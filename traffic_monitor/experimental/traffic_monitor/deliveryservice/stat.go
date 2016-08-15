@@ -7,7 +7,6 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -148,76 +147,6 @@ func NewStats() Stats {
 	return Stats{DeliveryService: map[enum.DeliveryServiceName]Stat{}}
 }
 
-// DsRegexes maps Delivery Service Regular Expressions to delivery services.
-// For performance, we categorize Regular Expressions into 3 categories:
-// 1. Direct string matches, with no regular expression matching characters
-// 2. .*\.foo\..* expressions, where foo is a direct string match with no regular expression matching characters
-// 3. Everything else
-// This allows us to do a cheap match on 1 and 2, and only regex match the uncommon case.
-// TODO performance tests, whether Go compiled *Regexp is relevantly slower than `strings.Contains` for direct and .foo. matches
-type Regexes struct {
-	DirectMatches                      map[string]enum.DeliveryServiceName
-	DotStartSlashDotFooSlashDotDotStar map[string]enum.DeliveryServiceName
-	RegexMatch                         map[*regexp.Regexp]enum.DeliveryServiceName
-}
-
-// DeliveryService returns the delivery service which matches the given fqdn, or false.
-func (d Regexes) DeliveryService(fqdn string) (enum.DeliveryServiceName, bool) {
-	if ds, ok := d.DirectMatches[fqdn]; ok {
-		return ds, true
-	}
-	for matchStr, ds := range d.DotStartSlashDotFooSlashDotDotStar {
-		if strings.Contains(fqdn, "."+matchStr+".") {
-			return ds, true
-		}
-	}
-	for regex, ds := range d.RegexMatch {
-		if regex.MatchString(fqdn) {
-			return ds, true
-		}
-	}
-	return "", false
-}
-
-// TODO precompute, move to TOData; call when we get new delivery services, instead of every time we create new stats
-func CreateRegexes(dsToRegex map[string][]string) (Regexes, error) {
-	dsRegexes := Regexes{
-		DirectMatches:                      map[string]enum.DeliveryServiceName{},
-		DotStartSlashDotFooSlashDotDotStar: map[string]enum.DeliveryServiceName{},
-		RegexMatch:                         map[*regexp.Regexp]enum.DeliveryServiceName{},
-	}
-
-	for dsStr, regexStrs := range dsToRegex {
-		ds := enum.DeliveryServiceName(dsStr)
-		for _, regexStr := range regexStrs {
-			prefix := `.*\.`
-			suffix := `\..*`
-			if strings.HasPrefix(regexStr, prefix) && strings.HasSuffix(regexStr, suffix) {
-				matchStr := regexStr[len(prefix) : len(regexStr)-len(suffix)]
-				if otherDs, ok := dsRegexes.DotStartSlashDotFooSlashDotDotStar[matchStr]; ok {
-					return dsRegexes, fmt.Errorf("duplicate regex %s (%s) in %s and %s", regexStr, matchStr, ds, otherDs)
-				}
-				dsRegexes.DotStartSlashDotFooSlashDotDotStar[matchStr] = ds
-				continue
-			}
-			if !strings.ContainsAny(regexStr, `[]^\:{}()|?+*,=%@<>!'`) {
-				if otherDs, ok := dsRegexes.DirectMatches[regexStr]; ok {
-					return dsRegexes, fmt.Errorf("duplicate Regex %s in %s and %s", regexStr, ds, otherDs)
-				}
-				dsRegexes.DirectMatches[regexStr] = ds
-				continue
-			}
-			// TODO warn? regex matches are unusual
-			r, err := regexp.Compile(regexStr)
-			if err != nil {
-				return dsRegexes, fmt.Errorf("regex %s failed to compile: %v", regexStr, err)
-			}
-			dsRegexes.RegexMatch[r] = ds
-		}
-	}
-	return dsRegexes, nil
-}
-
 func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
 	for ds, istat := range dsStats.DeliveryService {
 		istat.CommonData().CachesConfigured.Value = int64(len(dsServers[string(ds)]))
@@ -225,9 +154,9 @@ func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[string]string, serverDs map[string]string, serverTypes map[string]enum.CacheType) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[string]string, serverTypes map[enum.CacheName]enum.CacheType) (Stats, error) {
 	for cache, available := range crStates.Caches {
-		cacheGroup, ok := serverCachegroups[cache]
+		cacheGroup, ok := serverCachegroups[enum.CacheName(cache)]
 		if !ok {
 			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
 			continue
@@ -237,7 +166,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
 		}
-		cacheType, ok := serverTypes[cache]
+		cacheType, ok := serverTypes[enum.CacheName(cache)]
 		if !ok {
 			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
 			continue
@@ -401,14 +330,8 @@ func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, 
 	return dsStats, lastKbpsStats, nil
 }
 
-func CreateStats(statHistory map[string][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastKbpsStats StatsLastKbps, now time.Time) (Stats, StatsLastKbps, error) {
+func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastKbpsStats StatsLastKbps, now time.Time) (Stats, StatsLastKbps, error) {
 	dsStats := NewStats()
-
-	dsRegexes, err := CreateRegexes(toData.DeliveryServiceRegexes)
-	if err != nil {
-		return Stats{}, lastKbpsStats, fmt.Errorf("error creating Regexes: %v", err)
-	}
-
 	for deliveryService, _ := range toData.DeliveryServiceServers {
 		dsType, ok := toData.DeliveryServiceTypes[deliveryService]
 		if !ok {
@@ -422,8 +345,8 @@ func CreateStats(statHistory map[string][]cache.Result, toData todata.TOData, cr
 			return Stats{}, lastKbpsStats, fmt.Errorf("unknown type for '%s': %v", deliveryService, dsType)
 		}
 	}
-
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
+	var err error
 	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes)
 	if err != nil {
 		return dsStats, lastKbpsStats, fmt.Errorf("Error getting Cache availability data: %v", err)
@@ -434,50 +357,52 @@ func CreateStats(statHistory map[string][]cache.Result, toData todata.TOData, cr
 	cacheOutbytes := map[enum.CacheName]int64{}
 
 	for server, history := range statHistory {
+		if len(history) < 1 {
+			continue // TODO warn?
+		}
 		cachegroup, ok := toData.ServerCachegroups[server]
 		if !ok {
 			fmt.Printf("WARNING server %s has no cachegroup, skipping\n", server)
 			continue
 		}
-		serverType, ok := toData.ServerTypes[server]
+		serverType, ok := toData.ServerTypes[enum.CacheName(server)]
 		if !ok {
 			fmt.Printf("WARNING server %s not in CRConfig, skipping\n", server)
 			continue
 		}
-		for _, result := range history {
-			for stat, value := range result.Astats.Ats {
+		result := history[len(history)-1]
+		for stat, value := range result.Astats.Ats {
 
-				if strings.HasSuffix(stat, ".out_bytes") {
-					v, ok := value.(float64)
-					if !ok {
-						continue // no warning, because the same error will be returned by processStat
-					}
-					cacheOutbytes[enum.CacheName(server)] += int64(v)
+			if strings.HasSuffix(stat, ".out_bytes") {
+				v, ok := value.(float64)
+				if !ok {
+					continue // no warning, because the same error will be returned by processStat
 				}
-
-				ds, newstat, err := processStat(&dsStats, dsRegexes, toData.DeliveryServiceTypes, cachegroup, server, serverType, stat, value)
-				if err == ErrNotProcessedStat {
-					continue
-				}
-				if err != nil {
-					if !strings.HasPrefix(err.Error(), "stat has unknown initial part") && !strings.HasSuffix(err.Error(), "matched no delivery service") {
-						fmt.Printf("ERROR CreateStats failed to processStat for cachegroup '%s' server '%s' stat '%s': %v\n", cachegroup, server, stat, err)
-					}
-					continue
-				}
-				stats[ds] = newstat
+				cacheOutbytes[enum.CacheName(server)] += int64(v)
 			}
+
+			ds, newstat, err := processStat(&dsStats, toData.DeliveryServiceRegexes, toData.DeliveryServiceTypes, cachegroup, server, serverType, stat, value)
+			if err == ErrNotProcessedStat {
+				continue
+			}
+			if err != nil {
+				if !strings.HasPrefix(err.Error(), "stat has unknown initial part") && !strings.HasSuffix(err.Error(), "matched no delivery service") {
+					fmt.Printf("ERROR CreateStats failed to processStat for cachegroup '%s' server '%s' stat '%s': %v\n", cachegroup, server, stat, err)
+				}
+				continue
+			}
+			stats[ds] = newstat
 		}
 	}
 	dsStats.DeliveryService = stats
-
 	return addKbps(dsStats, lastKbpsStats, now, cacheOutbytes)
 }
 
 var ErrNotProcessedStat = errors.New("This stat is not used.")
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func processStat(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSType, cachegroup string, server string, serverType enum.CacheType, stat string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
+// TODO fix this being crazy slow. THIS IS THE BOTTLENECK
+func processStat(dsStats *Stats, dsRegexes todata.Regexes, dsTypes map[string]enum.DSType, cachegroup enum.CacheGroupName, server enum.CacheName, serverType enum.CacheType, stat string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return "", nil, fmt.Errorf("stat has no initial part")
@@ -493,7 +418,7 @@ func processStat(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSTy
 	}
 }
 
-func processStatPlugin(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSType, cachegroup string, server string, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
+func processStatPlugin(dsStats *Stats, dsRegexes todata.Regexes, dsTypes map[string]enum.DSType, cachegroup enum.CacheGroupName, server enum.CacheName, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
 	if len(statParts) < 1 {
 		return "", nil, fmt.Errorf("stat has no plugin part")
 	}
@@ -505,7 +430,7 @@ func processStatPlugin(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enu
 	}
 }
 
-func processStatPluginRemapStats(dsStats *Stats, dsRegexes Regexes, dsTypes map[string]enum.DSType, cachegroup string, server string, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
+func processStatPluginRemapStats(dsStats *Stats, dsRegexes todata.Regexes, dsTypes map[string]enum.DSType, cachegroup enum.CacheGroupName, server enum.CacheName, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, Stat, error) {
 	if len(statParts) < 2 {
 		return "", nil, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
@@ -528,14 +453,14 @@ func processStatPluginRemapStats(dsStats *Stats, dsRegexes Regexes, dsTypes map[
 	return ds, addedStat, nil
 }
 
-func addStat(iStat Stat, name string, val interface{}, ds string, server string, serverType enum.CacheType, cachegroup string, dsTypes map[string]enum.DSType) (Stat, error) {
+func addStat(iStat Stat, name string, val interface{}, ds string, server enum.CacheName, serverType enum.CacheType, cachegroup enum.CacheGroupName, dsTypes map[string]enum.DSType) (Stat, error) {
 	if iStat == nil {
 		return iStat, fmt.Errorf("addStat given nil stat for %s", ds)
 	}
 
 	var common *StatCommon
 	common = iStat.CommonData()
-	common.CachesReporting[enum.CacheName(server)] = true
+	common.CachesReporting[server] = true
 	if name == "error_string" {
 		valStr, ok := val.(string)
 		if !ok {
@@ -546,7 +471,7 @@ func addStat(iStat Stat, name string, val interface{}, ds string, server string,
 	common.Status.Value = "REPORTED" // TODO fix?
 
 	if stat, ok := iStat.(*StatHTTP); ok {
-		newCachegroupStat, err := addCacheStat(stat.CacheGroups[enum.CacheGroupName(cachegroup)], name, val)
+		newCachegroupStat, err := addCacheStat(stat.CacheGroups[cachegroup], name, val)
 		if err != nil {
 			return stat, err
 		}
@@ -569,7 +494,6 @@ func addStat(iStat Stat, name string, val interface{}, ds string, server string,
 		// TODO handle DNS DS stats
 		return stat, nil
 	}
-
 	return iStat, fmt.Errorf("delivery service %s type is invalid", iStat)
 }
 
