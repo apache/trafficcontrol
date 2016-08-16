@@ -2,6 +2,7 @@ package manager
 
 import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"sync"
 )
 
@@ -11,15 +12,15 @@ const defaultMaxHistory = 5 // TODO make config setting?
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and Deliveryservice maps?
 type StatHistoryThreadsafe struct {
-	statHistory map[string][]cache.Result
+	statHistory map[enum.CacheName][]cache.Result
 	m           *sync.Mutex
 }
 
 func NewStatHistoryThreadsafe() StatHistoryThreadsafe {
-	return StatHistoryThreadsafe{m: &sync.Mutex{}, statHistory: map[string][]cache.Result{}}
+	return StatHistoryThreadsafe{m: &sync.Mutex{}, statHistory: map[enum.CacheName][]cache.Result{}}
 }
 
-func (t StatHistoryThreadsafe) GetStat(stat string) []cache.Result {
+func (t StatHistoryThreadsafe) GetStat(stat enum.CacheName) []cache.Result {
 	t.m.Lock()
 	defer func() {
 		t.m.Unlock()
@@ -27,7 +28,7 @@ func (t StatHistoryThreadsafe) GetStat(stat string) []cache.Result {
 	return copyStat(t.statHistory[stat])
 }
 
-func (t StatHistoryThreadsafe) Get() map[string][]cache.Result {
+func (t StatHistoryThreadsafe) Get() map[enum.CacheName][]cache.Result {
 	t.m.Lock()
 	defer func() {
 		t.m.Unlock()
@@ -37,7 +38,7 @@ func (t StatHistoryThreadsafe) Get() map[string][]cache.Result {
 
 func (t StatHistoryThreadsafe) Add(stat cache.Result) {
 	t.m.Lock()
-	t.statHistory[stat.Id] = pruneHistory(append(t.statHistory[stat.Id], stat), defaultMaxHistory)
+	t.statHistory[enum.CacheName(stat.Id)] = pruneHistory(append(t.statHistory[enum.CacheName(stat.Id)], stat), defaultMaxHistory)
 	t.m.Unlock()
 }
 
@@ -56,8 +57,8 @@ func copyStat(a []cache.Result) []cache.Result {
 	return b
 }
 
-func copyStats(a map[string][]cache.Result) map[string][]cache.Result {
-	b := map[string][]cache.Result{}
+func copyStats(a map[enum.CacheName][]cache.Result) map[enum.CacheName][]cache.Result {
+	b := map[enum.CacheName][]cache.Result{}
 	for k, v := range a {
 		b[k] = copyStat(v)
 	}

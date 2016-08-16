@@ -40,7 +40,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -93,7 +92,7 @@ public class ConfigHandler {
 		return regionalGeoUpdater;
 	}
 
-	public boolean processConfig(final String jsonStr) throws JSONException, IOException, TrafficRouterException  {
+	public boolean processConfig(final String jsonStr) throws JSONException, IOException  {
 		if (jsonStr == null) {
 			trafficRouterManager.setCacheRegister(null);
 			return false;

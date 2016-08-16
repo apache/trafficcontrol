@@ -44,7 +44,6 @@ import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Zone;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -95,7 +94,7 @@ public class TrafficRouter {
 			final GeolocationService geolocationService6, 
 			final StatTracker statTracker,
 			final TrafficOpsUtils trafficOpsUtils,
-			final FederationRegistry federationRegistry) throws IOException, JSONException, TrafficRouterException {
+			final FederationRegistry federationRegistry) throws IOException, JSONException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
@@ -430,7 +429,7 @@ public class TrafficRouter {
 	}
 
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
-		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
+		if (cacheLocation == null || ds == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
 		}
 

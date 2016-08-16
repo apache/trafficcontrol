@@ -14,24 +14,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "https-test": ["edge-cache-001.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-001.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-001.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-001.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-001.ds-05.thecdn.example.com",
-          "edge-cache-001.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-000.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-000.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-000.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-000.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-test": ["edge-cache-001.https-test.thecdn.example.com"]
       }
     },
     "edge-cache-001": {
@@ -48,24 +31,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "https-test": ["edge-cache-001.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-001.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-001.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-001.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-001.ds-05.thecdn.example.com",
-          "edge-cache-001.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-001.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-001.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-001.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-001.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-test": ["edge-cache-001.https-test.thecdn.example.com"]
       }
     },
     "edge-cache-002": {
@@ -82,258 +48,9 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "https-test": ["edge-cache-002.https-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-002.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-002.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-002.ds-05.thecdn.example.com",
-          "edge-cache-002.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-002.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-002.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-002.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-002.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-test": ["edge-cache-002.https-test.thecdn.example.com"]
       }
     },
-    "edge-cache-003": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-003@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-003.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.103",
-      "ip6": "2001:dead:beef:0:C::13/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "https-test": ["edge-cache-003.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-003.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-003.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-003.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-003.ds-05.thecdn.example.com",
-          "edge-cache-003.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-003.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-003.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-003.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-003.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-004": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-004@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-004.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.104",
-      "ip6": "2001:dead:beef:0:C::14/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "https-test": ["edge-cache-004.https-test.thecdn.example.com"],
-        "mm-test": ["edge-cache-004.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-004.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-004.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-004.ds-05.thecdn.example.com",
-          "edge-cache-004.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-004.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-004.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-004.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-004.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-005": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-005@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-005.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.105",
-      "ip6": "2001:dead:beef:0:C::15/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-005.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-005.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-005.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-005.ds-05.thecdn.example.com",
-          "edge-cache-005.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-005.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-005.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-005.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-005.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-006": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-006@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-006.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.106",
-      "ip6": "2001:dead:beef:0:C::16/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-006.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-006.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-006.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-006.ds-05.thecdn.example.com",
-          "edge-cache-006.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-006.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-006.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-006.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-006.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-007": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-007@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-007.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.107",
-      "ip6": "2001:dead:beef:0:C::17/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-007.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-007.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-007.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-007.ds-05.thecdn.example.com",
-          "edge-cache-007.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-007.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-007.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-007.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-007.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-008": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-008@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-008.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.108",
-      "ip6": "2001:dead:beef:0:C::18/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-008.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-008.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-008.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-008.ds-05.thecdn.example.com",
-          "edge-cache-008.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-008.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-008.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-008.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-008.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-009": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-009@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-009.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.0.109",
-      "ip6": "2001:dead:beef:0:C::19/64",
-      "cacheGroup": "cache-group-0",
-      "locationId": "location-0",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-009.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-009.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-009.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-009.ds-05.thecdn.example.com",
-          "edge-cache-009.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-009.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-009.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-009.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-009.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
     "edge-cache-010": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
@@ -348,23 +65,12 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-010.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-010.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-010.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-010.ds-05.thecdn.example.com",
-          "edge-cache-010.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-010.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-010.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-010.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-010.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-test-1": ["edge-cache-010.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-010.steering-target-2.thecdn.example.com"],
+        "steering-target-1": [
+          "edge-cache-010.steering-target-1.thecdn.example.com",
+          "edge-cache-010.steering-target-1-b-b.thecdn.example.com"
+        ]
       }
     },    
     "edge-cache-011": {
@@ -381,23 +87,12 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-011.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-011.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-011.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-011.ds-05.thecdn.example.com",
-          "edge-cache-011.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-011.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-011.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-011.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-011.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-test-1": ["edge-cache-011.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-011.steering-target-2.thecdn.example.com"],
+        "steering-target-1": [
+          "edge-cache-011.steering-target-1.thecdn.example.com",
+          "edge-cache-011.steering-target-1-b-b.thecdn.example.com"
+        ]
       }
     },
     "edge-cache-012": {
@@ -414,256 +109,14 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-012.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-012.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-012.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-012.ds-05.thecdn.example.com",
-          "edge-cache-012.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-012.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-012.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-012.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-012.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-test-1": ["edge-cache-012.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-012.steering-target-2.thecdn.example.com"],
+        "steering-target-1": [
+          "edge-cache-012.steering-target-1.thecdn.example.com",
+          "edge-cache-012.steering-target-1-b-b.thecdn.example.com"
+        ]
       }
     },
-    "edge-cache-013": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-013@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-013.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.103",
-      "ip6": "2001:dead:beef:1:C::13/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-013.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-013.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-013.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-013.ds-05.thecdn.example.com",
-          "edge-cache-013.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-013.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-013.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-013.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-013.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-014": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-014@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-014.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.104",
-      "ip6": "2001:dead:beef:1:C::14/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-014.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-014.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-014.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-014.ds-05.thecdn.example.com",
-          "edge-cache-014.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-014.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-014.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-014.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-014.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-015": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-015@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-015.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.105",
-      "ip6": "2001:dead:beef:1:C::15/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-015.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-015.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-015.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-015.ds-05.thecdn.example.com",
-          "edge-cache-015.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-015.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-015.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-015.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-015.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-016": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-016@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-016.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.106",
-      "ip6": "2001:dead:beef:1:C::16/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-016.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-016.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-016.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-016.ds-05.thecdn.example.com",
-          "edge-cache-016.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-016.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-016.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-016.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-016.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-017": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-017@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-017.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.107",
-      "ip6": "2001:dead:beef:1:C::17/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-017.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-017.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-017.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-017.ds-05.thecdn.example.com",
-          "edge-cache-017.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-017.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-017.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-017.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-017.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-018": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-018@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-018.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.108",
-      "ip6": "2001:dead:beef:1:C::18/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-018.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-018.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-018.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-018.ds-05.thecdn.example.com",
-          "edge-cache-018.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-018.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-018.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-018.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-018.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-019": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-019@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-019.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.1.109",
-      "ip6": "2001:dead:beef:1:C::19/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-019.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-019.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-019.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-019.ds-05.thecdn.example.com",
-          "edge-cache-019.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-019.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-019.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-019.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-019.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
     "edge-cache-020": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
@@ -678,23 +131,9 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-020.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-020.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-020.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-020.ds-05.thecdn.example.com",
-          "edge-cache-020.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-020.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-020.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-020.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-020.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-test-2": ["edge-cache-020.steering-test-2.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-020.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-020.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-021": {
@@ -711,23 +150,9 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-021.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-021.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-021.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-021.ds-05.thecdn.example.com",
-          "edge-cache-021.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-021.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-021.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-021.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-021.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-test-2": ["edge-cache-021.steering-test-2.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-021.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-021.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-022": {
@@ -744,256 +169,11 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-022.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-022.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-022.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-022.ds-05.thecdn.example.com",
-          "edge-cache-022.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-022.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-022.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-022.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-022.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-test-2": ["edge-cache-022.steering-test-2.thecdn.example.com"],
+        "steering-target-4": ["edge-cache-022.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-022.steering-target-3.thecdn.example.com"]
       }
     },
-    "edge-cache-023": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-023@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-023.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.103",
-      "ip6": "2001:dead:beef:2:C::13/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-023.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-023.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-023.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-023.ds-05.thecdn.example.com",
-          "edge-cache-023.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-023.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-023.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-023.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-023.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-024": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-024@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-024.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.104",
-      "ip6": "2001:dead:beef:2:C::14/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-024.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-024.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-024.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-024.ds-05.thecdn.example.com",
-          "edge-cache-024.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-024.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-024.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-024.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-024.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-025": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-025@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-025.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.105",
-      "ip6": "2001:dead:beef:2:C::15/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-025.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-025.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-025.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-025.ds-05.thecdn.example.com",
-          "edge-cache-025.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-025.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-025.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-025.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-025.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-026": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-026@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-026.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.106",
-      "ip6": "2001:dead:beef:2:C::16/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-026.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-026.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-026.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-026.ds-05.thecdn.example.com",
-          "edge-cache-026.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-026.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-026.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-026.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-026.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-027": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-027@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-027.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.107",
-      "ip6": "2001:dead:beef:2:C::17/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-027.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-027.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-027.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-027.ds-05.thecdn.example.com",
-          "edge-cache-027.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-027.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-027.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-027.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-027.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-028": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-028@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-028.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.108",
-      "ip6": "2001:dead:beef:2:C::18/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-028.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-028.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-028.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-028.ds-05.thecdn.example.com",
-          "edge-cache-028.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-028.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-028.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-028.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-028.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-029": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-029@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-029.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.2.109",
-      "ip6": "2001:dead:beef:2:C::19/64",
-      "cacheGroup": "cache-group-2",
-      "locationId": "location-2",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-029.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-029.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-029.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-029.ds-05.thecdn.example.com",
-          "edge-cache-029.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-029.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-029.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-029.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-029.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
     "edge-cache-030": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
@@ -1008,23 +188,15 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-030.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-030.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-030.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
+        "steering-test-1": ["edge-cache-030.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-030.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-030.steering-test-2.thecdn.example.com"],
+        "steering-target-1": [
+          "edge-cache-030.steering-target-1.thecdn.example.com",
+          "edge-cache-030.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-030.ds-05.thecdn.example.com",
-          "edge-cache-030.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-030.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-030.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-030.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-030.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-030.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-030.steering-target-3.thecdn.example.com"]
       }
     },    
     "edge-cache-031": {
@@ -1041,23 +213,15 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-031.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-031.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-031.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
+        "steering-test-1": ["edge-cache-031.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-031.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-031.steering-test-2.thecdn.example.com"],
+        "steering-target-1": [
+          "edge-cache-031.steering-target-1.thecdn.example.com",
+          "edge-cache-031.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-031.ds-05.thecdn.example.com",
-          "edge-cache-031.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-031.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-031.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-031.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-031.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-031.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-031.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-032": {
@@ -1074,256 +238,17 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-032.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-032.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-032.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
+        "steering-test-1": ["edge-cache-032.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-032.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-032.steering-test-2.thecdn.example.com"],
+        "steering-target-1": [
+          "edge-cache-032.steering-target-1.thecdn.example.com",
+          "edge-cache-032.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-032.ds-05.thecdn.example.com",
-          "edge-cache-032.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-032.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-032.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-032.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-032.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-032.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-032.steering-target-3.thecdn.example.com"]
       }
     },
-    "edge-cache-033": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-033@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-033.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.103",
-      "ip6": "2001:dead:beef:3:C::13/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-033.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-033.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-033.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-033.ds-05.thecdn.example.com",
-          "edge-cache-033.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-033.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-033.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-033.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-033.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-034": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-034@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-034.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.104",
-      "ip6": "2001:dead:beef:3:C::14/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-034.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-034.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-034.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-034.ds-05.thecdn.example.com",
-          "edge-cache-034.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-034.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-034.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-034.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-034.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-035": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-035@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-035.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.105",
-      "ip6": "2001:dead:beef:3:C::15/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-035.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-035.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-035.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-035.ds-05.thecdn.example.com",
-          "edge-cache-035.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-035.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-035.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-035.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-035.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-036": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-036@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-036.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.106",
-      "ip6": "2001:dead:beef:3:C::16/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-036.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-036.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-036.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-036.ds-05.thecdn.example.com",
-          "edge-cache-036.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-036.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-036.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-036.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-036.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-037": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-037@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-037.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.107",
-      "ip6": "2001:dead:beef:3:C::17/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-037.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-037.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-037.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-037.ds-05.thecdn.example.com",
-          "edge-cache-037.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-037.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-037.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-037.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-037.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-038": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-038@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-038.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.108",
-      "ip6": "2001:dead:beef:3:C::18/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-038.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-038.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-038.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-038.ds-05.thecdn.example.com",
-          "edge-cache-038.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-038.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-038.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-038.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-038.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-039": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-039@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-039.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.3.109",
-      "ip6": "2001:dead:beef:3:C::19/64",
-      "cacheGroup": "cache-group-3",
-      "locationId": "location-3",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-039.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-039.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-039.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-039.ds-05.thecdn.example.com",
-          "edge-cache-039.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-039.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-039.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-039.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-039.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
     "edge-cache-040": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
@@ -1338,25 +263,21 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-040.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-040.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-040.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-1": ["edge-cache-040.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-040.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-040.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-040.ds-05.thecdn.example.com",
-          "edge-cache-040.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-040.steering-target-1.thecdn.example.com",
+          "edge-cache-040.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-040.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-040.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-040.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-040.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-040.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-040.steering-target-3.thecdn.example.com"]
       }
-    },    
+    },
     "edge-cache-041": {
       "type": "EDGE",
       "profile": "EDGE_STATIC",
@@ -1371,23 +292,19 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-041.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-041.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-041.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-1": ["edge-cache-041.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-041.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-041.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-041.ds-05.thecdn.example.com",
-          "edge-cache-041.ds-05-b-b.thecdn.example.com"
+        "steering-target-1": [
+          "edge-cache-041.steering-target-1.thecdn.example.com",
+          "edge-cache-041.steering-target-1-b-b.thecdn.example.com"
         ],
-        "ds-04": ["edge-cache-041.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-041.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-041.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-041.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-target-4": ["edge-cache-041.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-041.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-042": {
@@ -1404,1572 +321,19 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-042.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-042.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-042.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
+        "steering-test-1": ["edge-cache-042.steering-test-1.thecdn.example.com"],
+        "steering-target-2": ["edge-cache-042.steering-target-2.thecdn.example.com"],
+        "steering-test-2": ["edge-cache-042.steering-test-2.thecdn.example.com"],
+        "federation-test": [
+          "edge.federation-test.thecdn.example.com",
           "edge.dee-ehs-06.thecdn.example.com"
         ],
-        "ds-05": [
-          "edge-cache-042.ds-05.thecdn.example.com",
-          "edge-cache-042.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-042.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-042.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-042.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-042.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-043": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-043@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-043.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.103",
-      "ip6": "2001:dead:beef:4:C::13/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-043.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-043.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-043.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-043.ds-05.thecdn.example.com",
-          "edge-cache-043.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-043.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-043.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-043.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-043.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-044": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-044@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-044.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.104",
-      "ip6": "2001:dead:beef:4:C::14/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-044.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-044.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-044.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-044.ds-05.thecdn.example.com",
-          "edge-cache-044.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-044.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-044.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-044.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-044.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-045": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-045@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-045.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.105",
-      "ip6": "2001:dead:beef:4:C::15/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-045.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-045.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-045.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-045.ds-05.thecdn.example.com",
-          "edge-cache-045.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-045.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-045.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-045.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-045.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-046": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-046@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-046.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.106",
-      "ip6": "2001:dead:beef:4:C::16/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-046.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-046.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-046.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-046.ds-05.thecdn.example.com",
-          "edge-cache-046.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-046.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-046.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-046.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-046.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-047": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-047@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-047.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.107",
-      "ip6": "2001:dead:beef:4:C::17/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-047.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-047.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-047.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-047.ds-05.thecdn.example.com",
-          "edge-cache-047.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-047.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-047.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-047.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-047.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-048": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-048@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-048.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.108",
-      "ip6": "2001:dead:beef:4:C::18/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-048.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-048.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-048.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-048.ds-05.thecdn.example.com",
-          "edge-cache-048.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-048.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-048.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-048.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-048.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-049": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-049@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-049.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.4.109",
-      "ip6": "2001:dead:beef:4:C::19/64",
-      "cacheGroup": "cache-group-4",
-      "locationId": "location-4",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-049.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-049.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-049.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-049.ds-05.thecdn.example.com",
-          "edge-cache-049.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-049.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-049.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-049.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-049.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-050": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-050@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-050.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.100",
-      "ip6": "2001:dead:beef:5:C::1A/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-050.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-050.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-050.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-050.ds-05.thecdn.example.com",
-          "edge-cache-050.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-050.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-050.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-050.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-050.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-051": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-051@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-051.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.101",
-      "ip6": "2001:dead:beef:5:C::11/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-051.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-051.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-051.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-051.ds-05.thecdn.example.com",
-          "edge-cache-051.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-051.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-051.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-051.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-051.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-052": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-052@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-052.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.102",
-      "ip6": "2001:dead:beef:5:C::12/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-052.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-052.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-052.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-052.ds-05.thecdn.example.com",
-          "edge-cache-052.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-052.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-052.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-052.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-052.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-053": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-053@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-053.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.103",
-      "ip6": "2001:dead:beef:5:C::13/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-053.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-053.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-053.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-053.ds-05.thecdn.example.com",
-          "edge-cache-053.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-053.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-053.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-053.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-053.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-054": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-054@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-054.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.104",
-      "ip6": "2001:dead:beef:5:C::14/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-054.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-054.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-054.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-054.ds-05.thecdn.example.com",
-          "edge-cache-054.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-054.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-054.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-054.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-054.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-055": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-055@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-055.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.105",
-      "ip6": "2001:dead:beef:5:C::15/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-055.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-055.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-055.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-055.ds-05.thecdn.example.com",
-          "edge-cache-055.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-055.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-055.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-055.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-055.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-056": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-056@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-056.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.106",
-      "ip6": "2001:dead:beef:5:C::16/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-056.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-056.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-056.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-056.ds-05.thecdn.example.com",
-          "edge-cache-056.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-056.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-056.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-056.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-056.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-057": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-057@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-057.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.107",
-      "ip6": "2001:dead:beef:5:C::17/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-057.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-057.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-057.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-057.ds-05.thecdn.example.com",
-          "edge-cache-057.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-057.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-057.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-057.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-057.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-058": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-058@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-058.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.108",
-      "ip6": "2001:dead:beef:5:C::18/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-058.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-058.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-058.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-058.ds-05.thecdn.example.com",
-          "edge-cache-058.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-058.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-058.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-058.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-058.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-059": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-059@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-059.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.5.109",
-      "ip6": "2001:dead:beef:5:C::19/64",
-      "cacheGroup": "cache-group-5",
-      "locationId": "location-5",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-059.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-059.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-059.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-059.ds-05.thecdn.example.com",
-          "edge-cache-059.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-059.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-059.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-059.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-059.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-060": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-060@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-060.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.100",
-      "ip6": "2001:dead:beef:6:C::1A/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-060.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-060.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-060.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-060.ds-05.thecdn.example.com",
-          "edge-cache-060.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-060.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-060.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-060.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-060.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    "edge-cache-061": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-061@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-061.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.101",
-      "ip6": "2001:dead:beef:6:C::11/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-061.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-061.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-061.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-061.ds-05.thecdn.example.com",
-          "edge-cache-061.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-061.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-061.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-061.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-061.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-062": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-062@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-062.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.102",
-      "ip6": "2001:dead:beef:6:C::12/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-062.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-062.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-062.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-062.ds-05.thecdn.example.com",
-          "edge-cache-062.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-062.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-062.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-062.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-062.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-063": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-063@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-063.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.103",
-      "ip6": "2001:dead:beef:6:C::13/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-063.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-063.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-063.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-063.ds-05.thecdn.example.com",
-          "edge-cache-063.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-063.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-063.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-063.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-063.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-064": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-064@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-064.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.104",
-      "ip6": "2001:dead:beef:6:C::14/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-064.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-064.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-064.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-064.ds-05.thecdn.example.com",
-          "edge-cache-064.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-064.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-064.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-064.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-064.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-065": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-065@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-065.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.105",
-      "ip6": "2001:dead:beef:6:C::15/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-065.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-065.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-065.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-065.ds-05.thecdn.example.com",
-          "edge-cache-065.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-065.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-065.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-065.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-065.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-066": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-066@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-066.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.106",
-      "ip6": "2001:dead:beef:6:C::16/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-066.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-066.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-066.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-066.ds-05.thecdn.example.com",
-          "edge-cache-066.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-066.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-066.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-066.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-066.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-067": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-067@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-067.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.107",
-      "ip6": "2001:dead:beef:6:C::17/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-067.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-067.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-067.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-067.ds-05.thecdn.example.com",
-          "edge-cache-067.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-067.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-067.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-067.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-067.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-068": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-068@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-068.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.108",
-      "ip6": "2001:dead:beef:6:C::18/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-068.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-068.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-068.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-068.ds-05.thecdn.example.com",
-          "edge-cache-068.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-068.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-068.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-068.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-068.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-069": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-069@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-069.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.6.109",
-      "ip6": "2001:dead:beef:6:C::19/64",
-      "cacheGroup": "cache-group-6",
-      "locationId": "location-6",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-069.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-069.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-069.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-069.ds-05.thecdn.example.com",
-          "edge-cache-069.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-069.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-069.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-069.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-069.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-070": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-070@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-070.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.100",
-      "ip6": "2001:dead:beef:7:C::1A/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-070.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-070.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-070.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-070.ds-05.thecdn.example.com",
-          "edge-cache-070.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-070.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-070.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-070.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-070.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    "edge-cache-071": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-071@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-071.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.101",
-      "ip6": "2001:dead:beef:7:C::11/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-071.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-071.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-071.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-071.ds-05.thecdn.example.com",
-          "edge-cache-071.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-071.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-071.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-071.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-071.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-072": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-072@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-072.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.102",
-      "ip6": "2001:dead:beef:7:C::12/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-072.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-072.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-072.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-072.ds-05.thecdn.example.com",
-          "edge-cache-072.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-072.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-072.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-072.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-072.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-073": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-073@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-073.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.103",
-      "ip6": "2001:dead:beef:7:C::13/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-073.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-073.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-073.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-073.ds-05.thecdn.example.com",
-          "edge-cache-073.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-073.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-073.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-073.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-073.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-074": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-074@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-074.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.104",
-      "ip6": "2001:dead:beef:7:C::14/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-074.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-074.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-074.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-074.ds-05.thecdn.example.com",
-          "edge-cache-074.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-074.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-074.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-074.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-074.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-075": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-075@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-075.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.105",
-      "ip6": "2001:dead:beef:7:C::15/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-075.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-075.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-075.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-075.ds-05.thecdn.example.com",
-          "edge-cache-075.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-075.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-075.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-075.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-075.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-076": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-076@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-076.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.106",
-      "ip6": "2001:dead:beef:7:C::16/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-076.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-076.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-076.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-076.ds-05.thecdn.example.com",
-          "edge-cache-076.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-076.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-076.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-076.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-076.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-077": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-077@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-077.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.107",
-      "ip6": "2001:dead:beef:7:C::17/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-077.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-077.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-077.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-077.ds-05.thecdn.example.com",
-          "edge-cache-077.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-077.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-077.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-077.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-077.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-078": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-078@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-078.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.108",
-      "ip6": "2001:dead:beef:7:C::18/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-078.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-078.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-078.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-078.ds-05.thecdn.example.com",
-          "edge-cache-078.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-078.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-078.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-078.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-078.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-079": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-079@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-079.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.7.109",
-      "ip6": "2001:dead:beef:7:C::19/64",
-      "cacheGroup": "cache-group-7",
-      "locationId": "location-7",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-079.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-079.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-079.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-079.ds-05.thecdn.example.com",
-          "edge-cache-079.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-079.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-079.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-079.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-079.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },    
-    "edge-cache-080": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-080@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-080.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.100",
-      "ip6": "2001:dead:beef:8:C::1A/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-080.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-080.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-080.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-080.ds-05.thecdn.example.com",
-          "edge-cache-080.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-080.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-080.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-080.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-080.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-081": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-081@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-081.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.101",
-      "ip6": "2001:dead:beef:8:C::11/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-081.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-081.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-081.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-081.ds-05.thecdn.example.com",
-          "edge-cache-081.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-081.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-081.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-081.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-081.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-082": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-082@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-082.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.102",
-      "ip6": "2001:dead:beef:8:C::12/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-082.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-082.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-082.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-082.ds-05.thecdn.example.com",
-          "edge-cache-082.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-082.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-082.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-082.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-082.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-083": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-083@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-083.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.103",
-      "ip6": "2001:dead:beef:8:C::13/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-083.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-083.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-083.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-083.ds-05.thecdn.example.com",
-          "edge-cache-083.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-083.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-083.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-083.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-083.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-084": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-084@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-084.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.104",
-      "ip6": "2001:dead:beef:8:C::14/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-084.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-084.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-084.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-084.ds-05.thecdn.example.com",
-          "edge-cache-084.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-084.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-084.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-084.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-084.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-085": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-085@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-085.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.105",
-      "ip6": "2001:dead:beef:8:C::15/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-085.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-085.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-085.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-085.ds-05.thecdn.example.com",
-          "edge-cache-085.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-085.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-085.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-085.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-085.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-086": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-086@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-086.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.106",
-      "ip6": "2001:dead:beef:8:C::16/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-086.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-086.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-086.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-086.ds-05.thecdn.example.com",
-          "edge-cache-086.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-086.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-086.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-086.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-086.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-087": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-087@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-087.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.107",
-      "ip6": "2001:dead:beef:8:C::17/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-087.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-087.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-087.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-087.ds-05.thecdn.example.com",
-          "edge-cache-087.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-087.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-087.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-087.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-087.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-088": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-088@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-088.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.108",
-      "ip6": "2001:dead:beef:8:C::18/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-088.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-088.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-088.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-088.ds-05.thecdn.example.com",
-          "edge-cache-088.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-088.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-088.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-088.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-088.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-089": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-089@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-089.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.109",
-      "ip6": "2001:dead:beef:8:C::19/64",
-      "cacheGroup": "cache-group-8",
-      "locationId": "location-8",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-089.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-089.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-089.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-089.ds-05.thecdn.example.com",
-          "edge-cache-089.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-089.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-089.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-089.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-089.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "steering-target-1": [
+          "edge-cache-042.steering-target-1.thecdn.example.com",
+          "edge-cache-042.steering-target-1-b-b.thecdn.example.com"
+        ],
+        "steering-target-4": ["edge-cache-042.steering-target-4.thecdn.example.com"],
+        "steering-target-3": ["edge-cache-042.steering-target-3.thecdn.example.com"]
       }
     },
     "edge-cache-090": {
@@ -2986,24 +350,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-090.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-090.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-090.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-090.ds-05.thecdn.example.com",
-          "edge-cache-090.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-090.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-090.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-090.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-090.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-090.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-090.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-091": {
@@ -3020,24 +367,7 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-091.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-091.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-091.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-091.ds-05.thecdn.example.com",
-          "edge-cache-091.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-091.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-091.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-091.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-091.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-091.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-091.https-nocert.thecdn.example.com"]
       }
     },
     "edge-cache-092": {
@@ -3054,281 +384,11 @@
       "hashCount": 1000,
       "interfaceName": "bond0",
       "deliveryServices": {
-        "mm-test": ["edge-cache-092.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-092.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-092.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-092.ds-05.thecdn.example.com",
-          "edge-cache-092.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-092.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-092.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-092.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-092.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-093": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-093@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-093.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.103",
-      "ip6": "2001:dead:beef:9:C::13/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-093.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-093.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-093.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-093.ds-05.thecdn.example.com",
-          "edge-cache-093.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-093.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-093.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-093.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-093.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-093.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-094": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-094@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-094.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.104",
-      "ip6": "2001:dead:beef:9:C::14/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-094.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-094.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-094.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-094.ds-05.thecdn.example.com",
-          "edge-cache-094.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-094.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-094.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-094.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-094.ds-01.thecdn.example.com"],
-        "https-nocert": ["edge-cache-094.https-nocert.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-095": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-095@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-095.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.105",
-      "ip6": "2001:dead:beef:9:C::15/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-095.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-095.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-095.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-095.ds-05.thecdn.example.com",
-          "edge-cache-095.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-095.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-095.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-095.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-095.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-096": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-096@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-096.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.106",
-      "ip6": "2001:dead:beef:9:C::16/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-096.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-096.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-096.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-096.ds-05.thecdn.example.com",
-          "edge-cache-096.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-096.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-096.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-096.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-096.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-097": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-097@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-097.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.107",
-      "ip6": "2001:dead:beef:9:C::17/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-097.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-097.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-097.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-097.ds-05.thecdn.example.com",
-          "edge-cache-097.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-097.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-097.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-097.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-097.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-098": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-098@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-098.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.108",
-      "ip6": "2001:dead:beef:9:C::18/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-098.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-098.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-098.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-098.ds-05.thecdn.example.com",
-          "edge-cache-098.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-098.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-098.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-098.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-098.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
-      }
-    },
-    "edge-cache-099": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-099@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-099.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.8.109",
-      "ip6": "2001:dead:beef:9:C::19/64",
-      "cacheGroup": "cache-group-9",
-      "locationId": "location-9",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "mm-test": ["edge-cache-099.mm-test.thecdn.example.com"],
-        "ds-08": ["edge-cache-099.ds-08.thecdn.example.com"],
-        "ds-07": ["edge.ds-07.thecdn.example.com"],
-        "test": ["edge-cache-099.test.thecdn.example.com"],
-        "ds-06": [
-          "edge.ds-06.thecdn.example.com",
-          "edge.dee-ehs-06.thecdn.example.com"
-        ],
-        "ds-05": [
-          "edge-cache-099.ds-05.thecdn.example.com",
-          "edge-cache-099.ds-05-b-b.thecdn.example.com"
-        ],
-        "ds-04": ["edge-cache-099.ds-04.thecdn.example.com"],
-        "ds-03": ["edge-cache-099.ds-03.thecdn.example.com"],
-        "ds-02": ["edge-cache-099.ds-02.thecdn.example.com"],
-        "ds-01": ["edge-cache-099.ds-01.thecdn.example.com"],
-        "test-dns": ["edge.test-dns.thecdn.example.com"]
+        "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"]
       }
     }
   },
   "contentRouters": {
-    "testing-tr-04": {
-      "port": "80",
-      "status": "ONLINE",
-      "location": "dc-cmc",
-      "ip6": "2001:dead:beef:123:1::4",
-      "api.port": "3333",
-      "fqdn": "testing-tr-04.cdn.example.com",
-      "ip": "12.34.20.4",
-      "profile": "ROUTER_TEST"
-    },
-    "testing-tr-03": {
-      "port": "80",
-      "status": "ONLINE",
-      "location": "dc-cmc",
-      "ip6": "2001:dead:beef:123:1::3",
-      "api.port": "3333",
-      "fqdn": "testing-tr-03.cdn.example.com",
-      "ip": "12.34.20.3",
-      "profile": "ROUTER_TEST"
-    },
     "testing-tr-02": {
       "port": "80",
       "status": "ONLINE",
@@ -3408,10 +468,10 @@
       },
       "geolocationProvider": "maxmindGeolocationService"
     },
-    "mm-test": {
+    "steering-test-1": {
       "sslEnabled": "false",
       "requestHeaders": ["X-MoneyTrace"],
-      "domains": ["mm-test.thecdn.example.com"],
+      "domains": ["steering-test-1.thecdn.example.com"],
       "missLocation": {
         "long": "-87.627778",
         "lat": "41.881944"
@@ -3426,7 +486,7 @@
       "ip6RoutingEnabled": "true",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "mm-test.overflowcdn.net"
+        "fqdn": "steering-test-1.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
@@ -3437,7 +497,7 @@
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.mm-test\\..*",
+          "regex": ".*\\.steering-test-1\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3458,28 +518,28 @@
         },
         {
           "name": "mm-cname",
-          "value": "mm.mm-test.thecdn.example.com.",
+          "value": "mm.steering-test-1.thecdn.example.com.",
           "type": "CNAME",
           "ttl": "7200"
         }
       ]
     },
-    "ds-08": {
+    "steering-target-2": {
       "sslEnabled": "false",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "ds-08.overflowcdn.net"
+        "fqdn": "steering-target-2.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-08.thecdn.example.com"],
+      "domains": ["steering-target-2.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.ds-08\\..*",
+          "regex": ".*\\.steering-target-2\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3505,44 +565,7 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-07": {
-      "sslEnabled": "false",
-      "bypassDestination": {"DNS": {
-        "ttl": "30",
-        "cname": "www.example.com"
-      }},
-      "domains": ["ds-07.thecdn.example.com"],
-      "coverageZoneOnly": "false",
-      "matchsets": [{
-        "protocol": "DNS",
-        "matchlist": [{
-          "regex": ".*\\.ds-07\\..*",
-          "match-type": "HOST"
-        }]
-      }],
-      "ttls": {
-        "AAAA": "30",
-        "SOA": "7200",
-        "A": "30",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "30",
-      "maxDnsIpsForLocation": "2",
-      "ip6RoutingEnabled": "false"
-    },
-    "test": {
+    "steering-test-2": {
       "sslEnabled": "false",
       "dispersion": {
         "limit": 2,
@@ -3583,16 +606,16 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "true"
     },
-    "ds-06": {
+    "federation-test": {
       "sslEnabled": "false",
       "bypassDestination": {"DNS": {"ttl": "30"}},
-      "domains": ["ds-06.thecdn.example.com"],
+      "domains": ["federation-test.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [
         {
           "protocol": "DNS",
           "matchlist": [{
-            "regex": ".*\\.ds-06\\..*",
+            "regex": ".*\\.federation-test\\..*",
             "match-type": "HOST"
           }]
         },
@@ -3632,7 +655,7 @@
       "maxDnsIpsForLocation": "0",
       "ip6RoutingEnabled": "true"
     },
-    "ds-05": {
+    "steering-target-1": {
       "sslEnabled": "false",
       "requestHeaders": [
         "User-Agent",
@@ -3643,20 +666,20 @@
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-05.thecdn.example.com"],
+      "domains": ["steering-target-1.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [
         {
           "protocol": "HTTP",
           "matchlist": [{
-            "regex": ".*\\.ds-05\\..*",
+            "regex": ".*\\.steering-target-1\\..*",
             "match-type": "HOST"
           }]
         },
         {
           "protocol": "HTTP",
           "matchlist": [{
-            "regex": ".*\\.ds-05-b-b\\..*",
+            "regex": ".*\\.steering-target-1-b-b\\..*",
             "match-type": "HOST"
           }]
         }
@@ -3674,7 +697,7 @@
       },
       "soa": {
         "expire": "604800",
-        "minimum": "30",
+        "minimum": "3 0",
         "admin": "operations@thecdn.example.com",
         "retry": "7200",
         "refresh": "28800"
@@ -3683,22 +706,22 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-04": {
+    "steering-target-4": {
       "sslEnabled": "false",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "ds-04.overflowcdn.net"
+        "fqdn": "steering-target-4.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-04.thecdn.example.com"],
+      "domains": ["steering-target-4.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.ds-04\\..*",
+          "regex": ".*\\.steering-target-4\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3724,22 +747,22 @@
       "ttl": "3600",
       "ip6RoutingEnabled": "false"
     },
-    "ds-03": {
+    "steering-target-3": {
       "sslEnabled": "false",
       "bypassDestination": {"HTTP": {
         "port": "80",
-        "fqdn": "ds-03.overflowcdn.net"
+        "fqdn": "steering-target-3.overflowcdn.net"
       }},
       "dispersion": {
         "limit": 1,
         "shuffled": "true"
       },
-      "domains": ["ds-03.thecdn.example.com"],
+      "domains": ["steering-target-3.thecdn.example.com"],
       "coverageZoneOnly": "false",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
-          "regex": ".*\\.ds-03\\..*",
+          "regex": ".*\\.steering-target-3\\..*",
           "match-type": "HOST"
         }]
       }],
@@ -3751,84 +774,6 @@
         "NS": "3600"
       },
       "geoEnabled": [{"countryCode": "US"}],
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "3600",
-      "ip6RoutingEnabled": "false"
-    },
-    "ds-02": {
-      "sslEnabled": "false",
-      "dispersion": {
-        "limit": 1,
-        "shuffled": "true"
-      },
-      "domains": ["ds-02.thecdn.example.com"],
-      "coverageZoneOnly": "true",
-      "matchsets": [{
-        "protocol": "HTTP",
-        "matchlist": [{
-          "regex": ".*\\.ds-02\\..*",
-          "match-type": "HOST"
-        }]
-      }],
-      "regionalGeoBlocking": "false",
-      "ttls": {
-        "AAAA": "3600",
-        "SOA": "7200",
-        "A": "3600",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "3600",
-      "ip6RoutingEnabled": "false"
-    },
-    "ds-01": {
-      "sslEnabled": "false",
-      "bypassDestination": {"HTTP": {
-        "port": "80",
-        "fqdn": "ds-01.overflowcdn.net"
-      }},
-      "dispersion": {
-        "limit": 1,
-        "shuffled": "true"
-      },
-      "domains": ["ds-01.thecdn.example.com"],
-      "coverageZoneOnly": "false",
-      "matchsets": [{
-        "protocol": "HTTP",
-        "matchlist": [{
-          "regex": ".*\\.ds-01\\.ds.*",
-          "match-type": "HOST"
-        }]
-      }],
-      "regionalGeoBlocking": "false",
-      "ttls": {
-        "AAAA": "3600",
-        "SOA": "7200",
-        "A": "3600",
-        "NS": "3600"
-      },
       "missLocation": {
         "long": "-87.627778",
         "lat": "41.881944"
@@ -3880,43 +825,6 @@
         "refresh": "28800"
       },
       "geolocationProvider": "maxmindGeolocationService"
-    },
-    "test-dns": {
-      "sslEnabled": "false",
-      "bypassDestination": {"DNS": {
-        "ttl": "30",
-        "ip": "75.75.75.75"
-      }},
-      "domains": ["test-dns.thecdn.example.com"],
-      "coverageZoneOnly": "false",
-      "matchsets": [{
-        "protocol": "DNS",
-        "matchlist": [{
-          "regex": ".*\\.test-dns\\..*",
-          "match-type": "HOST"
-        }]
-      }],
-      "ttls": {
-        "AAAA": "30",
-        "SOA": "7200",
-        "A": "30",
-        "NS": "3600"
-      },
-      "missLocation": {
-        "long": "-87.627778",
-        "lat": "41.881944"
-      },
-      "soa": {
-        "expire": "604800",
-        "minimum": "30",
-        "admin": "operations@thecdn.example.com",
-        "retry": "7200",
-        "refresh": "28800"
-      },
-      "geolocationProvider": "maxmindGeolocationService",
-      "ttl": "30",
-      "maxDnsIpsForLocation": "0",
-      "ip6RoutingEnabled": "true"
     }
   },
   "stats": {
@@ -3947,22 +855,6 @@
     "location-4": {
       "longitude": -91.0,
       "latitude": 49.0
-    },
-    "location-5": {
-      "longitude": -81,
-      "latitude": 49.0
-    },
-    "location-6": {
-      "longitude": -116.0,
-      "latitude": 36.0
-    },
-    "location-7": {
-      "longitude": -106.0,
-      "latitude": 36.0
-    },
-    "location-8": {
-      "longitude": -96.0,
-      "latitude": 36.0
     },
     "location-9": {
       "longitude": -86.0,

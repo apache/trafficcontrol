@@ -30,6 +30,7 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 use JSON;
 use MojoPlugins::Response;
 use UI::DeliveryService;
+use Scalar::Util qw(looks_like_number);
 
 my $valid_server_types = {
 	edge => "EDGE",
@@ -64,6 +65,7 @@ sub delivery_services {
 			my $cdn_name  = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			my $re_rs     = $row->deliveryservice_regexes;
 			my @matchlist = ();
+
 			while ( my $re_row = $re_rs->next ) {
 				push(
 					@matchlist, {
@@ -73,9 +75,11 @@ sub delivery_services {
 					}
 				);
 			}
-			my $cdn_domain = &UI::DeliveryService::get_cdn_domain( $self, $row->id );
+
+			my $cdn_domain = $self->get_cdn_domain_by_ds_id($row->id);
 			my $regexp_set = &UI::DeliveryService::get_regexp_set( $self, $row->id );
 			my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
+
 			push(
 				@data, {
 					"id"                       => $row->id,
@@ -434,15 +438,15 @@ sub create {
 	}
 
 	my ($transformed_params, $err) = (undef, undef);
-	($transformed_params, $err) = $self->check_params($params);
+	($transformed_params, $err) = $self->_check_params($params);
 	if ( defined($err) ) {
 		return $self->alert($err);
 	}
 
-        my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $params->{xmlId} } )->get_column('xml_id')->single();
-        if ( $existing ) {
-                $self->alert("a delivery service with xmlId " . $params->{xmlId} . " already exists." );
-        }
+	my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $params->{xmlId} } )->get_column('xml_id')->single();
+	if ( $existing ) {
+			$self->alert("a delivery service with xmlId " . $params->{xmlId} . " already exists." );
+	}
 
 	my $value=$self->new_value($params, $transformed_params);
 	my $insert = $self->db->resultset('Deliveryservice')->create($value);
@@ -569,29 +573,40 @@ sub assign_servers {
 	return $self->success($response);
 }
 
-sub check_params {
+sub _check_params {
 	my $self = shift;
 	my $params = shift;
+	my $ds_id = shift;
 	my $transformed_params = undef;
 
 	if ( !defined($params) ) {
-		return (undef, "parameters should in json format, please check!");
+		return (undef, "parameters should be in json format, please check!");
 	}
 
 	if ( !defined($params->{xmlId}) ) {
 		return (undef, "parameter xmlId is must." );
 	}
 
-	if ( defined($params->{active}) ) {
-		if ( $params->{active} eq "true" || $params->{active} == 1 ) {
+	if (!defined($params->{active})) {
+		return (undef, "parameter active is must." );
+	}
+
+	if (looks_like_number($params->{active})) {
+		if ($params->{active} == 1) {
 			$transformed_params->{active} = 1;
-		} elsif ( $params->{active} eq "false" || $params->{active} == 0 ) {
+		} elsif ($params->{active} == 0) {
 			$transformed_params->{active} = 0;
 		} else {
-			return (undef, "active must be true|false." );
+			return (undef, "active must be 1|0");
 		}
 	} else {
-		return (undef, "parameter active is must." );
+		if ($params->{active} eq "true") {
+			$transformed_params->{active} = 1;
+		} elsif ($params->{active} eq "false") {
+			$transformed_params->{active} = 0;
+		} else {
+			return (undef, "active must be true|false");
+		}
 	}
 
 	if ( defined($params->{type}) ) {
@@ -606,12 +621,14 @@ sub check_params {
 		return (undef, "parameter type is must." );
 	}
 
-	if ( defined($params->{protocol}) ) {
-		if ( !( ( $params->{protocol} eq "0" ) || ( $params->{protocol} eq "1" ) || ( $params->{protocol} eq "2" ) ) ) {
-			return (undef, "protocol must be 0|1|2." );
-		}
-	} else {
+	if (!defined($params->{protocol})) {
 		return (undef, "parameter protocol is must." );
+	}
+
+	my $proto_num = $params->{protocol};
+
+	if (!looks_like_number($proto_num) || $proto_num < 0 || $proto_num > 3) {
+		return (undef, "protocol must be 0|1|2|3." );
 	}
 
 	if ( defined($params->{profileName}) ) {
@@ -634,8 +651,9 @@ sub check_params {
 		return (undef, "parameter profileName is must." );
 	}
 
+	my $cdn_id = undef;
 	if ( defined($params->{cdnName}) ) {
-		my $cdn_id = $self->db->resultset('Cdn')->search( { name => $params->{cdnName} } )->get_column('id')->single();
+		$cdn_id = $self->db->resultset('Cdn')->search( { name => $params->{cdnName} } )->get_column('id')->single();
 		if ( !defined $cdn_id ) {
 			return (undef, "cdnName (" . $params->{cdnName} . ") does not exists." );
 		} else {
@@ -646,10 +664,26 @@ sub check_params {
 	}
 
 	if ( defined($params->{matchList}) ) {
-		my $patterns     = $params->{matchList};
-		my $patterns_len = @$patterns;
-		if ( $patterns_len == 0 ) {
+		my $match_list = $params->{matchList};
+
+		if ((scalar $match_list) == 0) {
 			return (undef, "At least have 1 pattern in matchList.");
+		}
+
+		my $cdn_domain = undef;
+
+		if (defined($ds_id)) {
+			$cdn_domain = $self->get_cdn_domain_by_ds_id($ds_id);
+		} else {
+			my $profile_id = $self->get_profile_id_for_name($params->{profileName});
+			$cdn_domain = $self->get_cdn_domain_by_profile_id($profile_id);
+		}
+
+		foreach my $match_item (@$match_list) {
+			my $conflicting_regex = $self->find_existing_host_regex($match_item->{'type'}, $match_item->{'pattern'}, $cdn_domain, $cdn_id, $ds_id);
+			if (defined($conflicting_regex)) {
+				return(undef, "Another delivery service is already using host regex $conflicting_regex");
+			}
 		}
 	} else {
 		return (undef, "parameter matchList is must." );
@@ -836,7 +870,7 @@ sub update {
 	}
 
 	my ($transformed_params, $err) = (undef, undef);
-	($transformed_params, $err) = $self->check_params($params);
+	($transformed_params, $err) = $self->_check_params($params);
 	if ( defined($err) ) {
 		return $self->alert($err);
 	}
