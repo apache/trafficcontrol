@@ -438,8 +438,7 @@ sub create {
 	}
 
 	my ($transformed_params, $err) = (undef, undef);
-	($transformed_params, $err) = $self->check_params($params);
-
+	($transformed_params, $err) = $self->_check_params($params);
 	if ( defined($err) ) {
 		return $self->alert($err);
 	}
@@ -574,7 +573,7 @@ sub assign_servers {
 	return $self->success($response);
 }
 
-sub check_params {
+sub _check_params {
 	my $self = shift;
 	my $params = shift;
 	my $ds_id = shift;
@@ -622,12 +621,14 @@ sub check_params {
 		return (undef, "parameter type is must." );
 	}
 
-	if ( defined($params->{protocol}) ) {
-		if ( !( ( $params->{protocol} eq "0" ) || ( $params->{protocol} eq "1" ) || ( $params->{protocol} eq "2" ) ) ) {
-			return (undef, "protocol must be 0|1|2." );
-		}
-	} else {
+	if (!defined($params->{protocol})) {
 		return (undef, "parameter protocol is must." );
+	}
+
+	my $proto_num = $params->{protocol};
+
+	if (!looks_like_number($proto_num) || $proto_num < 0 || $proto_num > 3) {
+		return (undef, "protocol must be 0|1|2|3." );
 	}
 
 	if ( defined($params->{profileName}) ) {
@@ -869,7 +870,7 @@ sub update {
 	}
 
 	my ($transformed_params, $err) = (undef, undef);
-	($transformed_params, $err) = $self->check_params($params, $id);
+	($transformed_params, $err) = $self->_check_params($params);
 	if ( defined($err) ) {
 		return $self->alert($err);
 	}
