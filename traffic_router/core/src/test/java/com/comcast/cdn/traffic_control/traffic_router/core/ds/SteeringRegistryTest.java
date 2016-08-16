@@ -32,18 +32,18 @@ public class SteeringRegistryTest {
 		String json = "{ \"response\": [ " +
 			"{ \"deliveryService\":\"steering-1\"," +
 				"  \"targets\" : [" +
-				"        {\"deliveryService\": \"ds-01\", \"weight\": 9876}," +
-				"        {\"deliveryService\": \"ds-02\", \"weight\": 12345}" +
+				"        {\"deliveryService\": \"steering-target-01\", \"weight\": 9876}," +
+				"        {\"deliveryService\": \"steering-target-02\", \"weight\": 12345}" +
 				"      ]," +
 				"  \"filters\" : [" +
-				"      { \"pattern\" : \".*/force-to-one/.*\", \"deliveryService\" : \"ds-01\" }," +
-				"      { \"pattern\" : \".*/also-this/.*\", \"deliveryService\" : \"ds-01\" }" +
+				"      { \"pattern\" : \".*/force-to-one/.*\", \"deliveryService\" : \"steering-target-01\" }," +
+				"      { \"pattern\" : \".*/also-this/.*\", \"deliveryService\" : \"steering-target-01\" }" +
 				"   ]"+
 				"}, " +
 				"{ \"deliveryService\":\"steering-2\"," +
 				"  \"targets\" : [" +
-				"        {\"deliveryService\": \"ds-03\", \"weight\": 1117}," +
-				"        {\"deliveryService\": \"ds-02\", \"weight\": 556}" +
+				"        {\"deliveryService\": \"steering-target-3\", \"weight\": 1117}," +
+				"        {\"deliveryService\": \"steering-target-02\", \"weight\": 556}" +
 				"      ]" +
 				"}" +
 
@@ -55,22 +55,22 @@ public class SteeringRegistryTest {
 		assertThat(steeringRegistry.has("steering-2"), equalTo(true));
 
 		SteeringTarget steeringTarget1 = new SteeringTarget();
-		steeringTarget1.setDeliveryService("ds-01");
+		steeringTarget1.setDeliveryService("steering-target-01");
 		steeringTarget1.setWeight(9876);
 
 		SteeringTarget steeringTarget2 = new SteeringTarget();
-		steeringTarget2.setDeliveryService("ds-02");
+		steeringTarget2.setDeliveryService("steering-target-02");
 		steeringTarget2.setWeight(12345);
 
 		assertThat(steeringRegistry.get("steering-1").getTargets(), containsInAnyOrder(steeringTarget1, steeringTarget2));
-		assertThat(steeringRegistry.get("steering-2").getTargets().get(1).getDeliveryService(), equalTo("ds-02"));
+		assertThat(steeringRegistry.get("steering-2").getTargets().get(1).getDeliveryService(), equalTo("steering-target-02"));
 
 		assertThat(steeringRegistry.get("steering-1").getFilters().get(0).getPattern(), equalTo(".*/force-to-one/.*"));
-		assertThat(steeringRegistry.get("steering-1").getFilters().get(0).getDeliveryService(), equalTo("ds-01"));
+		assertThat(steeringRegistry.get("steering-1").getFilters().get(0).getDeliveryService(), equalTo("steering-target-01"));
 		assertThat(steeringRegistry.get("steering-1").getFilters().get(1).getPattern(), equalTo(".*/also-this/.*"));
-		assertThat(steeringRegistry.get("steering-1").getFilters().get(1).getDeliveryService(), equalTo("ds-01"));
+		assertThat(steeringRegistry.get("steering-1").getFilters().get(1).getDeliveryService(), equalTo("steering-target-01"));
 
-		assertThat(steeringRegistry.get("steering-1").getBypassDestination("/stuff/force-to-one/more/stuff"), equalTo("ds-01"));
+		assertThat(steeringRegistry.get("steering-1").getBypassDestination("/stuff/force-to-one/more/stuff"), equalTo("steering-target-01"));
 		assertThat(steeringRegistry.get("steering-1").getBypassDestination("/should/not/match"), nullValue());
 
 		assertThat(steeringRegistry.get("steering-2").getFilters().isEmpty(), equalTo(true));

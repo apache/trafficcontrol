@@ -25,7 +25,7 @@
           "cname": "example.com."
         }
       ],
-      "deliveryService": "ds-06"
+      "deliveryService": "federation-test"
     }
   ]
 }
