@@ -51,7 +51,7 @@ sub edit {
 	my $data = $rs_ds->single;
 	my $action;
 	my $regexp_set = &get_regexp_set( $self, $id );
-	my $cdn_domain = &get_cdn_domain( $self, $id );
+	my $cdn_domain = $self->get_cdn_domain_by_ds_id($id);
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
@@ -161,18 +161,6 @@ sub get_example_urls {
 	return @example_urls;
 }
 
-sub get_cdn_domain {
-	my $self       = shift;
-	my $id         = shift;
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{
-			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-			distinct => 1
-		}
-	)->get_column('value')->single();
-	return $cdn_domain;
-}
 
 sub get_regexp_set {
 	my $self = shift;
@@ -227,6 +215,7 @@ sub read {
 				"qstring_ignore"              => $row->qstring_ignore,
 				"geo_limit"                   => $row->geo_limit,
 				"geo_limit_countries"         => $row->geo_limit_countries,
+				"geolimit_redirect_url"       => $row->geolimit_redirect_url,
 				"geo_provider"                => $row->geo_provider,
 				"http_bypass_fqdn"            => $row->http_bypass_fqdn,
 				"dns_bypass_ip"               => $row->dns_bypass_ip,
@@ -326,6 +315,8 @@ sub sanitize_geo_limit_countries {
 
 sub check_deliveryservice_input {
 	my $self = shift;
+	my $cdn_id = shift;
+	my $ds_id = shift;
 
 	if ( $self->param('ds.xml_id') =~ /\s/ ) {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
@@ -338,20 +329,12 @@ sub check_deliveryservice_input {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
-	if (   $self->param('ds.qstring_ignore') == 2
-		&& $self->param('ds.regex_remap') ne "" )
-	{
+	if ($self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "") {
 		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
 	}
+
 	my $profile_id = $self->param('ds.profile');
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{
-			'Name'                       => 'domain_name',
-			'Config_file'                => 'CRConfig.json',
-			'profile_parameters.profile' => $profile_id,
-		},
-		{ join => 'profile_parameters', }
-	)->get_column('value')->single();
+	my $cdn_domain = $self->get_cdn_domain_by_profile_id($profile_id);
 
 	my $match_one = 0;
 	my $dbl_check = {};
@@ -385,36 +368,22 @@ sub check_deliveryservice_input {
 
 			if ( $param =~ /^re_re_(\d+)/ || $param =~ /^re_re_new_(\d+)/ ) {
 				my $order_no = $1;
-				my $type_id = &type_id( $self, 'HOST_REGEXP' );
-				if (
-					( defined( $self->param( 're_type_' . $order_no ) ) && $self->param( 're_type_' . $order_no ) eq 'HOST_REGEXP' )
-					|| ( defined( $self->param( 're_type_new_' . $order_no ) )
-						&& $self->param( 're_type_new_' . $order_no ) eq 'HOST_REGEXP' )
-					)
-				{
-					my $new_re =
-						  $self->param( 're_re_' . $order_no )
-						? $self->param( 're_re_' . $order_no ) . $cdn_domain
-						: $self->param( 're_re_new_' . $order_no ) . $cdn_domain;
-					my $new_order =
-						defined( $self->param( 're_order_' . $order_no ) )
-						? $self->param( 're_order_' . $order_no )
-						: $self->param( 're_order_new_' . $order_no );
-					my $rs =
-						$self->db->resultset('DeliveryserviceRegex')->search( undef, { prefetch => [ { regex => undef }, { deliveryservice => undef } ] } );
-					while ( my $row = $rs->next ) {
-						my $existing_re = $row->regex->pattern . $cdn_domain;
-						if ( defined( $self->param('id') )
-							&& $self->param('id') == $row->deliveryservice->id )
-						{
-							next;
-						}
-						if ( $existing_re eq $new_re ) {
-							$self->field('hidden.regex')
-								->is_equal( "", "There already is a HOST_REGEXP (" . $existing_re . ") that maches " . $new_re . "; No can do." );
-							last;
-						}
-					}
+				my $new_regex;
+				my $new_regex_type;
+
+				if (defined($self->param('re_type_' . $order_no))) {
+					$new_regex = $self->param('re_re_' . $order_no);
+					$new_regex_type = $self->param('re_type_' . $order_no);
+				}
+
+				if (defined($self->param('re_type_new_' . $order_no))) {
+					$new_regex = $self->param('re_re_new_' . $order_no);
+					$new_regex_type = $self->param('re_type_new_' . $order_no);
+				}
+
+				my $conflicting_regex = $self->find_existing_host_regex($new_regex_type, $new_regex, $cdn_domain, $cdn_id, $ds_id);
+				if (defined($conflicting_regex)) {
+					$self->field('hidden.regex')->is_equal( "", "There already is a HOST_REGEXP (" . $conflicting_regex . ") that matches " . $new_regex . "; Please choose another." );
 				}
 			}
 		}
@@ -521,6 +490,14 @@ sub check_deliveryservice_input {
 		}
 	}
 
+	if ( $self->param('ds.geo_limit') ne 0 ) {
+		my $url = $self->param('ds.geolimit_redirect_url');
+		$url =~ s/^(?i)https?(?-i):\/\/(.*)/$1/;
+		if ( (not $url =~ /^[0-9a-zA-Z_\!\~\*\'\(\)\.\;\?\:\@\&\=\+\$\,\%\#\-\/]+$/) || $url =~ /\/\//) {
+			$self->field('ds.geolimit_redirect_url')->is_equal("", "Invalid geolimit redirect url" );
+		}
+	}
+
 	my @valid_country_codes_list =
 		qw/AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI CV KH CM CA KY CF TD CL CN CX CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE ET FK FO FJ FI FR GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW  Y HT HM VA HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MO MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NL NC NZ NI NE NG NU NF MP NO OM PK PW PS PA PG PY PE PH PN PL PT PR QA RE RO RU RW BL SH KN LC  F PM VC WS SM ST SA SN RS SC SL SG SX SK SI SB SO ZA GS SS ES LK SD SR SJ SZ SE CH SY TW TJ TZ TH TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UM UY UZ VU VE VN VG VI WF EH YE ZM ZW/;
 	my %valid_country_codes;
@@ -569,7 +546,7 @@ sub header_rewrite {
 	my $tier       = shift;
 	my $type       = shift;
 
-	if ( $tier eq 'mid' && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
+	if ( $tier eq 'mid' && defined($type) && $type =~ /LIVE/ && $type !~ /NATNL/ ) {
 
 		# live local delivery services don't get remap rules
 		return;
@@ -748,7 +725,7 @@ sub update {
 		return $self->redirect_to($referer);
 	}
 
-	if ( $self->check_deliveryservice_input() ) {
+	if ( $self->check_deliveryservice_input($self->param('ds.cdn_id'), $id) ) {
 
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
@@ -760,6 +737,7 @@ sub update {
 			qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 			geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
+			geolimit_redirect_url       => $self->param('ds.geolimit_redirect_url'),
 			geo_provider                => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
@@ -909,7 +887,7 @@ sub update {
 		&stash_role($self);
 		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 		my $data = $rs_ds->single;
-		my $cdn_domain   = &get_cdn_domain( $self, $id );
+		my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
 		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 		my $regexp_set   = &get_regexp_set( $self, $id );
@@ -967,16 +945,17 @@ sub create {
 		$self->field('ds.xml_id')->is_equal( "", "A Delivery service with xml_id \"$xml_id\" already exists." );
 	}
 
-	if ( $self->check_deliveryservice_input() ) {
+	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
-				dscp                        => $self->paramAsScalar( 'ds.dscp', 0 ),
+				dscp                        => $self->paramAsScalar('ds.dscp', 0 ),
 				signed                      => $self->paramAsScalar('ds.signed'),
 				qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 				geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
+				geolimit_redirect_url       => $self->param('ds.geolimit_redirect_url'),
 				geo_provider                => $self->paramAsScalar('ds.geo_provider'),
 				http_bypass_fqdn            => $self->paramAsScalar('ds.http_bypass_fqdn'),
 				dns_bypass_ip               => $self->paramAsScalar('ds.dns_bypass_ip'),

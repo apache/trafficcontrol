@@ -28,6 +28,7 @@ When installing a complete CDN from scratch, a sample recommended order is:
 5. Traffic Monitor
 6. Traffic Router
 7. Traffic Stats
+8. Traffic Portal
 
 Once everything is installed, you will need to configure the servers to talk to each other. You will also need Origin server(s), which the Mid-Tier Cache(s) get content from. An Origin server is simply an HTTP(S) server which serves the content you wish to cache on the CDN.
 
@@ -38,6 +39,7 @@ Once everything is installed, you will need to configure the servers to talk to 
   traffic_ops_config.rst
   traffic_ops_using.rst
   traffic_ops_extensions.rst
+  traffic_portal.rst
   traffic_monitor.rst
   traffic_router.rst
   traffic_stats.rst

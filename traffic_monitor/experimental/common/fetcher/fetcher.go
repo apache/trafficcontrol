@@ -13,18 +13,22 @@ type Fetcher interface {
 }
 
 type HttpFetcher struct {
-	Client  http.Client
+	Client  *http.Client
 	Headers map[string]string
 	Handler handler.Handler
-	Success *gmx.Counter
-	Fail    *gmx.Counter
-	Pending *gmx.Gauge
+	Counters
 }
 
 type Result struct {
 	Source string
 	Data   []byte
 	Error  error
+}
+
+type Counters struct {
+	Success *gmx.Counter
+	Fail    *gmx.Counter
+	Pending *gmx.Gauge
 }
 
 func (f HttpFetcher) Fetch(id string, url string) {

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"encoding/json"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"io"
 	"time"
 )
@@ -9,6 +10,10 @@ import (
 type Handler struct {
 	ResultChannel chan Result
 	Notify        int
+}
+
+func NewHandler() Handler {
+	return Handler{ResultChannel: make(chan Result)}
 }
 
 type Result struct {
@@ -43,7 +48,7 @@ const (
 	NOTIFY_ALWAYS
 )
 
-func StatsMarshall(statHistory map[string][]interface{}, historyCount int) ([]byte, error) {
+func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([]byte, error) {
 	var stats Stats
 
 	stats.Caches = map[string]map[string][]Stat{}
@@ -52,19 +57,19 @@ func StatsMarshall(statHistory map[string][]interface{}, historyCount int) ([]by
 
 	for id, history := range statHistory {
 		for _, result := range history {
-			for stat, value := range result.(Result).Astats.Ats {
+			for stat, value := range result.Astats.Ats {
 				s := Stat{
-					Time:  result.(Result).Time.UnixNano() / 1000000,
+					Time:  result.Time.UnixNano() / 1000000,
 					Value: value,
 				}
 
-				_, exists := stats.Caches[id]
+				_, exists := stats.Caches[string(id)]
 
 				if !exists {
-					stats.Caches[id] = map[string][]Stat{}
+					stats.Caches[string(id)] = map[string][]Stat{}
 				}
 
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
+				stats.Caches[string(id)][stat] = append(stats.Caches[string(id)][stat], s)
 			}
 
 			if historyCount > 0 && count == historyCount {

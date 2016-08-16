@@ -125,7 +125,7 @@ __PACKAGE__->table("servercheck");
   data_type: 'integer'
   is_nullable: 1
 
-=head2 as
+=head2 bf
 
   data_type: 'integer'
   is_nullable: 1
@@ -240,7 +240,7 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 1 },
   "ar",
   { data_type => "integer", is_nullable => 1 },
-  "as",
+  "bf",
   { data_type => "integer", is_nullable => 1 },
   "at",
   { data_type => "integer", is_nullable => 1 },
@@ -333,8 +333,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:iMbBrThFPvnd502p6w/PrA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-09 09:23:54
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:usz1Un1hWx1h6ISbWLHixA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
