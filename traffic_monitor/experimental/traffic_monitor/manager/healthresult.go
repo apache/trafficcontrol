@@ -130,6 +130,9 @@ func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata
 	return lastHealthDurations, events, localCacheStatus, dsStats, lastKbpsStats
 }
 
+// cacheAggregateSeconds is how often to aggregate stats, if the health chan is never empty. (Otherwise, we read from the chan until it's empty, then aggregate, continuously)
+const cacheAggregateSeconds = 1
+
 func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, dsStats DSStatsThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
 	healthHistory := map[enum.CacheName][]cache.Result{}
@@ -138,14 +141,22 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 	// healthHistory := NewResultsThreadsafe()
 	// eventIndex := NewUintThreadsafe()
 
+	var results []cache.Result
 	for {
 		select {
-		case healthResult := <-cacheHealthChan:
-			fmt.Printf("DEBUG poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
-			// go func() {
-			{
+		// TODO add a tick, in case cacheHealthChan is never empty (starvation)
+		case r := <-cacheHealthChan:
+			results = append(results, r)
+		default:
+			// NOTE this busy waits. TODO figure out if there's a way in Go to listen to a chan until it's written to, then drain the channel, without defaulting and busy-waiting or sleeping
+			if len(results) == 0 {
+				continue
+			}
+			toDataCopy := toData.Get()               // create a copy, so the same data used for all processing of this cache health result
+			monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
+			for _, healthResult := range results {
+				fmt.Printf("DEBUG poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 				fetchCount.Inc()
-				toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
 				var prevResult cache.Result
 				healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
 				// healthResultHistory := healthHistory.Get(enum.CacheName(healthResult.Id))
@@ -153,7 +164,6 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 					prevResult = healthResultHistory[len(healthResultHistory)-1]
 				}
 
-				monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
 				health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
 				// healthHistory.Set(enum.CacheName(healthResult.Id), pruneHistory(append(healthHistory.Get(enum.CacheName(healthResult.Id)), healthResult), defaultMaxHistory))
 				healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
@@ -172,26 +182,35 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 				fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
 				calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 				fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
+			}
+			// TODO determine if we should combineCrStates() here
 
-				// TODO determine if we should combineCrStates() here
+			now := time.Now()
 
-				now := time.Now()
+			var err error
+			createStatsCopyStatHistory := statHistory.Get()
+			createStatsCopyCombinedStates := combinedStates.Get()
+			createStatsCopyLastKbpsStats := lastKbpsStats.Get()
 
-				var err error
-				createStatsCopyStatHistory := statHistory.Get()
-				createStatsCopyCombinedStates := combinedStates.Get()
-				createStatsCopyLastKbpsStats := lastKbpsStats.Get()
+			for _, healthResult := range results {
 				fmt.Printf("DEBUG poll %v %v CreateStats start\n", healthResult.PollID, time.Now())
-				newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
-				fmt.Printf("DEBUG poll %v %v CreateStats end\n", healthResult.PollID, time.Now())
-				if err != nil {
-					errorCount.Inc()
-					log.Printf("ERROR getting deliveryservice: %v\n", err)
-				} else {
-					dsStats.Set(newDsStats)
-					lastKbpsStats.Set(newLastKbpsStats)
-				}
+			}
 
+			newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
+
+			for _, healthResult := range results {
+				fmt.Printf("DEBUG poll %v %v CreateStats end\n", healthResult.PollID, time.Now())
+			}
+
+			if err != nil {
+				errorCount.Inc()
+				log.Printf("ERROR getting deliveryservice: %v\n", err)
+			} else {
+				dsStats.Set(newDsStats)
+				lastKbpsStats.Set(newLastKbpsStats)
+			}
+
+			for _, healthResult := range results {
 				//				if lastHealthStart, ok := lastHealthEndTimes.GetTime(enum.CacheName(healthResult.Id)); ok {
 				if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
 					d := time.Since(lastHealthStart)
@@ -201,8 +220,9 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 				// lastHealthEndTimes.Set(enum.CacheName(healthResult.Id), now)
 
 				fmt.Printf("DEBUG poll %v %v finish\n", healthResult.PollID, time.Now())
-				// }()
 			}
+
+			results = nil
 		}
 	}
 }
