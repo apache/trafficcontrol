@@ -19,6 +19,7 @@ type Result struct {
 	Available bool
 	Errors    []error
 	PeerStats Crstates
+	PollID    uint64
 }
 
 const (
@@ -27,11 +28,12 @@ const (
 	NOTIFY_ALWAYS
 )
 
-func (handler Handler) Handle(id string, r io.Reader, err error) {
+func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64) {
 	result := Result{
 		Id:        id,
 		Available: false,
 		Errors:    []error{},
+		PollID:    pollId,
 	}
 
 	if err != nil {

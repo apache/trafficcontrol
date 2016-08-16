@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"gopkg.in/fsnotify.v1"
@@ -107,6 +108,8 @@ func (p MonitorConfigPoller) Poll() {
 	}
 }
 
+var debugPollNum uint64
+
 func (p HttpPoller) Poll() {
 	tick := time.NewTicker(p.Config.Interval)
 	last_time := time.Now()
@@ -136,7 +139,9 @@ func (p HttpPoller) Poll() {
 			last_time = curr_time
 			if p.Config.Urls != nil {
 				for id, url := range p.Config.Urls {
-					go p.Fetcher.Fetch(id, url)
+					pollId := atomic.AddUint64(&debugPollNum, 1)
+					fmt.Printf("DEBUG poll %v %v start\n", pollId, time.Now())
+					go p.Fetcher.Fetch(id, url, pollId)
 				}
 			}
 		}

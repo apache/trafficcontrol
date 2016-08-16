@@ -77,6 +77,8 @@ func NewThreadsafe() TODataThreadsafe {
 	return TODataThreadsafe{m: &sync.Mutex{}, toData: New()}
 }
 
+// Get returns the current TOData. Callers MUST NOT modify returned data. Mutation IS NOT threadsafe
+// If callers need to modify, a new GetMutable() should be added which copies.
 func (d TODataThreadsafe) Get() TOData {
 	d.m.Lock()
 	defer func() {

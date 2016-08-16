@@ -53,9 +53,18 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
 
-	cacheHealthHandler := cache.NewHandler()
+	localStates := peer.NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
+	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
+	fetchCount := NewUintThreadsafe()               // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
+	healthIteration := NewUintThreadsafe()
+	errorCount := NewUintThreadsafe()
+
+	toData := todata.NewThreadsafe()
+	dr := make(chan http_server.DataRequest)
+
+	cacheHealthHandler := cache.NewPrecomputeHandler(toData, peerStates)
 	cacheHealthPoller := poller.NewHTTP(defaultCacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler)
-	cacheStatHandler := cache.NewHandler()
+	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates) // TODO figure out if this is necessary, with the CacheHealthPoller
 	cacheStatPoller := poller.NewHTTP(defaultCacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler)
 	monitorConfigPoller := poller.NewMonitorConfig(defaultMonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
@@ -66,9 +75,6 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
 
-	toData := todata.NewThreadsafe()
-	dr := make(chan http_server.DataRequest)
-
 	opsConfig := StartOpsConfigManager(
 		opsConfigFile,
 		dr,
@@ -76,13 +82,6 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		toData,
 		[]chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel},
 		[]chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel})
-
-	localStates := NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
-	peerStates := NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
-
-	fetchCount := NewUintThreadsafe() // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
-	healthIteration := NewUintThreadsafe()
-	errorCount := NewUintThreadsafe()
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,

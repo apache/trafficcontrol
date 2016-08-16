@@ -14,15 +14,16 @@ func NewStatsLastKbpsThreadsafe() StatsLastKbpsThreadsafe {
 	return StatsLastKbpsThreadsafe{m: &sync.Mutex{}, stats: ds.NewStatsLastKbps()}
 }
 
-func (o StatsLastKbpsThreadsafe) Get() ds.StatsLastKbps {
+func (o *StatsLastKbpsThreadsafe) Get() ds.StatsLastKbps {
 	o.m.Lock()
+
 	defer func() {
 		o.m.Unlock()
 	}()
 	return o.stats.Copy()
 }
 
-func (o StatsLastKbpsThreadsafe) Set(s ds.StatsLastKbps) {
+func (o *StatsLastKbpsThreadsafe) Set(s ds.StatsLastKbps) {
 	o.m.Lock()
 	o.stats = s // TODO copy?
 	o.m.Unlock()
