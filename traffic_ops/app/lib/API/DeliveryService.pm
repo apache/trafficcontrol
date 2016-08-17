@@ -870,7 +870,7 @@ sub update {
 	}
 
 	my ($transformed_params, $err) = (undef, undef);
-	($transformed_params, $err) = $self->_check_params($params);
+	($transformed_params, $err) = $self->_check_params($params, $id);
 	if ( defined($err) ) {
 		return $self->alert($err);
 	}
