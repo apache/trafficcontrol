@@ -32,4 +32,5 @@ Sorted alphabetically
 * **[Xiaodong Zhang (xiaodzha)] (https://github.com/xiaodzha)**
 * **[York Ma (yorma)] (https://github.com/yorma)**
 * **[Zhilin Huang (zhilhuan)] (https://github.com/zhilhuan)**
+* **[Shawn Canga (scanga)] (https://github.com/scanga)**
 
