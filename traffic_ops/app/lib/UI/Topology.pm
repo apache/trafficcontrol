@@ -27,6 +27,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Time::HiRes qw(gettimeofday);
 use File::Basename;
 use File::Path;
+use Scalar::Util qw(looks_like_number);
 
 sub ccr_config {
     my $self     = shift;
@@ -392,11 +393,28 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = $geoEnabled;
         }
 
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
-		my $ds_protocol = $row->protocol;
-		if ($ds_protocol > 0) {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
-		}
+        # Default to 'http only'
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'false';
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'redirectToHttps'} = 'false';
+
+        my $ds_protocol = $row->protocol;
+
+        if (looks_like_number($ds_protocol) && 0 < $ds_protocol && $ds_protocol < 4) {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'true';
+
+            # 'https only'
+            if ($ds_protocol == 1) {
+                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttp'} = 'false';
+
+            }
+
+            # 'http to https'
+            if ($ds_protocol == 3) {
+                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'redirectToHttps'} = 'true';
+            }
+        }
 
         my $geo_provider = $row->geo_provider;
         if ( $geo_provider == 1 ) {
@@ -748,6 +766,23 @@ sub stringify_ds {
     foreach my $dns ( @{ $ds->{'staticDnsEntries'} } ) {
         $string .= "|<br>&emsp;staticDns: |name:" . $dns->{'name'} . "|type:" . $dns->{'type'} . "|ttl:" . $dns->{'ttl'} . "|addr:" . $dns->{'value'} . "|";
     }
+
+    if (defined($ds->{'protocol'})) {
+        $string .= "|protocol: ";
+
+        if (defined($ds->{'protocol'}->{'acceptHttp'})) {
+            $string .= " acceptHttp=" . $ds->{'protocol'}->{'acceptHttp'};
+        }
+
+        if (defined($ds->{'protocol'}->{'acceptHttps'})) {
+            $string .= " acceptHttps=" . $ds->{'protocol'}->{'acceptHttps'};
+        }
+
+        if (defined($ds->{'protocol'}->{'redirectToHttps'})) {
+            $string .= " redirectToHttps=" . $ds->{'protocol'}->{'redirectToHttps'};
+        }
+    }
+
     return $string;
 }
 

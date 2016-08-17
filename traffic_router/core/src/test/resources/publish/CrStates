@@ -102,11 +102,11 @@
     "edge-cache-099": {"isAvailable": true}
   },
   "deliveryServices": {
-    "mm-test": {
+    "steering-test-1": {
       "disabledLocations": [],
       "isAvailable": true
     },
-    "ds-08": {
+    "steering-target-2": {
       "disabledLocations": [],
       "isAvailable": true
     },
@@ -114,7 +114,7 @@
       "disabledLocations": [],
       "isAvailable": true
     },
-    "ds-06": {
+    "federation-test": {
       "disabledLocations": [],
       "isAvailable": true
     },
@@ -122,15 +122,15 @@
       "disabledLocations": [],
       "isAvailable": true
     },
-    "ds-05": {
+    "steering-target-1": {
       "disabledLocations": [],
       "isAvailable": true
     },
-    "ds-04": {
+    "steering-target-4": {
       "disabledLocations": [],
       "isAvailable": true
     },
-    "ds-03": {
+    "steering-target-3": {
       "disabledLocations": [],
       "isAvailable": true
     },

@@ -247,7 +247,7 @@ sub read {
 				"check_path"                  => $row->check_path,
 				"matchlist"                   => \@matchlist,
 				"active"                      => \$row->active,
-				"protocol"                    => \$row->protocol,
+				"protocol"                    => $row->protocol,
 				"ipv6_routing_enabled"        => \$row->ipv6_routing_enabled,
 				"range_request_handling"      => $row->range_request_handling,
 				"cacheurl"                    => $row->cacheurl,
