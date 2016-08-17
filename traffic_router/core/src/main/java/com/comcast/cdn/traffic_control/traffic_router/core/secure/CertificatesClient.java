@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
+import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
@@ -21,13 +22,23 @@ public class CertificatesClient {
 	private static final String PEM_FOOTER_PREFIX = "-----END";
 
 	public void refreshData() {
-		final String jsonData = fetchRawData();
+		final StringBuilder stringBuilder = new StringBuilder();
+		int status = fetchRawData(stringBuilder);
 
-		if (jsonData == null) {
+		while (status != HttpURLConnection.HTTP_NOT_MODIFIED && status != HttpURLConnection.HTTP_OK) {
+			try {
+				Thread.sleep(trafficOpsUtils.getConfigLongValue("certificates.retry.interval", 30 * 1000L));
+			} catch (InterruptedException e) {
+				LOGGER.warn("Interrupted while pausing to fetch certificates from traffic ops", e);
+			}
+			status = fetchRawData(stringBuilder);
+		}
+
+		if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
 			return;
 		}
 
-		final List<CertificateData> certificateDataList = getCertificateData(jsonData);
+		final List<CertificateData> certificateDataList = getCertificateData(stringBuilder.toString());
 
 		if (certificateDataList.isEmpty()) {
 			return;
@@ -36,18 +47,18 @@ public class CertificatesClient {
 		persistCertificates(certificateDataList);
 	}
 
-	public String fetchRawData() {
+	public int fetchRawData(final StringBuilder stringBuilder) {
 		final String certificatesUrl = trafficOpsUtils.getUrl("certificate.api.url", "https://${toHostname}/api/1.2/cdns/name/${cdnName}/sslkeys.json");
 
 		try {
 			final ProtectedFetcher fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), 15000);
 			final FileTime fileTime = Files.getLastModifiedTime(Paths.get(getKeystorePath()));
-			return fetcher.fetchIfModifiedSince(certificatesUrl, fileTime.toMillis());
+			return fetcher.getIfModifiedSince(certificatesUrl, fileTime.toMillis(), stringBuilder);
 		} catch (Exception e) {
-			LOGGER.warn("Failed to fetch data for certificates from " + certificatesUrl + " : " + e.getMessage());
+			LOGGER.warn("Failed to fetch data for certificates from " + certificatesUrl + "(" + e.getClass().getSimpleName() + ") : " + e.getMessage(), e);
 		}
 
-		return null;
+		return -1;
 	}
 
 	public List<CertificateData> getCertificateData(final String jsonData) {
@@ -80,6 +91,14 @@ public class CertificatesClient {
 			}
 
 			builder.append(line);
+		}
+
+		if (encodedPemItems.isEmpty()) {
+			if (builder.length() == 0) {
+				LOGGER.warn("Failed base64 decoding");
+			 } else {
+				encodedPemItems.add(builder.toString());
+			}
 		}
 
 		return encodedPemItems.toArray(new String[encodedPemItems.size()]);

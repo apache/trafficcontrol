@@ -140,9 +140,13 @@ public class Fetcher {
 		final OutputStream out = null;
 		try {
 			final HttpURLConnection connection = getConnection(url, data, method, lastFetchTime);
-			connection.getInputStream();
 
 			if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				return null;
+			}
+
+			if (connection.getResponseCode() > 399) {
+				LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
 				return null;
 			}
 
@@ -158,6 +162,37 @@ public class Fetcher {
 			in.close();
 
 			return sb.toString();
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+	}
+
+	public int getIfModifiedSince(final String url, final long lastFetchTime, final StringBuilder stringBuilder) throws IOException {
+		final OutputStream out = null;
+		try {
+			final HttpURLConnection connection = getConnection(url, null, "GET", lastFetchTime);
+			final int status = connection.getResponseCode();
+
+			if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				return status;
+			}
+
+			if (connection.getResponseCode() > 399) {
+				LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
+				return status;
+			}
+
+			final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+			String input;
+
+			while ((input = in.readLine()) != null) {
+				stringBuilder.append(input);
+			}
+
+			in.close();
+
+			return status;
 		} finally {
 			IOUtils.closeQuietly(out);
 		}

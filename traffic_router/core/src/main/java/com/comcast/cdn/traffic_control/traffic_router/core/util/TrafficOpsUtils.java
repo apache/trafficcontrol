@@ -86,4 +86,8 @@ public class TrafficOpsUtils {
 	public void setConfig(final JSONObject config) {
 		this.config = config;
 	}
+
+	public long getConfigLongValue(final String name, final long defaultValue) {
+		return config.optLong(name, defaultValue);
+	}
 }
