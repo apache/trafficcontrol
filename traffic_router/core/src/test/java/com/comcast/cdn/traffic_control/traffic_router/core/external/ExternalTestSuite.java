@@ -155,12 +155,22 @@ public class ExternalTestSuite {
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(null, "testing-testing".toCharArray());
 
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
 		byte[] keyBytes = Base64.getDecoder().decode(HTTPS_TEST_KEY.getBytes());
 		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-		KeyFactory fact = KeyFactory.getInstance("RSA");
-		PrivateKey priv = fact.generatePrivate(keySpec);
+		PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
 
-		keyStore.setKeyEntry("https-only-test.thecdn.example.com", priv, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
+		keyStore.setKeyEntry("https-only-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
+
+		x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
+			.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(HTTP_AND_HTTPS_TEST_CERT)));
+
+		keyBytes = Base64.getDecoder().decode(HTTP_AND_HTTPS_TEST_KEY.getBytes());
+		keySpec = new PKCS8EncodedKeySpec(keyBytes);
+		privateKey = keyFactory.generatePrivate(keySpec);
+
+		keyStore.setKeyEntry("http-and-https-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
 
 		File dbDirectory = new File(tmpDeployDir, "db");
 		dbDirectory.mkdir();
@@ -252,4 +262,62 @@ public class ExternalTestSuite {
 		"IZaqRiHZaBEl3fy1tQ8QznMdwr5Z/RqD/R5uss0H8rmMU9TqZU7864nMYKaRAb3/" +
 		"pzEyKUZJcQO+o0rWMVM3GcTmVcg/z3kl7eo1ouYlvPkpWxbFQlvXbA6WMPmwqq1O" +
 		"tTHrGbnpc7Ey4W2MvXSvLMo=";
+
+	// The following is just a self signed certificate and key to use for testing
+	// this is NOT private data from a CA
+	// *.http-and-https-test.thecdn.example.com
+	//
+	// openssl req -nodes -newkey rsa:2048 -keyout ~/tmp/http-and-https.key -out ~/tmp/http-and-https.csr
+	//
+	// openssl x509 -req -days 3650 -in ~/tmp/http-and-https.csr -signkey ~/tmp/http-and-https.key -out ~/tmp/http-and-https.crt
+
+	final static String HTTP_AND_HTTPS_TEST_KEY =
+		"MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDjhGSGLMVtaY32" +
+		"aS7aBogJCVmWNb6esx7+W6ug/wwYgwrsCL0nl+J6snPBOG4HoHHU5pKisHVYAbUi" +
+		"3TUBgjeP/uCGxKIonjru5cbS7tRIoTqSX/PJOlm35i0sJ55A3UHZafH8C0xnSzQj" +
+		"Ti9Evot58wCza/zfHKp/01Ig0M38+BhU7jpDzEgNEbYfUVpgAkES0JoJBAvrzqKB" +
+		"IZHXtp9hMy6uG8cTOybFDZZGJfwfUpngWqQGfT2h91ah49gVbAlef//647EuW1Dw" +
+		"X7PQKb0rc1bPYtlaVfeEZNb+e+52hs/B/hL2rXJ++G2t+2skahi5Kq7bcycQGjr+" +
+		"OROkA5UbAgMBAAECggEBALqsif49Bc/752rianqhGUSw0zyX5Es6FJgGhw+VtEr4" +
+		"WiHIGcs+p6icerVyo3TGhB92/6FUvzLyU7jDXxZZzVTsfzSUaaiCC0Cwby3qn2ro" +
+		"PrKS3+efZLWqui2cZBA8eib08oMmkg2+eoztPYNeA/qPE2gjlltJnes7bAtYx2pi" +
+		"aQK5stsynOWyxYdDdmqC7VJxCtC9sTmubaAQXHBBzrQnmMt7XzYsc6X/WhbWIFbs" +
+		"CxvC6K0CSUD0DzPUz2eN8QERMQQZQMysq+DA73/G9Zrl4LFL4qLTooviVgzq1gjx" +
+		"5yzKYR93CNk0HFIJzREw/FPm9xKa6tH5ZnwpV6FVRSECgYEA+EfzX/vWGqTWH05X" +
+		"y1p1iNmNst9PbPVdJx/SqiitU0RsF+A2g1y/THEt67d6l4CD6OlsK/yTNHRr/dMm" +
+		"L9B0SLVYUNGNnphl3WF10VQ2Y+80dRyWSbJpqty7L3P3uLOmkZRX1/9X254ryVEj" +
+		"n6KmkKK056u7RZoQw1ZXMK8RkVUCgYEA6pcvCwJBgzIwc9LufIpLa7NurX249Bbp" +
+		"9B9LYS1vfS2GYAypZfvIwqUi8jAjH2SIaVzI7q3mzocn+lV93ZuvU/dHjYs1VTC3" +
+		"nW2G1sTk3nkSlrWnH0mDpkta9UK3/nD4gOmZmHD2rPyAvzj+RE3EAB0lzQGV9Squ" +
+		"aztpg7BsTK8CgYEA68xZxhUFmLRob78V/png+qGzw+f2JQM6/0dn6hdL1cMr7dkR" +
+		"rNzPCiiLdk0BbxWtMe1OwM/WdoEDd0OsBskxR0SDpe3/VFpklEZVgQM7zNmHtpn5" +
+		"2fBKDu4oEL9Qy+hDEAwVCZ0GshucdkxLSvdMvhzpNwWQjF/v/7TmheQfCSkCgYBM" +
+		"hdiAnNHF/B82CP5mfa4wia12xmYIqVjTm0m5f1q42JrWxgqUC9fnNnr5yZ4LZX3h" +
+		"8LRSt0Ns50WxMSYHnftJRoZ+s4RIL8YVgl7TvBJ0R8Y6hzLmz9Iz8qzPCF6Aj1Vg" +
+		"p9LEmUS+FPfiaLL4kO14pAlqoDPMb4nJzO2UWX5aXQKBgAmnvhj/aLcJnCJM0YnC" +
+		"/aRWTF5Q3HQmPOHx5fQlw9+hCjQUkaoPL5JVs4/Z/dOj1RsWYHg23fGy78zNHkQi" +
+		"zL6P2WpZ7pEpJbK4wobpfitzczKfNZROAzdJPDV4+ebtPHMkGA/ibN04AM2SWKTH" +
+		"UoGXvsZbRbb+j3EptEHBiNiN";
+
+	final static String HTTP_AND_HTTPS_TEST_CERT =
+		"MIIDqjCCApICCQDx6373gd/QFDANBgkqhkiG9w0BAQsFADCBljELMAkGA1UEBhMC" +
+		"VVMxETAPBgNVBAgMCENvbG9yYWRvMQ8wDQYDVQQHDAZEZW52ZXIxFTATBgNVBAoM" +
+		"DEh1YmNhcHMgUiBVczEZMBcGA1UECwwQSHViY2FwIFBvbGlzaGVyczExMC8GA1UE" +
+		"AwwoKi5odHRwLWFuZC1odHRwcy10ZXN0LnRoZWNkbi5leGFtcGxlLmNvbTAeFw0x" +
+		"NjA4MDkyMTI0NDdaFw0yNjA4MDcyMTI0NDdaMIGWMQswCQYDVQQGEwJVUzERMA8G" +
+		"A1UECAwIQ29sb3JhZG8xDzANBgNVBAcMBkRlbnZlcjEVMBMGA1UECgwMSHViY2Fw" +
+		"cyBSIFVzMRkwFwYDVQQLDBBIdWJjYXAgUG9saXNoZXJzMTEwLwYDVQQDDCgqLmh0" +
+		"dHAtYW5kLWh0dHBzLXRlc3QudGhlY2RuLmV4YW1wbGUuY29tMIIBIjANBgkqhkiG" +
+		"9w0BAQEFAAOCAQ8AMIIBCgKCAQEA44RkhizFbWmN9mku2gaICQlZljW+nrMe/lur" +
+		"oP8MGIMK7Ai9J5fierJzwThuB6Bx1OaSorB1WAG1It01AYI3j/7ghsSiKJ467uXG" +
+		"0u7USKE6kl/zyTpZt+YtLCeeQN1B2Wnx/AtMZ0s0I04vRL6LefMAs2v83xyqf9NS" +
+		"INDN/PgYVO46Q8xIDRG2H1FaYAJBEtCaCQQL686igSGR17afYTMurhvHEzsmxQ2W" +
+		"RiX8H1KZ4FqkBn09ofdWoePYFWwJXn//+uOxLltQ8F+z0Cm9K3NWz2LZWlX3hGTW" +
+		"/nvudobPwf4S9q1yfvhtrftrJGoYuSqu23MnEBo6/jkTpAOVGwIDAQABMA0GCSqG" +
+		"SIb3DQEBCwUAA4IBAQBpO3jPVhDvFPJZJmzFbaC2vT/yq1oPtn9Z29bvkz9UTOc8" +
+		"aItDK84KjbuUZ3i9ol1AWu6tWQRitfnxpkhKDEMXaOZq/HBMrz4XPHC+2Ez/+lOU" +
+		"SmwAQHaaQMS20/9TAtNjIBvwphFpXXeT6Iz2NZl2EYEVdIfbQkTW0UsoFzBZGn3S" +
+		"/0OXhd1lRXt0lH8glYEkL35FQJ0PCIM5W4mRJ50FKTI1x52xFY44ctEtGYkrGeWZ" +
+		"4xYU0pTLKEYET0vKBHkjcvevI7dTd7caaWIXu4WG6ToVz8suTiKH49dMd3ev0qM7" +
+		"qnx67ypmcnGqRRLxC6F2gnMx8B8sJ37QQlEYBMQo";
 }

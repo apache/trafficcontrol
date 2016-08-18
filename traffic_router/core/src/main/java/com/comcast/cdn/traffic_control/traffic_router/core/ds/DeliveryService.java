@@ -88,6 +88,7 @@ public class DeliveryService {
 	private static final int STANDARD_HTTPS_PORT = 443;
 	private boolean hasX509Cert = false;
 	private final boolean acceptHttp;
+	private final boolean acceptHttps;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -136,6 +137,7 @@ public class DeliveryService {
 
 		final JSONObject protocol = dsJo.optJSONObject("protocol");
 		acceptHttp = protocol != null ? protocol.optBoolean("acceptHttp", true) : true;
+		acceptHttps = protocol != null ? protocol.optBoolean("acceptHttps", false) : false;
 	}
 
 	public String getId() {
@@ -227,6 +229,20 @@ public class DeliveryService {
 	}
 	private static final String REGEX_PERIOD = "\\.";
 
+	private boolean useSecure(final HTTPRequest request) {
+		return request.isSecure() && acceptHttps && isSslReady();
+	}
+
+	private String getPortString(final HTTPRequest request, final int port) {
+		final int standard_port = useSecure(request) ? STANDARD_HTTPS_PORT : STANDARD_HTTP_PORT;
+		return port == standard_port ? "" : ":" + port;
+	}
+
+	private String getPortString(final HTTPRequest request, final Cache cache) {
+		final int cache_port = useSecure(request) ? cache.getHttpsPort() : cache.getPort();
+		return getPortString(request, cache_port);
+	}
+
 	public String createURIString(final HTTPRequest request, final Cache cache) {
 		String fqdn = getFQDN(cache);
 		if (fqdn == null) {
@@ -234,25 +250,15 @@ public class DeliveryService {
 			fqdn = cacheName[0] + "." + request.getHostname().split(REGEX_PERIOD, 2)[1];
 		}
 
-		final int port = isSslReady() ? cache.getHttpsPort() : cache.getPort();
+		final int port = useSecure(request) ? cache.getHttpsPort() : cache.getPort();
 		return createURIString(request, fqdn, port, getTransInfoStr(request));
 	}
 
-	private String getPortString(final int port) {
-		final int standard_port = isSslReady() ? STANDARD_HTTPS_PORT : STANDARD_HTTP_PORT;
-		return port == standard_port ? "" : ":" + port;
-	}
-
-	private String getPortString(final Cache cache) {
-		final int cache_port = isSslReady() ? cache.getHttpsPort() : cache.getPort();
-		return getPortString(cache_port);
-	}
-
 	private String createURIString(final HTTPRequest request, final String fqdn, final int port, final String tinfo) {
-		final StringBuilder uri = new StringBuilder(isSslReady() ? "https://" : "http://");
+		final StringBuilder uri = new StringBuilder(useSecure(request) ? "https://" : "http://");
 
 		uri.append(fqdn);
-		uri.append(getPortString(port));
+		uri.append(getPortString(request, port));
 		uri.append(request.getUri());
 
 		boolean queryAppended = false;
@@ -272,7 +278,7 @@ public class DeliveryService {
 	}
 
 	public String createURIString(final HTTPRequest request, final String alternatePath, final Cache cache) {
-		final StringBuilder uri = new StringBuilder(isSslReady() ? "https://" : "http://");
+		final StringBuilder uri = new StringBuilder(useSecure(request) ? "https://" : "http://");
 
 		String fqdn = getFQDN(cache);
 		if (fqdn == null) {
@@ -280,7 +286,7 @@ public class DeliveryService {
 			fqdn = cacheName[0] + "." + request.getHostname().split(REGEX_PERIOD, 2)[1];
 		}
 		uri.append(fqdn);
-		uri.append(getPortString(cache));
+		uri.append(getPortString(request, cache));
 		uri.append(alternatePath);
 		return uri.toString();
 	}
