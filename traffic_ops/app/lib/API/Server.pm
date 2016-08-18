@@ -141,7 +141,7 @@ sub get_servers {
 sub get_servers_by_dsid {
 	my $self              = shift;
 	my $current_user      = shift;
-	my $dsId              = shift;
+	my $ds_id              = shift;
 	my $status            = shift;
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
@@ -149,24 +149,16 @@ sub get_servers_by_dsid {
 
 	my @ds_servers;
 	my $forbidden;
-	if ( &is_privileged($self) ) {
-		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsId } )->get_column('server')->all();
-	}
-	elsif ( $self->is_delivery_service_assigned($dsId) ) {
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my $ds_id =
-			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id, deliveryservice => $dsId } )
-			->get_column('deliveryservice')->single();
-
+	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
-	elsif ( !$self->is_delivery_service_assigned($dsId) ) {
+	else {
 		$forbidden = "true";
 	}
 
 	my $servers;
 	if ( scalar(@ds_servers) ) {
-		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $dsId }, { prefetch => ['type'] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
 		my %criteria = ( 'me.id' => { -in => \@ds_servers } );
 
 		my @types_no_mid = qw( HTTP_NO_CACHE HTTP_LIVE DNS_LIVE );    # currently these are the ds types that bypass the mids
