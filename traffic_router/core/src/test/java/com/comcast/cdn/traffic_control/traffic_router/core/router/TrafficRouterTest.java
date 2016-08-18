@@ -75,6 +75,7 @@ public class TrafficRouterTest {
         when(deliveryService.isAvailable()).thenReturn(true);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
         when(deliveryService.getDispersion()).thenReturn(mock(Dispersion.class));
+        when(deliveryService.isAcceptHttp()).thenReturn(true);
 
         when(deliveryService.createURIString(any(HTTPRequest.class), any(Cache.class))).thenReturn("http://atscache.kabletown.net/index.html");
 

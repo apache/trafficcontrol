@@ -87,6 +87,7 @@ public class DeliveryService {
 	private static final int STANDARD_HTTP_PORT = 80;
 	private static final int STANDARD_HTTPS_PORT = 443;
 	private boolean hasX509Cert = false;
+	private final boolean acceptHttp;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -132,6 +133,9 @@ public class DeliveryService {
 			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
 		}
 		sslEnabled = dsJo.optBoolean("sslEnabled", false);
+
+		final JSONObject protocol = dsJo.optJSONObject("protocol");
+		acceptHttp = protocol != null ? protocol.optBoolean("acceptHttp", true) : true;
 	}
 
 	public String getId() {
@@ -571,5 +575,9 @@ public class DeliveryService {
 
 	public boolean isSslReady() {
 		return sslEnabled && hasX509Cert;
+	}
+
+	public boolean isAcceptHttp() {
+		return acceptHttp;
 	}
 }
