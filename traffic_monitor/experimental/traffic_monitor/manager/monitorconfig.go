@@ -51,7 +51,7 @@ func NewTrafficMonitorConfigMapThreadsafe() TrafficMonitorConfigMapThreadsafe {
 	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.Mutex{}}
 }
 
-func (t TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
+func (t *TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
 	t.m.Lock()
 	defer func() {
 		t.m.Unlock()
@@ -59,13 +59,13 @@ func (t TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
 	return copyTMConfig(*t.monitorConfig)
 }
 
-func (t TrafficMonitorConfigMapThreadsafe) Set(newMonitorConfig to.TrafficMonitorConfigMap) {
+func (t *TrafficMonitorConfigMapThreadsafe) Set(newMonitorConfig to.TrafficMonitorConfigMap) {
 	t.m.Lock()
 	*t.monitorConfig = copyTMConfig(newMonitorConfig)
 	t.m.Unlock()
 }
 
-func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) TrafficMonitorConfigMapThreadsafe {
+func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) TrafficMonitorConfigMapThreadsafe {
 	monitorConfig := NewTrafficMonitorConfigMapThreadsafe()
 	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber)
 	return monitorConfig
@@ -73,7 +73,7 @@ func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorCon
 
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
-func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) {
+func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) {
 	for {
 		select {
 		case monitorConfig := <-monitorConfigPollChan:

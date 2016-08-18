@@ -33,7 +33,7 @@ func NewEventsThreadsafe() EventsThreadsafe {
 	return EventsThreadsafe{m: &sync.Mutex{}, events: []Event{}}
 }
 
-func (o EventsThreadsafe) Get() []Event {
+func (o *EventsThreadsafe) Get() []Event {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -41,7 +41,7 @@ func (o EventsThreadsafe) Get() []Event {
 	return copyEvents(o.events)
 }
 
-func (o EventsThreadsafe) Add(e Event) {
+func (o *EventsThreadsafe) Add(e Event) {
 	o.m.Lock()
 	o.events = append([]Event{e}, o.events...)
 	if len(o.events) > maxEvents {

@@ -30,7 +30,7 @@ func NewCacheAvailableStatusThreadsafe() CacheAvailableStatusThreadsafe {
 	return CacheAvailableStatusThreadsafe{m: &sync.Mutex{}, caches: map[enum.CacheName]CacheAvailableStatus{}}
 }
 
-func (o CacheAvailableStatusThreadsafe) Get() map[enum.CacheName]CacheAvailableStatus {
+func (o *CacheAvailableStatusThreadsafe) Get() map[enum.CacheName]CacheAvailableStatus {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -38,7 +38,7 @@ func (o CacheAvailableStatusThreadsafe) Get() map[enum.CacheName]CacheAvailableS
 	return copyCacheAvailableStatus(o.caches)
 }
 
-func (o CacheAvailableStatusThreadsafe) Set(cache enum.CacheName, status CacheAvailableStatus) {
+func (o *CacheAvailableStatusThreadsafe) Set(cache enum.CacheName, status CacheAvailableStatus) {
 	o.m.Lock()
 	o.caches[cache] = status
 	o.m.Unlock()

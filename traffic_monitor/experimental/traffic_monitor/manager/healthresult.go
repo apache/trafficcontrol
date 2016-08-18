@@ -32,7 +32,7 @@ func NewDurationMapThreadsafe() DurationMapThreadsafe {
 	return DurationMapThreadsafe{m: &sync.Mutex{}, durationMap: map[enum.CacheName]time.Duration{}}
 }
 
-func (o DurationMapThreadsafe) Get() map[enum.CacheName]time.Duration {
+func (o *DurationMapThreadsafe) Get() map[enum.CacheName]time.Duration {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -40,7 +40,7 @@ func (o DurationMapThreadsafe) Get() map[enum.CacheName]time.Duration {
 	return copyDurationMap(o.durationMap)
 }
 
-func (o DurationMapThreadsafe) GetDuration(cacheName enum.CacheName) (time.Duration, bool) {
+func (o *DurationMapThreadsafe) GetDuration(cacheName enum.CacheName) (time.Duration, bool) {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -49,7 +49,7 @@ func (o DurationMapThreadsafe) GetDuration(cacheName enum.CacheName) (time.Durat
 	return duration, ok
 }
 
-func (o DurationMapThreadsafe) Set(cacheName enum.CacheName, d time.Duration) {
+func (o *DurationMapThreadsafe) Set(cacheName enum.CacheName, d time.Duration) {
 	o.m.Lock()
 	o.durationMap[cacheName] = d
 	o.m.Unlock()
@@ -80,7 +80,7 @@ func (o TimeMapThreadsafe) Get() map[enum.CacheName]time.Time {
 	return copyTimeMap(o.timeMap)
 }
 
-func (o TimeMapThreadsafe) GetTime(cacheName enum.CacheName) (time.Time, bool) {
+func (o *TimeMapThreadsafe) GetTime(cacheName enum.CacheName) (time.Time, bool) {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -89,7 +89,7 @@ func (o TimeMapThreadsafe) GetTime(cacheName enum.CacheName) (time.Time, bool) {
 	return time, ok
 }
 
-func (o TimeMapThreadsafe) Set(cacheName enum.CacheName, d time.Time) {
+func (o *TimeMapThreadsafe) Set(cacheName enum.CacheName, d time.Time) {
 	o.m.Lock()
 	o.timeMap[cacheName] = d
 	o.m.Unlock()
@@ -104,7 +104,7 @@ func NewResultsThreadsafe() ResultsThreadsafe {
 	return ResultsThreadsafe{m: &sync.Mutex{}, r: map[enum.CacheName][]cache.Result{}}
 }
 
-func (o ResultsThreadsafe) Get(cacheName enum.CacheName) []cache.Result {
+func (o *ResultsThreadsafe) Get(cacheName enum.CacheName) []cache.Result {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -112,7 +112,7 @@ func (o ResultsThreadsafe) Get(cacheName enum.CacheName) []cache.Result {
 	return o.r[cacheName]
 }
 
-func (o ResultsThreadsafe) Set(cacheName enum.CacheName, newR []cache.Result) {
+func (o *ResultsThreadsafe) Set(cacheName enum.CacheName, newR []cache.Result) {
 	o.m.Lock()
 	o.r[cacheName] = newR
 	o.m.Unlock()
@@ -120,7 +120,7 @@ func (o ResultsThreadsafe) Set(cacheName enum.CacheName, newR []cache.Result) {
 
 // StartHealthResultManager starts the goroutine which listens for health results.
 // Returns the last health durations, events, and the local cache statuses.
-func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates CRStatesThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates CRStatesPeersThreadsafe, combinedStates CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe) (DurationMapThreadsafe, EventsThreadsafe, CacheAvailableStatusThreadsafe, DSStatsThreadsafe, StatsLastKbpsThreadsafe) {
+func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe) (DurationMapThreadsafe, EventsThreadsafe, CacheAvailableStatusThreadsafe, DSStatsThreadsafe, StatsLastKbpsThreadsafe) {
 	lastHealthDurations := NewDurationMapThreadsafe()
 	events := NewEventsThreadsafe()
 	localCacheStatus := NewCacheAvailableStatusThreadsafe()
@@ -130,73 +130,116 @@ func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata
 	return lastHealthDurations, events, localCacheStatus, dsStats, lastKbpsStats
 }
 
-func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates CRStatesPeersThreadsafe, combinedStates CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, dsStats DSStatsThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
+// cacheAggregateSeconds is how often to aggregate stats, if the health chan is never empty. (Otherwise, we read from the chan until it's empty, then aggregate, continuously)
+const cacheAggregateSeconds = 1
+
+func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, dsStats DSStatsThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
 	healthHistory := map[enum.CacheName][]cache.Result{}
 	eventIndex := uint64(0) // TODO move to EventsThreadsafe.Add() ?
-	// lastHealthEndTimes := NewTimeMapThreadsafe()
-	// healthHistory := NewResultsThreadsafe()
-	// eventIndex := NewUintThreadsafe()
-
+	// NOTE this busy waits. TODO figure out if there's a way in Go to listen to a chan until it's written to, then drain the channel, without defaulting and busy-waiting or sleeping
+	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	for {
-		select {
-		case healthResult := <-cacheHealthChan:
-			// go func() {
-			{
-				fetchCount.Inc()
-				toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
-				var prevResult cache.Result
-				healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
-				if len(healthResultHistory) != 0 {
-					prevResult = healthResultHistory[len(healthResultHistory)-1]
+		var results []cache.Result
+		results = append(results, <-cacheHealthChan)
+		tick := time.Tick(time.Millisecond * 200)
+	innerLoop:
+		for {
+			select {
+			case <-tick:
+				processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, dsStats, lastKbpsStats, lastHealthEndTimes, healthHistory, eventIndex, results)
+				break innerLoop
+			default:
+				select {
+				case r := <-cacheHealthChan:
+					results = append(results, r)
+				default:
+					processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, dsStats, lastKbpsStats, lastHealthEndTimes, healthHistory, eventIndex, results)
+					break innerLoop
 				}
-
-				monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
-				health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
-				healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
-				isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-				if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-					fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
-					e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
-					eventIndex++
-					events.Add(e)
-				}
-
-				localCacheStatus.Set(enum.CacheName(healthResult.Id), CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status}) // TODO move within localStates
-				localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
-				calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
-
-				// TODO determine if we should combineCrStates() here
-
-				now := time.Now()
-
-				var err error
-				createStatsCopyStatHistory := statHistory.Get()
-				createStatsCopyCombinedStates := combinedStates.Get()
-				createStatsCopyLastKbpsStats := lastKbpsStats.Get()
-				newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
-				if err != nil {
-					errorCount.Inc()
-					log.Printf("ERROR getting deliveryservice: %v\n", err)
-				} else {
-					dsStats.Set(newDsStats)
-					lastKbpsStats.Set(newLastKbpsStats)
-				}
-
-				//				if lastHealthStart, ok := lastHealthEndTimes.GetTime(enum.CacheName(healthResult.Id)); ok {
-				if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
-					d := time.Since(lastHealthStart)
-					lastHealthDurations.Set(enum.CacheName(healthResult.Id), d)
-				}
-				lastHealthEndTimes[enum.CacheName(healthResult.Id)] = now
-				//}()
 			}
 		}
 	}
 }
 
+func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, dsStats DSStatsThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe, lastHealthEndTimes map[enum.CacheName]time.Time, healthHistory map[enum.CacheName][]cache.Result, eventIndex uint64, results []cache.Result) {
+	if len(results) == 0 {
+		return
+	}
+	toDataCopy := toData.Get()               // create a copy, so the same data used for all processing of this cache health result
+	monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
+	for _, healthResult := range results {
+		fmt.Printf("DEBUG poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
+		fetchCount.Inc()
+		var prevResult cache.Result
+		healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
+		// healthResultHistory := healthHistory.Get(enum.CacheName(healthResult.Id))
+		if len(healthResultHistory) != 0 {
+			prevResult = healthResultHistory[len(healthResultHistory)-1]
+		}
+
+		health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
+		// healthHistory.Set(enum.CacheName(healthResult.Id), pruneHistory(append(healthHistory.Get(enum.CacheName(healthResult.Id)), healthResult), defaultMaxHistory))
+		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
+		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
+		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
+			fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
+			e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
+			// e := Event{Index: eventIndex.Get(), Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
+			eventIndex++
+			// eventIndex.Inc()
+			events.Add(e)
+		}
+
+		localCacheStatus.Set(enum.CacheName(healthResult.Id), CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status}) // TODO move within localStates
+		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
+		fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
+		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
+		fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
+	}
+	// TODO determine if we should combineCrStates() here
+
+	now := time.Now()
+
+	var err error
+	createStatsCopyStatHistory := statHistory.Get()
+	createStatsCopyCombinedStates := combinedStates.Get()
+	createStatsCopyLastKbpsStats := lastKbpsStats.Get()
+
+	for _, healthResult := range results {
+		fmt.Printf("DEBUG poll %v %v CreateStats start\n", healthResult.PollID, time.Now())
+	}
+
+	newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
+
+	for _, healthResult := range results {
+		fmt.Printf("DEBUG poll %v %v CreateStats end\n", healthResult.PollID, time.Now())
+	}
+
+	if err != nil {
+		errorCount.Inc()
+		log.Printf("ERROR getting deliveryservice: %v\n", err)
+	} else {
+		dsStats.Set(newDsStats)
+		lastKbpsStats.Set(newLastKbpsStats)
+	}
+
+	for _, healthResult := range results {
+		//				if lastHealthStart, ok := lastHealthEndTimes.GetTime(enum.CacheName(healthResult.Id)); ok {
+		if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
+			d := time.Since(lastHealthStart)
+			lastHealthDurations.Set(enum.CacheName(healthResult.Id), d)
+		}
+		lastHealthEndTimes[enum.CacheName(healthResult.Id)] = now
+		// lastHealthEndTimes.Set(enum.CacheName(healthResult.Id), now)
+
+		fmt.Printf("DEBUG poll %v %v finish\n", healthResult.PollID, time.Now())
+		healthResult.PollFinished <- healthResult.PollID
+	}
+}
+
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, states CRStatesThreadsafe) {
+func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, states peer.CRStatesThreadsafe) {
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {

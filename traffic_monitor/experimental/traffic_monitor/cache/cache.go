@@ -2,18 +2,41 @@ package cache
 
 import (
 	"encoding/json"
+	"fmt"
+	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
+	"strings"
 	"time"
 )
 
 type Handler struct {
 	ResultChannel chan Result
 	Notify        int
+	ToData        *todata.TODataThreadsafe
+	PeerStates    *peer.CRStatesPeersThreadsafe
 }
 
+// NewHandler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
 func NewHandler() Handler {
 	return Handler{ResultChannel: make(chan Result)}
+}
+
+// NewPrecomputeHandler precomputes stat data and populates result.Precomputed before passing to ResultChannel.
+func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
+	return Handler{ResultChannel: make(chan Result), ToData: &toData, PeerStates: &peerStates}
+}
+
+func (h Handler) Precompute() bool {
+	return h.ToData != nil && h.PeerStates != nil
+}
+
+type PrecomputedData struct {
+	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
+	OutBytes             int64
+	Err                  error
 }
 
 type Result struct {
@@ -23,6 +46,9 @@ type Result struct {
 	Astats    Astats
 	Time      time.Time
 	Vitals    Vitals
+	PrecomputedData
+	PollID       uint64
+	PollFinished chan<- uint64
 }
 
 type Vitals struct {
@@ -83,12 +109,15 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 	return json.Marshal(stats)
 }
 
-func (handler Handler) Handle(id string, r io.Reader, err error) {
+func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
+	fmt.Printf("DEBUG poll %v %v handle start\n", pollId, time.Now())
 	result := Result{
-		Id:        id,
-		Available: false,
-		Errors:    []error{},
-		Time:      time.Now(),
+		Id:           id,
+		Available:    false,
+		Errors:       []error{},
+		Time:         time.Now(),
+		PollID:       pollId,
+		PollFinished: pollFinished,
 	}
 
 	if err != nil {
@@ -96,8 +125,10 @@ func (handler Handler) Handle(id string, r io.Reader, err error) {
 	}
 
 	if r != nil {
+		fmt.Printf("DEBUG poll %v %v handle decode start\n", pollId, time.Now())
 		dec := json.NewDecoder(r)
 		err := dec.Decode(&result.Astats)
+		fmt.Printf("DEBUG poll %v %v handle decode end\n", pollId, time.Now())
 
 		if err != nil {
 			result.Errors = append(result.Errors, err)
@@ -106,5 +137,216 @@ func (handler Handler) Handle(id string, r io.Reader, err error) {
 		}
 	}
 
+	if handler.Precompute() {
+		//		fmt.Println("precomputing")
+		fmt.Printf("DEBUG poll %v %v handle precompute start\n", pollId, time.Now())
+		result = handler.precompute(result)
+		fmt.Printf("DEBUG poll %v %v handle precompute end\n", pollId, time.Now())
+	} else {
+		fmt.Println("NOT precomputing")
+	}
+	fmt.Printf("DEBUG poll %v %v handle write start\n", pollId, time.Now())
 	handler.ResultChannel <- result
+	fmt.Printf("DEBUG poll %v %v handle end\n", pollId, time.Now())
+}
+
+// precompute does the calculations which are possible with only this one cache result.
+func (handler Handler) precompute(result Result) Result {
+	todata := handler.ToData.Get()
+	stats := map[enum.DeliveryServiceName]dsdata.Stat{}
+	for stat, value := range result.Astats.Ats {
+		if strings.HasSuffix(stat, ".out_bytes") {
+			v, ok := value.(float64)
+			if !ok {
+				continue // no warning, because the same error will be returned by processStat
+			}
+			result.PrecomputedData.OutBytes += int64(v)
+		}
+
+		var err error
+		stats, err = processStat(result.Id, stats, todata, stat, value)
+		if err != nil && err != dsdata.ErrNotProcessedStat {
+			result.PrecomputedData.Err = err
+			return result
+		}
+	}
+	result.PrecomputedData.DeliveryServiceStats = stats
+	return result
+}
+
+// processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
+// TODO fix this being crazy slow. THIS IS THE BOTTLENECK
+func processStat(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+	parts := strings.Split(stat, ".")
+	if len(parts) < 1 {
+		return stats, fmt.Errorf("stat has no initial part")
+	}
+
+	switch parts[0] {
+	case "plugin":
+		return processStatPlugin(server, stats, toData, stat, parts[1:], value)
+	case "proxy":
+		return stats, dsdata.ErrNotProcessedStat
+	case "server":
+		return stats, dsdata.ErrNotProcessedStat
+	default:
+		return stats, fmt.Errorf("stat '%s' has unknown initial part '%s'", stat, parts[0])
+	}
+}
+
+func processStatPlugin(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+	if len(statParts) < 1 {
+		return stats, fmt.Errorf("stat has no plugin part")
+	}
+	switch statParts[0] {
+	case "remap_stats":
+		return processStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value)
+	default:
+		return stats, fmt.Errorf("stat has unknown plugin part '%s'", statParts[0])
+	}
+}
+
+func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+	if len(statParts) < 2 {
+		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
+	}
+
+	fqdn := strings.Join(statParts[:len(statParts)-1], ".")
+	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(fqdn)
+
+	statName := statParts[len(statParts)-1]
+
+	dsStat, ok := stats[ds]
+	if !ok {
+		switch toData.DeliveryServiceTypes[string(ds)] {
+		case enum.DSTypeHTTP:
+			dsStat = dsdata.NewStatHTTP()
+		case enum.DSTypeDNS:
+			dsStat = dsdata.NewStatDNS()
+		default:
+			return stats, fmt.Errorf("unknown delivery service type: %v", toData.DeliveryServiceTypes[string(ds)])
+		}
+	}
+
+	switch t := dsStat.(type) {
+	case *dsdata.StatHTTP:
+		hstat := dsStat.(*dsdata.StatHTTP)
+
+		err := addCacheStat(&hstat.Total, statName, value)
+		if err != nil {
+			return stats, err
+		}
+
+		cachegroup, ok := toData.ServerCachegroups[enum.CacheName(server)]
+		if !ok {
+			return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
+		}
+		hstat.CacheGroups[cachegroup] = hstat.Total
+
+		cacheType, ok := toData.ServerTypes[enum.CacheName(server)]
+		if !ok {
+			return stats, fmt.Errorf("server missing from TOData.ServerTypes")
+		}
+		hstat.Type[cacheType] = hstat.Total
+
+		dsStat = hstat
+	case *dsdata.StatDNS:
+	default:
+		return stats, fmt.Errorf("stat unexpected type: %T", t)
+	}
+	stats[ds] = dsStat
+	return stats, nil
+}
+
+// addCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
+// TODO make this less duplicate code somehow.
+func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) error {
+	switch name {
+	case "status_2xx":
+		v, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Status2xx.Value += int64(v)
+	case "status_3xx":
+		v, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Status3xx.Value += int64(v)
+	case "status_4xx":
+		v, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Status4xx.Value += int64(v)
+	case "status_5xx":
+		v, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Status5xx.Value += int64(v)
+	case "out_bytes":
+		v, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.OutBytes.Value += int64(v)
+	case "is_available":
+		fmt.Println("DEBUGa got is_available")
+		v, ok := val.(bool)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)
+		}
+		if v {
+			stat.IsAvailable.Value = true
+		}
+	case "in_bytes":
+		v, ok := val.(float64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.InBytes.Value += v
+	case "tps_2xx":
+		v, ok := val.(int64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Tps2xx.Value += v
+	case "tps_3xx":
+		v, ok := val.(int64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Tps3xx.Value += v
+	case "tps_4xx":
+		v, ok := val.(int64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Tps4xx.Value += v
+	case "tps_5xx":
+		v, ok := val.(int64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.Tps5xx.Value += v
+	case "error_string":
+		v, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected string actual '%v' type %T", name, val, val)
+		}
+		stat.ErrorString.Value += v + ", "
+	case "tps_total":
+		v, ok := val.(int64)
+		if !ok {
+			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
+		}
+		stat.TpsTotal.Value += v
+	case "status_unknown":
+		return dsdata.ErrNotProcessedStat
+	default:
+		return fmt.Errorf("unknown stat '%s'", name)
+	}
+	return nil
 }
