@@ -17,7 +17,10 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -26,6 +29,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,11 +69,8 @@ public class ZoneManagerTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		try {
-			context = TestBase.getContext();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+		context = TestBase.getContext();
 	}
 
 	@Before

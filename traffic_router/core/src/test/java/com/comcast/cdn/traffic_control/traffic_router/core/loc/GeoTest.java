@@ -29,6 +29,14 @@ import org.junit.Assert;
 import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.IsNull.nullValue;
+
 @Category(IntegrationTest.class)
 public class GeoTest {
 	private static final Logger LOGGER = Logger.getLogger(GeoTest.class);
@@ -39,11 +47,8 @@ public class GeoTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		try {
-			context = TestBase.getContext();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+		context = TestBase.getContext();
 	}
 
 	@Before
