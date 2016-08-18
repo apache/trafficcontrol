@@ -446,18 +446,9 @@ public class TrafficRouter {
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
-		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
-		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath(), xtcSteeringOption);
+		final DeliveryService deliveryService = getDeliveryService(request, track);
 
 		if (deliveryService == null) {
-			track.setResult(ResultType.DS_MISS);
-			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
-			return null;
-		}
-
-		if (request.isSecure() && !deliveryService.isSslEnabled()) {
-			track.setResult(ResultType.ERROR);
-			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
 		}
 
@@ -496,6 +487,30 @@ public class TrafficRouter {
 		final String uriString = deliveryService.createURIString(request, cache);
 		routeResult.setUrl(new URL(uriString));
 		return routeResult;
+	}
+
+	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
+		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
+		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath(), xtcSteeringOption);
+
+		if (deliveryService == null) {
+			track.setResult(ResultType.DS_MISS);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
+		if (request.isSecure() && !deliveryService.isSslEnabled()) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
+		if (!request.isSecure() && !deliveryService.isAcceptHttp()) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+		return deliveryService;
 	}
 
 	protected NetworkNode getNetworkNode(final String ip) {

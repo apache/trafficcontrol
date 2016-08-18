@@ -141,7 +141,7 @@ sub get_servers {
 sub get_servers_by_dsid {
 	my $self              = shift;
 	my $current_user      = shift;
-	my $dsId              = shift;
+	my $ds_id              = shift;
 	my $status            = shift;
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
@@ -149,24 +149,16 @@ sub get_servers_by_dsid {
 
 	my @ds_servers;
 	my $forbidden;
-	if ( &is_privileged($self) ) {
-		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsId } )->get_column('server')->all();
-	}
-	elsif ( $self->is_delivery_service_assigned($dsId) ) {
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my $ds_id =
-			$self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id, deliveryservice => $dsId } )
-			->get_column('deliveryservice')->single();
-
+	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
-	elsif ( !$self->is_delivery_service_assigned($dsId) ) {
+	else {
 		$forbidden = "true";
 	}
 
 	my $servers;
 	if ( scalar(@ds_servers) ) {
-		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $dsId }, { prefetch => ['type'] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
 		my %criteria = ( -or => [ 'me.id' => { -in => \@ds_servers } ] );
 
 		# currently these are the ds types that bypass the mids
@@ -442,8 +434,8 @@ sub check_server_params {
 	if ( !defined( $json->{'cdnName'} ) ) {
 		$errFields{'cdnName'} = 'is required';
 	}
-	if (%errFields) {
-		return ( \%params, \%errFields );
+	if ( %errFields ) {
+		return (\%params, \%errFields);
 	}
 
 	if ( defined( $json->{'interfaceMtu'} ) ) {
@@ -476,14 +468,16 @@ sub check_server_params {
 		return ( \%params, "'profile' $json->{'profile'} not found!" );
 	}
 
-	eval { $params{'physLocation'} = $self->db->resultset('PhysLocation')->search( { name => $json->{'physLocation'} } )->get_column('id')->single(); };
+	eval {
+		$params{'physLocation'} = $self->db->resultset('PhysLocation')->search( { name => $json->{'physLocation'} } )->get_column('id')->single();
+	};
 	if ( $@ || ( !defined( $params{'physLocation'} ) ) ) {
 		return ( \%params, "'physLocation' $json->{'physLocation'} not found!" );
 	}
 
 	# IP address checks
 	foreach my $ipstr (
-		$json->{'ipAddress'},    $json->{'ipNetmask'},     $json->{'ipGateway'},     $json->{'iloIpAddress'}, $json->{'iloIpNetmask'},
+		$json->{'ipAddress'},     $json->{'ipNetmask'},      $json->{'ipGateway'},      $json->{'iloIpAddress'}, $json->{'iloIpNetmask'},
 		$json->{'iloIpGateway'}, $json->{'mgmtIpAddress'}, $json->{'mgmtIpNetmask'}, $json->{'mgmtIpGateway'}
 		)
 	{
@@ -690,7 +684,7 @@ sub create {
 
 	( $params, $err ) = $self->check_server_params( $json, undef );
 	if ( defined($err) ) {
-		return $self->alert($err);
+		return $self->alert( $err );
 	}
 
 	my $new_id      = -1;
@@ -705,7 +699,7 @@ sub create {
 					host_name        => $json->{'hostName'},
 					domain_name      => $json->{'domainName'},
 					tcp_port         => $params->{'tcpPort'},
-					xmpp_id          => $json->{'hostName'},                                                            # TODO JvD remove me later.
+					xmpp_id          => $json->{'hostName'},                                                           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $json->{'interfaceName'},
 					ip_address       => $json->{'ipAddress'},
@@ -747,7 +741,7 @@ sub create {
 					host_name        => $json->{'hostName'},
 					domain_name      => $json->{'domainName'},
 					tcp_port         => $params->{'tcpPort'},
-					xmpp_id          => $json->{'hostName'},                                                            # TODO JvD remove me later.
+					xmpp_id          => $json->{'hostName'},                                                           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $json->{'interfaceName'},
 					ip_address       => $json->{'ipAddress'},
@@ -796,7 +790,7 @@ sub create {
 	if ( defined($err) ) {
 		return $self->alert( { Error => $err } );
 	}
-	$self->success( $data, "Server successfully created: " . $json->{'hostName'} );
+	$self->success($data, "Server successfully created: " . $json->{'hostName'});
 }
 
 sub update {
@@ -816,7 +810,7 @@ sub update {
 	}
 	( $params, $err ) = $self->check_server_params( $json, $org_server );
 	if ( defined($err) ) {
-		return $self->alert($err);
+		return $self->alert( $err );
 	}
 
 	my $update = $self->db->resultset('Server')->find( { id => $id } );
@@ -831,24 +825,24 @@ sub update {
 				ip_netmask     => defined( $params->{'ipNetmask'} )     ? $params->{'ipNetmask'}     : $update->ip_netmask,
 				ip_gateway     => defined( $params->{'ipGateway'} )     ? $params->{'ipGateway'}     : $update->ip_gateway,
 				ip6_address => defined( $params->{'ip6Address'} ) && $params->{'ip6Address'} != "" ? $params->{'ip6Address'} : $update->ip6_address,
-				ip6_gateway      => defined( $params->{'ip6Gateway'} )     ? $params->{'ip6Gateway'}     : $update->ip6_gateway,
-				interface_mtu    => defined( $params->{'interfaceMtu'} )   ? $params->{'interfaceMtu'}   : $update->interface_mtu,
-				cachegroup       => defined( $params->{'cachegroup'} )     ? $params->{'cachegroup'}     : $update->cachegroup->id,
-				cdn_id           => defined( $params->{'cdnId'} )          ? $params->{'cdnId'}          : $update->cdn_id,
-				phys_location    => defined( $params->{'physLocation'} )   ? $params->{'physLocation'}   : $update->phys_location->id,
-				guid             => defined( $params->{'guid'} )           ? $params->{'guid'}           : $update->guid,
-				rack             => defined( $params->{'rack'} )           ? $params->{'rack'}           : $update->rack,
-				type             => defined( $params->{'type'} )           ? $params->{'type'}           : $update->type->id,
-				status           => defined( $params->{'status'} )         ? $params->{'status'}         : $update->status->id,
-				profile          => defined( $params->{'profile'} )        ? $params->{'profile'}        : $update->profile->id,
+				ip6_gateway      => defined( $params->{'ip6Gateway'} )      ? $params->{'ip6Gateway'}      : $update->ip6_gateway,
+				interface_mtu    => defined( $params->{'interfaceMtu'} )    ? $params->{'interfaceMtu'}    : $update->interface_mtu,
+				cachegroup       => defined( $params->{'cachegroup'} )       ? $params->{'cachegroup'}       : $update->cachegroup->id,
+				cdn_id           => defined( $params->{'cdnId'} )           ? $params->{'cdnId'}           : $update->cdn_id,
+				phys_location    => defined( $params->{'physLocation'} )    ? $params->{'physLocation'}    : $update->phys_location->id,
+				guid             => defined( $params->{'guid'} )             ? $params->{'guid'}             : $update->guid,
+				rack             => defined( $params->{'rack'} )             ? $params->{'rack'}             : $update->rack,
+				type             => defined( $params->{'type'} )             ? $params->{'type'}             : $update->type->id,
+				status           => defined( $params->{'status'} )           ? $params->{'status'}           : $update->status->id,
+				profile          => defined( $params->{'profile'} )          ? $params->{'profile'}          : $update->profile->id,
 				mgmt_ip_address  => defined( $params->{'mgmtIpAddress'} )  ? $params->{'mgmtIpAddress'}  : $update->mgmt_ip_address,
 				mgmt_ip_netmask  => defined( $params->{'mgmtIpNetmask'} )  ? $params->{'mgmtIpNetmask'}  : $update->mgmt_ip_netmask,
 				mgmt_ip_gateway  => defined( $params->{'mgmtIpGateway'} )  ? $params->{'mgmtIpGateway'}  : $update->mgmt_ip_gateway,
 				ilo_ip_address   => defined( $params->{'iloIpAddress'} )   ? $params->{'iloIpAddress'}   : $update->ilo_ip_address,
 				ilo_ip_netmask   => defined( $params->{'iloIpNetmask'} )   ? $params->{'iloIpNetmask'}   : $update->ilo_ip_netmask,
 				ilo_ip_gateway   => defined( $params->{'iloIpGateway'} )   ? $params->{'iloIpGateway'}   : $update->ilo_ip_gateway,
-				ilo_username     => defined( $params->{'iloUsername'} )    ? $params->{'iloUsername'}    : $update->ilo_username,
-				ilo_password     => defined( $params->{'iloPassword'} )    ? $params->{'iloPassword'}    : $update->ilo_password,
+				ilo_username     => defined( $params->{'iloUsername'} )     ? $params->{'iloUsername'}     : $update->ilo_username,
+				ilo_password     => defined( $params->{'iloPassword'} )     ? $params->{'iloPassword'}     : $update->ilo_password,
 				router_host_name => defined( $params->{'routerHostName'} ) ? $params->{'routerHostName'} : $update->router_host_name,
 				router_port_name => defined( $params->{'routerPortName'} ) ? $params->{'routerPortName'} : $update->router_port_name,
 			}
@@ -915,8 +909,8 @@ sub update {
 	# this just creates the log string for the log table / tab.
 	my $lstring = "Update server " . $update->host_name . " ";
 	foreach my $col ( keys %{ $org_server->{_column_data} } ) {
-		my $colParam = $col;
-		$colParam =~ s/_(\w)/\U$1/g;
+        my $colParam = $col;
+        $colParam =~ s/_(\w)/\U$1/g;
 		if ( defined( $params->{$colParam} )
 			&& $params->{$colParam} ne ( $org_server->{_column_data}->{$col} // "" ) )
 		{
@@ -936,7 +930,7 @@ sub update {
 	if ( defined($err) ) {
 		return $self->alert( { Error => $err } );
 	}
-	$self->success( $data, "Server was updated: " . $update->host_name );
+	$self->success($data, "Server was updated: " . $update->host_name);
 }
 
 sub delete {
@@ -958,7 +952,7 @@ sub delete {
 
 	&log( $self, "Delete server with id:" . $id . " named " . $host_name, "APICHANGE" );
 
-	return $self->success_message( "Server was deleted: " . $host_name );
+	return $self->success_message("Server was deleted: " . $host_name);
 }
 
 sub postupdatequeue {

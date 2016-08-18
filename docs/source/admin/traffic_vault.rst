@@ -154,13 +154,13 @@ On Each Riak Server:
 
 One time configuration:
 1. On one of the Riak servers in the cluster run the following riak-admin commands
-	``riak-admin security grant search.admin on schema to admin``
-	``riak-admin security grant search.admin on index to admin``
-	``riak-admin security grant search.query on index to admin``
-	``riak-admin security grant search.query on index sslkeys to admin``
-	``riak-admin security grant search.query on index to riakuser``
-	``riak-admin security grant search.query on index sslkeys to riakuser``
-	``riak-admin security grant riak_core.set_bucket on any to admin``
+``riak-admin security grant search.admin on schema to admin``
+``riak-admin security grant search.admin on index to admin``
+``riak-admin security grant search.query on index to admin``
+``riak-admin security grant search.query on index sslkeys to admin``
+``riak-admin security grant search.query on index to riakuser``
+``riak-admin security grant search.query on index sslkeys to riakuser``
+``riak-admin security grant riak_core.set_bucket on any to admin``
 
 2. Add the search schema to Riak.  This schema is a simple Apache Solr configuration file which will index all records on cdn, hostname, and deliveryservice.
 	* Get the schema file by either cloning the project and going to `traffic_ops/app/config/misc/riak_search` or from `github <https://github.com/Comcast/traffic_control/tree/master/traffic_ops/app/conf/misc/riak_search>`_.

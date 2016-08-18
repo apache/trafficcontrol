@@ -160,7 +160,7 @@ public class ExternalTestSuite {
 		KeyFactory fact = KeyFactory.getInstance("RSA");
 		PrivateKey priv = fact.generatePrivate(keySpec);
 
-		keyStore.setKeyEntry("https-test.thecdn.example.com", priv, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
+		keyStore.setKeyEntry("https-only-test.thecdn.example.com", priv, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
 
 		File dbDirectory = new File(tmpDeployDir, "db");
 		dbDirectory.mkdir();
