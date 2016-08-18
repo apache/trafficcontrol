@@ -14,6 +14,7 @@ func StartPeerManager(peerChan <-chan peer.Result, localStates peer.CRStatesThre
 			case crStatesResult := <-peerChan:
 				peerStates.Set(crStatesResult.Id, crStatesResult.PeerStats)
 				combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
+				crStatesResult.PollFinished <- crStatesResult.PollID
 			}
 		}
 	}()

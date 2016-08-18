@@ -13,7 +13,6 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
 )
@@ -62,8 +61,8 @@ type FilePoller struct {
 }
 
 type MonitorConfigPoller struct {
-	Session          trafficopswrapper.ITrafficOpsSession
-	SessionChannel   chan trafficopswrapper.ITrafficOpsSession
+	Session          towrap.ITrafficOpsSession
+	SessionChannel   chan towrap.ITrafficOpsSession
 	ConfigChannel    chan to.TrafficMonitorConfigMap
 	OpsConfigChannel chan handler.OpsConfig
 	Interval         time.Duration
@@ -111,41 +110,68 @@ func (p MonitorConfigPoller) Poll() {
 var debugPollNum uint64
 
 func (p HttpPoller) Poll() {
-	tick := time.NewTicker(p.Config.Interval)
-	last_time := time.Now()
-	iterationCount := uint64(0)
+	// iterationCount := uint64(0)
+	// iterationCount++ // on tick<:
+	// case p.TickChan <- iterationCount:
+	killChans := map[string]chan<- struct{}{}
 	for {
 		select {
-		case config := <-p.ConfigChannel:
-			p.Config = config // TODO: reset the ticker using the interval supplied in config. -jse
-		case curr_time := <-tick.C:
-			iterationCount++
-			if p.TickChan != nil {
-			tickWrite:
-				for {
-					select {
-					case p.TickChan <- iterationCount:
-						break tickWrite
-					case config := <-p.ConfigChannel:
-						p.Config = config
-					}
-				}
+		case newConfig := <-p.ConfigChannel:
+			deletions, additions := diffConfigs(p.Config, newConfig)
+			for _, id := range deletions {
+				killChan := killChans[id]
+				go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
+				delete(killChans, id)
 			}
-
-			if int64(curr_time.Sub(last_time)) > int64(float64(p.Config.Interval)*1.01) {
-				instr.TimerFail.Inc()
-				fmt.Println("Intended Duration:", p.Config.Interval, "Actual Duration", curr_time.Sub(last_time))
+			for _, info := range additions {
+				kill := make(chan struct{})
+				killChans[info.ID] = kill
+				go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
 			}
-			last_time = curr_time
-			if p.Config.Urls != nil {
-				for id, url := range p.Config.Urls {
-					pollId := atomic.AddUint64(&debugPollNum, 1)
-					fmt.Printf("DEBUG poll %v %v start\n", pollId, time.Now())
-					go p.Fetcher.Fetch(id, url, pollId)
-				}
-			}
+			p.Config = newConfig
 		}
 	}
+}
+
+type HTTPPollInfo struct {
+	Interval time.Duration
+	ID       string
+	URL      string
+}
+
+// diffConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
+func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPollInfo) {
+	deletions := []string{}
+	additions := []HTTPPollInfo{}
+
+	if old.Interval != new.Interval {
+		for id, _ := range old.Urls {
+			deletions = append(deletions, id)
+		}
+		for id, url := range new.Urls {
+			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: url})
+		}
+		return deletions, additions
+	}
+
+	for id, oldUrl := range old.Urls {
+		newUrl, newIdExists := new.Urls[id]
+		if !newIdExists {
+			deletions = append(deletions, id)
+		} else if newUrl != oldUrl {
+			deletions = append(deletions, id)
+			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: newUrl})
+		}
+	}
+
+	for id, newUrl := range new.Urls {
+		_, oldIdExists := old.Urls[id]
+		if !oldIdExists {
+			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: newUrl})
+		}
+	}
+
+	return deletions, additions
 }
 
 func (p FilePoller) Poll() {
@@ -176,6 +202,31 @@ func (p FilePoller) Poll() {
 			}
 		case err := <-watcher.Errors:
 			fmt.Println(time.Now(), "error:", err)
+		}
+	}
+}
+
+// TODO iterationCount and/or p.TickChan?
+func pollHttp(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+	tick := time.NewTicker(interval)
+	lastTime := time.Now()
+	for {
+		select {
+		case now := <-tick.C:
+			realInterval := now.Sub(lastTime)
+			if realInterval > interval+(time.Millisecond*100) {
+				instr.TimerFail.Inc()
+				fmt.Printf("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
+			}
+			lastTime = time.Now()
+
+			pollId := atomic.AddUint64(&debugPollNum, 1)
+			pollFinishedChan := make(chan uint64)
+			fmt.Printf("DEBUG poll %v %v start\n", pollId, time.Now())
+			go fetcher.Fetch(id, url, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			<-pollFinishedChan
+		case <-die:
+			return
 		}
 	}
 }

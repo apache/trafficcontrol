@@ -137,93 +137,104 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
 	healthHistory := map[enum.CacheName][]cache.Result{}
 	eventIndex := uint64(0) // TODO move to EventsThreadsafe.Add() ?
-	// lastHealthEndTimes := NewTimeMapThreadsafe()
-	// healthHistory := NewResultsThreadsafe()
-	// eventIndex := NewUintThreadsafe()
-
-	var results []cache.Result
+	// NOTE this busy waits. TODO figure out if there's a way in Go to listen to a chan until it's written to, then drain the channel, without defaulting and busy-waiting or sleeping
+	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	for {
-		select {
-		// TODO add a tick, in case cacheHealthChan is never empty (starvation)
-		case r := <-cacheHealthChan:
-			results = append(results, r)
-		default:
-			// NOTE this busy waits. TODO figure out if there's a way in Go to listen to a chan until it's written to, then drain the channel, without defaulting and busy-waiting or sleeping
-			if len(results) == 0 {
-				continue
-			}
-			toDataCopy := toData.Get()               // create a copy, so the same data used for all processing of this cache health result
-			monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
-			for _, healthResult := range results {
-				fmt.Printf("DEBUG poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
-				fetchCount.Inc()
-				var prevResult cache.Result
-				healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
-				// healthResultHistory := healthHistory.Get(enum.CacheName(healthResult.Id))
-				if len(healthResultHistory) != 0 {
-					prevResult = healthResultHistory[len(healthResultHistory)-1]
+		var results []cache.Result
+		results = append(results, <-cacheHealthChan)
+		tick := time.Tick(time.Millisecond * 200)
+	innerLoop:
+		for {
+			select {
+			case <-tick:
+				processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, dsStats, lastKbpsStats, lastHealthEndTimes, healthHistory, eventIndex, results)
+				break innerLoop
+			default:
+				select {
+				case r := <-cacheHealthChan:
+					results = append(results, r)
+				default:
+					processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, dsStats, lastKbpsStats, lastHealthEndTimes, healthHistory, eventIndex, results)
+					break innerLoop
 				}
-
-				health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
-				// healthHistory.Set(enum.CacheName(healthResult.Id), pruneHistory(append(healthHistory.Get(enum.CacheName(healthResult.Id)), healthResult), defaultMaxHistory))
-				healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
-				isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-				if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-					fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
-					e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
-					// e := Event{Index: eventIndex.Get(), Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
-					eventIndex++
-					// eventIndex.Inc()
-					events.Add(e)
-				}
-
-				localCacheStatus.Set(enum.CacheName(healthResult.Id), CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status}) // TODO move within localStates
-				localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
-				fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
-				calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
-				fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
 			}
-			// TODO determine if we should combineCrStates() here
-
-			now := time.Now()
-
-			var err error
-			createStatsCopyStatHistory := statHistory.Get()
-			createStatsCopyCombinedStates := combinedStates.Get()
-			createStatsCopyLastKbpsStats := lastKbpsStats.Get()
-
-			for _, healthResult := range results {
-				fmt.Printf("DEBUG poll %v %v CreateStats start\n", healthResult.PollID, time.Now())
-			}
-
-			newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
-
-			for _, healthResult := range results {
-				fmt.Printf("DEBUG poll %v %v CreateStats end\n", healthResult.PollID, time.Now())
-			}
-
-			if err != nil {
-				errorCount.Inc()
-				log.Printf("ERROR getting deliveryservice: %v\n", err)
-			} else {
-				dsStats.Set(newDsStats)
-				lastKbpsStats.Set(newLastKbpsStats)
-			}
-
-			for _, healthResult := range results {
-				//				if lastHealthStart, ok := lastHealthEndTimes.GetTime(enum.CacheName(healthResult.Id)); ok {
-				if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
-					d := time.Since(lastHealthStart)
-					lastHealthDurations.Set(enum.CacheName(healthResult.Id), d)
-				}
-				lastHealthEndTimes[enum.CacheName(healthResult.Id)] = now
-				// lastHealthEndTimes.Set(enum.CacheName(healthResult.Id), now)
-
-				fmt.Printf("DEBUG poll %v %v finish\n", healthResult.PollID, time.Now())
-			}
-
-			results = nil
 		}
+	}
+}
+
+func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, dsStats DSStatsThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe, lastHealthEndTimes map[enum.CacheName]time.Time, healthHistory map[enum.CacheName][]cache.Result, eventIndex uint64, results []cache.Result) {
+	if len(results) == 0 {
+		return
+	}
+	toDataCopy := toData.Get()               // create a copy, so the same data used for all processing of this cache health result
+	monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
+	for _, healthResult := range results {
+		fmt.Printf("DEBUG poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
+		fetchCount.Inc()
+		var prevResult cache.Result
+		healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
+		// healthResultHistory := healthHistory.Get(enum.CacheName(healthResult.Id))
+		if len(healthResultHistory) != 0 {
+			prevResult = healthResultHistory[len(healthResultHistory)-1]
+		}
+
+		health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
+		// healthHistory.Set(enum.CacheName(healthResult.Id), pruneHistory(append(healthHistory.Get(enum.CacheName(healthResult.Id)), healthResult), defaultMaxHistory))
+		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
+		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
+		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
+			fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
+			e := Event{Index: eventIndex, Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
+			// e := Event{Index: eventIndex.Get(), Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable}
+			eventIndex++
+			// eventIndex.Inc()
+			events.Add(e)
+		}
+
+		localCacheStatus.Set(enum.CacheName(healthResult.Id), CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status}) // TODO move within localStates
+		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
+		fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
+		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
+		fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
+	}
+	// TODO determine if we should combineCrStates() here
+
+	now := time.Now()
+
+	var err error
+	createStatsCopyStatHistory := statHistory.Get()
+	createStatsCopyCombinedStates := combinedStates.Get()
+	createStatsCopyLastKbpsStats := lastKbpsStats.Get()
+
+	for _, healthResult := range results {
+		fmt.Printf("DEBUG poll %v %v CreateStats start\n", healthResult.PollID, time.Now())
+	}
+
+	newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
+
+	for _, healthResult := range results {
+		fmt.Printf("DEBUG poll %v %v CreateStats end\n", healthResult.PollID, time.Now())
+	}
+
+	if err != nil {
+		errorCount.Inc()
+		log.Printf("ERROR getting deliveryservice: %v\n", err)
+	} else {
+		dsStats.Set(newDsStats)
+		lastKbpsStats.Set(newLastKbpsStats)
+	}
+
+	for _, healthResult := range results {
+		//				if lastHealthStart, ok := lastHealthEndTimes.GetTime(enum.CacheName(healthResult.Id)); ok {
+		if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
+			d := time.Since(lastHealthStart)
+			lastHealthDurations.Set(enum.CacheName(healthResult.Id), d)
+		}
+		lastHealthEndTimes[enum.CacheName(healthResult.Id)] = now
+		// lastHealthEndTimes.Set(enum.CacheName(healthResult.Id), now)
+
+		fmt.Printf("DEBUG poll %v %v finish\n", healthResult.PollID, time.Now())
+		healthResult.PollFinished <- healthResult.PollID
 	}
 }
 

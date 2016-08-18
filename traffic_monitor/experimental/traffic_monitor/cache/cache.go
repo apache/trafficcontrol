@@ -47,7 +47,8 @@ type Result struct {
 	Time      time.Time
 	Vitals    Vitals
 	PrecomputedData
-	PollID uint64
+	PollID       uint64
+	PollFinished chan<- uint64
 }
 
 type Vitals struct {
@@ -108,14 +109,15 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 	return json.Marshal(stats)
 }
 
-func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64) {
+func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
 	fmt.Printf("DEBUG poll %v %v handle start\n", pollId, time.Now())
 	result := Result{
-		Id:        id,
-		Available: false,
-		Errors:    []error{},
-		Time:      time.Now(),
-		PollID:    pollId,
+		Id:           id,
+		Available:    false,
+		Errors:       []error{},
+		Time:         time.Now(),
+		PollID:       pollId,
+		PollFinished: pollFinished,
 	}
 
 	if err != nil {

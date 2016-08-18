@@ -11,7 +11,7 @@ import (
 )
 
 type Fetcher interface {
-	Fetch(string, string, uint64)
+	Fetch(string, string, uint64, chan<- uint64)
 }
 
 type HttpFetcher struct {
@@ -33,7 +33,7 @@ type Counters struct {
 	Pending *gmx.Gauge
 }
 
-func (f HttpFetcher) Fetch(id string, url string, pollId uint64) {
+func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedChan chan<- uint64) {
 	fmt.Printf("DEBUG poll %v %v fetch start\n", pollId, time.Now())
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
@@ -58,11 +58,11 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64) {
 			f.Success.Inc()
 		}
 		fmt.Printf("DEBUG poll %v %v fetch end\n", pollId, time.Now())
-		f.Handler.Handle(id, response.Body, err, pollId)
+		f.Handler.Handle(id, response.Body, err, pollId, pollFinishedChan)
 	} else {
 		if f.Fail != nil {
 			f.Fail.Inc()
 		}
-		f.Handler.Handle(id, nil, err, pollId)
+		f.Handler.Handle(id, nil, err, pollId, pollFinishedChan)
 	}
 }

@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	defaultCacheHealthPollingInterval   time.Duration = 1 * time.Second
-	defaultCacheStatPollingInterval     time.Duration = 5 * time.Second
+	defaultCacheHealthPollingInterval   time.Duration = 6 * time.Second
+	defaultCacheStatPollingInterval     time.Duration = 6 * time.Second
 	defaultMonitorConfigPollingInterval time.Duration = 5 * time.Second
 	defaultHttpTimeout                  time.Duration = 2 * time.Second
 	defaultPeerPollingInterval          time.Duration = 5 * time.Second
