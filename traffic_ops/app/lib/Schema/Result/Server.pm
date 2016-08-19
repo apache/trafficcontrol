@@ -33,13 +33,13 @@ __PACKAGE__->table("server");
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 domain_name
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 tcp_port
 
@@ -62,7 +62,7 @@ __PACKAGE__->table("server");
 =head2 interface_name
 
   data_type: 'varchar'
-  is_nullable: 0
+  is_nullable: 1
   size: 45
 
 =head2 ip_address
@@ -74,13 +74,13 @@ __PACKAGE__->table("server");
 =head2 ip_netmask
 
   data_type: 'varchar'
-  is_nullable: 0
+  is_nullable: 1
   size: 45
 
 =head2 ip_gateway
 
   data_type: 'varchar'
-  is_nullable: 0
+  is_nullable: 1
   size: 45
 
 =head2 ip6_address
@@ -223,15 +223,20 @@ __PACKAGE__->table("server");
   default_value: current_timestamp
   is_nullable: 1
 
+=head2 https_port
+
+  data_type: 'smallint'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "host_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "domain_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "tcp_port",
   { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 1 },
   "xmpp_id",
@@ -239,13 +244,13 @@ __PACKAGE__->add_columns(
   "xmpp_passwd",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "interface_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 1, size => 45 },
   "ip_address",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_netmask",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 1, size => 45 },
   "ip_gateway",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 1, size => 45 },
   "ip6_address",
   { data_type => "varchar", is_nullable => 1, size => 50 },
   "ip6_gateway",
@@ -302,6 +307,8 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 1,
   },
+  "https_port",
+  { data_type => "smallint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -325,42 +332,6 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
-
-=head2 C<cs_ip_address_UNIQUE>
-
-=over 4
-
-=item * L</ip_address>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("cs_ip_address_UNIQUE", ["ip_address"]);
-
-=head2 C<host_name>
-
-=over 4
-
-=item * L</host_name>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("host_name", ["host_name"]);
-
-=head2 C<ip6_address>
-
-=over 4
-
-=item * L</ip6_address>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("ip6_address", ["ip6_address"]);
 
 =head2 C<se_id_UNIQUE>
 
@@ -512,8 +483,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-06-13 22:13:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gdRECADmRFpa3OWLbqJirA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-08-19 14:22:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vlUemFUFrHSXb7gxHFQWnQ
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
