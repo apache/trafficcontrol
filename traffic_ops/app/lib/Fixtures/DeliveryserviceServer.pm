@@ -54,6 +54,34 @@ my %definition_for = (
 			server          => 8,
 		},
 	},
+	test_ds5_server_edge14 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 5,
+			server          => 14,
+		},
+	},
+	test_ds5_server_edge15 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 5,
+			server          => 15,
+		},
+	},
+	test_ds6_server_edge14 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 6,
+			server          => 14,
+		},
+	},
+	test_ds6_server_edge15 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 6,
+			server          => 15,
+		},
+	},
 );
 
 sub get_definition {
