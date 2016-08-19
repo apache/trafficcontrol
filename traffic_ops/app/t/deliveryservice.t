@@ -219,11 +219,11 @@ ok $t->post_ok(
 
 ok $t->get_ok('/datadeliveryservice')->
 	status_is(200)->
-	json_is( '/4/dscp' => '40' )
-	->json_is( '/4/active' => '1' )
-	->json_is( '/4/protocol' => '3' )
-	->json_is( '/4/display_name' => 'display name 1' )
-	->json_is( '/4/regional_geo_blocking' => '1' )
+	json_is( '/6/dscp' => '40' )
+	->json_is( '/6/active' => '1' )
+	->json_is( '/6/protocol' => '3' )
+	->json_is( '/6/display_name' => 'display name 1' )
+	->json_is( '/6/regional_geo_blocking' => '1' )
 	->json_is( '/0/regional_geo_blocking' => '1' )
 	->json_is( '/1/regional_geo_blocking' => '0' ),
 	"validate delivery services were created";
@@ -289,24 +289,24 @@ ok $t->post_ok(
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
 ok $t->get_ok('/datadeliveryservice')->status_is(200)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( '/6/dscp' => '41' )->json_is( '/6/active' => '0' )
-  ->json_is( '/6/profile_description' => 'mid description' )
-  ->json_is( '/6/org_server_fqdn'     => 'http://update.knutsel.com' )
-  ->json_is( '/6/xml_id'              => 'tst_xml_id_3_update' )
-  ->json_is( '/6/signed'         => '0' )->json_is( '/6/qstring_ignore' => '0' )
-  ->json_is( '/6/dns_bypass_ip'  => '10.10.10.11' )
-  ->json_is( '/6/dns_bypass_ip6' => '2001:558:fee8:180::1/64' )
-  ->json_is( '/6/dns_bypass_ttl' => '31' )->json_is( '/6/ccr_dns_ttl' => 3601 )
-  ->json_is( '/6/global_max_mbps' => 4000000 )
-  ->json_is( '/6/global_max_tps' => 10001 )->json_is( '/6/miss_lat' => '0' )
-  ->json_is( '/6/miss_long' => '0' )->json_is( '/6/long_desc' => 'long_update' )
-  ->json_is( '/6/long_desc_1' => 'cust_update' )
-  ->json_is( '/6/long_desc_2' => 'service_update' )
-  ->json_is( '/6/info_url'    => 'http://knutsel-update.com' )
-  ->json_is( '/6/protocol'    => '1' )->json_is( '/6/profile_name' => 'MID1' )
-  ->json_is( '/6/geolimit_redirect_url' => 'http://update.redirect.url.com' )
-  ->json_is( '/6/display_name'          => 'Testing Delivery Service' )
-  ->json_is( '/6/regional_geo_blocking' => '1' ),
+  ->json_is( '/8/dscp' => '41' )->json_is( '/8/active' => '0' )
+  ->json_is( '/8/profile_description' => 'mid description' )
+  ->json_is( '/8/org_server_fqdn'     => 'http://update.knutsel.com' )
+  ->json_is( '/8/xml_id'              => 'tst_xml_id_3_update' )
+  ->json_is( '/8/signed'         => '0' )->json_is( '/8/qstring_ignore' => '0' )
+  ->json_is( '/8/dns_bypass_ip'  => '10.10.10.11' )
+  ->json_is( '/8/dns_bypass_ip6' => '2001:558:fee8:180::1/64' )
+  ->json_is( '/8/dns_bypass_ttl' => '31' )->json_is( '/8/ccr_dns_ttl' => 3601 )
+  ->json_is( '/8/global_max_mbps' => 4000000 )
+  ->json_is( '/8/global_max_tps' => 10001 )->json_is( '/8/miss_lat' => '0' )
+  ->json_is( '/8/miss_long' => '0' )->json_is( '/8/long_desc' => 'long_update' )
+  ->json_is( '/8/long_desc_1' => 'cust_update' )
+  ->json_is( '/8/long_desc_2' => 'service_update' )
+  ->json_is( '/8/info_url'    => 'http://knutsel-update.com' )
+  ->json_is( '/8/protocol'    => '1' )->json_is( '/8/profile_name' => 'MID1' )
+  ->json_is( '/8/geolimit_redirect_url' => 'http://update.redirect.url.com' )
+  ->json_is( '/8/display_name'          => 'Testing Delivery Service' )
+  ->json_is( '/8/regional_geo_blocking' => '1' ),
   "validate delivery service was updated";
 
 #delete delivery service
