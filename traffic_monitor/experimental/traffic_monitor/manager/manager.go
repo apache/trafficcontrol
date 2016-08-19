@@ -90,8 +90,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel)
 	combinedStates := StartPeerManager(peerHandler.ResultChannel, localStates, peerStates)
-	statHistory := StartStatHistoryManager(cacheStatHandler.ResultChannel)
-	lastHealthDurations, events, localCacheStatus, dsStats, lastKbpsStats := StartHealthResultManager(
+	statHistory, _, lastKbpsStats, dsStats := StartStatHistoryManager(cacheStatHandler.ResultChannel, combinedStates, toData, errorCount)
+	lastHealthDurations, events, localCacheStatus := StartHealthResultManager(
 		cacheHealthHandler.ResultChannel,
 		toData,
 		localStates,
