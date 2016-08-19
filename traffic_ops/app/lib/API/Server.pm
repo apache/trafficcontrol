@@ -159,12 +159,15 @@ sub get_servers_by_dsid {
 	my $servers;
 	if ( scalar(@ds_servers) ) {
 		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
-		my %criteria = ( 'me.id' => { -in => \@ds_servers } );
+		my %criteria = ( -or => [ 'me.id' => { -in => \@ds_servers } ] );
 
-		my @types_no_mid = qw( HTTP_NO_CACHE HTTP_LIVE DNS_LIVE );    # currently these are the ds types that bypass the mids
+		# currently these are the ds types that bypass the mids
+		my @types_no_mid = qw( HTTP_NO_CACHE HTTP_LIVE DNS_LIVE );
 		if ( !grep { $_ eq $ds->type->name } @types_no_mid ) {
-			$criteria{'type.name'} = { -not_like => 'MID%' };
-			$criteria{'me.cdn_id'} = $ds->cdn_id;
+			# if the delivery service employs mids, we're gonna pull mid servers too by pulling the cachegroups of the edges and finding those cachegroups parent cachegroup...
+			# then we see which servers have cachegroup in parent cachegroup list...that's how we find mids for the ds :)
+			my @parent_cachegroup_ids = $self->db->resultset('ServersParentCachegroupList')->search( { 'me.server_id' => { -in => \@ds_servers } } )->get_column('parent_cachegroup_id')->all();
+			push @{ $criteria{-or} }, { 'me.cachegroup' => { -in => \@parent_cachegroup_ids } };
 		}
 
 		if ( defined $status ) {
