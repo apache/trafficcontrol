@@ -145,6 +145,7 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 		for {
 			select {
 			case <-tick:
+				fmt.Printf("WARN Health Result Manager flushing queued results\n")
 				processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, dsStats, lastKbpsStats, lastHealthEndTimes, healthHistory, results)
 				break innerLoop
 			default:
