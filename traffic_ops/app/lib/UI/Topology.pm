@@ -191,7 +191,7 @@ sub gen_crconfig_json {
             'me.cdn_id' => $cdn_id
         }, {
             prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
-            columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
+            columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
         }
     );
 
@@ -203,13 +203,14 @@ sub gen_crconfig_json {
             || $row->status->name eq 'ADMIN_DOWN' );
 
         if ( $row->type->name eq "RASCAL" ) {
-            $data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'status'}   = $row->status->name;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'location'} = $row->cachegroup->name;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'port'}     = $row->tcp_port;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'ip'}       = $row->ip_address;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
-            $data_obj->{'monitors'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}      = $row->host_name . "." . $row->domain_name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'status'}    = $row->status->name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'location'}  = $row->cachegroup->name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'port'}      = $row->tcp_port;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'httpsPort'} = $row->https_port;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'ip'}        = $row->ip_address;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'ip6'}       = ( $row->ip6_address || "" );
+            $data_obj->{'monitors'}->{ $row->host_name }->{'profile'}   = $row->profile->name;
 
         }
         elsif ( $row->type->name eq "CCR" ) {
@@ -223,14 +224,15 @@ sub gen_crconfig_json {
             my $r = $rs_param->single;
             my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
 
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'status'}   = $row->status->name;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'location'} = $row->cachegroup->name;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'port'}     = $row->tcp_port;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'api.port'} = $port;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'}       = $row->ip_address;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'}        = $row->host_name . "." . $row->domain_name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'status'}      = $row->status->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'location'}    = $row->cachegroup->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'port'}        = $row->tcp_port;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'httpsPort'}   = $row->https_port;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'api.port'}    = $port;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'}          = $row->ip_address;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}         = ( $row->ip6_address || "" );
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}     = $row->profile->name;
         }
         elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 
@@ -257,6 +259,7 @@ sub gen_crconfig_json {
             $data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'}    = $row->cachegroup->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'port'}          = $row->tcp_port;
+            $data_obj->{'contentServers'}->{ $row->host_name }->{'httpsPort'}     = $row->https_port;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'interfaceName'} = $row->interface_name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'status'}        = $row->status->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'ip'}            = $row->ip_address;
@@ -472,10 +475,10 @@ sub gen_crconfig_json {
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
-            
+
             if ( defined($row->geo_limit) && $row->geo_limit ne 0 ) {
-            	$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLimitRedirectURL'} = 
-       			defined($row->geolimit_redirect_url) ? $row->geolimit_redirect_url : "";
+                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLimitRedirectURL'} =
+                    defined($row->geolimit_redirect_url) ? $row->geolimit_redirect_url : "";
             }
         }
 
