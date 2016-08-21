@@ -184,6 +184,12 @@ public abstract class AbstractServiceUpdater {
 		}
 	}
 
+	public void cancelServiceUpdater() {
+		this.stopServiceUpdater();
+		pollingInterval = 0;
+		dataBaseURL = null;
+	}
+
 	public void setDataBaseURL(final String url, final long refresh) {
 		if (refresh !=0 && refresh != pollingInterval) {
 
