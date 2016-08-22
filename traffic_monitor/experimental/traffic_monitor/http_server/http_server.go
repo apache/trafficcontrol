@@ -24,6 +24,7 @@ type Server struct {
 // This is a function because Go doesn't have constant map literals.
 func (s Server) endpoints() (map[string]http.HandlerFunc, error) {
 	handleRoot, err := s.handleRootFunc()
+	handleSortableJs, err := s.handleSortableFunc()
 	if err != nil {
 		return nil, fmt.Errorf("Error getting root endpoint: %v", err)
 	}
@@ -45,7 +46,8 @@ func (s Server) endpoints() (map[string]http.HandlerFunc, error) {
 		"/api/version":               s.dataRequestFunc(APIVersion),
 		"/api/traffic-ops-uri":       s.dataRequestFunc(APITrafficOpsURI),
 		"/api/cache-statuses":        s.dataRequestFunc(APICacheStates),
-		"/": handleRoot,
+		"/":             handleRoot,
+		"/sorttable.js": handleSortableJs,
 	}, nil
 }
 
@@ -172,6 +174,16 @@ func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f 
 
 func (s Server) handleRootFunc() (http.HandlerFunc, error) {
 	index, err := ioutil.ReadFile("index.html")
+	if err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(w, "%s", index)
+	}, nil
+}
+
+func (s Server) handleSortableFunc() (http.HandlerFunc, error) {
+	index, err := ioutil.ReadFile("sorttable.js")
 	if err != nil {
 		return nil, err
 	}
