@@ -412,7 +412,7 @@ __PACKAGE__->add_columns(
   "logs_enabled",
   { data_type => "smallint", is_nullable => 1 },
   "multi_site_origin_algorithm",
-  { data_type => "smallint", is_nullable => 0 },
+  { data_type => "smallint", is_nullable => 1 },
   "geolimit_redirect_url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
 );
@@ -433,7 +433,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_419527_ds_id_unique>
+=head2 C<idx_471938_ds_id_unique>
 
 =over 4
 
@@ -443,9 +443,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419527_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_471938_ds_id_unique", ["id"]);
 
-=head2 C<idx_419527_ds_name_unique>
+=head2 C<idx_471938_ds_name_unique>
 
 =over 4
 
@@ -455,7 +455,7 @@ __PACKAGE__->add_unique_constraint("idx_419527_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419527_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_471938_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -630,8 +630,7 @@ __PACKAGE__->belongs_to(
 );
 
 
-
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-01 08:58:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:k1aJ71tsV0AWeFF/OpHFUA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-22 12:27:39
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:mMuIsM5MBvxpWmub6CN8mw
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

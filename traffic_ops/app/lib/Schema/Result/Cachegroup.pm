@@ -126,7 +126,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_419504_cg_name_unique>
+=head2 C<idx_471915_cg_name_unique>
 
 =over 4
 
@@ -136,9 +136,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419504_cg_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_471915_cg_name_unique", ["name"]);
 
-=head2 C<idx_419504_cg_short_unique>
+=head2 C<idx_471915_cg_short_unique>
 
 =over 4
 
@@ -148,9 +148,9 @@ __PACKAGE__->add_unique_constraint("idx_419504_cg_name_unique", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419504_cg_short_unique", ["short_name"]);
+__PACKAGE__->add_unique_constraint("idx_471915_cg_short_unique", ["short_name"]);
 
-=head2 C<idx_419504_lo_id_unique>
+=head2 C<idx_471915_lo_id_unique>
 
 =over 4
 
@@ -160,7 +160,7 @@ __PACKAGE__->add_unique_constraint("idx_419504_cg_short_unique", ["short_name"])
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419504_lo_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_471915_lo_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -310,8 +310,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:uaf7j2sabahtgl722PPv5w
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-22 12:27:39
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:sjzOIyn5fs4e2ckGxs05Xg
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

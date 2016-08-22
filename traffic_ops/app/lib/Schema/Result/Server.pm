@@ -331,7 +331,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_419724_cs_ip_address_unique>
+=head2 C<idx_472135_cs_ip_address_unique>
 
 =over 4
 
@@ -341,9 +341,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419724_cs_ip_address_unique", ["ip_address"]);
+__PACKAGE__->add_unique_constraint("idx_472135_cs_ip_address_unique", ["ip_address"]);
 
-=head2 C<idx_419724_host_name>
+=head2 C<idx_472135_host_name>
 
 =over 4
 
@@ -353,9 +353,9 @@ __PACKAGE__->add_unique_constraint("idx_419724_cs_ip_address_unique", ["ip_addre
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419724_host_name", ["host_name"]);
+__PACKAGE__->add_unique_constraint("idx_472135_host_name", ["host_name"]);
 
-=head2 C<idx_419724_ip6_address>
+=head2 C<idx_472135_ip6_address>
 
 =over 4
 
@@ -365,9 +365,9 @@ __PACKAGE__->add_unique_constraint("idx_419724_host_name", ["host_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419724_ip6_address", ["ip6_address"]);
+__PACKAGE__->add_unique_constraint("idx_472135_ip6_address", ["ip6_address"]);
 
-=head2 C<idx_419724_se_id_unique>
+=head2 C<idx_472135_se_id_unique>
 
 =over 4
 
@@ -377,7 +377,7 @@ __PACKAGE__->add_unique_constraint("idx_419724_ip6_address", ["ip6_address"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_419724_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_472135_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -522,8 +522,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GqYil3dgeCYPUYPu+hJKXw
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-22 12:27:39
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:PF+9P6mqaO+53t8vWJ4Kjw
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
