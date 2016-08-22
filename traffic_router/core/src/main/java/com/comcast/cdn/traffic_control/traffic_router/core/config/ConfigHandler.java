@@ -442,7 +442,7 @@ public class ConfigHandler {
 
 		if (jo.has(deliveryServicesKey)) {
 			final JSONObject dss = jo.getJSONObject(deliveryServicesKey);
-			for (String ds : JSONObject.getNames(dss)) {
+			for (final String ds : JSONObject.getNames(dss)) {
 				if (dss.getJSONObject(ds).has("regionalGeoBlocking") &&
 						dss.getJSONObject(ds).getString("regionalGeoBlocking").equals("true")) {
 					final long interval = config.optLong("regional_geoblock.polling.interval");
