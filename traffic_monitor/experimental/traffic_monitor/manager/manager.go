@@ -62,7 +62,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	toData := todata.NewThreadsafe()
 	dr := make(chan http_server.DataRequest)
 
-	cacheHealthHandler := cache.NewPrecomputeHandler(toData, peerStates)
+	cacheHealthHandler := cache.NewHandler()
 	cacheHealthPoller := poller.NewHTTP(defaultCacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates) // TODO figure out if this is necessary, with the CacheHealthPoller
 	cacheStatPoller := poller.NewHTTP(defaultCacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler)

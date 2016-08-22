@@ -223,7 +223,7 @@
 						 document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
 					 }
 					 if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
-						 document.getElementById("cache-states-" + server + "-bandwidth-kbps").textContent = jdata[server].bandwidth_kbps;
+						 document.getElementById("cache-states-" + server + "-bandwidth-kbps").textContent = jdata[server].bandwidth_kbps.toFixed(2);
 					 }
 					 if (jdata[server].hasOwnProperty("connection_count")) {
 						 document.getElementById("cache-states-" + server + "-connection-count").textContent = jdata[server].connection_count;

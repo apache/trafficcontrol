@@ -132,6 +132,8 @@ type LastKbpsData struct {
 	Time  time.Time
 }
 
+const BytesPerKbps = 1024
+
 // addKbps adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
 //
 // Traffic Server only updates its data every N seconds. So, often we get a new Stats with the same OutBytes as the previous one,
@@ -139,7 +141,7 @@ type LastKbpsData struct {
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
-func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, cacheOutbytes map[enum.CacheName]int64) (Stats, StatsLastKbps, error) {
+func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time) (Stats, StatsLastKbps, error) {
 	for dsName, iStat := range dsStats.DeliveryService {
 		if _, ok := iStat.(*dsdata.StatDNS); ok {
 			continue
@@ -197,7 +199,13 @@ func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
 	}
 
-	for cacheName, outBytes := range cacheOutbytes { // map[enum.CacheName]int64
+	for cacheName, results := range statHistory { // map[enum.CacheName]int64
+		if len(results) < 1 {
+			continue // TODO warn?
+		}
+		result := results[0]
+		outBytes := result.PrecomputedData.OutBytes
+
 		lastCacheKbpsData, ok := lastKbpsStats.Caches[cacheName]
 		if !ok {
 			lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: 0}
@@ -208,8 +216,23 @@ func addKbps(dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, 
 			continue // don't try to kbps, and importantly don't change the time of the last change, if Traffic Server hasn't updated
 		}
 
-		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / dsStatsTime.Sub(lastCacheKbpsData.Time).Seconds()
-		lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: kbps}
+		if outBytes == 0 {
+			fmt.Printf("ERROR adding kbps %v outbytes zero\n", cacheName)
+			continue
+		}
+
+		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / result.Time.Sub(lastCacheKbpsData.Time).Seconds() / BytesPerKbps
+		if lastCacheKbpsData.Bytes == 0 {
+			kbps = 0
+			fmt.Printf("ERROR adding kbps %v lastCacheKbpsData.Bytes zero\n", cacheName)
+		}
+		if kbps < 0 {
+			kbps = 0
+			// TODO figure out what to do. Print error. Explode. Definitely don't set kbps negative.
+			fmt.Printf("ERROR negative kbps: %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time)
+		}
+
+		lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: result.Time, Bytes: outBytes, Kbps: kbps}
 	}
 
 	return dsStats, lastKbpsStats, nil
@@ -238,8 +261,6 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		return dsStats, lastKbpsStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
 
-	cacheOutbytes := map[enum.CacheName]int64{}
-
 	for server, history := range statHistory {
 		if len(history) < 1 {
 			continue // TODO warn?
@@ -255,8 +276,6 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			continue
 		}
 		result := history[len(history)-1]
-
-		cacheOutbytes[enum.CacheName(server)] = result.PrecomputedData.OutBytes
 
 		for ds, stat := range result.PrecomputedData.DeliveryServiceStats {
 			switch stat.(type) {
@@ -280,7 +299,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		}
 	}
 
-	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(dsStats, lastKbpsStats, now, cacheOutbytes)
+	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(statHistory, dsStats, lastKbpsStats, now)
 	fmt.Printf("CreateStats took %v\n", time.Since(start))
 	return kbpsStats, kbpsStatsLastKbps, kbpsErr
 }
