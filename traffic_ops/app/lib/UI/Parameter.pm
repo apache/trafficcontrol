@@ -151,7 +151,7 @@ sub delete {
 	else {
 		my $secure = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('secure')->single();
 		if ( (1==$secure) && !&is_admin($self) ) {
-			$self->flash( alertmsg => "No can do for secure parameter. Get more privs." );
+			$self->flash( alertmsg => "Forbidden. Admin role required to delete a secure parameter." );
 		}
 		else {
 			my $p_name = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('name')->single();
