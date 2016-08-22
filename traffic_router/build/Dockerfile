@@ -11,9 +11,12 @@ RUN	yum -y install \
 ENV GITREPO=https://github.com/Comcast/traffic_control
 ENV BRANCH=master
 
-
 #############################################################################
 # Above are common for all sub-projects.
+
+RUN	yum -y install \
+		which && \
+	yum -y clean all
 
 ### java/mvn
 WORKDIR /opt
