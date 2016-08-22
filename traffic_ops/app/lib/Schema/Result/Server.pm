@@ -327,6 +327,12 @@ __PACKAGE__->add_columns(
 
 =back
 
+=cut
+
+__PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
+
+=head1 UNIQUE CONSTRAINTS
+
 =head2 C<cs_ip_address_UNIQUE>
 
 =over 4
