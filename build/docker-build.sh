@@ -9,7 +9,6 @@
 #    -r <gitrepo> git repository to clone from (defaults to value of GITREPO env variable or
 #		  `https://github.com/Comcast/traffic_control').  Can be a URI or local directory.
 #    -b <branch>  branch (or tag) in repository to checkout (defaults to value of BRANCH env variable or `master')
-#    -c           clean images after completion (default is not to clean)
 #    -d <dir>     directory to copy build artifacts (default is ./dist)
 
 export GITREPO="${GITREPO:-https://github.com/Comcast/traffic_control}"
@@ -92,22 +91,13 @@ cat <<-ENDMSG
 	
 	Building from git repository '$GITREPO' branch '$BRANCH'
 	Artifacts will be delivered to '$dist'
-	New docker images will $cleanmsg
 
 	Projects to build: $projects
 	********************************************************
 
 ENDMSG
 
-# sub-projects to build
-
-image_exists() {
-	docker history --quiet $1 >/dev/null 2>&1
-	return $?
-}
-
 # collect image names for later cleanup
-images=
 createBuilders() {
 	# topdir=.../traffic_control
 	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
@@ -116,17 +106,8 @@ createBuilders() {
 	for p in $projects
 	do 
 		local image=$p/build
-		if [[ -n $cleanup ]]
-		then
-			docker rmi $image || echo "No image to remove"
-		fi
-
-		if ! image_exists $image
-		then
-			echo -n "**   $image: "; date
-			docker build --tag $image "$topdir/$p/build"
-			images="$images $image"
-		fi
+		echo -n "**   $image: "; date
+		docker build --tag $image "$topdir/$p/build"
 	done
 }
 
