@@ -327,6 +327,42 @@ __PACKAGE__->add_columns(
 
 =back
 
+=head2 C<cs_ip_address_UNIQUE>
+
+=over 4
+
+=item * L</ip_address>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("cs_ip_address_UNIQUE", ["ip_address"]);
+
+=head2 C<host_name>
+
+=over 4
+
+=item * L</host_name>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("host_name", ["host_name"]);
+
+=head2 C<ip6_address>
+
+=over 4
+
+=item * L</ip6_address>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("ip6_address", ["ip6_address"]);
+
 =cut
 
 __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
