@@ -832,7 +832,7 @@ sub update {
 				host_name      => defined( $params->{'hostName'} )      ? $params->{'hostName'}      : $update->host_name,
 				domain_name    => defined( $params->{'domainName'} )    ? $params->{'domainName'}    : $update->domain_name,
 				tcp_port       => defined( $params->{'tcpPort'} )       ? $params->{'tcpPort'}       : $update->tcp_port,
-				tcp_port       => defined( $params->{'httpsPort'} )       ? $params->{'httpsPort'}       : $update->https_port,
+				https_port     => defined( $params->{'httpsPort'} )       ? $params->{'httpsPort'}   : $update->https_port,
 				interface_name => defined( $params->{'interfaceName'} ) ? $params->{'interfaceName'} : $update->interface_name,
 				ip_address     => defined( $params->{'ipAddress'} )     ? $params->{'ipAddress'}     : $update->ip_address,
 				ip_netmask     => defined( $params->{'ipNetmask'} )     ? $params->{'ipNetmask'}     : $update->ip_netmask,
