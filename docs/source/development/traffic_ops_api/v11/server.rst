@@ -372,7 +372,7 @@ Server
         "routerPortName": "2",
         "status": "ONLINE",
         "tcpPort": "80",
-        "httpsPort": "80",
+        "httpsPort": "443",
         "type": "EDGE",
         "xmppId": "atsec-chi-00-dummyxmpp",
         "xmppPasswd": "X"
