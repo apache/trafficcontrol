@@ -89,6 +89,7 @@ public class DeliveryService {
 	private boolean hasX509Cert = false;
 	private final boolean acceptHttp;
 	private final boolean acceptHttps;
+	private final boolean redirectToHttps;
 
 	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
 		this.id = id;
@@ -138,6 +139,7 @@ public class DeliveryService {
 		final JSONObject protocol = dsJo.optJSONObject("protocol");
 		acceptHttp = protocol != null ? protocol.optBoolean("acceptHttp", true) : true;
 		acceptHttps = protocol != null ? protocol.optBoolean("acceptHttps", false) : false;
+		redirectToHttps = protocol != null ? protocol.optBoolean("redirectToHttps", false) : false;
 	}
 
 	public String getId() {
@@ -230,7 +232,11 @@ public class DeliveryService {
 	private static final String REGEX_PERIOD = "\\.";
 
 	private boolean useSecure(final HTTPRequest request) {
-		return request.isSecure() && acceptHttps && isSslReady();
+		if (request.isSecure()) {
+			return acceptHttps && isSslReady();
+		}
+
+		return redirectToHttps && acceptHttps && isSslReady();
 	}
 
 	private String getPortString(final HTTPRequest request, final int port) {

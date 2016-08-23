@@ -34,7 +34,6 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -72,12 +71,15 @@ public class RouterTest {
 	private final String httpsOnlyId = "https-only-test";
 	private final String secureNoCertId = "https-nocert";
 	private final String httpAndHttpsId = "http-and-https-test";
+	private final String httpToHttpsId = "http-to-https-test";
 	private List<String> httpsOnlyLocations = new ArrayList<>();
 	private List<String> noCertValidLocations = new ArrayList<>();
 	private List<String> httpAndHttpsLocations = new ArrayList<>();
+	private List<String> httpToHttpsLocations = new ArrayList<>();
 	private String httpsOnlyDomain = httpsOnlyId + ".thecdn.example.com";
 	private String noCertsDeliveryServiceDomain = "https-nocert.thecdn.example.com";
 	private String httpAndHttpsDomain = httpAndHttpsId + ".thecdn.example.com";
+	private String httpToHttpsDomain = httpToHttpsId + ".thecdn.example.com";
 	private String routerHttpPort = System.getProperty("routerHttpPort", "8888");
 	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
 	
@@ -171,6 +173,13 @@ public class RouterTest {
 				port = cacheNode.has("port") ? cacheNode.get("port").asInt(80) : 80;
 				portText = (port == 80) ? "" : ":" + port;
 				httpAndHttpsLocations.add("http://" + cacheId + "." + httpAndHttpsDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
+			}
+
+			if (cacheNode.get("deliveryServices").has(httpToHttpsId)) {
+				int port = cacheNode.has("httpsPort") ? cacheNode.get("httpsPort").asInt(443) : 443;
+
+				String portText = (port == 443) ? "" : ":" + port;
+				httpToHttpsLocations.add("https://" + cacheId + "." + httpToHttpsDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
 			}
 		}
 
@@ -302,22 +311,36 @@ public class RouterTest {
 		}
 	}
 
-	@Ignore // Ignore this test until we add explicit support for 'http to https' delivery service
 	@Test
 	public void itRedirectsFromHttpToHttps() throws Exception {
 		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpsOnlyId + ".bar");
-		CloseableHttpResponse response = null;
+		httpGet.addHeader("Host", "tr." + httpToHttpsId + ".bar");
 
-		try {
-			response = httpClient.execute(httpGet);
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			Header header = response.getFirstHeader("Location");
-			assertThat(header.getValue(), isIn(httpsOnlyLocations));
+			assertThat(header.getValue(), isIn(httpToHttpsLocations));
 			assertThat(header.getValue(), startsWith("https://"));
-			assertThat(header.getValue(), containsString(httpsOnlyId + ".thecdn.example.com/stuff"));
-		} finally {
-			if (response != null) response.close();
+			assertThat(header.getValue(), containsString(httpToHttpsId + ".thecdn.example.com"));
+			assertThat(header.getValue(), containsString("/stuff"));
+		}
+
+		httpClient = HttpClientBuilder.create()
+			.setSSLSocketFactory(new ClientSslSocketFactory("tr.http-and-https-test.thecdn.example.com"))
+			.setSSLHostnameVerifier(new TestHostnameVerifier())
+			.disableRedirectHandling()
+			.build();
+
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpToHttpsId + ".bar");
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			Header header = response.getFirstHeader("Location");
+			assertThat(header.getValue(), isIn(httpToHttpsLocations));
+			assertThat(header.getValue(), startsWith("https://"));
+			assertThat(header.getValue(), containsString(httpToHttpsId + ".thecdn.example.com"));
+			assertThat(header.getValue(), containsString("/stuff"));
 		}
 	}
 
