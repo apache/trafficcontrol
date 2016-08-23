@@ -50,8 +50,8 @@ sub edit {
 		$self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', { 'type' => undef }, { 'profile' => undef } ] } );
 	my $data = $rs_ds->single;
 	my $action;
-	my $regexp_set = &get_regexp_set( $self, $id );
-	my $cdn_domain = $self->get_cdn_domain_by_ds_id($id);
+	my $regexp_set   = &get_regexp_set( $self, $id );
+	my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
@@ -67,6 +67,19 @@ sub edit {
 		hidden       => {},               # for form validation purposes
 		mode         => 'edit'            # for form generation
 	);
+}
+
+sub get_cdn_domain {
+	my $self       = shift;
+	my $id         = shift;
+	my $cdn_domain = $self->db->resultset('Parameter')->search(
+		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
+		{
+			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+			distinct => 1
+		}
+	)->get_column('value')->single();
+	return $cdn_domain;
 }
 
 sub get_example_urls {
@@ -160,7 +173,6 @@ sub get_example_urls {
 	}
 	return @example_urls;
 }
-
 
 sub get_regexp_set {
 	my $self = shift;
@@ -314,9 +326,9 @@ sub sanitize_geo_limit_countries {
 }
 
 sub check_deliveryservice_input {
-	my $self = shift;
+	my $self   = shift;
 	my $cdn_id = shift;
-	my $ds_id = shift;
+	my $ds_id  = shift;
 
 	if ( $self->param('ds.xml_id') =~ /\s/ ) {
 		$self->field('ds.xml_id')->is_equal( "", "Delivery service xml_id cannot contain whitespace." );
@@ -329,7 +341,7 @@ sub check_deliveryservice_input {
 		return $self->valid;    # Anything goes for the ANY_MAP, but ds.type is only set on create
 	}
 
-	if ($self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "") {
+	if ( $self->param('ds.qstring_ignore') == 2 && $self->param('ds.regex_remap') ne "" ) {
 		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
 	}
 
@@ -371,19 +383,21 @@ sub check_deliveryservice_input {
 				my $new_regex;
 				my $new_regex_type;
 
-				if (defined($self->param('re_type_' . $order_no))) {
-					$new_regex = $self->param('re_re_' . $order_no);
-					$new_regex_type = $self->param('re_type_' . $order_no);
+				if ( defined( $self->param( 're_type_' . $order_no ) ) ) {
+					$new_regex      = $self->param( 're_re_' . $order_no );
+					$new_regex_type = $self->param( 're_type_' . $order_no );
 				}
 
-				if (defined($self->param('re_type_new_' . $order_no))) {
-					$new_regex = $self->param('re_re_new_' . $order_no);
-					$new_regex_type = $self->param('re_type_new_' . $order_no);
+				if ( defined( $self->param( 're_type_new_' . $order_no ) ) ) {
+					$new_regex      = $self->param( 're_re_new_' . $order_no );
+					$new_regex_type = $self->param( 're_type_new_' . $order_no );
 				}
 
-				my $conflicting_regex = $self->find_existing_host_regex($new_regex_type, $new_regex, $cdn_domain, $cdn_id, $ds_id);
-				if (defined($conflicting_regex)) {
-					$self->field('hidden.regex')->is_equal( "", "There already is a HOST_REGEXP (" . $conflicting_regex . ") that matches " . $new_regex . "; Please choose another." );
+				my $conflicting_regex = $self->find_existing_host_regex( $new_regex_type, $new_regex, $cdn_domain, $cdn_id, $ds_id );
+				if ( defined($conflicting_regex) ) {
+					$self->field('hidden.regex')
+						->is_equal( "",
+						"There already is a HOST_REGEXP (" . $conflicting_regex . ") that matches " . $new_regex . "; Please choose another." );
 				}
 			}
 		}
@@ -493,8 +507,8 @@ sub check_deliveryservice_input {
 	if ( $self->param('ds.geo_limit') ne 0 ) {
 		my $url = $self->param('ds.geolimit_redirect_url');
 		$url =~ s/^(?i)https?(?-i):\/\/(.*)/$1/;
-		if ( (not $url =~ /^[0-9a-zA-Z_\!\~\*\'\(\)\.\;\?\:\@\&\=\+\$\,\%\#\-\/]+$/) || $url =~ /\/\//) {
-			$self->field('ds.geolimit_redirect_url')->is_equal("", "Invalid geolimit redirect url" );
+		if ( ( not $url =~ /^[0-9a-zA-Z_\!\~\*\'\(\)\.\;\?\:\@\&\=\+\$\,\%\#\-\/]+$/ ) || $url =~ /\/\// ) {
+			$self->field('ds.geolimit_redirect_url')->is_equal( "", "Invalid geolimit redirect url" );
 		}
 	}
 
@@ -725,7 +739,7 @@ sub update {
 		return $self->redirect_to($referer);
 	}
 
-	if ( $self->check_deliveryservice_input($self->param('ds.cdn_id'), $id) ) {
+	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
 
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
@@ -950,7 +964,7 @@ sub create {
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
-				dscp                        => $self->paramAsScalar('ds.dscp', 0 ),
+				dscp                        => $self->paramAsScalar( 'ds.dscp', 0 ),
 				signed                      => $self->paramAsScalar('ds.signed'),
 				qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
