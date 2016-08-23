@@ -59,6 +59,7 @@ sub index {
 					"hostName"       => $row->host_name,
 					"domainName"     => $row->domain_name,
 					"tcpPort"        => $row->tcp_port,
+					"httpsPort"      => $row->https_port,
 					"interfaceName"  => $row->interface_name,
 					"ipAddress"      => $row->ip_address,
 					"ipNetmask"      => $row->ip_netmask,
@@ -270,6 +271,7 @@ sub details_v11 {
 			"hostName"       => $row->host_name,
 			"domainName"     => $row->domain_name,
 			"tcpPort"        => $row->tcp_port,
+			"httpsPort"      => $row->https_port,
 			"xmppId"         => $row->xmpp_id,
 			"xmppPasswd"     => $isadmin ? $row->xmpp_passwd : "********",
 			"interfaceName"  => $row->interface_name,
@@ -343,6 +345,7 @@ sub details {
 				"hostName"       => $row->host_name,
 				"domainName"     => $row->domain_name,
 				"tcpPort"        => $row->tcp_port,
+				"httpsPort"        => $row->https_port,
 				"xmppId"         => $row->xmpp_id,
 				"xmppPasswd"     => $isadmin ? $row->xmpp_passwd : "********",
 				"interfaceName"  => $row->interface_name,
@@ -449,6 +452,12 @@ sub check_server_params {
 	}
 	elsif ( !defined($update_base) ) {
 		$params{'tcpPort'} = 80;
+	}
+	if ( defined( $json->{'httpsPort'} ) ) {
+		$params{'httpsPort'} = int( $json->{'httpsPort'} );
+	}
+	elsif ( !defined($update_base) ) {
+		$params{'httpsPort'} = 443;
 	}
 
 	eval { $params{'cachegroup'} = $self->db->resultset('Cachegroup')->search( { name => $json->{'cachegroup'} } )->get_column('id')->single(); };
@@ -620,6 +629,9 @@ sub check_server_params {
 	if ( defined( $json->{'tcpPort'} ) && $json->{'tcpPort'} !~ /\d+/ ) {
 		return ( \%params, $json->{'tcpPort'} . " is not a valid tcp port" );
 	}
+	if ( defined( $json->{'httpsPort'} ) && $json->{'httpsPort'} !~ /\d+/ ) {
+		return ( \%params, $json->{'httpsPort'} . " is not a valid tcp port" );
+	}
 
 	return ( \%params, $err );
 }
@@ -639,6 +651,7 @@ sub get_server_by_id {
 		"hostName"       => $row->host_name,
 		"domainName"     => $row->domain_name,
 		"tcpPort"        => $row->tcp_port,
+		"httpsPort"      => $row->https_port,
 		"xmppId"         => $row->xmpp_id,
 		"xmppPasswd"     => "**********",
 		"interfaceName"  => $row->interface_name,
@@ -699,6 +712,7 @@ sub create {
 					host_name        => $json->{'hostName'},
 					domain_name      => $json->{'domainName'},
 					tcp_port         => $params->{'tcpPort'},
+					https_port         => $params->{'httpsPort'},
 					xmpp_id          => $json->{'hostName'},                                                           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $json->{'interfaceName'},
@@ -741,6 +755,7 @@ sub create {
 					host_name        => $json->{'hostName'},
 					domain_name      => $json->{'domainName'},
 					tcp_port         => $params->{'tcpPort'},
+					https_port         => $params->{'httpsPort'},
 					xmpp_id          => $json->{'hostName'},                                                           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $json->{'interfaceName'},
@@ -820,6 +835,7 @@ sub update {
 				host_name      => defined( $params->{'hostName'} )      ? $params->{'hostName'}      : $update->host_name,
 				domain_name    => defined( $params->{'domainName'} )    ? $params->{'domainName'}    : $update->domain_name,
 				tcp_port       => defined( $params->{'tcpPort'} )       ? $params->{'tcpPort'}       : $update->tcp_port,
+				https_port     => defined( $params->{'httpsPort'} )       ? $params->{'httpsPort'}   : $update->https_port,
 				interface_name => defined( $params->{'interfaceName'} ) ? $params->{'interfaceName'} : $update->interface_name,
 				ip_address     => defined( $params->{'ipAddress'} )     ? $params->{'ipAddress'}     : $update->ip_address,
 				ip_netmask     => defined( $params->{'ipNetmask'} )     ? $params->{'ipNetmask'}     : $update->ip_netmask,

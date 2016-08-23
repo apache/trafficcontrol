@@ -223,6 +223,11 @@ __PACKAGE__->table("server");
   default_value: current_timestamp
   is_nullable: 1
 
+=head2 https_port
+
+  data_type: 'smallint'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -302,6 +307,8 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 1,
   },
+  "https_port",
+  { data_type => "smallint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -512,8 +519,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-06-13 22:13:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gdRECADmRFpa3OWLbqJirA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-08-19 14:22:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vlUemFUFrHSXb7gxHFQWnQ
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
@@ -1027,7 +1034,7 @@ __PACKAGE__->belongs_to(
 #
 #
 1;
-# End of lines loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' 
+# End of lines loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm'
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
