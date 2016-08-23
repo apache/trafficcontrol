@@ -15,7 +15,7 @@ func NewDSStatsThreadsafe() DSStatsThreadsafe {
 	return DSStatsThreadsafe{m: &sync.Mutex{}, dsStats: &s}
 }
 
-func (o DSStatsThreadsafe) Get() ds.Stats {
+func (o *DSStatsThreadsafe) Get() ds.Stats {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -23,7 +23,7 @@ func (o DSStatsThreadsafe) Get() ds.Stats {
 	return o.dsStats.Copy()
 }
 
-func (o DSStatsThreadsafe) Set(newDsStats ds.Stats) {
+func (o *DSStatsThreadsafe) Set(newDsStats ds.Stats) {
 	o.m.Lock()
 	*o.dsStats = newDsStats
 	o.m.Unlock()

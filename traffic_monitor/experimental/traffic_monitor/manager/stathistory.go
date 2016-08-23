@@ -20,7 +20,7 @@ func NewStatHistoryThreadsafe() StatHistoryThreadsafe {
 	return StatHistoryThreadsafe{m: &sync.Mutex{}, statHistory: map[enum.CacheName][]cache.Result{}}
 }
 
-func (t StatHistoryThreadsafe) GetStat(stat enum.CacheName) []cache.Result {
+func (t *StatHistoryThreadsafe) GetStat(stat enum.CacheName) []cache.Result {
 	t.m.Lock()
 	defer func() {
 		t.m.Unlock()
@@ -28,7 +28,7 @@ func (t StatHistoryThreadsafe) GetStat(stat enum.CacheName) []cache.Result {
 	return copyStat(t.statHistory[stat])
 }
 
-func (t StatHistoryThreadsafe) Get() map[enum.CacheName][]cache.Result {
+func (t *StatHistoryThreadsafe) Get() map[enum.CacheName][]cache.Result {
 	t.m.Lock()
 	defer func() {
 		t.m.Unlock()
@@ -36,7 +36,7 @@ func (t StatHistoryThreadsafe) Get() map[enum.CacheName][]cache.Result {
 	return copyStats(t.statHistory)
 }
 
-func (t StatHistoryThreadsafe) Add(stat cache.Result) {
+func (t *StatHistoryThreadsafe) Add(stat cache.Result) {
 	t.m.Lock()
 	t.statHistory[enum.CacheName(stat.Id)] = pruneHistory(append(t.statHistory[enum.CacheName(stat.Id)], stat), defaultMaxHistory)
 	t.m.Unlock()

@@ -367,14 +367,16 @@
 		<% } %>
 		%= label_for 'multi_site_origin_algorithm' => 'Multi Site Origin Algorithm', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.multi_site_origin_algorithm')->select([['Consistent hash' => 0], ['Primary/backup' => 1], ['Strict round-robin' => 2], ['IP based round-robin' => 3]]);
+		%= field('ds.multi_site_origin_algorithm')->select([['Consistent hash' => 0], ['Primary/backup' => 1], ['Strict round-robin' => 2], ['IP based round-robin' => 3], ['Latch on failover' => 4]]);
 		<% } else { %>
 			<% if ($ds->multi_site_origin_algorithm == 1) { %>
 				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Primary/backup', readonly => 'readonly');
-			<% } elsif ($ds->range_request_handling == 2) { %>
+			<% } elsif ($ds->multi_site_origin_algorithm == 2) { %>
 				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Strict round-robin', readonly => 'readonly');
-			<% } elsif ($ds->range_request_handling == 3) { %>
-				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'IP based round-robin', readonly => 'readonly');
+			<% } elsif ($ds->multi_site_origin_algorithm == 3) { %>
+  			        %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'IP based round-robin', readonly => 'readonly');
+			<% } elsif ($ds->multi_site_origin_algorithm == 4) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Latch on failover', readonly => 'readonly');                        
 			<% } else { %>
                 %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Consistent hash', readonly => 'readonly');
 			<% } %>

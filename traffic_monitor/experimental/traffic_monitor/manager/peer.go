@@ -6,14 +6,15 @@ import (
 )
 
 // StartPeerManager listens for peer results, and when it gets one, it adds it to the peerStates list, and optimistically combines the good results into combinedStates
-func StartPeerManager(peerChan <-chan peer.Result, localStates CRStatesThreadsafe, peerStates CRStatesPeersThreadsafe) CRStatesThreadsafe {
-	combinedStates := NewCRStatesThreadsafe()
+func StartPeerManager(peerChan <-chan peer.Result, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe) peer.CRStatesThreadsafe {
+	combinedStates := peer.NewCRStatesThreadsafe()
 	go func() {
 		for {
 			select {
 			case crStatesResult := <-peerChan:
 				peerStates.Set(crStatesResult.Id, crStatesResult.PeerStats)
 				combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
+				crStatesResult.PollFinished <- crStatesResult.PollID
 			}
 		}
 	}()

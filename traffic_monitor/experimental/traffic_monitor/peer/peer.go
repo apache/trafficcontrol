@@ -15,10 +15,12 @@ func NewHandler() Handler {
 }
 
 type Result struct {
-	Id        string
-	Available bool
-	Errors    []error
-	PeerStats Crstates
+	Id           string
+	Available    bool
+	Errors       []error
+	PeerStats    Crstates
+	PollID       uint64
+	PollFinished chan<- uint64
 }
 
 const (
@@ -27,11 +29,13 @@ const (
 	NOTIFY_ALWAYS
 )
 
-func (handler Handler) Handle(id string, r io.Reader, err error) {
+func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
 	result := Result{
-		Id:        id,
-		Available: false,
-		Errors:    []error{},
+		Id:           id,
+		Available:    false,
+		Errors:       []error{},
+		PollID:       pollId,
+		PollFinished: pollFinished,
 	}
 
 	if err != nil {

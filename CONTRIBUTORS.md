@@ -32,4 +32,7 @@ Sorted alphabetically
 * **[Xiaodong Zhang (xiaodzha)] (https://github.com/xiaodzha)**
 * **[York Ma (yorma)] (https://github.com/yorma)**
 * **[Zhilin Huang (zhilhuan)] (https://github.com/zhilhuan)**
-
+* **[Shawn Canga (scanga)] (https://github.com/scanga)**
+* **[Alejandro Bueno (abueno001)] (https://github.com/abueno001)**
+* **[Julian Daw (jdawgitsome)] (https://github.com/jdawgitsome)**
+* **[Carol Stemley (cstemley)] (https://github.com/cstemley)**

@@ -218,10 +218,9 @@ ok $t->post_ok(
 # Note the 4 is the index, not the id.
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
 ok $t->get_ok('/datadeliveryservice')->
-	status_is(200)->
-	json_is( '/4/dscp' => '40' )
+	status_is(200)->json_is( '/4/dscp' => '40' )
 	->json_is( '/4/active' => '1' )
-	->json_is( '/4/protocol' => '3' )
+	->json_is( '/4/protocol' => '1' )
 	->json_is( '/4/display_name' => 'target-ds2-displayname' )
 	->json_is( '/4/regional_geo_blocking' => '1' )
 	->json_is( '/0/regional_geo_blocking' => '1' )

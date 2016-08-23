@@ -13,7 +13,7 @@ const (
 )
 
 type Handler interface {
-	Handle(string, io.Reader, error)
+	Handle(string, io.Reader, error, uint64, chan<- uint64)
 }
 
 type OpsConfigFileHandler struct {

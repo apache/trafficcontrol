@@ -149,10 +149,16 @@ sub delete {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $p_name = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('name')->single();
-		my $delete = $self->db->resultset('Parameter')->search( { id => $id } );
-		$delete->delete();
-		&log( $self, "Delete parameter " . $p_name, "UICHANGE" );
+		my $secure = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('secure')->single();
+		if ( (1==$secure) && !&is_admin($self) ) {
+			$self->flash( alertmsg => "Forbidden. Admin role required to delete a secure parameter." );
+		}
+		else {
+			my $p_name = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('name')->single();
+			my $delete = $self->db->resultset('Parameter')->search( { id => $id } );
+			$delete->delete();
+			&log( $self, "Delete parameter " . $p_name, "UICHANGE" );
+		}
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }

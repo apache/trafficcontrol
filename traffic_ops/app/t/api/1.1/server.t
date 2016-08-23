@@ -41,25 +41,25 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/1/status", "ONLINE" )->json_is( "/response/1/ipGateway", "127.0.0.7" )->json_is( "/response/1/ip6Gateway", "2345:1234:12:d::1" )
-	->json_is( "/response/1/tcpPort", "80" )->json_is( "/response/1/cachegroup", "edge_atl_group" )
+	->json_is( "/response/1/tcpPort", "80" )->json_is( "/response/1/cachegroup", "cg5-edge_atl_group" )
 	->json_is( "/response/1/hostName", "atlanta-edge-02" )->json_is( "/response/1/domainName", "ga.atlanta.kabletown.net" )
 	->json_is( "/response/1/ipAddress", "127.0.0.7" )->json_is( "/response/1/profile", "EDGE1" )->json_is( "/response/1/type", "EDGE" )
 	->json_is( "/response/1/physLocation", "Boulder" )->json_is( "/response/1/interfaceName", "bond0" )->json_is( "/response/1/interfaceMtu", "9000" )
 
 	->json_is( "/response/2/status", "ONLINE" )->json_is( "/response/2/ipGateway", "127.0.0.1" )->json_is( "/response/2/ip6Gateway", "2345:1234:12:8::1" )
-	->json_is( "/response/2/tcpPort", "80" )->json_is( "/response/2/cachegroup", "edge_atl_group" )->json_is( "/response/2/hostName", "atlanta-edge-03" )
+	->json_is( "/response/2/tcpPort", "80" )->json_is( "/response/2/cachegroup", "cg5-edge_atl_group" )->json_is( "/response/2/hostName", "atlanta-edge-03" )
 	->json_is( "/response/2/domainName", "ga.atlanta.kabletown.net" )->json_is( "/response/2/ipAddress", "127.0.0.13" )->json_is( "/response/2/profile", "EDGE1" )
 	->json_is( "/response/2/type", "EDGE" )->json_is( "/response/2/physLocation", "Boulder" )->json_is( "/response/2/interfaceName", "bond0" )
 	->json_is( "/response/2/interfaceMtu", "9000" )
 
 	->json_is( "/response/4/status", "ONLINE" )->json_is( "/response/4/ipGateway", "127.0.0.8" )->json_is( "/response/4/ip6Gateway", "2345:1234:12:e::1" )
-	->json_is( "/response/4/tcpPort", "80" )->json_is( "/response/4/cachegroup", "mid-northwest-group" )->json_is( "/response/4/hostName", "atlanta-mid-02" )
+	->json_is( "/response/4/tcpPort", "80" )->json_is( "/response/4/cachegroup", "cg2-mid-northwest" )->json_is( "/response/4/hostName", "atlanta-mid-02" )
 	->json_is( "/response/4/domainName", "ga.atlanta.kabletown.net" )->json_is( "/response/4/ipAddress", "127.0.0.8" )->json_is( "/response/4/profile", "MID1" )
 	->json_is( "/response/4/type", "MID" )->json_is( "/response/4/physLocation", "Denver" )->json_is( "/response/4/interfaceName", "bond0" )
 	->json_is( "/response/4/interfaceMtu", "9000" )
 
 	->json_is( "/response/7/status", "ONLINE" )->json_is( "/response/7/ipGateway", "127.0.0.11" )->json_is( "/response/7/ip6Gateway", "127.0.0.11" )
-	->json_is( "/response/7/tcpPort", "8086" )->json_is( "/response/7/cachegroup", "mid-northeast-group" )->json_is( "/response/7/hostName", "influxdb02" )
+	->json_is( "/response/7/tcpPort", "8086" )->json_is( "/response/7/cachegroup", "cg1-mid-northeast" )->json_is( "/response/7/hostName", "influxdb02" )
 	->json_is( "/response/7/domainName", "kabletown.net" )->json_is( "/response/7/ipAddress", "127.0.0.11" )->json_is( "/response/7/profile", "RASCAL1" )
 	->json_is( "/response/7/type", "INFLUXDB" )->json_is( "/response/7/physLocation", "HotAtlanta" )->json_is( "/response/7/interfaceName", "eth1" )
 	->json_is( "/response/7/interfaceMtu", "1500" );

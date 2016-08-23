@@ -23,8 +23,8 @@ my %definition_for = (
 	mid_northeast => {
 		new   => 'Cachegroup',
 		using => {
-			name                 => 'mid-northeast-group',
-			short_name           => 'ne',
+			name                 => 'cg1-mid-northeast',
+			short_name           => 'cg1',
 			type                 => 18,
 			latitude             => 120,
 			longitude            => 120,
@@ -35,12 +35,49 @@ my %definition_for = (
 	mid_northwest => {
 		new   => 'Cachegroup',
 		using => {
-			name                 => 'mid-northwest-group',
-			short_name           => 'nw',
+			name                 => 'cg2-mid-northwest',
+			short_name           => 'cg2',
 			type                 => 18,
 			latitude             => 100,
 			longitude            => 100,
 			parent_cachegroup_id => 1,
+		},
+	},
+	## id => 3
+	mid_cg3 => {
+		new   => 'Cachegroup',
+		using => {
+			name                 => 'cg3-mid-south',
+			short_name           => 'cg3',
+			type                 => 19,
+			latitude             => 100,
+			longitude            => 100,
+			parent_cachegroup_id => undef,
+		},
+	},
+	## id => 4
+	edge_cg4 => {
+		new   => 'Cachegroup',
+		using => {
+			name                 => 'cg4-edge-southcentral',
+			short_name           => 'cg4',
+			type                 => 10,
+			latitude             => 100,
+			longitude            => 100,
+			parent_cachegroup_id => 3,
+		},
+	},
+	## id => 5
+	edge_atl => {
+		new   => 'Cachegroup',
+		using => {
+			name                           => 'cg5-edge_atl_group',
+			short_name                     => 'cg5',
+			type                           => 10,
+			latitude                       => 120,
+			longitude                      => 120,
+			parent_cachegroup_id           => 1,
+			secondary_parent_cachegroup_id => 2,
 		},
 	},
 );

@@ -22,7 +22,7 @@ func NewOpsConfigThreadsafe() OpsConfigThreadsafe {
 	return OpsConfigThreadsafe{m: &sync.Mutex{}, opsConfig: &handler.OpsConfig{}}
 }
 
-func (o OpsConfigThreadsafe) Get() handler.OpsConfig {
+func (o *OpsConfigThreadsafe) Get() handler.OpsConfig {
 	o.m.Lock()
 	defer func() {
 		o.m.Unlock()
@@ -30,7 +30,7 @@ func (o OpsConfigThreadsafe) Get() handler.OpsConfig {
 	return *o.opsConfig
 }
 
-func (o OpsConfigThreadsafe) Set(newOpsConfig handler.OpsConfig) {
+func (o *OpsConfigThreadsafe) Set(newOpsConfig handler.OpsConfig) {
 	o.m.Lock()
 	*o.opsConfig = newOpsConfig
 	o.m.Unlock()

@@ -70,6 +70,23 @@ my %definition_for = (
 			region     => 1,
 		},
 	},
+	## id => 4
+	seattle => {
+		new   => 'PhysLocation',
+		using => {
+			name       => 'Seattle',
+			short_name => 'seattle',
+			address    => '1234 westward way',
+			city       => 'Seattle',
+			state      => 'WA',
+			zip        => '12345',
+			poc        => undef,
+			phone      => '222-222-2222',
+			email      => undef,
+			comments   => undef,
+			region     => 1,
+		},
+	},
 );
 
 sub get_definition {

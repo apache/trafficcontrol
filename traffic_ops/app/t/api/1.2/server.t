@@ -18,6 +18,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use DBI;
+use JSON;
 use strict;
 use warnings;
 no warnings 'once';
@@ -62,6 +63,23 @@ ok $t->get_ok('/api/1.2/servers.json?type=MID&status=ONLINE')->status_is(200)->o
   ->json_is( "/response/0/type", "MID" )
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# Count the 'response number'
+my $count_response = sub {
+	my ( $t, $count ) = @_;
+	my $json = decode_json( $t->tx->res->content->asset->slurp );
+	my $r    = $json->{response};
+	return $t->success( is( scalar(@$r), $count ) );
+};
+
+# this is a dns delivery service with 2 edges and 1 mid and since dns ds's DO employ mids, 3 servers return
+$t->get_ok('/api/1.2/servers.json?dsId=12')->status_is(200)->$count_response(3)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# this is a http_no_cache delivery service with 2 edges and 1 mid and since http_no_cache ds's DON'T employ mids, 3 servers return
+$t->get_ok('/api/1.2/servers.json?dsId=13')->status_is(200)->$count_response(3)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
