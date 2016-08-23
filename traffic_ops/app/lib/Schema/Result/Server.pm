@@ -369,12 +369,6 @@ __PACKAGE__->add_unique_constraint("host_name", ["host_name"]);
 
 __PACKAGE__->add_unique_constraint("ip6_address", ["ip6_address"]);
 
-=cut
-
-__PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
-
-=head1 UNIQUE CONSTRAINTS
-
 =head2 C<se_id_UNIQUE>
 
 =over 4
