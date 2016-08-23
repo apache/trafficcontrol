@@ -248,7 +248,7 @@ func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[e
 	conns := map[enum.CacheName]int64{}
 	for server, history := range statHistory {
 		for _, result := range history {
-			val, ok := result.Astats.Ats["proxy.process.http.total_incoming_connections"]
+			val, ok := result.Astats.Ats["proxy.process.http.current_client_connections"]
 			if !ok {
 				fmt.Printf("ERROR DEBUG6 connections stat not found for %s\n", server)
 				continue
