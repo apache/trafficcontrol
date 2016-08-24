@@ -18,10 +18,9 @@ RUN (echo y;echo o conf prerequisites_policy follow;echo o conf urllist push htt
 
 RUN cpan Carton
 
-# Override RPM arg to use a different one using --build-arg RPM=...  RPM must be in a form readable by curl.
-#   http://... or file:///... forms are acceptable
+# Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
 ARG RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_ops-1.6.0-3503.4899d302.x86_64.rpm
-RUN curl -O $RPM
+ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 
 RUN cd /opt/traffic_ops/app && carton
