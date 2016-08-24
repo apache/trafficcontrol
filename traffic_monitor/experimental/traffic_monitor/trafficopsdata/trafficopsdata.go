@@ -49,7 +49,7 @@ func NewRegexes() Regexes {
 
 type TOData struct {
 	DeliveryServiceServers map[string][]string
-	ServerDeliveryServices map[string]string
+	ServerDeliveryServices map[string][]string
 	ServerTypes            map[enum.CacheName]enum.CacheType
 	DeliveryServiceTypes   map[string]enum.DSType
 	DeliveryServiceRegexes Regexes
@@ -59,7 +59,7 @@ type TOData struct {
 func New() *TOData {
 	return &TOData{
 		DeliveryServiceServers: map[string][]string{},
-		ServerDeliveryServices: map[string]string{},
+		ServerDeliveryServices: map[string][]string{},
 		ServerTypes:            map[enum.CacheName]enum.CacheType{},
 		DeliveryServiceTypes:   map[string]enum.DSType{},
 		DeliveryServiceRegexes: NewRegexes(),
@@ -156,17 +156,17 @@ func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error 
 
 // getDeliveryServiceServers gets the servers on each delivery services, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]server, and a map[server]deliveryService
-func getDeliveryServiceServers(crc CRConfig) (map[string][]string, map[string]string, error) {
+func getDeliveryServiceServers(crc CRConfig) (map[string][]string, map[string][]string, error) {
 	dsServers := map[string][]string{}
-	serverDs := map[string]string{}
+	serverDses := map[string][]string{}
 
 	for serverName, serverData := range crc.ContentServers {
 		for deliveryServiceName, _ := range serverData.DeliveryServices {
 			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
-			serverDs[serverName] = deliveryServiceName
+			serverDses[serverName] = append(serverDses[serverName], deliveryServiceName)
 		}
 	}
-	return dsServers, serverDs, nil
+	return dsServers, serverDses, nil
 }
 
 // getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.

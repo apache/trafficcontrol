@@ -39,14 +39,14 @@ func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[string]string, serverTypes map[enum.CacheName]enum.CacheType) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[string][]string, serverTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result) (Stats, error) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[enum.CacheName(cache)]
 		if !ok {
 			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
 			continue
 		}
-		deliveryService, ok := serverDs[cache]
+		deliveryServices, ok := serverDs[cache]
 		if !ok {
 			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
@@ -57,29 +57,49 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			continue
 		}
 
-		iStat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
-		if !ok || iStat == nil {
-			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Stats\n", cache)
-			continue // TODO log warning? Error?
-		}
-
-		if available.IsAvailable {
-			iStat.CommonData().IsAvailable.Value = true
-			if stat, ok := iStat.(*dsdata.StatHTTP); ok {
-				cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
-				cacheGroupStats.IsAvailable.Value = true
-				stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
-				stat.Total.IsAvailable.Value = true
-				typeStats := stat.Type[cacheType]
-				typeStats.IsAvailable.Value = true
-				stat.Type[cacheType] = typeStats
-			} else if _, ok := iStat.(*dsdata.StatDNS); ok {
-			} else {
-				return dsStats, fmt.Errorf("Unknown stat type for Delivery Service '%s': %v", deliveryService, iStat)
+		for _, deliveryService := range deliveryServices {
+			iStat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
+			if !ok || iStat == nil {
+				fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Stats\n", cache)
+				continue // TODO log warning? Error?
 			}
-		}
 
-		dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = iStat // TODO Necessary? Remove?
+			if available.IsAvailable {
+				// c.IsAvailable.Value
+				iStat.CommonData().IsAvailable.Value = true
+				iStat.CommonData().CachesAvailable.Value++
+				if stat, ok := iStat.(*dsdata.StatHTTP); ok {
+					cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
+					cacheGroupStats.IsAvailable.Value = true
+					stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
+					stat.Total.IsAvailable.Value = true
+					typeStats := stat.Type[cacheType]
+					typeStats.IsAvailable.Value = true
+					stat.Type[cacheType] = typeStats
+				} else if _, ok := iStat.(*dsdata.StatDNS); ok {
+				} else {
+					return dsStats, fmt.Errorf("Unknown stat type for Delivery Service '%s': %v", deliveryService, iStat)
+				}
+			}
+
+			// TODO fix nested ifs
+			if results, ok := statHistory[enum.CacheName(cache)]; ok {
+				if len(results) < 1 {
+					fmt.Printf("WARNING no results %v %v\n", cache, deliveryService)
+				} else {
+					result := results[0]
+					if result.PrecomputedData.Reporting {
+						iStat.CommonData().CachesReporting[enum.CacheName(cache)] = true
+					} else {
+						fmt.Printf("DEBUG no reporting %v %v\n", cache, deliveryService)
+					}
+				}
+			} else {
+				fmt.Printf("DEBUG no result for %v %v\n", cache, deliveryService)
+			}
+
+			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = iStat // TODO Necessary? Remove?
+		}
 	}
 	return dsStats, nil
 }
@@ -256,7 +276,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
-	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes) // TODO move after stat summarisation
+	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, statHistory) // TODO move after stat summarisation
 	if err != nil {
 		return dsStats, lastKbpsStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
@@ -295,6 +315,14 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 				httpDsStat.Type[serverType] = httpDsStat.Type[serverType].Sum(resultHttpStat.Type[serverType])
 				dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
 			case *dsdata.StatDNS:
+				resultDnsStat := stat.(*dsdata.StatDNS)
+				dsStatsDnsStat, ok := dsStats.DeliveryService[ds].(*dsdata.StatDNS)
+				if !ok {
+					fmt.Printf("WARNING precomputed DNS stat does not match dsStats\n")
+					continue
+				}
+				dsStatsDnsStat.Sum(resultDnsStat)
+				dsStats.DeliveryService[ds] = dsStatsDnsStat // TODO determine if necessary
 			}
 		}
 	}
@@ -364,7 +392,7 @@ func addStat(iStat dsdata.Stat, name string, val interface{}, ds string, server 
 
 	var common *dsdata.StatCommon
 	common = iStat.CommonData()
-	common.CachesReporting[server] = true
+
 	if name == "error_string" {
 		valStr, ok := val.(string)
 		if !ok {

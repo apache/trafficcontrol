@@ -38,6 +38,7 @@ type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
 	Err                  error
+	Reporting            bool
 }
 
 type Result struct {
@@ -126,6 +127,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	}
 
 	if r != nil {
+		result.PrecomputedData.Reporting = true
 		fmt.Printf("DEBUG poll %v %v handle decode start\n", pollId, time.Now())
 
 		if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
