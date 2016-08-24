@@ -1360,6 +1360,7 @@ sub ssl_keys {
 					crt => $record->{'certificate.crt'},
 					key => $record->{'certificate.key'},
 				}
+				hostname => $record->{hostname}
 			});
 		}
 		return $self->success($keys);
