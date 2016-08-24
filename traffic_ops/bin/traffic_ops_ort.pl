@@ -129,7 +129,7 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
-my $lwp_conn                   = &setup_lwp(); 
+my $lwp_conn                   = &setup_lwp();
 
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
@@ -265,7 +265,7 @@ sub usage {
 	print "\n\t[optional flags]:\n";
 	print "\t\tdispersion=<time>      => wait a random number between 0 and <time> before starting. Default = 300.\n";
 	print "\t\tretries=<number>       => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
-	print "\t\twait_for_parents=<0|1> => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n"; 
+	print "\t\twait_for_parents=<0|1> => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1155,11 +1155,11 @@ sub lwp_get {
 
 	my $response;
 	my $response_content;
-	
+
 	while( $retry_counter > 0 ) {
-		
+
 		$response = $lwp_conn->get($url, %headers);
-		$response_content = $response->content; 
+		$response_content = $response->content;
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
@@ -1175,11 +1175,11 @@ sub lwp_get {
 			( $log_level >> $DEBUG ) && print "DEBUG result for $url is: ..." . $response->content . "...\n";
 			last;
 		}
-		
+
 	}
 
 	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
-	
+
 	&eval_json($response) if ( $url =~ m/\.json$/ );
 
 	return $response_content;
@@ -1313,7 +1313,7 @@ sub get_cookie {
 	if ( $response->header('Set-Cookie') ) {
 		($cookie) = split(/\;/, $response->header('Set-Cookie'));
 	}
-	
+
 	if ( $cookie =~ m/mojolicious/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Cookie is $cookie.\n";
 		return $cookie;
@@ -1331,17 +1331,17 @@ sub check_lwp_response_code {
 	my $url           = $lwp_response->request->uri;
 
 	if ( !defined($lwp_response->code()) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url failed!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url failed!\n";
 		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
 	elsif ( $lwp_response->code() >= 400 ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "!\n";
 		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
-	else {	
-		( $log_level >> $DEBUG ) && print "DEBUG $url returned HTTP " . $lwp_response->code() . ".\n"; 
+	else {
+		( $log_level >> $DEBUG ) && print "DEBUG $url returned HTTP " . $lwp_response->code() . ".\n";
 		return 0;
 	}
 }
@@ -1353,17 +1353,17 @@ sub check_lwp_response_content_length {
 	my $url           = $lwp_response->request->uri;
 
 	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n";
 		exit;
 		return 1;
 	}
 	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n"; 
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
 		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
-	else {	
-		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n"; 
+	else {
+		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
 		return 0;
 	}
 
@@ -2497,14 +2497,13 @@ sub adv_processing_ssl {
 		my $url = $traffic_ops_host . "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
 		my $result = &lwp_get($url);
 		if ( $result =~ m/^\d{3}$/ ) {
-				if ( $script_mode == $REPORT ) {
-						( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
-								return 1;
-				}
-				else {
-						( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
-						exit 1;
-				}
+			if ( $script_mode == $REPORT ) {
+				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
+				return 1;
+			else {
+				( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
+				exit 1;
+			}
 		}
 		my $result_json = decode_json($result);
 		my $certs = $result_json->{'response'};
