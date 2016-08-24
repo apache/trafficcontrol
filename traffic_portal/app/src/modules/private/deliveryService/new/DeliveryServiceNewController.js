@@ -77,10 +77,8 @@ var DeliveryServiceNewController = function($scope, $location, $anchorScroll, fo
     $scope.resetDSData();
 
     $scope.onDeliveryProtocolChange = function() {
-        if ($scope.dsData.deliveryProtocol == 'http-and-https' || $scope.dsData.deliveryProtocol == 'https-only') {
-            $scope.dsData.routingType = 'dns'; // routing type must be dns
-            $scope.dsData.headerRewriteRedirectRouter = ''; // not relevant for routingType == dns
-            $scope.dsData.serviceAliases = [ '' ]; // can't have service aliases
+        if ($scope.dsData.deliveryProtocol == 'http-to-https') {
+            $scope.dsData.routingType = 'http'; // routing type must be http for http-to-https protocol
         }
     };
 
