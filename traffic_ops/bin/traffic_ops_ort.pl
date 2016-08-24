@@ -2492,55 +2492,56 @@ sub adv_processing_udev {
 sub adv_processing_ssl {
 
 	my @db_file_lines = @{ $_[0] };
-
-	( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
-	foreach my $line (@db_file_lines) {
-		( $log_level >> $DEBUG ) && print "DEBUG line in ssl_multicert.config from Traffic Ops: $line \n";
-		if ( $line =~ m/^\s*ssl_cert_name\=(.*)\s+ssl_key_name\=(.*)\s*$/ ) {
-			push( @{ $ssl_tracker->{'db_config'} }, { cert_name => $1, key_name => $2 } );
-		}
-	}
-
-	foreach my $keypair ( @{ $ssl_tracker->{'db_config'} } ) {
-		( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
-
-		my $remap = $keypair->{'key_name'};
-		$remap =~ s/\.key$//;
-
-		my $url = $traffic_ops_host . "/api/1.1/deliveryservices/hostname/" . $remap . "/sslkeys.json";
-
+	if (@db_file_lines > 1) { #header line is always present, so look for 2 lines or more
+		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
+		my $url = $traffic_ops_host . "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
 		my $result = &lwp_get($url);
 		if ( $result =~ m/^\d{3}$/ ) {
-			if ( $script_mode == $REPORT ) {
-				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
-				return 1;
-			}
-			else {
-				( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
-				exit 1;
-			}
+				if ( $script_mode == $REPORT ) {
+						( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
+								return 1;
+				}
+				else {
+						( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
+						exit 1;
+				}
 		}
 		my $result_json = decode_json($result);
+		my $certs = $result_json->{'response'};
 
-		my $ssl_key_base64  = $result_json->{'response'}->{'certificate'}->{'key'};
-		my $ssl_key         = decode_base64($ssl_key_base64);
-		my $ssl_cert_base64 = $result_json->{'response'}->{'certificate'}->{'crt'};
-		my $ssl_cert        = decode_base64($ssl_cert_base64);
-		( $log_level >> $DEBUG ) && print "DEBUG private key for $remap is:\n$ssl_key\n";
-		( $log_level >> $DEBUG ) && print "DEBUG certificate for $remap is:\n$ssl_cert\n";
+		foreach my $line (@db_file_lines) {
+				( $log_level >> $DEBUG ) && print "DEBUG line in ssl_multicert.config from Traffic Ops: $line \n";
+				if ( $line =~ m/^\s*ssl_cert_name\=(.*)\s+ssl_key_name\=(.*)\s*$/ ) {
+						push( @{ $ssl_tracker->{'db_config'} }, { cert_name => $1, key_name => $2 } );
+				}
+		}
 
-		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'location'}  = "/opt/trafficserver/etc/trafficserver/ssl/";
-		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'service'}   = "trafficserver";
-		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'component'} = "SSL";
-		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'contents'}  = $ssl_key;
-		$cfg_file_tracker->{ $keypair->{'key_name'} }->{'fname-in-TO'}  = $keypair->{'key_name'};
+		foreach my $keypair ( @{ $ssl_tracker->{'db_config'} } ) {
+			( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
 
-		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'location'}  = "/opt/trafficserver/etc/trafficserver/ssl/";
-		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'service'}   = "trafficserver";
-		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'component'} = "SSL";
-		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'contents'}  = $ssl_cert;
-		$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'fname-in-TO'}  = $keypair->{'cert_name'};
+			my $remap = $keypair->{'key_name'};
+			$remap =~ s/\.key$//;
+			foreach my $record (@$certs){
+				if ($record->{'hostname'} eq $remap){
+					my $ssl_key         = decode_base64($record->{'certificate'}->{'key'});
+					my $ssl_cert        = decode_base64($record->{'certificate'}->{'crt'});
+					( $log_level >> $DEBUG ) && print "DEBUG private key for $remap is:\n$ssl_key\n";
+					( $log_level >> $DEBUG ) && print "DEBUG certificate for $remap is:\n$ssl_cert\n";
 
+					$cfg_file_tracker->{ $keypair->{'key_name'} }->{'location'}  = "/opt/trafficserver/etc/trafficserver/ssl/";
+					$cfg_file_tracker->{ $keypair->{'key_name'} }->{'service'}   = "trafficserver";
+					$cfg_file_tracker->{ $keypair->{'key_name'} }->{'component'} = "SSL";
+					$cfg_file_tracker->{ $keypair->{'key_name'} }->{'contents'}  = $ssl_key;
+					$cfg_file_tracker->{ $keypair->{'key_name'} }->{'fname-in-TO'}  = $keypair->{'key_name'};
+
+					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'location'}  = "/opt/trafficserver/etc/trafficserver/ssl/";
+					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'service'}   = "trafficserver";
+					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'component'} = "SSL";
+					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'contents'}  = $ssl_cert;
+					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'fname-in-TO'}  = $keypair->{'cert_name'};
+				}
+			}
+		}
 	}
 	return 0;
 }
