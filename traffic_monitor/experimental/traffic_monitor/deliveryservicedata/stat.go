@@ -140,4 +140,18 @@ func (s StatDNS) Copy() Stat {
 	return &StatDNS{Common: s.Common.Copy()}
 }
 
+func (a *StatDNS) Sum(b *StatDNS) {
+	a.CommonData().CachesConfigured.Value += b.CommonData().CachesConfigured.Value
+	for cache, reporting := range b.CommonData().CachesReporting {
+		if reporting {
+			a.CommonData().CachesReporting[cache] = true
+		}
+	}
+	a.CommonData().ErrorString.Value += b.CommonData().ErrorString.Value
+	//	a.CommonData().Status += b.CommonData().Status // TODO decide what to do about 'summing' the status text
+	a.CommonData().IsHealthy.Value = a.CommonData().IsHealthy.Value || b.CommonData().IsHealthy.Value
+	a.CommonData().IsAvailable.Value = a.CommonData().IsAvailable.Value || b.CommonData().IsAvailable.Value
+	a.CommonData().CachesAvailable.Value += b.CommonData().CachesAvailable.Value
+}
+
 var ErrNotProcessedStat = errors.New("This stat is not used.")
