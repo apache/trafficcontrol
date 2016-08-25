@@ -58,6 +58,11 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 		}
 
 		for _, deliveryService := range deliveryServices {
+			if deliveryService == "" {
+				fmt.Printf("ERROR EMPTY addAvailableData DS") // various bugs in other functions can cause this - this will help identify and debug them.
+				continue
+			}
+
 			iStat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
 			if !ok || iStat == nil {
 				fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Stats\n", cache)
@@ -186,8 +191,12 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 				continue
 			}
 
-			if lastKbpsStatExists {
+			if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
 				cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+			}
+
+			if cacheStats.Kbps.Value < 0 {
+				fmt.Printf("ERROR negative cachegroup cacheStats.Kbps.Value: '%v' '%v' %v - %v / %v\n", dsName, cgName, cacheStats.OutBytes.Value, lastKbpsData.Bytes, dsStatsTime.Sub(lastKbpsData.Time).Seconds())
 			}
 
 			lastKbpsStat.CacheGroups[cgName] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
@@ -198,19 +207,29 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			lastKbpsData, _ := lastKbpsStat.Type[cacheType]
 			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
 				if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
+					if lastKbpsData.Kbps < 0 {
+						fmt.Printf("ERROR negative cachetype cacheStats.Kbps.Value!\n")
+					}
 					cacheStats.Kbps.Value = lastKbpsData.Kbps
 					stat.Type[cacheType] = cacheStats
 					continue
 				}
-				if lastKbpsStatExists {
+				if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
 					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+				}
+				if cacheStats.Kbps.Value < 0 {
+					fmt.Printf("ERROR negative cachetype cacheStats.Kbps.Value.\n")
 				}
 				lastKbpsStat.Type[cacheType] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
 				stat.Type[cacheType] = cacheStats
 			}
 		}
-		if lastKbpsStatExists {
+		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 {
 			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
+			if stat.Total.Kbps.Value < 0 {
+				fmt.Printf("ERROR negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.Total.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
+			}
+
 		} else {
 			stat.Total.Kbps.Value = lastKbpsStat.Total.Kbps
 		}
@@ -249,7 +268,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 		if kbps < 0 {
 			kbps = 0
 			// TODO figure out what to do. Print error. Explode. Definitely don't set kbps negative.
-			fmt.Printf("ERROR negative kbps: %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time)
+			fmt.Printf("ERROR negative cache kbps: %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time)
 		}
 
 		lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: result.Time, Bytes: outBytes, Kbps: kbps}
@@ -262,6 +281,10 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	start := time.Now()
 	dsStats := NewStats()
 	for deliveryService, _ := range toData.DeliveryServiceServers {
+		if deliveryService == "" {
+			fmt.Printf("ERROR EMPTY CreateStats deliveryService")
+			continue
+		}
 		dsType, ok := toData.DeliveryServiceTypes[deliveryService]
 		if !ok {
 			return Stats{}, lastKbpsStats, fmt.Errorf("deliveryservice %s missing type", deliveryService)
@@ -298,6 +321,11 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		result := history[len(history)-1]
 
 		for ds, stat := range result.PrecomputedData.DeliveryServiceStats {
+			if ds == "" {
+				fmt.Printf("ERROR EMPTY precomputed delivery service")
+				continue
+			}
+
 			switch stat.(type) {
 			case *dsdata.StatHTTP:
 				resultHttpStat := stat.(*dsdata.StatHTTP)
@@ -372,6 +400,9 @@ func processStatPluginRemapStats(dsStats *Stats, dsRegexes todata.Regexes, dsTyp
 	ds, ok := dsRegexes.DeliveryService(fqdn)
 	if !ok {
 		return ds, nil, fmt.Errorf("%s matched no delivery service", fqdn)
+	}
+	if ds == "" {
+		return ds, nil, fmt.Errorf("ERROR: EMPTY DS: fqdn %v stat %v", strings.Join(statParts, "."))
 	}
 
 	if _, ok := dsTypes[string(ds)]; !ok {

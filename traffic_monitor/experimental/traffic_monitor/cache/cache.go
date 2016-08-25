@@ -161,7 +161,6 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-// \todo
 func outBytes(procNetDev, iface string) (int64, error) {
 	if procNetDev == "" {
 		return 0, fmt.Errorf("procNetDev empty")
@@ -244,6 +243,13 @@ func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceNa
 
 	fqdn := strings.Join(statParts[:len(statParts)-1], ".")
 	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(fqdn)
+
+	if !ok {
+		return stats, fmt.Errorf("ERROR no delivery service match for fqdn '%v' stat '%v'\n", fqdn, strings.Join(statParts, "."))
+	}
+	if ds == "" {
+		return stats, fmt.Errorf("ERROR EMPTY delivery service fqdn %v stat %v\n", fqdn, strings.Join(statParts, "."))
+	}
 
 	statName := statParts[len(statParts)-1]
 
