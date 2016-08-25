@@ -1,7 +1,9 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CertificateData {
 	@JsonProperty
 	private String deliveryservice;
