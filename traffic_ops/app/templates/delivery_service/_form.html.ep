@@ -13,7 +13,13 @@
      See the License for the specific language governing permissions and
      limitations under the License.
  -->
-<div class="main">
+	<div class="main">
+	<% if ($mode =~ /edit/) { %>
+	<div class="block form-row">
+		%= label_for 'ds.id' => '* ID', class => 'label'
+		%= field('ds.id')->text(class => 'field', required => 'required', name => 'ds.id', id => 'ds.id', readonly => 'readonly')
+	</div>
+	<% } %>
 	<div class="block form-row">
 		<% unless (field('ds.xml_id')->valid) { %>
 			<span class="field-with-error"><%= field('ds.xml_id')->error %></span>

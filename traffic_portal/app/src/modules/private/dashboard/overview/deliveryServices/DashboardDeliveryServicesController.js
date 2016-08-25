@@ -160,9 +160,10 @@ var DashboardDeliveryServicesController = function($window, $rootScope, $scope, 
 
     $scope.hideDeliveryService = function(ds) {
         var query = $scope.search.query.toLowerCase(),
+            id = ds.id,
             xmlId = ds.xmlId.toLowerCase(),
             displayName = ds.displayName.toLowerCase(),
-            isSubstring = (xmlId.indexOf(query) !== -1) || (displayName.indexOf(query) !== -1);
+            isSubstring = (id.indexOf(query) !== -1) || (xmlId.indexOf(query) !== -1) || (displayName.indexOf(query) !== -1);
 
         return !isSubstring || ($scope.dsOptions.inactive == false && !ds.active);
     };

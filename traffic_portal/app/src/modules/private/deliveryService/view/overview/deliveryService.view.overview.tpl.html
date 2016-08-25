@@ -19,7 +19,7 @@ limitations under the License.
 <div id="dsOverviewContainer" ng-show="deliveryService">
     <div class="ds-header">
         <ol class="breadcrumb">
-            <li class="active"><span class="ds-name" title="{{deliveryService.displayName}} ({{deliveryService.xmlId}})">{{deliveryService.displayName}}</span> <a class="link" title="View Delivery Service Config" ng-click="viewConfig(deliveryService)"><i class="fa fa-cog fa-fw"></i></a></li>
+            <li class="active"><span class="ds-name" title="{{deliveryService.displayName}} ({{deliveryService.id}} | {{deliveryService.xmlId}})">{{deliveryService.displayName}}</span> <a class="link" title="View Delivery Service Config" ng-click="viewConfig(deliveryService)"><i class="fa fa-cog fa-fw"></i></a></li>
         </ol>
         <div ng-if="properties.deliveryService.invalidateContent.show && user.localUser" class="invalidate-content-btn btn-group" uib-dropdown is-open="invalidate.isopen">
             <button id="invalidate-button" type="button" class="action-btn-dropdown btn" uib-dropdown-toggle>
