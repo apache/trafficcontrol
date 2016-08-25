@@ -86,8 +86,9 @@ limitations under the License.
                             <label class="control-label" for="deliveryProtocol">Delivery Protocol&nbsp;&nbsp;<i class="delivery-protocol-tooltip field-info fa fa-info-circle" popover-title="Delivery Protocol" uib-popover="Services that use &quot;HTTP and HTTPS&quot; will be able to deliver both types of traffic. If you deliver HTTPS you will not be able to use a service alias with your service." popover-trigger="mouseenter" popover-class="popover-class ds-wizard-popover-small" popover-placement="top" popover-append-to-body="true"></i></label>
                             <select id="deliveryProtocol" name="deliveryProtocol" class="form-control" ng-change="onDeliveryProtocolChange()" ng-model="dsData.deliveryProtocol">
                                 <option value="http">HTTP</option>
+                                <option value="https-only">HTTPS</option>
                                 <option value="http-and-https">HTTP and HTTPS</option>
-                                <option value="https-only">HTTPS Only</option>
+                                <option value="http-to-https">HTTP to HTTPS</option>
                             </select>
                         </div>
                     </div>
@@ -106,11 +107,11 @@ limitations under the License.
                     <div class="col-sm-6 col-md-6">
                         <div class="form-group">
                             <label class="control-label" for="routingType">Routing Type&nbsp;&nbsp;<i class="routing-type-tooltip field-info fa fa-info-circle" popover-title="Routing Type" uib-popover="DNS is the standard routing type for most CDN services. HTTP Redirect is a specialty routing service that is primarily used for video and large file downloads where localization and latency are significant concerns." popover-trigger="mouseenter" popover-class="popover-class ds-wizard-popover-small" popover-placement="top" popover-append-to-body="true"></i></label>
-                            <select id="routingType" name="routingType" class="form-control" ng-disabled="dsData.deliveryProtocol == 'http-and-https' || dsData.deliveryProtocol == 'https-only'" ng-change="onRoutingTypeChange()" ng-model="dsData.routingType">
+                            <select id="routingType" name="routingType" class="form-control" ng-disabled="dsData.deliveryProtocol == 'http-to-https'" ng-change="onRoutingTypeChange()" ng-model="dsData.routingType">
                                 <option value="dns">DNS</option>
                                 <option value="http">HTTP Redirect</option>
                             </select>
-                            <small class="input-error" ng-show="dsData.deliveryProtocol == 'http-and-https' || dsData.deliveryProtocol == 'https-only'">DNS required for HTTP and HTTPS / HTTPS Only</small>
+                            <small class="input-error" ng-show="dsData.deliveryProtocol == 'http-to-https'">HTTP required for HTTP to HTTPS delivery protocol</small>
                         </div>
                     </div>
                 </div>
@@ -258,7 +259,7 @@ limitations under the License.
                 </div>
                 <div class="row">
                     <div class="col-sm-6 col-md-6">
-                        <div class="row" ng-show="dsData.deliveryProtocol == 'http'" ng-repeat="alias in dsData.serviceAliases track by $index">
+                        <div class="row" ng-repeat="alias in dsData.serviceAliases track by $index">
                             <div class="col-sm-12 col-md-12">
                                 <ng-form name="aliasForm">
                                     <div class="form-group">
@@ -460,7 +461,7 @@ limitations under the License.
                             <td class="col-sm-4 col-md-4 col-lg-4">Negative Caching Instructions:</td>
                             <td class="col-sm-8 col-md-8 col-lg-8">{{dsData.negativeCachingCustomizationNote}}</td>
                         </tr>
-                        <tr ng-show="dsData.deliveryProtocol == 'http'" ng-repeat="alias in dsData.serviceAliases track by $index">
+                        <tr ng-repeat="alias in dsData.serviceAliases track by $index">
                             <td class="col-sm-4 col-md-4 col-lg-4">Service Alias #{{$index + 1}}:</td>
                             <td class="col-sm-8 col-md-8 col-lg-8">{{dsData.serviceAliases[$index]}}</td>
                         </tr>

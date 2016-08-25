@@ -8,6 +8,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -37,6 +38,7 @@ type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
 	Err                  error
+	Reporting            bool
 }
 
 type Result struct {
@@ -115,7 +117,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 		Id:           id,
 		Available:    false,
 		Errors:       []error{},
-		Time:         time.Now(),
+		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
 		PollID:       pollId,
 		PollFinished: pollFinished,
 	}
@@ -125,9 +127,17 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	}
 
 	if r != nil {
+		result.PrecomputedData.Reporting = true
 		fmt.Printf("DEBUG poll %v %v handle decode start\n", pollId, time.Now())
-		dec := json.NewDecoder(r)
-		err := dec.Decode(&result.Astats)
+
+		if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
+			result.Errors = append(result.Errors, err)
+		}
+
+		if result.Astats.System.ProcNetDev == "" {
+			fmt.Printf("DEBUG %s procnetdev empty for '%s'\n\n", id)
+		}
+
 		fmt.Printf("DEBUG poll %v %v handle decode end\n", pollId, time.Now())
 
 		if err != nil {
@@ -150,19 +160,40 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	fmt.Printf("DEBUG poll %v %v handle end\n", pollId, time.Now())
 }
 
+// outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
+// \todo
+func outBytes(procNetDev, iface string) (int64, error) {
+	if procNetDev == "" {
+		return 0, fmt.Errorf("procNetDev empty")
+	}
+	if iface == "" {
+		return 0, fmt.Errorf("iface empty")
+	}
+	ifacePos := strings.Index(procNetDev, iface)
+	if ifacePos == -1 {
+		return 0, fmt.Errorf("interface '%s' not found in proc.net.dev '%s'", iface, procNetDev)
+	}
+
+	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
+	spacePos := strings.Index(procNetDevIfaceBytes, " ")
+	if spacePos != -1 {
+		procNetDevIfaceBytes = procNetDevIfaceBytes[:spacePos]
+	}
+	return strconv.ParseInt(procNetDevIfaceBytes, 10, 64)
+}
+
 // precompute does the calculations which are possible with only this one cache result.
 func (handler Handler) precompute(result Result) Result {
 	todata := handler.ToData.Get()
 	stats := map[enum.DeliveryServiceName]dsdata.Stat{}
-	for stat, value := range result.Astats.Ats {
-		if strings.HasSuffix(stat, ".out_bytes") {
-			v, ok := value.(float64)
-			if !ok {
-				continue // no warning, because the same error will be returned by processStat
-			}
-			result.PrecomputedData.OutBytes += int64(v)
-		}
 
+	var err error
+	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName); err != nil {
+		result.PrecomputedData.OutBytes = 0
+		fmt.Printf("ERROR precomputing %s outbytes: %v\n", result.Id, err)
+	}
+
+	for stat, value := range result.Astats.Ats {
 		var err error
 		stats, err = processStat(result.Id, stats, todata, stat, value)
 		if err != nil && err != dsdata.ErrNotProcessedStat {

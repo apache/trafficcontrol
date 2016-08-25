@@ -53,7 +53,7 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 		}
 	}()
 
-	if response != nil {
+	if response != nil && response.StatusCode/100 == 2 {
 		if f.Success != nil {
 			f.Success.Inc()
 		}

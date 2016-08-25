@@ -66,7 +66,7 @@ limitations under the License.
                     <ul id="scrollable-ds-nav-menu" class="uib-dropdown-menu scrollable" role="menu" aria-labelledby="dsMenu-button">
                         <li ng-if="properties.deliveryService.request.show"><a class="ds-name-link" title="New Delivery Service" ng-click="navigateToState('trafficPortal.private.deliveryService.new', true)"><i class="fa fa-plus fa-fw"></i> New Delivery Service</a> </li>
                         <li ng-if="properties.deliveryService.request.show && deliveryServices.length > 0" class="divider"></li>
-                        <li ng-repeat="ds in deliveryServices | orderBy:'displayName'"><a class="ds-name-link" title="{{ds.displayName}} ({{ds.xmlId}})" ng-click="showDS(ds.id)"><i class="fa fa-times fa-fw" title="Inactive" ng-show="!ds.active"></i><i class="fa fa-check fa-fw" title="Active" ng-show="ds.active"></i> {{ds.displayName}}</a></li>
+                        <li ng-repeat="ds in deliveryServices | orderBy:'displayName'"><a class="ds-name-link" title="{{ds.displayName}} ({{ds.id}} | {{ds.xmlId}})" ng-click="showDS(ds.id)"><i class="fa fa-times fa-fw" title="Inactive" ng-show="!ds.active"></i><i class="fa fa-check fa-fw" title="Active" ng-show="ds.active"></i> {{ds.displayName}}</a></li>
                     </ul>
                 </div>
             </li>

@@ -1,3 +1,4 @@
+
 package main;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
@@ -104,10 +105,10 @@ $t->get_ok('/dataserver/orderby/cachegroup')->status_is(200)->json_has('/0/route
 # create a new server
 $t->post_ok(
 	'/server/create' => form => {
-		host_name        => 'jvd-test-01',
-		domain_name      => 'jvd.net',
+		host_name        => 'test-01',
+		domain_name      => 'kabletown.net',
 		tcp_port         => '80',
-		xmpp_id          => 'jvd-test-01@ocdn.net',
+		xmpp_id          => 'test-01@kabletown.net',
 		xmpp_passwd      => 'very_secret_passwd',
 		interface_name   => 'bond0',
 		ip_address       => '3.3.3.3',
@@ -127,10 +128,11 @@ $t->post_ok(
 		ilo_ip_address   => '3.9.9.3',
 		ilo_ip_netmask   => '255.255.255.0',
 		ilo_ip_gateway   => '3.9.9.9',
-		ilo_username     => 'jvd',
+		ilo_username     => 'user',
 		ilo_password     => 'tt',
-		router_host_name => 'ur091.jvd.home.net',
+		router_host_name => 'ur091.home.net',
 		router_port_name => 'ae99.99',
+		https_port       => '443',
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -138,7 +140,7 @@ $t->post_ok(
 &upd_and_del();
 
 sub upd_and_del() {
-	my $q          = 'select id, host_name from server where host_name = \'odol-jvd-test-01\'';
+	my $q          = 'select id, host_name from server where host_name = \'test-01\'';
 	my $get_server = $dbh->prepare($q);
 	$get_server->execute();
 	my $p = $get_server->fetchall_arrayref( {} );
@@ -150,7 +152,7 @@ sub upd_and_del() {
 		my $id = $p->[$i]->{id};
 		$t->post_ok(
 			"/server/$id/update" => form => {
-				xmpp_id          => 'jvd-test-01@ocdn.net',
+				xmpp_id          => 'test-01@cdn.net',
 				xmpp_passwd      => 'very_secretother_passwd',
 				interface_name   => 'bond0',
 				ip_address       => '3.3.3.9',
@@ -170,19 +172,20 @@ sub upd_and_del() {
 				ilo_ip_address   => '3.9.3.3',
 				ilo_ip_netmask   => '255.255.255.0',
 				ilo_ip_gateway   => '3.9.3.9',
-				ilo_username     => 'jvd',
+				ilo_username     => 'user',
 				ilo_password     => 'tt',
 				router_host_name => '',
 				router_port_name => '',
+				https_port       => '443',
 			}
 		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-		$t->post_ok( '/server/jvd-test-01/status/REPORTED' => form => {} )->json_is( '/result' => 'SUCCESS' );
-		$t->get_ok('/dataserverdetail/select/jvd-test-01')->status_is(200)->json_is( '/0/status' => 'REPORTED' );
-		$t->post_ok( '/server/jvd-test-01/status/OFFLINE' => form => {} )->json_is( '/result' => 'SUCCESS' );
-		$t->get_ok('/dataserverdetail/select/jvd-test-01')->status_is(200)->json_is( '/0/status' => 'OFFLINE' );
-		$t->post_ok( '/server/jvd-test-01/status/ONLINE' => form => {} )->json_is( '/result' => 'SUCCESS' );
-		$t->get_ok('/dataserverdetail/select/jvd-test-01')->status_is(200)->json_is( '/0/status' => 'ONLINE' );
+		$t->post_ok( '/server/test-01/status/REPORTED' => form => {} )->json_is( '/result' => 'SUCCESS' );
+		$t->get_ok('/dataserverdetail/select/test-01')->status_is(200)->json_is( '/0/status' => 'REPORTED' );
+		$t->post_ok( '/server/test-01/status/OFFLINE' => form => {} )->json_is( '/result' => 'SUCCESS' );
+		$t->get_ok('/dataserverdetail/select/test-01')->status_is(200)->json_is( '/0/status' => 'OFFLINE' );
+		$t->post_ok( '/server/test-01/status/ONLINE' => form => {} )->json_is( '/result' => 'SUCCESS' );
+		$t->get_ok('/dataserverdetail/select/test-01')->status_is(200)->json_is( '/0/status' => 'ONLINE' );
 
 		diag $id;
 		$t->get_ok("/server/$id/delete")->status_is(302);
