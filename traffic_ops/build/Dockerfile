@@ -18,14 +18,10 @@ RUN	yum -y install \
 		golang && \
 	yum -y clean all
 
-
-ENV	GITREPO=https://github.com/Comcast/traffic_control
-ENV	BRANCH=master
-
 RUN	mkdir -p /dist
 VOLUME	/dist
 
 WORKDIR /
-CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
+CMD	echo "GITREPO=$GITREPO BRANCH=$BRANCH" && git clone --branch $BRANCH $GITREPO && cd traffic_control && git status && \
 	./traffic_ops/build/build_rpm.sh && \
 	cp -f dist/* /dist/.
