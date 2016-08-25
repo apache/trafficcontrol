@@ -78,6 +78,20 @@ public class MaxmindGeolocationService implements GeolocationService {
 	}
 
 	@Override
+	public void reloadDatabase(final File dbFile) throws IOException {
+		if (databaseReader != null) {
+			databaseReader.close();
+		}
+
+		if (dbFile != null) {
+			final DatabaseReader reader = createDatabaseReader(dbFile);
+			if (reader != null) {
+				initialized = true;
+			}
+		}
+	}
+
+	@Override
 	public boolean verifyDatabase(final File databaseFile) throws IOException {
 		return createDatabaseReader(databaseFile) != null;
 	}

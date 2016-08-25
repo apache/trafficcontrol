@@ -102,7 +102,7 @@ public class NetworkNodeUnitTest {
 
         JSONTokener jsonTokener = new JSONTokener(czmapString);
         final JSONObject json = new JSONObject(jsonTokener);
-        NetworkNode networkNode = NetworkNode.generateTree(json);
+        NetworkNode networkNode = NetworkNode.generateTree(json, false);
         NetworkNode foundNetworkNode = networkNode.getNetwork("1234:5678::1");
 
         assertThat(foundNetworkNode.getLoc(), equalTo("us-co-denver"));
@@ -149,9 +149,45 @@ public class NetworkNodeUnitTest {
 
         JSONTokener jsonTokener = new JSONTokener(czmapString);
         final JSONObject json = new JSONObject(jsonTokener);
-        NetworkNode networkNode = NetworkNode.generateTree(json);
+        NetworkNode networkNode = NetworkNode.generateTree(json, false);
         NetworkNode foundNetworkNode = networkNode.getNetwork("192.168.55.2");
 
         assertThat(foundNetworkNode.getLoc(), equalTo("us-co-denver"));
+    }
+
+    @Test
+    public void itRejectsInvalidIpV4Network() throws Exception {
+        String czmapString = "{" +
+            "\"revision\": \"Mon Dec 21 15:04:01 2015\"," +
+            "\"customerName\": \"Kabletown\"," +
+            "\"coverageZones\": {" +
+            "\"us-co-denver\": {" +
+            "\"network\": [\"192.168.55.258/24\",\"192.168.6.0/24\",\"192.168.0.0/16\"]," +
+            "\"network6\": [\"1234:5678::/64\",\"1234:5679::/64\"]" +
+            "}" +
+            "}" +
+            "}";
+
+        JSONTokener jsonTokener = new JSONTokener(czmapString);
+        final JSONObject json = new JSONObject(jsonTokener);
+        assertThat(NetworkNode.generateTree(json, false), equalTo(null));
+    }
+
+    @Test
+    public void itRejectsInvalidIpV6Network() throws Exception {
+        String czmapString = "{" +
+            "\"revision\": \"Mon Dec 21 15:04:01 2015\"," +
+            "\"customerName\": \"Kabletown\"," +
+            "\"coverageZones\": {" +
+            "\"us-co-denver\": {" +
+            "\"network\": [\"192.168.55.0/24\",\"192.168.6.0/24\",\"192.168.0.0/16\"]," +
+            "\"network6\": [\"1234:5678::/64\",\"zyx:5679::/64\"]" +
+            "}" +
+            "}" +
+            "}";
+
+        JSONTokener jsonTokener = new JSONTokener(czmapString);
+        final JSONObject json = new JSONObject(jsonTokener);
+        assertThat(NetworkNode.generateTree(json, false), equalTo(null));
     }
 }

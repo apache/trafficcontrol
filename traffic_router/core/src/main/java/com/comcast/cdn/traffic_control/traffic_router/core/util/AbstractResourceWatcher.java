@@ -87,6 +87,8 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 		return true;
 	}
 
+	abstract protected boolean verifyData(final String data);
+
 	@Override
 	public boolean loadDatabase() throws IOException, org.apache.wicket.ajax.json.JSONException {
 		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
@@ -106,6 +108,25 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 
 		return useData(new String(jsonData));
 	}
+
+	@Override
+	public boolean verifyDatabase(final File dbFile) throws IOException {
+		if (!dbFile.exists() || !dbFile.canRead()) {
+			return false;
+		}
+
+		final char[] jsonData = new char[(int) dbFile.length()];
+		final FileReader reader = new FileReader(dbFile);
+
+		try {
+			reader.read(jsonData);
+		} finally {
+			reader.close();
+		}
+
+		return verifyData(new String(jsonData));
+	}
+
 
 	@Override
 	protected File downloadDatabase(final String url, final File existingDb) {

@@ -109,68 +109,72 @@ public abstract class AbstractServiceUpdater {
 			return false;
 		}
 
+		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
+
 		if (!isLoaded()) {
 			try {
 				setLoaded(loadDatabase());
 			} catch (Exception e) {
-				LOGGER.error("Failed to load existing database! " + e.getMessage());
-				return false;
+				LOGGER.warn("[" + getClass().getSimpleName() + "] Failed to load existing database! " + e.getMessage());
 			}
-		}
-
-		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
-		File newDB;
-		if (!needsUpdating(existingDB)) {
+		} else if (!needsUpdating(existingDB)) {
 			LOGGER.info("[" + getClass().getSimpleName() + "] Location database does not require updating.");
 			return false;
 		}
 
+		File newDB = null;
 		boolean isModified = true;
 
 		try {
-			newDB = downloadDatabase(getDataBaseURL(), existingDB);
-			trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
+			try {
+				newDB = downloadDatabase(getDataBaseURL(), existingDB);
+				trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
 
-			// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
-			if (newDB == existingDB) {
-				isModified = false;
-			}
-		} catch (Exception e) {
-			LOGGER.fatal("[" + getClass().getSimpleName() + "] Caught exception while attempting to download: " + getDataBaseURL(), e);
-			return false;
-		}
-
-		if (!isModified || newDB == null || !newDB.exists()) {
-			return false;
-		}
-
-		try {
-			if (!verifyDatabase(newDB)) {
-				LOGGER.warn("[" + getClass().getSimpleName() + "] " + newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
+				// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
+				if (newDB == existingDB) {
+					isModified = false;
+				}
+			} catch (Exception e) {
+				LOGGER.fatal("[" + getClass().getSimpleName() + "] Caught exception while attempting to download: " + getDataBaseURL(), e);
 				return false;
 			}
-		} catch (Exception e) {
-			LOGGER.error("[" + getClass().getSimpleName() + "] Failed verifying database " + newDB.getAbsolutePath() + " : " + e.getMessage());
-			return false;
-		}
 
-		try {
-			if (copyDatabaseIfDifferent(existingDB, newDB)) {
-				setLoaded(loadDatabase());
-				trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
-			} else {
-				newDB.delete();
+			if (!isModified || newDB == null || !newDB.exists()) {
+				return false;
 			}
-		} catch (Exception e) {
-			LOGGER.error("[" + getClass().getSimpleName() + "] Failed copying and loading new database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+
+			try {
+				if (!verifyDatabase(newDB)) {
+					LOGGER.warn("[" + getClass().getSimpleName() + "] " + newDB.getAbsolutePath() + " from " + getDataBaseURL() + " is invalid!");
+					return false;
+				}
+			} catch (Exception e) {
+				LOGGER.error("[" + getClass().getSimpleName() + "] Failed verifying database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+				return false;
+			}
+
+			try {
+				if (copyDatabaseIfDifferent(existingDB, newDB)) {
+					setLoaded(loadDatabase());
+					trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Update");
+				} else {
+					newDB.delete();
+				}
+			} catch (Exception e) {
+				LOGGER.error("[" + getClass().getSimpleName() + "] Failed copying and loading new database " + newDB.getAbsolutePath() + " : " + e.getMessage());
+			}
+
+		} finally {
+			if (newDB != null && newDB.exists()) {
+				LOGGER.info("[" + getClass().getSimpleName() + "] Try to delete downloaded temp file");
+				deleteDatabase(newDB);
+			}
 		}
 
 		return true;
 	}
 
-	public boolean verifyDatabase(final File dbFile) throws IOException {
-		return true;
-	}
+	abstract public boolean verifyDatabase(final File dbFile) throws IOException, JSONException;
 	abstract public boolean loadDatabase() throws IOException, JSONException;
 
 	public void setDatabaseName(final String databaseName) {
@@ -285,17 +289,7 @@ public abstract class AbstractServiceUpdater {
 		}
 
 		if (existingDB != null && existingDB.exists()) {
-			existingDB.setReadable(true, true);
-			existingDB.setWritable(true, false);
-
-			if (existingDB.isDirectory()) {
-				for (final File file : existingDB.listFiles()) {
-					file.delete();
-				}
-				LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + existingDB);
-			} else {
-				existingDB.delete();
-			}
+			deleteDatabase(existingDB);
 		}
 
 		newDB.setReadable(true, true);
@@ -322,6 +316,20 @@ public abstract class AbstractServiceUpdater {
 
 		existingDB.delete();
 		Files.move(newDB.toPath(), existingDB.toPath(), StandardCopyOption.ATOMIC_MOVE);
+	}
+
+	private void deleteDatabase(final File db) {
+		db.setReadable(true, true);
+		db.setWritable(true, false);
+
+		if (db.isDirectory()) {
+			for (final File file : db.listFiles()) {
+				file.delete();
+			}
+			LOGGER.debug("[" + getClass().getSimpleName() + "] Successfully deleted database under: " + db);
+		} else {
+			db.delete();
+		}
 	}
 
 	protected boolean sourceCompressed = true;
