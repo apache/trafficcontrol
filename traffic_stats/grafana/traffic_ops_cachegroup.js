@@ -245,7 +245,10 @@ dashboard.refresh = "30s";
           "seriesOverrides": [],
           "links": []
         }
-      ]
+      ],
+      "title": "Row",
+      "collapse": false,
+      "editable": true
     }
   );
 }
