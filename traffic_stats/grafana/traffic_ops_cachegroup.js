@@ -144,7 +144,7 @@ dashboard.refresh = "30s";
                 {
                   "key": "cachegroup",
                   "operator": "=",
-                  "value": "us-co-denver"
+                  "value": which
                 }
               ],
               "groupBy": [
