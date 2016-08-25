@@ -26,7 +26,8 @@ limitations under the License.
 <table id="dashboardDSTable" class="table">
     <thead>
     <tr>
-        <th><a ng-click="predicate = 'displayName'; reverse = !reverse">Delivery Service <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'displayName' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'displayName' && reverse"></i></a></th>
+        <th>ID</th>
+        <th><a ng-click="predicate = 'displayName'; reverse = !reverse">Delivery Service Name <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'displayName' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'displayName' && reverse"></i></a></th>
         <th>Bandwidth (24 hrs)</th>
         <th><a ng-click="predicate = 'last'; reverse = !reverse">Last Bandwidth <i class="fa fa-caret-up fa-fw" ng-show="predicate == 'last' && !reverse"></i><i class="fa fa-caret-down fa-fw" ng-show="predicate == 'last' && reverse"></i></a></th>
         <th>Actions</th>
@@ -34,7 +35,8 @@ limitations under the License.
     </thead>
     <tbody>
     <tr class="delivery-service-row" ng-class="{'active': !deliveryService.active}" ng-repeat="deliveryService in deliveryServices | orderBy:predicate:reverse" ng-hide="hideDeliveryService(deliveryService)">
-        <td><a class="link" ng-click="navigateToDeliveryService(deliveryService.id)"><span title="{{deliveryService.displayName}} ({{deliveryService.xmlId}})">{{deliveryService.displayName}}</span> <span ng-show="!deliveryService.active">[ inactive ]</span></a></td>
+        <td><a class="link" ng-click="navigateToDeliveryService(deliveryService.id)"><span title="{{deliveryService.id}}">{{deliveryService.id}}</span></a></td>
+        <td><a class="link" ng-click="navigateToDeliveryService(deliveryService.id)"><span title="{{deliveryService.displayName}} ({{deliveryService.id}} | {{deliveryService.xmlId}})">{{deliveryService.displayName}}</span> <span ng-show="!deliveryService.active">[ inactive ]</span></a></td>
         <td class="delivery-service-sparkline delivery-service-sparkline-{{deliveryService.id}} loading-text"><a class="link" title="Load Bandwidth" ng-click="loadBandwidth(deliveryService.id, true)">Load Bandwidth</a></td>
         <td class="delivery-service-last-{{deliveryService.id}} loading-text" style="min-width:120px;"></td>
         <td style="width:130px;">

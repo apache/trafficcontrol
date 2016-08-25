@@ -19,7 +19,7 @@ limitations under the License.
 <div id="dsChartsContainer" ng-show="deliveryService">
     <div class="ds-header">
         <ol class="breadcrumb">
-            <li><a class="ds-name" ng-click="navigateToDeliveryService(deliveryService.id)" title="{{deliveryService.displayName}} ({{deliveryService.xmlId}})">{{deliveryService.displayName}}</a></li>
+            <li><a class="ds-name" ng-click="navigateToDeliveryService(deliveryService.id)" title="{{deliveryService.displayName}} ({{deliveryService.id}} | {{deliveryService.xmlId}})">{{deliveryService.displayName}}</a></li>
             <li class="active">Charts</li>
         </ol>
         <div class="more-ds-btn btn-group" uib-dropdown is-open="dsDropdown.isopen">
@@ -27,7 +27,7 @@ limitations under the License.
                 Change Delivery Service <i class="fa fa-angle-down fa-lg"></i>
             </button>
             <ul class="action-btn-menu uib-dropdown-menu dropdown-menu-right more-ds-menu scrollable" role="menu" aria-labelledby="moreDS-button">
-                <li ng-repeat="ds in deliveryServices | orderBy:'displayName'" ng-show="ds.id != deliveryService.id"><a class="ds-name-link" title="{{ds.displayName}} ({{ds.xmlId}})" ng-click="changeDS(ds.id)"><span ng-show="!ds.active" title="Inactive"><i class="fa fa-times fa-fw"></i></span><span ng-show="ds.active" title="Active"><i class="fa fa-check fa-fw"></i></span> {{ds.displayName}}</a></li>
+                <li ng-repeat="ds in deliveryServices | orderBy:'displayName'" ng-show="ds.id != deliveryService.id"><a class="ds-name-link" title="{{ds.displayName}} ({{ds.id}} | {{ds.xmlId}})" ng-click="changeDS(ds.id)"><span ng-show="!ds.active" title="Inactive"><i class="fa fa-times fa-fw"></i></span><span ng-show="ds.active" title="Active"><i class="fa fa-check fa-fw"></i></span> {{ds.displayName}}</a></li>
             </ul>
         </div>
     </div>
