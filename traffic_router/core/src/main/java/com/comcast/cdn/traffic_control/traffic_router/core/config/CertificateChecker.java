@@ -28,26 +28,48 @@ public class CertificateChecker {
 
 	public boolean certificatesAreValid(final JSONObject deliveryServicesJson) {
 		for (final String deliveryServiceId : JSONObject.getNames(deliveryServicesJson)) {
-			final JSONObject deliveryServiceJson = deliveryServicesJson.optJSONObject(deliveryServiceId);
-			final JSONObject protocolJson = deliveryServiceJson.optJSONObject("protocol");
-
-			if (protocolJson == null) {
-				continue;
-			}
-
-			if (!"HTTP".equals(getDeliveryServiceType(deliveryServiceJson))) {
-				continue;
-			}
-
-			if (!protocolJson.optBoolean("acceptHttps", false)) {
-				continue;
-			}
-
-			if (!keyStoreHelper.hasCertificate(deliveryServiceId)) {
-				LOGGER.error("Delivery Service " + deliveryServiceId + " is marked to accept https traffic and does not have a certificate");
+			if (!deliveryServiceHasValidCertificates(deliveryServicesJson, deliveryServiceId)) {
 				return false;
 			}
 		}
 		return true;
+	}
+
+	private Boolean deliveryServiceHasValidCertificates(final JSONObject deliveryServicesJson, final String deliveryServiceId) {
+		final JSONObject deliveryServiceJson = deliveryServicesJson.optJSONObject(deliveryServiceId);
+		final JSONObject protocolJson = deliveryServiceJson.optJSONObject("protocol");
+
+		if (!supportsHttps(deliveryServiceJson, protocolJson)) {
+			return true;
+		}
+
+		final JSONArray domains = deliveryServiceJson.optJSONArray("domains");
+
+		if (domains == null) {
+			LOGGER.warn("Delivery Service " + deliveryServiceId + " is not configured with any domains!");
+			return true;
+		}
+
+		for (int i = 0; i < domains.length(); i++) {
+			final String domain = domains.optString(i, "").replaceAll("^\\*\\.", "");
+			if (domain == null || domain.isEmpty()) {
+				continue;
+			}
+
+			if (!keyStoreHelper.hasCertificate(domain)) {
+				LOGGER.error("Delivery Service " + deliveryServiceId + " with domain " + domain + " is marked to accept https traffic and does not have a certificate");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private boolean supportsHttps(final JSONObject deliveryServiceJson, final JSONObject protocolJson) {
+		if (!"HTTP".equals(getDeliveryServiceType(deliveryServiceJson))) {
+			return false;
+		}
+
+		return protocolJson != null ? protocolJson.optBoolean("acceptHttps", false) : false;
 	}
 }

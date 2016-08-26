@@ -11,6 +11,9 @@ public class CertificateData {
 	@JsonProperty
 	private Certificate certificate;
 
+	@JsonProperty
+	private String hostname;
+
 	public String getDeliveryservice() {
 		return deliveryservice;
 	}
@@ -27,17 +30,26 @@ public class CertificateData {
 		this.certificate = certificate;
 	}
 
-	@Override
+	public String getHostname() {
+		return hostname;
+	}
+
+	public void setHostname(final String hostname) {
+		this.hostname = hostname;
+	}
+
 	@SuppressWarnings("PMD")
-	public boolean equals(final Object o) {
+	@Override
+	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		final CertificateData that = (CertificateData) o;
+		CertificateData that = (CertificateData) o;
 
 		if (deliveryservice != null ? !deliveryservice.equals(that.deliveryservice) : that.deliveryservice != null)
 			return false;
-		return certificate != null ? certificate.equals(that.certificate) : that.certificate == null;
+		if (certificate != null ? !certificate.equals(that.certificate) : that.certificate != null) return false;
+		return hostname != null ? hostname.equals(that.hostname) : that.hostname == null;
 
 	}
 
@@ -45,6 +57,7 @@ public class CertificateData {
 	public int hashCode() {
 		int result = deliveryservice != null ? deliveryservice.hashCode() : 0;
 		result = 31 * result + (certificate != null ? certificate.hashCode() : 0);
+		result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
 		return result;
 	}
 }

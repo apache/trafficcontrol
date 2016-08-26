@@ -51,7 +51,7 @@ public class CertificatesPoller implements ConfigurationListener {
 			try {
 				certificatesClient.refreshData();
 			} catch (Throwable t) {
-				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage());
+				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage(), t);
 			}
 		};
 

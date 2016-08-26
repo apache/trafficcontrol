@@ -48,6 +48,11 @@ public class CertificatesClient {
 	}
 
 	public int fetchRawData(final StringBuilder stringBuilder) {
+		if (trafficOpsUtils == null || trafficOpsUtils.getHostname() == null || trafficOpsUtils.getHostname().isEmpty()) {
+			LOGGER.error("No traffic ops hostname yet!");
+			return -1;
+		}
+
 		final String certificatesUrl = trafficOpsUtils.getUrl("certificate.api.url", "https://${toHostname}/api/1.2/cdns/name/${cdnName}/sslkeys.json");
 
 		try {
@@ -111,7 +116,7 @@ public class CertificatesClient {
 		keyStoreHelper.clearCertificates();
 
 		for (final CertificateData certificateData : certificateDataList) {
-			final String alias = certificateData.getDeliveryservice();
+			final String alias = certificateData.getHostname().replaceAll("^\\*\\.", "");
 			final String key = doubleDecode(certificateData.getCertificate().getKey())[0];
 			final String[] chain = doubleDecode(certificateData.getCertificate().getCrt());
 

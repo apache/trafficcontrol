@@ -13,6 +13,7 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
@@ -21,6 +22,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -82,6 +84,13 @@ public class KeyStoreHelper {
 			for (int i = 0; i < encodedCertificateChain.length; i++) {
 				x509Chain[i] = (X509Certificate) CertificateFactory.getInstance("X.509")
 					.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(encodedCertificateChain[i])));
+				final Date notAfter = x509Chain[i].getNotAfter();
+				final Date notBefore = x509Chain[i].getNotBefore();
+				final Principal subject = x509Chain[i].getSubjectDN();
+				final Principal issuer = x509Chain[i].getIssuerDN();
+				log.info("Import [" + alias + "][" + i + "] not before " + notBefore + " and not after " + notAfter);
+				log.info("Import [" + alias + "][" + i + "] subject " + subject);
+				log.info("Import [" + alias + "][" + i + "] issuer " + issuer);
 			}
 
 			byte[] keyBytes = Base64.getDecoder().decode(encodedKey.getBytes());

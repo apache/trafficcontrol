@@ -56,18 +56,23 @@ public class KeyManager extends X509ExtendedKeyManager {
 
 		StringBuilder stringBuilder = new StringBuilder();
 		for (final SNIServerName requestedName : requestedNames) {
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(", ");
+			}
+
+			final String sniString = new String(requestedName.getEncoded());
+			stringBuilder.append(sniString);
+
 			try {
 				final Enumeration<String> aliases = keyStoreHelper.getKeyStore().aliases();
 
+				if (!aliases.hasMoreElements()) {
+					log.error("Keystore has NO aliases!");
+					return null;
+				}
+
 				while (aliases.hasMoreElements()) {
-					if (stringBuilder.length() > 0) {
-						stringBuilder.append(", ");
-					}
-
 					final String alias = aliases.nextElement();
-					final String sniString = new String(requestedName.getEncoded());
-					stringBuilder.append(sniString);
-
 					if (sniString.contains(alias)) {
 						return alias;
 					}
@@ -80,7 +85,7 @@ public class KeyManager extends X509ExtendedKeyManager {
 		if (stringBuilder.length() > 0) {
 			log.warn("No keystore aliases matching " + stringBuilder.toString());
 		} else {
-			log.error("Client did not send any Server Name Indicators");
+			log.warn("Client " + sslSocket.getRemoteSocketAddress() + " did not send any Server Name Indicators");
 		}
 		return null;
 	}
