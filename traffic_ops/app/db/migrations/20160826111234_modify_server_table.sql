@@ -16,9 +16,21 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-alter table server drop index cs_ip_address_UNIQUE;
-alter table server drop index host_name;
-alter table server drop index ip6_address;
+set @exist1 := (select count(*) from information_schema.statistics where table_name = 'server' and index_name = 'cs_ip_address_UNIQUE' and table_schema = database());
+set @sqlstmt1 := if( @exist1 > 0, 'alter table server drop index cs_ip_address_UNIQUE', 'alter table server');
+PREPARE stmt1 FROM @sqlstmt1;
+EXECUTE stmt1;
+
+set @exist2 := (select count(*) from information_schema.statistics where table_name = 'server' and index_name = 'ip6_address' and table_schema = database());
+set @sqlstmt2 := if( @exist2 > 0, 'alter table server drop index ip6_address', 'alter table server');
+PREPARE stmt2 FROM @sqlstmt2;
+EXECUTE stmt2;
+
+set @exist3 := (select count(*) from information_schema.statistics where table_name = 'server' and index_name = 'host_name' and table_schema = database());
+set @sqlstmt3 := if( @exist3 > 0, 'alter table server drop index host_name', 'alter table server');
+PREPARE stmt3 FROM @sqlstmt3;
+EXECUTE stmt3;
+
 alter table server modify host_name varchar(63) not null;
 alter table server modify domain_name varchar(63) not null;
 alter table server modify interface_name varchar(45) null;
