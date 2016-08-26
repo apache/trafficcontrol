@@ -25,6 +25,9 @@ ARG RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_ops
 ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 
+# once installed, remove rpm to lower image size
+RUN rm /$(basename $RPM)
+
 RUN cd /opt/traffic_ops/app && carton
 
 # TODO: workaround for installing on CentOS 7 -- fix this!
