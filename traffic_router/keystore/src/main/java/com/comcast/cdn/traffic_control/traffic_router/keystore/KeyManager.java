@@ -50,6 +50,11 @@ public class KeyManager extends X509ExtendedKeyManager {
 			return null;
 		}
 
+		if (keyStoreHelper.getLastModified() > keyStoreHelper.getLastLoaded()) {
+			log.warn("Reloading keystore from filesystem");
+			keyStoreHelper.reload();
+		}
+
 		final SSLSocket sslSocket = (SSLSocket) socket;
 		final ExtendedSSLSession sslSession = (ExtendedSSLSession) sslSocket.getHandshakeSession();
 		final List<SNIServerName> requestedNames = sslSession.getRequestedServerNames();

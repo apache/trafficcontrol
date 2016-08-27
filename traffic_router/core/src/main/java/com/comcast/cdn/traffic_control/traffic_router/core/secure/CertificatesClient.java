@@ -128,6 +128,7 @@ public class CertificatesClient {
 		}
 
 		keyStoreHelper.save();
+		keyStoreHelper.reload();
 		return allCertificatesPersisted;
 	}
 

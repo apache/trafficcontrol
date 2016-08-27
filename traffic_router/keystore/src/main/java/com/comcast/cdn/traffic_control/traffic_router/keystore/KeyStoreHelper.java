@@ -33,7 +33,7 @@ public class KeyStoreHelper {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyStoreHelper.class);
 	public static final String KEYSTORE_PROPERTIES_PATH = "/conf/keystore.properties";
 	public static final String KEYPASS_PROPERTY = "keypass";
-	private KeyStore keyStore;
+	private volatile KeyStore keyStore;
 	private char[] keyPass;
 	private long lastLoaded;
 	private final Map<String, PrivateKey> privateKeyMap = new HashMap<>();
@@ -108,13 +108,12 @@ public class KeyStoreHelper {
 	}
 
 	public boolean importCertificateChain(final String alias, final PrivateKey privateKey, final Certificate[] certificateChain) {
-		try (final OutputStream outputStream = Files.newOutputStream(Paths.get(getKeystorePath()))) {
+		try {
 			keyStore.setKeyEntry(alias, privateKey, keyPass, certificateChain);
-			keyStore.store(outputStream, keyPass);
 			privateKeyMap.put(alias, privateKey);
 			log.info("Imported certificate chain into keystore for " + alias);
 		} catch (Exception e) {
-			log.error("Failed importing certificate chain with alias '" + alias + "' to keystore at " + getKeystorePath() + " : " + e.getMessage());
+			log.error("Failed importing certificate chain with alias '" + alias + "' to keystore : " + e.getMessage());
 			return false;
 		}
 
