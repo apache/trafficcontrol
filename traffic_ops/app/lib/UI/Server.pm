@@ -285,11 +285,11 @@ sub check_server_input_cgi {
 	my $self         = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address interface_mtu cdn cachegroup type profile/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port/)
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway interface_name ip_netmask ip_gateway ip6_address ip6_gateway tcp_port/)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
@@ -318,7 +318,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address interface_mtu cdn cachegroup type profile/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} )
@@ -356,7 +356,7 @@ sub check_server_input {
 		}
 	}
 
-	if ( !&is_netmask( $paramHashRef->{'ip_netmask'} ) ) {
+	if ( defined( $paramHashRef->{'ip_netmask'} ) && $paramHashRef->{'ip_netmask'} ne "" && !&is_netmask( $paramHashRef->{'ip_netmask'} ) ) {
 		$err .= $paramHashRef->{'ip_netmask'} . " is not a valid netmask (I think... ;-)" . $sep;
 	}
 	if ( $paramHashRef->{'ilo_ip_netmask'} ne ""
@@ -371,7 +371,7 @@ sub check_server_input {
 	}
 	my $ipstr1 = $paramHashRef->{'ip_address'} . "/" . $paramHashRef->{'ip_netmask'};
 	my $ipstr2 = $paramHashRef->{'ip_gateway'} . "/" . $paramHashRef->{'ip_netmask'};
-	if ( !&in_same_net( $ipstr1, $ipstr2 ) ) {
+	if ( defined( $paramHashRef->{'ip_netmask'} ) && $paramHashRef->{'ip_netmask'} ne "" && !&in_same_net( $ipstr1, $ipstr2 ) ) {
 		$err .= $paramHashRef->{'ip_address'} . " and " . $paramHashRef->{'ip_gateway'} . " are not in same network" . $sep;
 	}
 
@@ -593,12 +593,12 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach my $requiredParam (
-		qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile phys_location/)
+		qw/host_name domain_name ip_address interface_mtu cdn cachegroup type profile phys_location/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask interface_name ip_netmask ip_gateway mgmt_ip_gateway ip6_address ip6_gateway tcp_port
 		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{
