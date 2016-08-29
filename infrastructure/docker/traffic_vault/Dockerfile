@@ -1,15 +1,15 @@
 ############################################################
 # Dockerfile to build Riak container images
-#   as Traffic Vault for Traffic Control 1.4
+#   as Traffic Vault for Traffic Control 1.6.0
 # Based on CentOS 6.6
 ############################################################
 
 # Example Build and Run:
-# docker build --file Traffic_Vault_Dockerfile --rm --tag traffic_vault:1.4 .
-# docker run --name my-traffic-vault --hostname my-traffic-vault --net cdnet --env ADMIN_PASS=riakadminsecret --env USER_PASS=marginallylesssecret --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --env DOMAIN=cdnet --detach traffic_vault:1.4
+# docker build --rm --tag traffic_vault:1.6.0 traffic_vault
+# docker run --name my-traffic-vault --hostname my-traffic-vault --net cdnet --env ADMIN_PASS=riakadminsecret --env USER_PASS=marginallylesssecret --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --env DOMAIN=cdnet --detach traffic_vault:1.6.0
 
 FROM centos:6.6
-MAINTAINER Robert Butts
+MAINTAINER Dan Kirkwood
 
 ARG ADMIN_PASS
 ARG USER_PASS
@@ -33,5 +33,5 @@ RUN mkdir /etc/riak/certs
 RUN echo "tls_protocols.tlsv1 = on" >> /etc/riak/riak.conf 
 
 EXPOSE 8098 8087 8088
-ADD Traffic_Vault_Dockerfile_run.sh /
-ENTRYPOINT /Traffic_Vault_Dockerfile_run.sh
+ADD run.sh /
+ENTRYPOINT /run.sh

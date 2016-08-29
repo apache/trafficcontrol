@@ -15,8 +15,16 @@
 # CERT_STATE
 # CERT_CITY
 # CERT_COMPANY
-# TRAFFIC_VAULT_PASS
 # DOMAIN
+
+# TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
+
+# Check that env vars are set
+envvars=( MYSQL_IP MYSQL_PORT MYSQL_ROOT_PASS MYSQL_TRAFFIC_OPS_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
+for v in $envvars
+do
+	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+done
 
 start() {
 		service traffic_ops start
