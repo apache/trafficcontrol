@@ -500,6 +500,22 @@ sub check_server_params {
 		return ( \%params, "Address " . $json->{'ip6Address'} . " is not a valid IPv6 address " );
 	}
 
+	my $ip_used =
+		$self->db->resultset('Server')
+			->search( { -and => [ ip_address => $json->{'ipAddress'}, profile => $json->{'profile'}, id => { '!=' => (defined($update_base)) ? $update_base->{'id'} : undef } ] })->single();
+	if ( $ip_used ) {
+		return ( \%params, $json->{'ipAddress'} . " is already being used by a server with the same profile" );
+	}
+
+	if ( defined( $json->{'ip6Address'} ) && $json->{'ip6Address'} ne "" ) {
+		my $ip6_used =
+			$self->db->resultset('Server')
+				->search( { -and => [ ip6_address => $json->{'ip6Address'}, profile => $json->{'profile'}, id => { '!=' => (defined($update_base)) ? $update_base->{'id'} : undef } ] })->single();
+		if ( $ip6_used ) {
+			return ( \%params, $json->{'ipAddress'} . " is already being used by a server with the same profile" );
+		}
+	}
+
 	# Netmask checks
 	if ( defined( $json->{'ipNetmask'} )
 		&& $json->{'mgmtIpNetmask'} ne ""
