@@ -10,7 +10,7 @@
 # docker run --name my-traffic-router --hostname my-traffic-router --net cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --env TRAFFIC_MONITORS="my-traffic-monitor-0:80;my-traffic-monitor-1:80" --env ORIGIN_URI="http://my-hotair.cdnet" --detach traffic_router:1.4
 
 FROM centos:6.6
-MAINTAINER Robert Butts
+MAINTAINER Dan Kirkwood
 
 # Default values for JDK and RPM -- override with `docker build --build-arg JDK=...'
 ARG JDK=http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.rpm

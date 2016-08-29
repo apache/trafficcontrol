@@ -9,7 +9,7 @@
 # docker run --name my-traffic-monitor-0 --hostname my-traffic-monitor-0 --net=cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_monitor:1.6.0
 
 FROM centos:6.6
-MAINTAINER Robert Butts
+MAINTAINER Dan Kirkwood
 
 # Default values for JDK and RPM -- override with `docker build --build-arg RPM=... --build-arg JDK=...'
 ARG JDK=http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.rpm
