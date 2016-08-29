@@ -143,6 +143,13 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 				body = []byte(opsConfig.Get().Url)
 			case http_server.APICacheStates:
 				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
+			case http_server.APIBandwidthKbps:
+				kbpsStats := lastKbpsStats.Get()
+				sum := float64(0.0)
+				for _, data := range kbpsStats.Caches {
+					sum += data.Kbps
+				}
+				body = []byte(fmt.Sprintf("%f", sum))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
@@ -241,7 +248,7 @@ func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[e
 	conns := map[enum.CacheName]int64{}
 	for server, history := range statHistory {
 		for _, result := range history {
-			val, ok := result.Astats.Ats["proxy.process.http.total_incoming_connections"]
+			val, ok := result.Astats.Ats["proxy.process.http.current_client_connections"]
 			if !ok {
 				fmt.Printf("ERROR DEBUG6 connections stat not found for %s\n", server)
 				continue

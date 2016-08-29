@@ -1,9 +1,15 @@
 package manager
 
 import (
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"fmt"
 	"sync"
+	"time"
+
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
+	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
 //const maxHistory = (60 / pollingInterval) * 5
@@ -65,15 +71,60 @@ func copyStats(a map[enum.CacheName][]cache.Result) map[enum.CacheName][]cache.R
 	return b
 }
 
-func StartStatHistoryManager(cacheStatChan <-chan cache.Result) StatHistoryThreadsafe {
+// StartStatHistoryManager fetches the full statistics data from ATS Astats. This includes everything needed for all calculations, such as Delivery Services. This is expensive, though, and may be hard on ATS, so it should poll less often.
+// For a fast 'is it alive' poll, use the Health Result Manager poll.
+// Returns the stat history, the duration between the stat poll for each cache, the last Kbps data, and the calculated Delivery Service stats.
+func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates peer.CRStatesThreadsafe, toData todata.TODataThreadsafe, errorCount UintThreadsafe) (StatHistoryThreadsafe, DurationMapThreadsafe, StatsLastKbpsThreadsafe, DSStatsThreadsafe) {
 	statHistory := NewStatHistoryThreadsafe()
+	lastStatDurations := NewDurationMapThreadsafe()
+	lastStatEndTimes := map[enum.CacheName]time.Time{}
+	lastKbpsStats := NewStatsLastKbpsThreadsafe()
+	dsStats := NewDSStatsThreadsafe()
 	go func() {
 		for {
 			select {
 			case stat := <-cacheStatChan:
 				statHistory.Add(stat)
+
+				now := time.Now()
+
+				var err error
+				createStatsCopyStatHistory := statHistory.Get()
+				createStatsCopyCombinedStates := combinedStates.Get()
+				createStatsCopyLastKbpsStats := lastKbpsStats.Get()
+				toDataCopy := toData.Get()
+
+				//				for _, healthResult := range results {
+				fmt.Printf("DEBUG poll %v %v CreateStats start\n", stat.PollID, time.Now())
+				//				}
+
+				newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
+
+				//				for _, healthResult := range results {
+				fmt.Printf("DEBUG poll %v %v CreateStats end\n", stat.PollID, time.Now())
+				//				}
+
+				if err != nil {
+					errorCount.Inc()
+					fmt.Printf("ERROR getting deliveryservice: %v\n", err)
+				} else {
+					dsStats.Set(newDsStats)
+					lastKbpsStats.Set(newLastKbpsStats)
+				}
+
+				// for _, healthResult := range results {
+				if lastStatStart, ok := lastStatEndTimes[enum.CacheName(stat.Id)]; ok {
+					d := time.Since(lastStatStart)
+					lastStatDurations.Set(enum.CacheName(stat.Id), d)
+				}
+				lastStatEndTimes[enum.CacheName(stat.Id)] = now
+
+				fmt.Printf("DEBUG poll %v %v statfinish\n", stat.PollID, time.Now())
+				stat.PollFinished <- stat.PollID
+				//				}
+
 			}
 		}
 	}()
-	return statHistory
+	return statHistory, lastStatDurations, lastKbpsStats, dsStats
 }

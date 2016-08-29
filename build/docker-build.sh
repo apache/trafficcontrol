@@ -123,7 +123,7 @@ runBuild() {
 	for p in $projects
 	do
 		echo -n "**   building $p: "; date
-		docker run --rm $vol -v $dist:/dist $p/build
+		docker run --rm --env "GITREPO=$GITREPO" --env "BRANCH=$BRANCH" $vol -v $dist:/dist $p/build
 	done
 	echo -n "** End Build: "; date
 }

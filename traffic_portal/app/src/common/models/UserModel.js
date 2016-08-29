@@ -29,7 +29,7 @@ var UserModel = function($rootScope, messageModel) {
             user.username = ''; // new users were given a temp username that needs to be ditched
         }
         if (!user.localUser) {
-            messageModel.setMessages([ { level: 'success', text: 'Logged in as LDAP user.' } ], false);
+            messageModel.setMessages([ { level: 'success', text: 'Logged in as read-only user.' } ], false);
         }
         $rootScope.$broadcast('userModel::userUpdated', user);
     };
