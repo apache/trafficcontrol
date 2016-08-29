@@ -242,8 +242,8 @@ func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceNa
 	}
 
 	fqdn := strings.Join(statParts[:len(statParts)-1], ".")
-	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(fqdn)
 
+	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(fqdn)
 	if !ok {
 		return stats, fmt.Errorf("ERROR no delivery service match for fqdn '%v' stat '%v'\n", fqdn, strings.Join(statParts, "."))
 	}
@@ -255,42 +255,25 @@ func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceNa
 
 	dsStat, ok := stats[ds]
 	if !ok {
-		switch toData.DeliveryServiceTypes[string(ds)] {
-		case enum.DSTypeHTTP:
-			dsStat = dsdata.NewStatHTTP()
-		case enum.DSTypeDNS:
-			dsStat = dsdata.NewStatDNS()
-		default:
-			return stats, fmt.Errorf("unknown delivery service type: %v", toData.DeliveryServiceTypes[string(ds)])
-		}
+		newStat := dsdata.NewStat()
+		dsStat = *newStat
 	}
 
-	switch t := dsStat.(type) {
-	case *dsdata.StatHTTP:
-		hstat := dsStat.(*dsdata.StatHTTP)
-
-		err := addCacheStat(&hstat.Total, statName, value)
-		if err != nil {
-			return stats, err
-		}
-
-		cachegroup, ok := toData.ServerCachegroups[enum.CacheName(server)]
-		if !ok {
-			return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
-		}
-		hstat.CacheGroups[cachegroup] = hstat.Total
-
-		cacheType, ok := toData.ServerTypes[enum.CacheName(server)]
-		if !ok {
-			return stats, fmt.Errorf("server missing from TOData.ServerTypes")
-		}
-		hstat.Type[cacheType] = hstat.Total
-
-		dsStat = hstat
-	case *dsdata.StatDNS:
-	default:
-		return stats, fmt.Errorf("stat unexpected type: %T", t)
+	if err := addCacheStat(&dsStat.Total, statName, value); err != nil {
+		return stats, err
 	}
+
+	cachegroup, ok := toData.ServerCachegroups[enum.CacheName(server)]
+	if !ok {
+		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
+	}
+	dsStat.CacheGroups[cachegroup] = dsStat.Total
+
+	cacheType, ok := toData.ServerTypes[enum.CacheName(server)]
+	if !ok {
+		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
+	}
+	dsStat.Type[cacheType] = dsStat.Total
 	stats[ds] = dsStat
 	return stats, nil
 }
