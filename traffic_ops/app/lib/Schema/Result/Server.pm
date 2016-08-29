@@ -324,6 +324,35 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
+=head1 UNIQUE CONSTRAINTS
+
+=head2 C<ip6_profile>
+
+=over 4
+
+=item * L</ip6_address>
+
+=item * L</profile>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("ip6_profile", ["ip6_address", "profile"]);
+
+=head2 C<ip_profile>
+
+=over 4
+
+=item * L</ip_address>
+
+=item * L</profile>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("ip_profile", ["ip_address", "profile"]);
 
 =head2 C<se_id_UNIQUE>
 
@@ -475,8 +504,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-06-13 22:13:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gdRECADmRFpa3OWLbqJirA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-29 17:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qsqvo1OFcbS8+qXvS2DU1Q
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
