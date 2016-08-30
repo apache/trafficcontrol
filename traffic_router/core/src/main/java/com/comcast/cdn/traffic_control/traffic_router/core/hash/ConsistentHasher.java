@@ -1,18 +1,16 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.hash;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class ConsistentHasher {
-	private static final Logger LOGGER = Logger.getLogger(ConsistentHasher.class);
+//	private static final Logger LOGGER = Logger.getLogger(ConsistentHasher.class);
 
 	final private MD5HashFunction hashFunction = new MD5HashFunction();
 
