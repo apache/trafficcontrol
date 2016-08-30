@@ -180,6 +180,10 @@ $(function () {
 						<td class="editable" id="tcp_port"><%= $server_data->tcp_port %></td>
 					</tr>
 					<tr>
+						<td>HTTPS Port</td>
+						<td class="editable" id="https_port"><%= $server_data->https_port %></td>
+					</tr>
+					<tr>
 						<td>Interface Name</td>
 						<td class="editable" id="interface_name"><%= $server_data->interface_name %></td>
 					</tr>

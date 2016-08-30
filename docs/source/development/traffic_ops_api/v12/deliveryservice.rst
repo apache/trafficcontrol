@@ -71,6 +71,8 @@ Delivery Service
   |                          |        | Note that this does not prevent access to content or makes content secure; it just prevents                                          |                                                                                                     |
   |                          |        | routing to the content by Traffic Router.                                                                                            |                                                                                                     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
+  | ``geoLimitRedirectURL``  | string | This is the URL Traffic Router will redirect to when Geo Limit Failure.                                                              |                                                                                                     |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
   | ``globalMaxMbps``        | string | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the                                 |                                                                                                     |
   |                          |        | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.                                           |                                                                                                     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
@@ -158,6 +160,7 @@ Delivery Service
           "dnsBypassTtl": null,
           "dscp": "40",
           "geoLimit": "0",
+          "geoLimitRedirectURL": "",
           "globalMaxMbps": "0",
           "globalMaxTps": "0",
           "headerRewrite": "add-header X-Powered-By: KABLETOWN [L]",
@@ -245,6 +248,8 @@ Delivery Service
   |                          |        | Note that this does not prevent access to content or makes content secure; it just prevents                                          |
   |                          |        | routing to the content by Traffic Router.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitRedirectURL``  | string | This is the URL Traffic Router will redirect to when Geo Limit Failure.                                                              |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``globalMaxMbps``        | string | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the                                 |
   |                          |        | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -330,6 +335,7 @@ Delivery Service
           "dnsBypassTtl": null,
           "dscp": "40",
           "geoLimit": "0",
+          "geoLimitRedirectURL":"",
           "globalMaxMbps": "0",
           "globalMaxTps": "0",
           "headerRewrite": "add-header X-Powered-By: KABLETOWN [L]",
@@ -1107,6 +1113,8 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | geoLimitCountries      | no       | The geo limit countries.                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | geoLimitRedirectURL    | no       | This is the URL Traffic Router will redirect to when Geo Limit Failure.                                 |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | geoProvider            | no       | - 0: Maxmind(default)                                                                                   |
   |                        |          | - 1: Neustar                                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1352,6 +1360,8 @@ SSL Keys
   |                        |          | routing to the content by Traffic Router.                                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | geoLimitCountries      | no       | The geo limit countries.                                                                                |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | geoLimitRedirectURL    | no       | This is the URL Traffic Router will redirect to when Geo Limit Failure.                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | geoProvider            | no       | - 0: Maxmind(default)                                                                                   |
   |                        |          | - 1: Neustar                                                                                            |

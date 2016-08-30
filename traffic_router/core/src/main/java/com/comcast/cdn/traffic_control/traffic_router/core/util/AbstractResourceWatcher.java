@@ -110,7 +110,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	@Override
 	protected File downloadDatabase(final String url, final File existingDb) {
 		if (fetcher == null) {
-			LOGGER.warn("Waiting for federations configuration to be processed, unable download federations");
+			LOGGER.warn("[" + getClass().getSimpleName() + "] Waiting for configuration to be processed, unable to download from '" + url + "'");
 			return null;
 		}
 

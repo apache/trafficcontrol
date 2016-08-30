@@ -223,6 +223,11 @@ __PACKAGE__->table("server");
   default_value: current_timestamp
   is_nullable: 1
 
+=head2 https_port
+
+  data_type: 'smallint'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -302,6 +307,8 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 1,
   },
+  "https_port",
+  { data_type => "smallint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -981,7 +988,7 @@ __PACKAGE__->belongs_to(
 #
 #
 1;
-# End of lines loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' 
+# End of lines loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm'
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

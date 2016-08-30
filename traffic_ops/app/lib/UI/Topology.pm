@@ -27,6 +27,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Time::HiRes qw(gettimeofday);
 use File::Basename;
 use File::Path;
+use Scalar::Util qw(looks_like_number);
 
 sub ccr_config {
     my $self     = shift;
@@ -190,7 +191,7 @@ sub gen_crconfig_json {
             'me.cdn_id' => $cdn_id
         }, {
             prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
-            columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
+            columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
         }
     );
 
@@ -202,13 +203,14 @@ sub gen_crconfig_json {
             || $row->status->name eq 'ADMIN_DOWN' );
 
         if ( $row->type->name eq "RASCAL" ) {
-            $data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'status'}   = $row->status->name;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'location'} = $row->cachegroup->name;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'port'}     = $row->tcp_port;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'ip'}       = $row->ip_address;
-            $data_obj->{'monitors'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
-            $data_obj->{'monitors'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'fqdn'}      = $row->host_name . "." . $row->domain_name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'status'}    = $row->status->name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'location'}  = $row->cachegroup->name;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'port'}      = $row->tcp_port;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'httpsPort'} = $row->https_port;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'ip'}        = $row->ip_address;
+            $data_obj->{'monitors'}->{ $row->host_name }->{'ip6'}       = ( $row->ip6_address || "" );
+            $data_obj->{'monitors'}->{ $row->host_name }->{'profile'}   = $row->profile->name;
 
         }
         elsif ( $row->type->name eq "CCR" ) {
@@ -222,14 +224,15 @@ sub gen_crconfig_json {
             my $r = $rs_param->single;
             my $port = ( defined($r) && defined( $r->value ) ) ? $r->value : 80;
 
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'}     = $row->host_name . "." . $row->domain_name;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'status'}   = $row->status->name;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'location'} = $row->cachegroup->name;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'port'}     = $row->tcp_port;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'api.port'} = $port;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'}       = $row->ip_address;
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}      = ( $row->ip6_address || "" );
-            $data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}  = $row->profile->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'fqdn'}        = $row->host_name . "." . $row->domain_name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'status'}      = $row->status->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'location'}    = $row->cachegroup->name;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'port'}        = $row->tcp_port;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'httpsPort'}   = $row->https_port;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'api.port'}    = $port;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip'}          = $row->ip_address;
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'ip6'}         = ( $row->ip6_address || "" );
+            $data_obj->{'contentRouters'}->{ $row->host_name }->{'profile'}     = $row->profile->name;
         }
         elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 
@@ -256,6 +259,7 @@ sub gen_crconfig_json {
             $data_obj->{'contentServers'}->{ $row->host_name }->{'cacheGroup'}    = $row->cachegroup->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'port'}          = $row->tcp_port;
+            $data_obj->{'contentServers'}->{ $row->host_name }->{'httpsPort'}     = $row->https_port;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'interfaceName'} = $row->interface_name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'status'}        = $row->status->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'ip'}            = $row->ip_address;
@@ -392,11 +396,28 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = $geoEnabled;
         }
 
-		$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
-		my $ds_protocol = $row->protocol;
-		if ($ds_protocol > 0) {
-			$data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
-		}
+        # Default to 'http only'
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'false';
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'redirectToHttps'} = 'false';
+
+        my $ds_protocol = $row->protocol;
+
+        if (looks_like_number($ds_protocol) && 0 < $ds_protocol && $ds_protocol < 4) {
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'true';
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'true';
+
+            # 'https only'
+            if ($ds_protocol == 1) {
+                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttp'} = 'false';
+
+            }
+
+            # 'http to https'
+            if ($ds_protocol == 3) {
+                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'redirectToHttps'} = 'true';
+            }
+        }
 
         my $geo_provider = $row->geo_provider;
         if ( $geo_provider == 1 ) {
@@ -454,6 +475,11 @@ sub gen_crconfig_json {
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
+
+            if ( defined($row->geo_limit) && $row->geo_limit ne 0 ) {
+                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLimitRedirectURL'} =
+                    defined($row->geolimit_redirect_url) ? $row->geolimit_redirect_url : "";
+            }
         }
 
         if ( defined( $row->tr_response_headers )
@@ -736,10 +762,30 @@ sub stringify_ds {
     if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
         $string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
     }
+    if ( defined( $ds->{'geoLimitRedirectURL'}) ) {
+		$string .= "|Geolimit_Redirect_URL:" . $ds->{'geoLimitRedirectURL'};
+	}
     $string .= "|<br>&emsp;DNS TTLs: A:" . $ds->{'ttls'}->{'A'} . " AAAA:" . $ds->{'ttls'}->{'AAAA'} . "|";
     foreach my $dns ( @{ $ds->{'staticDnsEntries'} } ) {
         $string .= "|<br>&emsp;staticDns: |name:" . $dns->{'name'} . "|type:" . $dns->{'type'} . "|ttl:" . $dns->{'ttl'} . "|addr:" . $dns->{'value'} . "|";
     }
+
+    if (defined($ds->{'protocol'})) {
+        $string .= "|protocol: ";
+
+        if (defined($ds->{'protocol'}->{'acceptHttp'})) {
+            $string .= " acceptHttp=" . $ds->{'protocol'}->{'acceptHttp'};
+        }
+
+        if (defined($ds->{'protocol'}->{'acceptHttps'})) {
+            $string .= " acceptHttps=" . $ds->{'protocol'}->{'acceptHttps'};
+        }
+
+        if (defined($ds->{'protocol'}->{'redirectToHttps'})) {
+            $string .= " redirectToHttps=" . $ds->{'protocol'}->{'redirectToHttps'};
+        }
+    }
+
     return $string;
 }
 

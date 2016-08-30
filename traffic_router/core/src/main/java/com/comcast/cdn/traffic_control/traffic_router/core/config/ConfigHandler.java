@@ -40,7 +40,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -61,6 +60,7 @@ public class ConfigHandler {
 
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
+	private static String deliveryServicesKey = "deliveryServices";
 
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
@@ -93,7 +93,7 @@ public class ConfigHandler {
 		return regionalGeoUpdater;
 	}
 
-	public boolean processConfig(final String jsonStr) throws JSONException, IOException, TrafficRouterException  {
+	public boolean processConfig(final String jsonStr) throws JSONException, IOException  {
 		if (jsonStr == null) {
 			trafficRouterManager.setCacheRegister(null);
 			return false;
@@ -115,17 +115,18 @@ public class ConfigHandler {
 			try {
 				parseGeolocationConfig(config);
 				parseCoverageZoneNetworkConfig(config);
-				parseRegionalGeoConfig(config);
+				parseRegionalGeoConfig(jo);
 
 				final CacheRegister cacheRegister = new CacheRegister();
 				cacheRegister.setTrafficRouters(jo.getJSONObject("contentRouters"));
 				cacheRegister.setConfig(config);
 				cacheRegister.setStats(stats);
 				parseTrafficOpsConfig(config, stats);
-				parseDeliveryServiceConfig(jo.getJSONObject("deliveryServices"), cacheRegister);
+				parseDeliveryServiceConfig(jo.getJSONObject(deliveryServicesKey), cacheRegister);
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
+				parseCertificatesConfig(config);
 				NetworkNode.getInstance().clearCacheLocations();
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
@@ -222,9 +223,9 @@ public class ConfigHandler {
 					LOGGER.warn(e+" : "+ip);
 				}
 
-				if(jo.has("deliveryServices")) {
+				if(jo.has(deliveryServicesKey)) {
 					final List<DeliveryServiceReference> references = new ArrayList<Cache.DeliveryServiceReference>();
-					final JSONObject dsJos = jo.optJSONObject("deliveryServices");
+					final JSONObject dsJos = jo.optJSONObject(deliveryServicesKey);
 					for (final String ds : JSONObject.getNames(dsJos)) {
 						/* technically this could be more than just a string or array,
 						 * but, as we only have had those two types, let's not worry about the future
@@ -403,6 +404,17 @@ public class ConfigHandler {
 		}
 	}
 
+	private void parseCertificatesConfig(final JSONObject config) {
+		final String pollingInterval = "certificates.polling.interval";
+		if (config.has(pollingInterval)) {
+			try {
+				System.setProperty(pollingInterval, config.getString(pollingInterval));
+			} catch (Exception e) {
+				LOGGER.warn("Failed to set system property " + pollingInterval + " from configuration object: " + e.getMessage());
+			}
+		}
+	}
+
 	/**
 	 * Parses the ConverageZoneNetwork database configuration and updates the database if the URL has
 	 * changed.
@@ -418,7 +430,8 @@ public class ConfigHandler {
 			);
 	}
 
-	private void parseRegionalGeoConfig(final JSONObject config) {
+	private void parseRegionalGeoConfig(final JSONObject jo) throws JSONException {
+		final JSONObject config = jo.getJSONObject("config");
 		final String url = config.optString("regional_geoblock.polling.url", null);
 
 		if (url == null) {
@@ -427,8 +440,19 @@ public class ConfigHandler {
 			return;
 		}
 
-		final long interval = config.optLong("regional_geoblock.polling.interval");
-		getRegionalGeoUpdater().setDataBaseURL(url, interval);
+		if (jo.has(deliveryServicesKey)) {
+			final JSONObject dss = jo.getJSONObject(deliveryServicesKey);
+			for (final String ds : JSONObject.getNames(dss)) {
+				if (dss.getJSONObject(ds).has("regionalGeoBlocking") &&
+						dss.getJSONObject(ds).getString("regionalGeoBlocking").equals("true")) {
+					final long interval = config.optLong("regional_geoblock.polling.interval");
+					getRegionalGeoUpdater().setDataBaseURL(url, interval);
+					return;
+				}
+			}
+		}
+
+		getRegionalGeoUpdater().cancelServiceUpdater();
 	}
 
 	/**

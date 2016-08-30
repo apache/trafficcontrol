@@ -149,10 +149,16 @@ sub delete {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my $p_name = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('name')->single();
-		my $delete = $self->db->resultset('Parameter')->search( { id => $id } );
-		$delete->delete();
-		&log( $self, "Delete parameter " . $p_name, "UICHANGE" );
+		my $secure = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('secure')->single();
+		if ( (1==$secure) && !&is_admin($self) ) {
+			$self->flash( alertmsg => "Forbidden. Admin role required to delete a secure parameter." );
+		}
+		else {
+			my $p_name = $self->db->resultset('Parameter')->search( { id => $id } )->get_column('name')->single();
+			my $delete = $self->db->resultset('Parameter')->search( { id => $id } );
+			$delete->delete();
+			&log( $self, "Delete parameter " . $p_name, "UICHANGE" );
+		}
 	}
 	return $self->redirect_to('/close_fancybox.html');
 }
@@ -168,7 +174,7 @@ sub update {
 		$update->config_file( $self->param('parameter.config_file') );
 		$update->value( $self->param('parameter.value') );
 		if ( &is_admin($self) ) {
-			my $secure = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
+			my $secure = defined( $self->param('parameter.secure') ) ? $self->param('parameter.secure') : 0;
 			$update->secure($secure);
 		}
 		$update->update();
@@ -245,7 +251,7 @@ sub create {
 	my $new_id = -1;
 
 	if ( $self->is_valid() ) {
-		my $secure = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
+		my $secure = defined( $self->param('parameter.secure') ) ? $self->param('parameter.secure') : 0;
 		my $insert = $self->db->resultset('Parameter')->create(
 			{
 				name        => $self->param('parameter.name'),
