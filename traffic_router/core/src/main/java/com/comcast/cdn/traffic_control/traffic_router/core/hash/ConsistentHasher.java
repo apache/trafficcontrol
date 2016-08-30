@@ -1,5 +1,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.hash;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -15,44 +16,27 @@ public class ConsistentHasher {
 
 	final private MD5HashFunction hashFunction = new MD5HashFunction();
 
-	public <T extends Hashable> T selectHashable(final List<T> hashables, final String s, final boolean shuffle) {
-		if (hashables.isEmpty()) {
-			LOGGER.warn("Cannot select a hashable from an empty list!");
-			return null;
-		}
-
-		if (shuffle) {
-			return hashables.get(new Random(System.currentTimeMillis()).nextInt(hashables.size()));
-		}
-
-		final Collection<T> values = sortHashables(hashables, s).values();
-
-		if (values.isEmpty()) {
-			LOGGER.warn("Failed to generate sorted hashables from given hashables list of size " + hashables.size());
-			return null;
-		}
-
-		return values.iterator().next();
+	public <T extends Hashable> T selectHashable(final List<T> hashables, final Dispersion dispersion, final String s) {
+		return selectHashables(hashables, dispersion, s).get(0);
 	}
 
-	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final int limit, final String s, final boolean shuffle) {
-		if (shuffle) {
-			Collections.shuffle(hashables);
-			return (limit <= hashables.size()) ? hashables.subList(0, limit) : hashables;
-		}
+	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final Dispersion dispersion, final String s) {
 
 		final SortedMap<Double, T> sortedHashables = sortHashables(hashables, s);
 		final List<T> selectedHashables = new ArrayList<T>();
 
-		for (T hashable : sortedHashables.values()) {
-			if (selectedHashables.size() >= limit) {
+		for (final T hashable : sortedHashables.values()) {
+			if (selectedHashables.size() >= dispersion.getLimit()) {
 				break;
 			}
 
 			selectedHashables.add(hashable);
 		}
+		if (dispersion.isShuffled()) {
+			Collections.shuffle(selectedHashables);
+		}
 
-		return selectedHashables;
+		return (dispersion.getLimit() <= selectedHashables.size()) ? selectedHashables.subList(0, dispersion.getLimit()) : selectedHashables;
 	}
 
 	private <T extends Hashable> SortedMap<Double, T> sortHashables(final List<T> hashables, final String s) {

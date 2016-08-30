@@ -366,8 +366,7 @@ public class TrafficRouter {
 		List<Cache> selectedCaches;
 
 		if (maxDnsIps > 0 && isConsistentDNSRouting()) { // only consistent hash if we must
-			final Dispersion dispersion = ds.getDispersion();
-			selectedCaches = (List<Cache>) consistentHasher.selectHashables(caches, dispersion.getLimit(), request.getHostname(), dispersion.getLimit() > 1 && dispersion.isShuffled());
+			selectedCaches = (List<Cache>) consistentHasher.selectHashables(caches, ds.getDispersion(), request.getHostname());
 		} else if (maxDnsIps > 0) {
 			/*
 			 * We also shuffle in NameServer when adding Records to the Message prior
@@ -476,9 +475,7 @@ public class TrafficRouter {
 			routeResult.setUrl(deliveryService.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
-
-		final boolean isShuffled = deliveryService.getDispersion().getLimit() > 1 && deliveryService.getDispersion().isShuffled();
-		final Cache cache = consistentHasher.selectHashable(caches, request.getPath(), isShuffled);
+		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
 
 		if (deliveryService.isRegionalGeoEnabled()) {
 			RegionalGeo.enforce(this, request, deliveryService, cache, routeResult, track);
@@ -547,7 +544,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, requestPath, deliveryService.getDispersion().getLimit() > 1 && deliveryService.getDispersion().isShuffled());
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
 	}
 
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -575,7 +572,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, requestPath, deliveryService.getDispersion().getLimit() > 1 && deliveryService.getDispersion().isShuffled());
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
 	}
 
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
@@ -602,7 +599,7 @@ public class TrafficRouter {
 			return cacheRegister.getDeliveryService(bypassDeliveryServiceId);
 		}
 
-		final SteeringTarget steeringTarget = consistentHasher.selectHashable(steering.getTargets(), requestPath, false);
+		final SteeringTarget steeringTarget = consistentHasher.selectHashable(steering.getTargets(), deliveryService.getDispersion(), requestPath);
 		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 	}
 
@@ -636,7 +633,7 @@ public class TrafficRouter {
 		return null;
 	}
 
-	/**
+	/*
 	 * Selects a {@link Cache} from the {@link CacheLocation} provided.
 	 * 
 	 * @param location
