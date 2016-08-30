@@ -286,11 +286,11 @@ sub check_server_input_cgi {
 	my $id         	 = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address interface_mtu cdn cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway interface_name ip_netmask ip_gateway ip6_address ip6_gateway tcp_port/)
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port/)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
@@ -320,7 +320,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address interface_mtu cdn cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} )
@@ -613,12 +613,12 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach my $requiredParam (
-		qw/host_name domain_name ip_address interface_mtu cdn cachegroup type profile phys_location/)
+		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask interface_name ip_netmask ip_gateway mgmt_ip_gateway ip6_address ip6_gateway tcp_port
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port
 		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{

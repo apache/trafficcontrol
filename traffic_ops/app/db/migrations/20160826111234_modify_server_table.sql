@@ -33,9 +33,6 @@ EXECUTE stmt3;
 
 alter table server modify host_name varchar(63) not null;
 alter table server modify domain_name varchar(63) not null;
-alter table server modify interface_name varchar(45) null;
-alter table server modify ip_netmask varchar(45) null;
-alter table server modify ip_gateway varchar(45) null;
 
 alter table server add unique key `ip_profile` (ip_address, profile);
 alter table server add unique key `ip6_profile` (ip6_address, profile);
@@ -47,9 +44,6 @@ create unique index host_name on server (host_name);
 create unique index ip6_address on server (ip6_address);
 alter table server modify host_name varchar(45) not null;
 alter table server modify domain_name varchar(45) not null;
-alter table server modify interface_name varchar(45) not null;
-alter table server modify ip_netmask varchar(45) not null;
-alter table server modify ip_gateway varchar(45) not null;
 
 set @exist4 := (select count(*) from information_schema.statistics where table_name = 'server' and index_name = 'ip_profile' and table_schema = database());
 set @sqlstmt4 := if( @exist4 > 0, 'alter table server drop index ip_profile', 'alter table server');
