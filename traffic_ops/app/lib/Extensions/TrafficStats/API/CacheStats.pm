@@ -100,7 +100,7 @@ sub get_stat {
 	my $self = shift;
 	my $database = shift;
 	my $query = shift;
-	
+
 	my $response_container = $self->influxdb_query($database, $query);
 	my $response           = $response_container->{'response'};
 	my $content            = $response->{_content};
@@ -110,7 +110,7 @@ sub get_stat {
 		$summary_content   = decode_json($content);
 		return $summary_content->{results}[0]{series}[0]{values}[0][1];
 	}
-	
+
 	return "";
 }
 
@@ -123,7 +123,7 @@ sub current_stats {
 	my $rs = $self->db->resultset('Cdn');
 	while ( my $cdn = $rs->next ) {
 		my $cdn_name = $cdn->name;
-		my $bw = $current_bw->{$cdn_name};	
+		my $bw = $current_bw->{$cdn_name};
 		my $conn = $conns->{$cdn_name};
 		my $cap = $capacity->{$cdn_name};
 		push(@stats, ({cdn => $cdn_name, bandwidth => $bw, connections => $conn, capacity => $cap}));
@@ -174,8 +174,8 @@ sub get_current_capacity {
 	my $rs = $self->db->resultset('Cdn');
 	while ( my $cdn = $rs->next ) {
 		my $cdn_name = $cdn->name;
-	  	my $query = "select sum(value)/6 from \"maxKbps\" where time > now() - 120s and time < now() - 60s and cdn = \'$cdn_name\'";
-		my $capacity = $self->get_stat("cache_stats", $query);  	
+		my $query = "select last(value) from \"monthly\".\"maxkbps.cdn.1min\" where cdn = \'$cdn_name\'";
+		my $capacity = $self->get_stat("cache_stats", $query);
 		if ($capacity) {
 		$capacity = $capacity/1000000; #convert to Gbps
 		$capacity = $capacity * 0.85;    # need a better way to figure out percentage of max besides hard-coding
@@ -205,11 +205,11 @@ sub daily_summary {
 		my $max_bw = $self->get_stat($database, "select max(value) from \"daily_maxgbps\" where cdn = \'$cdn\'");
 		$max->{"highest"} = $max_bw;
 		#get last bw
-		my $last_bw = $self->get_stat($database, "select last(value) from \"daily_maxgbps\" where cdn = \'$cdn\'"); 
+		my $last_bw = $self->get_stat($database, "select last(value) from \"daily_maxgbps\" where cdn = \'$cdn\'");
 		$max->{"yesterday"} = $last_bw;
 		push(@max_gbps, $max);
 		#get bytesserved
-		my $bytesserved = $self->get_stat($database, "select sum(value) from \"daily_bytesserved\" where cdn = \'$cdn\'"); 
+		my $bytesserved = $self->get_stat($database, "select sum(value) from \"daily_bytesserved\" where cdn = \'$cdn\'");
 		$bytes_served->{"bytesServed"} = $bytesserved/1000;
 		push(@pb_served, $bytes_served);
 		$total_bytesserved += $bytesserved;

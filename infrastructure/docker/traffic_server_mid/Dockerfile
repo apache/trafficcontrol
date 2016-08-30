@@ -14,7 +14,7 @@
 
 # Example Build and Run:
 #
-# docker build --file Traffic_Server_Mid_Dockerfile --rm --tag traffic_server_mid:1.4 .
+# docker build --rm --tag traffic_server_mid:1.4 traffic_server_mid
 #
 # docker run --name my-mid-0 --hostname my-mid-0 --net cdnet --device /dev/ram0:/dev/ram0 --device /dev/ram1:/dev/ram1 --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_server_mid:1.4
 #
@@ -23,7 +23,7 @@
 # docker run --name my-mid-0 --hostname my-mid-0 --net cdnet --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --detach traffic_server_mid:1.4
 
 FROM centos:6.6
-MAINTAINER Robert Butts
+MAINTAINER Dan Kirkwood
 
 RUN yum install -y perl-JSON
 
@@ -54,5 +54,5 @@ RUN setcap 'cap_net_bind_service=+ep' /opt/trafficserver/bin/tspush
 RUN setcap 'cap_net_bind_service=+ep' /opt/trafficserver/bin/tsxs
 
 EXPOSE 80 443
-ADD Traffic_Server_Mid_Dockerfile_run.sh /
-ENTRYPOINT /Traffic_Server_Mid_Dockerfile_run.sh
+ADD run.sh /
+ENTRYPOINT /run.sh

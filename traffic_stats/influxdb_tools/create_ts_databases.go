@@ -22,8 +22,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	influx "github.com/influxdata/influxdb/client/v2"
 	"os"
+
+	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 func main() {
@@ -74,12 +75,14 @@ func createCacheStats(client influx.Client, replication *string) {
 	createRetentionPolicy(client, db, "daily", "26h", replication, true)
 	createRetentionPolicy(client, db, "monthly", "30d", replication, false)
 	createRetentionPolicy(client, db, "indefinite", "INF", replication, false)
-	createContinuousQuery(client, "bandwidth_1min", "CREATE CONTINUOUS QUERY bandwidth_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.1min\" FROM \"cache_stats\".\"daily\".bandwidth GROUP BY time(1m), * END")
-	createContinuousQuery(client, "connections_1min", "CREATE CONTINUOUS QUERY connections_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.1min\" FROM \"cache_stats\".\"daily\".\"ats.proxy.process.http.current_client_connections\" GROUP BY time(1m), * END")
-	createContinuousQuery(client, "bandwidth_cdn_1min", "CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.cdn.1min\" FROM \"cache_stats\".\"monthly\".\"bandwidth.1min\" GROUP BY time(1m), cdn END")
-	createContinuousQuery(client, "connections_cdn_1min", "CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.cdn.1min\" FROM \"cache_stats\".\"monthly\".\"connections.1min\" GROUP BY time(1m), cdn END")
-	createContinuousQuery(client, "bandwidth_cdn_type_1min", "CREATE CONTINUOUS QUERY bandwidth_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"bandwidth.cdn.type.1min\" FROM \"cache_stats\".\"monthly\".\"bandwidth.1min\" GROUP BY time(1m), cdn, type END")
-	createContinuousQuery(client, "connections_cdn_type_1min", "CREATE CONTINUOUS QUERY connections_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS \"value\" INTO \"cache_stats\".\"monthly\".\"connections.cdn.type.1min\" FROM \"cache_stats\".\"monthly\".\"connections.1min\" GROUP BY time(1m), cdn, type END")
+	createContinuousQuery(client, "bandwidth_1min", `CREATE CONTINUOUS QUERY bandwidth_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.1min" FROM "cache_stats"."daily".bandwidth GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "connections_1min", `CREATE CONTINUOUS QUERY connections_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."connections.1min" FROM "cache_stats"."daily"."ats.proxy.process.http.current_client_connections" GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "bandwidth_cdn_1min", `CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.cdn.1min" FROM "cache_stats"."monthly"."bandwidth.1min" GROUP BY time(1m), cdn END`)
+	createContinuousQuery(client, "connections_cdn_1min", `CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn END`)
+	createContinuousQuery(client, "bandwidth_cdn_type_1min", `CREATE CONTINUOUS QUERY bandwidth_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.cdn.type.1min" FROM "cache_stats"."monthly"."bandwidth.1min" GROUP BY time(1m), cdn, type END`)
+	createContinuousQuery(client, "connections_cdn_type_1min", `CREATE CONTINUOUS QUERY connections_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.type.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn, type END`)
+	createContinuousQuery(client, "maxKbps_1min", `CREATE CONTINUOUS QUERY maxKbps_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS value INTO cache_stats.monthly."maxkbps.1min" FROM cache_stats.daily.maxKbps GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "maxkbps_cdn_1min", `CREATE CONTINUOUS QUERY maxkbps_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS value INTO cache_stats.monthly."maxkbps.cdn.1min" FROM cache_stats.monthly."maxkbps.1min" GROUP BY time(1m), cdn END`)
 }
 
 func createDeliveryServiceStats(client influx.Client, replication *string) {
@@ -88,14 +91,14 @@ func createDeliveryServiceStats(client influx.Client, replication *string) {
 	createRetentionPolicy(client, db, "daily", "26h", replication, true)
 	createRetentionPolicy(client, db, "monthly", "30d", replication, false)
 	createRetentionPolicy(client, db, "indefinite", "INF", replication, false)
-	createContinuousQuery(client, "tps_2xx_ds_1min", "CREATE CONTINUOUS QUERY tps_2xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"tps_2xx.ds.1min\" FROM \"deliveryservice_stats\".\"daily\".tps_2xx WHERE cachegroup = 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "tps_3xx_ds_1min", "CREATE CONTINUOUS QUERY tps_3xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"tps_3xx.ds.1min\" FROM \"deliveryservice_stats\".\"daily\".tps_3xx WHERE cachegroup = 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "tps_4xx_ds_1min", "CREATE CONTINUOUS QUERY tps_4xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"tps_4xx.ds.1min\" FROM \"deliveryservice_stats\".\"daily\".tps_4xx WHERE cachegroup = 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "tps_5xx_ds_1min", "CREATE CONTINUOUS QUERY tps_5xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"tps_5xx.ds.1min\" FROM \"deliveryservice_stats\".\"daily\".tps_5xx WHERE cachegroup = 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "tps_total_ds_1min", "CREATE CONTINUOUS QUERY tps_total_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"tps_total.ds.1min\" FROM \"deliveryservice_stats\".\"daily\".tps_total WHERE cachegroup = 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "kbps_ds_1min", "CREATE CONTINUOUS QUERY kbps_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"kbps.ds.1min\" FROM \"deliveryservice_stats\".\"daily\".kbps WHERE cachegroup = 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "kbps_cg_1min", "CREATE CONTINUOUS QUERY kbps_cg_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS \"value\" INTO \"deliveryservice_stats\".\"monthly\".\"kbps.cg.1min\" FROM \"deliveryservice_stats\".\"daily\".kbps WHERE cachegroup != 'total' GROUP BY time(1m), * END")
-	createContinuousQuery(client, "max_kbps_ds_1day", "CREATE CONTINUOUS QUERY max_kbps_ds_1day ON deliveryservice_stats RESAMPLE FOR 2d BEGIN SELECT max(value) AS \"value\" INTO \"deliveryservice_stats\".\"indefinite\".\"max.kbps.ds.1day\" FROM \"deliveryservice_stats\".\"monthly\".\"kbps.ds.1min\" GROUP BY time(1d), deliveryservice, cdn END")
+	createContinuousQuery(client, "tps_2xx_ds_1min", `CREATE CONTINUOUS QUERY tps_2xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_2xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_2xx WHERE cachegroup = 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "tps_3xx_ds_1min", `CREATE CONTINUOUS QUERY tps_3xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_3xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_3xx WHERE cachegroup = 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "tps_4xx_ds_1min", `CREATE CONTINUOUS QUERY tps_4xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_4xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_4xx WHERE cachegroup = 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "tps_5xx_ds_1min", `CREATE CONTINUOUS QUERY tps_5xx_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_5xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_5xx WHERE cachegroup = 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "tps_total_ds_1min", `CREATE CONTINUOUS QUERY tps_total_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_total.ds.1min" FROM "deliveryservice_stats"."daily".tps_total WHERE cachegroup = 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "kbps_ds_1min", `CREATE CONTINUOUS QUERY kbps_ds_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."kbps.ds.1min" FROM "deliveryservice_stats"."daily".kbps WHERE cachegroup = 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "kbps_cg_1min", `CREATE CONTINUOUS QUERY kbps_cg_1min ON deliveryservice_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."kbps.cg.1min" FROM "deliveryservice_stats"."daily".kbps WHERE cachegroup != 'total' GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "max_kbps_ds_1day", `CREATE CONTINUOUS QUERY max_kbps_ds_1day ON deliveryservice_stats RESAMPLE FOR 2d BEGIN SELECT max(value) AS "value" INTO "deliveryservice_stats"."indefinite"."max.kbps.ds.1day" FROM "deliveryservice_stats"."monthly"."kbps.ds.1min" GROUP BY time(1d), deliveryservice, cdn END`)
 }
 
 func createDailyStats(client influx.Client, replication *string) {

@@ -174,7 +174,7 @@ sub update {
 		$update->config_file( $self->param('parameter.config_file') );
 		$update->value( $self->param('parameter.value') );
 		if ( &is_admin($self) ) {
-			my $secure = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
+			my $secure = defined( $self->param('parameter.secure') ) ? $self->param('parameter.secure') : 0;
 			$update->secure($secure);
 		}
 		$update->update();
@@ -251,7 +251,7 @@ sub create {
 	my $new_id = -1;
 
 	if ( $self->is_valid() ) {
-		my $secure = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
+		my $secure = defined( $self->param('parameter.secure') ) ? $self->param('parameter.secure') : 0;
 		my $insert = $self->db->resultset('Parameter')->create(
 			{
 				name        => $self->param('parameter.name'),
