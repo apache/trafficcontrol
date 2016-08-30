@@ -63,7 +63,6 @@ ok $t->get_ok('/api/1.2/servers.json?type=MID&status=ONLINE')->status_is(200)->o
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-# create a server with required fields
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"hostName" => "server1",
 			"domainName" => "example-domain.com",
@@ -75,9 +74,8 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"type" => "EDGE",
 			"profile" => "EDGE1" })
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	, 'Does the server details return?';
+	, 'Is a server created when all required fields are provided?';
 
-# create a server with a duplicate ipAddress for the same profile
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"hostName" => "server2",
 			"domainName" => "example-domain.com",
@@ -88,9 +86,9 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"physLocation" => "Denver",
 			"type" => "EDGE",
 			"profile" => "EDGE1" })
-		->status_is(400);
+		->status_is(400)
+	, 'Does the server creation fail because ip address is already used for the profile?';
 
-# create a server with required fields and ip6Address
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"hostName" => "server3",
 			"domainName" => "example-domain.com",
@@ -104,9 +102,8 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"type" => "EDGE",
 			"profile" => "EDGE1" })
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	, 'Does the server details return?';
+	, 'Is a server created when all required fields are provided plus an ip6 address?';
 
-# create a server with a duplicate ip6Address for the same profile
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"hostName" => "server3",
 			"domainName" => "example-domain.com",
@@ -119,7 +116,8 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"physLocation" => "Denver",
 			"type" => "EDGE",
 			"profile" => "EDGE1" })
-		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server creation fail because ip6 address is already used for the profile?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
