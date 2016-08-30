@@ -37,3 +37,16 @@ At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist_
 * jdk 6.0 or higher
 * apache-maven 3.3.1 or higher
  
+# Docker build instructions
+
+__Building using `docker` is experimental at this time and has not been fully vetted.__
+
+Dockerfiles for each sub-project are located in the build directory (e.g. `traffic_ops/build/Dockerfile`)
+
+## Optionally set these environment variables to control the source to start with:
+* `GITREPO` (default is `https://github.com/Comcast/traffic_control`) and `BRANCH` (default is master).
+
+> export GITHUB_REPO=https://github.com/myuser/traffic_control
+> export BRANCH=feature/my-new-feature
+> ./build/docker-build.sh
+

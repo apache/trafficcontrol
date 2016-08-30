@@ -19,6 +19,7 @@ package UI::Cdn;
 #
 
 use UI::Utils;
+use UI::Parameter;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use UI::ConfigFiles;
@@ -205,7 +206,7 @@ sub isValidCdn {
 
 sub aprofileparameter {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs;
     if ( defined( $self->param('filter') ) ) {
@@ -248,7 +249,7 @@ sub aprofileparameter {
 
 sub aparameter {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $col = undef;
     my $val = undef;
@@ -259,7 +260,7 @@ sub aparameter {
     }
 
     my $rs = undef;
-    if ( $col eq 'profile' and $val eq 'ORPHANS' ) {
+    if ( $col eq 'profile' and $val eq 'ORPHANS' ) { # Used with 'Parameters > Orphaned Parameters' menu item
         my $lindked_profile_rs    = $self->db->resultset('ProfileParameter')->search(undef);
         my $lindked_cachegroup_rs = $self->db->resultset('CachegroupParameter')->search(undef);
         $rs = $self->db->resultset('Parameter')->search(
@@ -275,22 +276,34 @@ sub aparameter {
             }
         );
         while ( my $row = $rs->next ) {
-            my @line = [ $row->id, "NONE", $row->name, $row->config_file, $row->value, "profile" ];
+            my $secure = "no";
+            if ( $row->secure == 1 ) {
+                $secure = "yes";
+            }
+            my $value = $row->value;
+            &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
+            my @line = [ $row->id, "NONE", $row->name, $row->config_file, $value, $secure, "profile" ];
             push( @{ $data{'aaData'} }, @line );
         }
         $rs = undef;
     }
-    elsif ( $col eq 'profile' && $val ne 'all' ) {
+    elsif ( $col eq 'profile' && $val ne 'all' ) { # Used with 'Parameters > Global Profile' menu item
         my $p_id = &profile_id( $self, $val );
         $rs = $self->db->resultset('ProfileParameter')->search( { $col => $p_id }, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
     }
-    elsif ( !defined($col) || ( $col eq 'profile' && $val eq 'all' ) ) {
+    elsif ( !defined($col) || ( $col eq 'profile' && $val eq 'all' ) ) { # Used with 'Parameters > All Profiles' menu item
         $rs = $self->db->resultset('ProfileParameter')->search( undef, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
     }
 
     if ( defined($rs) ) {
         while ( my $row = $rs->next ) {
-            my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, "profile" ];
+            my $secure = "no";
+            if ( $row->parameter->secure == 1 ) {
+                $secure = "yes";
+            }
+            my $value = $row->parameter->value;
+            &UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+            my @line = [ $row->parameter->id, $row->profile->name, $row->parameter->name, $row->parameter->config_file, $value, $secure ];
             push( @{ $data{'aaData'} }, @line );
         }
     }
@@ -301,14 +314,19 @@ sub aparameter {
         $rs = $self->db->resultset('CachegroupParameter')
             ->search( { $col => $l_id }, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
     }
-    elsif ( !defined($col) || ( $col eq 'cachegroup' && $val eq 'all' ) ) {
+    elsif ( !defined($col) || ( $col eq 'cachegroup' && $val eq 'all' ) ) { # Used with 'Parameters > All Cache Groups' menu item
         $rs = $self->db->resultset('CachegroupParameter')->search( undef, { prefetch => [ { 'parameter' => undef }, { 'cachegroup' => undef } ] } );
     }
 
     if ( defined($rs) ) {
         while ( my $row = $rs->next ) {
-            my @line =
-                [ $row->parameter->id, $row->cachegroup->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, "cachegroup" ];
+            my $secure = "no";
+            if ( $row->parameter->secure == 1 ) {
+                $secure = "yes";
+            }
+            my $value = $row->parameter->value;
+            &UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+            my @line = [ $row->parameter->id, $row->cachegroup->name, $row->parameter->name, $row->parameter->config_file, $row->parameter->value, $secure ];
             push( @{ $data{'aaData'} }, @line );
         }
     }
@@ -319,7 +337,7 @@ sub aparameter {
 sub aserver {
     my $self          = shift;
     my $server_select = shift;
-    my %data          = ( "aaData" => undef );
+    my %data          = ( "aaData" => [] );
     my $pparam =
         $self->db->resultset('ProfileParameter')
         ->search( { -and => [ 'parameter.name' => 'server_graph_url', 'profile.name' => 'GLOBAL' ] }, { prefetch => [ 'parameter', 'profile' ] } )
@@ -377,7 +395,7 @@ sub aserver {
 
 sub aasn {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Asn')->search( undef, { prefetch => [ { 'cachegroup' => 'cachegroups' }, ] } );
 
@@ -391,7 +409,7 @@ sub aasn {
 
 sub aphys_location {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('PhysLocation')->search( undef, { prefetch => ['region'] } );
 
@@ -407,7 +425,7 @@ sub aphys_location {
 
 sub adeliveryservice {
     my $self       = shift;
-    my %data       = ( "aaData" => undef );
+    my %data       = ( "aaData" => [] );
     my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + Countries" );
     my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
 
@@ -508,7 +526,7 @@ sub hwinfo {
 
 sub ajob {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Job')->search(
         undef, {
@@ -527,7 +545,7 @@ sub ajob {
 
 sub alog {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $interval = "> now() - interval '30 day'";    # postgres
     if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
@@ -560,7 +578,7 @@ sub alog {
 
 sub acdn {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my %id_to_name = ();
     my $rs         = $self->db->resultset('Cdn')->search(undef);
@@ -578,7 +596,7 @@ sub acdn {
 
 sub acachegroup {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my %id_to_name = ();
     my $rs = $self->db->resultset('Cachegroup')->search( undef, { prefetch => [ { 'type' => undef } ] } );
@@ -603,7 +621,7 @@ sub acachegroup {
 
 sub auser {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('TmUser')->search( undef, { prefetch => [ { 'role' => undef } ] } );
 
@@ -621,7 +639,7 @@ sub auser {
 
 sub afederation {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my @line;
     my $feds = $self->db->resultset('Federation')->search(undef);
@@ -662,7 +680,7 @@ sub afederation {
 
 sub aprofile {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Profile')->search(undef);
 
@@ -676,7 +694,7 @@ sub aprofile {
 
 sub atype {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Type')->search(undef);
 
@@ -689,7 +707,7 @@ sub atype {
 
 sub adivision {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Division')->search(undef);
 
@@ -702,7 +720,7 @@ sub adivision {
 
 sub aregion {
     my $self = shift;
-    my %data = ( "aaData" => undef );
+    my %data = ( "aaData" => [] );
 
     my $rs = $self->db->resultset('Region')->search( undef, { prefetch => [ { 'division' => undef } ] } );
 

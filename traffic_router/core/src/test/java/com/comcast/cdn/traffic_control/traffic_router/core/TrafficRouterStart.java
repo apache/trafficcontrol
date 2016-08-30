@@ -46,9 +46,12 @@ public class TrafficRouterStart {
 		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter(prefix + "/src/main/opt/tomcat/conf/server.xml", prefix + "/src/main/webapp");
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Starting Traffic Router");
 		catalinaTrafficRouter.start();
-		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router started, press <ENTER> to stop");
+		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router started, press q and <ENTER> to stop");
 
-		System.in.read();
+		while ('q' != System.in.read()) {
+			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>> press q and <ENTER> to stop");
+		}
+
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Stopping Traffic Router");
 		catalinaTrafficRouter.stop();
 	}

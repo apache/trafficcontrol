@@ -33,14 +33,14 @@ public class DeliveryServicesTest {
 
 	@Test
 	public void itReturnsIdOfValidDeliveryService() throws Exception {
-		String encodedUrl = URLEncoder.encode("http://trafficrouter01.ds-05.thecdn.cdn.example.com/stuff", "utf-8");
+		String encodedUrl = URLEncoder.encode("http://trafficrouter01.steering-target-1.thecdn.example.com/stuff", "utf-8");
 		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/deliveryservices?url="+encodedUrl);
 
 		CloseableHttpResponse response = null;
 		try {
 			response = closeableHttpClient.execute(httpGet);
 			String responseBody = EntityUtils.toString(response.getEntity());
-			assertThat(responseBody, equalTo("{\"id\":\"ds-05\"}"));
+			assertThat(responseBody, equalTo("{\"id\":\"steering-target-1\"}"));
 		} finally {
 			if (response != null) response.close();
 		}

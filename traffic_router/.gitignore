@@ -13,3 +13,5 @@
 /core/src/test/db/health.json
 /core/src/test/db
 /core/src/test/conf/traffic_monitor.properties
+**/.keystore
+**/keystore.properties

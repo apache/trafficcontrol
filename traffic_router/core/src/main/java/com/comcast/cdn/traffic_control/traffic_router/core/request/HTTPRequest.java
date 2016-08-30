@@ -35,6 +35,7 @@ public class HTTPRequest extends Request {
     private String uri;
     private String queryString;
     private Map<String, String> headers;
+    private boolean secure = false;
 
     public HTTPRequest() { }
 
@@ -79,6 +80,7 @@ public class HTTPRequest extends Request {
             headers.put(name, value);
         }
         setHeaders(headers);
+        secure = request.isSecure();
     }
 
     public void applyUrl(final URL url) {
@@ -181,5 +183,9 @@ public class HTTPRequest extends Request {
         }
 
         return null;
+    }
+
+    public boolean isSecure() {
+        return secure;
     }
 }

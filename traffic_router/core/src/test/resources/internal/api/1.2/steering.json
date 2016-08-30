@@ -1,31 +1,31 @@
 {
   "response": [
     {
-      "deliveryService": "mm-test",
+      "deliveryService": "steering-test-1",
       "targets": [
         {
-          "deliveryService": "ds-05",
+          "deliveryService": "steering-target-1",
           "weight": "1000"
         },
         {
-          "deliveryService": "ds-08",
+          "deliveryService": "steering-target-2",
           "weight": "9000"
         }
       ],
       "filters" :[
-        { "pattern" : ".*/force-to-five/.*", "deliveryService" : "ds-05"},
-        { "pattern" : ".*/force-to-eight/.*", "deliveryService" : "ds-08"}
+        { "pattern" : ".*/force-to-target-1/.*", "deliveryService" : "steering-target-1"},
+        { "pattern" : ".*/force-to-target-2/.*", "deliveryService" : "steering-target-2"}
       ]
     },
     {
-      "deliveryService": "test",
+      "deliveryService": "steering-test-2",
       "targets": [
         {
-          "deliveryService": "ds-03",
+          "deliveryService": "steering-target-3",
           "weight": "60000"
         },
         {
-          "deliveryService": "ds-04",
+          "deliveryService": "steering-target-4",
           "weight": "45000"
         }
       ]

@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-        <version>1.6.0</version>
+        <version>1.7.0</version>
 	</parent>
 
 	<artifactId>traffic_router_connector</artifactId>
@@ -29,18 +29,18 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>2.5</version>
+				<version>3.6</version>
 				<executions>
 					<execution>
 						<id>PMD</id>
-						<phase>verify</phase>
+						<phase>compile</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<targetJdk>1.7</targetJdk>
+							<targetJdk>${java.version}</targetJdk>
 							<verbose>true</verbose>
-							<failurePriority>2</failurePriority>
+							<failurePriority>5</failurePriority>
 							<rulesets>
 								<ruleset>build/pmd/ruleset.xml</ruleset>
 							</rulesets>
@@ -48,9 +48,9 @@
 					</execution>
 				</executions>
 				<configuration>
-					<targetJdk>1.7</targetJdk>
+					<targetJdk>${java.version}</targetJdk>
 					<verbose>true</verbose>
-					<failurePriority>2</failurePriority>
+					<failurePriority>5</failurePriority>
 					<rulesets>
 						<ruleset>build/pmd/ruleset.xml</ruleset>
 					</rulesets>
@@ -59,13 +59,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
 					<showDeprecation>true</showDeprecation>
+					<fork>true</fork>
+					<compilerArgument>-XDignore.symbol.file</compilerArgument>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -94,10 +95,45 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_keystore</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>coyote</artifactId>
-			<version>6.0.37</version>
+			<version>6.0.33</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-api-mockito</artifactId>
+			<version>1.6.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-module-junit4</artifactId>
+			<version>1.6.4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-all</artifactId>
+			<version>1.3</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

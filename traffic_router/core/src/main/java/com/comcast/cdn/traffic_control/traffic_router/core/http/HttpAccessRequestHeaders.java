@@ -25,7 +25,7 @@ public class HttpAccessRequestHeaders {
     public Map<String, String> makeMap(final HttpServletRequest request, final Set<String> headerNames) {
         final Map<String, String> result = new HashMap<String, String>();
 
-        for (String name : headerNames) {
+        for (final String name : headerNames) {
             final String value = request.getHeader(name);
             if (value != null && !value.isEmpty()) {
                 result.put(name, value);

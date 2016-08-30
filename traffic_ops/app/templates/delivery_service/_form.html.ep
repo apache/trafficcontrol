@@ -14,6 +14,12 @@
      limitations under the License.
  -->
 <div class="main">
+	<% if ($mode =~ /edit/) { %>
+	<div class="block form-row">
+		%= label_for 'ds.id' => '* ID', class => 'label'
+		%= field('ds.id')->text(class => 'field', required => 'required', name => 'ds.id', id => 'ds.id', readonly => 'readonly')
+	</div>
+	<% } %>
 	<div class="block form-row">
 		<% unless (field('ds.xml_id')->valid) { %>
 			<span class="field-with-error"><%= field('ds.xml_id')->error %></span>
@@ -65,7 +71,7 @@
 		<% } %>
 		%= label_for 'protocol' => '* Protocol ', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.protocol')->select([ ["http" => 0, selected => 'true'], ["https" => 1], ["http and https" => 2]], id => 'protocol');
+		%= field('ds.protocol')->select([ ["http" => 0, selected => 'true'], ["https" => 1], ["http and https" => 2], ["http to https" => 3] ], id => 'protocol');
 		<% } else { %>
 			<% if ($ds->protocol == 0 ) { %>
 			%= field('ds.protocol')->text(class => 'field', readonly => 'readonly', value => 'No');
@@ -198,6 +204,17 @@
 			<% } else { %>
                 %= field('ds.geo_provider')->text(class => 'field', value =>  'Neustar', readonly => 'readonly');
 			<% } %>
+		<% } %>
+	</div>
+	<div class="block form-row" id="geolimit_redirect_url_row">
+		<% unless (field('ds.geolimit_redirect_url')->valid) { %>
+			<span class="field-with-error"><%= field('ds.geolimit_redirect_url')->error %></span>
+		<% } %>
+		%= label_for 'geolimit_redirect_url' => 'Geolimit Redirect URL', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.geolimit_redirect_url')->text(class => 'field', id => 'geolimit_redirect_url', name => 'ds.geolimit_redirect_url');
+		<% } else { %>
+		%= field('ds.geolimit_redirect_url')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div>
 	<div class="block form-row" id='http_bypass_fqdn_row'>
@@ -347,6 +364,27 @@
 				%= field('ds.multi_site_origin')->text(class => 'field', value =>  'No', readonly => 'readonly');
 			<% } else { %>
 				%= field('ds.multi_site_origin')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+			<% } %>
+		<% } %>
+	</div><br>
+	<div class="block form-row" id="multi_site_origin_algorithm_row">
+		<% unless (field('ds.multi_site_origin_algorithm')->valid) { %>
+			<span class="field-with-error"><%= field('ds.multi_site_origin_algorithm')->error %></span>
+		<% } %>
+		%= label_for 'multi_site_origin_algorithm' => 'Multi Site Origin Algorithm', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.multi_site_origin_algorithm')->select([['Consistent hash' => 0], ['Primary/backup' => 1], ['Strict round-robin' => 2], ['IP based round-robin' => 3], ['Latch on failover' => 4]]);
+		<% } else { %>
+			<% if ($ds->multi_site_origin_algorithm == 1) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Primary/backup', readonly => 'readonly');
+			<% } elsif ($ds->multi_site_origin_algorithm == 2) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Strict round-robin', readonly => 'readonly');
+			<% } elsif ($ds->multi_site_origin_algorithm == 3) { %>
+  			        %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'IP based round-robin', readonly => 'readonly');
+			<% } elsif ($ds->multi_site_origin_algorithm == 4) { %>
+				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Latch on failover', readonly => 'readonly');                        
+			<% } else { %>
+                %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Consistent hash', readonly => 'readonly');
 			<% } %>
 		<% } %>
 	</div>

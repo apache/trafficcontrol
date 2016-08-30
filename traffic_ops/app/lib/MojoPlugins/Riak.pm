@@ -88,6 +88,17 @@ sub register {
 			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->delete( $bucket, $key ) }, SCHEMA_FILE );
 		}
 	);
+
+		$app->renderer->add_helper(
+		riak_search => sub {
+			my $self   = shift;
+			my $index = shift;
+			my $search_string    = shift;
+			my $conf   = load_conf($self);
+			my $helper = $helper_class->new( $conf->{user}, $conf->{password} );
+			return $self->server_send_request( SERVER_TYPE, $helper, sub { $helper_class->search( $index, $search_string ) }, SCHEMA_FILE );
+		}
+	);
 }
 
 sub load_conf {

@@ -50,7 +50,7 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 	}
 
 	public boolean matches(final Request request) {
-		for (RequestMatcher matcher : requestMatchers) {
+		for (final RequestMatcher matcher : requestMatchers) {
 			if (!matcher.matches(request)) {
 				return false;
 			}
@@ -78,6 +78,7 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 	}
 
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	@Override
 	public int compareTo(final DeliveryServiceMatcher that) {
 		if (this == that || this.equals(that)) {
@@ -90,7 +91,7 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 		final Set<RequestMatcher> uniqueToThat = new HashSet<RequestMatcher>();
 		uniqueToThat.addAll(that.requestMatchers);
 
-		for (RequestMatcher myRequestMatcher : requestMatchers) {
+		for (final RequestMatcher myRequestMatcher : requestMatchers) {
 			if (uniqueToThat.remove(myRequestMatcher)) {
 				uniqueToThis.remove(myRequestMatcher);
 			}
@@ -98,11 +99,11 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 
 		final TreeMap<RequestMatcher, DeliveryServiceMatcher> map = new TreeMap<RequestMatcher, DeliveryServiceMatcher>();
 
-		for (RequestMatcher thisMatcher : uniqueToThis) {
+		for (final RequestMatcher thisMatcher : uniqueToThis) {
 			map.put(thisMatcher, this);
 		}
 
-		for (RequestMatcher thatMatcher : uniqueToThat) {
+		for (final RequestMatcher thatMatcher : uniqueToThat) {
 			map.put(thatMatcher, that);
 		}
 
@@ -111,5 +112,21 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 		}
 
 		return (this == map.firstEntry().getValue()) ? -1 : 1;
+	}
+
+	@Override
+	public String toString() {
+		if (requestMatchers.size() > 1) {
+			return "DeliveryServiceMatcher{" +
+				"deliveryService=" + deliveryService +
+				", requestMatchers=" + requestMatchers +
+				'}';
+		}
+
+		return "DeliveryServiceMatcher{" +
+			"deliveryService=" + deliveryService +
+			", requestMatcher=" + requestMatchers.get(0) +
+			'}';
+
 	}
 }

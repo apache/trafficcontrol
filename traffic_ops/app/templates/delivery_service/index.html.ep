@@ -77,9 +77,9 @@ $("a.fancybox").fancybox({
       });
     function renderEditColumn(id) {
         % if ($priv_level >= 20) {
-          return "<a class='fancybox fancybox.iframe' href='/ds/" + id + "'>Edit</a>";
+          return "<a class='fancybox fancybox.iframe' href='/ds/" + id + "'>Edit [" + id + "]</a>";
         % } else {
-          return "<a class='fancybox fancybox.iframe' href='/ds/" + id + "'>Details</a>";;
+          return "<a class='fancybox fancybox.iframe' href='/ds/" + id + "'>Details [" + id + "]</a>";
         % }
     };
 </script>

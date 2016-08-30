@@ -391,8 +391,8 @@ sub writeSecret {
 	my $dumper = Data::Dumper->new( [$cdnh] );
 	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
 
-	# write whole config to temp file
-	my $tmpfile = File::Temp->new();
+	# write whole config to temp file in pwd (keeps in same filesystem)
+	my $tmpfile = File::Temp->new(DIR => '.');
 	print $tmpfile $dumper->Dump();
 	close $tmpfile;
 
@@ -408,7 +408,7 @@ sub writeSecret {
 	# rename temp file to cdn.conf and set ownership/permissions same as backup
 	my @stats = stat($backup_name);
 	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
-	move( $tmpfile, $cdn_conf ) or die("move(): $!");
+	rename( $tmpfile, $cdn_conf ) or die("rename(): $!");
 
 	chown $uid, $gid, $cdn_conf;
 	chmod $perm, $cdn_conf;

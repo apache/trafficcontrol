@@ -22,12 +22,15 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.startup.Catalina;
+import org.springframework.util.SocketUtils;
+
 import java.util.logging.Level;
 
 public class CatalinaTrafficRouter {
 	Catalina catalina;
 
 	public CatalinaTrafficRouter(String serverXmlPath, String appBase) {
+		System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tFT%1$tT.%1$tL [%4$s] %5$s %6$s%n");
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
 		java.util.logging.Handler[] handlers = logger.getHandlers();
 		for (java.util.logging.Handler handler : handlers) {
@@ -49,9 +52,16 @@ public class CatalinaTrafficRouter {
 		Connector[] connectors = trafficRouterService.findConnectors();
 		for (Connector connector : connectors) {
 			if (connector.getPort() == 80) {
-				connector.setPort(8888);
+				connector.setPort(Integer.parseInt(System.getProperty("routerHttpPort", "8888")));
 			}
-			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort());
+
+			SocketUtils.findAvailableTcpPort();
+
+			if (connector.getPort() == 443) {
+				connector.setPort(Integer.parseInt(System.getProperty("routerSecurePort", "8443")));
+			}
+			System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Traffic Router listening on port " + connector.getPort() + " " + connector.getScheme());
+
 		}
 
 		StandardHost standardHost = (StandardHost) trafficRouterService.getContainer().findChild("localhost");

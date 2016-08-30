@@ -22,7 +22,7 @@
 	</script>
 	% }
 
-	// change the display for Generate/paste 
+	// change the display for Generate/paste
 	<script type="text/javascript">
 	  $(function () {
 		$(document).ready(function () {
@@ -36,7 +36,8 @@
 			$('#sslkeysadd').hide();
 			$('#generate-section').show();
 			$(".error-section").show();
-			$(".flash-section").show()
+			$(".flash-section").show();
+			$("#generate-button").val('Generate Keys');
 		  }
 		  else if (action_selected.match(/^Paste/)) {
 			$('#sslkeysgenerate').hide();
@@ -54,7 +55,7 @@
 			$(".error-section").show();
 			$(".flash-section").show();
 		  }
-		  // 
+		  //
 		}
 
 		  $('#ssl_action').change(function() {
@@ -172,7 +173,7 @@
 			   <% } %>
 			  %= label_for 'version' => 'Key Version', class => 'label'
 			  %= field('ssl.version')->text( class => "readonly_field",  required => 'required', name => 'ssl.version', id => 'sslversion', readonly => 'readonly')
-			 </div><br>   
+			 </div><br>
 		   </div>
 		  </div>
 
@@ -185,23 +186,25 @@
             <% } %>
             %= label_for 'key' => 'Private Key', class => 'label'
             %= field('ssl.priv_key')->textarea(size => '20x50', name => 'ssl.priv_key', id => 'ssl.priv_key')
-          </div><br>      
+          </div><br>
           <div class="block">
             <% unless (field('ssl.csr')->valid) { %>
             <span class="field-with-error"><%= field('ssl.csr')->error %></span>
             <% } %>
             %= label_for 'key' => 'Certificate Signing Request (CSR)', class => 'label'
             %= field('ssl.csr')->textarea(size => '20x50', name => 'ssl.csr', id => 'ssl.csr', value => "paste csr here")
-          </div><br>      
+          </div><br>
           <div class="block">
             <% unless (field('ssl.crt')->valid) { %>
             <span class="field-with-error"><%= field('ssl.crt')->error %></span>
             <% } %>
             %= label_for 'key' => 'Certificate (CRT)', class => 'label'
             %= field('ssl.crt')->textarea(size => '20X50', name => 'ssl.crt', id => 'ssl.crt', value => "paste crt here")
-          </div><br> 
-          <div class="block">     
+          </div><br>
+          <div class="block">
           %= field('xml_id')->hidden(name => 'xml_id', id => 'xml_id')
+          %= field('ssl.cdn')->hidden(name => 'ssl.cdn', id => 'ssl.cdn')
+          %= field('ssl.deliveryservice')->hidden(name => 'ssl.deliveryservice', id => 'ssl.deliveryservice')
           </div><br>
         </div>
 

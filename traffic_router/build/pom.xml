@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.6.0</version>
+		<version>1.7.0</version>
 	</parent>
 
 	<scm>
@@ -36,6 +36,11 @@
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_connector</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_keystore</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
@@ -61,7 +66,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<shortRevisionLength>9</shortRevisionLength>
+					<shortRevisionLength>8</shortRevisionLength>
 					<doCheck>false</doCheck>
 					<doUpdate>false</doUpdate>
 					<timestampFormat>
@@ -217,7 +222,9 @@
 								</mapping>
 							</mappings>
 							<requires>
-								<require>jdk >= 1.7.0</require>
+								<require>jdk1.8.0_92</require>
+								<require>wget</require>
+								<require>tar</require>
 							</requires>
 
 							<preinstallScriptlet>

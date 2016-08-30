@@ -14,8 +14,8 @@
      limitations under the License.
  -->
 % if (defined (flash 'alertmsg')) {
-<script> 
-    var alertmsg = "<%= flash 'alertmsg' %>"; 
+<script>
+    var alertmsg = "<%= flash 'alertmsg' %>";
     alertmsg = alertmsg.replace(/__NEWLINE__/g, "\n");
     alert(alertmsg);
 </script>
@@ -24,7 +24,7 @@
 //$(function(){
 //	$.get("/dataprofile/orderby/id", function(data){
 //		$.each(data, function(idx, val) {
-//			$("#profile_table_body").append("<tr><td width=50%>" + data[idx].name +  
+//			$("#profile_table_body").append("<tr><td width=50%>" + data[idx].name +
 //				" (" + data[idx].description + " ) </td><td> <input type=\"checkBox\" name=\"profile\" value=\"" + data[idx].id + "\"></td></tr>\n");
 //		});
 //	}, "json");
@@ -116,7 +116,7 @@ $(function(){
 				</tr>
 				<tr>
 					<td>Network MTU</td>
-					
+
 					<td>
 						<select id="interface_mtu" name="interface_mtu">
 							<option default>9000</option>
@@ -175,8 +175,16 @@ $(function(){
 					<td><input type="text" size=45 id="rack" name="rack" value="<%= stash 'rack' %>"></td>
 				</tr>
 				<tr>
+					<td>Cloud ID</td>
+					<td><input type="text" size=45 id="guid" name="guid" value="<%= stash 'rack' %>"></td>
+				</tr>
+				<tr>
 					<td>TCP Port</td>
 					<td><input type="text" size=45 id="tcp_port" name="tcp_port" value="<%= $default_tcp_port %>"></td>
+				</tr>
+				<tr>
+					<td>HTTPS Port</td>
+					<td><input type="text" size=45 id="https_port" name="https_port" value="<%= $default_https_port %>"></td>
 				</tr>
 				<tr>
 					<td>1G (management) IP Address</td>

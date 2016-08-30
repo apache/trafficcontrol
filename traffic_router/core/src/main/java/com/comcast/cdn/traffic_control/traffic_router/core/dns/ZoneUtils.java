@@ -33,7 +33,7 @@ public class ZoneUtils {
 	protected static long getMaximumTTL(final List<Record> records) {
 		long maximumTTL = 0;
 
-		for (Record record : records) {
+		for (final Record record : records) {
 			if (record.getTTL() > maximumTTL) {
 				maximumTTL = record.getTTL();
 			}

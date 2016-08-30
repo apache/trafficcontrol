@@ -31,6 +31,7 @@ public class LanguidState {
 	private TrafficRouterManager trafficRouterManager;
 	private int port = 0;
 	private int apiPort = 0;
+	private int securePort = 0;
 
 	public void init() {
 		if (trafficRouterManager == null || trafficRouterManager.getTrafficRouter() == null) {
@@ -54,24 +55,33 @@ public class LanguidState {
 
 		final JSONObject routers = tr.getCacheRegister().getTrafficRouters();
 
-		for (String key : JSONObject.getNames(routers)) {
+		for (final String key : JSONObject.getNames(routers)) {
 			final JSONObject routerJson = routers.optJSONObject(key);
 
-			if (hostname.equalsIgnoreCase(key)) { // this is us
-				if (routerJson.has("port")) {
-					setPort(routerJson.optInt("port"));
-				}
-
-				if (routerJson.has("api.port")) {
-					setApiPort(routerJson.optInt("api.port"));
-					trafficRouterManager.setApiPort(apiPort);
-				}
-
-				break;
+			if (! hostname.equalsIgnoreCase(key)) {
+				continue;
 			}
+
+			initPorts(routerJson);
+			break;
 		}
 
 		setReady(true);
+	}
+
+	private void initPorts(final JSONObject routerJson) {
+		if (routerJson.has("port")) {
+			setPort(routerJson.optInt("port"));
+		}
+
+		if (routerJson.has("api.port")) {
+			setApiPort(routerJson.optInt("api.port"));
+			trafficRouterManager.setApiPort(apiPort);
+		}
+
+		if (routerJson.has("secure.port")) {
+			setSecurePort(routerJson.optInt("secure.port"));
+		}
 	}
 
 	public boolean isReady() {
@@ -104,5 +114,13 @@ public class LanguidState {
 
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
+	}
+
+	public int getSecurePort() {
+		return securePort;
+	}
+
+	public void setSecurePort(final int securePort) {
+		this.securePort = securePort;
 	}
 }

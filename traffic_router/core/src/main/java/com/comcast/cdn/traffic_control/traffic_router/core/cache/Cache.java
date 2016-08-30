@@ -44,6 +44,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	private int port;
 	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
 	private final Hashable hashable = new DefaultHashable();
+	private int httpsPort = 443;
 
 	public Cache(final String id, final String hashId, final int hashCount) {
 		this.id = id;
@@ -91,7 +92,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		}
 		if(ipAddresses == null) { return null; }
 		final List<InetRecord> ret = new ArrayList<InetRecord>();
-		for(InetRecord ir : ipAddresses) {
+		for (final InetRecord ir : ipAddresses) {
 			if (ir.isInet6() && !ip6RoutingEnabled) {
 				continue;
 			}
@@ -123,7 +124,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	}
 
 	public void setDeliveryServices(final Collection<DeliveryServiceReference> deliveryServices) {
-		for (DeliveryServiceReference deliveryServiceReference : deliveryServices) {
+		for (final DeliveryServiceReference deliveryServiceReference : deliveryServices) {
 			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
 		}
 	}
@@ -236,5 +237,13 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	@Override
 	public List<Double> getHashValues() {
 		return hashable.getHashValues();
+	}
+
+	public int getHttpsPort() {
+		return httpsPort;
+	}
+
+	public void setHttpsPort(final int httpsPort) {
+		this.httpsPort = httpsPort;
 	}
 }

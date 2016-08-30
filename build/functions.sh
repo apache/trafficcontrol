@@ -89,8 +89,8 @@ function checkEnvironment {
 
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
-	# verify required tools available in path
-	for pgm in git go rpmbuild; do
+	# verify required tools available in path -- extra tools required by subsystem are passed in
+	for pgm in git rpmbuild "$@"; do
 		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
 	done
 	# verify git version

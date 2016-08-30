@@ -43,6 +43,30 @@ my %definition_for = (
 			parent_cachegroup_id => 1,
 		},
 	},
+	mid_cg3 => {
+		new   => 'Cachegroup',
+		using => {
+			id                   => 8,
+			name                 => 'mid_cg3',
+			short_name           => 'mid_cg3',
+			type                 => 6,
+			latitude             => 100,
+			longitude            => 100,
+			parent_cachegroup_id => undef,
+		},
+	},
+	edge_cg4 => {
+		new   => 'Cachegroup',
+		using => {
+			id                   => 9,
+			name                 => 'edge_cg4',
+			short_name           => 'edge_cg4',
+			type                 => 5,
+			latitude             => 100,
+			longitude            => 100,
+			parent_cachegroup_id => 8,
+		},
+	},
 );
 
 sub get_definition {
