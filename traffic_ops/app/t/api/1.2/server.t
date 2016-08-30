@@ -63,6 +63,64 @@ ok $t->get_ok('/api/1.2/servers.json?type=MID&status=ONLINE')->status_is(200)->o
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+# create a server with required fields
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "server1",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.194",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server details return?';
+
+# create a server with a duplicate ipAddress for the same profile
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "server2",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.194",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(400);
+
+# create a server with required fields and ip6Address
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "server3",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.85",
+			"ip6Address" => "2001:852:fe0f:27::2/64",
+			"ip6Gateway" => "2001:852:fe0f:27::1",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server details return?';
+
+# create a server with a duplicate ip6Address for the same profile
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "server3",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.77",
+			"ip6Address" => "2001:852:fe0f:27::2/64",
+			"ip6Gateway" => "2001:852:fe0f:27::1",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

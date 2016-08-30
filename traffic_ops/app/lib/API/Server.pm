@@ -502,7 +502,18 @@ sub check_server_params {
 
 	my $ip_used =
 		$self->db->resultset('Server')
-			->search( { -and => [ ip_address => $json->{'ipAddress'}, profile => $json->{'profile'}, id => { '!=' => (defined($update_base)) ? $update_base->{'id'} : undef } ] })->single();
+			->search(
+				{ -and =>
+					[
+						'me.ip_address' => $json->{'ipAddress'},
+						'profile.name' => $json->{'profile'},
+						'me.id' => { '!=' => (defined($update_base)) ? $update_base->id : 0 }
+					]
+				},
+				{
+					join   => [ 'profile' ]
+				}
+		)->single();
 	if ( $ip_used ) {
 		return ( \%params, $json->{'ipAddress'} . " is already being used by a server with the same profile" );
 	}
@@ -510,9 +521,20 @@ sub check_server_params {
 	if ( defined( $json->{'ip6Address'} ) && $json->{'ip6Address'} ne "" ) {
 		my $ip6_used =
 			$self->db->resultset('Server')
-				->search( { -and => [ ip6_address => $json->{'ip6Address'}, profile => $json->{'profile'}, id => { '!=' => (defined($update_base)) ? $update_base->{'id'} : undef } ] })->single();
+				->search(
+				{ -and =>
+					[
+						'me.ip6_address' => $json->{'ip6Address'},
+						'profile.name' => $json->{'profile'},
+						'me.id' => { '!=' => (defined($update_base)) ? $update_base->id : 0 }
+					]
+				},
+				{
+					join   => [ 'profile' ]
+				}
+			)->single();
 		if ( $ip6_used ) {
-			return ( \%params, $json->{'ipAddress'} . " is already being used by a server with the same profile" );
+			return ( \%params, $json->{'ip6Address'} . " is already being used by a server with the same profile" );
 		}
 	}
 
