@@ -148,8 +148,6 @@ public class TrafficRouterTest {
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
         when(trafficRouter.orderCacheLocations(any(List.class), any(Geolocation.class))).thenCallRealMethod();
 
-        when(consistentHasher.selectHashable(any(List.class),any(Dispersion.class),anyString())).thenReturn(cache);
-
         HTTPRouteResult httpRouteResult = trafficRouter.route(httpRequest, track);
 
         assertThat(httpRouteResult.getUrl().toString(), equalTo("http://atscache.kabletown.net/index.html"));
