@@ -76,6 +76,7 @@ sub server_by_id {
 			"domain_name"    => $server_row->domain_name,
 			"guid"           => $server_row->guid,
 			"tcp_port"       => $server_row->tcp_port,
+			"https_port"       => $server_row->https_port,
 			"xmpp_id"        => $server_row->xmpp_id,
 			"xmpp_passwd"    => $server_row->xmpp_passwd,
 			"interface_name" => $server_row->interface_name,
@@ -121,6 +122,7 @@ sub getserverdata {
 				"host_name"        => $row->host_name,
 				"domain_name"      => $row->domain_name,
 				"tcp_port"         => $row->tcp_port,
+				"https_port"         => $row->https_port,
 				"xmpp_id"          => $row->xmpp_id,
 				"xmpp_passwd"      => "**********",
 				"interface_name"   => $row->interface_name,
@@ -177,6 +179,7 @@ sub serverdetail {
 			"host_name"        => $row->host_name,
 			"domain_name"      => $row->domain_name,
 			"tcp_port"         => $row->tcp_port,
+			"https_port"         => $row->https_port,
 			"xmpp_id"          => $row->xmpp_id,
 			"xmpp_passwd"      => $row->xmpp_passwd,
 			"interface_name"   => $row->interface_name,
@@ -290,7 +293,7 @@ sub check_server_input_cgi {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port/)
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port https_port/)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
@@ -431,6 +434,9 @@ sub check_server_input {
 	if ( $paramHashRef->{'tcp_port'} !~ /\d+/ ) {
 		$err .= $paramHashRef->{'tcp_port'} . " is not a valid tcp port" . $sep;
 	}
+	if ( $paramHashRef->{'https_port'} !~ /\d+/ ) {
+		$err .= $paramHashRef->{'https_port'} . " is not a valid tcp port" . $sep;
+	}
 
 	# RFC5952 checks (lc)
 
@@ -475,6 +481,7 @@ sub update {
 				host_name        => $paramHashRef->{'host_name'},
 				domain_name      => $paramHashRef->{'domain_name'},
 				tcp_port         => $paramHashRef->{'tcp_port'},
+				https_port         => $paramHashRef->{'https_port'},
 				interface_name   => $paramHashRef->{'interface_name'},
 				ip_address       => $paramHashRef->{'ip_address'},
 				ip_netmask       => $paramHashRef->{'ip_netmask'},
@@ -618,7 +625,7 @@ sub cgi_params_to_param_hash_ref {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port https_port
 		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{
@@ -658,6 +665,7 @@ sub create {
 					host_name        => $paramHashRef->{'host_name'},
 					domain_name      => $paramHashRef->{'domain_name'},
 					tcp_port         => $paramHashRef->{'tcp_port'},
+					https_port         => $paramHashRef->{'https_port'},
 					xmpp_id          => $paramHashRef->{'host_name'},           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $paramHashRef->{'interface_name'},
@@ -694,6 +702,7 @@ sub create {
 					host_name        => $paramHashRef->{'host_name'},
 					domain_name      => $paramHashRef->{'domain_name'},
 					tcp_port         => $paramHashRef->{'tcp_port'},
+					https_port         => $paramHashRef->{'https_port'},
 					xmpp_id          => $paramHashRef->{'host_name'},           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $paramHashRef->{'interface_name'},
@@ -771,9 +780,11 @@ sub add {
 	my $self = shift;
 
 	my $default_port = 80;
+	my $default_https_port = 443;
 	$self->stash(
 		fbox_layout      => 1,
 		default_tcp_port => $default_port,
+		default_https_port => $default_https_port,
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {

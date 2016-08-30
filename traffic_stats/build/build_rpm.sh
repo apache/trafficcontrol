@@ -54,6 +54,6 @@ function initBuildArea() {
 # ---------------------------------------
 
 importFunctions
-checkEnvironment
+checkEnvironment go
 initBuildArea
 buildRpm traffic_stats

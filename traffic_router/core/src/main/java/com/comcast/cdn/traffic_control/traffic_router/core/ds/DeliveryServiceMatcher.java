@@ -113,4 +113,20 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 
 		return (this == map.firstEntry().getValue()) ? -1 : 1;
 	}
+
+	@Override
+	public String toString() {
+		if (requestMatchers.size() > 1) {
+			return "DeliveryServiceMatcher{" +
+				"deliveryService=" + deliveryService +
+				", requestMatchers=" + requestMatchers +
+				'}';
+		}
+
+		return "DeliveryServiceMatcher{" +
+			"deliveryService=" + deliveryService +
+			", requestMatcher=" + requestMatchers.get(0) +
+			'}';
+
+	}
 }

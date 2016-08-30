@@ -1129,6 +1129,9 @@ sub parent_dot_config {
 				elsif ( $multi_site_origin_algorithm == 3 ) {
 					$mso_algorithm = "true";
 				}
+				elsif ( $multi_site_origin_algorithm == 4 ) {
+					$mso_algorithm = "latched";
+				}                                
 				else {
 					$mso_algorithm = "consistent_hash";
 				}
@@ -1263,8 +1266,7 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	my $max_days =
-		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	$max_days = $self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 

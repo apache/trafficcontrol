@@ -40,7 +40,7 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCacheLocation() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/cachelocation?ip=100.3.3.123&deliveryServiceId=ds-05");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/cachelocation?ip=100.3.3.123&deliveryServiceId=steering-target-1");
 
 		CloseableHttpResponse response = null;
 		try {
@@ -53,7 +53,7 @@ public class CoverageZoneTest {
 			assertThat(jsonNode.get("geolocation"), not(nullValue()));
 			assertThat(jsonNode.get("caches").get(0).get("id").asText(), startsWith("edge-cache-03"));
 			assertThat(jsonNode.get("caches").get(0).get("fqdn").asText(), startsWith("edge-cache-03"));
-			assertThat(jsonNode.get("caches").get(0).get("fqdn").asText(), endsWith("thecdn.cdn.example.com"));
+			assertThat(jsonNode.get("caches").get(0).get("fqdn").asText(), endsWith("thecdn.example.com"));
 			assertThat(jsonNode.get("caches").get(0).get("port").asInt(), greaterThan(1024));
 			assertThat(jsonNode.get("caches").get(0).get("hashValues").get(0).asDouble(), greaterThan(1.0));
 			assertThat(isValidIpV4String(jsonNode.get("caches").get(0).get("ip4").asText()), equalTo(true));
@@ -67,11 +67,12 @@ public class CoverageZoneTest {
 
 	@Test
 	public void itGetsCaches() throws Exception {
-		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=ds-07&cacheLocationId=location-5");
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=steering-target-4&cacheLocationId=location-3");
 
 		CloseableHttpResponse response = null;
 		try {
 			response = closeableHttpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
 
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
@@ -92,6 +93,15 @@ public class CoverageZoneTest {
 		}
 	}
 
+	@Test
+	public void itReturns404ForMissingDeliveryService() throws Exception {
+		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/coveragezone/caches?deliveryServiceId=ds-07&cacheLocationId=location-5");
+
+		try (CloseableHttpResponse response = closeableHttpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(404));
+		}
+	}
+
 	boolean isValidIpV4String(String ip) {
 		String[] octets = ip.split("\\.");
 
@@ -109,3 +119,4 @@ public class CoverageZoneTest {
 		return true;
 	}
 }
+

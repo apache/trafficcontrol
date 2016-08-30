@@ -19,11 +19,12 @@
 
 	<artifactId>traffic_router</artifactId>
 	<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-	<version>1.6.0</version>
+	<version>1.7.0</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>
 
 	<modules>
+		<module>keystore</module>
 		<module>connector</module>
 		<module>configuration</module>
 		<module>geolocation</module>
