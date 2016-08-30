@@ -62,7 +62,7 @@ __PACKAGE__->table("server");
 =head2 interface_name
 
   data_type: 'varchar'
-  is_nullable: 1
+  is_nullable: 0
   size: 45
 
 =head2 ip_address
@@ -74,13 +74,13 @@ __PACKAGE__->table("server");
 =head2 ip_netmask
 
   data_type: 'varchar'
-  is_nullable: 1
+  is_nullable: 0
   size: 45
 
 =head2 ip_gateway
 
   data_type: 'varchar'
-  is_nullable: 1
+  is_nullable: 0
   size: 45
 
 =head2 ip6_address
@@ -239,13 +239,13 @@ __PACKAGE__->add_columns(
   "xmpp_passwd",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "interface_name",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_address",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_netmask",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_gateway",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip6_address",
   { data_type => "varchar", is_nullable => 1, size => 50 },
   "ip6_gateway",
@@ -578,7 +578,7 @@ __PACKAGE__->table("server");
 =head2 interface_name
 
   data_type: 'varchar'
-  is_nullable: 1
+  is_nullable: 0
   size: 45
 
 =head2 ip_address
@@ -590,13 +590,13 @@ __PACKAGE__->table("server");
 =head2 ip_netmask
 
   data_type: 'varchar'
-  is_nullable: 1
+  is_nullable: 0
   size: 45
 
 =head2 ip_gateway
 
   data_type: 'varchar'
-  is_nullable: 1
+  is_nullable: 0
   size: 45
 
 =head2 ip6_address
@@ -743,13 +743,13 @@ __PACKAGE__->add_columns(
   "xmpp_passwd",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "interface_name",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_address",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_netmask",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip_gateway",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 45 },
   "ip6_address",
   { data_type => "varchar", is_nullable => 1, size => 50 },
   "ip6_gateway",

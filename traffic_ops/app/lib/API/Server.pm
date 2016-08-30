@@ -413,8 +413,17 @@ sub check_server_params {
 	if ( !defined( $json->{'cachegroup'} ) ) {
 		$errFields{'cachegroup'} = 'is required';
 	}
+	if ( !defined( $json->{'interfaceName'} ) ) {
+		$errFields{'interfaceName'} = 'is required';
+	}
 	if ( !defined( $json->{'ipAddress'} ) ) {
 		$errFields{'ipAddress'} = 'is required';
+	}
+	if ( !defined( $json->{'ipNetmask'} ) ) {
+		$errFields{'ipNetmask'} = 'is required';
+	}
+	if ( !defined( $json->{'ipGateway'} ) ) {
+		$errFields{'ipGateway'} = 'is required';
 	}
 	if ( !defined( $json->{'interfaceMtu'} ) ) {
 		$errFields{'interfaceMtu'} = 'is required';
