@@ -104,7 +104,7 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 	case status == "ONLINE":
 		return true, "set to ONLINE"
 	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.HealthThresholdLoadAvg:
-		return false, fmt.Sprintf("load average %d exceeds threshold %d", mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.HealthThresholdLoadAvg, result.Vitals.LoadAvg)
+		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[result.Id].Profile].Parameters.HealthThresholdLoadAvg)
 	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
 		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, result.Vitals.MaxKbpsOut)
 	default:

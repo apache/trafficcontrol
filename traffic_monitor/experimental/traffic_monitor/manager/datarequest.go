@@ -250,17 +250,16 @@ func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[e
 		for _, result := range history {
 			val, ok := result.Astats.Ats["proxy.process.http.current_client_connections"]
 			if !ok {
-				fmt.Printf("ERROR DEBUG6 connections stat not found for %s\n", server)
 				continue
 			}
 
 			v, ok := val.(float64)
 			if !ok {
-				fmt.Printf("ERROR connection stat value expected int actual '%v' type %T", val, val)
 				continue
 			}
 
 			conns[server] = int64(v)
+			break
 		}
 	}
 	return conns

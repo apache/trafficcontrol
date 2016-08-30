@@ -80,51 +80,67 @@ func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates p
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastKbpsStats := NewStatsLastKbpsThreadsafe()
 	dsStats := NewDSStatsThreadsafe()
+	tickInterval := time.Millisecond * 200 // TODO make config setting
 	go func() {
 		for {
-			select {
-			case stat := <-cacheStatChan:
-				statHistory.Add(stat)
-
-				now := time.Now()
-
-				var err error
-				createStatsCopyStatHistory := statHistory.Get()
-				createStatsCopyCombinedStates := combinedStates.Get()
-				createStatsCopyLastKbpsStats := lastKbpsStats.Get()
-				toDataCopy := toData.Get()
-
-				//				for _, healthResult := range results {
-				fmt.Printf("DEBUG poll %v %v CreateStats start\n", stat.PollID, time.Now())
-				//				}
-
-				newDsStats, newLastKbpsStats, err := ds.CreateStats(createStatsCopyStatHistory, toDataCopy, createStatsCopyCombinedStates, createStatsCopyLastKbpsStats, now)
-
-				//				for _, healthResult := range results {
-				fmt.Printf("DEBUG poll %v %v CreateStats end\n", stat.PollID, time.Now())
-				//				}
-
-				if err != nil {
-					errorCount.Inc()
-					fmt.Printf("ERROR getting deliveryservice: %v\n", err)
-				} else {
-					dsStats.Set(newDsStats)
-					lastKbpsStats.Set(newLastKbpsStats)
+			var results []cache.Result
+			results = append(results, <-cacheStatChan)
+			tick := time.Tick(tickInterval)
+		innerLoop:
+			for {
+				select {
+				case <-tick:
+					fmt.Printf("WARN StatHistoryManager flushing queued results\n")
+					processStatResults(results, statHistory, combinedStates.Get(), lastKbpsStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations)
+					break innerLoop
+				default:
+					select {
+					case r := <-cacheStatChan:
+						results = append(results, r)
+					default:
+						processStatResults(results, statHistory, combinedStates.Get(), lastKbpsStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations)
+						break innerLoop
+					}
 				}
-
-				// for _, healthResult := range results {
-				if lastStatStart, ok := lastStatEndTimes[enum.CacheName(stat.Id)]; ok {
-					d := time.Since(lastStatStart)
-					lastStatDurations.Set(enum.CacheName(stat.Id), d)
-				}
-				lastStatEndTimes[enum.CacheName(stat.Id)] = now
-
-				fmt.Printf("DEBUG poll %v %v statfinish\n", stat.PollID, time.Now())
-				stat.PollFinished <- stat.PollID
-				//				}
-
 			}
 		}
 	}()
 	return statHistory, lastStatDurations, lastKbpsStats, dsStats
+}
+
+func processStatResults(results []cache.Result, statHistory StatHistoryThreadsafe, combinedStates peer.Crstates, lastKbpsStats StatsLastKbpsThreadsafe, toData todata.TOData, errorCount UintThreadsafe, dsStats DSStatsThreadsafe, lastStatEndTimes map[enum.CacheName]time.Time, lastStatDurations DurationMapThreadsafe) {
+	for _, result := range results {
+		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
+		statHistory.Add(result)
+	}
+
+	for _, result := range results {
+		fmt.Printf("DEBUG poll %v %v CreateStats start\n", result.PollID, time.Now())
+	}
+
+	newDsStats, newLastKbpsStats, err := ds.CreateStats(statHistory.Get(), toData, combinedStates, lastKbpsStats.Get(), time.Now())
+
+	for _, result := range results {
+		fmt.Printf("DEBUG poll %v %v CreateStats end\n", result.PollID, time.Now())
+	}
+
+	if err != nil {
+		errorCount.Inc()
+		fmt.Printf("ERROR getting deliveryservice: %v\n", err)
+	} else {
+		dsStats.Set(newDsStats)
+		lastKbpsStats.Set(newLastKbpsStats)
+	}
+
+	endTime := time.Now()
+	for _, result := range results {
+		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.Id)]; ok {
+			d := time.Since(lastStatStart)
+			lastStatDurations.Set(enum.CacheName(result.Id), d)
+		}
+		lastStatEndTimes[enum.CacheName(result.Id)] = endTime
+
+		// fmt.Printf("DEBUG poll %v %v statfinish\n", result.PollID, endTime)
+		result.PollFinished <- result.PollID
+	}
 }

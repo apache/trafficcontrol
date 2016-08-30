@@ -160,6 +160,7 @@ const BytesPerKbps = 1024
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
+// TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
 func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time) (Stats, StatsLastKbps, error) {
 	for dsName, stat := range dsStats.DeliveryService {
 		lastKbpsStat, lastKbpsStatExists := lastKbpsStats.DeliveryServices[dsName]
@@ -181,7 +182,8 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			}
 
 			if cacheStats.Kbps.Value < 0 {
-				fmt.Printf("ERROR negative cachegroup cacheStats.Kbps.Value: '%v' '%v' %v - %v / %v\n", dsName, cgName, cacheStats.OutBytes.Value, lastKbpsData.Bytes, dsStatsTime.Sub(lastKbpsData.Time).Seconds())
+				cacheStats.Kbps.Value = 0
+				fmt.Printf("ERROR addkbps negative cachegroup cacheStats.Kbps.Value: '%v' '%v' %v - %v / %v\n", dsName, cgName, cacheStats.OutBytes.Value, lastKbpsData.Bytes, dsStatsTime.Sub(lastKbpsData.Time).Seconds())
 			}
 
 			lastKbpsStat.CacheGroups[cgName] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
@@ -193,7 +195,8 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
 				if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
 					if lastKbpsData.Kbps < 0 {
-						fmt.Printf("ERROR negative cachetype cacheStats.Kbps.Value!\n")
+						fmt.Printf("ERROR addkbps negative cachetype cacheStats.Kbps.Value!\n")
+						lastKbpsData.Kbps = 0
 					}
 					cacheStats.Kbps.Value = lastKbpsData.Kbps
 					stat.Type[cacheType] = cacheStats
@@ -203,7 +206,8 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
 				}
 				if cacheStats.Kbps.Value < 0 {
-					fmt.Printf("ERROR negative cachetype cacheStats.Kbps.Value.\n")
+					fmt.Printf("ERROR addkbps negative cachetype cacheStats.Kbps.Value.\n")
+					cacheStats.Kbps.Value = 0
 				}
 				lastKbpsStat.Type[cacheType] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
 				stat.Type[cacheType] = cacheStats
@@ -212,7 +216,8 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 {
 			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
 			if stat.Total.Kbps.Value < 0 {
-				fmt.Printf("ERROR negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.Total.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
+				stat.Total.Kbps.Value = 0
+				fmt.Printf("ERROR addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.Total.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
 			}
 
 		} else {
@@ -223,37 +228,50 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
 	}
 
-	for cacheName, results := range statHistory { // map[enum.CacheName]int64
-		if len(results) < 1 {
-			continue // TODO warn?
+	for cacheName, results := range statHistory {
+		var result *cache.Result
+		for _, r := range results {
+			// result.Errors can include stat errors where OutBytes was set correctly, so we look for the first non-zero OutBytes rather than the first errorless result
+			// TODO add error classes to PrecomputedData, to distinguish stat errors from HTTP errors?
+			if r.PrecomputedData.OutBytes == 0 {
+				continue
+			}
+			result = &r
+			break
 		}
-		result := results[0]
+
+		if result == nil {
+			fmt.Printf("WARNING addkbps cache %v has no results\n", cacheName)
+			continue
+		}
+
 		outBytes := result.PrecomputedData.OutBytes
 
 		lastCacheKbpsData, ok := lastKbpsStats.Caches[cacheName]
 		if !ok {
+			// this means this is the first result for this cache - this is a normal condition
 			lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: 0}
 			continue
 		}
 
 		if lastCacheKbpsData.Bytes == outBytes {
+			// this means this ATS hasn't updated its byte count yet - this is a normal condition
 			continue // don't try to kbps, and importantly don't change the time of the last change, if Traffic Server hasn't updated
 		}
 
 		if outBytes == 0 {
-			fmt.Printf("ERROR adding kbps %v outbytes zero\n", cacheName)
+			fmt.Printf("ERROR addkbps %v outbytes zero\n", cacheName)
 			continue
 		}
 
 		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / result.Time.Sub(lastCacheKbpsData.Time).Seconds() / BytesPerKbps
 		if lastCacheKbpsData.Bytes == 0 {
 			kbps = 0
-			fmt.Printf("ERROR adding kbps %v lastCacheKbpsData.Bytes zero\n", cacheName)
+			fmt.Printf("ERROR addkbps cache %v lastCacheKbpsData.Bytes zero\n", cacheName)
 		}
 		if kbps < 0 {
+			fmt.Printf("ERROR addkbps negative cache kbps: cache %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time) // this is almost certainly a code bug. The only case this would ever be a data issue, would be if Traffic Server returned fewer bytes than previously.
 			kbps = 0
-			// TODO figure out what to do. Print error. Explode. Definitely don't set kbps negative.
-			fmt.Printf("ERROR negative cache kbps: %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time)
 		}
 
 		lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: result.Time, Bytes: outBytes, Kbps: kbps}
@@ -295,6 +313,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		}
 		result := history[len(history)-1]
 
+		// TODO check result.PrecomputedData.Errors
 		for ds, resultStat := range result.PrecomputedData.DeliveryServiceStats {
 			if ds == "" {
 				fmt.Printf("ERROR EMPTY precomputed delivery service")

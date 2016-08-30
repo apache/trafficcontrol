@@ -139,7 +139,8 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 	for {
 		var results []cache.Result
 		results = append(results, <-cacheHealthChan)
-		tick := time.Tick(time.Millisecond * 200)
+		tickInterval := time.Millisecond * 200 // TODO make config setting
+		tick := time.Tick(tickInterval)
 	innerLoop:
 		for {
 			select {

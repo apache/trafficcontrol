@@ -37,7 +37,7 @@ func (h Handler) Precompute() bool {
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
-	Err                  error
+	Errors               []error
 	Reporting            bool
 }
 
@@ -123,37 +123,45 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	}
 
 	if err != nil {
+		fmt.Printf("ERROR %v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
 		result.Errors = append(result.Errors, err)
+		handler.ResultChannel <- result
+		return
 	}
 
-	if r != nil {
-		result.PrecomputedData.Reporting = true
-		fmt.Printf("DEBUG poll %v %v handle decode start\n", pollId, time.Now())
+	if r == nil {
+		fmt.Printf("ERROR %v handle reader nil\n", id)
+		result.Errors = append(result.Errors, fmt.Errorf("handler got nil reader"))
+		handler.ResultChannel <- result
+		return
+	}
 
-		if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
-			result.Errors = append(result.Errors, err)
-		}
+	result.PrecomputedData.Reporting = true
 
-		if result.Astats.System.ProcNetDev == "" {
-			fmt.Printf("DEBUG %s procnetdev empty for '%s'\n\n", id)
-		}
+	if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
+		fmt.Printf("ERROR %s procnetdev decode error '%v'\n", id, err)
+		result.Errors = append(result.Errors, err)
+		handler.ResultChannel <- result
+		return
+	}
 
-		fmt.Printf("DEBUG poll %v %v handle decode end\n", pollId, time.Now())
+	if result.Astats.System.ProcNetDev == "" {
+		fmt.Printf("WARNING addkbps %s procnetdev empty\n", id)
+	}
 
-		if err != nil {
-			result.Errors = append(result.Errors, err)
-		} else {
-			result.Available = true
-		}
+	fmt.Printf("DEBUG poll %v %v handle decode end\n", pollId, time.Now())
+
+	if err != nil {
+		result.Errors = append(result.Errors, err)
+		fmt.Printf("ERROR addkbps handle %s error '%v'\n", id, err)
+	} else {
+		result.Available = true
 	}
 
 	if handler.Precompute() {
-		//		fmt.Println("precomputing")
 		fmt.Printf("DEBUG poll %v %v handle precompute start\n", pollId, time.Now())
 		result = handler.precompute(result)
 		fmt.Printf("DEBUG poll %v %v handle precompute end\n", pollId, time.Now())
-	} else {
-		fmt.Println("NOT precomputing")
 	}
 	fmt.Printf("DEBUG poll %v %v handle write start\n", pollId, time.Now())
 	handler.ResultChannel <- result
@@ -174,6 +182,7 @@ func outBytes(procNetDev, iface string) (int64, error) {
 	}
 
 	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
+	procNetDevIfaceBytes = strings.TrimLeft(procNetDevIfaceBytes, " ")
 	spacePos := strings.Index(procNetDevIfaceBytes, " ")
 	if spacePos != -1 {
 		procNetDevIfaceBytes = procNetDevIfaceBytes[:spacePos]
@@ -189,15 +198,15 @@ func (handler Handler) precompute(result Result) Result {
 	var err error
 	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName); err != nil {
 		result.PrecomputedData.OutBytes = 0
-		fmt.Printf("ERROR precomputing %s outbytes: %v\n", result.Id, err)
+		fmt.Printf("ERROR addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
 
 	for stat, value := range result.Astats.Ats {
 		var err error
 		stats, err = processStat(result.Id, stats, todata, stat, value)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			result.PrecomputedData.Err = err
-			return result
+			fmt.Printf("ERROR precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
+			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}
 	result.PrecomputedData.DeliveryServiceStats = stats
