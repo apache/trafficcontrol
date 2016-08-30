@@ -51,7 +51,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
