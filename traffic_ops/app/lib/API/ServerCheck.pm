@@ -49,10 +49,10 @@ sub aadata {
 			$server->servercheck->aa, $server->servercheck->ab, $server->servercheck->ac, $server->servercheck->ad, $server->servercheck->ae,
 			$server->servercheck->af, $server->servercheck->ag, $server->servercheck->ah, $server->servercheck->ai, $server->servercheck->aj,
 			$server->servercheck->ak, $server->servercheck->al, $server->servercheck->am, $server->servercheck->an, $server->servercheck->ao,
-			$server->servercheck->ap, $server->servercheck->aq, $server->servercheck->ar, $server->servercheck->as, $server->servercheck->at,
-			$server->servercheck->au, $server->servercheck->av, $server->servercheck->aw, $server->servercheck->ax, $server->servercheck->ay,
-			$server->servercheck->az, $server->servercheck->ba, $server->servercheck->bb, $server->servercheck->bc, $server->servercheck->bd,
-			$server->servercheck->bd, $server->servercheck->be,
+			$server->servercheck->ap, $server->servercheck->aq, $server->servercheck->ar, $server->servercheck->at, $server->servercheck->au,
+			$server->servercheck->av, $server->servercheck->aw, $server->servercheck->ax, $server->servercheck->ay, $server->servercheck->az,
+			$server->servercheck->ba, $server->servercheck->bb, $server->servercheck->bc, $server->servercheck->bd, $server->servercheck->bd,
+			$server->servercheck->be, $server->servercheck->bf,
 		);
 		push( @{ $data{'aaData'} }, \@line );
 	}
@@ -78,7 +78,7 @@ sub read {
 		$v->{adminState} = $server->status->name;
 		$v->{cacheGroup} = $server->cachegroup->name;
 		$v->{type}       = $server->type->name;
-		foreach my $col (qw/aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar as at au av aw ax ay az ba bb bc bd be/) {
+		foreach my $col (qw/aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar at au av aw ax ay az ba bb bc bd be bf/) {
 			if ( defined( $mapping{$col} ) && defined( $server->servercheck ) ) {
 				$v->{checks}->{ $mapping{$col} } = $server->servercheck->$col();
 			}

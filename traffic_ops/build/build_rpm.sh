@@ -60,6 +60,6 @@ function initBuildArea() {
 
 # ---------------------------------------
 importFunctions
-checkEnvironment
+checkEnvironment go
 initBuildArea
 buildRpm traffic_ops traffic_ops_ort

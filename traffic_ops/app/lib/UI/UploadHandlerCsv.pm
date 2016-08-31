@@ -213,6 +213,7 @@ sub getParamHashRef {
 	$paramHashRef->{'ilo_password'}     = $p->[23];
 	$paramHashRef->{'router_host_name'} = $p->[24];
 	$paramHashRef->{'router_port_name'} = $p->[25];
+	$paramHashRef->{'https_port'}       = $p->[26];
 	$paramHashRef->{'status'}           = '';
 	$paramHashRef->{'csv_line_number'}  = $lineNumber;
 	return $paramHashRef;
@@ -308,7 +309,7 @@ sub processCSV {
 
 					#print Dumper(@p);
 					my $itemCount    = scalar @p;
-					my $correctCount = 26;
+					my $correctCount = 27;
 					if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 						$processCSVErrors
 							.= $errorLineDelim

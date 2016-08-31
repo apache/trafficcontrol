@@ -105,9 +105,9 @@ func main() {
 
 	switch *database {
 	case "all":
+		go syncDailyDb(ch, sourceClient, targetClient, *days)
 		go syncCsDb(ch, sourceClient, targetClient, *days)
 		go syncDsDb(ch, sourceClient, targetClient, *days)
-		go syncDailyDb(ch, sourceClient, targetClient, *days)
 	case "cache_stats":
 		go syncCsDb(ch, sourceClient, targetClient, *days)
 	case "deliveryservice_stats":
@@ -134,10 +134,12 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 	stats := [...]string{
 		"bandwidth.cdn.1min",
 		"connections.cdn.1min",
-		"bandwidth.1min",
-		"connections.1min",
 		"connections.cdn.type.1min",
 		"bandwidth.cdn.type.1min",
+		//these take a long time so do them last
+		"bandwidth.1min",
+		"connections.1min",
+		//
 	}
 	for _, statName := range stats {
 		fmt.Printf("Syncing %s database with %s \n", db, statName)

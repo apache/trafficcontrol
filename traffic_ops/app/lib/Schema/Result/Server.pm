@@ -33,13 +33,13 @@ __PACKAGE__->table("server");
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 domain_name
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 tcp_port
 
@@ -223,15 +223,20 @@ __PACKAGE__->table("server");
   default_value: current_timestamp
   is_nullable: 1
 
+=head2 https_port
+
+  data_type: 'smallint'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "host_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "domain_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "tcp_port",
   { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 1 },
   "xmpp_id",
@@ -302,6 +307,8 @@ __PACKAGE__->add_columns(
     default_value => \"current_timestamp",
     is_nullable => 1,
   },
+  "https_port",
+  { data_type => "smallint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -326,41 +333,33 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<cs_ip_address_UNIQUE>
-
-=over 4
-
-=item * L</ip_address>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("cs_ip_address_UNIQUE", ["ip_address"]);
-
-=head2 C<host_name>
-
-=over 4
-
-=item * L</host_name>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("host_name", ["host_name"]);
-
-=head2 C<ip6_address>
+=head2 C<ip6_profile>
 
 =over 4
 
 =item * L</ip6_address>
 
+=item * L</profile>
+
 =back
 
 =cut
 
-__PACKAGE__->add_unique_constraint("ip6_address", ["ip6_address"]);
+__PACKAGE__->add_unique_constraint("ip6_profile", ["ip6_address", "profile"]);
+
+=head2 C<ip_profile>
+
+=over 4
+
+=item * L</ip_address>
+
+=item * L</profile>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("ip_profile", ["ip_address", "profile"]);
 
 =head2 C<se_id_UNIQUE>
 
@@ -512,8 +511,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-06-13 22:13:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gdRECADmRFpa3OWLbqJirA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-29 17:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qsqvo1OFcbS8+qXvS2DU1Q
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
@@ -557,13 +556,13 @@ __PACKAGE__->table("server");
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 domain_name
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 tcp_port
 
@@ -741,9 +740,9 @@ __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "host_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "domain_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "tcp_port",
   { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 1 },
   "xmpp_id",
@@ -831,44 +830,6 @@ __PACKAGE__->add_columns(
 =cut
 
 __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
-
-=head1 UNIQUE CONSTRAINTS
-
-=head2 C<cs_ip_address_UNIQUE>
-
-=over 4
-
-=item * L</ip_address>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("cs_ip_address_UNIQUE", ["ip_address"]);
-
-=head2 C<host_name>
-
-=over 4
-
-=item * L</host_name>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("host_name", ["host_name"]);
-
-=head2 C<ip6_address>
-
-=over 4
-
-=item * L</ip6_address>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("ip6_address", ["ip6_address"]);
 
 =head2 C<se_id_UNIQUE>
 
@@ -1027,7 +988,7 @@ __PACKAGE__->belongs_to(
 #
 #
 1;
-# End of lines loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' 
+# End of lines loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm'
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

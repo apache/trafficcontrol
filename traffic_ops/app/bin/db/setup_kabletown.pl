@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 package main;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
@@ -20,7 +22,8 @@ use Test::IntegrationTestHelper;
 use strict;
 use warnings;
 
-BEGIN { $ENV{MOJO_MODE} = "development" }
+# If MOJO_MODE not already defined, default to development
+BEGIN { $ENV{MOJO_MODE} //= "development" }
 my $schema = Schema->connect_to_database;
 my $t      = Test::Mojo->new('TrafficOps');
 

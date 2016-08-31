@@ -257,7 +257,7 @@ $(document).ready(function() {
           <button class="button" id="btnToggleInstructions">Toggle Instructions</button>
         </div>
         <div id="divInstructions">
-          <div>Below is the general process for the ‘UploadServerCSV’ 12Monkeys production page:</div>
+          <div>Below is the general process for the ‘UploadServerCSV’ Traffic Ops production page:</div>
           <div>
             <ul>
               <li>
@@ -324,10 +324,10 @@ $(document).ready(function() {
             <li>HOSTNAME <span style="color:red;">[REQUIRED]</span></li>
             <li>DOMAINNAME <span style="color:red;">[REQUIRED]</span></li>
             <li>INTERFACENAME <span style="color:red;">[REQUIRED]</span></li>
-            <li>NETWORKIP <span style="color:red;">[REQUIRED]</span></li>
+            <li>NETWORKIP <span style="color:red;">[REQUIRED][UNIQUE PER PROFILE]</span></li>
             <li>NETWORKSUBNET <span style="color:red;">[REQUIRED]</span></li>
             <li>NETWORKGATEWAY <span style="color:red;">[REQUIRED]</span></li>
-            <li>IPV6ADDRESS</li>
+            <li>IPV6ADDRESS <span style="color:red;">[UNIQUE PER PROFILE]</span></li>
             <li>IPV6GATEWAY</li>
             <li>NETWORKMTU <span style="color:red;">[REQUIRED]</span></li>
             <li>LOCATION <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>

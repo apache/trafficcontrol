@@ -19,7 +19,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>1.6.0</version>
+		<version>1.7.0</version>
 	</parent>
 
 	<artifactId>traffic_router_core</artifactId>
@@ -130,16 +130,16 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.3</version>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
 					<showDeprecation>true</showDeprecation>
+					<fork>true</fork>
+					<compilerArgument>-XDignore.symbol.file</compilerArgument>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -227,6 +227,12 @@
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_config</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<artifactId>traffic_router_keystore</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 

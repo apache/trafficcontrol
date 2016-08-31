@@ -35,6 +35,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
+import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,7 +44,6 @@ import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Zone;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.TrafficRouterException;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
@@ -51,7 +51,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
@@ -87,13 +86,14 @@ public class TrafficRouter {
 
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
+	private final KeyStoreHelper keyStoreHelper = KeyStoreHelper.getInstance();
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
 			final StatTracker statTracker,
 			final TrafficOpsUtils trafficOpsUtils,
-			final FederationRegistry federationRegistry) throws IOException, JSONException, TrafficRouterException {
+			final FederationRegistry federationRegistry) throws IOException, JSONException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
@@ -366,8 +366,7 @@ public class TrafficRouter {
 		List<Cache> selectedCaches;
 
 		if (maxDnsIps > 0 && isConsistentDNSRouting()) { // only consistent hash if we must
-			final Dispersion dispersion = ds.getDispersion();
-			selectedCaches = (List<Cache>) consistentHasher.selectHashables(caches, dispersion.getLimit(), request.getHostname(), dispersion.getLimit() > 1 && dispersion.isShuffled());
+			selectedCaches = (List<Cache>) consistentHasher.selectHashables(caches, ds.getDispersion(), request.getHostname());
 		} else if (maxDnsIps > 0) {
 			/*
 			 * We also shuffle in NameServer when adding Records to the Message prior
@@ -428,7 +427,7 @@ public class TrafficRouter {
 	}
 
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
-		if (cacheLocation == null || !ds.isLocationAvailable(cacheLocation)) {
+		if (cacheLocation == null || ds == null || !ds.isLocationAvailable(cacheLocation)) {
 			return null;
 		}
 
@@ -445,12 +444,9 @@ public class TrafficRouter {
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
-		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
-		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath(), xtcSteeringOption);
+		final DeliveryService deliveryService = getDeliveryService(request, track);
 
 		if (deliveryService == null) {
-			track.setResult(ResultType.DS_MISS);
-			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
 		}
 
@@ -476,18 +472,41 @@ public class TrafficRouter {
 			routeResult.setUrl(deliveryService.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
-
-		final boolean isShuffled = deliveryService.getDispersion().getLimit() > 1 && deliveryService.getDispersion().isShuffled();
-		final Cache cache = consistentHasher.selectHashable(caches, request.getPath(), isShuffled);
+		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
 
 		if (deliveryService.isRegionalGeoEnabled()) {
 			RegionalGeo.enforce(this, request, deliveryService, cache, routeResult, track);
 			return routeResult;
 		}
 
+		deliveryService.setHasX509Cert(keyStoreHelper.hasCertificate(deliveryService.getId()));
 		final String uriString = deliveryService.createURIString(request, cache);
 		routeResult.setUrl(new URL(uriString));
 		return routeResult;
+	}
+
+	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
+		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
+		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath(), xtcSteeringOption);
+
+		if (deliveryService == null) {
+			track.setResult(ResultType.DS_MISS);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
+		if (request.isSecure() && !deliveryService.isSslEnabled()) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
+		if (!request.isSecure() && !deliveryService.isAcceptHttp()) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+		return deliveryService;
 	}
 
 	protected NetworkNode getNetworkNode(final String ip) {
@@ -547,7 +566,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, requestPath, deliveryService.getDispersion().getLimit() > 1 && deliveryService.getDispersion().isShuffled());
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
 	}
 
 	public Cache consistentHashForGeolocation(final String ip, final String deliveryServiceId, final String requestPath) {
@@ -575,7 +594,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		return consistentHasher.selectHashable(caches, requestPath, deliveryService.getDispersion().getLimit() > 1 && deliveryService.getDispersion().isShuffled());
+		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
 	}
 
 	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
@@ -602,7 +621,7 @@ public class TrafficRouter {
 			return cacheRegister.getDeliveryService(bypassDeliveryServiceId);
 		}
 
-		final SteeringTarget steeringTarget = consistentHasher.selectHashable(steering.getTargets(), requestPath, false);
+		final SteeringTarget steeringTarget = consistentHasher.selectHashable(steering.getTargets(), deliveryService.getDispersion(), requestPath);
 		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 	}
 
@@ -636,7 +655,7 @@ public class TrafficRouter {
 		return null;
 	}
 
-	/**
+	/*
 	 * Selects a {@link Cache} from the {@link CacheLocation} provided.
 	 * 
 	 * @param location

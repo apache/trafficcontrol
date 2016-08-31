@@ -76,6 +76,7 @@ sub server_by_id {
 			"domain_name"    => $server_row->domain_name,
 			"guid"           => $server_row->guid,
 			"tcp_port"       => $server_row->tcp_port,
+			"https_port"       => $server_row->https_port,
 			"xmpp_id"        => $server_row->xmpp_id,
 			"xmpp_passwd"    => $server_row->xmpp_passwd,
 			"interface_name" => $server_row->interface_name,
@@ -121,6 +122,7 @@ sub getserverdata {
 				"host_name"        => $row->host_name,
 				"domain_name"      => $row->domain_name,
 				"tcp_port"         => $row->tcp_port,
+				"https_port"         => $row->https_port,
 				"xmpp_id"          => $row->xmpp_id,
 				"xmpp_passwd"      => "**********",
 				"interface_name"   => $row->interface_name,
@@ -177,6 +179,7 @@ sub serverdetail {
 			"host_name"        => $row->host_name,
 			"domain_name"      => $row->domain_name,
 			"tcp_port"         => $row->tcp_port,
+			"https_port"         => $row->https_port,
 			"xmpp_id"          => $row->xmpp_id,
 			"xmpp_passwd"      => $row->xmpp_passwd,
 			"interface_name"   => $row->interface_name,
@@ -283,26 +286,28 @@ sub delete {
 
 sub check_server_input_cgi {
 	my $self         = shift;
+	my $id         	 = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port/)
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port https_port/)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
 	}
 
 	$paramHashRef = &trim_whitespace($paramHashRef);
 
-	$err = &check_server_input( $self, $paramHashRef );
+	$err = &check_server_input( $self, $paramHashRef, $id );
 	return $err;
 }
 
 sub check_server_input {
 	my $self              = shift;
 	my $paramHashRef      = shift;
+	my $id                = shift;
 	my $sep               = "__NEWLINE__";    # the line separator sub that with \n in the .ep javascript
 	my $err               = '';
 	my $errorCSVLineDelim = '';
@@ -318,7 +323,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} )
@@ -356,7 +361,14 @@ sub check_server_input {
 		}
 	}
 
-	if ( !&is_netmask( $paramHashRef->{'ip_netmask'} ) ) {
+	my $ip_used =
+		$self->db->resultset('Server')
+			->search( { -and => [ ip_address => $paramHashRef->{'ip_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+	if ( $ip_used ) {
+		$err .= $paramHashRef->{'ip_address'} . " is already being used by a server with the same profile" . $sep;
+	}
+
+	if ( defined( $paramHashRef->{'ip_netmask'} ) && $paramHashRef->{'ip_netmask'} ne "" && !&is_netmask( $paramHashRef->{'ip_netmask'} ) ) {
 		$err .= $paramHashRef->{'ip_netmask'} . " is not a valid netmask (I think... ;-)" . $sep;
 	}
 	if ( $paramHashRef->{'ilo_ip_netmask'} ne ""
@@ -371,8 +383,17 @@ sub check_server_input {
 	}
 	my $ipstr1 = $paramHashRef->{'ip_address'} . "/" . $paramHashRef->{'ip_netmask'};
 	my $ipstr2 = $paramHashRef->{'ip_gateway'} . "/" . $paramHashRef->{'ip_netmask'};
-	if ( !&in_same_net( $ipstr1, $ipstr2 ) ) {
+	if ( defined( $paramHashRef->{'ip_netmask'} ) && $paramHashRef->{'ip_netmask'} ne "" && !&in_same_net( $ipstr1, $ipstr2 ) ) {
 		$err .= $paramHashRef->{'ip_address'} . " and " . $paramHashRef->{'ip_gateway'} . " are not in same network" . $sep;
+	}
+
+	if ( defined( $paramHashRef->{'ip6_address'} ) && $paramHashRef->{'ip6_address'} ne "" ) {
+		my $ip6_used =
+			$self->db->resultset('Server')
+				->search( { -and => [ ip6_address => $paramHashRef->{'ip6_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+		if ( $ip6_used ) {
+			$err .= $paramHashRef->{'ip6_address'} . " is already being used by a server with the same profile" . $sep;
+		}
 	}
 
 	if (
@@ -413,6 +434,9 @@ sub check_server_input {
 	if ( $paramHashRef->{'tcp_port'} !~ /\d+/ ) {
 		$err .= $paramHashRef->{'tcp_port'} . " is not a valid tcp port" . $sep;
 	}
+	if ( $paramHashRef->{'https_port'} !~ /\d+/ ) {
+		$err .= $paramHashRef->{'https_port'} . " is not a valid tcp port" . $sep;
+	}
 
 	# RFC5952 checks (lc)
 
@@ -436,11 +460,13 @@ sub update {
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
 		$paramHashRef = &cgi_params_to_param_hash_ref($self);
 	}
+
 	my $id = $paramHashRef->{'id'};
 
 	$paramHashRef = &trim_whitespace($paramHashRef);
 
-	my $err = &check_server_input_cgi($self);
+	my $err = &check_server_input_cgi($self, $id);
+
 	if ( defined($err) && length($err) > 0 ) {
 		$self->flash( alertmsg => "update():  " . $err );
 	}
@@ -455,6 +481,7 @@ sub update {
 				host_name        => $paramHashRef->{'host_name'},
 				domain_name      => $paramHashRef->{'domain_name'},
 				tcp_port         => $paramHashRef->{'tcp_port'},
+				https_port         => $paramHashRef->{'https_port'},
 				interface_name   => $paramHashRef->{'interface_name'},
 				ip_address       => $paramHashRef->{'ip_address'},
 				ip_netmask       => $paramHashRef->{'ip_netmask'},
@@ -593,12 +620,12 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach my $requiredParam (
-		qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile phys_location/)
+		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
-		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port
+		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port https_port
 		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{
@@ -638,6 +665,7 @@ sub create {
 					host_name        => $paramHashRef->{'host_name'},
 					domain_name      => $paramHashRef->{'domain_name'},
 					tcp_port         => $paramHashRef->{'tcp_port'},
+					https_port         => $paramHashRef->{'https_port'},
 					xmpp_id          => $paramHashRef->{'host_name'},           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $paramHashRef->{'interface_name'},
@@ -674,6 +702,7 @@ sub create {
 					host_name        => $paramHashRef->{'host_name'},
 					domain_name      => $paramHashRef->{'domain_name'},
 					tcp_port         => $paramHashRef->{'tcp_port'},
+					https_port         => $paramHashRef->{'https_port'},
 					xmpp_id          => $paramHashRef->{'host_name'},           # TODO JvD remove me later.
 					xmpp_passwd      => $xmpp_passwd,
 					interface_name   => $paramHashRef->{'interface_name'},
@@ -751,9 +780,11 @@ sub add {
 	my $self = shift;
 
 	my $default_port = 80;
+	my $default_https_port = 443;
 	$self->stash(
 		fbox_layout      => 1,
 		default_tcp_port => $default_port,
+		default_https_port => $default_https_port,
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {
