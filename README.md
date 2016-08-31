@@ -15,6 +15,8 @@ Traffic Control is an Open Source implementation of a Content Delivery Network.
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
 ##### News
+* 31-August 2016: Traffic Control 1.6.1 is released.
+	See https://github.com/Comcast/traffic_control/releases/tag/RELEASE-1.6.1 for the full change list.
 * 29-July 2016: Traffic Control 1.6.0 is released.
 	See https://github.com/Comcast/traffic_control/releases/tag/RELEASE-1.6.0 for the full change list.
 * 25-May 2016: Traffic Control 1.5.1 is released.
