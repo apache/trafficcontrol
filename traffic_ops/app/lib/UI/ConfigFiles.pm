@@ -26,6 +26,7 @@ use NetAddr::IP;
 use UI::DeliveryService;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
+use URI;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
@@ -262,7 +263,6 @@ sub ds_data {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-
 					#add the second with https
 					my $map_from2 = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
@@ -799,9 +799,9 @@ sub hosting_dot_config {
 	my $file = shift;
 	my $data = shift;
 
-	my $server       = $self->server_data($id);
-	my $storage_data = $self->param_data( $server, "storage.config" );
-	my $text         = $self->header_comment( $server->host_name );
+	my $server = $self->server_data($id);
+	my $storage_data   = $self->param_data( $server, "storage.config" );
+	my $text   = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
@@ -829,7 +829,7 @@ sub hosting_dot_config {
 			}
 		}
 	}
-	my $disk_volume = 1;    # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
+	my $disk_volume = 1; # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
 	$text .= "hostname=*   volume=" . $disk_volume . "\n";
 
 	return $text;
@@ -1074,6 +1074,8 @@ sub parent_dot_config {
 
 	my $server      = $self->server_data($id);
 	my $server_type = $server->type->name;
+	my $parent_qstring;
+	my $pinfo;
 	my $text        = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
@@ -1082,30 +1084,43 @@ sub parent_dot_config {
 	# Origin Shield or Multi Site Origin
 	#$self->app->log->debug( "id = $id and server_type = $server_type,  hostname = " . $server->{host_name} );
 	if ( $server_type =~ m/^MID/ ) {
+		my @unique_origin;
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $xml_id                      = $ds->{ds_xml_id};
 			my $os                          = $ds->{origin_shield};
+			$parent_qstring 		= "ignore";
 			my $multi_site_origin           = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
 			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
 
-			my $org_fqdn = $ds->{org};
-			$org_fqdn =~ s/https?:\/\///;
+			my $org_uri = URI->new($ds->{org});
+
+			# Don't duplicate origin line if multiple seen
+			next if ( grep( /^$org_uri$/, @unique_origin));
+			push @unique_origin, $org_uri;
+
 			if ( defined($os) ) {
 				my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 				my $algorithm = "";
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
 				}
-				$text .= "dest_domain=$org_fqdn parent=$os $algorithm go_direct=true\n";
+				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " parent=$os $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
-				$text .= "dest_domain=$org_fqdn ";
-				my $pinfo = $self->parent_data($server);
+				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " ";
+
+				# If we have multi-site origin, get parent_data once
+				if ( not defined($pinfo) ) {
+					$pinfo = $self->parent_data($server);
+				}
 
 				my @ranked_parents = ();
-				if ( exists( $pinfo->{$org_fqdn} ) ) {
-					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_fqdn} };
+				if ( exists( $pinfo->{$org_uri->host} ) ) {
+					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_uri->host} };
 				}
+				else {
+					$self->app->log->debug( "BUG: Did not match an origin: " . $org_uri );
+        }
 
 				my @parent_info;
 				foreach my $parent (@ranked_parents) {
@@ -1119,6 +1134,10 @@ sub parent_dot_config {
 				my $mso_algorithm = "";
 				if ( $multi_site_origin_algorithm == 0 ) {
 					$mso_algorithm = "consistent_hash";
+					if ( $ds->{qstring_ignore} == 0 ) {
+						$parent_qstring = "consider";
+					}
+
 				}
 				elsif ( $multi_site_origin_algorithm == 1 ) {
 					$mso_algorithm = "false";
@@ -1131,11 +1150,11 @@ sub parent_dot_config {
 				}
 				elsif ( $multi_site_origin_algorithm == 4 ) {
 					$mso_algorithm = "latched";
-				}                                
+				}
 				else {
 					$mso_algorithm = "consistent_hash";
 				}
-				$text .= "$parents round_robin=$mso_algorithm go_direct=false parent_is_proxy=false\n";
+				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false\n";
 			}
 		}
 
@@ -1146,25 +1165,23 @@ sub parent_dot_config {
 	else {
 
 		#"True" Parent
-		my $pinfo = $self->parent_data($server);
+		$pinfo = $self->parent_data($server);
 
 		my %done = ();
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			my $org = $remap->{org};
+			$parent_qstring = "ignore";
 			next if !defined $org || $org eq "";
 			next if $done{$org};
+			my $org_uri = URI->new($org);
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
-				my $org_fqdn = $remap->{org};
-				$org_fqdn =~ s/https?:\/\///;
-				$text .= "dest_domain=" . $org_fqdn . " go_direct=true\n";
+				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				my $org_fqdn = $remap->{org};
-				$org_fqdn =~ s/https?:\/\///;
-
-				my $qstring = $self->profile_param_value( $server->profile->id, 'parent.config', 'qstring', undef );
-				$qstring = ( defined $qstring ) ? "qstring=$qstring" : '';
+				if ( $remap->{qstring_ignore} == 0 ) {
+					$parent_qstring = "consider";
+				}
 
 				my @parent_info;
 				my @secondary_parent_info;
@@ -1188,7 +1205,7 @@ sub parent_dot_config {
 				}
 				my $round_robin = 'round_robin=consistent_hash';
 				my $go_direct   = 'go_direct=false';
-				$text .= "dest_domain=$org_fqdn $parents $secparents $round_robin $go_direct $qstring\n";
+				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 			}
 			$done{$org} = 1;
 		}
