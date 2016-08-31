@@ -1,19 +1,21 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.hashing;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.NumberSearcher;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Random;
 
 import static org.hamcrest.Matchers.greaterThan;
@@ -59,22 +61,37 @@ public class ConsistentHasherTest {
 
 	@Test
 	public void itHashes() throws Exception {
-		DefaultHashable hashable = consistentHasher.selectHashable(hashables, "some-string", false);
+		DefaultHashable hashable = consistentHasher.selectHashable(hashables, new Dispersion(new JSONObject()), "some-string");
 		assertThat(hashable, anyOf(equalTo(hashable1), equalTo(hashable2), equalTo(hashable3)));
-		DefaultHashable nextHashable = consistentHasher.selectHashable(hashables, "some-string", false);
+		DefaultHashable nextHashable = consistentHasher.selectHashable(hashables, new Dispersion(new JSONObject()),"some-string");
 		assertThat(nextHashable, equalTo(hashable));
 	}
 
 	@Test
 	public void itHashesMoreThanOne() throws Exception {
-		List<DefaultHashable> results = consistentHasher.selectHashables(hashables, 2, "some-string", false);
+		JSONObject jo = new JSONObject("{dispersion: {\n" +
+				"limit: 2,\n" +
+				"shuffled: \"true\"\n" +
+				"}}");
+		Dispersion dispersion = new Dispersion(jo);
+
+		List<DefaultHashable> results = consistentHasher.selectHashables(hashables, dispersion, "some-string");
 		assertThat(results.size(), equalTo(2));
 		assertThat(results.get(0), anyOf(equalTo(hashable1), equalTo(hashable2), equalTo(hashable3)));
 		assertThat(results.get(1), anyOf(equalTo(hashable1), equalTo(hashable2), equalTo(hashable3)));
+		List<DefaultHashable> results2 = consistentHasher.selectHashables(hashables, dispersion, "some-string");
+		assert(results.containsAll(results2));
 
-		assertThat(consistentHasher.selectHashables(hashables, 2, "some-string", false), equalTo(results));
-		assertThat(consistentHasher.selectHashables(hashables, 2000000000, "some-string", true), equalTo(hashables));
+		JSONObject jo2 = new JSONObject("{dispersion: {\n" +
+				"limit: 2000000000,\n" +
+				"shuffled: \"true\"\n" +
+				"}}");
+		Dispersion disp2 = new Dispersion(jo2);
+		List <DefaultHashable> res3 = consistentHasher.selectHashables(hashables, disp2, "some-string");
+		assert(res3.containsAll(hashables));
+
 	}
+
 
 	@Test
 	public void itemsMigrateFromSmallerToLargerBucket() {
@@ -96,7 +113,7 @@ public class ConsistentHasherTest {
 		hashedPaths.put(largerBucket, new ArrayList<String>());
 
 		for (String randomPath : randomPaths) {
-			Hashable hashable = consistentHasher.selectHashable(buckets, randomPath, false);
+			Hashable hashable = consistentHasher.selectHashable(buckets, new Dispersion(new JSONObject()), randomPath);
 			hashedPaths.get(hashable).add(randomPath);
 		}
 
@@ -112,7 +129,7 @@ public class ConsistentHasherTest {
 		rehashedPaths.put(shrunkBucket, new ArrayList<String>());
 
 		for (String randomPath : randomPaths) {
-			Hashable hashable = consistentHasher.selectHashable(changedBuckets, randomPath, false);
+			Hashable hashable = consistentHasher.selectHashable(changedBuckets, new Dispersion(new JSONObject()), randomPath);
 			rehashedPaths.get(hashable).add(randomPath);
 		}
 

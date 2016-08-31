@@ -24,7 +24,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
@@ -34,7 +33,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import org.junit.Before;
 import org.junit.Test;
-import org.powermock.reflect.Whitebox;
 import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
@@ -57,8 +55,7 @@ import static org.mockito.Mockito.when;
 import static org.powermock.reflect.Whitebox.setInternalState;
 
 public class TrafficRouterTest {
-    MD5HashFunction hashFunction;
-    ConsistentHasher consistentHasher;
+    private ConsistentHasher consistentHasher;
     private TrafficRouter trafficRouter;
 
     private DeliveryService deliveryService;
@@ -66,12 +63,12 @@ public class TrafficRouterTest {
 
     @Before
     public void before() throws Exception {
-        hashFunction = new MD5HashFunction();
-        consistentHasher = new ConsistentHasher();
         deliveryService = mock(DeliveryService.class);
         when(deliveryService.isAvailable()).thenReturn(true);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
         when(deliveryService.getDispersion()).thenReturn(mock(Dispersion.class));
+
+        consistentHasher = mock(ConsistentHasher.class);
 
         when(deliveryService.createURIString(any(HTTPRequest.class), any(Cache.class))).thenReturn("http://atscache.kabletown.net/index.html");
 
@@ -81,8 +78,6 @@ public class TrafficRouterTest {
 
         federationRegistry = mock(FederationRegistry.class);
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(inetRecords);
-
-        Whitebox.setInternalState(consistentHasher, "hashFunction", hashFunction);
 
         trafficRouter = mock(TrafficRouter.class);
 
@@ -137,7 +132,6 @@ public class TrafficRouterTest {
 
         when(deliveryService.filterAvailableLocations(any(Collection.class))).thenCallRealMethod();
         when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(true);
-
 
         List<Cache> caches = new ArrayList<Cache>();
         caches.add(cache);
