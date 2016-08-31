@@ -18,6 +18,7 @@ public class CertificatesPoller implements ConfigurationListener {
 	private CertificatesClient certificatesClient;
 	private static final long defaultFixedRate = 3600 * 1000L;
 	private static final String intervalProperty = "certificates.polling.interval";
+	private long pollingInterval = defaultFixedRate;
 
 	@Autowired
 	private Environment environment;
@@ -50,22 +51,21 @@ public class CertificatesPoller implements ConfigurationListener {
 			try {
 				certificatesClient.refreshData();
 			} catch (Throwable t) {
-				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage());
+				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage(), t);
 			}
 		};
 
-		Long fixedRate = defaultFixedRate;
 		final Long customFixedRate = getEnvironmentPollingInterval();
 
 		if (customFixedRate == null) {
-			LOGGER.info("Using default fixed rate polling interval " + fixedRate + " msec");
+			LOGGER.info("Using default fixed rate polling interval " + pollingInterval + " msec");
 		} else {
 			LOGGER.info("Using custom fixed rate polling interval " + customFixedRate + " msec");
-			fixedRate = customFixedRate;
+			pollingInterval = customFixedRate;
 		}
 
-		future = executor.scheduleWithFixedDelay(runnable, 0, fixedRate, TimeUnit.MILLISECONDS);
-		LOGGER.info("Polling for certificates every " + fixedRate + " msec");
+		future = executor.scheduleWithFixedDelay(runnable, 0, pollingInterval, TimeUnit.MILLISECONDS);
+		LOGGER.info("Polling for certificates every " + pollingInterval + " msec");
 	}
 
 	public void stop() {
@@ -97,6 +97,10 @@ public class CertificatesPoller implements ConfigurationListener {
 		}
 
 		start();
+	}
+
+	public long getPollingInterval() {
+		return pollingInterval;
 	}
 
 	@Override

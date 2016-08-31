@@ -35,6 +35,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -73,6 +74,8 @@ public class ConfigHandler {
 	private FederationsWatcher federationsWatcher;
 	private RegionalGeoUpdater regionalGeoUpdater;
 	private SteeringWatcher steeringWatcher;
+	private CertificateChecker certificateChecker;
+	private CertificatesPoller certificatesPoller;
 
 	public String getConfigDir() {
 		return configDir;
@@ -118,15 +121,28 @@ public class ConfigHandler {
 				parseRegionalGeoConfig(jo);
 
 				final CacheRegister cacheRegister = new CacheRegister();
+				final JSONObject deliveryServicesJson = jo.getJSONObject("deliveryServices");
 				cacheRegister.setTrafficRouters(jo.getJSONObject("contentRouters"));
 				cacheRegister.setConfig(config);
 				cacheRegister.setStats(stats);
 				parseTrafficOpsConfig(config, stats);
+
+				parseCertificatesConfig(config);
+				certificatesPoller.restart();
 				parseDeliveryServiceConfig(jo.getJSONObject(deliveryServicesKey), cacheRegister);
+
+				LOGGER.warn("Waiting for all https delivery services to have valid certificates");
+				while (!certificateChecker.certificatesAreValid(deliveryServicesJson)) {
+					try {
+						Thread.sleep(1000L);
+					} catch (InterruptedException e) {
+						LOGGER.warn("Interrupted while sleeping between checks of https certificates");
+					}
+				}
+
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
-				parseCertificatesConfig(config);
 				NetworkNode.getInstance().clearCacheLocations();
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
@@ -294,22 +310,22 @@ public class ConfigHandler {
 	 * @throws JSONException 
 	 */
 	private void parseDeliveryServiceConfig(final JSONObject deliveryServices, final CacheRegister cacheRegister) throws JSONException {
-		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
-		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
-		final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
+		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<>();
+		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<>();
+		final Map<String,DeliveryService> deliveryServiceMap = new HashMap<>();
 
-		for (final String dsId : JSONObject.getNames(deliveryServices)) {
-			final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
-			final JSONArray matchsets = dsJo.getJSONArray("matchsets");
-			final DeliveryService ds = new DeliveryService(dsId, dsJo);
+		for (final String deliveryServiceId : JSONObject.getNames(deliveryServices)) {
+			final JSONObject deliveryServicesJson = deliveryServices.getJSONObject(deliveryServiceId);
+			final JSONArray matchsets = deliveryServicesJson.getJSONArray("matchsets");
+			final DeliveryService deliveryService = new DeliveryService(deliveryServiceId, deliveryServicesJson);
 			boolean isDns = false;
-			dsMap.put(dsId, ds);
+			deliveryServiceMap.put(deliveryServiceId, deliveryService);
 
 			for (int i = 0; i < matchsets.length(); i++) {
 				final JSONObject matchset = matchsets.getJSONObject(i);
 				final String protocol = matchset.getString("protocol");
 
-				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(ds);
+				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(deliveryService);
 
 				if ("HTTP".equals(protocol)) {
 					httpServiceMatchers.add(deliveryServiceMatcher);
@@ -327,13 +343,13 @@ public class ConfigHandler {
 				}
 			}
 
-			ds.setDns(isDns);
+			deliveryService.setDns(isDns);
 		}
 
-		cacheRegister.setDeliveryServiceMap(dsMap);
+		cacheRegister.setDeliveryServiceMap(deliveryServiceMap);
 		cacheRegister.setDnsDeliveryServiceMatchers(dnsServiceMatchers);
 		cacheRegister.setHttpDeliveryServiceMatchers(httpServiceMatchers);
-		initGeoFailedRedirect(dsMap, cacheRegister);
+		initGeoFailedRedirect(deliveryServiceMap, cacheRegister);
 	}
 
 	private void initGeoFailedRedirect(final Map<String, DeliveryService> dsMap, final CacheRegister cacheRegister) {
@@ -564,5 +580,13 @@ public class ConfigHandler {
 
 	public void setSteeringWatcher(final SteeringWatcher steeringWatcher) {
 		this.steeringWatcher = steeringWatcher;
+	}
+
+	public void setCertificateChecker(final CertificateChecker certificateChecker) {
+		this.certificateChecker = certificateChecker;
+	}
+
+	public void setCertificatesPoller(final CertificatesPoller certificatesPoller) {
+		this.certificatesPoller = certificatesPoller;
 	}
 }
