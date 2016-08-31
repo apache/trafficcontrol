@@ -254,7 +254,7 @@ sub ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 ) {
+				elsif ( $protocol == 1 || $protocol == 3) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}

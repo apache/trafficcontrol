@@ -99,7 +99,7 @@ sub get_example_urls {
 	elsif ( $protocol eq '1' ) {
 		$scheme = 'https';
 	}
-	elsif ( $protocol eq '2' ) {
+	elsif ( $protocol eq '2' || $protocol eq '3' ) {
 		$scheme  = 'http';
 		$scheme2 = 'https';
 	}
