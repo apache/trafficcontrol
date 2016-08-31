@@ -38,13 +38,13 @@ public class CertificateData {
 		this.hostname = hostname;
 	}
 
-	@SuppressWarnings("PMD")
+	@SuppressWarnings("PMD.IfStmtsMustUseBraces")
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		CertificateData that = (CertificateData) o;
+		final CertificateData that = (CertificateData) o;
 
 		if (deliveryservice != null ? !deliveryservice.equals(that.deliveryservice) : that.deliveryservice != null)
 			return false;
