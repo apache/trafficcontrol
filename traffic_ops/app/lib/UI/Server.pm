@@ -1031,7 +1031,7 @@ sub postupdatequeue {
 		}
 	}
 
-	return;
+	$self->redirect_to('/tools/queue_updates');
 }
 
 1;
