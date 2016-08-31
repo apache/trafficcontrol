@@ -31,6 +31,9 @@ my $date           = `/bin/date`;
 chomp($date);
 print "$date\n";
 
+# supported redhat/centos releases
+my %supported_el_release = ( "EL6" => 1, "EL7" => 1);
+
 my $dispersion = 300;
 my $retries = 5;
 my $wait_for_parents = 1;
@@ -245,8 +248,12 @@ if ( $script_mode != $REPORT ) {
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 
 sub os_version {
-        my @release = split(/\./, `/bin/uname -r`);
-        return uc $release[3];
+  my $release = "UNKNOWN";
+  if (`uname -r` =~ m/.+(el\d)\.x86_64/)  {
+    $release = uc $1;
+  }
+  exists $supported_el_release{$release} ? return $release
+      : die("unsupported el_version: $release");
 }
 
 sub usage {
