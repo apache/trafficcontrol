@@ -32,8 +32,9 @@ func NewStats() Stats {
 }
 
 func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
-	for ds, istat := range dsStats.DeliveryService {
-		istat.Common.CachesConfigured.Value = int64(len(dsServers[string(ds)]))
+	for ds, stat := range dsStats.DeliveryService {
+		stat.Common.CachesConfigured.Value = int64(len(dsServers[string(ds)]))
+		dsStats.DeliveryService[ds] = stat // TODO consider changing dsStats.DeliveryService[ds] to a pointer so this kind of thing isn't necessary; possibly more performant, as well
 	}
 	return dsStats
 }
