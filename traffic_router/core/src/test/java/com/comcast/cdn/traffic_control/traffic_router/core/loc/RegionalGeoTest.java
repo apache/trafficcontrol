@@ -38,7 +38,7 @@ public class RegionalGeoTest {
     @Before
     public void setUp() throws Exception {
         final File dbFile = new File("src/test/resources/regional_geoblock.json");
-        RegionalGeo.parseConfigFile(dbFile);
+        RegionalGeo.parseConfigFile(dbFile, false);
     }
 
     @Test

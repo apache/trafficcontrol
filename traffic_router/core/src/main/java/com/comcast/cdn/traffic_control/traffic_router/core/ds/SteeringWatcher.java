@@ -64,6 +64,17 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 	}
 
 	@Override
+	protected boolean verifyData(final String data) {
+		try {
+			return steeringRegistry.verify(data);
+		} catch (Exception e) {
+			LOGGER.warn("Failed to build steering data while verifying");
+		}
+
+		return false;
+	}
+
+	@Override
 	public String getWatcherConfigPrefix() {
 		return "steeringmapping";
 	}
