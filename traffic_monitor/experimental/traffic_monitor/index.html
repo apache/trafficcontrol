@@ -239,7 +239,20 @@
 			 })
 		 }
 
+		 var millisecondsInSecond = 1000;
+
+		 var previousDeliveryserviceStats2xx = new Object();
+		 var previousDeliveryserviceStats3xx = new Object();
+		 var previousDeliveryserviceStats4xx = new Object();
+		 var previousDeliveryserviceStats5xx = new Object();
+		 var previousDeliveryserviceStatsTime2xx = new Object();
+		 var previousDeliveryserviceStatsTime3xx = new Object();
+		 var previousDeliveryserviceStatsTime4xx = new Object();
+		 var previousDeliveryserviceStatsTime5xx = new Object();
+
 		 function getDsStats() {
+			 var now = Date.now();
+
 			 /// \todo add /api/delivery-service-stats which only returns the data needed by the UI, for efficiency
 			 ajax("/publish/DsStats", function(r) {
 				 var j = JSON.parse(r);
@@ -273,18 +286,53 @@
 					 if (jds[deliveryService].hasOwnProperty("total.kbps")) {
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = jds[deliveryService]['total.kbps'][0].value;
 					 }
+
 					 if (jds[deliveryService].hasOwnProperty("total.status_2xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = jds[deliveryService]['total.status_2xx'][0].value;
+						 var new2xx = jds[deliveryService]['total.status_2xx'][0].value;
+						 if (previousDeliveryserviceStats2xx.hasOwnProperty(deliveryService) && previousDeliveryserviceStats2xx[deliveryService] != new2xx) {
+							 //							 alert("new2xx " + new2xx + " previousDeliveryserviceStats2xx " + previousDeliveryserviceStats2xx[deliveryService] + " now " + now + " previousDeliveryserviceStatsTime " +  previousDeliveryserviceStatsTime2xx[deliveryService] + " statdiff " + (new2xx - previousDeliveryserviceStats2xx[deliveryService]) + " timediff " + ((now - previousDeliveryserviceStatsTime2xx[deliveryService]) / millisecondsInSecond) );
+							 var perSec = (new2xx - previousDeliveryserviceStats2xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime2xx[deliveryService]) / millisecondsInSecond);
+							 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = perSec.toFixed(2);
+						 }
+						 if (previousDeliveryserviceStats2xx[deliveryService] != new2xx) {
+						 	previousDeliveryserviceStatsTime2xx[deliveryService] = now;
+						 }
+						 previousDeliveryserviceStats2xx[deliveryService] = new2xx;
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.status_3xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = jds[deliveryService]['total.status_3xx'][0].value;
+						 var new3xx = jds[deliveryService]['total.status_3xx'][0].value;
+						 if (previousDeliveryserviceStats3xx.hasOwnProperty(deliveryService) && previousDeliveryserviceStats3xx[deliveryService] != new3xx) {
+							 var perSec = (new3xx - previousDeliveryserviceStats3xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime3xx[deliveryService]) / millisecondsInSecond);
+							 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = perSec.toFixed(2);
+						 }
+						 if (previousDeliveryserviceStats3xx[deliveryService] != new3xx) {
+						 	previousDeliveryserviceStatsTime3xx[deliveryService] = now;
+						 }
+						 previousDeliveryserviceStats3xx[deliveryService] = new3xx;
 					 }
-					 if (jds[deliveryService].hasOwnProperty("total.status_4xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = jds[deliveryService]['total.status_4xx'][0].value;
+					 if (jds[deliveryService].hasOwnProperty("total.status_4xx") && previousDeliveryserviceStats4xx[deliveryService] != new4xx) {
+						 var new4xx = jds[deliveryService]['total.status_4xx'][0].value;
+						 if (previousDeliveryserviceStats4xx.hasOwnProperty(deliveryService)) {
+							 var perSec = (new4xx - previousDeliveryserviceStats4xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime4xx[deliveryService]) / millisecondsInSecond);
+							 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = perSec.toFixed(2);
+						 }
+						 if (previousDeliveryserviceStats4xx[deliveryService] != new4xx) {
+						 	previousDeliveryserviceStatsTime4xx[deliveryService] = now;
+						 }
+						 previousDeliveryserviceStats4xx[deliveryService] = new4xx;
 					 }
-					 if (jds[deliveryService].hasOwnProperty("total.status_5xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = jds[deliveryService]['total.status_5xx'][0].value;
+					 if (jds[deliveryService].hasOwnProperty("total.status_5xx") && previousDeliveryserviceStats5xx[deliveryService] != new5xx) {
+						 var new5xx = jds[deliveryService]['total.status_5xx'][0].value;
+						 if (previousDeliveryserviceStats5xx.hasOwnProperty(deliveryService)) {
+							 var perSec = (new5xx - previousDeliveryserviceStats5xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime5xx[deliveryService]) / millisecondsInSecond);
+							 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = perSec.toFixed(2);
+						 }
+						 if (previousDeliveryserviceStats5xx[deliveryService] != new5xx) {
+						 	previousDeliveryserviceStatsTime5xx[deliveryService] = now;
+						 }
+						 previousDeliveryserviceStats5xx[deliveryService] = new5xx;
 					 }
+
 					 // \todo implement disabled locations
 				 }
 			 })
