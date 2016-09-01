@@ -1346,7 +1346,7 @@ sub ssl_keys {
 	my $cdn_name = $self->param('name');
 	my $keys;
 	#get "latest" ssl records for all DSs in the CDN
-	my $response_container = $self->riak_search( "sslkeys", "q=cdn:$cdn_name&fq=_yz_rk:*latest" );
+	my $response_container = $self->riak_search( "sslkeys", "q=cdn:$cdn_name&fq=_yz_rk:*latest&start=0&rows=1000" );
 	my $response = $response_container->{'response'};
 	if ( $response->is_success() ) {
 		my $content = decode_json($response->content)->{response}->{docs};
@@ -1359,7 +1359,8 @@ sub ssl_keys {
 				certificate => {
 					crt => $record->{'certificate.crt'},
 					key => $record->{'certificate.key'},
-				}
+				},
+				hostname => $record->{hostname}
 			});
 		}
 		return $self->success($keys);

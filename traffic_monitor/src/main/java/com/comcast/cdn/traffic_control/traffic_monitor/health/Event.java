@@ -62,7 +62,7 @@ public class Event extends JSONObject implements Serializable {
 		final long currentTimeMillis = System.currentTimeMillis();
 		final String timeString = String.format("%d.%03d", currentTimeMillis / 1000, currentTimeMillis % 1000);
 
-		EVENT_LOGGER.info(String.format("%s name=\"%s\", type=%s, available=%s, msg=\"%s\"", timeString , name, type, String.valueOf(isAvailable), message));
+		EVENT_LOGGER.info(String.format("%s host=\"%s\", type=%s, available=%s, msg=\"%s\"", timeString , name, type, String.valueOf(isAvailable), message));
 
 		final Event ret = new Event(name, type, isAvailable, message);
 		final int eventLogCount = ConfigHandler.getInstance().getConfig().getEventLogCount();

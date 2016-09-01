@@ -13,6 +13,7 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
@@ -21,6 +22,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +33,7 @@ public class KeyStoreHelper {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyStoreHelper.class);
 	public static final String KEYSTORE_PROPERTIES_PATH = "/conf/keystore.properties";
 	public static final String KEYPASS_PROPERTY = "keypass";
-	private KeyStore keyStore;
+	private volatile KeyStore keyStore;
 	private char[] keyPass;
 	private long lastLoaded;
 	private final Map<String, PrivateKey> privateKeyMap = new HashMap<>();
@@ -82,6 +84,13 @@ public class KeyStoreHelper {
 			for (int i = 0; i < encodedCertificateChain.length; i++) {
 				x509Chain[i] = (X509Certificate) CertificateFactory.getInstance("X.509")
 					.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(encodedCertificateChain[i])));
+				final Date notAfter = x509Chain[i].getNotAfter();
+				final Date notBefore = x509Chain[i].getNotBefore();
+				final Principal subject = x509Chain[i].getSubjectDN();
+				final Principal issuer = x509Chain[i].getIssuerDN();
+				log.info("Import [" + alias + "][" + i + "] not before " + notBefore + " and not after " + notAfter);
+				log.info("Import [" + alias + "][" + i + "] subject " + subject);
+				log.info("Import [" + alias + "][" + i + "] issuer " + issuer);
 			}
 
 			byte[] keyBytes = Base64.getDecoder().decode(encodedKey.getBytes());
@@ -99,13 +108,12 @@ public class KeyStoreHelper {
 	}
 
 	public boolean importCertificateChain(final String alias, final PrivateKey privateKey, final Certificate[] certificateChain) {
-		try (final OutputStream outputStream = Files.newOutputStream(Paths.get(getKeystorePath()))) {
+		try {
 			keyStore.setKeyEntry(alias, privateKey, keyPass, certificateChain);
-			keyStore.store(outputStream, keyPass);
 			privateKeyMap.put(alias, privateKey);
 			log.info("Imported certificate chain into keystore for " + alias);
 		} catch (Exception e) {
-			log.error("Failed importing certificate chain with alias '" + alias + "' to keystore at " + getKeystorePath() + " : " + e.getMessage());
+			log.error("Failed importing certificate chain with alias '" + alias + "' to keystore : " + e.getMessage());
 			return false;
 		}
 

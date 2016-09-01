@@ -62,6 +62,18 @@ public class SteeringRegistry {
 		}
 	}
 
+	public boolean verify(final String json) {
+		try {
+			final ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+			mapper.readValue(json, new TypeReference<HashMap<String, List<Steering>>>() { });
+		} catch (IOException e) {
+			LOGGER.error("Failed consuming Json data to populate steering registry while verifying:" + e.getMessage());
+			return false;
+		}
+
+		return true;
+	}
+
 	public boolean has(final String steeringId) {
 		return registry.containsKey(steeringId);
 	}

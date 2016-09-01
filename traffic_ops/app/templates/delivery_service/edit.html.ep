@@ -425,18 +425,16 @@ function setup_form(speed) {
 		$('#regexp_selector :nth-child(1)').prop('selected', true); // set back to 0 index
 	}
 
-	// hide/show 'Manage SSL Keys' button
-	 function show_mng_ssl_button(speed) {
-      var ssl_selected = $('#protocol :selected').text();
-      if (ssl_selected.match(/^https/)) {
-        $('#addkeys').show(speed);
-      }
-      else if (ssl_selected.match(/http and https/)) {
-        $('#addkeys').show(speed);
-      }
-      else if (ssl_selected.match(/^http/)) {
-        $('#addkeys').hide(speed);
-      }
+    // hide/show 'Manage SSL Keys' button
+     function show_mng_ssl_button(speed) {
+        var ssl_selected = $('#protocol :selected').text();
+
+        if (ssl_selected.match(/https/)) {
+            $('#addkeys').show(speed);
+        }
+        else {
+            $('#addkeys').hide(speed);
+        }
     }
 
 	// hide/show 'Generate URL Sig Keys'

@@ -106,6 +106,9 @@
 		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
+
+	<bean name="certificateChecker" class="com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker"/>
+
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
@@ -116,6 +119,8 @@
 		<property name="federationsWatcher" ref="federationsWatcher" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
 		<property name="steeringWatcher" ref="steeringWatcher" />
+		<property name="certificatesPoller" ref="certificatesPoller"/>
+		<property name="certificateChecker" ref="certificateChecker" />
 	</bean>
 
 	<bean id="trafficOpsUtils" class="com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils">

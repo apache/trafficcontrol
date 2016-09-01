@@ -286,9 +286,10 @@ sub delete {
 
 sub check_server_input_cgi {
 	my $self         = shift;
+	my $id         	 = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
@@ -299,13 +300,14 @@ sub check_server_input_cgi {
 
 	$paramHashRef = &trim_whitespace($paramHashRef);
 
-	$err = &check_server_input( $self, $paramHashRef );
+	$err = &check_server_input( $self, $paramHashRef, $id );
 	return $err;
 }
 
 sub check_server_input {
 	my $self              = shift;
 	my $paramHashRef      = shift;
+	my $id                = shift;
 	my $sep               = "__NEWLINE__";    # the line separator sub that with \n in the .ep javascript
 	my $err               = '';
 	my $errorCSVLineDelim = '';
@@ -321,7 +323,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} )
@@ -359,7 +361,14 @@ sub check_server_input {
 		}
 	}
 
-	if ( !&is_netmask( $paramHashRef->{'ip_netmask'} ) ) {
+	my $ip_used =
+		$self->db->resultset('Server')
+			->search( { -and => [ ip_address => $paramHashRef->{'ip_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+	if ( $ip_used ) {
+		$err .= $paramHashRef->{'ip_address'} . " is already being used by a server with the same profile" . $sep;
+	}
+
+	if ( defined( $paramHashRef->{'ip_netmask'} ) && $paramHashRef->{'ip_netmask'} ne "" && !&is_netmask( $paramHashRef->{'ip_netmask'} ) ) {
 		$err .= $paramHashRef->{'ip_netmask'} . " is not a valid netmask (I think... ;-)" . $sep;
 	}
 	if ( $paramHashRef->{'ilo_ip_netmask'} ne ""
@@ -374,8 +383,17 @@ sub check_server_input {
 	}
 	my $ipstr1 = $paramHashRef->{'ip_address'} . "/" . $paramHashRef->{'ip_netmask'};
 	my $ipstr2 = $paramHashRef->{'ip_gateway'} . "/" . $paramHashRef->{'ip_netmask'};
-	if ( !&in_same_net( $ipstr1, $ipstr2 ) ) {
+	if ( defined( $paramHashRef->{'ip_netmask'} ) && $paramHashRef->{'ip_netmask'} ne "" && !&in_same_net( $ipstr1, $ipstr2 ) ) {
 		$err .= $paramHashRef->{'ip_address'} . " and " . $paramHashRef->{'ip_gateway'} . " are not in same network" . $sep;
+	}
+
+	if ( defined( $paramHashRef->{'ip6_address'} ) && $paramHashRef->{'ip6_address'} ne "" ) {
+		my $ip6_used =
+			$self->db->resultset('Server')
+				->search( { -and => [ ip6_address => $paramHashRef->{'ip6_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+		if ( $ip6_used ) {
+			$err .= $paramHashRef->{'ip6_address'} . " is already being used by a server with the same profile" . $sep;
+		}
 	}
 
 	if (
@@ -442,11 +460,13 @@ sub update {
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
 		$paramHashRef = &cgi_params_to_param_hash_ref($self);
 	}
+
 	my $id = $paramHashRef->{'id'};
 
 	$paramHashRef = &trim_whitespace($paramHashRef);
 
-	my $err = &check_server_input_cgi($self);
+	my $err = &check_server_input_cgi($self, $id);
+
 	if ( defined($err) && length($err) > 0 ) {
 		$self->flash( alertmsg => "update():  " . $err );
 	}
@@ -600,7 +620,7 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach my $requiredParam (
-		qw/host_name domain_name ip_address ip_netmask ip_gateway interface_mtu interface_name cdn cachegroup type profile phys_location/)
+		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
@@ -1011,7 +1031,7 @@ sub postupdatequeue {
 		}
 	}
 
-	return;
+	$self->redirect_to('/tools/queue_updates');
 }
 
 1;

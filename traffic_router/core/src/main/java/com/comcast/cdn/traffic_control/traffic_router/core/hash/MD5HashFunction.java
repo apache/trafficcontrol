@@ -20,7 +20,6 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,21 +28,27 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MD5HashFunction {
-    private static final Logger LOGGER = Logger.getLogger(MD5HashFunction.class);
-
-    private MessageDigest md5;
-
-    public MD5HashFunction() {
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-        } catch (final NoSuchAlgorithmException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-    }
 
     public double hash(final String value) {
-        final BigInteger bi = new BigInteger(1, md5.digest(value != null ? value.getBytes() : "".getBytes()));
-        return bi.doubleValue();
+        final byte[] valueBytes = value != null ? value.getBytes() : "".getBytes();
+        return new BigInteger(1, md5Digest().digest(valueBytes)).doubleValue();
     }
 
+    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
+    MessageDigest md5Digest() {
+        // https://docs.oracle.com/javase/8/docs/api/java/security/MessageDigest.html
+
+        // Every implementation of the Java platform is required to support the following standard MessageDigest algorithms:
+        //
+        // MD5
+        // SHA-1
+        // SHA-256
+
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            // This should NEVER happen
+            throw new RuntimeException("Failed to get MD5 message digest, something's very wrong!", e);
+        }
+    }
 }

@@ -29,6 +29,7 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 		tmpSuffix = ".json";
 	}
 
+	@Override
 	public boolean loadDatabase() throws IOException, JSONException {
 		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
@@ -36,7 +37,16 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 			return false;
 		}
 
-		NetworkNode.generateTree(existingDB);
-		return true;
+		return NetworkNode.generateTree(existingDB, false) != null;
 	}
+
+	@Override
+	public boolean verifyDatabase(final File dbFile) throws IOException, JSONException {
+		if (!dbFile.exists() || !dbFile.canRead()) {
+			return false;
+		}
+
+		return NetworkNode.generateTree(dbFile, true) != null;
+	}
+
 }

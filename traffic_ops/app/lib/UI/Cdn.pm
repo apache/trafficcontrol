@@ -428,7 +428,7 @@ sub adeliveryservice {
     my $self       = shift;
     my %data       = ( "aaData" => [] );
     my %geo_limits = ( 0 => "none", 1 => "CZF", 2 => "CZF + Countries" );
-    my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https" );
+    my %protocol   = ( 0 => "http", 1 => "https", 2 => "http/https", 3 => "http to https" );
 
     my $rs = $self->db->resultset('Deliveryservice')->search(
         {},
