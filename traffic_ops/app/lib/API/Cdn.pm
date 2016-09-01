@@ -1359,7 +1359,7 @@ sub ssl_keys {
 				certificate => {
 					crt => $record->{'certificate.crt'},
 					key => $record->{'certificate.key'},
-				}
+				},
 				hostname => $record->{hostname}
 			});
 		}
