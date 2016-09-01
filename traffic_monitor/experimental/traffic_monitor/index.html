@@ -56,10 +56,10 @@
 			 padding:5px 50px 5px 5px
 		 }
 
-		 tr:nth-child(even) {
+		 tr.stripes:nth-child(even) {
 			 background: #ffd699
 		 }
-		 tr:nth-child(odd) {
+		 tr.stripes:nth-child(odd) {
 			 background: #fff
 		 }
 
@@ -102,6 +102,9 @@
 			 padding-top: 10px;
 		 }
 
+		 .unavailable {
+			 background-color: #f00;
+		 }
 		</style>
 		<script>
 		 function init() {
@@ -188,6 +191,7 @@
 					 }
 					 lastEvent = event.index
 					 var row = document.getElementById("event-log").insertRow(1); //document.createElement("tr");
+					 row.classList.add("stripes");
 					 row.insertCell(0).textContent = event.name;
 					 row.insertCell(1).textContent = event.type;
 					 row.insertCell(2).textContent = event.isAvailable;
@@ -205,6 +209,7 @@
 					 var server = servers[i];
 					 if (!document.getElementById("cache-states-" + server)) {
 						 var row = document.getElementById("cache-states").insertRow(1); //document.createElement("tr");
+						 row.classList.add("stripes");
 						 row.id = "cache-states-" + server
 						 row.insertCell(0).id = row.id + "-server";
 						 row.insertCell(1).id = row.id + "-type";
@@ -222,6 +227,14 @@
 					 }
 					 if (jdata[server].hasOwnProperty("status")) {
 						 document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
+						 var row = document.getElementById("cache-states-" + server);
+						 if (jdata[server].status.indexOf(" available") == -1) {
+							 row.classList.add("unavailable");
+							 row.classList.remove("stripes");
+						 } else {
+							 row.classList.add("stripe");
+							 row.classList.remove("unavailable");
+						 }
 					 }
 					 if (jdata[server].hasOwnProperty("load_average")) {
 						 document.getElementById("cache-states-" + server + "-load-average").textContent = jdata[server].load_average;
@@ -334,6 +347,15 @@
 					 }
 
 					 // \todo implement disabled locations
+
+					 var row = document.getElementById("deliveryservice-stats-" + deliveryService);
+					 if (jds[deliveryService]["isAvailable"][0].value) {
+						 row.classList.add("stripes");
+						 row.classList.remove("unavailable");
+					 } else {
+						 row.classList.add("unavailable");
+						 row.classList.remove("stripes");
+					 }
 				 }
 			 })
 		 }
