@@ -214,19 +214,24 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 				stat.Type[cacheType] = cacheStats
 			}
 		}
-		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 {
-			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
+
+		totalChanged := lastKbpsStat.Total.Bytes != stat.Total.OutBytes.Value
+		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
+			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds() / BytesPerKbps
 			if stat.Total.Kbps.Value < 0 {
 				stat.Total.Kbps.Value = 0
 				fmt.Printf("ERROR addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.Total.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
 			}
-
 		} else {
 			stat.Total.Kbps.Value = lastKbpsStat.Total.Kbps
 		}
-		lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.Total.OutBytes.Value, Kbps: stat.Total.Kbps.Value}
+
+		if totalChanged {
+			lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.Total.OutBytes.Value, Kbps: stat.Total.Kbps.Value}
+		}
 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
+		dsStats.DeliveryService[dsName] = stat
 	}
 
 	for cacheName, results := range statHistory {
