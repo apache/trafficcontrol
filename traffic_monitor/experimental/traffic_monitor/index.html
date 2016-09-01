@@ -29,11 +29,11 @@
 		 }
 
 		 ul.tab li a:hover {
-			 background-color: #ffd480;
+			 background-color: #cfd;
 		 }
 
 		 .tab-header-selected {
-			 background-color: #ffa31a;
+			 background-color: #adb;
 		 }
 
 		 .tabcontent {
@@ -57,7 +57,7 @@
 		 }
 
 		 tr.stripes:nth-child(even) {
-			 background: #ffd699
+			 background: #dfe
 		 }
 		 tr.stripes:nth-child(odd) {
 			 background: #fff
@@ -73,7 +73,7 @@
 
 		 #top-bar {
 			 border-collapse: collapse;
-			 border-color: #ffa31a;
+			 border-color: #adb;;
 			 border-width: 0px 0px 1px 0px;
 			 padding-bottom: 10px;
 		 }
@@ -102,8 +102,11 @@
 			 padding-top: 10px;
 		 }
 
-		 .unavailable {
+		 .error {
 			 background-color: #f00;
+		 }
+		 .warning {
+			 background-color: #f80;
 		 }
 		</style>
 		<script>
@@ -228,12 +231,18 @@
 					 if (jdata[server].hasOwnProperty("status")) {
 						 document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
 						 var row = document.getElementById("cache-states-" + server);
-						 if (jdata[server].status.indexOf(" available") == -1) {
-							 row.classList.add("unavailable");
+						 if (jdata[server].status.indexOf("ADMIN_DOWN") != -1) {
+							 row.classList.add("warning");
+							 row.classList.remove("error");
+							 row.classList.remove("stripes");
+						 } else if (jdata[server].status.indexOf(" available") == -1) {
+							 row.classList.add("error");
+							 row.classList.remove("warning");
 							 row.classList.remove("stripes");
 						 } else {
 							 row.classList.add("stripe");
-							 row.classList.remove("unavailable");
+							 row.classList.remove("warning");
+							 row.classList.remove("error");
 						 }
 					 }
 					 if (jdata[server].hasOwnProperty("load_average")) {
