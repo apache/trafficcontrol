@@ -109,7 +109,7 @@ public class TarExtractorTest {
 
 		InputStream inputStream1 = mock(InputStream.class);
 		TarExtractor tarExtractor = new TarExtractor();
-		assertThat(tarExtractor.extractTo(directory, inputStream1), equalTo(directory));
+		assertThat(tarExtractor.extractTo(directory, inputStream1), equalTo(true));
 
 		verify(fileInTar).createNewFile();
 		verify(fileOutputStream).write(any(byte[].class), eq(0), eq(654321));
