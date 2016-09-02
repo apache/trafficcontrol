@@ -111,15 +111,8 @@ public class Fetcher {
 		if (method.equals(POST_STR) && data != null) {
 			http.setDoOutput(true); // Triggers POST.
 
-			OutputStream output = null;
-
-			try {
-				output = http.getOutputStream();
+			try (final OutputStream output = http.getOutputStream()) {
 				output.write(data.getBytes(UTF8_STR));
-			} finally {
-				if (output != null) {
-					output.close(); // will throw IOException if there's an issue
-				}
 			}
 		}
 
@@ -151,15 +144,14 @@ public class Fetcher {
 			}
 
 			final StringBuilder sb = new StringBuilder();
-			final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-			String input;
+			try (final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+				String input;
 
-			while ((input = in.readLine()) != null) {
-				sb.append(input);
+				while ((input = in.readLine()) != null) {
+					sb.append(input);
+				}
 			}
-
-			in.close();
 
 			return sb.toString();
 		} finally {
@@ -182,15 +174,13 @@ public class Fetcher {
 				return status;
 			}
 
-			final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			try (final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+				String input;
 
-			String input;
-
-			while ((input = in.readLine()) != null) {
-				stringBuilder.append(input);
+				while ((input = in.readLine()) != null) {
+					stringBuilder.append(input);
+				}
 			}
-
-			in.close();
 
 			return status;
 		} finally {

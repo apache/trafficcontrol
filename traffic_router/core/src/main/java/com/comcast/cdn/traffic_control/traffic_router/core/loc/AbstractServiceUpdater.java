@@ -263,23 +263,18 @@ public abstract class AbstractServiceUpdater {
 		return true;
 	}
 
+	private String fileMd5(final File file) throws IOException {
+		try (FileInputStream stream = new FileInputStream(file)) {
+			return md5Hex(stream);
+		}
+	}
+
 	private boolean compareFiles(final File a, final File b) throws IOException {
 		if (a.length() != b.length()) {
 			return false;
 		}
 
-		FileInputStream fis = new FileInputStream(a);
-		final String md5a = md5Hex(fis);
-		fis.close();
-		fis = new FileInputStream(b);
-		final String md5b = md5Hex(fis);
-		fis.close();
-
-		if (md5a.equals(md5b)) {
-			return true;
-		}
-
-		return false;
+		return fileMd5(a).equals(fileMd5(b));
 	}
 
 	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {

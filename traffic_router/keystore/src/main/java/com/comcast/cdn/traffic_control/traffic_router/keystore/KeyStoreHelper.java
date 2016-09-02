@@ -17,6 +17,7 @@ import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -77,13 +78,20 @@ public class KeyStoreHelper {
 		return keyStore;
 	}
 
+	X509Certificate toCertificate(final String encodedCertificate) throws IOException, CertificateException {
+		final byte[] encodedBytes = Base64.getDecoder().decode(encodedCertificate);
+
+		try (ByteArrayInputStream stream = new ByteArrayInputStream(encodedBytes)) {
+			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(stream);
+		}
+	}
+
 	public boolean importCertificateChain(final String alias, final String encodedKey, final String[] encodedCertificateChain) {
 		try {
 			final X509Certificate x509Chain[] = new X509Certificate[encodedCertificateChain.length];
 
 			for (int i = 0; i < encodedCertificateChain.length; i++) {
-				x509Chain[i] = (X509Certificate) CertificateFactory.getInstance("X.509")
-					.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(encodedCertificateChain[i])));
+				x509Chain[i] = toCertificate(encodedCertificateChain[i]);
 				final Date notAfter = x509Chain[i].getNotAfter();
 				final Date notBefore = x509Chain[i].getNotBefore();
 				final Principal subject = x509Chain[i].getSubjectDN();

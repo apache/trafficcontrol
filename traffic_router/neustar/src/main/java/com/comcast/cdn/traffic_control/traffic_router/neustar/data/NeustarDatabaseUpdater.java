@@ -108,9 +108,11 @@ public class NeustarDatabaseUpdater {
 				return false;
 			}
 
-			if (!tarExtractor.extractTo(tmpDir, new GZIPInputStream(response.getEntity().getContent()))) {
-				LOGGER.error("Failed to decompress remote content from " + neustarDataUrl);
-				return false;
+			try (GZIPInputStream gzipStream = new GZIPInputStream(response.getEntity().getContent())) {
+				if (!tarExtractor.extractTo(tmpDir, gzipStream)) {
+					LOGGER.error("Failed to decompress remote content from " + neustarDataUrl);
+					return false;
+				}
 			}
 
 			LOGGER.info("Replacing neustar files in " + neustarDatabaseDirectory.getAbsolutePath() + " with those in " + tmpDir.getAbsolutePath());
