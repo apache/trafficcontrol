@@ -1,13 +1,13 @@
 package manager
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
@@ -90,7 +90,7 @@ func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates p
 			for {
 				select {
 				case <-tick:
-					fmt.Printf("WARN StatHistoryManager flushing queued results\n")
+					log.Warnf("StatHistoryManager flushing queued results\n")
 					processStatResults(results, statHistory, combinedStates.Get(), lastKbpsStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations)
 					break innerLoop
 				default:
@@ -115,18 +115,18 @@ func processStatResults(results []cache.Result, statHistory StatHistoryThreadsaf
 	}
 
 	for _, result := range results {
-		fmt.Printf("DEBUG poll %v %v CreateStats start\n", result.PollID, time.Now())
+		log.Debugf("poll %v %v CreateStats start\n", result.PollID, time.Now())
 	}
 
 	newDsStats, newLastKbpsStats, err := ds.CreateStats(statHistory.Get(), toData, combinedStates, lastKbpsStats.Get(), time.Now())
 
 	for _, result := range results {
-		fmt.Printf("DEBUG poll %v %v CreateStats end\n", result.PollID, time.Now())
+		log.Debugf("poll %v %v CreateStats end\n", result.PollID, time.Now())
 	}
 
 	if err != nil {
 		errorCount.Inc()
-		fmt.Printf("ERROR getting deliveryservice: %v\n", err)
+		log.Errorf("getting deliveryservice: %v\n", err)
 	} else {
 		dsStats.Set(newDsStats)
 		lastKbpsStats.Set(newLastKbpsStats)
@@ -140,7 +140,7 @@ func processStatResults(results []cache.Result, statHistory StatHistoryThreadsaf
 		}
 		lastStatEndTimes[enum.CacheName(result.Id)] = endTime
 
-		// fmt.Printf("DEBUG poll %v %v statfinish\n", result.PollID, endTime)
+		// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
 		result.PollFinished <- result.PollID
 	}
 }

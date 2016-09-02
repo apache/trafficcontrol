@@ -5,6 +5,7 @@ import (
 	"fmt"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
@@ -112,7 +113,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 }
 
 func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
-	fmt.Printf("DEBUG poll %v %v handle start\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle start\n", pollId, time.Now())
 	result := Result{
 		Id:           id,
 		Available:    false,
@@ -123,14 +124,14 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	}
 
 	if err != nil {
-		fmt.Printf("ERROR %v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
+		log.Errorf("%v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
 		result.Errors = append(result.Errors, err)
 		handler.ResultChannel <- result
 		return
 	}
 
 	if r == nil {
-		fmt.Printf("ERROR %v handle reader nil\n", id)
+		log.Errorf("%v handle reader nil\n", id)
 		result.Errors = append(result.Errors, fmt.Errorf("handler got nil reader"))
 		handler.ResultChannel <- result
 		return
@@ -139,33 +140,33 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	result.PrecomputedData.Reporting = true
 
 	if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
-		fmt.Printf("ERROR %s procnetdev decode error '%v'\n", id, err)
+		log.Errorf("%s procnetdev decode error '%v'\n", id, err)
 		result.Errors = append(result.Errors, err)
 		handler.ResultChannel <- result
 		return
 	}
 
 	if result.Astats.System.ProcNetDev == "" {
-		fmt.Printf("WARNING addkbps %s procnetdev empty\n", id)
+		log.Warnf("addkbps %s procnetdev empty\n", id)
 	}
 
-	fmt.Printf("DEBUG poll %v %v handle decode end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
 
 	if err != nil {
 		result.Errors = append(result.Errors, err)
-		fmt.Printf("ERROR addkbps handle %s error '%v'\n", id, err)
+		log.Errorf("addkbps handle %s error '%v'\n", id, err)
 	} else {
 		result.Available = true
 	}
 
 	if handler.Precompute() {
-		fmt.Printf("DEBUG poll %v %v handle precompute start\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute start\n", pollId, time.Now())
 		result = handler.precompute(result)
-		fmt.Printf("DEBUG poll %v %v handle precompute end\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute end\n", pollId, time.Now())
 	}
-	fmt.Printf("DEBUG poll %v %v handle write start\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle write start\n", pollId, time.Now())
 	handler.ResultChannel <- result
-	fmt.Printf("DEBUG poll %v %v handle end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle end\n", pollId, time.Now())
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
@@ -198,14 +199,14 @@ func (handler Handler) precompute(result Result) Result {
 	var err error
 	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName); err != nil {
 		result.PrecomputedData.OutBytes = 0
-		fmt.Printf("ERROR addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
+		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
 
 	for stat, value := range result.Astats.Ats {
 		var err error
 		stats, err = processStat(result.Id, stats, todata, stat, value)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			fmt.Printf("ERROR precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
+			log.Errorf("precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}
@@ -322,7 +323,7 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		}
 		stat.OutBytes.Value += int64(v)
 	case "is_available":
-		fmt.Println("DEBUGa got is_available")
+		log.Debugln("got is_available")
 		v, ok := val.(bool)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)

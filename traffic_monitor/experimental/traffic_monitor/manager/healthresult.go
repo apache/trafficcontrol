@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
@@ -145,7 +145,7 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 		for {
 			select {
 			case <-tick:
-				fmt.Printf("WARN Health Result Manager flushing queued results\n")
+				log.Warnf("Health Result Manager flushing queued results\n")
 				processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, lastHealthEndTimes, healthHistory, results)
 				break innerLoop
 			default:
@@ -168,7 +168,7 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 	toDataCopy := toData.Get()               // create a copy, so the same data used for all processing of this cache health result
 	monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
 	for _, healthResult := range results {
-		fmt.Printf("DEBUG poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
+		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
 		healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
@@ -182,15 +182,15 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-			fmt.Println("Changing state for", healthResult.Id, " was:", prevResult.Available, " is now:", isAvailable, " because:", whyAvailable, " errors:", healthResult.Errors)
+			log.Infof("Changing state for %s was: %t now: %t because %s errors: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Errors)
 			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable})
 		}
 
 		localCacheStatus.Set(enum.CacheName(healthResult.Id), CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status}) // TODO move within localStates
 		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
-		fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
+		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
 		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
-		fmt.Printf("DEBUG poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
+		log.Debugf("poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
 	}
 	// TODO determine if we should combineCrStates() here
 
@@ -201,7 +201,7 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 		}
 		lastHealthEndTimes[enum.CacheName(healthResult.Id)] = time.Now()
 
-		fmt.Printf("DEBUG poll %v %v finish\n", healthResult.PollID, time.Now())
+		log.Debugf("poll %v %v finish\n", healthResult.PollID, time.Now())
 		healthResult.PollFinished <- healthResult.PollID
 	}
 }
@@ -211,7 +211,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, s
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
-			// log.Printf("ERROR CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
+			// log.Errorf("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
 			continue
 		}
 		deliveryServiceState.IsAvailable = false

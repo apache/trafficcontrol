@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"runtime"
 	"time"
 
 	_ "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/manager"
 	_ "github.com/davecheney/gmx"
 )
@@ -39,7 +39,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	staticData, err := getStaticAppData()
 	if err != nil {
-		log.Printf("ERROR failed to get static app data: %v", err)
+		fmt.Printf("ERROR failed to get static app data: %v", err)
 		return
 	}
 
@@ -50,6 +50,8 @@ func main() {
 		fmt.Println("The --opsCfg argument is required")
 		os.Exit(1)
 	}
+
+	log.Init(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 
 	// Start the Manager
 	manager.Start(*opsConfigFile, staticData)

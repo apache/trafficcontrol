@@ -78,7 +78,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 			elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
 			newResult.Vitals.KbpsOut = int64(float64(((newResult.Vitals.BytesOut - prevResult.Vitals.BytesOut) * 8 / 1000)) / elapsedTimeInSecs)
 		} else {
-			// fmt.Println("prevResult == nil for id " + newResult.Id + ". Hope we're just starting up?")
+			// log.Infoln("prevResult == nil for id " + newResult.Id + ". Hope we're just starting up?")
 		}
 	} else {
 		setError(newResult, fmt.Errorf("Error parsing procnetdev: no fields found"))
@@ -90,7 +90,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	interfaceBandwidth := newResult.Astats.System.InfSpeed
 	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[newResult.Id].Profile].Parameters.MinFreeKbps
 
-	// fmt.Println(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
+	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
 // EvalCache returns whether the given cache should be marked available, and a string describing why
