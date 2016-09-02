@@ -144,9 +144,13 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 			case http_server.APICacheStates:
 				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
 			case http_server.APIBandwidthKbps:
+				serverTypes := toData.Get().ServerTypes
 				kbpsStats := lastKbpsStats.Get()
 				sum := float64(0.0)
-				for _, data := range kbpsStats.Caches {
+				for cache, data := range kbpsStats.Caches {
+					if serverTypes[cache] != enum.CacheTypeEdge {
+						continue
+					}
 					sum += data.Kbps
 				}
 				body = []byte(fmt.Sprintf("%f", sum))
