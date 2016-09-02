@@ -34,13 +34,13 @@ __PACKAGE__->table("server");
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 domain_name
 
   data_type: 'varchar'
   is_nullable: 0
-  size: 45
+  size: 63
 
 =head2 tcp_port
 
@@ -148,7 +148,7 @@ __PACKAGE__->table("server");
 
   data_type: 'bigint'
   is_foreign_key: 1
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 mgmt_ip_address
 
@@ -225,7 +225,7 @@ __PACKAGE__->table("server");
 
 =head2 https_port
 
-  data_type: 'smallint'
+  data_type: 'bigint'
   is_nullable: 1
 
 =cut
@@ -239,9 +239,9 @@ __PACKAGE__->add_columns(
     sequence          => "server_id_seq",
   },
   "host_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "domain_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "varchar", is_nullable => 0, size => 63 },
   "tcp_port",
   { data_type => "bigint", is_nullable => 1 },
   "xmpp_id",
@@ -282,7 +282,7 @@ __PACKAGE__->add_columns(
   "profile",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "mgmt_ip_address",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "mgmt_ip_netmask",
@@ -313,7 +313,7 @@ __PACKAGE__->add_columns(
     original      => { default_value => \"now()" },
   },
   "https_port",
-  { data_type => "smallint", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -338,43 +338,35 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_472135_cs_ip_address_unique>
-
-=over 4
-
-=item * L</ip_address>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("idx_472135_cs_ip_address_unique", ["ip_address"]);
-
-=head2 C<idx_472135_host_name>
-
-=over 4
-
-=item * L</host_name>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("idx_472135_host_name", ["host_name"]);
-
-=head2 C<idx_472135_ip6_address>
+=head2 C<idx_28858_ip6_profile>
 
 =over 4
 
 =item * L</ip6_address>
 
+=item * L</profile>
+
 =back
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_472135_ip6_address", ["ip6_address"]);
+__PACKAGE__->add_unique_constraint("idx_28858_ip6_profile", ["ip6_address", "profile"]);
 
-=head2 C<idx_472135_se_id_unique>
+=head2 C<idx_28858_ip_profile>
+
+=over 4
+
+=item * L</ip_address>
+
+=item * L</profile>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint("idx_28858_ip_profile", ["ip_address", "profile"]);
+
+=head2 C<idx_28858_se_id_unique>
 
 =over 4
 
@@ -384,7 +376,7 @@ __PACKAGE__->add_unique_constraint("idx_472135_ip6_address", ["ip6_address"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_472135_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_28858_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -415,12 +407,7 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  {
-    is_deferrable => 0,
-    join_type     => "LEFT",
-    on_delete     => "SET NULL",
-    on_update     => "RESTRICT",
-  },
+  { is_deferrable => 0, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
 =head2 deliveryservice_servers
@@ -529,8 +516,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-22 12:27:39
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:PF+9P6mqaO+53t8vWJ4Kjw
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:5K4RR/LKnc4laLjOXHbk3Q
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

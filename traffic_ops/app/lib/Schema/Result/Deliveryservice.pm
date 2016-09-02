@@ -107,7 +107,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'bigint'
   is_foreign_key: 1
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 ccr_dns_ttl
 
@@ -181,7 +181,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'smallint'
   default_value: 0
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 ssl_key_version
 
@@ -341,7 +341,7 @@ __PACKAGE__->add_columns(
   "profile",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "ccr_dns_ttl",
   { data_type => "bigint", is_nullable => 1 },
   "global_max_mbps",
@@ -372,7 +372,7 @@ __PACKAGE__->add_columns(
     original      => { default_value => \"now()" },
   },
   "protocol",
-  { data_type => "smallint", default_value => 0, is_nullable => 0 },
+  { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "ssl_key_version",
   { data_type => "bigint", default_value => 0, is_nullable => 1 },
   "ipv6_routing_enabled",
@@ -433,7 +433,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_471938_ds_id_unique>
+=head2 C<idx_28672_ds_id_unique>
 
 =over 4
 
@@ -443,9 +443,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_471938_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_28672_ds_id_unique", ["id"]);
 
-=head2 C<idx_471938_ds_name_unique>
+=head2 C<idx_28672_ds_name_unique>
 
 =over 4
 
@@ -455,7 +455,7 @@ __PACKAGE__->add_unique_constraint("idx_471938_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_471938_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_28672_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -471,12 +471,7 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  {
-    is_deferrable => 0,
-    join_type     => "LEFT",
-    on_delete     => "SET NULL",
-    on_update     => "RESTRICT",
-  },
+  { is_deferrable => 0, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
 =head2 deliveryservice_regexes
@@ -630,7 +625,7 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-22 12:27:39
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:mMuIsM5MBvxpWmub6CN8mw
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zK/6hgR8yYD0BnEUaUbJXg
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
