@@ -16,7 +16,7 @@ MAINTAINER Dan Kirkwood
 
 RUN yum install -y tar gcc-c++ perl cpan openssl-devel mysql-devel expect
 
-RUN (echo y;echo o conf prerequisites_policy follow;echo o conf urllist push http://cpan.yimg.com/;echo o conf urllist push ftp://cpan.cs.utah.edu/CPAN/;echo o conf urllist push ftp://cpan.cs.utah.edu/CPAN/;echo o conf urllist push ftp://mirrors.syringanetworks.net/CPAN/;echo o conf commit;echo install YAML;echo install IPC::Cmd;echo install HTTP::Tiny;echo install CPAN;echo reload cpan)|cpan
+RUN (echo y;echo o conf prerequisites_policy follow;echo o conf urllist push ftp://cpan.cs.utah.edu/CPAN/;echo o conf urllist push ftp://cpan.cs.utah.edu/CPAN/;echo o conf urllist push ftp://mirrors.syringanetworks.net/CPAN/;echo o conf commit;echo install YAML;echo install IPC::Cmd;echo install HTTP::Tiny;echo install CPAN;echo reload cpan)|cpan
 
 RUN cpan Carton
 
