@@ -1573,7 +1573,7 @@
         {
             "config_file": "package",
             "name": "trafficserver",
-            "value": "5.3.2-758.ce6de0c.el6.x86_64"
+            "value": "5.3.2-759.ee14bbe.el6.x86_64"
         },
         {
             "config_file": "records.config",
