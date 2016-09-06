@@ -58,4 +58,4 @@ WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
 ADD profile.origin.traffic_ops /
 ADD run.sh /
-ENTRYPOINT /run.sh
+CMD /run.sh
