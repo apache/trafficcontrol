@@ -349,7 +349,7 @@ sub processCSV {
 				my $keep         = 0;
 				my @p            = parse_line( $delim, $keep, $line );
 				my $itemCount    = scalar @p;
-				my $correctCount = 26;
+				my $correctCount = 27;
 				if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 					$processCSVErrors
 						.= $errorLineDelim
@@ -441,7 +441,7 @@ sub processSynchronizeCSV {
 					my $keep         = 0;
 					my @p            = parse_line( $delim, $keep, $pLine );
 					my $itemCount    = scalar @p;
-					my $correctCount = 26;
+					my $correctCount = 27;
 					if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 						$processCSVErrors
 							.= $errorLineDelim
@@ -495,7 +495,7 @@ sub processSynchronizeCSV {
 				my $keep         = 0;
 				my @p            = parse_line( $delim, $keep, $line );
 				my $itemCount    = scalar @p;
-				my $correctCount = 26;
+				my $correctCount = 27;
 				if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 					$processCSVErrors
 						.= $errorLineDelim
