@@ -431,11 +431,11 @@ sub check_server_input {
 		}
 	}
 
-	if ( $paramHashRef->{'tcp_port'} !~ /\d+/ ) {
+	if ( defined( $paramHashRef->{'tcp_port'} ) && $paramHashRef->{'tcp_port'} !~ /\d+/ ) {
 		$err .= $paramHashRef->{'tcp_port'} . " is not a valid tcp port" . $sep;
 	}
-	if ( $paramHashRef->{'https_port'} !~ /\d+/ ) {
-		$err .= $paramHashRef->{'https_port'} . " is not a valid tcp port" . $sep;
+	if ( defined( $paramHashRef->{'https_port'} ) && $paramHashRef->{'https_port'} !~ /\d+/ ) {
+		$err .= $paramHashRef->{'https_port'} . " is not a valid https port" . $sep;
 	}
 
 	# RFC5952 checks (lc)
