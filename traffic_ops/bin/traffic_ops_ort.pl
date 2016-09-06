@@ -2507,7 +2507,7 @@ sub adv_processing_ssl {
 			if ( $script_mode == $REPORT ) {
 				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
 				return 1;
-			else {
+			} else {
 				( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
 				exit 1;
 			}
