@@ -16,7 +16,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -25,9 +29,11 @@ import static org.springframework.util.SocketUtils.findAvailableUdpPort;
 
 public class TestBase {
 	private static final Logger LOGGER = Logger.getLogger(TestBase.class);
+	public static final String monitorPropertiesPath = "src/test/conf/traffic_monitor.properties";
 	private static ApplicationContext context;
 
 	public static ApplicationContext getContext() {
+
 		System.setProperty("deploy.dir", "src/test");
 		System.setProperty("dns.zones.dir", "src/test/var/auto-zones");
 
@@ -37,6 +43,10 @@ public class TestBase {
 		if (context != null) {
 			return context;
 		}
+
+		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
+		LogManager.getRootLogger().addAppender(consoleAppender);
+		LogManager.getRootLogger().setLevel(Level.WARN);
 
 		LOGGER.warn("Initializing context before running integration tests");
 		context = new FileSystemXmlApplicationContext("src/main/webapp/WEB-INF/applicationContext.xml");

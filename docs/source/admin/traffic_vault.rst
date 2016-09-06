@@ -153,13 +153,21 @@ On Each Riak Server:
 	* ``service riak restart``
 
 One time configuration:
-1. On one of the Riak servers in the cluster run the following riak-admin commands
+
+1. **On one of the Riak servers in the cluster run the following riak-admin commands**
+
 ``riak-admin security grant search.admin on schema to admin``
+
 ``riak-admin security grant search.admin on index to admin``
+
 ``riak-admin security grant search.query on index to admin``
+
 ``riak-admin security grant search.query on index sslkeys to admin``
+
 ``riak-admin security grant search.query on index to riakuser``
+
 ``riak-admin security grant search.query on index sslkeys to riakuser``
+
 ``riak-admin security grant riak_core.set_bucket on any to admin``
 
 2. Add the search schema to Riak.  This schema is a simple Apache Solr configuration file which will index all records on cdn, hostname, and deliveryservice.
@@ -181,7 +189,7 @@ Validate the search is working by querying against Riak directly:
 ``curl -kvs "https://admin:password@riakserver:8088/search/query/sslkeys?wt=json&q=cdn:mycdn"``
 
 Validation can also be done by querying Traffic Ops:
-``curl -Lvs -H "Cookie: $COOKIE" https://traffic-ops.kabletown.net/api/1.2/cdns/name/title-vi/sslkeys.json``
+``curl -Lvs -H "Cookie: $COOKIE" https://traffic-ops.kabletown.net/api/1.2/cdns/name/mycdn/sslkeys.json``
 
 
 

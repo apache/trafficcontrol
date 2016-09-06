@@ -40,6 +40,18 @@ public class FederationsWatcher extends AbstractResourceWatcher {
         return false;
     }
 
+    @Override
+    protected boolean verifyData(final String data) {
+        try {
+            new FederationsBuilder().fromJSON(data);
+            return true;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to build federations data from " + dataBaseURL);
+        }
+
+        return false;
+    }
+
     public void setFederationRegistry(final FederationRegistry federationRegistry) {
         this.federationRegistry = federationRegistry;
     }

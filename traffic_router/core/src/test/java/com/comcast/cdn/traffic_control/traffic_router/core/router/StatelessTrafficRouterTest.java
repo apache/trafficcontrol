@@ -30,6 +30,14 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.IsNull.nullValue;
+
 @Category(IntegrationTest.class)
 public class StatelessTrafficRouterTest {
 	private static final Logger LOGGER = Logger.getLogger(StatelessTrafficRouterTest.class);
@@ -40,14 +48,8 @@ public class StatelessTrafficRouterTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		try {
-			context = TestBase.getContext();
-			Logger root = Logger.getRootLogger();
-			boolean rootIsConfigured = root.getAllAppenders().hasMoreElements();
-			System.out.println("rootIsConfigured: "+rootIsConfigured);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+		context = TestBase.getContext();
 	}
 
 	@Before

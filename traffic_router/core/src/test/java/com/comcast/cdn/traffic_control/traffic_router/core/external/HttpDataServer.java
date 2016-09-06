@@ -39,6 +39,7 @@ public class HttpDataServer implements HttpHandler {
 	}
 	private boolean receivedSteeringPost = false;
 	private boolean receivedCertificatesPost = false;
+	private boolean receivedCrConfigPost = false;
 
 // Useful for producing an access log
 //	static {
@@ -77,6 +78,10 @@ public class HttpDataServer implements HttpHandler {
 
 					if (!receivedCertificatesPost && "/certificates".equals(httpExchange.getRequestURI().getPath())) {
 						receivedCertificatesPost = true;
+					}
+
+					if (!receivedCrConfigPost && "/crconfig".equals(httpExchange.getRequestURI().getPath())) {
+						receivedCrConfigPost = true;
 					}
 
 					try {
@@ -125,6 +130,10 @@ public class HttpDataServer implements HttpHandler {
 					return;
 				}
 
+				if (path.contains("CrConfig") && receivedCrConfigPost) {
+					path = path.replace("CrConfig", "CrConfig2");
+				}
+
 				InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
 
 				if (inputStream == null) {
@@ -171,6 +180,7 @@ public class HttpDataServer implements HttpHandler {
 						}
 
 						String body = stringBuilder.toString();
+						body = body.replaceAll("localhost:8889" , "localhost:" + testHttpServerPort);
 
 						if (path.contains("CrConfig")) {
 							body = body.replaceAll("localhost:8889" , "localhost:" + testHttpServerPort);

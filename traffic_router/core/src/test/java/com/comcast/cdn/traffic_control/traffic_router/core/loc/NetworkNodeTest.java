@@ -48,7 +48,7 @@ public class NetworkNodeTest {
 	@Before
 	public void setUp() throws Exception {
 		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
-		root = NetworkNode.generateTree(file);
+		root = NetworkNode.generateTree(file, false);
 
 		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
 		final JSONObject coverageZones = json.getJSONObject("coverageZones");

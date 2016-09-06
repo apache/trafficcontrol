@@ -63,12 +63,12 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return instance;
     }
 
-    public static NetworkNode generateTree(final File f) throws NetworkNodeException, FileNotFoundException, JSONException  {
-        return generateTree(new JSONObject(new JSONTokener(new FileReader(f))));
+    public static NetworkNode generateTree(final File f, final boolean verifyOnly) throws NetworkNodeException, FileNotFoundException, JSONException  {
+        return generateTree(new JSONObject(new JSONTokener(new FileReader(f))), verifyOnly);
     }
 
     @SuppressWarnings("PMD.CyclomaticComplexity")
-    public static NetworkNode generateTree(final JSONObject json) {
+    public static NetworkNode generateTree(final JSONObject json, final boolean verifyOnly) {
         try {
             final JSONObject coverageZones = json.getJSONObject("coverageZones");
 
@@ -95,6 +95,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             root.add6(new NetworkNode(ip, loc, geolocation));
                         } catch (NetworkNodeException ex) {
                             LOGGER.error(ex, ex);
+                            return null;
                         }
                     }
                 } catch (JSONException ex) {
@@ -111,6 +112,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             root.add(new NetworkNode(ip, loc, geolocation));
                         } catch (NetworkNodeException ex) {
                             LOGGER.error(ex, ex);
+                            return null;
                         }
                     }
                 } catch (JSONException ex) {
@@ -118,7 +120,9 @@ public class NetworkNode implements Comparable<NetworkNode> {
                 }
             }
 
-            instance = root;
+            if (!verifyOnly) {
+                instance = root;
+            }
 
             return root;
         } catch (JSONException e) {

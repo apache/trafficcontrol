@@ -233,7 +233,7 @@ public final class RegionalGeo {
         return null;
     }
 
-    public static boolean parseConfigFile(final File f) {
+    public static boolean parseConfigFile(final File f, final boolean verifyOnly) {
         JSONObject json = null;
         try {
             json = new JSONObject(new JSONTokener(new FileReader(f)));
@@ -249,7 +249,10 @@ public final class RegionalGeo {
             return false;
         }
         
-        currentConfig = regionalGeo; // point to the new parsed object
+        if (!verifyOnly) {
+            currentConfig = regionalGeo; // point to the new parsed object
+        }
+
         currentConfig.setFallback(false);
         LOGGER.debug("RegionalGeo: create instance from new json");
         return true;

@@ -134,7 +134,6 @@ public class KeyStoreHelperTest {
 		assertThat(success, equalTo(true));
 
 		verify(keyStore).setKeyEntry("deliveryservice.cdn.example.com", privateKey, "password".toCharArray(), new Certificate[] {x509Certificate});
-		verify(keyStore).store(outputStream, "password".toCharArray());
 
 		assertThat(KeyStoreHelper.getInstance().getAllCommonNames(), containsInAnyOrder("*.deliveryservice1.cdn.example.com"));
 	}
