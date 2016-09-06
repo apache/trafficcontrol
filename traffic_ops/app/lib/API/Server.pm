@@ -654,7 +654,7 @@ sub check_server_params {
 		return ( \%params, $json->{'tcpPort'} . " is not a valid tcp port" );
 	}
 	if ( defined( $json->{'httpsPort'} ) && $json->{'httpsPort'} !~ /\d+/ ) {
-		return ( \%params, $json->{'httpsPort'} . " is not a valid tcp port" );
+		return ( \%params, $json->{'httpsPort'} . " is not a valid https port" );
 	}
 
 	return ( \%params, $err );
