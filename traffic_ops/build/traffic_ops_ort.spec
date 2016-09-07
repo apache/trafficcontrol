@@ -20,14 +20,15 @@
 Name:		traffic_ops_ort
 Summary:	Installs ORT script for Traffic Control caches
 Version:	%{traffic_control_version}
-Release:	%{build_number}
+Release:	%{build_number}%{?dist}
 License:	Apache License, Version 2.0
 Group:		Applications/Communications
 Source0:	traffic_ops_ort-%{version}.tgz
 URL:		https://github.com/Comcast/traffic_control/
 Vendor:		Comcast
 Packager:	daniel_kirkwood at Cable dot Comcast dot com
-Requires:	perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay
+%{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay}
+%{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https}
 
 
 %description
