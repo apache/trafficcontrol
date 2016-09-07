@@ -3,7 +3,7 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"math"
 	"runtime"
 	"strconv"
@@ -144,9 +144,13 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 			case http_server.APICacheStates:
 				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
 			case http_server.APIBandwidthKbps:
+				serverTypes := toData.Get().ServerTypes
 				kbpsStats := lastKbpsStats.Get()
 				sum := float64(0.0)
-				for _, data := range kbpsStats.Caches {
+				for cache, data := range kbpsStats.Caches {
+					if serverTypes[cache] != enum.CacheTypeEdge {
+						continue
+					}
 					sum += data.Kbps
 				}
 				body = []byte(fmt.Sprintf("%f", sum))
@@ -156,7 +160,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 
 			if err != nil {
 				errorCount.Inc()
-				log.Printf("ERROR Request Error: %v\n", err)
+				log.Errorf("Request Error: %v\n", err)
 			} else {
 				req.Response <- body
 			}
@@ -172,27 +176,27 @@ func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHisto
 	for cacheName, cacheType := range cacheTypes {
 		cacheStatHistory, ok := statHistory[cacheName]
 		if !ok {
-			log.Printf("WARNING DEBUG6 createCacheStatuses stat history missing cache %s\n", cacheName)
+			log.Warnf("createCacheStatuses stat history missing cache %s\n", cacheName)
 			continue
 		}
 
 		if len(cacheStatHistory) < 1 {
-			log.Printf("WARNING DEBUG6 createCacheStatuses stat history empty for cache %s\n", cacheName)
+			log.Warnf("createCacheStatuses stat history empty for cache %s\n", cacheName)
 			continue
 		}
 
-		log.Printf("DEBUGQ createCacheStatuses NOT empty for cache %s\n", cacheName)
+		log.Debugf("createCacheStatuses NOT empty for cache %s\n", cacheName)
 
 		var loadAverage *float64
 		procLoadAvg := cacheStatHistory[0].Astats.System.ProcLoadavg
 		if procLoadAvg != "" {
 			firstSpace := strings.IndexRune(procLoadAvg, ' ')
 			if firstSpace == -1 {
-				log.Printf("WARNING DEBUG6 unexpected proc.loadavg '%s' for cache %s\n", procLoadAvg, cacheName)
+				log.Warnf("WARNING unexpected proc.loadavg '%s' for cache %s\n", procLoadAvg, cacheName)
 			} else {
 				loadAverageVal, err := strconv.ParseFloat(procLoadAvg[:firstSpace], 64)
 				if err != nil {
-					log.Printf("WARNING proc.loadavg doesn't contain a float prefix '%s' for cache %s\n", procLoadAvg, cacheName)
+					log.Warnf("proc.loadavg doesn't contain a float prefix '%s' for cache %s\n", procLoadAvg, cacheName)
 				} else {
 					loadAverage = &loadAverageVal
 				}
@@ -202,7 +206,7 @@ func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHisto
 		var queryTime *int64
 		queryTimeVal, ok := lastHealthDurations[cacheName]
 		if !ok {
-			log.Printf("WARNING DEBUGQ cache not in last health durations cache %s\n", cacheName)
+			log.Warnf("cache not in last health durations cache %s\n", cacheName)
 		} else {
 			queryTimeInt := int64(queryTimeVal / time.Millisecond)
 			queryTime = &queryTimeInt
@@ -211,7 +215,7 @@ func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHisto
 		var kbps *float64
 		kbpsVal, ok := lastKbpsStats.Caches[enum.CacheName(cacheName)]
 		if !ok {
-			log.Printf("WARNING DEBUGQ cache not in last kbps cache %s\n", cacheName)
+			log.Warnf("cache not in last kbps cache %s\n", cacheName)
 		} else {
 			kbps = &kbpsVal.Kbps
 		}
@@ -219,7 +223,7 @@ func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHisto
 		var connections *int64
 		connectionsVal, ok := conns[enum.CacheName(cacheName)]
 		if !ok {
-			log.Printf("WARNING DEBUGQ cache not in connections %s\n", cacheName)
+			log.Warnf("cache not in connections %s\n", cacheName)
 		} else {
 			connections = &connectionsVal
 		}
@@ -227,7 +231,7 @@ func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHisto
 		var status *string
 		statusVal, ok := localCacheStatus[enum.CacheName(cacheName)]
 		if !ok {
-			log.Printf("WARNING DEBUGQ cache not in statuses %s\n", cacheName)
+			log.Warnf("cache not in statuses %s\n", cacheName)
 		} else {
 			statusString := statusVal.Status + " - "
 			if localCacheStatus[enum.CacheName(cacheName)].Available {
@@ -250,17 +254,16 @@ func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[e
 		for _, result := range history {
 			val, ok := result.Astats.Ats["proxy.process.http.current_client_connections"]
 			if !ok {
-				fmt.Printf("ERROR DEBUG6 connections stat not found for %s\n", server)
 				continue
 			}
 
 			v, ok := val.(float64)
 			if !ok {
-				fmt.Printf("ERROR connection stat value expected int actual '%v' type %T", val, val)
 				continue
 			}
 
 			conns[server] = int64(v)
+			break
 		}
 	}
 	return conns

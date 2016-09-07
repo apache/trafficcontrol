@@ -2,9 +2,9 @@ package http_server
 
 import (
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/hydrogen18/stoppableListener"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -71,11 +71,11 @@ func (s Server) Run(c chan<- DataRequest, addr string) error {
 	//      objects can be created and Run.
 
 	if s.stoppableListener != nil {
-		log.Printf("Stopping Web Server\n")
+		log.Infof("Stopping Web Server\n")
 		s.stoppableListener.Stop()
 		s.stoppableListenerWaitGroup.Wait()
 	}
-	log.Printf("Starting Web Server\n")
+	log.Infof("Starting Web Server\n")
 
 	var err error
 	var originalListener net.Listener
@@ -108,7 +108,7 @@ func (s Server) Run(c chan<- DataRequest, addr string) error {
 		server.Serve(s.stoppableListener)
 	}()
 
-	log.Printf("Web server listening on %s", addr)
+	log.Infof("Web server listening on %s", addr)
 	return nil
 }
 
