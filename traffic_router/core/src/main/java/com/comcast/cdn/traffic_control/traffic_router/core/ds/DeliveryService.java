@@ -18,9 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -384,38 +386,60 @@ public class DeliveryService {
 		return shouldAppendQueryString;
 	}
 
-	enum TransInfoType {
-		NONE,
-		IP,
-		IP_TID
-	};
+	enum TransInfoType {NONE, IP, IP_TID}
+
 	public String getTransInfoStr(final HTTPRequest request) {
 		final TransInfoType type = TransInfoType.valueOf(getProp("transInfoType", "NONE"));
-		if(type == TransInfoType.NONE) {
+
+		if (type == TransInfoType.NONE) {
 			return null;
 		}
+
 		try {
-			final InetAddress ip = InetAddress.getByName(request.getClientIP());
-			byte[] ipBytes = ip.getAddress();
-			if(ipBytes.length > 4) {
-				if(type == TransInfoType.IP) {
-					return null;
-				}
-				ipBytes = new byte[]{0,0,0,0};
+			final byte[] ipBytes = getClientIpBytes(request, type);
+
+			if (ipBytes == null) {
+				return null;
 			}
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			final DataOutputStream dos = new DataOutputStream(baos);
+
+			return getEncryptedTrans(type, ipBytes);
+		} catch (Exception e) {
+			LOGGER.warn(e,e);
+		}
+
+		return null;
+	}
+
+	private byte[] getClientIpBytes(final HTTPRequest request, final TransInfoType type) throws UnknownHostException {
+		final InetAddress ip = InetAddress.getByName(request.getClientIP());
+		byte[] ipBytes = ip.getAddress();
+
+		if (ipBytes.length > 4) {
+			if (type == TransInfoType.IP) {
+				return null;
+			}
+
+			ipBytes = new byte[]{0,0,0,0};
+		}
+
+		return ipBytes;
+	}
+
+	private String getEncryptedTrans(final TransInfoType type, final byte[] ipBytes) throws IOException, GeneralSecurityException {
+		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		     final DataOutputStream dos = new DataOutputStream(baos)) {
+
 			dos.write(ipBytes);
-			if(type == TransInfoType.IP_TID) {
+
+			if (type == TransInfoType.IP_TID) {
 				dos.writeLong(System.currentTimeMillis());
 				dos.writeInt(getTid());
 			}
+
 			dos.flush();
-			return "t0="+getStringProtector().encryptForUrl(baos.toByteArray());
-		}catch (Exception e) {
-			LOGGER.warn(e,e);
+
+			return "t0=" + getStringProtector().encryptForUrl(baos.toByteArray());
 		}
-		return null;
 	}
 
 	private String getProp(final String key, final String d) {
