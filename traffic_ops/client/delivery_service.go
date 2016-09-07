@@ -71,6 +71,25 @@ type DeliveryService struct {
 	InitialDispersion    string `json:"initialDispersion"`
 }
 
+// DeliveryServiceStateResponse ...
+type DeliveryServiceStateResponse struct {
+	Response DeliveryServiceState `json:"response"`
+}
+
+// DeliveryServiceState ...
+type DeliveryServiceState struct {
+	Enabled  bool                    `json:"enabled"`
+	Failover DeliveryServiceFailover `json:"failover"`
+}
+
+// DeliveryServiceFailover ...
+type DeliveryServiceFailover struct {
+	Locations   []string `json:"locations"`
+	Destination string   `json:"destination"`
+	Configured  bool     `json:"configured"`
+	Enabled     bool     `json:"enabled"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	url := "/api/1.2/deliveryservices.json"
@@ -86,4 +105,38 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	}
 
 	return data.Response, nil
+}
+
+// DeliveryService gets the DeliveryService for the ID it's passed
+func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
+	url := "/api/1.2/deliveryservices/" + id + ".json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response[0], nil
+}
+
+// DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
+func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/state.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceStateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
 }

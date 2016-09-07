@@ -51,3 +51,22 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 		},
 	}
 }
+
+// DeliveryServiceState returns a default DeliveryServiceStateResponse to be used for testing.
+func DeliveryServiceState() *client.DeliveryServiceStateResponse {
+	failover := client.DeliveryServiceFailover{
+		Locations:   []string{"one", "two"},
+		Destination: "someDestination",
+		Configured:  true,
+		Enabled:     true,
+	}
+
+	ds := client.DeliveryServiceState{
+		Enabled:  true,
+		Failover: failover,
+	}
+
+	return &client.DeliveryServiceStateResponse{
+		Response: ds,
+	}
+}
