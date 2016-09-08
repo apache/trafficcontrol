@@ -263,7 +263,9 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 
 			if (trafficMonitorConfigFile.exists()) {
 				LOGGER.info("Loading properties from " + trafficMonitorConfigFile.getAbsolutePath());
-				props.load(new FileInputStream(trafficMonitorConfigFile));
+				try (FileInputStream configStream = new FileInputStream(trafficMonitorConfigFile)) {
+					props.load(configStream);
+				}
 			} else {
 				LOGGER.warn("Cannot load traffic monitor properties file " + trafficMonitorConfigFile.getAbsolutePath() + " file not found!");
 			}

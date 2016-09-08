@@ -5,6 +5,7 @@ import (
 	"fmt"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
@@ -37,7 +38,7 @@ func (h Handler) Precompute() bool {
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
-	Err                  error
+	Errors               []error
 	Reporting            bool
 }
 
@@ -112,7 +113,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 }
 
 func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
-	fmt.Printf("DEBUG poll %v %v handle start\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle start\n", pollId, time.Now())
 	result := Result{
 		Id:           id,
 		Available:    false,
@@ -123,45 +124,52 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	}
 
 	if err != nil {
+		log.Errorf("%v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
 		result.Errors = append(result.Errors, err)
+		handler.ResultChannel <- result
+		return
 	}
 
-	if r != nil {
-		result.PrecomputedData.Reporting = true
-		fmt.Printf("DEBUG poll %v %v handle decode start\n", pollId, time.Now())
+	if r == nil {
+		log.Errorf("%v handle reader nil\n", id)
+		result.Errors = append(result.Errors, fmt.Errorf("handler got nil reader"))
+		handler.ResultChannel <- result
+		return
+	}
 
-		if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
-			result.Errors = append(result.Errors, err)
-		}
+	result.PrecomputedData.Reporting = true
 
-		if result.Astats.System.ProcNetDev == "" {
-			fmt.Printf("DEBUG %s procnetdev empty for '%s'\n\n", id)
-		}
+	if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
+		log.Errorf("%s procnetdev decode error '%v'\n", id, err)
+		result.Errors = append(result.Errors, err)
+		handler.ResultChannel <- result
+		return
+	}
 
-		fmt.Printf("DEBUG poll %v %v handle decode end\n", pollId, time.Now())
+	if result.Astats.System.ProcNetDev == "" {
+		log.Warnf("addkbps %s procnetdev empty\n", id)
+	}
 
-		if err != nil {
-			result.Errors = append(result.Errors, err)
-		} else {
-			result.Available = true
-		}
+	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
+
+	if err != nil {
+		result.Errors = append(result.Errors, err)
+		log.Errorf("addkbps handle %s error '%v'\n", id, err)
+	} else {
+		result.Available = true
 	}
 
 	if handler.Precompute() {
-		//		fmt.Println("precomputing")
-		fmt.Printf("DEBUG poll %v %v handle precompute start\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute start\n", pollId, time.Now())
 		result = handler.precompute(result)
-		fmt.Printf("DEBUG poll %v %v handle precompute end\n", pollId, time.Now())
-	} else {
-		fmt.Println("NOT precomputing")
+		log.Debugf("poll %v %v handle precompute end\n", pollId, time.Now())
 	}
-	fmt.Printf("DEBUG poll %v %v handle write start\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle write start\n", pollId, time.Now())
 	handler.ResultChannel <- result
-	fmt.Printf("DEBUG poll %v %v handle end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle end\n", pollId, time.Now())
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-// \todo
 func outBytes(procNetDev, iface string) (int64, error) {
 	if procNetDev == "" {
 		return 0, fmt.Errorf("procNetDev empty")
@@ -175,6 +183,7 @@ func outBytes(procNetDev, iface string) (int64, error) {
 	}
 
 	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
+	procNetDevIfaceBytes = strings.TrimLeft(procNetDevIfaceBytes, " ")
 	spacePos := strings.Index(procNetDevIfaceBytes, " ")
 	if spacePos != -1 {
 		procNetDevIfaceBytes = procNetDevIfaceBytes[:spacePos]
@@ -190,15 +199,15 @@ func (handler Handler) precompute(result Result) Result {
 	var err error
 	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName); err != nil {
 		result.PrecomputedData.OutBytes = 0
-		fmt.Printf("ERROR precomputing %s outbytes: %v\n", result.Id, err)
+		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
 
 	for stat, value := range result.Astats.Ats {
 		var err error
 		stats, err = processStat(result.Id, stats, todata, stat, value)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			result.PrecomputedData.Err = err
-			return result
+			log.Errorf("precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
+			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}
 	result.PrecomputedData.DeliveryServiceStats = stats
@@ -243,48 +252,38 @@ func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceNa
 	}
 
 	fqdn := strings.Join(statParts[:len(statParts)-1], ".")
+
 	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(fqdn)
+	if !ok {
+		return stats, fmt.Errorf("ERROR no delivery service match for fqdn '%v' stat '%v'\n", fqdn, strings.Join(statParts, "."))
+	}
+	if ds == "" {
+		return stats, fmt.Errorf("ERROR EMPTY delivery service fqdn %v stat %v\n", fqdn, strings.Join(statParts, "."))
+	}
 
 	statName := statParts[len(statParts)-1]
 
 	dsStat, ok := stats[ds]
 	if !ok {
-		switch toData.DeliveryServiceTypes[string(ds)] {
-		case enum.DSTypeHTTP:
-			dsStat = dsdata.NewStatHTTP()
-		case enum.DSTypeDNS:
-			dsStat = dsdata.NewStatDNS()
-		default:
-			return stats, fmt.Errorf("unknown delivery service type: %v", toData.DeliveryServiceTypes[string(ds)])
-		}
+		newStat := dsdata.NewStat()
+		dsStat = *newStat
 	}
 
-	switch t := dsStat.(type) {
-	case *dsdata.StatHTTP:
-		hstat := dsStat.(*dsdata.StatHTTP)
-
-		err := addCacheStat(&hstat.Total, statName, value)
-		if err != nil {
-			return stats, err
-		}
-
-		cachegroup, ok := toData.ServerCachegroups[enum.CacheName(server)]
-		if !ok {
-			return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
-		}
-		hstat.CacheGroups[cachegroup] = hstat.Total
-
-		cacheType, ok := toData.ServerTypes[enum.CacheName(server)]
-		if !ok {
-			return stats, fmt.Errorf("server missing from TOData.ServerTypes")
-		}
-		hstat.Type[cacheType] = hstat.Total
-
-		dsStat = hstat
-	case *dsdata.StatDNS:
-	default:
-		return stats, fmt.Errorf("stat unexpected type: %T", t)
+	if err := addCacheStat(&dsStat.Total, statName, value); err != nil {
+		return stats, err
 	}
+
+	cachegroup, ok := toData.ServerCachegroups[enum.CacheName(server)]
+	if !ok {
+		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
+	}
+	dsStat.CacheGroups[cachegroup] = dsStat.Total
+
+	cacheType, ok := toData.ServerTypes[enum.CacheName(server)]
+	if !ok {
+		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
+	}
+	dsStat.Type[cacheType] = dsStat.Total
 	stats[ds] = dsStat
 	return stats, nil
 }
@@ -324,7 +323,7 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		}
 		stat.OutBytes.Value += int64(v)
 	case "is_available":
-		fmt.Println("DEBUGa got is_available")
+		log.Debugln("got is_available")
 		v, ok := val.(bool)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)

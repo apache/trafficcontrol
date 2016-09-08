@@ -37,7 +37,7 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 	fmt.Printf("DEBUG poll %v %v fetch start\n", pollId, time.Now())
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
-	req.Header.Set("User-Agent", "traffic_monitor/1.0")
+	req.Header.Set("User-Agent", "traffic_monitor/1.0") // TODO change to 2.0?
 	req.Header.Set("Connection", "keep-alive")
 	if f.Pending != nil {
 		f.Pending.Inc()
@@ -48,12 +48,22 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 	}
 	defer func() {
 		if response != nil && response.Body != nil {
-			ioutil.ReadAll(response.Body)
+			ioutil.ReadAll(response.Body) // TODO determine if necessary
 			response.Body.Close()
 		}
 	}()
 
-	if response != nil && response.StatusCode/100 == 2 {
+	if err == nil && response == nil {
+		err = fmt.Errorf("err nil and response nil")
+	}
+	if err == nil && response != nil && (response.StatusCode < 200 || response.StatusCode > 299) {
+		err = fmt.Errorf("bad status: %v", response.StatusCode)
+	}
+	if err != nil {
+		err = fmt.Errorf("fetch error: %v", err)
+	}
+
+	if err == nil && response != nil {
 		if f.Success != nil {
 			f.Success.Inc()
 		}

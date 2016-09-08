@@ -24,26 +24,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.zip.GZIPInputStream;
 
 public class TarExtractor {
 	private final Logger LOGGER = Logger.getLogger(TarExtractor.class);
 
-	public File extractTgzTo(File directory, InputStream inputStream) {
-		try {
-			return extractTo(directory, new GZIPInputStream(inputStream));
-		} catch (IOException e) {
-			LOGGER.error("Failed to extract gzip tar file to " + directory.getAbsolutePath() + ": " + e.getMessage());
-			return null;
-		}
-	}
-
-	public File extractTo(File directory, InputStream inputStream) {
-		TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(inputStream);
-		TarArchiveEntry tarArchiveEntry;
-		try {
+	public boolean extractTo(File directory, InputStream inputStream) {
+		try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(inputStream)) {
+			TarArchiveEntry tarArchiveEntry;
 			while ((tarArchiveEntry = tarArchiveInputStream.getNextTarEntry()) != null) {
 				if (tarArchiveEntry.isDirectory()) {
 					continue;
@@ -51,33 +38,30 @@ public class TarExtractor {
 
 				File file = new File(directory, tarArchiveEntry.getName());
 				LOGGER.info("Extracting Tarfile entry " + tarArchiveEntry.getName() + " to temporary location " + file.getAbsolutePath());
+
 				if (!file.exists() && !file.createNewFile()) {
 					LOGGER.warn("Failed to extract file to " + file.getAbsolutePath() + ", cannot create file, check permissions of " + directory.getAbsolutePath());
-					continue;
+					return false;
 				}
 
 				copyInputStreamToFile(tarArchiveInputStream, file);
-
 			}
 		} catch (IOException e) {
 			LOGGER.error("Failed extracting tar archive to directory " + directory.getAbsolutePath() + " : " + e.getMessage());
+			return false;
 		}
 
-		return directory;
+		return true;
 	}
 
 	protected void copyInputStreamToFile(InputStream inputStream, File file) throws IOException {
 		byte[] buffer = new byte[50 * 1024 * 1024];
 		int bytesRead;
 
-		FileOutputStream outputStream = new FileOutputStream(file);
-
-		try {
+		try (FileOutputStream outputStream = new FileOutputStream(file)) {
 			while ((bytesRead = inputStream.read(buffer)) != -1) {
 				outputStream.write(buffer, 0, bytesRead);
 			}
-		} finally {
-			outputStream.close();
 		}
 	}
 }

@@ -41,7 +41,9 @@ import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 
-/** 
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+
+/**
  * 
  * @author jlaue
  *
@@ -213,33 +215,45 @@ public class PeriodicResourceUpdater {
 		this.pollingInterval = pollingInterval;
 	}
 
-	boolean filesEqual(final File a, final String newDB) throws IOException {
-		if(!a.exists() && newDB == null) { return true; }
-		if(!a.exists() || newDB  == null) { return false; }
-		if(a.length() != newDB.length()) { return false; }
-		final FileInputStream fis = new FileInputStream(a);
-		final String md5a = org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
-		fis.close();
-		final InputStream is = IOUtils.toInputStream(newDB);
-		final String md5b = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
-		is.close();
-		if(md5a.equals(md5b)) { return true; }
-		return false;
+	private String fileMd5(final File file) throws IOException {
+		try (FileInputStream stream = new FileInputStream(file)) {
+			return md5Hex(stream);
+		}
 	}
+
+	boolean filesEqual(final File a, final String newDB) throws IOException {
+		if (!a.exists()) {
+			return newDB == null;
+		}
+
+		if (newDB == null) {
+			return false;
+		}
+
+		if (a.length() != newDB.length()) {
+			return false;
+		}
+
+		try (InputStream newDBStream = IOUtils.toInputStream(newDB)) {
+			return fileMd5(a).equals(md5Hex(newDBStream));
+		}
+	}
+
 	protected synchronized void copyDatabase(final File existingDB, final String newDB) throws IOException {
-		final StringReader in = new StringReader(newDB);
-		final FileOutputStream out = new FileOutputStream(existingDB);
-		final FileLock lock = out.getChannel().tryLock();
-		if (lock != null) {
+		try (final StringReader in = new StringReader(newDB);
+			final FileOutputStream out = new FileOutputStream(existingDB);
+			final FileLock lock = out.getChannel().tryLock()) {
+
+			if (lock == null) {
+				LOGGER.error("Database " + existingDB.getAbsolutePath() + " locked by another process.");
+				return;
+			}
+
 			IOUtils.copy(in, out);
 			existingDB.setReadable(true, false);
 			existingDB.setWritable(true, true);
 			lock.release();
-		} else {
-			LOGGER.error("Database " + existingDB.getAbsolutePath() + " locked by another process.");
 		}
-		IOUtils.closeQuietly(in);
-		IOUtils.closeQuietly(out);
 	}
 
 	protected boolean needsUpdating(final File existingDB) {

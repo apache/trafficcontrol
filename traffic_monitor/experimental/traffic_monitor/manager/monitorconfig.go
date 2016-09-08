@@ -3,6 +3,7 @@ package manager
 import (
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
 	"strings"
@@ -128,7 +129,7 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 
 			for k := range localStates.GetCaches() {
 				if _, exists := monitorConfig.TrafficServer[k]; !exists {
-					fmt.Printf("Warning: removing %s from localStates", k)
+					log.Warnf("Removing %s from localStates", k)
 					localStates.DeleteCache(k)
 				}
 			}

@@ -22,8 +22,8 @@ ADD $INFLUXDB /
 ADD $GRAFANA /
 ADD $RPM /
 
-RUN yum install -y /$(basename INFLUXDB) /$(basename $RPM) /$(basename $GRAFANA)
-RUN rm /$(basename INFLUXDB) /$(basename $RPM) /$(basename $GRAFANA)
+RUN yum install -y /$(basename $INFLUXDB) /$(basename $RPM) /$(basename $GRAFANA)
+RUN rm /$(basename $INFLUXDB) /$(basename $RPM) /$(basename $GRAFANA)
 
 EXPOSE 80 8086 8083
 ADD run.sh /

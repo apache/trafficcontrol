@@ -5,10 +5,10 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -33,8 +33,9 @@ func NewStats() Stats {
 }
 
 func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
-	for ds, istat := range dsStats.DeliveryService {
-		istat.CommonData().CachesConfigured.Value = int64(len(dsServers[string(ds)]))
+	for ds, stat := range dsStats.DeliveryService {
+		stat.Common.CachesConfigured.Value = int64(len(dsServers[string(ds)]))
+		dsStats.DeliveryService[ds] = stat // TODO consider changing dsStats.DeliveryService[ds] to a pointer so this kind of thing isn't necessary; possibly more performant, as well
 	}
 	return dsStats
 }
@@ -43,62 +44,62 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[enum.CacheName(cache)]
 		if !ok {
-			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
+			log.Warnf("CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
 			continue
 		}
 		deliveryServices, ok := serverDs[cache]
 		if !ok {
-			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
+			log.Warnf("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
 		}
 		cacheType, ok := serverTypes[enum.CacheName(cache)]
 		if !ok {
-			fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
+			log.Warnf("CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
 			continue
 		}
 
 		for _, deliveryService := range deliveryServices {
-			iStat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
-			if !ok || iStat == nil {
-				fmt.Printf("WARNING: CreateStats not adding availability data for '%s': not found in Stats\n", cache)
+			if deliveryService == "" {
+				log.Errorf("EMPTY addAvailableData DS") // various bugs in other functions can cause this - this will help identify and debug them.
+				continue
+			}
+
+			stat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
+			if !ok {
+				log.Warnf("CreateStats not adding availability data for '%s': not found in Stats\n", cache)
 				continue // TODO log warning? Error?
 			}
 
 			if available.IsAvailable {
 				// c.IsAvailable.Value
-				iStat.CommonData().IsAvailable.Value = true
-				iStat.CommonData().CachesAvailable.Value++
-				if stat, ok := iStat.(*dsdata.StatHTTP); ok {
-					cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
-					cacheGroupStats.IsAvailable.Value = true
-					stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
-					stat.Total.IsAvailable.Value = true
-					typeStats := stat.Type[cacheType]
-					typeStats.IsAvailable.Value = true
-					stat.Type[cacheType] = typeStats
-				} else if _, ok := iStat.(*dsdata.StatDNS); ok {
-				} else {
-					return dsStats, fmt.Errorf("Unknown stat type for Delivery Service '%s': %v", deliveryService, iStat)
-				}
+				stat.Common.IsAvailable.Value = true
+				stat.Common.CachesAvailable.Value++
+				cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
+				cacheGroupStats.IsAvailable.Value = true
+				stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
+				stat.Total.IsAvailable.Value = true
+				typeStats := stat.Type[cacheType]
+				typeStats.IsAvailable.Value = true
+				stat.Type[cacheType] = typeStats
 			}
 
 			// TODO fix nested ifs
 			if results, ok := statHistory[enum.CacheName(cache)]; ok {
 				if len(results) < 1 {
-					fmt.Printf("WARNING no results %v %v\n", cache, deliveryService)
+					log.Warnf("no results %v %v\n", cache, deliveryService)
 				} else {
 					result := results[0]
 					if result.PrecomputedData.Reporting {
-						iStat.CommonData().CachesReporting[enum.CacheName(cache)] = true
+						stat.Common.CachesReporting[enum.CacheName(cache)] = true
 					} else {
-						fmt.Printf("DEBUG no reporting %v %v\n", cache, deliveryService)
+						log.Debugf("no reporting %v %v\n", cache, deliveryService)
 					}
 				}
 			} else {
-				fmt.Printf("DEBUG no result for %v %v\n", cache, deliveryService)
+				log.Debugf("no result for %v %v\n", cache, deliveryService)
 			}
 
-			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = iStat // TODO Necessary? Remove?
+			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = stat // TODO Necessary? Remove?
 		}
 	}
 	return dsStats, nil
@@ -161,17 +162,9 @@ const BytesPerKbps = 1024
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
+// TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
 func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time) (Stats, StatsLastKbps, error) {
-	for dsName, iStat := range dsStats.DeliveryService {
-		if _, ok := iStat.(*dsdata.StatDNS); ok {
-			continue
-		}
-		if _, ok := iStat.(*dsdata.StatHTTP); !ok {
-			fmt.Printf("WARNING: addKbps got unknown stat type %T\n", iStat)
-			continue
-		}
-		stat := iStat.(*dsdata.StatHTTP)
-
+	for dsName, stat := range dsStats.DeliveryService {
 		lastKbpsStat, lastKbpsStatExists := lastKbpsStats.DeliveryServices[dsName]
 		if !lastKbpsStatExists {
 			lastKbpsStat = newStatLastKbps()
@@ -186,8 +179,13 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 				continue
 			}
 
-			if lastKbpsStatExists {
+			if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
 				cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+			}
+
+			if cacheStats.Kbps.Value < 0 {
+				cacheStats.Kbps.Value = 0
+				log.Errorf("addkbps negative cachegroup cacheStats.Kbps.Value: '%v' '%v' %v - %v / %v\n", dsName, cgName, cacheStats.OutBytes.Value, lastKbpsData.Bytes, dsStatsTime.Sub(lastKbpsData.Time).Seconds())
 			}
 
 			lastKbpsStat.CacheGroups[cgName] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
@@ -198,58 +196,89 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			lastKbpsData, _ := lastKbpsStat.Type[cacheType]
 			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
 				if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
+					if lastKbpsData.Kbps < 0 {
+						log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value!\n")
+						lastKbpsData.Kbps = 0
+					}
 					cacheStats.Kbps.Value = lastKbpsData.Kbps
 					stat.Type[cacheType] = cacheStats
 					continue
 				}
-				if lastKbpsStatExists {
+				if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
 					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+				}
+				if cacheStats.Kbps.Value < 0 {
+					log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value.\n")
+					cacheStats.Kbps.Value = 0
 				}
 				lastKbpsStat.Type[cacheType] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
 				stat.Type[cacheType] = cacheStats
 			}
 		}
-		if lastKbpsStatExists {
-			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
+
+		totalChanged := lastKbpsStat.Total.Bytes != stat.Total.OutBytes.Value
+		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
+			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds() / BytesPerKbps
+			if stat.Total.Kbps.Value < 0 {
+				stat.Total.Kbps.Value = 0
+				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.Total.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
+			}
 		} else {
 			stat.Total.Kbps.Value = lastKbpsStat.Total.Kbps
 		}
-		lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.Total.OutBytes.Value, Kbps: stat.Total.Kbps.Value}
+
+		if totalChanged {
+			lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.Total.OutBytes.Value, Kbps: stat.Total.Kbps.Value}
+		}
 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
+		dsStats.DeliveryService[dsName] = stat
 	}
 
-	for cacheName, results := range statHistory { // map[enum.CacheName]int64
-		if len(results) < 1 {
-			continue // TODO warn?
+	for cacheName, results := range statHistory {
+		var result *cache.Result
+		for _, r := range results {
+			// result.Errors can include stat errors where OutBytes was set correctly, so we look for the first non-zero OutBytes rather than the first errorless result
+			// TODO add error classes to PrecomputedData, to distinguish stat errors from HTTP errors?
+			if r.PrecomputedData.OutBytes == 0 {
+				continue
+			}
+			result = &r
+			break
 		}
-		result := results[0]
+
+		if result == nil {
+			log.Warnf("addkbps cache %v has no results\n", cacheName)
+			continue
+		}
+
 		outBytes := result.PrecomputedData.OutBytes
 
 		lastCacheKbpsData, ok := lastKbpsStats.Caches[cacheName]
 		if !ok {
+			// this means this is the first result for this cache - this is a normal condition
 			lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: dsStatsTime, Bytes: outBytes, Kbps: 0}
 			continue
 		}
 
 		if lastCacheKbpsData.Bytes == outBytes {
+			// this means this ATS hasn't updated its byte count yet - this is a normal condition
 			continue // don't try to kbps, and importantly don't change the time of the last change, if Traffic Server hasn't updated
 		}
 
 		if outBytes == 0 {
-			fmt.Printf("ERROR adding kbps %v outbytes zero\n", cacheName)
+			log.Errorf("addkbps %v outbytes zero\n", cacheName)
 			continue
 		}
 
 		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / result.Time.Sub(lastCacheKbpsData.Time).Seconds() / BytesPerKbps
 		if lastCacheKbpsData.Bytes == 0 {
 			kbps = 0
-			fmt.Printf("ERROR adding kbps %v lastCacheKbpsData.Bytes zero\n", cacheName)
+			log.Errorf("addkbps cache %v lastCacheKbpsData.Bytes zero\n", cacheName)
 		}
 		if kbps < 0 {
+			log.Errorf("addkbps negative cache kbps: cache %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time) // this is almost certainly a code bug. The only case this would ever be a data issue, would be if Traffic Server returned fewer bytes than previously.
 			kbps = 0
-			// TODO figure out what to do. Print error. Explode. Definitely don't set kbps negative.
-			fmt.Printf("ERROR negative kbps: %v kbps %v outBytes %v lastCacheKbpsData.Bytes %v dsStatsTime %v lastCacheKbpsData.Time %v\n", cacheName, kbps, outBytes, lastCacheKbpsData.Bytes, dsStatsTime, lastCacheKbpsData.Time)
 		}
 
 		lastKbpsStats.Caches[cacheName] = LastKbpsData{Time: result.Time, Bytes: outBytes, Kbps: kbps}
@@ -262,17 +291,11 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	start := time.Now()
 	dsStats := NewStats()
 	for deliveryService, _ := range toData.DeliveryServiceServers {
-		dsType, ok := toData.DeliveryServiceTypes[deliveryService]
-		if !ok {
-			return Stats{}, lastKbpsStats, fmt.Errorf("deliveryservice %s missing type", deliveryService)
+		if deliveryService == "" {
+			log.Errorf("EMPTY CreateStats deliveryService")
+			continue
 		}
-		if dsType == enum.DSTypeHTTP {
-			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = dsdata.NewStatHTTP()
-		} else if dsType == enum.DSTypeDNS {
-			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = dsdata.NewStatDNS()
-		} else {
-			return Stats{}, lastKbpsStats, fmt.Errorf("unknown type for '%s': %v", deliveryService, dsType)
-		}
+		dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = *dsdata.NewStat()
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
@@ -287,240 +310,38 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		}
 		cachegroup, ok := toData.ServerCachegroups[server]
 		if !ok {
-			fmt.Printf("WARNING server %s has no cachegroup, skipping\n", server)
+			log.Warnf("server %s has no cachegroup, skipping\n", server)
 			continue
 		}
 		serverType, ok := toData.ServerTypes[enum.CacheName(server)]
 		if !ok {
-			fmt.Printf("WARNING server %s not in CRConfig, skipping\n", server)
+			log.Warnf("server %s not in CRConfig, skipping\n", server)
 			continue
 		}
 		result := history[len(history)-1]
 
-		for ds, stat := range result.PrecomputedData.DeliveryServiceStats {
-			switch stat.(type) {
-			case *dsdata.StatHTTP:
-				resultHttpStat := stat.(*dsdata.StatHTTP)
-				if _, ok := dsStats.DeliveryService[ds]; !ok {
-					dsStats.DeliveryService[ds] = resultHttpStat
-					continue
-				}
-				httpDsStat, ok := dsStats.DeliveryService[ds].(*dsdata.StatHTTP)
-				if !ok {
-					fmt.Printf("WARNING precomputed stat does not match dsStats\n")
-					continue
-				}
-				httpDsStat.Total = httpDsStat.Total.Sum(resultHttpStat.Total)
-				httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultHttpStat.CacheGroups[cachegroup])
-				httpDsStat.Type[serverType] = httpDsStat.Type[serverType].Sum(resultHttpStat.Type[serverType])
-				dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
-			case *dsdata.StatDNS:
-				resultDnsStat := stat.(*dsdata.StatDNS)
-				dsStatsDnsStat, ok := dsStats.DeliveryService[ds].(*dsdata.StatDNS)
-				if !ok {
-					fmt.Printf("WARNING precomputed DNS stat does not match dsStats\n")
-					continue
-				}
-				dsStatsDnsStat.Sum(resultDnsStat)
-				dsStats.DeliveryService[ds] = dsStatsDnsStat // TODO determine if necessary
+		// TODO check result.PrecomputedData.Errors
+		for ds, resultStat := range result.PrecomputedData.DeliveryServiceStats {
+			if ds == "" {
+				log.Errorf("EMPTY precomputed delivery service")
+				continue
 			}
+
+			if _, ok := dsStats.DeliveryService[ds]; !ok {
+				dsStats.DeliveryService[ds] = resultStat
+				continue
+			}
+			httpDsStat := dsStats.DeliveryService[ds]
+			httpDsStat.Total = httpDsStat.Total.Sum(resultStat.Total)
+			httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultStat.CacheGroups[cachegroup])
+			httpDsStat.Type[serverType] = httpDsStat.Type[serverType].Sum(resultStat.Type[serverType])
+			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
 		}
 	}
 
 	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(statHistory, dsStats, lastKbpsStats, now)
-	fmt.Printf("CreateStats took %v\n", time.Since(start))
+	log.Infof("CreateStats took %v\n", time.Since(start))
 	return kbpsStats, kbpsStatsLastKbps, kbpsErr
-}
-
-// processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-// TODO fix this being crazy slow. THIS IS THE BOTTLENECK
-func processStat(dsStats *Stats, dsRegexes todata.Regexes, dsTypes map[string]enum.DSType, cachegroup enum.CacheGroupName, server enum.CacheName, serverType enum.CacheType, stat string, value interface{}) (enum.DeliveryServiceName, dsdata.Stat, error) {
-	parts := strings.Split(stat, ".")
-	if len(parts) < 1 {
-		return "", nil, fmt.Errorf("stat has no initial part")
-	}
-
-	switch parts[0] {
-	case "plugin":
-		return processStatPlugin(dsStats, dsRegexes, dsTypes, cachegroup, server, serverType, stat, parts[1:], value)
-	case "proxy":
-		return "", nil, dsdata.ErrNotProcessedStat
-	default:
-		return "", nil, fmt.Errorf("stat has unknown initial part '%s'", parts[0])
-	}
-}
-
-func processStatPlugin(dsStats *Stats, dsRegexes todata.Regexes, dsTypes map[string]enum.DSType, cachegroup enum.CacheGroupName, server enum.CacheName, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, dsdata.Stat, error) {
-	if len(statParts) < 1 {
-		return "", nil, fmt.Errorf("stat has no plugin part")
-	}
-	switch statParts[0] {
-	case "remap_stats":
-		return processStatPluginRemapStats(dsStats, dsRegexes, dsTypes, cachegroup, server, serverType, stat, statParts[1:], value)
-	default:
-		return "", nil, fmt.Errorf("stat has unknown plugin part '%s'", statParts[0])
-	}
-}
-
-func processStatPluginRemapStats(dsStats *Stats, dsRegexes todata.Regexes, dsTypes map[string]enum.DSType, cachegroup enum.CacheGroupName, server enum.CacheName, serverType enum.CacheType, stat string, statParts []string, value interface{}) (enum.DeliveryServiceName, dsdata.Stat, error) {
-	if len(statParts) < 2 {
-		return "", nil, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
-	}
-
-	fqdn := strings.Join(statParts[:len(statParts)-1], ".")
-	statName := statParts[len(statParts)-1]
-	ds, ok := dsRegexes.DeliveryService(fqdn)
-	if !ok {
-		return ds, nil, fmt.Errorf("%s matched no delivery service", fqdn)
-	}
-
-	if _, ok := dsTypes[string(ds)]; !ok {
-		return ds, nil, fmt.Errorf("delivery service %s not found in types map", ds)
-	}
-
-	addedStat, err := addStat(dsStats.DeliveryService[ds], statName, value, string(ds), server, serverType, cachegroup, dsTypes)
-	if err != nil {
-		return ds, nil, err
-	}
-	return ds, addedStat, nil
-}
-
-func addStat(iStat dsdata.Stat, name string, val interface{}, ds string, server enum.CacheName, serverType enum.CacheType, cachegroup enum.CacheGroupName, dsTypes map[string]enum.DSType) (dsdata.Stat, error) {
-	if iStat == nil {
-		return iStat, fmt.Errorf("addStat given nil stat for %s", ds)
-	}
-
-	var common *dsdata.StatCommon
-	common = iStat.CommonData()
-
-	if name == "error_string" {
-		valStr, ok := val.(string)
-		if !ok {
-			return iStat, fmt.Errorf("stat '%s' value expected string actual '%v' type %T", name, val, val)
-		}
-		common.ErrorString.Value += valStr + "; " // TODO figure out what the delimiter should be
-	}
-	common.Status.Value = "REPORTED" // TODO fix?
-
-	if stat, ok := iStat.(*dsdata.StatHTTP); ok {
-		newCachegroupStat, err := addCacheStat(stat.CacheGroups[cachegroup], name, val)
-		if err != nil {
-			return stat, err
-		}
-		stat.CacheGroups[enum.CacheGroupName(cachegroup)] = newCachegroupStat
-
-		newTypeStat, err := addCacheStat(stat.Type[serverType], name, val)
-		if err != nil {
-			return stat, err
-		}
-		stat.Type[serverType] = newTypeStat
-
-		newTotal, err := addCacheStat(stat.Total, name, val)
-		if err != nil {
-			return stat, err
-		}
-		stat.Total = newTotal
-
-		return stat, nil
-	}
-	if stat, ok := iStat.(*dsdata.StatDNS); ok {
-		// TODO handle DNS DS stats
-		return stat, nil
-	}
-	return iStat, fmt.Errorf("delivery service %s type is invalid", iStat)
-}
-
-// addCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
-// TODO make this less duplicate code somehow.
-func addCacheStat(stat dsdata.StatCacheStats, name string, val interface{}) (dsdata.StatCacheStats, error) {
-	switch name {
-	case "status_2xx":
-		v, ok := val.(float64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status2xx.Value += int64(v)
-	case "status_3xx":
-		v, ok := val.(float64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status3xx.Value += int64(v)
-	case "status_4xx":
-		v, ok := val.(float64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status4xx.Value += int64(v)
-	case "status_5xx":
-		v, ok := val.(float64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status5xx.Value += int64(v)
-	case "out_bytes":
-		v, ok := val.(float64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.OutBytes.Value += int64(v)
-	case "is_available":
-		fmt.Println("DEBUGa got is_available")
-		v, ok := val.(bool)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)
-		}
-		if v {
-			stat.IsAvailable.Value = true
-		}
-	case "in_bytes":
-		v, ok := val.(float64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.InBytes.Value += v
-	case "tps_2xx":
-		v, ok := val.(int64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps2xx.Value += v
-	case "tps_3xx":
-		v, ok := val.(int64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps3xx.Value += v
-	case "tps_4xx":
-		v, ok := val.(int64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps4xx.Value += v
-	case "tps_5xx":
-		v, ok := val.(int64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps5xx.Value += v
-	case "error_string":
-		v, ok := val.(string)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected string actual '%v' type %T", name, val, val)
-		}
-		stat.ErrorString.Value += v + ", "
-	case "tps_total":
-		v, ok := val.(int64)
-		if !ok {
-			return stat, fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.TpsTotal.Value += v
-	case "status_unknown":
-		return stat, dsdata.ErrNotProcessedStat
-	default:
-		return stat, fmt.Errorf("unknown stat '%s'", name)
-	}
-	return stat, nil
 }
 
 type StatName string
@@ -568,18 +389,16 @@ func StatsJSON(dsStats Stats) StatsOld {
 	now := time.Now().Unix()
 	jsonObj := &StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[StatName][]StatOld{}}
 
-	for deliveryService, dsStat := range dsStats.DeliveryService {
+	for deliveryService, stat := range dsStats.DeliveryService {
 		jsonObj.DeliveryService[deliveryService] = map[StatName][]StatOld{}
-		jsonObj = addCommonData(jsonObj, dsStat.CommonData(), deliveryService, now)
-		if stat, ok := dsStat.(*dsdata.StatHTTP); ok {
-			for cacheGroup, cacheGroupStats := range stat.CacheGroups {
-				jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, string("location."+cacheGroup), now)
-			}
-			for cacheType, typeStats := range stat.Type {
-				jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String(), now)
-			}
-			jsonObj = addStatCacheStats(jsonObj, stat.Total, deliveryService, "total", now)
+		jsonObj = addCommonData(jsonObj, &stat.Common, deliveryService, now)
+		for cacheGroup, cacheGroupStats := range stat.CacheGroups {
+			jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, string("location."+cacheGroup), now)
 		}
+		for cacheType, typeStats := range stat.Type {
+			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String(), now)
+		}
+		jsonObj = addStatCacheStats(jsonObj, stat.Total, deliveryService, "total", now)
 	}
 	return *jsonObj
 }
