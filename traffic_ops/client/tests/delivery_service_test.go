@@ -219,7 +219,7 @@ func TestDeliveryServiceHealth(t *testing.T) {
 	}
 
 	if health.CacheGroups[0].Name != "someCacheGroup" {
-		testHelper.Error(t, "Should get back \"someCacheGroup\" for \"cacheGroups[0].Name\", got: %s", health.CacheGroups[0].Name)
+		testHelper.Error(t, "Should get back \"someCacheGroup\" for \"CacheGroups[0].Name\", got: %s", health.CacheGroups[0].Name)
 	} else {
 		testHelper.Success(t, "Should get back \"someCacheGroup\" for \"CacheGroups[0].Name\"")
 	}
@@ -238,6 +238,65 @@ func TestDeliveryServiceHealthUnauthorized(t *testing.T) {
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceHealth")
 
 	_, err := to.DeliveryServiceHealth("123")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}
+
+func TestDeliveryServiceCapacity(t *testing.T) {
+	resp := fixtures.DeliveryServiceCapacity()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceCapacity")
+
+	capacity, err := to.DeliveryServiceCapacity("123")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if capacity.AvailablePercent != 1 {
+		testHelper.Error(t, "Should get back \"2\" for \"AvailablePercent\", got: %s", capacity.AvailablePercent)
+	} else {
+		testHelper.Success(t, "Should get back \"2\" for \"AvailablePercent\"")
+	}
+
+	if capacity.UnavailablePercent != 2 {
+		testHelper.Error(t, "Should get back \"2\" for \"UnavailablePercent\", got: %s", capacity.UnavailablePercent)
+	} else {
+		testHelper.Success(t, "Should get back \"2\" for \"UnavailablePercent\"")
+	}
+
+	if capacity.UtilizedPercent != 3 {
+		testHelper.Error(t, "Should get back \"3\" for \"UtilizedPercent\", got: %s", capacity.UtilizedPercent)
+	} else {
+		testHelper.Success(t, "Should get back \"3\" for \"UtilizedPercent\"")
+	}
+}
+
+func TestDeliveryServiceCapacityUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceCapacity")
+
+	_, err := to.DeliveryServiceCapacity("123")
 	if err == nil {
 		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {

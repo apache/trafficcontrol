@@ -89,3 +89,17 @@ func DeliveryServiceHealth() *client.DeliveryServiceHealthResponse {
 		Response: dsh,
 	}
 }
+
+// DeliveryServiceCapacity returns a default DeliveryServiceCapacityResponse to be used for testing.
+func DeliveryServiceCapacity() *client.DeliveryServiceCapacityResponse {
+	dsc := client.DeliveryServiceCapacity{
+		AvailablePercent:   1,
+		UnavailablePercent: 2,
+		UtilizedPercent:    3,
+		MaintenancePercent: 4,
+	}
+
+	return &client.DeliveryServiceCapacityResponse{
+		Response: dsc,
+	}
+}

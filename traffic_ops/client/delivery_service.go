@@ -109,6 +109,19 @@ type DeliveryServiceCacheGroup struct {
 	Name    string `json:"name"`
 }
 
+// DeliveryServiceCapacityResponse ...
+type DeliveryServiceCapacityResponse struct {
+	Response DeliveryServiceCapacity `json:"response"`
+}
+
+// DeliveryServiceCapacity ...
+type DeliveryServiceCapacity struct {
+	AvailablePercent   int `json:"availablePercent"`
+	UnavailablePercent int `json:"unavailablePercent"`
+	UtilizedPercent    int `json:"utilizedPercent"`
+	MaintenancePercent int `json:"maintenancePercent"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	url := "/api/1.2/deliveryservices.json"
@@ -170,6 +183,23 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 	defer resp.Body.Close()
 
 	var data DeliveryServiceHealthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
+func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/capacity.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceCapacityResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
