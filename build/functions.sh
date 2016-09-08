@@ -87,7 +87,7 @@ function getCommit() {
 # ---------------------------------------
 function checkEnvironment {
 	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER=""${BUILD_NUMBER:-$(getBuildNumber)}.$(getRhelVersion)"
+	export BUILD_NUMBER="${BUILD_NUMBER:-$(getBuildNumber)}.$(getRhelVersion)"
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
