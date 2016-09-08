@@ -20,7 +20,7 @@
 Name:		traffic_ops_ort
 Summary:	Installs ORT script for Traffic Control caches
 Version:	%{traffic_control_version}
-Release:	%{build_number}%{?dist}
+Release:	%{build_number}
 License:	Apache License, Version 2.0
 Group:		Applications/Communications
 Source0:	traffic_ops_ort-%{version}.tgz
