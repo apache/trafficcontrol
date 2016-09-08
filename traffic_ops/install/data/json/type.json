@@ -19,5 +19,3 @@
 {"name":"REDIS","description":"Redis stats gateway","use_in_table":"server"}
 {"name":"DNS_LIVE_NATNL","description":"DNS Content routing, RAM cache, National","use_in_table":"deliveryservice"}
 {"name":"DNS_LIVE","description":"DNS Content routing, RAM cache, Local","use_in_table":"deliveryservice"}
-{"name":"LOCAL","description":"Local User","use_in_table":"tm_user"}
-{"name":"ACTIVE_DIRECTORY","description":"Active Directory User","use_in_table":"tm_user"}
