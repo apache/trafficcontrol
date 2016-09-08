@@ -185,3 +185,62 @@ func TestDeliveryServiceStateUnauthorized(t *testing.T) {
 		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
+
+func TestDeliveryServiceHealth(t *testing.T) {
+	resp := fixtures.DeliveryServiceHealth()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceHealth")
+
+	health, err := to.DeliveryServiceHealth("123")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if health.TotalOnline != 2 {
+		testHelper.Error(t, "Should get back \"2\" for \"TotalOnline\", got: %s", health.TotalOnline)
+	} else {
+		testHelper.Success(t, "Should get back \"2\" for \"TotalOnline\"")
+	}
+
+	if health.TotalOffline != 3 {
+		testHelper.Error(t, "Should get back \"3\" for \"TotalOffline\", got: %s", health.TotalOffline)
+	} else {
+		testHelper.Success(t, "Should get back \"2\" for \"TotalOffline\"")
+	}
+
+	if health.CacheGroups[0].Name != "someCacheGroup" {
+		testHelper.Error(t, "Should get back \"someCacheGroup\" for \"cacheGroups[0].Name\", got: %s", health.CacheGroups[0].Name)
+	} else {
+		testHelper.Success(t, "Should get back \"someCacheGroup\" for \"CacheGroups[0].Name\"")
+	}
+}
+
+func TestDeliveryServiceHealthUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceHealth")
+
+	_, err := to.DeliveryServiceHealth("123")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}

@@ -70,3 +70,22 @@ func DeliveryServiceState() *client.DeliveryServiceStateResponse {
 		Response: ds,
 	}
 }
+
+// DeliveryServiceHealth returns a default DeliveryServiceHealthResponse to be used for testing.
+func DeliveryServiceHealth() *client.DeliveryServiceHealthResponse {
+	cacheGroup := client.DeliveryServiceCacheGroup{
+		Name:    "someCacheGroup",
+		Online:  2,
+		Offline: 3,
+	}
+
+	dsh := client.DeliveryServiceHealth{
+		TotalOnline:  2,
+		TotalOffline: 3,
+		CacheGroups:  []client.DeliveryServiceCacheGroup{cacheGroup},
+	}
+
+	return &client.DeliveryServiceHealthResponse{
+		Response: dsh,
+	}
+}

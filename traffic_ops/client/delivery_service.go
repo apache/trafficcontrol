@@ -90,6 +90,25 @@ type DeliveryServiceFailover struct {
 	Enabled     bool     `json:"enabled"`
 }
 
+// DeliveryServiceHealthResponse ...
+type DeliveryServiceHealthResponse struct {
+	Response DeliveryServiceHealth `json:"response"`
+}
+
+// DeliveryServiceHealth ...
+type DeliveryServiceHealth struct {
+	TotalOnline  int                         `json:"totalOnline"`
+	TotalOffline int                         `json:"totalOffline"`
+	CacheGroups  []DeliveryServiceCacheGroup `json:"cacheGroups"`
+}
+
+// DeliveryServiceCacheGroup ...
+type DeliveryServiceCacheGroup struct {
+	Online  int    `json:"online"`
+	Offline int    `json:"offline"`
+	Name    string `json:"name"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	url := "/api/1.2/deliveryservices.json"
@@ -134,6 +153,23 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 	defer resp.Body.Close()
 
 	var data DeliveryServiceStateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
+func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/health.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceHealthResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
