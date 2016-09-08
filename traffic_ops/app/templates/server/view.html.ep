@@ -243,6 +243,16 @@ $(function () {
 						<td>Status</td>
 						<td class="editable" id="status"><%= $server_data->status->name %></td>
 					</tr>
+					% if ($server_data->status->name eq 'ADMIN_DOWN' || $server_data->status->name eq 'OFFLINE') {
+						<tr>
+						% if ($server_data->status->name eq 'ADMIN_DOWN') {
+							<td>Admin_Down User:Reason</td>
+						% } else {
+							<td>Offline User:Reason</td>
+						% }
+							<td class="editable" id="st_chg_reason"><%= $server_data->st_chg_reason %></td>
+						</tr>
+					% }
 					<tr>
 						<td>Profile</td>
 						<td class="editable" id="profile"><%= $server_data->profile->name %></td>
@@ -349,7 +359,16 @@ var last_part = "?";
 function offline_confirm() {
 	var r=confirm("Set status of this machine to " + offline_status + last_part);
 	if (r==true) {
-		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %> });
+		var ask="A reason is required.\nWhy are you setting Status = " + offline_status + "?";
+		var y=prompt(ask,"");
+		if (y == null || y == "") {
+			r=false;
+		} else {
+			y="<%= $user %>: " + y;
+		}
+	}
+	if (r==true) {
+		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %>, reason: y });
 		if ( queue_updates == true )
 			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: offline_status });
 		parent.$.fancybox.close();
