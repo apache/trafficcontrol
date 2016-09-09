@@ -466,7 +466,9 @@ sub update {
 	if ($server_status ne "OFFLINE" && $server_status ne "ADMIN_DOWN") {
 		$self->param(offline_reason => "N/A"); # this will satisfy the UI's requirement of offline reason if not offline or admin_down
 	} else {
-		$self->param(offline_reason => $self->current_user()->{username} . ": " . $offline_reason) if( $offline_reason !~ /^.*: / );
+		if (defined($offline_reason) && $offline_reason ne "") {
+			$self->param(offline_reason => $self->current_user()->{username} . ": " . $offline_reason);
+		}
 	}
 
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
