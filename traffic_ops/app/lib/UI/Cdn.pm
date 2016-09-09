@@ -386,7 +386,7 @@ sub aserver {
                 $cdn_name,             $row->cachegroup->name, $row->phys_location->name, $row->ip_address,
                 $row->ip6_address,     $row->status->name,     $row->profile->name,       $row->ilo_ip_address,
                 $row->mgmt_ip_address, $row->type->name,       $aux_url,                  $img,
-		$row->st_chg_reason
+		        $row->offline_reason
             ];
         }
         push( @{ $data{'aaData'} }, @line );

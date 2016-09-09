@@ -245,12 +245,8 @@ $(function () {
 					</tr>
 					% if ($server_data->status->name eq 'ADMIN_DOWN' || $server_data->status->name eq 'OFFLINE') {
 						<tr>
-						% if ($server_data->status->name eq 'ADMIN_DOWN') {
-							<td>Admin_Down User:Reason</td>
-						% } else {
-							<td>Offline User:Reason</td>
-						% }
-							<td class="editable" id="st_chg_reason"><%= $server_data->st_chg_reason %></td>
+							<td>Offline Reason</td>
+							<td class="editable" id="offline_reason"><%= $server_data->offline_reason %></td>
 						</tr>
 					% }
 					<tr>
@@ -368,7 +364,7 @@ function offline_confirm() {
 		}
 	}
 	if (r==true) {
-		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %>, reason: y });
+		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %>, offlineReason: y });
 		if ( queue_updates == true )
 			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: offline_status });
 		parent.$.fancybox.close();
@@ -377,7 +373,7 @@ function offline_confirm() {
 function online_confirm() {
 	var r=confirm("Set status of this machine to " + online_status + last_part);
 	if (r==true) {
-		$.post("/server/updatestatus", { status: online_status, id: <%= $id %> });
+		$.post("/server/updatestatus", { status: online_status, id: <%= $id %>, offlineReason: "" });
 		if ( queue_updates == true )
 			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: online_status });
 		parent.$.fancybox.close();
