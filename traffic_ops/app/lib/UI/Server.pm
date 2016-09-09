@@ -139,7 +139,7 @@ sub getserverdata {
 				"rack"             => $row->rack,
 				"type"             => $row->type->name,
 				"status"           => $row->status->name,
-				"st_chg_reason"    => $row->st_chg_reason,
+				"offline_reason"   => $row->offline_reason,
 				"profile"          => $row->profile->name,
 				"mgmt_ip_address"  => $row->mgmt_ip_address,
 				"mgmt_ip_netmask"  => $row->mgmt_ip_netmask,
@@ -197,7 +197,7 @@ sub serverdetail {
 			"rack"             => $row->rack,
 			"type"             => $row->type->name,
 			"status"           => $row->status->name,
-			"st_chg_reason"    => $row->st_chg_reason,
+			"offline_reason"   => $row->offline_reason,
 			"profile"          => $row->profile->name,
 			"mgmt_ip_address"  => $row->mgmt_ip_address,
 			"mgmt_ip_netmask"  => $row->mgmt_ip_netmask,
@@ -291,7 +291,7 @@ sub check_server_input_cgi {
 	my $id         	 = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile offline_reason/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
@@ -325,7 +325,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile offline_reason/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} )
@@ -459,6 +459,13 @@ sub update {
 	# }
 	#===
 
+
+	my $server_status = $self->db->resultset('Status')->search( { id => $self->param('status') } )->get_column('name')->single();
+
+	if ($server_status ne "OFFLINE" && $server_status ne "ADMIN_DOWN") {
+		$self->param(offline_reason => "N/A"); # this will satisfy the UI's requirement of offline reason if not offline or admin_down
+	}
+
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
 		$paramHashRef = &cgi_params_to_param_hash_ref($self);
 	}
@@ -498,7 +505,7 @@ sub update {
 				rack             => $paramHashRef->{'rack'},
 				type             => $paramHashRef->{'type'},
 				status           => $paramHashRef->{'status'},
-				st_chg_reason    => $paramHashRef->{'st_chg_reason'},
+				offline_reason   => $paramHashRef->{'offline_reason'},
 				profile          => $paramHashRef->{'profile'},
 				mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
 				mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
@@ -582,10 +589,10 @@ sub update {
 }
 
 sub updatestatus {
-	my $self   = shift;
-	my $id     = $self->param('id');
-	my $status = $self->param('status');
-	my $reason = $self->param('reason');
+	my $self   			= shift;
+	my $id     			= $self->param('id');
+	my $status 			= $self->param('status');
+	my $offline_reason 	= $self->param('offlineReason');
 
 	my $statstring = undef;
 	if ( $status !~ /^\d$/ ) {    # if it is a string like "REPORTED", look up the id in the db.
@@ -595,7 +602,7 @@ sub updatestatus {
 	else {
 		$statstring = $self->db->resultset('Status')->search( { id => $status } )->get_column('name')->single();
 	}
-	my $update = $self->set_serverstatus( $id, $status, $reason );
+	my $update = $self->set_serverstatus( $id, $status, $offline_reason );
 	my $fqdn = $update->host_name . "." . $update->domain_name;
 
 	my $lstring = "Update server $fqdn new status = $statstring";
@@ -612,11 +619,10 @@ sub set_serverstatus {
 	# we can't use :status as a placeholder in our rest call -jse
 	my $id     = shift;
 	my $status = shift;
-	my $reason = shift;
+	my $offline_reason = shift;
 
 	my $update = $self->db->resultset('Server')->find( { id => $id } );
-	$update->update( { status => $status, st_chg_reason => $reason } );
-	$update->update();
+	$update->update( { status => $status, offline_reason => $offline_reason } );
 
 	return ($update);
 }
@@ -625,13 +631,13 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach my $requiredParam (
-		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location/)
+		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location offline_reason/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
 		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port https_port
-		ilo_username ilo_password router_host_name router_port_name status st_chg_reason rack guid id/
+		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
@@ -687,7 +693,7 @@ sub create {
 					rack             => $paramHashRef->{'rack'},
 					type             => $paramHashRef->{'type'},
 					status           => &admin_status_id( $self, "OFFLINE" ),
-					st_chg_reason    => &admin_status_id( $self, "Newly created" ),
+					offline_reason   => &admin_status_id( $self, "Newly created" ),
 					profile          => $paramHashRef->{'profile'},
 					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
 					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
@@ -723,7 +729,7 @@ sub create {
 					rack             => $paramHashRef->{'rack'},
 					type             => $paramHashRef->{'type'},
 					status           => &admin_status_id( $self, "OFFLINE" ),
-					st_chg_reason    => &admin_status_id( $self, "Newly created" ),
+					offline_reason   => &admin_status_id( $self, "Newly created" ),
 					profile          => $paramHashRef->{'profile'},
 					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
 					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
