@@ -135,7 +135,8 @@ __PACKAGE__->table("server");
 =head2 offline_reason
 
   data_type: 'varchar'
-  is_nullable: 1
+  default_value: 'N/A'
+  is_nullable: 0
   size: 256
 
 =head2 upd_pending
@@ -154,7 +155,7 @@ __PACKAGE__->table("server");
 
   data_type: 'integer'
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 mgmt_ip_address
 
@@ -231,7 +232,8 @@ __PACKAGE__->table("server");
 
 =head2 https_port
 
-  data_type: 'smallint'
+  data_type: 'integer'
+  extra: {unsigned => 1}
   is_nullable: 1
 
 =cut
@@ -279,13 +281,18 @@ __PACKAGE__->add_columns(
   "status",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "offline_reason",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  {
+    data_type => "varchar",
+    default_value => "N/A",
+    is_nullable => 0,
+    size => 256,
+  },
   "upd_pending",
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "profile",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
   "mgmt_ip_address",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "mgmt_ip_netmask",
@@ -316,7 +323,7 @@ __PACKAGE__->add_columns(
     is_nullable => 1,
   },
   "https_port",
-  { data_type => "smallint", is_nullable => 1 },
+  { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -410,7 +417,12 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "SET NULL",
+    on_update     => "RESTRICT",
+  },
 );
 
 =head2 deliveryservice_servers
@@ -519,8 +531,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-08 16:03:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:I3HqV6I4I5taXrqaaNTESw
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-09 16:27:58
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nQIElaZRLqvUtTPauXCOyQ
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
