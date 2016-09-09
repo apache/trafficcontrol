@@ -380,7 +380,7 @@ function offline_confirm() {
 function online_confirm() {
 	var r=confirm("Set status of this machine to " + online_status + last_part);
 	if (r==true) {
-		$.post("/server/updatestatus", { status: online_status, id: <%= $id %>, offlineReason: "" });
+		$.post("/server/updatestatus", { status: online_status, id: <%= $id %>, offlineReason: "N/A" });
 		if ( queue_updates == true )
 			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: online_status });
 		parent.$.fancybox.close();
