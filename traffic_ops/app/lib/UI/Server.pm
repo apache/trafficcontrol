@@ -291,7 +291,7 @@ sub check_server_input_cgi {
 	my $id         	 = shift;
 	my $paramHashRef = {};
 	my $err          = undef;
-	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
+	foreach my $requiredParam (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile offline_reason/) {
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
@@ -325,7 +325,7 @@ sub check_server_input {
 
 	# then, check the mandatory parameters for 'existence'. The error may be a bit cryptic to the user, but
 	# I don't want to write too much code around it.
-	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile/) {
+	foreach my $param (qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile offline_reason/) {
 
 		#print "$param -> " . $paramHashRef->{$param} . "\n";
 		if ( !defined( $paramHashRef->{$param} )
@@ -458,6 +458,13 @@ sub update {
 	# 	print $f . " => " . $self->param($f) . "\n";
 	# }
 	#===
+
+
+	my $server_status = $self->db->resultset('Status')->search( { id => $self->param('status') } )->get_column('name')->single();
+
+	if ($server_status ne "OFFLINE" && $server_status ne "ADMIN_DOWN") {
+		$self->param(offline_reason => "N/A"); # this will satisfy the UI's requirement of offline reason if not offline or admin_down
+	}
 
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
 		$paramHashRef = &cgi_params_to_param_hash_ref($self);
@@ -624,13 +631,13 @@ sub cgi_params_to_param_hash_ref {
 	my $self         = shift;
 	my $paramHashRef = {};
 	foreach my $requiredParam (
-		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location/)
+		qw/host_name domain_name ip_address interface_name ip_netmask ip_gateway interface_mtu cdn cachegroup type profile phys_location offline_reason/)
 	{
 		$paramHashRef->{$requiredParam} = $self->param($requiredParam);
 	}
 	foreach my $optionalParam (
 		qw/ilo_ip_address ilo_ip_netmask ilo_ip_gateway mgmt_ip_address mgmt_ip_netmask mgmt_ip_gateway ip6_address ip6_gateway tcp_port https_port
-		ilo_username ilo_password router_host_name router_port_name status offline_reason rack guid id/
+		ilo_username ilo_password router_host_name router_port_name status rack guid id/
 		)
 	{
 		$paramHashRef->{$optionalParam} = $self->param($optionalParam);
