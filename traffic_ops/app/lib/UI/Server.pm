@@ -461,9 +461,12 @@ sub update {
 
 
 	my $server_status = $self->db->resultset('Status')->search( { id => $self->param('status') } )->get_column('name')->single();
+	my $offline_reason = &cgi_params_to_param_hash_ref($self)->{'offline_reason'};
 
 	if ($server_status ne "OFFLINE" && $server_status ne "ADMIN_DOWN") {
 		$self->param(offline_reason => "N/A"); # this will satisfy the UI's requirement of offline reason if not offline or admin_down
+	} else {
+		$self->param(offline_reason => $self->current_user()->{username} . ": " . $offline_reason) if( $offline_reason !~ /^.*: / );
 	}
 
 	if ( !defined( $paramHashRef->{'csv_line_number'} ) ) {
