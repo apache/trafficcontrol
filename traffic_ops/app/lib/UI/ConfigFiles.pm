@@ -1137,7 +1137,7 @@ sub parent_dot_config {
 					else {
 						push @null_parent_info, format_parent_info($parent);
 					}
-
+				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
