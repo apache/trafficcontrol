@@ -16,7 +16,11 @@ MAINTAINER Dan Kirkwood
 ARG JDK=http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.rpm
 ARG RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_router-1.6.0-3503.4899d302.x86_64.rpm
 
-RUN yum install -y wget tar unzip perl-JSON perl-WWW-Curl
+RUN yum install -y wget tar unzip perl-JSON perl-WWW-Curl which
+
+# NOTE: Can't just use ADD because of the required cookie
+RUN curl -O -L -b "oraclelicense=a" $JDK
+ADD $RPM /
 
 RUN yum install -y /$(basename $JDK) /$(basename $RPM)
 RUN rm /$(basename $JDK) /$(basename $RPM)
