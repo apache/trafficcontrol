@@ -89,6 +89,7 @@ $(function(){
 		<h3><a href="#">Add Server</a></h3>
 		<form method="POST" action="/server/create" id=serveradd>
 			<h2>Required Info:</h2>
+			<input type="hidden" id="offline_reason" name="offline_reason" value="Newly created">
 			<table>
 				<tr>
 					<td>Hostname</td>
