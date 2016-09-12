@@ -613,8 +613,8 @@ sub updatestatus {
 	my $update = $self->set_serverstatus( $id, $status, $offline_reason );
 	my $fqdn = $update->host_name . "." . $update->domain_name;
 
-	my $lstring = "Update server $fqdn new status = $statstring";
-	&log( $self, $lstring, "UICHANGE" );
+	my $lstring = "Update server $fqdn new status = $statstring [" . qq/$offline_reason/ . "]";
+	&log( $self, qq/$lstring/, "UICHANGE" );
 
 	my $referer = $self->req->headers->header('referer');
 	return $self->redirect_to($referer);
