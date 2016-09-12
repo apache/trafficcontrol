@@ -159,8 +159,11 @@ send -- "\\r"\n\
 expect -exact "Enter pass phrase for server.key.orig:"\n\
 sleep 0.5\n\
 send -- "pass\\r"\n\
-expect -exact "Health Polling Interval (milliseconds) \[8000\]"\n\
+expect -exact "Install Cron entry to clean install .iso files older than 7 days? \[y/n\] \[n\]:"
+send -- "\\r"\n\
 sleep 0.5\n\
+expect -exact "Health Polling Interval (milliseconds) \[8000\]"\n\
+sleep 0.5\n
 send -- "\\r"\n\
 expect -exact "TLD SOA admin \[traffic_ops\]:"\n\
 sleep 0.5\n\

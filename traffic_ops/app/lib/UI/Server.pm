@@ -436,7 +436,8 @@ sub check_server_input {
 	if ( defined( $paramHashRef->{'tcp_port'} ) && $paramHashRef->{'tcp_port'} !~ /\d+/ ) {
 		$err .= $paramHashRef->{'tcp_port'} . " is not a valid tcp port" . $sep;
 	}
-	if ( defined( $paramHashRef->{'https_port'} ) && $paramHashRef->{'https_port'} !~ /\d+/ ) {
+	if ( defined( $paramHashRef->{'https_port'} ) && $paramHashRef->{'https_port'} ne "" && $paramHashRef->{'https_port'} !~ /\d+/ ) {
+		print("https_port: " . defined( $paramHashRef->{'https_port'} ) . "\n");
 		$err .= $paramHashRef->{'https_port'} . " is not a valid https port" . $sep;
 	}
 
@@ -572,7 +573,7 @@ sub update {
 			}
 		}
 
-		# this just creates the log string for the log table / tab.
+		# creates the change log entry string which includes the new values for server properties that have changed (i.e. host_name->foo-bar)
 		my $lstring = "Update server " . $self->param('host_name') . " ";
 		foreach my $col ( keys %{ $org_server->{_column_data} } ) {
 			if ( defined( $self->param($col) )
@@ -701,7 +702,7 @@ sub create {
 					rack             => $paramHashRef->{'rack'},
 					type             => $paramHashRef->{'type'},
 					status           => &admin_status_id( $self, "OFFLINE" ),
-					offline_reason   => &admin_status_id( $self, "Newly created" ),
+					offline_reason   => "Newly created",
 					profile          => $paramHashRef->{'profile'},
 					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
 					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},
@@ -737,7 +738,7 @@ sub create {
 					rack             => $paramHashRef->{'rack'},
 					type             => $paramHashRef->{'type'},
 					status           => &admin_status_id( $self, "OFFLINE" ),
-					offline_reason   => &admin_status_id( $self, "Newly created" ),
+					offline_reason   => "Newly created",
 					profile          => $paramHashRef->{'profile'},
 					mgmt_ip_address  => $paramHashRef->{'mgmt_ip_address'},
 					mgmt_ip_netmask  => $paramHashRef->{'mgmt_ip_netmask'},

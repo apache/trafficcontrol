@@ -338,6 +338,7 @@ $(document).ready(function() {
             <li>ROUTERHOSTNAME</li>
             <li>ROUTERPORTNAME</li>
             <li>HTTPSPORT</li>
+            <li>OFFLINEREASON</li>
           </ul>
         </li>
       </ul>
