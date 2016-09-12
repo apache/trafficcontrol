@@ -26,13 +26,6 @@ type StatString struct {
 	Value string `json:"value"`
 }
 
-// TODO add `AddCacheStat` func, so it isn't necessary to cast, to add stats
-type Stat interface {
-	StatType() enum.DSType
-	CommonData() *StatCommon
-	Copy() Stat
-}
-
 type StatCommon struct {
 	CachesConfigured StatInt                 `json:"caches_configured"`
 	CachesReporting  map[enum.CacheName]bool `json:"caches_reporting"`
@@ -90,68 +83,26 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 	}
 }
 
-type StatHTTP struct {
+type Stat struct {
 	Common      StatCommon
 	CacheGroups map[enum.CacheGroupName]StatCacheStats
 	Type        map[enum.CacheType]StatCacheStats
 	Total       StatCacheStats
 }
 
-func (d StatHTTP) StatType() enum.DSType {
-	return enum.DSTypeHTTP
+func NewStat() *Stat {
+	return &Stat{CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}, Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
 }
 
-func (d *StatHTTP) CommonData() *StatCommon {
-	return &d.Common
-}
-
-func NewStatHTTP() *StatHTTP {
-	return &StatHTTP{CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}, Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
-}
-
-func (a StatHTTP) Copy() Stat {
-	b := StatHTTP{Common: a.Common.Copy(), Total: a.Total, CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}}
+func (a Stat) Copy() Stat {
+	b := Stat{Common: a.Common.Copy(), Total: a.Total, CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Type: map[enum.CacheType]StatCacheStats{}}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
 	}
 	for k, v := range a.Type {
 		b.Type[k] = v
 	}
-	return &b
-}
-
-type StatDNS struct {
-	Common StatCommon
-}
-
-func (d StatDNS) StatType() enum.DSType {
-	return enum.DSTypeDNS
-}
-
-func (d *StatDNS) CommonData() *StatCommon {
-	return &d.Common
-}
-
-func NewStatDNS() *StatDNS {
-	return &StatDNS{Common: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
-}
-
-func (s StatDNS) Copy() Stat {
-	return &StatDNS{Common: s.Common.Copy()}
-}
-
-func (a *StatDNS) Sum(b *StatDNS) {
-	a.CommonData().CachesConfigured.Value += b.CommonData().CachesConfigured.Value
-	for cache, reporting := range b.CommonData().CachesReporting {
-		if reporting {
-			a.CommonData().CachesReporting[cache] = true
-		}
-	}
-	a.CommonData().ErrorString.Value += b.CommonData().ErrorString.Value
-	//	a.CommonData().Status += b.CommonData().Status // TODO decide what to do about 'summing' the status text
-	a.CommonData().IsHealthy.Value = a.CommonData().IsHealthy.Value || b.CommonData().IsHealthy.Value
-	a.CommonData().IsAvailable.Value = a.CommonData().IsAvailable.Value || b.CommonData().IsAvailable.Value
-	a.CommonData().CachesAvailable.Value += b.CommonData().CachesAvailable.Value
+	return b
 }
 
 var ErrNotProcessedStat = errors.New("This stat is not used.")

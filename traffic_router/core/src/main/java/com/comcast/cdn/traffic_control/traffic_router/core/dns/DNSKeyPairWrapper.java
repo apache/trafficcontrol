@@ -47,20 +47,20 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
 		this.ttl = keyPair.optLong("ttl", defaultTTL);
 		this.name = keyPair.getString("name");
-		//this.status = keyPair.getString("status"); // this field is used by Traffic Ops; we detect expiration by using the above dates
 
 		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.getString("private"));
 		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.getString("public"));
-		final InputStream in = new ByteArrayInputStream(publicKey);
 
-		final Master master = new Master(in, new Name(name), ttl);
-		Record record = null;
-		setPrivateKeyString(new String(privateKey));
+		try (InputStream in = new ByteArrayInputStream(publicKey)) {
+			final Master master = new Master(in, new Name(name), ttl);
+			setPrivateKeyString(new String(privateKey));
 
-		while ((record = master.nextRecord()) != null) {
-			if (record.getType() == Type.DNSKEY) {
-				setDNSKEYRecord((DNSKEYRecord) record);
-				break;
+			Record record;
+			while ((record = master.nextRecord()) != null) {
+				if (record.getType() == Type.DNSKEY) {
+					setDNSKEYRecord((DNSKEYRecord) record);
+					break;
+				}
 			}
 		}
 	}

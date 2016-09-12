@@ -18,6 +18,8 @@ package com.comcast.cdn.traffic_control.traffic_router.neustar.data;
 
 import com.comcast.cdn.traffic_control.traffic_router.neustar.files.FilesMover;
 import com.quova.bff.reader.io.GPDatabaseReader;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -26,13 +28,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
+
+import static java.lang.Long.parseLong;
 
 public class NeustarDatabaseUpdater {
 	private final Logger LOGGER = Logger.getLogger(NeustarDatabaseUpdater.class);
@@ -61,12 +63,14 @@ public class NeustarDatabaseUpdater {
 		this.httpClient = httpClient;
 	}
 
-	private File createTmpDir(File directory) throws IOException {
-		return Files.createTempDirectory(directory.toPath(), null).toFile();
-	}
+	private File createTmpDir(File directory) {
+		try {
+			return Files.createTempDirectory(directory.toPath(), "neustar-").toFile();
+		} catch (IOException e) {
+			System.out.println("Failed to create temporary directory in " + directory.getAbsolutePath() + ": " + e.getMessage());
+		}
 
-	public File extractRemoteContent(InputStream inputStream) throws IOException {
-		return tarExtractor.extractTgzTo(createTmpDir(neustarDatabaseDirectory), inputStream);
+		return null;
 	}
 
 	public boolean verifyNewDatabase(File directory) {
@@ -85,14 +89,56 @@ public class NeustarDatabaseUpdater {
 			return false;
 		}
 
-		URI uri;
-		try {
-			uri = URI.create(neustarDataUrl);
-		} catch (Exception e) {
-			LOGGER.error("Cannot get latest neustar data 'neustar.polling.url' value '" + neustarDataUrl + "' is not valid");
+		File tmpDir = createTmpDir(neustarDatabaseDirectory);
+		if (tmpDir == null) {
 			return false;
 		}
 
+		try (CloseableHttpResponse response = getRemoteDataResponse(URI.create(neustarDataUrl))) {
+			if (response.getStatusLine().getStatusCode() == 304) {
+				LOGGER.info("Neustar database unchanged at " + neustarDataUrl);
+				return false;
+			}
+
+			if (response.getStatusLine().getStatusCode() != 200) {
+				LOGGER.error("Failed downloading remote neustar database from " + neustarDataUrl + " " + response.getStatusLine().getReasonPhrase());
+			}
+
+			if (!enoughFreeSpace(tmpDir, response, neustarDataUrl)) {
+				return false;
+			}
+
+			try (GZIPInputStream gzipStream = new GZIPInputStream(response.getEntity().getContent())) {
+				if (!tarExtractor.extractTo(tmpDir, gzipStream)) {
+					LOGGER.error("Failed to decompress remote content from " + neustarDataUrl);
+					return false;
+				}
+			}
+
+			LOGGER.info("Replacing neustar files in " + neustarDatabaseDirectory.getAbsolutePath() + " with those in " + tmpDir.getAbsolutePath());
+
+			if (!filesMover.updateCurrent(neustarDatabaseDirectory, tmpDir, neustarOldDatabaseDirectory)) {
+				LOGGER.error("Failed updating neustar files");
+				return false;
+			}
+
+			if (!verifyNewDatabase(tmpDir)) {
+				return false;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Failed getting remote neustar data: " + e.getMessage());
+		} finally {
+			httpClient.close();
+
+			if (!filesMover.purgeDirectory(tmpDir) || !tmpDir.delete()) {
+				LOGGER.error("Failed purging temporary directory " + tmpDir.getAbsolutePath());
+			}
+		}
+
+		return true;
+	}
+
+	public CloseableHttpResponse getRemoteDataResponse(URI uri) {
 		HttpGet httpGet = new HttpGet(uri);
 		httpGet.setConfig(RequestConfig.custom().setSocketTimeout(neustarPollingTimeout).build());
 		Date buildDate = getDatabaseBuildDate();
@@ -101,58 +147,25 @@ public class NeustarDatabaseUpdater {
 			httpGet.setHeader("If-Modified-Since", new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z").format(buildDate));
 		}
 
-		CloseableHttpResponse response = httpClient.execute(httpGet);
+		return httpClient.execute(httpGet);
+	}
 
-		if (response == null) {
+	public boolean enoughFreeSpace(File destination, HttpResponse response, String request) {
+		Header contentLengthHeader = response.getFirstHeader("Content-Length");
+
+		if (contentLengthHeader == null) {
+			LOGGER.warn("Unable to determine size of data from " + request);
+			return true;
+		}
+
+		long contentLength = parseLong(contentLengthHeader.getValue());
+		long freespace = destination.getFreeSpace();
+
+		if (freespace < contentLength) {
+			LOGGER.error("Not enough space in " + destination + " to save " + request + "(Free: " + freespace + ", Need: " + contentLength);
 			return false;
 		}
 
-		if (response.getStatusLine().getStatusCode() != 200) {
-			if (response.getStatusLine().getStatusCode() != 304) {
-				LOGGER.warn("Failed downloading Neustar Database from " + neustarDataUrl + " " + response.getStatusLine().getReasonPhrase());
-			}
-
-			try {
-				response.close();
-			} catch (IOException e) {
-				LOGGER.warn("Failed to close http response for " + neustarDataUrl + " : " + e.getMessage());
-			}
-			httpClient.close();
-			return false;
-		}
-
-		File tmpDir = null;
-		try {
-
-			tmpDir = createTmpDir(neustarDatabaseDirectory);
-			tarExtractor.extractTo(tmpDir, new GZIPInputStream(response.getEntity().getContent()));
-		} catch (IOException e) {
-			LOGGER.error("Failed to decompress remote content from " + neustarDataUrl + " : " + e.getMessage());
-			return false;
-		} finally {
-			try {
-				response.close();
-			} catch (IOException e) {
-				LOGGER.warn("Failed to close http response for " + neustarDataUrl);
-			}
-			httpClient.close();
-		}
-
-		if (!verifyNewDatabase(tmpDir)) {
-			filesMover.purgeDirectory(tmpDir);
-			return false;
-		}
-
-		LOGGER.info("Replacing files in " + neustarDatabaseDirectory.getAbsolutePath() + " with those in " + tmpDir.getAbsolutePath());
-		if (!filesMover.updateCurrent(neustarDatabaseDirectory, tmpDir, neustarOldDatabaseDirectory)) {
-			LOGGER.warn("Failed replacing files, not purging " + tmpDir.getAbsolutePath());
-			return false;
-		}
-
-		if (filesMover.purgeDirectory(tmpDir)) {
-			tmpDir.delete();
-		}
-		
 		return true;
 	}
 

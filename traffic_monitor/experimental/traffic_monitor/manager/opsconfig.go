@@ -2,14 +2,15 @@ package manager
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
-	"log"
-	"sync"
 )
 
 // This could be made lock-free, if the performance was necessary
@@ -78,7 +79,7 @@ func opsConfigManagerListen(opsConfig OpsConfigThreadsafe, opsConfigChannel <-ch
 
 			handleErr := func(err error) {
 				errorCount++
-				log.Printf("%v\n", err)
+				log.Errorf("OpsConfigManager: %v\n", err)
 			}
 
 			err = httpServer.Run(dr, listenAddress)

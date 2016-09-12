@@ -35,6 +35,6 @@
 			<span class="field-with-error"><%= field('type_data.use_in_table')->error %></span>
 		<% } %>
 		%= label_for 'use_in_table' => '* Use In Table', class => 'label'
-		%= field('type_data.use_in_table')->select(['deliveryservice','cachegroup','regex','server','staticdnsentry','tm_user'], class => 'field', id => 'use_in_table', name => 'use_in_table.use_in_table', style=>"width:315px;");
+		%= field('type_data.use_in_table')->select(['deliveryservice','cachegroup','regex','server','staticdnsentry'], class => 'field', id => 'use_in_table', name => 'use_in_table.use_in_table', style=>"width:315px;");
 	</div>
 </div>
