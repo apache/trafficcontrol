@@ -572,7 +572,7 @@ sub update {
 			}
 		}
 
-		# this just creates the log string for the log table / tab.
+		# creates the change log entry string which includes the new values for server properties that have changed (i.e. host_name->foo-bar)
 		my $lstring = "Update server " . $self->param('host_name') . " ";
 		foreach my $col ( keys %{ $org_server->{_column_data} } ) {
 			if ( defined( $self->param($col) )
