@@ -467,7 +467,10 @@ sub update {
 		$self->param(offline_reason => "N/A"); # this will satisfy the UI's requirement of offline reason if not offline or admin_down
 	} else {
 		if (defined($offline_reason) && $offline_reason ne "") {
-			$self->param(offline_reason => $self->current_user()->{username} . ": " . $offline_reason);
+			my $user=$self->current_user()->{username};
+			if ($offline_reason !~ /^${user}: /) {
+				$self->param(offline_reason => $user . ": " . $offline_reason);
+			}
 		}
 	}
 
