@@ -47,6 +47,16 @@ $(function () {
 		$("#cachegroup").html("<select id=\"cachegroupselect\" name=\"cachegroup\"></select>");
 		$("#phys_location").html("<select id=\"phys_locationselect\" name=\"phys_location\"></select>");
 		$("#status").html("<select id=\"statusselect\" name=\"status\"></select>");
+		$("#statusselect").on("change", function(event) {
+		    var newStatus = $("#statusselect option:selected").text();
+		    if (newStatus == "OFFLINE" || newStatus == "ADMIN_DOWN") {
+                $("#editserver_form input[name=offline_reason]").val("");
+                $("#editserver_form input[name=offline_reason]").css( { "border-color": "red" });
+		    } else {
+		        $("#editserver_form input[name=offline_reason]").val("N/A");
+                $("#editserver_form input[name=offline_reason]").css( { "border-color": "black" });
+		    }
+		});
 		$.get("/datatype/orderby/id", function(data){
 			$.each(data, function(idx, val) {
 				if (data[idx].name == "<%= $server_data->type->name %>") {
@@ -243,6 +253,10 @@ $(function () {
 						<td>Status</td>
 						<td class="editable" id="status"><%= $server_data->status->name %></td>
 					</tr>
+                    <tr>
+                        <td>Offline Reason</td>
+                        <td class="editable" id="offline_reason"><%= $server_data->offline_reason %></td>
+                    </tr>
 					<tr>
 						<td>Profile</td>
 						<td class="editable" id="profile"><%= $server_data->profile->name %></td>
@@ -349,21 +363,32 @@ var last_part = "?";
 function offline_confirm() {
 	var r=confirm("Set status of this machine to " + offline_status + last_part);
 	if (r==true) {
-		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %> });
+		var ask="A reason is required.\nWhy are you setting Status = " + offline_status + "?";
+		var y=prompt(ask,"");
+		if (y == null || y == "") {
+			r=false;
+		} else {
+			y="<%= $user %>: " + y;
+		}
+	}
+	if (r==true) {
+		$.post("/server/updatestatus", { status: offline_status, id: <%= $id %>, offlineReason: y });
 		if ( queue_updates == true )
 			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: offline_status });
 		parent.$.fancybox.close();
 	}
 }
+
 function online_confirm() {
 	var r=confirm("Set status of this machine to " + online_status + last_part);
 	if (r==true) {
-		$.post("/server/updatestatus", { status: online_status, id: <%= $id %> });
+		$.post("/server/updatestatus", { status: online_status, id: <%= $id %>, offlineReason: "N/A" });
 		if ( queue_updates == true )
 			$.post('/postupdatequeue/<%= $id %>', { setqueue: 1, status: online_status });
 		parent.$.fancybox.close();
 	}
 }
+
 </script>
 % } # if ($priv_level >= 20) {
 

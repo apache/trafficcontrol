@@ -132,6 +132,13 @@ __PACKAGE__->table("server");
   is_foreign_key: 1
   is_nullable: 0
 
+=head2 offline_reason
+
+  data_type: 'varchar'
+  default_value: 'N/A'
+  is_nullable: 0
+  size: 256
+
 =head2 upd_pending
 
   data_type: 'tinyint'
@@ -272,6 +279,13 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "status",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "offline_reason",
+  {
+    data_type => "varchar",
+    default_value => "N/A",
+    is_nullable => 0,
+    size => 256,
+  },
   "upd_pending",
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
   "profile",
@@ -511,8 +525,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-08-29 17:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qsqvo1OFcbS8+qXvS2DU1Q
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-08 16:03:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:I3HqV6I4I5taXrqaaNTESw
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

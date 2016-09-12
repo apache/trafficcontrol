@@ -68,6 +68,20 @@ $(function () {
 				"aTargets": [7]
 			}, 
 			{
+                                "mRender": function (data, type, full) {
+                                        if (full[9] != undefined) {
+                                        	if (full[9] == 'OFFLINE' || full[9] == 'ADMIN_DOWN') {
+                                                	return "<a href='#' title='" + full[16] + "'>" + full[9] + "</a>";
+                                                	//<a href="#"  title="Hooray!">Hover over me</a>
+						} else {
+							return full[9];
+						}
+					}
+                                },
+				"bUseRendered": false,
+                                "aTargets": [9]
+                        },
+			{
 				"mRender": function (data, type, full) {
 					if (full[11] != undefined) {
 						return "<a href='https://" + full[11] + "' target=\"_blank\">" + full[11] + "</a>";
