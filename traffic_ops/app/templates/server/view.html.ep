@@ -51,8 +51,10 @@ $(function () {
 		    var newStatus = $("#statusselect option:selected").text();
 		    if (newStatus == "OFFLINE" || newStatus == "ADMIN_DOWN") {
                 $("#editserver_form input[name=offline_reason]").val("");
+                $("#editserver_form input[name=offline_reason]").css( { "border-color": "red" });
 		    } else {
 		        $("#editserver_form input[name=offline_reason]").val("N/A");
+                $("#editserver_form input[name=offline_reason]").css( { "border-color": "black" });
 		    }
 		});
 		$.get("/datatype/orderby/id", function(data){
