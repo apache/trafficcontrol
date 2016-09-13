@@ -2,6 +2,7 @@
 .*.swp
 .DS_Store
 *.bak
+*.iml
 .idea/
 cpanfile.snapshot
 rpm/build.number
@@ -28,6 +29,4 @@ traffic_stats/traffic_stats
 misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
-traffic_router/*/*.iml
-traffic_router/*.iml
 .dbInfo
