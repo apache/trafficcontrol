@@ -51,3 +51,60 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 		},
 	}
 }
+
+// DeliveryServiceState returns a default DeliveryServiceStateResponse to be used for testing.
+func DeliveryServiceState() *client.DeliveryServiceStateResponse {
+	dest := client.DeliveryServiceDestination{
+		Location: "someLocation",
+		Type:     "DNS",
+	}
+
+	failover := client.DeliveryServiceFailover{
+		Locations:   []string{"one", "two"},
+		Destination: dest,
+		Configured:  true,
+		Enabled:     true,
+	}
+
+	ds := client.DeliveryServiceState{
+		Enabled:  true,
+		Failover: failover,
+	}
+
+	return &client.DeliveryServiceStateResponse{
+		Response: ds,
+	}
+}
+
+// DeliveryServiceHealth returns a default DeliveryServiceHealthResponse to be used for testing.
+func DeliveryServiceHealth() *client.DeliveryServiceHealthResponse {
+	cacheGroup := client.DeliveryServiceCacheGroup{
+		Name:    "someCacheGroup",
+		Online:  2,
+		Offline: 3,
+	}
+
+	dsh := client.DeliveryServiceHealth{
+		TotalOnline:  2,
+		TotalOffline: 3,
+		CacheGroups:  []client.DeliveryServiceCacheGroup{cacheGroup},
+	}
+
+	return &client.DeliveryServiceHealthResponse{
+		Response: dsh,
+	}
+}
+
+// DeliveryServiceCapacity returns a default DeliveryServiceCapacityResponse to be used for testing.
+func DeliveryServiceCapacity() *client.DeliveryServiceCapacityResponse {
+	dsc := client.DeliveryServiceCapacity{
+		AvailablePercent:   90.12345,
+		UnavailablePercent: 90.12345,
+		UtilizedPercent:    90.12345,
+		MaintenancePercent: 90.12345,
+	}
+
+	return &client.DeliveryServiceCapacityResponse{
+		Response: dsc,
+	}
+}
