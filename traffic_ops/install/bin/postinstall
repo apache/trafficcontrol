@@ -665,9 +665,10 @@ sub profiles_exist {
 		print "Existing Profile Count: $num_profiles\n";
 
 		my %initial_profiles = (
-				"INFLUXDB"      => 1,
-				"RIAK_ALL"      => 1,
-				"TRAFFIC_STATS" => 1
+				"INFLUXDB"       => 1,
+				"RIAK_ALL"       => 1,
+				"TRAFFIC_STATS"  => 1,
+				"TRAFFIC_PORTAL" => 1
 				);
 
 		my $profiles_response = $profiles->{"response"};
