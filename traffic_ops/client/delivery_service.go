@@ -84,10 +84,16 @@ type DeliveryServiceState struct {
 
 // DeliveryServiceFailover ...
 type DeliveryServiceFailover struct {
-	Locations   []string `json:"locations"`
-	Destination string   `json:"destination"`
-	Configured  bool     `json:"configured"`
-	Enabled     bool     `json:"enabled"`
+	Locations   []string                   `json:"locations"`
+	Destination DeliveryServiceDestination `json:"destination"`
+	Configured  bool                       `json:"configured"`
+	Enabled     bool                       `json:"enabled"`
+}
+
+// DeliveryServiceDestination ...
+type DeliveryServiceDestination struct {
+	Location string `json:"location"`
+	Type     string `json:"type"`
 }
 
 // DeliveryServiceHealthResponse ...

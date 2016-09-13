@@ -54,9 +54,14 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 
 // DeliveryServiceState returns a default DeliveryServiceStateResponse to be used for testing.
 func DeliveryServiceState() *client.DeliveryServiceStateResponse {
+	dest := client.DeliveryServiceDestination{
+		Location: "someLocation",
+		Type:     "DNS",
+	}
+
 	failover := client.DeliveryServiceFailover{
 		Locations:   []string{"one", "two"},
-		Destination: "someDestination",
+		Destination: dest,
 		Configured:  true,
 		Enabled:     true,
 	}

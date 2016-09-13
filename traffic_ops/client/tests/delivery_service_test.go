@@ -159,6 +159,12 @@ func TestDeliveryServiceState(t *testing.T) {
 		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
+	if state.Failover.Destination.Location != "someLocation" {
+		testHelper.Error(t, "Should get back \"someLocation\" for \"Failover.Destination.Location\", got: %s", state.Failover.Destination.Location)
+	} else {
+		testHelper.Success(t, "Should get back \"someLocation\" for \"Failover.Destination.Location\"")
+	}
+
 	if state.Enabled != true {
 		testHelper.Error(t, "Should get back \"true\" for \"Enabled\", got: %s", state.Enabled)
 	} else {
