@@ -271,22 +271,22 @@ func TestDeliveryServiceCapacity(t *testing.T) {
 		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
-	if capacity.AvailablePercent != 1 {
-		testHelper.Error(t, "Should get back \"2\" for \"AvailablePercent\", got: %s", capacity.AvailablePercent)
+	if capacity.AvailablePercent != 90.12345 {
+		testHelper.Error(t, "Should get back \"90.12345\" for \"AvailablePercent\", got: %s", capacity.AvailablePercent)
 	} else {
-		testHelper.Success(t, "Should get back \"2\" for \"AvailablePercent\"")
+		testHelper.Success(t, "Should get back \"90.12345\" for \"AvailablePercent\"")
 	}
 
-	if capacity.UnavailablePercent != 2 {
-		testHelper.Error(t, "Should get back \"2\" for \"UnavailablePercent\", got: %s", capacity.UnavailablePercent)
+	if capacity.UnavailablePercent != 90.12345 {
+		testHelper.Error(t, "Should get back \"90.12345\" for \"UnavailablePercent\", got: %s", capacity.UnavailablePercent)
 	} else {
-		testHelper.Success(t, "Should get back \"2\" for \"UnavailablePercent\"")
+		testHelper.Success(t, "Should get back \"90.12345\" for \"UnavailablePercent\"")
 	}
 
-	if capacity.UtilizedPercent != 3 {
-		testHelper.Error(t, "Should get back \"3\" for \"UtilizedPercent\", got: %s", capacity.UtilizedPercent)
+	if capacity.UtilizedPercent != 90.12345 {
+		testHelper.Error(t, "Should get back \"90.12345\" for \"UtilizedPercent\", got: %s", capacity.UtilizedPercent)
 	} else {
-		testHelper.Success(t, "Should get back \"3\" for \"UtilizedPercent\"")
+		testHelper.Success(t, "Should get back \"90.12345\" for \"UtilizedPercent\"")
 	}
 }
 

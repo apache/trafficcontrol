@@ -122,10 +122,10 @@ type DeliveryServiceCapacityResponse struct {
 
 // DeliveryServiceCapacity ...
 type DeliveryServiceCapacity struct {
-	AvailablePercent   int `json:"availablePercent"`
-	UnavailablePercent int `json:"unavailablePercent"`
-	UtilizedPercent    int `json:"utilizedPercent"`
-	MaintenancePercent int `json:"maintenancePercent"`
+	AvailablePercent   float64 `json:"availablePercent"`
+	UnavailablePercent float64 `json:"unavailablePercent"`
+	UtilizedPercent    float64 `json:"utilizedPercent"`
+	MaintenancePercent float64 `json:"maintenancePercent"`
 }
 
 // DeliveryServices gets an array of DeliveryServices
