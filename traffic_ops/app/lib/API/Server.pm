@@ -50,6 +50,7 @@ sub index {
 
 	my @data;
 	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
 		while ( my $row = $servers->next ) {
 			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 
@@ -84,7 +85,7 @@ sub index {
 					"iloIpNetmask"   => $row->ilo_ip_netmask,
 					"iloIpGateway"   => $row->ilo_ip_gateway,
 					"iloUsername"    => $row->ilo_username,
-					"iloPassword"    => &is_admin($self) ? $row->ilo_password : "********",
+					"iloPassword"    => $is_admin ? $row->ilo_password : "********",
 					"routerHostName" => $row->router_host_name,
 					"routerPortName" => $row->router_port_name,
 					"lastUpdated"    => $row->last_updated,
