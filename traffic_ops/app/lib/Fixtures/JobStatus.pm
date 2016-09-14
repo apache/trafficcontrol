@@ -19,36 +19,36 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	pending => {
+	## id => 1
+	cancelled => {
 		new   => 'JobStatus',
 		using => {
-			id          => 1,
-			name        => 'PENDING',
-			description => 'Job is queued, but has not been picked up by any agents yet'
+			name        => 'CANCELLED',
+			description => 'Job was cancelled'
 		},
 	},
-	in_progress => {
-		new   => 'JobStatus',
-		using => {
-			id          => 2,
-			name        => 'IN_PROGRESS',
-			description => 'Job is being processed by agents'
-		},
-	},
+	## id => 2
 	completed => {
 		new   => 'JobStatus',
 		using => {
-			id          => 3,
 			name        => 'COMPLETED',
 			description => 'Job has finished'
 		},
 	},
-	cancelled => {
+	## id => 3
+	in_progress => {
 		new   => 'JobStatus',
 		using => {
-			id          => 4,
-			name        => 'CANCELLED',
-			description => 'Job was cancelled'
+			name        => 'IN_PROGRESS',
+			description => 'Job is being processed by agents'
+		},
+	},
+	## id => 4
+	pending => {
+		new   => 'JobStatus',
+		using => {
+			name        => 'PENDING',
+			description => 'Job is queued, but has not been picked up by any agents yet'
 		},
 	},
 );
@@ -59,7 +59,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

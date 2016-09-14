@@ -46,19 +46,15 @@ my $t      = Test::Mojo->new('TrafficOps');
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-Test::TestHelper->teardown( $schema, 'DeliveryserviceTmuser' );
-my $deliveryservice_tmuser = Fixtures::DeliveryserviceTmuser->new( { schema => $schema, no_transactions => 1 } );
-Test::TestHelper->load_all_fixtures($deliveryservice_tmuser);
-
-Test::TestHelper->teardown( $schema, 'JobStatus' );
 Test::TestHelper->teardown( $schema, 'JobAgent' );
-Test::TestHelper->teardown( $schema, 'Job' );
 my $jobagent = Fixtures::JobAgent->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobagent);
 
+Test::TestHelper->teardown( $schema, 'JobStatus' );
 my $jobstatus = Fixtures::JobStatus->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobstatus);
 
+Test::TestHelper->teardown( $schema, 'Job' );
 my $jobs = Fixtures::Job->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobs);
 
@@ -67,7 +63,7 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_U
 
 ok $schema->resultset('Cdn')->find( { name => 'cdn1' } ), 'cdn1 parameter exists?';
 
-ok $schema->resultset('Profile')->find( { name => 'edge1' } ), 'Profile edge1 exists?';
+ok $schema->resultset('Profile')->find( { name => 'EDGE1' } ), 'Profile edge1 exists?';
 
 ok $schema->resultset('Deliveryservice')->find( { xml_id => 'test-ds1' } ), 'Deliveryservice test-ds1 exists?';
 
@@ -78,7 +74,7 @@ ok $t->get_ok('/api/1.1/user/current/jobs.json')->status_is(200)->json_has( '/re
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo1/.*',
 		ttl       => 48,
 		startTime => $now,
@@ -89,31 +85,31 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo1/.*',
 		ttl       => 0,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 72" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 2160" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper low range?';
 
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo1/.*',
-		ttl       => 1000,
+		ttl       => 3000,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 72" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 2160" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper high range?';
 
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => $now,
@@ -123,7 +119,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 2,
+		dsId      => 9,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => $now,
@@ -133,7 +129,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		ttl       => 49,
 		startTime => $now,
 	}
@@ -144,7 +140,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId  => 1,
+		dsId  => 8,
 		regex => '/foo2/.*',
 		ttl   => 49,
 	}
@@ -155,7 +151,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => '2015-01-09',
@@ -168,7 +164,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 1,
+		dsId      => 8,
 		regex     => '/foo2/.*',
 		startTime => $now,
 	}

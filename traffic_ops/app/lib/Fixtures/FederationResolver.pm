@@ -22,36 +22,36 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
+	## id => 1
 	ipv4_resolver1 => {
 		new   => 'FederationResolver',
 		using => {
-			id         => 1,
 			ip_address => "127.0.0.1/32",
-			type       => 33,
+			type       => 24,
 		},
 	},
+	## id => 2
 	ipv4_resolver2 => {
 		new   => 'FederationResolver',
 		using => {
-			id         => 2,
 			ip_address => "127.0.0.2/32",
-			type       => 33,
+			type       => 24,
 		},
 	},
+	## id => 3
 	ipv6_resolver1 => {
 		new   => 'FederationResolver',
 		using => {
-			id         => 3,
 			ip_address => "FE80::0202:B3FF:FE1E:8329/128",
-			type       => 34,
+			type       => 25,
 		},
 	},
+	## id => 4
 	ipv6_resolver2 => {
 		new   => 'FederationResolver',
 		using => {
-			id         => 4,
 			ip_address => "FE80::0202:B3FF:FE1E:8330/128",
-			type       => 34,
+			type       => 25,
 		},
 	},
 );
@@ -62,7 +62,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db ip_address to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{ip_address} cmp $definition_for{$b}{using}{ip_address} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

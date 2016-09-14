@@ -1,4 +1,4 @@
-package Fixtures::EdgeCachegroup;
+package Fixtures::StatsSummary;
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
 #
@@ -19,17 +19,15 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	edge_atl => {
-		new   => 'Cachegroup',
+	## id => 1
+	stat1 => {
+		new   => 'StatsSummary',
 		using => {
-			id                             => 3,
-			name                           => 'edge_atl_group',
-			short_name                     => 'atl',
-			type                           => 5,
-			latitude                       => 120,
-			longitude                      => 120,
-			parent_cachegroup_id           => 1,
-			secondary_parent_cachegroup_id => 2,
+			cdn_name => "cdn1",
+      deliveryservice_name => "test-ds1",
+      stat_name => "test_stat",
+      stat_value => "1",
+      stat_date => "2016-07-25"
 		},
 	},
 );
@@ -39,10 +37,11 @@ sub get_definition {
 	return $definition_for{$name};
 }
 
-sub all_fixture_names {
-	return keys %definition_for;
-}
 
+sub all_fixture_names {
+	# sort by db stat_name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{stat_name} cmp $definition_for{$b}{using}{stat_name} } keys %definition_for);
+}
 __PACKAGE__->meta->make_immutable;
 
 1;

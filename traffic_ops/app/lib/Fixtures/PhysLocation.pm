@@ -19,27 +19,10 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	denver => {
-		new   => 'PhysLocation',
-		using => {
-			id         => 1,
-			name       => 'Denver',
-			short_name => 'denver',
-			address    => '1234 mile high circle',
-			city       => 'Denver',
-			state      => 'CO',
-			zip        => '80202',
-			poc        => undef,
-			phone      => '303-111-1111',
-			email      => undef,
-			comments   => undef,
-			region     => 1,
-		},
-	},
+	## id => 1
 	boulder => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 2,
 			name       => 'Boulder',
 			short_name => 'boulder',
 			address    => '1234 green way',
@@ -53,10 +36,27 @@ my %definition_for = (
 			region     => 1,
 		},
 	},
+	## id => 2
+	denver => {
+		new   => 'PhysLocation',
+		using => {
+			name       => 'Denver',
+			short_name => 'denver',
+			address    => '1234 mile high circle',
+			city       => 'Denver',
+			state      => 'CO',
+			zip        => '80202',
+			poc        => undef,
+			phone      => '303-111-1111',
+			email      => undef,
+			comments   => undef,
+			region     => 1,
+		},
+	},
+	## id => 3
 	atlanta => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 3,
 			name       => 'HotAtlanta',
 			short_name => 'atlanta',
 			address    => '1234 southern way',
@@ -70,6 +70,23 @@ my %definition_for = (
 			region     => 1,
 		},
 	},
+	## id => 4
+	seattle => {
+		new   => 'PhysLocation',
+		using => {
+			name       => 'Seattle',
+			short_name => 'seattle',
+			address    => '1234 westward way',
+			city       => 'Seattle',
+			state      => 'WA',
+			zip        => '12345',
+			poc        => undef,
+			phone      => '222-222-2222',
+			email      => undef,
+			comments   => undef,
+			region     => 1,
+		},
+	},
 );
 
 sub get_definition {
@@ -78,7 +95,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

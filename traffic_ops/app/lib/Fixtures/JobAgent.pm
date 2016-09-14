@@ -19,10 +19,10 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	agent1 => {
 		new   => 'JobAgent',
 		using => {
-			id          => 1,
 			name        => 'agent1',
 			description => 'Test Agent1'
 		},
@@ -35,7 +35,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

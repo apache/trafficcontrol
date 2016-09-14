@@ -25,9 +25,10 @@ __PACKAGE__->table("role");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'role_id_seq'
 
 =head2 name
 
@@ -43,20 +44,25 @@ __PACKAGE__->table("role");
 
 =head2 priv_level
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 0
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "role_id_seq",
+  },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "description",
   { data_type => "varchar", is_nullable => 1, size => 128 },
   "priv_level",
-  { data_type => "integer", is_nullable => 0 },
+  { data_type => "bigint", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -104,8 +110,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-06-03 08:58:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eNrksFOoJ9HkhtHhBjrWpA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2SvNz8z/KCGe3y/IUrC9Uw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

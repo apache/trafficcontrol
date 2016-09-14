@@ -19,19 +19,107 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	regex2 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 9,
+			regex           => 7,
+			set_number      => 0,
+		},
+	},
+	target_r1_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 4,
+			regex           => 1,
+			set_number      => 0,
+		},
+	},
 	regex1 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 1,
+			deliveryservice => 8,
+			regex           => 5,
+			set_number      => 0,
+		},
+	},
+	target_r2_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 4,
 			regex           => 2,
 			set_number      => 0,
 		},
 	},
-	regex2 => {
+	target_r4_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 7,
+			regex           => 3,
+			set_number      => 0,
+		},
+	},
+	target_r3_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 6,
+			regex           => 4,
+			set_number      => 0,
+		},
+	},
+	new_steering => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 3,
+			regex           => 6,
+			set_number      => 0,
+		},
+	},
+	steering_1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 1,
+			regex           => 8,
+			set_number      => 0,
+		},
+	},
+	steering_2 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
 			deliveryservice => 2,
-			regex           => 1,
+			regex           => 9,
+			set_number      => 0,
+		},
+	},
+	target_1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 4,
+			regex           => 10,
+			set_number      => 0,
+		},
+	},
+	target_2 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 5,
+			regex           => 11,
+			set_number      => 0,
+		},
+	},
+	target_3 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 6,
+			regex           => 12,
+			set_number      => 0,
+		},
+	},
+		target_4 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 7,
+			regex           => 13,
 			set_number      => 0,
 		},
 	},
@@ -43,7 +131,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db regex to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{regex} cmp $definition_for{$b}{using}{regex} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

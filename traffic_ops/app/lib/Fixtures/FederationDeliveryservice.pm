@@ -26,28 +26,28 @@ my %definition_for = (
 		new   => 'FederationDeliveryservice',
 		using => {
 			federation      => 1,
-			deliveryservice => 1,
+			deliveryservice => 8,
 		},
 	},
 	federation_deliveryservice2 => {
 		new   => 'FederationDeliveryservice',
 		using => {
 			federation      => 2,
-			deliveryservice => 2,
+			deliveryservice => 9,
 		},
 	},
 	federation_deliveryservice3 => {
 		new   => 'FederationDeliveryservice',
 		using => {
 			federation      => 3,
-			deliveryservice => 3,
+			deliveryservice => 10,
 		},
 	},
 	federation_deliveryservice4 => {
 		new   => 'FederationDeliveryservice',
 		using => {
 			federation      => 4,
-			deliveryservice => 4,
+			deliveryservice => 11,
 		},
 	},
 );

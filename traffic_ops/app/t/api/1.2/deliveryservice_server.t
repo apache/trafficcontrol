@@ -42,27 +42,27 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/cachegroups/3/deliveryservices' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups/5/deliveryservices' => {Accept => 'application/json'} => json => {
         "deliveryServices" => [
-             1
+             8
         ]})
      ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-     ->json_is( "/response/id" => 3 )
-     ->json_is( "/response/deliveryServices/0" => 1 )
+     ->json_is( "/response/id" => 5 )
+     ->json_is( "/response/deliveryServices/0" => 8 )
      ->json_is( "/alerts/0/level" => "success" )
-     ->json_is( "/alerts/0/text" => "Delivery services successfully assigned to all the servers of cache group 3" )
+     ->json_is( "/alerts/0/text" => "Delivery services successfully assigned to all the servers of cache group 5" )
             , 'Does the delivery services assign details return?';
 
 ok $t->get_ok('/api/1.2/deliveryserviceserver.json')
      ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-     ->json_is( "/response/0/deliveryService" => "1" )
+     ->json_is( "/response/0/deliveryService" => "8" )
      ->json_is( "/response/0/server" => "1" )
-     ->json_is( "/response/1/deliveryService" => "1" )
+     ->json_is( "/response/1/deliveryService" => "8" )
      ->json_is( "/response/1/server" => "2" )
-     ->json_is( "/response/2/deliveryService" => "1" )
-     ->json_is( "/response/2/server" => "7" )
+     ->json_is( "/response/2/deliveryService" => "8" )
+     ->json_is( "/response/2/server" => "3" )
             , 'Does the delivery services servers details return?';
- 
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

@@ -61,14 +61,14 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
         "latitude" => "12",
         "longitude" => "56",
         "parentCachegroup" => "cache_group_mid",
-        "secondaryParentCachegroup" => "mid-northeast-group",
+        "secondaryParentCachegroup" => "cg1-mid-northeast",
         "typeName" => "EDGE_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cache_group_edge" )
     ->json_is( "/response/shortName" => "cg_edge")
     ->json_is( "/response/latitude" => "12")
     ->json_is( "/response/longitude" => "56")
     ->json_is( "/response/parentCachegroup" => "cache_group_mid")
-    ->json_is( "/response/secondaryParentCachegroup" => "mid-northeast-group")
+    ->json_is( "/response/secondaryParentCachegroup" => "cg1-mid-northeast")
             , 'Does the cache group details return?';
 
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
@@ -109,7 +109,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats2",
         "domainName" => "my.cisco.com",
-        "cachegroup" => "mid-northeast-group",
+        "cachegroup" => "cg1-mid-northeast",
         "cdnName" => "cdn1",
         "interfaceName" => "eth0",
         "ipAddress" => "10.74.27.184",
@@ -123,14 +123,14 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
     ->json_is( "/response/hostName" => "tc1_ats2")
             , 'Does the server details return?';
 
-my $necg_id = &get_cg_id('mid-northeast-group');
+my $necg_id = &get_cg_id('cg1-mid-northeast');
 ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
         'action' => 'queue',
         'cdn' => 'cdn1'})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/action" => "queue")
     ->json_is( "/response/cdn" => "cdn1")
-    ->json_is( "/response/cachegroupName" => "mid-northeast-group")
+    ->json_is( "/response/cachegroupName" => "cg1-mid-northeast")
             , 'Does the queue_update api return?';
 
 ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
@@ -138,7 +138,7 @@ ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept =>
         'cdn' => 'cdn1'})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/action" => "dequeue")
-    ->json_is( "/response/cachegroupName" => "mid-northeast-group")
+    ->json_is( "/response/cachegroupName" => "cg1-mid-northeast")
             , 'Does the queue_update api return?';
 
 ok $t->post_ok('/api/1.2/cachegroups/'. $necg_id .'/queue_update' =>  {Accept => 'application/json'} =>json => {
@@ -165,7 +165,7 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
     ->json_is( "/response/latitude" => "23")
     ->json_is( "/response/longitude" => "56")
     ->json_is( "/response/parentCachegroup" => "cache_group_mid")
-    ->json_is( "/response/secondaryParentCachegroup" => "mid-northeast-group")
+    ->json_is( "/response/secondaryParentCachegroup" => "cg1-mid-northeast")
             , 'Does the cache group details return?';
 
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {

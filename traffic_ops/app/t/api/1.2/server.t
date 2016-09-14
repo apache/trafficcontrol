@@ -41,10 +41,10 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->get_ok('/api/1.2/servers/details.json?hostName=atlanta-edge-01')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "1" ), 'Does the hostname details return?';
+	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "8" ), 'Does the hostname details return?';
 
 ok $t->get_ok('/api/1.2/servers/details.json?physLocationID=1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "1" ), 'Does the physLocationID details return?';
+	->json_is( "/response/0/ipGateway", "127.0.0.1" )->json_is( "/response/0/deliveryservices/0", "8" ), 'Does the physLocationID details return?';
 
 ok $t->get_ok('/api/1.2/servers/details.json')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the validation error occur?';
@@ -141,11 +141,11 @@ my $count_response = sub {
 };
 
 # this is a dns delivery service with 2 edges and 1 mid and since dns ds's DO employ mids, 3 servers return
-$t->get_ok('/api/1.2/servers.json?dsId=5')->status_is(200)->$count_response(3)
+$t->get_ok('/api/1.2/servers.json?dsId=12')->status_is(200)->$count_response(3)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-# this is a http_no_cache delivery service with 2 edges and 1 mid and since http_no_cache ds's DON'T employ mids, 2 servers return
-$t->get_ok('/api/1.2/servers.json?dsId=6')->status_is(200)->$count_response(2)
+# this is a http_no_cache delivery service with 2 edges and 1 mid and since http_no_cache ds's DON'T employ mids, 3 servers return
+$t->get_ok('/api/1.2/servers.json?dsId=13')->status_is(200)->$count_response(3)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );

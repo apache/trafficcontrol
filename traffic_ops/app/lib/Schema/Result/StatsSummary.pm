@@ -25,9 +25,10 @@ __PACKAGE__->table("stats_summary");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'stats_summary_id_seq'
 
 =head2 cdn_name
 
@@ -50,27 +51,31 @@ __PACKAGE__->table("stats_summary");
 
 =head2 stat_value
 
-  data_type: 'float'
+  data_type: 'double precision'
   is_nullable: 0
 
 =head2 summary_time
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 0
+  original: {default_value => \"now()"}
 
 =head2 stat_date
 
   data_type: 'date'
-  datetime_undef_if_invalid: 1
   is_nullable: 1
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "stats_summary_id_seq",
+  },
   "cdn_name",
   {
     data_type => "varchar",
@@ -83,16 +88,16 @@ __PACKAGE__->add_columns(
   "stat_name",
   { data_type => "varchar", is_nullable => 0, size => 255 },
   "stat_value",
-  { data_type => "float", is_nullable => 0 },
+  { data_type => "double precision", is_nullable => 0 },
   "summary_time",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 0,
+    is_nullable   => 0,
+    original      => { default_value => \"now()" },
   },
   "stat_date",
-  { data_type => "date", datetime_undef_if_invalid => 1, is_nullable => 1 },
+  { data_type => "date", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -108,8 +113,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-07-21 15:49:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LymxjQoZIaTrV1NC2uSgzA
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lv8Yzs2hwRBDdZKjdugAdA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

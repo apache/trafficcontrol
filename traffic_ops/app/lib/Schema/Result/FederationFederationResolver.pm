@@ -25,36 +25,36 @@ __PACKAGE__->table("federation_federation_resolver");
 
 =head2 federation
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 federation_resolver
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "federation",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "federation_resolver",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -86,7 +86,7 @@ __PACKAGE__->belongs_to(
   "federation",
   "Schema::Result::Federation",
   { id => "federation" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 =head2 federation_resolver
@@ -101,12 +101,12 @@ __PACKAGE__->belongs_to(
   "federation_resolver",
   "Schema::Result::FederationResolver",
   { id => "federation_resolver" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-09-28 13:05:02
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Nkm0asIVOi/Mih+l1squCQ
+# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XJzxRXntasBQ6gG/bSfb3g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

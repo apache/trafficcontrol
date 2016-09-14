@@ -23,12 +23,12 @@ use Digest::SHA1 qw(sha1_hex);
 
 my $local_passwd   = sha1_hex('password');
 my %definition_for = (
+	## id => 1
 	admin => {
 		new   => 'TmUser',
 		using => {
-			id                   => 1,
 			username             => 'admin',
-			role                 => 4,
+			role                 => 1,
 			uid                  => '1',
 			gid                  => '1',
 			local_passwd         => $local_passwd,
@@ -47,34 +47,10 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
-	portal => {
-		new   => 'TmUser',
-		using => {
-			id                   => 2,
-			username             => 'portal',
-			role                 => 6,
-			uid                  => '1',
-			gid                  => '1',
-			local_passwd         => $local_passwd,
-			confirm_local_passwd => $local_passwd,
-			full_name            => 'The Portal User',
-			email                => 'portal@kabletown.com',
-			new_user             => '1',
-			address_line1        => 'address_line3',
-			address_line2        => 'address_line4',
-			city                 => 'city',
-			state_or_province    => 'state_or_province',
-			phone_number         => '222-222-2222',
-			postal_code          => '80122',
-			country              => 'United States',
-			token                => '',
-			registration_sent    => '1999-01-01 00:00:00',
-		},
-	},
+	## id => 2
 	codebig => {
 		new   => 'TmUser',
 		using => {
-			id                   => 3,
 			username             => 'codebig',
 			role                 => 6,
 			uid                  => '1',
@@ -95,12 +71,36 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	## id => 3
+	federation => {
+		new   => 'TmUser',
+		using => {
+			username             => 'federation',
+			role                 => 3,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The federations User',
+			email                => 'federation@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line1',
+			address_line2        => 'address_line2',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '333-333-3333',
+			postal_code          => '80123',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+	## id => 4
 	migrations => {
 		new   => 'TmUser',
 		using => {
-			id                   => 4,
 			username             => 'migration',
-			role                 => 5,
+			role                 => 4,
 			uid                  => '1',
 			gid                  => '1',
 			local_passwd         => $local_passwd,
@@ -119,18 +119,66 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
-	federation => {
+	## id => 5
+	portal => {
 		new   => 'TmUser',
 		using => {
-			id                   => 5,
-			username             => 'federation',
-			role                 => 7,
+			username             => 'portal',
+			role                 => 6,
 			uid                  => '1',
 			gid                  => '1',
 			local_passwd         => $local_passwd,
 			confirm_local_passwd => $local_passwd,
-			full_name            => 'The federations User',
-			email                => 'federation@kabletown.com',
+			full_name            => 'The Portal User',
+			email                => 'portal@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line3',
+			address_line2        => 'address_line4',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '222-222-2222',
+			postal_code          => '80122',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+	## id => 6
+	steering1 => {
+		new   => 'TmUser',
+		using => {
+			username             => 'steering1',
+			role                 => 8,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The steering User 1',
+			email                => 'steering1@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line1',
+			address_line2        => 'address_line2',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '333-333-3333',
+			postal_code          => '80123',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+	## id => 7
+	steering2 => {
+		new   => 'TmUser',
+		using => {
+			username             => 'steering2',
+			role                 => 8,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The steering User 2',
+			email                => 'steering2@kabletown.com',
 			new_user             => '1',
 			address_line1        => 'address_line1',
 			address_line2        => 'address_line2',
@@ -151,7 +199,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db username to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{username} cmp $definition_for{$b}{using}{username} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

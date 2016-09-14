@@ -22,64 +22,64 @@ my %definition_for = (
 	test_ds1_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
+			deliveryservice => 8,
 			server          => 1,
 		},
 	},
 	test_ds1_server_edge13 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 13,
+			deliveryservice => 8,
+			server          => 3,
 		},
 	},
 	test_ds1_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 2,
+			deliveryservice => 8,
+			server          => 4,
 		},
 	},
 	test_ds2_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 2,
-			server          => 7,
+			deliveryservice => 9,
+			server          => 2,
 		},
 	},
 	test_ds2_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 2,
-			server          => 8,
+			deliveryservice => 9,
+			server          => 5,
 		},
 	},
 	test_ds5_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 5,
-			server          => 14,
+			deliveryservice => 12,
+			server          => 13,
 		},
 	},
 	test_ds5_server_edge15 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 5,
-			server          => 15,
+			deliveryservice => 12,
+			server          => 14,
 		},
 	},
 	test_ds6_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 6,
-			server          => 14,
+			deliveryservice => 13,
+			server          => 13,
 		},
 	},
 	test_ds6_server_edge15 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 6,
-			server          => 15,
+			deliveryservice => 13,
+			server          => 14,
 		},
 	},
 );

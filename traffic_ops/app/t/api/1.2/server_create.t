@@ -42,7 +42,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats2",
         "domainName" => "northbound.com",
-        "cachegroup" => "mid-northeast-group",
+        "cachegroup" => "cg1-mid-northeast",
         "cdnName" => "cdn1",
         "interfaceName" => "eth0",
         "ipAddress" => "10.74.27.184",
@@ -55,7 +55,7 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/hostName" => "tc1_ats2")
     ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "mid-northeast-group")
+    ->json_is( "/response/cachegroup" => "cg1-mid-northeast")
     ->json_is( "/response/ipNetmask" => "255.255.255.0")
     ->json_is( "/response/interfaceName" => "eth0")
     ->json_is( "/response/ipAddress" => "10.74.27.184")
@@ -69,7 +69,7 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats1",
         "domainName" => "northbound.com",
-        "cachegroup" => "edge_atl_group",
+        "cachegroup" => "cg5-edge_atl_group",
         "cdnName" => "cdn1",
         "interfaceName" => "eth0",
         "ipAddress" => "10.74.27.185",
@@ -82,7 +82,7 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/hostName" => "tc1_ats1")
     ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "edge_atl_group")
+    ->json_is( "/response/cachegroup" => "cg5-edge_atl_group")
     ->json_is( "/response/ipNetmask" => "255.255.255.0")
     ->json_is( "/response/interfaceName" => "eth0")
     ->json_is( "/response/ipAddress" => "10.74.27.185")
@@ -98,7 +98,7 @@ my $svr_id = &get_svr_id('tc1_ats1');
 ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats3",
         "domainName" => "northbound.com",
-        "cachegroup" => "edge_atl_group",
+        "cachegroup" => "cg5-edge_atl_group",
         "cdnName" => "cdn1",
         "interfaceName" => "eth0",
         "ipAddress" => "10.74.27.186",
@@ -111,7 +111,7 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/hostName" => "tc1_ats3")
     ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "edge_atl_group")
+    ->json_is( "/response/cachegroup" => "cg5-edge_atl_group")
     ->json_is( "/response/ipNetmask" => "255.255.255.0")
     ->json_is( "/response/interfaceName" => "eth0")
     ->json_is( "/response/ipAddress" => "10.74.27.186")
