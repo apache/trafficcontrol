@@ -133,6 +133,7 @@ $t->post_ok(
 		router_host_name => 'ur091.home.net',
 		router_port_name => 'ae99.99',
 		https_port       => '443',
+		offline_reason   => 'N/A'
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

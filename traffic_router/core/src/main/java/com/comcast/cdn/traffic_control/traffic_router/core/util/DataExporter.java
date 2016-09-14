@@ -71,12 +71,10 @@ public class DataExporter {
 		final Map<String, String> globals = new HashMap<String, String>();
 		System.getProperties().keys();
 
-		final InputStream stream = getClass().getResourceAsStream("/version.prop");
 		final Properties props = new Properties();
 
-		try {
+		try (final InputStream stream = getClass().getResourceAsStream("/version.prop")){
 			props.load(stream);
-			stream.close();
 		} catch (IOException e) {
 			LOGGER.warn(e,e);
 		}

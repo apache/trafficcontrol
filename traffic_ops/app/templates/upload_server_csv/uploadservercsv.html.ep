@@ -153,10 +153,6 @@ $(document).ready(function() {
       // do something here...related to tabs
     //}
   //});
-  $("#divSampleCSVContentDialog").dialog({autoOpen:false,height:150,width:900,modal:true});
-  $("#btnViewSampleCSVContent").click(function() {
-    $("#divSampleCSVContentDialog").dialog('open');
-  });
   $("#btnAvailableLocationsFormatted").click(function() {
     var url = '/datalocationtrimmed';
     var json = '';
@@ -238,12 +234,6 @@ $(document).ready(function() {
         <div class="upload_form_title1">Upload Server CSV</div>
         <div class="upload_form_title2">[Pure JQuery/AJAX using FormData object]</div>
         <div class="upload_form_container">
-          <div style="display:none;"><button class="button" id="btnViewSampleCSVContent">VIEW SAMPLE CSV CONTENT</button></div>
-          <div id="divSampleCSVContentDialog" title="SAMPLE CSV CONTENT">
-            <div><pre>HEADER: [HOSTNAME,DOMAINNAME,INTERFACENAME,NETWORKIP,NETWORKSUBNET,NETWORKGATEWAY,IPV6ADDRESS,IPV6GATEWAY,NETWORKMTU,LOCATION,TYPE,PROFILE,TCPPORT,1GMANAGEMENTIPADDRESS,1GMANAGEMENTNETMASK,1GMANAGEMENTGATEWAY,ILOIPADDRESS,ILONETMASK,ILOGATEWAY,ILOUSERNAME,ILOPASSWORD,ROUTERHOSTNAME,ROUTERPORTNAME]</pre></div>
-            <div><pre>test_hostname,test_domainname,test_interfacename,192.168.2.2,255.255.255.0,192.168.2.1,2001:558:1418:1f:5920:1e18:a39a:29aa,2001:558:1418:1f:5920:1e18:a39a:29ab,9000,us-co-denver-test,CCR,CCR_TOP_TEST,8080,192.168.2.3,255.255.255.0,192.168.2.1,192.168.2.4,255.255.255.0,192.168.2.1,test_username,test_password,router_host_test,8080</pre></div>
-            <div><pre>test_hostname2,test_domainname2,test_interfacename2,192.168.2.2,255.255.255.0,192.168.2.1,2001:558:1418:1f:5920:1e18:a39a:29aa,2001:558:1418:1f:5920:1e18:a39a:29ab,9000,us-co-denver-test2,CCR,CCR_TOP_TEST2,8080,192.168.2.3,255.255.255.0,192.168.2.1,192.168.2.4,255.255.255.0,192.168.2.1,test_username2,test_password2,router_host_test2,8080</pre></div>
-          </div>
           <form class="form_file" action="" method="POST" enctype="multipart/form-data">
             <input id="input_file" class="input_file" type="file" name="files[]" accept=".csv" />
             <button class="button" id="btnSubmit">Submit</button>
@@ -330,12 +320,13 @@ $(document).ready(function() {
             <li>IPV6ADDRESS <span style="color:red;">[UNIQUE PER PROFILE]</span></li>
             <li>IPV6GATEWAY</li>
             <li>NETWORKMTU <span style="color:red;">[REQUIRED]</span></li>
-            <li>LOCATION <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>
+            <li>CDN <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>
+            <li>CACHEGROUP <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>
             <li>PHYS_LOCATION <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>
-            <li>RACK <span style="color:red;">[REQUIRED]</span></li>
+            <li>RACK</li>
             <li>TYPE <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>
             <li>PROFILE <span style="color:red;">[REQUIRED] [MUST BE TEXT. CASE SENSITIVE.]</span></li>
-            <li>TCPPORT <span style="color:red;">[REQUIRED]</span></li>
+            <li>TCPPORT</li>
             <li>1GMANAGEMENTIPADDRESS</li>
             <li>1GMANAGEMENTNETMASK</li>
             <li>1GMANAGEMENTGATEWAY</li>
@@ -345,7 +336,9 @@ $(document).ready(function() {
             <li>ILOUSERNAME</li>
             <li>ILOPASSWORD</li>
             <li>ROUTERHOSTNAME</li>
-            <li>ROUTERPORTNAME <span style="color:red;">[REQUIRED]</span></li>
+            <li>ROUTERPORTNAME</li>
+            <li>HTTPSPORT</li>
+            <li>OFFLINEREASON</li>
           </ul>
         </li>
       </ul>

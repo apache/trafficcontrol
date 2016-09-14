@@ -71,6 +71,63 @@ type DeliveryService struct {
 	InitialDispersion    string `json:"initialDispersion"`
 }
 
+// DeliveryServiceStateResponse ...
+type DeliveryServiceStateResponse struct {
+	Response DeliveryServiceState `json:"response"`
+}
+
+// DeliveryServiceState ...
+type DeliveryServiceState struct {
+	Enabled  bool                    `json:"enabled"`
+	Failover DeliveryServiceFailover `json:"failover"`
+}
+
+// DeliveryServiceFailover ...
+type DeliveryServiceFailover struct {
+	Locations   []string                   `json:"locations"`
+	Destination DeliveryServiceDestination `json:"destination"`
+	Configured  bool                       `json:"configured"`
+	Enabled     bool                       `json:"enabled"`
+}
+
+// DeliveryServiceDestination ...
+type DeliveryServiceDestination struct {
+	Location string `json:"location"`
+	Type     string `json:"type"`
+}
+
+// DeliveryServiceHealthResponse ...
+type DeliveryServiceHealthResponse struct {
+	Response DeliveryServiceHealth `json:"response"`
+}
+
+// DeliveryServiceHealth ...
+type DeliveryServiceHealth struct {
+	TotalOnline  int                         `json:"totalOnline"`
+	TotalOffline int                         `json:"totalOffline"`
+	CacheGroups  []DeliveryServiceCacheGroup `json:"cacheGroups"`
+}
+
+// DeliveryServiceCacheGroup ...
+type DeliveryServiceCacheGroup struct {
+	Online  int    `json:"online"`
+	Offline int    `json:"offline"`
+	Name    string `json:"name"`
+}
+
+// DeliveryServiceCapacityResponse ...
+type DeliveryServiceCapacityResponse struct {
+	Response DeliveryServiceCapacity `json:"response"`
+}
+
+// DeliveryServiceCapacity ...
+type DeliveryServiceCapacity struct {
+	AvailablePercent   float64 `json:"availablePercent"`
+	UnavailablePercent float64 `json:"unavailablePercent"`
+	UtilizedPercent    float64 `json:"utilizedPercent"`
+	MaintenancePercent float64 `json:"maintenancePercent"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	url := "/api/1.2/deliveryservices.json"
@@ -86,4 +143,72 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	}
 
 	return data.Response, nil
+}
+
+// DeliveryService gets the DeliveryService for the ID it's passed
+func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
+	url := "/api/1.2/deliveryservices/" + id + ".json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response[0], nil
+}
+
+// DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
+func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/state.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceStateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
+func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/health.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceHealthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
+func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/capacity.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceCapacityResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
 }

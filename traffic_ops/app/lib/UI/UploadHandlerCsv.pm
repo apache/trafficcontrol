@@ -214,6 +214,7 @@ sub getParamHashRef {
 	$paramHashRef->{'router_host_name'} = $p->[24];
 	$paramHashRef->{'router_port_name'} = $p->[25];
 	$paramHashRef->{'https_port'}       = $p->[26];
+	$paramHashRef->{'offline_reason'}   = $p->[27];
 	$paramHashRef->{'status'}           = '';
 	$paramHashRef->{'csv_line_number'}  = $lineNumber;
 	return $paramHashRef;
@@ -309,7 +310,7 @@ sub processCSV {
 
 					#print Dumper(@p);
 					my $itemCount    = scalar @p;
-					my $correctCount = 27;
+					my $correctCount = 28;
 					if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 						$processCSVErrors
 							.= $errorLineDelim
@@ -321,7 +322,7 @@ sub processCSV {
 							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 						$processCSVErrors
 							.= "</li><ul><li style='color:blue;'>"
-							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
 							. "</li></ul>";
 					}
 					else {
@@ -349,7 +350,7 @@ sub processCSV {
 				my $keep         = 0;
 				my @p            = parse_line( $delim, $keep, $line );
 				my $itemCount    = scalar @p;
-				my $correctCount = 26;
+				my $correctCount = 28;
 				if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 					$processCSVErrors
 						.= $errorLineDelim
@@ -361,7 +362,7 @@ sub processCSV {
 						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 					$processCSVErrors
 						.= "</li><ul><li style='color:blue;'>"
-						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
 						. "</li></ul>";
 				}
 				else {
@@ -441,7 +442,7 @@ sub processSynchronizeCSV {
 					my $keep         = 0;
 					my @p            = parse_line( $delim, $keep, $pLine );
 					my $itemCount    = scalar @p;
-					my $correctCount = 26;
+					my $correctCount = 28;
 					if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 						$processCSVErrors
 							.= $errorLineDelim
@@ -453,7 +454,7 @@ sub processSynchronizeCSV {
 							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 						$processCSVErrors
 							.= "</li><ul><li style='color:blue;'>"
-							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
 							. "</li></ul>";
 					}
 					else {
@@ -495,7 +496,7 @@ sub processSynchronizeCSV {
 				my $keep         = 0;
 				my @p            = parse_line( $delim, $keep, $line );
 				my $itemCount    = scalar @p;
-				my $correctCount = 26;
+				my $correctCount = 28;
 				if ( $itemCount > $correctCount || $itemCount < $correctCount ) {
 					$processCSVErrors
 						.= $errorLineDelim
@@ -507,7 +508,7 @@ sub processSynchronizeCSV {
 						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 					$processCSVErrors
 						.= "</li><ul><li style='color:blue;'>"
-						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port]"
+						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
 						. "</li></ul>";
 				}
 				else {

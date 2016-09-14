@@ -75,6 +75,11 @@ function getVersion() {
 }
 
 # ---------------------------------------
+function getRhelVersion {
+        echo el$(rpm -q --qf "%{VERSION}" $(rpm -q --whatprovides redhat-release))
+}
+
+# ---------------------------------------
 function getCommit() {
 	git rev-parse HEAD
 }
@@ -82,7 +87,7 @@ function getCommit() {
 # ---------------------------------------
 function checkEnvironment {
 	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
+	export BUILD_NUMBER="${BUILD_NUMBER:-$(getBuildNumber)}.$(getRhelVersion)"
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
@@ -141,4 +146,3 @@ function buildRpm () {
 		cp "$RPMBUILD/SRPMS/$srpm" "$DIST/." || { echo "Could not copy $srpm to $DIST: $?"; exit 1; }
 	done
 }
-
