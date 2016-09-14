@@ -1141,20 +1141,15 @@ sub parent_dot_config {
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
-				my $parents = 'parent="' . join( '', @parent_info ) . '"';
-				my $secparents = '';
 				if ( scalar @secondary_parent_info > 0 ) {
 					my %seen;
 					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
-					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
 				}
-				my $nullparents = '';
 				if ( scalar @null_parent_info > 0 ) {
 					my %seen;
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
-					$nullparents = 'null_parent="' . join( '', @null_parent_info ) . '"';
 				}
-
+                                my $parents = 'parent="' . join( '', @parent_info ) . '' . join ( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
 				my $mso_algorithm = "";
 				if ( $multi_site_origin_algorithm == 0 ) {
 					$mso_algorithm = "consistent_hash";
