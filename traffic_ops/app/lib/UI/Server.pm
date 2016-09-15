@@ -987,7 +987,7 @@ sub postupdatequeue {
 	my $wording    = ( $setqueue == 1 ) ? "Queue Updates" : "Unqueue Updates";
 
 	if ( !&is_admin($self) && !&is_oper($self) ) {
-		$self->flash( alertmsg => "No can do. Get more privs." );
+		$self->flash( alertmsg => "You must be an ADMIN to perform this operation!" );
 		return;
 	}
 

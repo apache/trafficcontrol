@@ -110,7 +110,7 @@ sub delete {
 	my $id   = $self->param('id');
 
 	if ( !&is_admin($self) ) {
-		$self->flash( message => "No can do. Get more privs." );
+		$self->flash( message => "You must be an ADMIN to perform this operation!" );
 	}
 	else {
 		my $name   = $self->db->resultset('Division')->search( { id => $id } )->get_column('name')->single();

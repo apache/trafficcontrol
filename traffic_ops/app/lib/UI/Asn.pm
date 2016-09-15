@@ -49,7 +49,7 @@ sub delete {
 	my $id   = $self->param('id');
 
 	if ( !&is_admin($self) ) {
-		$self->flash( alertmsg => "No can do. Get more privs." );
+		$self->flash( alertmsg => "You must be an ADMIN to perform this operation!" );
 	}
 	else {
 		my $asn    = $self->db->resultset('Asn')->search( { id => $id } )->get_column('asn')->single();
@@ -68,7 +68,7 @@ sub check_asn_input {
 
 	# First, check permissions
 	if ( !&is_admin($self) ) {
-		$err .= "You do not have enough privileges to modify this." . $sep;
+		$err .= "You must be an ADMIN to perform this operation!" . $sep;
 		return $err;
 	}
 
