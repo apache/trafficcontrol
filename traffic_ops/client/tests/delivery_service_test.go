@@ -309,3 +309,50 @@ func TestDeliveryServiceCapacityUnauthorized(t *testing.T) {
 		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
+
+func TestDeliveryServiceRouting(t *testing.T) {
+	resp := fixtures.DeliveryServiceRouting()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceRouting")
+
+	routing, err := to.DeliveryServiceRouting("123")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if routing.StaticRoute != 1 {
+		testHelper.Error(t, "Should get back \"1\" for \"StaticRoute\", got: %s", routing.StaticRoute)
+	} else {
+		testHelper.Success(t, "Should get back \"1\" for \"StaticRoute\"")
+	}
+}
+
+func TestDeliveryServiceRoutingUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceRouting")
+
+	_, err := to.DeliveryServiceRouting("123")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}

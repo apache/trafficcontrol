@@ -108,3 +108,19 @@ func DeliveryServiceCapacity() *client.DeliveryServiceCapacityResponse {
 		Response: dsc,
 	}
 }
+
+// DeliveryServiceRouting returns a default DeliveryServiceRoutingResponse to be used for testing.
+func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
+	dsc := client.DeliveryServiceRouting{
+		StaticRoute: 1,
+		Miss:        2,
+		Geo:         3,
+		Err:         4,
+		CZ:          5,
+		DSR:         6,
+	}
+
+	return &client.DeliveryServiceRoutingResponse{
+		Response: dsc,
+	}
+}
