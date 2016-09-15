@@ -114,10 +114,10 @@ func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
 	dsc := client.DeliveryServiceRouting{
 		StaticRoute: 1,
 		Miss:        2,
-		Geo:         3,
+		Geo:         3.33,
 		Err:         4,
-		CZ:          5,
-		DSR:         6,
+		CZ:          5.55,
+		DSR:         6.66,
 	}
 
 	return &client.DeliveryServiceRoutingResponse{

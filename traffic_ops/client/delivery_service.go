@@ -135,12 +135,15 @@ type DeliveryServiceRoutingResponse struct {
 
 // DeliveryServiceRouting ...
 type DeliveryServiceRouting struct {
-	StaticRoute int `json:"staticRoute"`
-	Miss        int `json:"miss"`
-	Geo         int `json:"geo"`
-	Err         int `json:"err"`
-	CZ          int `json:"cz"`
-	DSR         int `json:"dsr"`
+	StaticRoute       int     `json:"staticRoute"`
+	Miss              int     `json:"miss"`
+	Geo               float64 `json:"geo"`
+	Err               int     `json:"err"`
+	CZ                float64 `json:"cz"`
+	DSR               float64 `json:"dsr"`
+	FED               int     `json:"fed"`
+	RegionalAlternate int     `json:"regionalAlternate"`
+	RegionalDenied    int     `json:"regionalDenied"`
 }
 
 // DeliveryServices gets an array of DeliveryServices
