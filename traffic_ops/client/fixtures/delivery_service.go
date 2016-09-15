@@ -41,7 +41,7 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 				MissLat:              "44.654321",
 				MissLong:             "-99.123456",
 				Protocol:             "0",
-				IPv6RoutingEnabled:   true,
+				IPV6RoutingEnabled:   true,
 				RangeRequestHandling: "0",
 				TRResponseHeaders:    "Access-Control-Allow-Origin: *",
 				MultiSiteOrigin:      "0",
