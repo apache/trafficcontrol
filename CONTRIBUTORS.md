@@ -24,6 +24,7 @@ Sorted alphabetically
 * **[Kai Luo (kailuocisco)](https://github.com/kailuocisco)**
 * **[Lawrence Wickline (lwickline)](https://github.com/lwickline)**
 * **[Mark Torluemke (mtorluemke)](https://github.com/mtorluemke)**
+* **[Mike Ball (mdb)](https://github.com/mdb)**
 * **[Neil Hao (nbaoping)](https://github.com/nbaoping)**
 * **[Petro, Christopher C. (petrocc)](https://github.com/petrocc)**
 * **[Phil Sorber (PSUdaemon)](https://github.com/PSUdaemon)**
