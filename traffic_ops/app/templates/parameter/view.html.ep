@@ -133,8 +133,9 @@ function deleteCachegroupAssignment(cachegroup) {
                 <table style="width: 90%;" id='assignedProfilesTable'>
                     % for my $id (sort {$a <=> $b} (keys %{$assigned_profiles})) {
                     <tr>
-                        <td><a href="/#Misc"><%= $$assigned_profiles{$id}->{name} %></a></td><td><%= $$assigned_profiles{$id}->{desc} %></td>
-                         % if ($priv_level >= 20) {
+                        <td><%= $$assigned_profiles{$id}->{name} %></td>
+                        <td><%= $$assigned_profiles{$id}->{desc} %></td>
+                        % if ($priv_level >= 20) {
                         <td width="12%"><a href="#" onclick=deleteProfileAssignment(<%= $id %>)>remove</a></td>
                         % }
                     </tr>
@@ -143,7 +144,7 @@ function deleteCachegroupAssignment(cachegroup) {
             </form>
             <br>
             % if ($priv_level >= 20) {
-                <button id="addProfileButton" class="button" onclick="addProfileParameter()">Add Profile</button>
+            <button id="addProfileButton" class="button" onclick="addProfileParameter()">Add Profile</button>
             % }
             <div>
                 <br><hr>
@@ -154,7 +155,8 @@ function deleteCachegroupAssignment(cachegroup) {
                 <table style="width: 90%;"  id='assignedCachegroupsTable'>
                     % for my $id (sort {$a <=> $b} (keys %{$assigned_cachegroups})) {
                     <tr>
-                        <td><a href="/#Misc"><%= $$assigned_cachegroups{$id}->{name} %></a><td><%= $$assigned_cachegroups{$id}->{desc} %></td></td>
+                        <td><%= $$assigned_cachegroups{$id}->{name} %></td>
+                        <td><%= $$assigned_cachegroups{$id}->{desc} %></td>
                         % if ($priv_level >= 20) {
                         <td width="12%"><a href="#" onclick=deleteCachegroupAssignment(<%= $id %>)>remove</a></td>
                         % }
@@ -164,14 +166,15 @@ function deleteCachegroupAssignment(cachegroup) {
             </form>
             <br>
             % if ($priv_level >= 20) {
-                <button id="addCachegroupButton" class="button" onclick="addCachegroupParameter()">Add Cache Group</button>
+            <button id="addCachegroupButton" class="button" onclick="addCachegroupParameter()">Add Cache Group</button>
             % }
         </div>
         <div >
             <br><hr><br>
             % if ( ($priv_level >= 30) || ( ($priv_level >= 20) && (field('parameter.secure') == 0) ) ) {
-                <button class="button" onclick="deleteFunction()">Delete Parameter</button>
+            <button class="button" onclick="deleteFunction()">Delete Parameter</button>
             % }
             <button id="close_button" class="button" style="float:right; margin-right: 200px">Close</button>
         </div>
     </div>
+</div>
