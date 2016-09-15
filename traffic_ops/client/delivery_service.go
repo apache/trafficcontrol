@@ -57,11 +57,11 @@ type DeliveryService struct {
 	CheckPath            string `json:"checkPath"`
 	LastUpdated          string `json:"lastUpdated"`
 	Protocol             string `json:"protocol"`
-	IPv6RoutingEnabled   bool   `json:"ipv6RoutingEnabled"`
+	IPV6RoutingEnabled   bool   `json:"ipv6RoutingEnabled"`
 	RangeRequestHandling string `json:"rangeRequestHandling"`
 	HeaderRewrite        string `json:"headerRewrite"`
 	EdgeHeaderRewrite    string `json:"edgeHeaderRewrite"`
-	MidHeaderReqrite     string `json:"midHeaderRewrite"`
+	MidHeaderRewrite     string `json:"midHeaderRewrite"`
 	TRResponseHeaders    string `json:"trResponseHeaders"`
 	RegexRemap           string `json:"regexRemap"`
 	CacheURL             string `json:"cacheurl"`
