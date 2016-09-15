@@ -61,7 +61,7 @@ type DeliveryService struct {
 	RangeRequestHandling string `json:"rangeRequestHandling"`
 	HeaderRewrite        string `json:"headerRewrite"`
 	EdgeHeaderRewrite    string `json:"edgeHeaderRewrite"`
-	MidHeaderReqrite     string `json:"midHeaderRewrite"`
+	MidHeaderRewrite     string `json:"midHeaderRewrite"`
 	TRResponseHeaders    string `json:"trResponseHeaders"`
 	RegexRemap           string `json:"regexRemap"`
 	CacheURL             string `json:"cacheurl"`
