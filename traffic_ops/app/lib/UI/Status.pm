@@ -47,7 +47,7 @@ sub delete {
 	my $id   = $self->param('id');
 
 	if ( !&is_admin($self) ) {
-		$self->flash( alertmsg => "No can do. Get more privs." );
+		$self->flash( alertmsg => "You must be an ADMIN to perform this operation!" );
 	}
 	else {
 		my $p_name = $self->db->resultset('Status')->search( { id => $id } )->get_column('name')->single();
@@ -66,7 +66,7 @@ sub check_status_input {
 
 	# First, check permissions
 	if ( !&is_admin($self) ) {
-		$err .= "You do not have enough privileges to modify this." . $sep;
+		$err .= "You must be an ADMIN to perform this operation!" . $sep;
 		return $err;
 	}
 
