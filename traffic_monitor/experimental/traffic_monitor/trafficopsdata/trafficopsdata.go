@@ -68,20 +68,18 @@ func New() *TOData {
 // This could be made lock-free, if the performance was necessary
 type TODataThreadsafe struct {
 	toData *TOData
-	m      *sync.Mutex
+	m      *sync.RWMutex
 }
 
 func NewThreadsafe() TODataThreadsafe {
-	return TODataThreadsafe{m: &sync.Mutex{}, toData: New()}
+	return TODataThreadsafe{m: &sync.RWMutex{}, toData: New()}
 }
 
 // Get returns the current TOData. Callers MUST NOT modify returned data. Mutation IS NOT threadsafe
 // If callers need to modify, a new GetMutable() should be added which copies.
 func (d TODataThreadsafe) Get() TOData {
-	d.m.Lock()
-	defer func() {
-		d.m.Unlock()
-	}()
+	d.m.RLock()
+	defer d.m.RUnlock()
 	return *d.toData
 }
 

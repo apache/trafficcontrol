@@ -20,7 +20,7 @@ const maxEvents = 200 // TODO make config?
 
 type EventsThreadsafe struct {
 	events    *[]Event
-	m         *sync.Mutex
+	m         *sync.RWMutex
 	nextIndex *uint64
 }
 
@@ -34,14 +34,12 @@ func copyEvents(a []Event) []Event {
 
 func NewEventsThreadsafe() EventsThreadsafe {
 	i := uint64(0)
-	return EventsThreadsafe{m: &sync.Mutex{}, events: &[]Event{}, nextIndex: &i}
+	return EventsThreadsafe{m: &sync.RWMutex{}, events: &[]Event{}, nextIndex: &i}
 }
 
 func (o *EventsThreadsafe) Get() []Event {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return copyEvents(*o.events)
 }
 

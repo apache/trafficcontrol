@@ -14,7 +14,7 @@ import (
 
 type DurationMapThreadsafe struct {
 	durationMap map[enum.CacheName]time.Duration
-	m           *sync.Mutex
+	m           *sync.RWMutex
 }
 
 func copyDurationMap(a map[enum.CacheName]time.Duration) map[enum.CacheName]time.Duration {
@@ -26,22 +26,18 @@ func copyDurationMap(a map[enum.CacheName]time.Duration) map[enum.CacheName]time
 }
 
 func NewDurationMapThreadsafe() DurationMapThreadsafe {
-	return DurationMapThreadsafe{m: &sync.Mutex{}, durationMap: map[enum.CacheName]time.Duration{}}
+	return DurationMapThreadsafe{m: &sync.RWMutex{}, durationMap: map[enum.CacheName]time.Duration{}}
 }
 
 func (o *DurationMapThreadsafe) Get() map[enum.CacheName]time.Duration {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return copyDurationMap(o.durationMap)
 }
 
 func (o *DurationMapThreadsafe) GetDuration(cacheName enum.CacheName) (time.Duration, bool) {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	duration, ok := o.durationMap[cacheName]
 	return duration, ok
 }
@@ -54,7 +50,7 @@ func (o *DurationMapThreadsafe) Set(cacheName enum.CacheName, d time.Duration) {
 
 type TimeMapThreadsafe struct {
 	timeMap map[enum.CacheName]time.Time
-	m       *sync.Mutex
+	m       *sync.RWMutex
 }
 
 func copyTimeMap(a map[enum.CacheName]time.Time) map[enum.CacheName]time.Time {
@@ -66,22 +62,18 @@ func copyTimeMap(a map[enum.CacheName]time.Time) map[enum.CacheName]time.Time {
 }
 
 func NewTimeMapThreadsafe() TimeMapThreadsafe {
-	return TimeMapThreadsafe{m: &sync.Mutex{}, timeMap: map[enum.CacheName]time.Time{}}
+	return TimeMapThreadsafe{m: &sync.RWMutex{}, timeMap: map[enum.CacheName]time.Time{}}
 }
 
 func (o TimeMapThreadsafe) Get() map[enum.CacheName]time.Time {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return copyTimeMap(o.timeMap)
 }
 
 func (o *TimeMapThreadsafe) GetTime(cacheName enum.CacheName) (time.Time, bool) {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	time, ok := o.timeMap[cacheName]
 	return time, ok
 }
@@ -94,18 +86,16 @@ func (o *TimeMapThreadsafe) Set(cacheName enum.CacheName, d time.Time) {
 
 type ResultsThreadsafe struct {
 	r map[enum.CacheName][]cache.Result
-	m *sync.Mutex
+	m *sync.RWMutex
 }
 
 func NewResultsThreadsafe() ResultsThreadsafe {
-	return ResultsThreadsafe{m: &sync.Mutex{}, r: map[enum.CacheName][]cache.Result{}}
+	return ResultsThreadsafe{m: &sync.RWMutex{}, r: map[enum.CacheName][]cache.Result{}}
 }
 
 func (o *ResultsThreadsafe) Get(cacheName enum.CacheName) []cache.Result {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return o.r[cacheName]
 }
 
