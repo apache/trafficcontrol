@@ -9,6 +9,7 @@ import (
 	"time"
 
 	_ "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/manager"
 	_ "github.com/davecheney/gmx"
@@ -37,13 +38,16 @@ func getStaticAppData() (manager.StaticAppData, error) {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	log.Init(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+
 	staticData, err := getStaticAppData()
 	if err != nil {
-		fmt.Printf("ERROR failed to get static app data: %v", err)
+		log.Errorf("failed to get static app data: %v\n", err)
 		return
 	}
 
 	opsConfigFile := flag.String("opsCfg", "", "The traffic ops config file")
+	configFileName := flag.String("config", "", "The Traffic Monitor config file path")
 	flag.Parse()
 
 	if *opsConfigFile == "" {
@@ -51,8 +55,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Init(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+	// TODO add hot reloading (like opsConfigFile)?
+	cfg, err := config.Load(*configFileName)
+	if err != nil {
+		log.Errorf("failed to load config: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Start the Manager
-	manager.Start(*opsConfigFile, staticData)
+	manager.Start(*opsConfigFile, cfg, staticData)
 }
