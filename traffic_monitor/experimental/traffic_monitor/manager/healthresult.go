@@ -115,14 +115,14 @@ func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata
 	lastHealthDurations := NewDurationMapThreadsafe()
 	events := NewEventsThreadsafe(cfg.MaxEvents)
 	localCacheStatus := NewCacheAvailableStatusThreadsafe()
-	go healthResultManagerListen(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus)
+	go healthResultManagerListen(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, cfg)
 	return lastHealthDurations, events, localCacheStatus
 }
 
 // cacheAggregateSeconds is how often to aggregate stats, if the health chan is never empty. (Otherwise, we read from the chan until it's empty, then aggregate, continuously)
 const cacheAggregateSeconds = 1
 
-func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) {
+func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, cfg config.Config) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
 	healthHistory := map[enum.CacheName][]cache.Result{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
@@ -136,14 +136,14 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 			select {
 			case <-tick:
 				log.Warnf("Health Result Manager flushing queued results\n")
-				processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, lastHealthEndTimes, healthHistory, results)
+				processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, lastHealthEndTimes, healthHistory, results, cfg)
 				break innerLoop
 			default:
 				select {
 				case r := <-cacheHealthChan:
 					results = append(results, r)
 				default:
-					processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, lastHealthEndTimes, healthHistory, results)
+					processHealthResult(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus, lastHealthEndTimes, healthHistory, results, cfg)
 					break innerLoop
 				}
 			}
@@ -151,7 +151,7 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 	}
 }
 
-func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastHealthEndTimes map[enum.CacheName]time.Time, healthHistory map[enum.CacheName][]cache.Result, results []cache.Result) {
+func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastHealthEndTimes map[enum.CacheName]time.Time, healthHistory map[enum.CacheName][]cache.Result, results []cache.Result, cfg config.Config) {
 	if len(results) == 0 {
 		return
 	}
@@ -169,7 +169,7 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 
 		health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
 		// healthHistory.Set(enum.CacheName(healthResult.Id), pruneHistory(append(healthHistory.Get(enum.CacheName(healthResult.Id)), healthResult), defaultMaxHistory))
-		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), defaultMaxHistory)
+		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), cfg.MaxHealthHistory)
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s errors: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Errors)

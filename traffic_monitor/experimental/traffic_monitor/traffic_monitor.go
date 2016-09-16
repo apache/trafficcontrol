@@ -62,6 +62,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Start the Manager
 	manager.Start(*opsConfigFile, cfg, staticData)
 }

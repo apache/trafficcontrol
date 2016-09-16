@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-// Config contains all the config values for the app.
-// Values may be nil, in which case the 'owner' of the config setting should set or declare a default.
 type Config struct {
 	CacheHealthPollingInterval   time.Duration `json:"-"`
 	CacheStatPollingInterval     time.Duration `json:"-"`
@@ -15,6 +13,8 @@ type Config struct {
 	HttpTimeout                  time.Duration `json:"-"`
 	PeerPollingInterval          time.Duration `json:"-"`
 	MaxEvents                    uint64        `json:"max_events"`
+	MaxStatHistory               uint64        `json:"max_stat_history"`
+	MaxHealthHistory             uint64        `json:"max_health_history"`
 }
 
 var DefaultConfig = Config{
@@ -24,6 +24,8 @@ var DefaultConfig = Config{
 	HttpTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
 	MaxEvents:                    200,
+	MaxStatHistory:               5,
+	MaxHealthHistory:             5,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
