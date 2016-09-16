@@ -148,14 +148,9 @@ type DeliveryServiceRouting struct {
 
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
-	resp, err := to.request(deliveryServicesEp(), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServicesEp(), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -164,14 +159,9 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 
 // DeliveryService gets the DeliveryService for the ID it's passed
 func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
-	resp, err := to.request(deliveryServiceEp(id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -180,14 +170,9 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
 func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
-	resp, err := to.request(deliveryServiceStateEp(id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceStateResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceStateEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -196,14 +181,9 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
 func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
-	resp, err := to.request(deliveryServiceHealthEp(id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceHealthResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceHealthEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -212,14 +192,9 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
 func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
-	resp, err := to.request(deliveryServiceCapacityEp(id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceCapacityResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceCapacityEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -228,16 +203,24 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 
 // DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
 func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
-	resp, err := to.request(deliveryServiceRoutingEp(id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceRoutingResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceRoutingEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
 	return &data.Response, nil
+}
+
+func get(to *Session, endpoint string, respStruct interface{}) error {
+	resp, err := to.request(endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
+		return err
+	}
+
+	return nil
 }
