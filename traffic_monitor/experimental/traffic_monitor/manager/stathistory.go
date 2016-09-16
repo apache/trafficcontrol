@@ -75,7 +75,7 @@ func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates p
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastKbpsStats := NewStatsLastKbpsThreadsafe()
 	dsStats := NewDSStatsThreadsafe()
-	tickInterval := time.Millisecond * 200 // TODO make config setting
+	tickInterval := cfg.StatFlushInterval
 	go func() {
 		for {
 			var results []cache.Result

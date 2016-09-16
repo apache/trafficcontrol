@@ -15,6 +15,8 @@ type Config struct {
 	MaxEvents                    uint64        `json:"max_events"`
 	MaxStatHistory               uint64        `json:"max_stat_history"`
 	MaxHealthHistory             uint64        `json:"max_health_history"`
+	HealthFlushInterval          time.Duration `json:"-"`
+	StatFlushInterval            time.Duration `json:"-"`
 }
 
 var DefaultConfig = Config{
@@ -26,6 +28,8 @@ var DefaultConfig = Config{
 	MaxEvents:                    200,
 	MaxStatHistory:               5,
 	MaxHealthHistory:             5,
+	HealthFlushInterval:          200 * time.Millisecond,
+	StatFlushInterval:            200 * time.Millisecond,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -37,6 +41,8 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
 		HttpTimeoutMs                  uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
+		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
+		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
 		*Alias
 	}{
 		CacheHealthPollingIntervalMs:   uint64(c.CacheHealthPollingInterval / time.Millisecond),
@@ -44,18 +50,22 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		MonitorConfigPollingIntervalMs: uint64(c.MonitorConfigPollingInterval / time.Millisecond),
 		HttpTimeoutMs:                  uint64(c.HttpTimeout / time.Millisecond),
 		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
-		Alias: (*Alias)(c),
+		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
+		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
+		Alias:                          (*Alias)(c),
 	})
 }
 
 func (c *Config) UnmarshalJSON(data []byte) error {
 	type Alias Config
 	aux := &struct {
-		CacheHealthPollingIntervalMs   uint64 `json:"cache_health_polling_interval_ms"`
-		CacheStatPollingIntervalMs     uint64 `json:"cache_stat_polling_interval_ms"`
-		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
-		HttpTimeoutMs                  uint64 `json:"http_timeout_ms"`
-		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
+		CacheHealthPollingIntervalMs   *uint64 `json:"cache_health_polling_interval_ms"`
+		CacheStatPollingIntervalMs     *uint64 `json:"cache_stat_polling_interval_ms"`
+		MonitorConfigPollingIntervalMs *uint64 `json:"monitor_config_polling_interval_ms"`
+		HttpTimeoutMs                  *uint64 `json:"http_timeout_ms"`
+		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
+		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
+		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -64,11 +74,27 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	c.CacheHealthPollingInterval = time.Duration(aux.CacheHealthPollingIntervalMs) * time.Millisecond
-	c.CacheStatPollingInterval = time.Duration(aux.CacheStatPollingIntervalMs) * time.Millisecond
-	c.MonitorConfigPollingInterval = time.Duration(aux.MonitorConfigPollingIntervalMs) * time.Millisecond
-	c.HttpTimeout = time.Duration(aux.HttpTimeoutMs) * time.Millisecond
-	c.PeerPollingInterval = time.Duration(aux.PeerPollingIntervalMs) * time.Millisecond
+	if aux.CacheHealthPollingIntervalMs != nil {
+		c.CacheHealthPollingInterval = time.Duration(*aux.CacheHealthPollingIntervalMs) * time.Millisecond
+	}
+	if aux.CacheStatPollingIntervalMs != nil {
+		c.CacheStatPollingInterval = time.Duration(*aux.CacheStatPollingIntervalMs) * time.Millisecond
+	}
+	if aux.MonitorConfigPollingIntervalMs != nil {
+		c.MonitorConfigPollingInterval = time.Duration(*aux.MonitorConfigPollingIntervalMs) * time.Millisecond
+	}
+	if aux.HttpTimeoutMs != nil {
+		c.HttpTimeout = time.Duration(*aux.HttpTimeoutMs) * time.Millisecond
+	}
+	if aux.PeerPollingIntervalMs != nil {
+		c.PeerPollingInterval = time.Duration(*aux.PeerPollingIntervalMs) * time.Millisecond
+	}
+	if aux.HealthFlushIntervalMs != nil {
+		c.HealthFlushInterval = time.Duration(*aux.HealthFlushIntervalMs) * time.Millisecond
+	}
+	if aux.StatFlushIntervalMs != nil {
+		c.StatFlushInterval = time.Duration(*aux.StatFlushIntervalMs) * time.Millisecond
+	}
 	return nil
 }
 

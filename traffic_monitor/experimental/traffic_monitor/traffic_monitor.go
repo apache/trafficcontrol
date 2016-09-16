@@ -62,5 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	log.Infof("Starting with config %+v\n", cfg)
+
 	manager.Start(*opsConfigFile, cfg, staticData)
 }
