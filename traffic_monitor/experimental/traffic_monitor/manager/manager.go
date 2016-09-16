@@ -95,7 +95,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		peerStates,
 		combinedStates,
 		fetchCount,
-		errorCount)
+		errorCount,
+		cfg)
 	StartDataRequestManager(
 		dr,
 		opsConfig,

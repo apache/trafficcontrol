@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
@@ -110,9 +111,9 @@ func (o *ResultsThreadsafe) Set(cacheName enum.CacheName, newR []cache.Result) {
 // This poll should be quicker and less computationally expensive for ATS, but
 // doesn't include all stat data needed for e.g. delivery service calculations.4
 // Returns the last health durations, events, and the local cache statuses.
-func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe) (DurationMapThreadsafe, EventsThreadsafe, CacheAvailableStatusThreadsafe) {
+func StartHealthResultManager(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, cfg config.Config) (DurationMapThreadsafe, EventsThreadsafe, CacheAvailableStatusThreadsafe) {
 	lastHealthDurations := NewDurationMapThreadsafe()
-	events := NewEventsThreadsafe()
+	events := NewEventsThreadsafe(cfg.MaxEvents)
 	localCacheStatus := NewCacheAvailableStatusThreadsafe()
 	go healthResultManagerListen(cacheHealthChan, toData, localStates, lastHealthDurations, statHistory, monitorConfig, peerStates, combinedStates, fetchCount, errorCount, events, localCacheStatus)
 	return lastHealthDurations, events, localCacheStatus

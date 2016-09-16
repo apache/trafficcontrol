@@ -14,6 +14,7 @@ type Config struct {
 	MonitorConfigPollingInterval time.Duration `json:"-"`
 	HttpTimeout                  time.Duration `json:"-"`
 	PeerPollingInterval          time.Duration `json:"-"`
+	MaxEvents                    uint64        `json:"max_events"`
 }
 
 var DefaultConfig = Config{
@@ -22,6 +23,7 @@ var DefaultConfig = Config{
 	MonitorConfigPollingInterval: 5 * time.Second,
 	HttpTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
+	MaxEvents:                    200,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
