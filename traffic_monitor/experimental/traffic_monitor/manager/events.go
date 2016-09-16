@@ -2,16 +2,18 @@ package manager
 
 import (
 	"sync"
+
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 )
 
 type Event struct {
-	Index       uint64 `json:"index"`
-	Time        int64  `json:"time"`
-	Description string `json:"description"`
-	Name        string `json:"name"`
-	Hostname    string `json:"hostname"`
-	Type        string `json:"type"`
-	Available   bool   `json:"isAvailable"`
+	Index       uint64         `json:"index"`
+	Time        int64          `json:"time"`
+	Description string         `json:"description"`
+	Name        enum.CacheName `json:"name"`
+	Hostname    enum.CacheName `json:"hostname"`
+	Type        string         `json:"type"`
+	Available   bool           `json:"isAvailable"`
 }
 
 const maxEvents = 200 // TODO make config?
