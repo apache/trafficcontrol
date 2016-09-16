@@ -919,6 +919,7 @@ CREATE TABLE server (
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
     type bigint NOT NULL,
     status bigint NOT NULL,
+    offline_reason character varying(256),
     upd_pending smallint DEFAULT '0'::smallint NOT NULL,
     profile bigint NOT NULL,
     cdn_id bigint NOT NULL,
@@ -1478,770 +1479,770 @@ ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclas
 --
 
 ALTER TABLE ONLY asn
-    ADD CONSTRAINT idx_28644_primary PRIMARY KEY (id, cachegroup);
+    ADD CONSTRAINT idx_39541_primary PRIMARY KEY (id, cachegroup);
 
 
 --
--- Name: idx_28652_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39549_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY cachegroup
-    ADD CONSTRAINT idx_28652_primary PRIMARY KEY (id, type);
+    ADD CONSTRAINT idx_39549_primary PRIMARY KEY (id, type);
 
 
 --
--- Name: idx_28657_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39554_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY cachegroup_parameter
-    ADD CONSTRAINT idx_28657_primary PRIMARY KEY (cachegroup, parameter);
+    ADD CONSTRAINT idx_39554_primary PRIMARY KEY (cachegroup, parameter);
 
 
 --
--- Name: idx_28664_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39561_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY cdn
-    ADD CONSTRAINT idx_28664_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39561_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28672_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39569_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY deliveryservice
-    ADD CONSTRAINT idx_28672_primary PRIMARY KEY (id, type);
+    ADD CONSTRAINT idx_39569_primary PRIMARY KEY (id, type);
 
 
 --
--- Name: idx_28687_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39584_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY deliveryservice_regex
-    ADD CONSTRAINT idx_28687_primary PRIMARY KEY (deliveryservice, regex);
+    ADD CONSTRAINT idx_39584_primary PRIMARY KEY (deliveryservice, regex);
 
 
 --
--- Name: idx_28691_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39588_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY deliveryservice_server
-    ADD CONSTRAINT idx_28691_primary PRIMARY KEY (deliveryservice, server);
+    ADD CONSTRAINT idx_39588_primary PRIMARY KEY (deliveryservice, server);
 
 
 --
--- Name: idx_28695_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39592_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY deliveryservice_tmuser
-    ADD CONSTRAINT idx_28695_primary PRIMARY KEY (deliveryservice, tm_user_id);
+    ADD CONSTRAINT idx_39592_primary PRIMARY KEY (deliveryservice, tm_user_id);
 
 
 --
--- Name: idx_28701_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39598_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY division
-    ADD CONSTRAINT idx_28701_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39598_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28708_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39605_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY federation
-    ADD CONSTRAINT idx_28708_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39605_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28716_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39613_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY federation_deliveryservice
-    ADD CONSTRAINT idx_28716_primary PRIMARY KEY (federation, deliveryservice);
+    ADD CONSTRAINT idx_39613_primary PRIMARY KEY (federation, deliveryservice);
 
 
 --
--- Name: idx_28720_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39617_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY federation_federation_resolver
-    ADD CONSTRAINT idx_28720_primary PRIMARY KEY (federation, federation_resolver);
+    ADD CONSTRAINT idx_39617_primary PRIMARY KEY (federation, federation_resolver);
 
 
 --
--- Name: idx_28726_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39623_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY federation_resolver
-    ADD CONSTRAINT idx_28726_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39623_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28731_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39628_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY federation_tmuser
-    ADD CONSTRAINT idx_28731_primary PRIMARY KEY (federation, tm_user);
+    ADD CONSTRAINT idx_39628_primary PRIMARY KEY (federation, tm_user);
 
 
 --
--- Name: idx_28747_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39644_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY hwinfo
-    ADD CONSTRAINT idx_28747_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39644_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28757_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39654_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY job
-    ADD CONSTRAINT idx_28757_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39654_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28767_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39664_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY job_agent
-    ADD CONSTRAINT idx_28767_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39664_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28778_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39675_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY job_result
-    ADD CONSTRAINT idx_28778_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39675_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28788_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39685_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY job_status
-    ADD CONSTRAINT idx_28788_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39685_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28795_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39692_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY log
-    ADD CONSTRAINT idx_28795_primary PRIMARY KEY (id, tm_user);
+    ADD CONSTRAINT idx_39692_primary PRIMARY KEY (id, tm_user);
 
 
 --
--- Name: idx_28805_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39702_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY parameter
-    ADD CONSTRAINT idx_28805_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39702_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28816_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39713_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY phys_location
-    ADD CONSTRAINT idx_28816_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39713_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28826_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39723_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY profile
-    ADD CONSTRAINT idx_28826_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39723_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28831_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39728_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY profile_parameter
-    ADD CONSTRAINT idx_28831_primary PRIMARY KEY (profile, parameter);
+    ADD CONSTRAINT idx_39728_primary PRIMARY KEY (profile, parameter);
 
 
 --
--- Name: idx_28837_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39734_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY regex
-    ADD CONSTRAINT idx_28837_primary PRIMARY KEY (id, type);
+    ADD CONSTRAINT idx_39734_primary PRIMARY KEY (id, type);
 
 
 --
--- Name: idx_28845_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39742_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY region
-    ADD CONSTRAINT idx_28845_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39742_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28852_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39749_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY role
-    ADD CONSTRAINT idx_28852_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39749_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28858_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39755_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY server
-    ADD CONSTRAINT idx_28858_primary PRIMARY KEY (id, cachegroup, type, status, profile);
+    ADD CONSTRAINT idx_39755_primary PRIMARY KEY (id, cachegroup, type, status, profile);
 
 
 --
--- Name: idx_28871_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39768_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY servercheck
-    ADD CONSTRAINT idx_28871_primary PRIMARY KEY (id, server);
+    ADD CONSTRAINT idx_39768_primary PRIMARY KEY (id, server);
 
 
 --
--- Name: idx_28878_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39775_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY staticdnsentry
-    ADD CONSTRAINT idx_28878_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39775_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28886_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39783_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY stats_summary
-    ADD CONSTRAINT idx_28886_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39783_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28897_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39794_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY status
-    ADD CONSTRAINT idx_28897_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39794_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28902_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39799_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY steering_target
-    ADD CONSTRAINT idx_28902_primary PRIMARY KEY (deliveryservice, target);
+    ADD CONSTRAINT idx_39799_primary PRIMARY KEY (deliveryservice, target);
 
 
 --
--- Name: idx_28908_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39805_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY tm_user
-    ADD CONSTRAINT idx_28908_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39805_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28919_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39816_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY to_extension
-    ADD CONSTRAINT idx_28919_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39816_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28929_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_39826_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
 --
 
 ALTER TABLE ONLY type
-    ADD CONSTRAINT idx_28929_primary PRIMARY KEY (id);
+    ADD CONSTRAINT idx_39826_primary PRIMARY KEY (id);
 
 
 --
--- Name: idx_28644_cr_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39541_cr_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28644_cr_id_unique ON asn USING btree (id);
+CREATE UNIQUE INDEX idx_39541_cr_id_unique ON asn USING btree (id);
 
 
 --
--- Name: idx_28644_fk_cran_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39541_fk_cran_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28644_fk_cran_cachegroup1 ON asn USING btree (cachegroup);
+CREATE INDEX idx_39541_fk_cran_cachegroup1 ON asn USING btree (cachegroup);
 
 
 --
--- Name: idx_28652_cg_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39549_cg_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28652_cg_name_unique ON cachegroup USING btree (name);
+CREATE UNIQUE INDEX idx_39549_cg_name_unique ON cachegroup USING btree (name);
 
 
 --
--- Name: idx_28652_cg_short_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39549_cg_short_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28652_cg_short_unique ON cachegroup USING btree (short_name);
+CREATE UNIQUE INDEX idx_39549_cg_short_unique ON cachegroup USING btree (short_name);
 
 
 --
--- Name: idx_28652_fk_cg_1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39549_fk_cg_1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28652_fk_cg_1 ON cachegroup USING btree (parent_cachegroup_id);
+CREATE INDEX idx_39549_fk_cg_1 ON cachegroup USING btree (parent_cachegroup_id);
 
 
 --
--- Name: idx_28652_fk_cg_secondary; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39549_fk_cg_secondary; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28652_fk_cg_secondary ON cachegroup USING btree (secondary_parent_cachegroup_id);
+CREATE INDEX idx_39549_fk_cg_secondary ON cachegroup USING btree (secondary_parent_cachegroup_id);
 
 
 --
--- Name: idx_28652_fk_cg_type1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39549_fk_cg_type1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28652_fk_cg_type1 ON cachegroup USING btree (type);
+CREATE INDEX idx_39549_fk_cg_type1 ON cachegroup USING btree (type);
 
 
 --
--- Name: idx_28652_lo_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39549_lo_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28652_lo_id_unique ON cachegroup USING btree (id);
+CREATE UNIQUE INDEX idx_39549_lo_id_unique ON cachegroup USING btree (id);
 
 
 --
--- Name: idx_28657_fk_parameter; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39554_fk_parameter; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28657_fk_parameter ON cachegroup_parameter USING btree (parameter);
+CREATE INDEX idx_39554_fk_parameter ON cachegroup_parameter USING btree (parameter);
 
 
 --
--- Name: idx_28664_cdn_cdn_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39561_cdn_cdn_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28664_cdn_cdn_unique ON cdn USING btree (name);
+CREATE UNIQUE INDEX idx_39561_cdn_cdn_unique ON cdn USING btree (name);
 
 
 --
--- Name: idx_28672_ds_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39569_ds_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28672_ds_id_unique ON deliveryservice USING btree (id);
+CREATE UNIQUE INDEX idx_39569_ds_id_unique ON deliveryservice USING btree (id);
 
 
 --
--- Name: idx_28672_ds_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39569_ds_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28672_ds_name_unique ON deliveryservice USING btree (xml_id);
+CREATE UNIQUE INDEX idx_39569_ds_name_unique ON deliveryservice USING btree (xml_id);
 
 
 --
--- Name: idx_28672_fk_cdn1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39569_fk_cdn1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28672_fk_cdn1 ON deliveryservice USING btree (cdn_id);
+CREATE INDEX idx_39569_fk_cdn1 ON deliveryservice USING btree (cdn_id);
 
 
 --
--- Name: idx_28672_fk_deliveryservice_profile1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39569_fk_deliveryservice_profile1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28672_fk_deliveryservice_profile1 ON deliveryservice USING btree (profile);
+CREATE INDEX idx_39569_fk_deliveryservice_profile1 ON deliveryservice USING btree (profile);
 
 
 --
--- Name: idx_28672_fk_deliveryservice_type1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39569_fk_deliveryservice_type1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28672_fk_deliveryservice_type1 ON deliveryservice USING btree (type);
+CREATE INDEX idx_39569_fk_deliveryservice_type1 ON deliveryservice USING btree (type);
 
 
 --
--- Name: idx_28687_fk_ds_to_regex_regex1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39584_fk_ds_to_regex_regex1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28687_fk_ds_to_regex_regex1 ON deliveryservice_regex USING btree (regex);
+CREATE INDEX idx_39584_fk_ds_to_regex_regex1 ON deliveryservice_regex USING btree (regex);
 
 
 --
--- Name: idx_28691_fk_ds_to_cs_contentserver1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39588_fk_ds_to_cs_contentserver1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28691_fk_ds_to_cs_contentserver1 ON deliveryservice_server USING btree (server);
+CREATE INDEX idx_39588_fk_ds_to_cs_contentserver1 ON deliveryservice_server USING btree (server);
 
 
 --
--- Name: idx_28695_fk_tm_userid; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39592_fk_tm_userid; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28695_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
+CREATE INDEX idx_39592_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
 
 
 --
--- Name: idx_28701_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39598_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28701_name_unique ON division USING btree (name);
+CREATE UNIQUE INDEX idx_39598_name_unique ON division USING btree (name);
 
 
 --
--- Name: idx_28716_fk_fed_to_ds1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39613_fk_fed_to_ds1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28716_fk_fed_to_ds1 ON federation_deliveryservice USING btree (deliveryservice);
+CREATE INDEX idx_39613_fk_fed_to_ds1 ON federation_deliveryservice USING btree (deliveryservice);
 
 
 --
--- Name: idx_28720_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39617_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28720_fk_federation_federation_resolver ON federation_federation_resolver USING btree (federation);
+CREATE INDEX idx_39617_fk_federation_federation_resolver ON federation_federation_resolver USING btree (federation);
 
 
 --
--- Name: idx_28720_fk_federation_resolver_to_fed1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39617_fk_federation_resolver_to_fed1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28720_fk_federation_resolver_to_fed1 ON federation_federation_resolver USING btree (federation_resolver);
+CREATE INDEX idx_39617_fk_federation_resolver_to_fed1 ON federation_federation_resolver USING btree (federation_resolver);
 
 
 --
--- Name: idx_28726_federation_resolver_ip_address; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39623_federation_resolver_ip_address; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28726_federation_resolver_ip_address ON federation_resolver USING btree (ip_address);
+CREATE UNIQUE INDEX idx_39623_federation_resolver_ip_address ON federation_resolver USING btree (ip_address);
 
 
 --
--- Name: idx_28726_fk_federation_mapping_type; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39623_fk_federation_mapping_type; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28726_fk_federation_mapping_type ON federation_resolver USING btree (type);
+CREATE INDEX idx_39623_fk_federation_mapping_type ON federation_resolver USING btree (type);
 
 
 --
--- Name: idx_28731_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39628_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28731_fk_federation_federation_resolver ON federation_tmuser USING btree (federation);
+CREATE INDEX idx_39628_fk_federation_federation_resolver ON federation_tmuser USING btree (federation);
 
 
 --
--- Name: idx_28731_fk_federation_tmuser_role; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39628_fk_federation_tmuser_role; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28731_fk_federation_tmuser_role ON federation_tmuser USING btree (role);
+CREATE INDEX idx_39628_fk_federation_tmuser_role ON federation_tmuser USING btree (role);
 
 
 --
--- Name: idx_28731_fk_federation_tmuser_tmuser; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39628_fk_federation_tmuser_tmuser; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28731_fk_federation_tmuser_tmuser ON federation_tmuser USING btree (tm_user);
+CREATE INDEX idx_39628_fk_federation_tmuser_tmuser ON federation_tmuser USING btree (tm_user);
 
 
 --
--- Name: idx_28747_fk_hwinfo1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39644_fk_hwinfo1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28747_fk_hwinfo1 ON hwinfo USING btree (serverid);
+CREATE INDEX idx_39644_fk_hwinfo1 ON hwinfo USING btree (serverid);
 
 
 --
--- Name: idx_28747_serverid; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39644_serverid; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28747_serverid ON hwinfo USING btree (serverid, description);
+CREATE UNIQUE INDEX idx_39644_serverid ON hwinfo USING btree (serverid, description);
 
 
 --
--- Name: idx_28757_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39654_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28757_fk_job_agent_id1 ON job USING btree (agent);
+CREATE INDEX idx_39654_fk_job_agent_id1 ON job USING btree (agent);
 
 
 --
--- Name: idx_28757_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39654_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28757_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
+CREATE INDEX idx_39654_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
 
 
 --
--- Name: idx_28757_fk_job_status_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39654_fk_job_status_id1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28757_fk_job_status_id1 ON job USING btree (status);
+CREATE INDEX idx_39654_fk_job_status_id1 ON job USING btree (status);
 
 
 --
--- Name: idx_28757_fk_job_user_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39654_fk_job_user_id1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28757_fk_job_user_id1 ON job USING btree (job_user);
+CREATE INDEX idx_39654_fk_job_user_id1 ON job USING btree (job_user);
 
 
 --
--- Name: idx_28778_fk_agent_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39675_fk_agent_id1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28778_fk_agent_id1 ON job_result USING btree (agent);
+CREATE INDEX idx_39675_fk_agent_id1 ON job_result USING btree (agent);
 
 
 --
--- Name: idx_28778_fk_job_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39675_fk_job_id1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28778_fk_job_id1 ON job_result USING btree (job);
+CREATE INDEX idx_39675_fk_job_id1 ON job_result USING btree (job);
 
 
 --
--- Name: idx_28795_fk_log_1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39692_fk_log_1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28795_fk_log_1 ON log USING btree (tm_user);
+CREATE INDEX idx_39692_fk_log_1 ON log USING btree (tm_user);
 
 
 --
--- Name: idx_28805_parameter_name_value_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39702_parameter_name_value_idx; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28805_parameter_name_value_idx ON parameter USING btree (name, value);
+CREATE INDEX idx_39702_parameter_name_value_idx ON parameter USING btree (name, value);
 
 
 --
--- Name: idx_28816_fk_phys_location_region_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39713_fk_phys_location_region_idx; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28816_fk_phys_location_region_idx ON phys_location USING btree (region);
+CREATE INDEX idx_39713_fk_phys_location_region_idx ON phys_location USING btree (region);
 
 
 --
--- Name: idx_28816_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39713_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28816_name_unique ON phys_location USING btree (name);
+CREATE UNIQUE INDEX idx_39713_name_unique ON phys_location USING btree (name);
 
 
 --
--- Name: idx_28816_short_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39713_short_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28816_short_name_unique ON phys_location USING btree (short_name);
+CREATE UNIQUE INDEX idx_39713_short_name_unique ON phys_location USING btree (short_name);
 
 
 --
--- Name: idx_28826_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39723_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28826_name_unique ON profile USING btree (name);
+CREATE UNIQUE INDEX idx_39723_name_unique ON profile USING btree (name);
 
 
 --
--- Name: idx_28831_fk_atsprofile_atsparameters_atsparameters1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39728_fk_atsprofile_atsparameters_atsparameters1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28831_fk_atsprofile_atsparameters_atsparameters1 ON profile_parameter USING btree (parameter);
+CREATE INDEX idx_39728_fk_atsprofile_atsparameters_atsparameters1 ON profile_parameter USING btree (parameter);
 
 
 --
--- Name: idx_28831_fk_atsprofile_atsparameters_atsprofile1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39728_fk_atsprofile_atsparameters_atsprofile1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28831_fk_atsprofile_atsparameters_atsprofile1 ON profile_parameter USING btree (profile);
+CREATE INDEX idx_39728_fk_atsprofile_atsparameters_atsprofile1 ON profile_parameter USING btree (profile);
 
 
 --
--- Name: idx_28837_fk_regex_type1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39734_fk_regex_type1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28837_fk_regex_type1 ON regex USING btree (type);
+CREATE INDEX idx_39734_fk_regex_type1 ON regex USING btree (type);
 
 
 --
--- Name: idx_28837_re_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39734_re_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28837_re_id_unique ON regex USING btree (id);
+CREATE UNIQUE INDEX idx_39734_re_id_unique ON regex USING btree (id);
 
 
 --
--- Name: idx_28845_fk_region_division1_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39742_fk_region_division1_idx; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28845_fk_region_division1_idx ON region USING btree (division);
+CREATE INDEX idx_39742_fk_region_division1_idx ON region USING btree (division);
 
 
 --
--- Name: idx_28845_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39742_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28845_name_unique ON region USING btree (name);
+CREATE UNIQUE INDEX idx_39742_name_unique ON region USING btree (name);
 
 
 --
--- Name: idx_28858_fk_cdn2; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_fk_cdn2; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28858_fk_cdn2 ON server USING btree (cdn_id);
+CREATE INDEX idx_39755_fk_cdn2 ON server USING btree (cdn_id);
 
 
 --
--- Name: idx_28858_fk_contentserver_atsprofile1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_fk_contentserver_atsprofile1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28858_fk_contentserver_atsprofile1 ON server USING btree (profile);
+CREATE INDEX idx_39755_fk_contentserver_atsprofile1 ON server USING btree (profile);
 
 
 --
--- Name: idx_28858_fk_contentserver_contentserverstatus1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_fk_contentserver_contentserverstatus1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28858_fk_contentserver_contentserverstatus1 ON server USING btree (status);
+CREATE INDEX idx_39755_fk_contentserver_contentserverstatus1 ON server USING btree (status);
 
 
 --
--- Name: idx_28858_fk_contentserver_contentservertype1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_fk_contentserver_contentservertype1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28858_fk_contentserver_contentservertype1 ON server USING btree (type);
+CREATE INDEX idx_39755_fk_contentserver_contentservertype1 ON server USING btree (type);
 
 
 --
--- Name: idx_28858_fk_contentserver_phys_location1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_fk_contentserver_phys_location1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28858_fk_contentserver_phys_location1 ON server USING btree (phys_location);
+CREATE INDEX idx_39755_fk_contentserver_phys_location1 ON server USING btree (phys_location);
 
 
 --
--- Name: idx_28858_fk_server_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_fk_server_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28858_fk_server_cachegroup1 ON server USING btree (cachegroup);
+CREATE INDEX idx_39755_fk_server_cachegroup1 ON server USING btree (cachegroup);
 
 
 --
--- Name: idx_28858_ip6_profile; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_ip6_profile; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28858_ip6_profile ON server USING btree (ip6_address, profile);
+CREATE UNIQUE INDEX idx_39755_ip6_profile ON server USING btree (ip6_address, profile);
 
 
 --
--- Name: idx_28858_ip_profile; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_ip_profile; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28858_ip_profile ON server USING btree (ip_address, profile);
+CREATE UNIQUE INDEX idx_39755_ip_profile ON server USING btree (ip_address, profile);
 
 
 --
--- Name: idx_28858_se_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39755_se_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28858_se_id_unique ON server USING btree (id);
+CREATE UNIQUE INDEX idx_39755_se_id_unique ON server USING btree (id);
 
 
 --
--- Name: idx_28871_fk_serverstatus_server1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39768_fk_serverstatus_server1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28871_fk_serverstatus_server1 ON servercheck USING btree (server);
+CREATE INDEX idx_39768_fk_serverstatus_server1 ON servercheck USING btree (server);
 
 
 --
--- Name: idx_28871_server; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39768_server; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28871_server ON servercheck USING btree (server);
+CREATE UNIQUE INDEX idx_39768_server ON servercheck USING btree (server);
 
 
 --
--- Name: idx_28871_ses_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39768_ses_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28871_ses_id_unique ON servercheck USING btree (id);
+CREATE UNIQUE INDEX idx_39768_ses_id_unique ON servercheck USING btree (id);
 
 
 --
--- Name: idx_28878_combi_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39775_combi_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28878_combi_unique ON staticdnsentry USING btree (host, address, deliveryservice, cachegroup);
+CREATE UNIQUE INDEX idx_39775_combi_unique ON staticdnsentry USING btree (host, address, deliveryservice, cachegroup);
 
 
 --
--- Name: idx_28878_fk_staticdnsentry_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39775_fk_staticdnsentry_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28878_fk_staticdnsentry_cachegroup1 ON staticdnsentry USING btree (cachegroup);
+CREATE INDEX idx_39775_fk_staticdnsentry_cachegroup1 ON staticdnsentry USING btree (cachegroup);
 
 
 --
--- Name: idx_28878_fk_staticdnsentry_ds; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39775_fk_staticdnsentry_ds; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28878_fk_staticdnsentry_ds ON staticdnsentry USING btree (deliveryservice);
+CREATE INDEX idx_39775_fk_staticdnsentry_ds ON staticdnsentry USING btree (deliveryservice);
 
 
 --
--- Name: idx_28878_fk_staticdnsentry_type; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39775_fk_staticdnsentry_type; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28878_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
+CREATE INDEX idx_39775_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
 
 
 --
--- Name: idx_28908_fk_user_1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39805_fk_user_1; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28908_fk_user_1 ON tm_user USING btree (role);
+CREATE INDEX idx_39805_fk_user_1 ON tm_user USING btree (role);
 
 
 --
--- Name: idx_28908_tmuser_email_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39805_tmuser_email_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28908_tmuser_email_unique ON tm_user USING btree (email);
+CREATE UNIQUE INDEX idx_39805_tmuser_email_unique ON tm_user USING btree (email);
 
 
 --
--- Name: idx_28908_username_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39805_username_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28908_username_unique ON tm_user USING btree (username);
+CREATE UNIQUE INDEX idx_39805_username_unique ON tm_user USING btree (username);
 
 
 --
--- Name: idx_28919_fk_ext_type_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39816_fk_ext_type_idx; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE INDEX idx_28919_fk_ext_type_idx ON to_extension USING btree (type);
+CREATE INDEX idx_39816_fk_ext_type_idx ON to_extension USING btree (type);
 
 
 --
--- Name: idx_28919_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39816_id_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28919_id_unique ON to_extension USING btree (id);
+CREATE UNIQUE INDEX idx_39816_id_unique ON to_extension USING btree (id);
 
 
 --
--- Name: idx_28929_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_39826_name_unique; Type: INDEX; Schema: public; Owner: to_user
 --
 
-CREATE UNIQUE INDEX idx_28929_name_unique ON type USING btree (name);
+CREATE UNIQUE INDEX idx_39826_name_unique ON type USING btree (name);
 
 
 --
