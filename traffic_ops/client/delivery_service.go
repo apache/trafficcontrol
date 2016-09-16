@@ -148,8 +148,7 @@ type DeliveryServiceRouting struct {
 
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
-	url := "/api/1.2/deliveryservices.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request(deliveryServicesEp(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +164,7 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 
 // DeliveryService gets the DeliveryService for the ID it's passed
 func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
-	url := "/api/1.2/deliveryservices/" + id + ".json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request(deliveryServiceEp(id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -182,8 +180,7 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
 func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/state.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request(deliveryServiceStateEp(id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -199,8 +196,7 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
 func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/health.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request(deliveryServiceHealthEp(id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +212,7 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
 func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/capacity.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request(deliveryServiceCapacityEp(id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -233,8 +228,7 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 
 // DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
 func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/routing.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request(deliveryServiceRoutingEp(id), nil)
 	if err != nil {
 		return nil, err
 	}
