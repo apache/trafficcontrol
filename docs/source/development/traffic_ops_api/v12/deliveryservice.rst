@@ -554,20 +554,18 @@ Health
   +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
   | ``err``                  | number | The percentage of Traffic Router requests for this deliveryservice resulting in an error.                                   |
   +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``cz``                   | number | The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF hit.                                  |
+  | ``cz``                   | number | The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF (coverage zone file) hit.             |
   +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
   | ``dsr``                  | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the                                 |
   |                          |        | client to the overflow CDN.                                                                                                 |
   +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``fed``                  | number |                                                                                                                             |
-  |                          |        |                                                                                                                             |
-  +--------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``regionalAlternate``    | number |                                                                                                                             |
-  |                          |        |                                                                                                                             |
-  +--------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``regionalDenied``       | number |                                                                                                                             |
-  |                          |        |                                                                                                                             |
-  +--------------------------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``fed``                  | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the client to a federated CDN.      |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalAlternate``    | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the client to the alternate         |
+  |                          |        | regional geoblocking URL.                                                                                                   |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalDenied``       | number | The percent of Traffic Router requests for this deliveryservice denied due to geolocation policy.                           |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
 
