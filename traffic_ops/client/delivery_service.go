@@ -141,7 +141,7 @@ type DeliveryServiceRouting struct {
 	Err               int     `json:"err"`
 	CZ                float64 `json:"cz"`
 	DSR               float64 `json:"dsr"`
-	FED               int     `json:"fed"`
+	Fed               int     `json:"fed"`
 	RegionalAlternate int     `json:"regionalAlternate"`
 	RegionalDenied    int     `json:"regionalDenied"`
 }
