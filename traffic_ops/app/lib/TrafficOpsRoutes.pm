@@ -629,6 +629,10 @@ sub api_routes {
 		->to( 'ProfileParameter#index', namespace => $namespace );
 	$r->get( "/api/$version/parameters/profile/:name")->over( authenticated => 1 )
 		->to( 'Parameter#profile', namespace => $namespace );
+	$r->post( "/api/$version/parameters")->over( authenticated => 1 )->to( 'Parameter#create', namespace => $namespace );
+	$r->post( "/api/$version/parameters/validate")->over( authenticated => 1 )->to( 'Parameter#validate', namespace => $namespace );
+	$r->put( "/api/$version/parameters/:id")->over( authenticated => 1 )->to( 'Parameter#edit', namespace => $namespace );
+	$r->delete( "/api/$version/parameters/:id")->over( authenticated => 1 )->to( 'Parameter#delete', namespace => $namespace );
 
 	# -- PARAMETERS: CACHEGROUP PARAMETERS
 	$r->get( "/api/$version/cachegroup/:parameter_id/parameter")->over( authenticated => 1 )
