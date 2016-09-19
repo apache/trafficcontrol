@@ -70,53 +70,43 @@ func CrstatesMarshall(states Crstates) ([]byte, error) {
 // TODO add separate locks for Caches and Deliveryservice maps?
 type CRStatesThreadsafe struct {
 	crStates *Crstates
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewCRStatesThreadsafe() CRStatesThreadsafe {
 	crs := NewCrstates()
-	return CRStatesThreadsafe{m: &sync.Mutex{}, crStates: &crs}
+	return CRStatesThreadsafe{m: &sync.RWMutex{}, crStates: &crs}
 }
 
 // TODO add GetCaches, GetDeliveryservices?
 func (t CRStatesThreadsafe) Get() Crstates {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.Copy()
 }
 
 // TODO add GetCaches, GetDeliveryservices?
 func (t CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]Deliveryservice {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.CopyDeliveryservices()
 }
 
 func (t CRStatesThreadsafe) GetCache(name enum.CacheName) IsAvailable {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.Caches[name]
 }
 
 func (t CRStatesThreadsafe) GetCaches() map[enum.CacheName]IsAvailable {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.CopyCaches()
 }
 
 func (t CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) Deliveryservice {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.Deliveryservice[name]
 }
 
@@ -153,20 +143,20 @@ func (o CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.Delive
 // This could be made lock-free, if the performance was necessary
 type CRStatesPeersThreadsafe struct {
 	crStates map[enum.TrafficMonitorName]Crstates
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
-	return CRStatesPeersThreadsafe{m: &sync.Mutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}}
+	return CRStatesPeersThreadsafe{m: &sync.RWMutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}}
 }
 
 func (t CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
-	t.m.Lock()
+	t.m.RLock()
 	m := map[enum.TrafficMonitorName]Crstates{}
 	for k, v := range t.crStates {
 		m[k] = v.Copy()
 	}
-	t.m.Unlock()
+	t.m.RUnlock()
 	return m
 }
 

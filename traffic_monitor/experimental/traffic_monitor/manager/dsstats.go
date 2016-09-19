@@ -7,19 +7,17 @@ import (
 
 type DSStatsThreadsafe struct {
 	dsStats *ds.Stats
-	m       *sync.Mutex
+	m       *sync.RWMutex
 }
 
 func NewDSStatsThreadsafe() DSStatsThreadsafe {
 	s := ds.NewStats()
-	return DSStatsThreadsafe{m: &sync.Mutex{}, dsStats: &s}
+	return DSStatsThreadsafe{m: &sync.RWMutex{}, dsStats: &s}
 }
 
 func (o *DSStatsThreadsafe) Get() ds.Stats {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return o.dsStats.Copy()
 }
 

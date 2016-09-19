@@ -46,18 +46,16 @@ type TrafficMonitorConfigMap struct {
 
 type TrafficMonitorConfigMapThreadsafe struct {
 	monitorConfig *to.TrafficMonitorConfigMap
-	m             *sync.Mutex
+	m             *sync.RWMutex
 }
 
 func NewTrafficMonitorConfigMapThreadsafe() TrafficMonitorConfigMapThreadsafe {
-	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.Mutex{}}
+	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
 }
 
 func (t *TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return copyTMConfig(*t.monitorConfig)
 }
 

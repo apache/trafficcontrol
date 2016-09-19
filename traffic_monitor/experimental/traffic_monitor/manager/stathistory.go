@@ -19,26 +19,22 @@ const defaultMaxHistory = 5 // TODO make config setting?
 // TODO add separate locks for Caches and Deliveryservice maps?
 type StatHistoryThreadsafe struct {
 	statHistory map[enum.CacheName][]cache.Result
-	m           *sync.Mutex
+	m           *sync.RWMutex
 }
 
 func NewStatHistoryThreadsafe() StatHistoryThreadsafe {
-	return StatHistoryThreadsafe{m: &sync.Mutex{}, statHistory: map[enum.CacheName][]cache.Result{}}
+	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: map[enum.CacheName][]cache.Result{}}
 }
 
 func (t *StatHistoryThreadsafe) GetStat(stat enum.CacheName) []cache.Result {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return copyStat(t.statHistory[stat])
 }
 
 func (t *StatHistoryThreadsafe) Get() map[enum.CacheName][]cache.Result {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return copyStats(t.statHistory)
 }
 
@@ -136,7 +132,7 @@ func processStatResults(results []cache.Result, statHistory StatHistoryThreadsaf
 	for _, result := range results {
 		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.Id)]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations.Set(enum.CacheName(result.Id), d)
+			lastStatDurations.Set(enum.CacheName(result.Id), d) // TODO fix to acquire the mutex once
 		}
 		lastStatEndTimes[enum.CacheName(result.Id)] = endTime
 
