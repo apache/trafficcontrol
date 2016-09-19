@@ -543,22 +543,29 @@ Health
 
   **Response Properties**
 
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  |    Parameter    |  Type  |                                                         Description                                                         |
-  +=================+========+=============================================================================================================================+
-  | ``staticRoute`` | number | The percentage of Traffic Router responses for this deliveryservice satisfied with pre-configured DNS entries.              |
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``miss``        | number | The percentage of Traffic Router responses for this deliveryservice that were a miss (no location available for client IP). |
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``geo``         | number | The percentage of Traffic Router responses for this deliveryservice satisfied using 3rd party geo-IP mapping.               |
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``err``         | number | The percentage of Traffic Router requests for this deliveryservice resulting in an error.                                   |
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``cz``          | number | The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF hit.                                  |
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
-  | ``dsr``         | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the                                 |
-  |                 |        | client to the overflow CDN.                                                                                                 |
-  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter             |  Type  |                                                         Description                                                         |
+  +==========================+========+=============================================================================================================================+
+  | ``staticRoute``          | number | The percentage of Traffic Router responses for this deliveryservice satisfied with pre-configured DNS entries.              |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``miss``                 | number | The percentage of Traffic Router responses for this deliveryservice that were a miss (no location available for client IP). |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``geo``                  | number | The percentage of Traffic Router responses for this deliveryservice satisfied using 3rd party geo-IP mapping.               |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``err``                  | number | The percentage of Traffic Router requests for this deliveryservice resulting in an error.                                   |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``cz``                   | number | The percentage of Traffic Router requests for this deliveryservice satisfied by a CZF (coverage zone file) hit.             |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``dsr``                  | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the                                 |
+  |                          |        | client to the overflow CDN.                                                                                                 |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``fed``                  | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the client to a federated CDN.      |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalAlternate``    | number | The percentage of Traffic Router requests for this deliveryservice satisfied by sending the client to the alternate         |
+  |                          |        | regional geoblocking URL.                                                                                                   |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalDenied``       | number | The percent of Traffic Router requests for this deliveryservice denied due to geolocation policy.                           |
+  +--------------------------+--------+-----------------------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -569,7 +576,10 @@ Health
         "geo": 37.8855391018869,
         "err": 0,
         "cz": 62.1144608981131,
-        "dsr": 0
+        "dsr": 0,
+        "fed": 0,
+        "regionalAlternate": 0,
+        "regionalDenied": 0
      },
     }
 

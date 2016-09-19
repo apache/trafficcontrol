@@ -128,6 +128,24 @@ type DeliveryServiceCapacity struct {
 	MaintenancePercent float64 `json:"maintenancePercent"`
 }
 
+// DeliveryServiceRoutingResponse ...
+type DeliveryServiceRoutingResponse struct {
+	Response DeliveryServiceRouting `json:"response"`
+}
+
+// DeliveryServiceRouting ...
+type DeliveryServiceRouting struct {
+	StaticRoute       int     `json:"staticRoute"`
+	Miss              int     `json:"miss"`
+	Geo               float64 `json:"geo"`
+	Err               int     `json:"err"`
+	CZ                float64 `json:"cz"`
+	DSR               float64 `json:"dsr"`
+	Fed               int     `json:"fed"`
+	RegionalAlternate int     `json:"regionalAlternate"`
+	RegionalDenied    int     `json:"regionalDenied"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	url := "/api/1.2/deliveryservices.json"
@@ -206,6 +224,23 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 	defer resp.Body.Close()
 
 	var data DeliveryServiceCapacityResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
+func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
+	url := "/api/1.2/deliveryservices/" + id + "/routing.json"
+	resp, err := to.request(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data DeliveryServiceRoutingResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
