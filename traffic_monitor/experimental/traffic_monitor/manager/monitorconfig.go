@@ -3,6 +3,7 @@ package manager
 import (
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
@@ -65,15 +66,15 @@ func (t *TrafficMonitorConfigMapThreadsafe) Set(newMonitorConfig to.TrafficMonit
 	t.m.Unlock()
 }
 
-func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) TrafficMonitorConfigMapThreadsafe {
+func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config) TrafficMonitorConfigMapThreadsafe {
 	monitorConfig := NewTrafficMonitorConfigMapThreadsafe()
-	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber)
+	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber, cfg)
 	return monitorConfig
 }
 
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
-func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) {
+func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config) {
 	for {
 		select {
 		case monitorConfig := <-monitorConfigPollChan:
@@ -124,9 +125,9 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 				peerUrls[srv.HostName] = url
 			}
 
-			statUrlSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: defaultCacheStatPollingInterval}
-			healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: defaultCacheHealthPollingInterval}
-			peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: defaultPeerPollingInterval}
+			statUrlSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: cfg.CacheStatPollingInterval}
+			healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: cfg.CacheHealthPollingInterval}
+			peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: cfg.PeerPollingInterval}
 
 			for cacheName := range localStates.GetCaches() {
 				if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {

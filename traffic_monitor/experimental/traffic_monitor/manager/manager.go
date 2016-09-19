@@ -9,20 +9,13 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	//	to "github.com/Comcast/traffic_control/traffic_ops/client"
 	"github.com/davecheney/gmx"
-)
-
-const (
-	defaultCacheHealthPollingInterval   time.Duration = 6 * time.Second
-	defaultCacheStatPollingInterval     time.Duration = 6 * time.Second
-	defaultMonitorConfigPollingInterval time.Duration = 5 * time.Second
-	defaultHttpTimeout                  time.Duration = 2 * time.Second
-	defaultPeerPollingInterval          time.Duration = 5 * time.Second
 )
 
 type StaticAppData struct {
@@ -38,7 +31,7 @@ type StaticAppData struct {
 //
 // Kicks off the pollers and handlers
 //
-func Start(opsConfigFile string, staticAppData StaticAppData) {
+func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
 	toSession := towrap.ITrafficOpsSession(nil)
 
 	counters := fetcher.Counters{
@@ -49,7 +42,7 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 
 	// TODO investigate whether a unique client per cache to be polled is faster
 	sharedClient := &http.Client{
-		Timeout:   defaultHttpTimeout,
+		Timeout:   cfg.HttpTimeout,
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
 
@@ -63,12 +56,12 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 	dr := make(chan http_server.DataRequest)
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(defaultCacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates) // TODO figure out if this is necessary, with the CacheHealthPoller
-	cacheStatPoller := poller.NewHTTP(defaultCacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler)
-	monitorConfigPoller := poller.NewMonitorConfig(defaultMonitorConfigPollingInterval)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler)
+	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(defaultPeerPollingInterval, false, sharedClient, counters, peerHandler)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -88,9 +81,11 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		localStates,
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
-		peerPoller.ConfigChannel)
+		peerPoller.ConfigChannel,
+		cfg)
+
 	combinedStates := StartPeerManager(peerHandler.ResultChannel, localStates, peerStates)
-	statHistory, _, lastKbpsStats, dsStats := StartStatHistoryManager(cacheStatHandler.ResultChannel, combinedStates, toData, errorCount)
+	statHistory, _, lastKbpsStats, dsStats := StartStatHistoryManager(cacheStatHandler.ResultChannel, combinedStates, toData, errorCount, cfg)
 	lastHealthDurations, events, localCacheStatus := StartHealthResultManager(
 		cacheHealthHandler.ResultChannel,
 		toData,
@@ -100,7 +95,8 @@ func Start(opsConfigFile string, staticAppData StaticAppData) {
 		peerStates,
 		combinedStates,
 		fetchCount,
-		errorCount)
+		errorCount,
+		cfg)
 	StartDataRequestManager(
 		dr,
 		opsConfig,
