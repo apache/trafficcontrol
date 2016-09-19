@@ -157,8 +157,6 @@ public class ConfigHandler {
 			}
 		}
 
-		LOGGER.info("Exit: processConfig");
-
 		return true;
 	}
 
