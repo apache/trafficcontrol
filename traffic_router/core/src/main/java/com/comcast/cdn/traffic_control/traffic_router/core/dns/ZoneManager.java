@@ -168,9 +168,11 @@ public class ZoneManager extends Resolver {
 			initZoneDirectory();
 
 			try {
+				LOGGER.info("Generating zone data");
 				generateZones(tr, zc, dzc, initExecutor);
 				initExecutor.shutdown();
 				initExecutor.awaitTermination(5, TimeUnit.MINUTES);
+				LOGGER.info("Zone generation complete");
 			} catch (final InterruptedException ex) {
 				LOGGER.warn("Initialization of zone data exceeded time limit of 5 minutes; continuing", ex);
 			} catch (IOException ex) {
@@ -253,6 +255,7 @@ public class ZoneManager extends Resolver {
 
 			final File zoneFile = new File(getZoneDirectory(), zone.getOrigin().toString());
 			final FileWriter w = new FileWriter(zoneFile);
+			LOGGER.info("writing: " + zoneFile.getAbsolutePath());
 			IOUtils.write(zone.toMasterFile(), w);
 			w.flush();
 			w.close();
