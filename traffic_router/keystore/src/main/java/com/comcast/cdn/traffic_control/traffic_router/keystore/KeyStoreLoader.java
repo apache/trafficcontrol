@@ -30,7 +30,7 @@ public class KeyStoreLoader {
 			log.info("loaded keystore from " + keyStorePath.toAbsolutePath());
 			return keyStore;
 		} catch (Exception e) {
-			log.error("Failed loading keystore from " + keyStorePath + " : " + e.getMessage());
+			log.error("Failed loading keystore from " + keyStorePath + " : " + e.getMessage(), e);
 		}
 
 		return null;

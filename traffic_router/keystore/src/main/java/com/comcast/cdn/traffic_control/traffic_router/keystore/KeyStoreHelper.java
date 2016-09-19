@@ -10,7 +10,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.Key;
-import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.Principal;
@@ -20,7 +19,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -39,6 +37,8 @@ public class KeyStoreHelper {
 	private long lastLoaded;
 	private final Map<String, PrivateKey> privateKeyMap = new HashMap<>();
 	private final Map<String, Boolean> aliasCertMap = new HashMap<>();
+	private static final String CRT_HEADER = "-----BEGIN CERTIFICATE-----";
+	private static final String CRT_FOOTER = "-----END CERTIFICATE-----";
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
@@ -79,7 +79,7 @@ public class KeyStoreHelper {
 	}
 
 	X509Certificate toCertificate(final String encodedCertificate) throws IOException, CertificateException {
-		final byte[] encodedBytes = Base64.getDecoder().decode(encodedCertificate);
+		final byte[] encodedBytes = Base64.getDecoder().decode(encodedCertificate.replaceAll(CRT_HEADER, "").replaceAll(CRT_FOOTER, ""));
 
 		try (ByteArrayInputStream stream = new ByteArrayInputStream(encodedBytes)) {
 			return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(stream);
@@ -101,12 +101,9 @@ public class KeyStoreHelper {
 				log.info("Import [" + alias + "][" + i + "] issuer " + issuer);
 			}
 
-			byte[] keyBytes = Base64.getDecoder().decode(encodedKey.getBytes());
-			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-			KeyFactory fact = KeyFactory.getInstance("RSA");
-			PrivateKey key = fact.generatePrivate(keySpec);
+			PrivateKey privateKey = new PrivateKeyDecoder().decode(encodedKey);
 
-			return importCertificateChain(alias, key, x509Chain);
+			return importCertificateChain(alias, privateKey, x509Chain);
 		} catch (Exception e) {
 			log.error("Failed importing certificates for alias '" + alias + "'");
 			log.error(e);
