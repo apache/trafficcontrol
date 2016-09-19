@@ -7,20 +7,17 @@ import (
 
 type StatsLastKbpsThreadsafe struct {
 	stats *ds.StatsLastKbps
-	m     *sync.Mutex
+	m     *sync.RWMutex
 }
 
 func NewStatsLastKbpsThreadsafe() StatsLastKbpsThreadsafe {
 	s := ds.NewStatsLastKbps()
-	return StatsLastKbpsThreadsafe{m: &sync.Mutex{}, stats: &s}
+	return StatsLastKbpsThreadsafe{m: &sync.RWMutex{}, stats: &s}
 }
 
 func (o *StatsLastKbpsThreadsafe) Get() ds.StatsLastKbps {
-	o.m.Lock()
-
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return o.stats.Copy()
 }
 

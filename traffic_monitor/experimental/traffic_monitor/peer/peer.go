@@ -3,6 +3,8 @@ package peer
 import (
 	"encoding/json"
 	"io"
+
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 )
 
 type Handler struct {
@@ -15,7 +17,7 @@ func NewHandler() Handler {
 }
 
 type Result struct {
-	Id           string
+	Id           enum.TrafficMonitorName
 	Available    bool
 	Errors       []error
 	PeerStats    Crstates
@@ -31,7 +33,7 @@ const (
 
 func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
 	result := Result{
-		Id:           id,
+		Id:           enum.TrafficMonitorName(id),
 		Available:    false,
 		Errors:       []error{},
 		PollID:       pollId,

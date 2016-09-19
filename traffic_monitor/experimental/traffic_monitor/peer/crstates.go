@@ -3,17 +3,19 @@ package peer
 import (
 	"encoding/json"
 	"sync"
+
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 )
 
 type Crstates struct {
-	Caches          map[string]IsAvailable     `json:"caches"`
-	Deliveryservice map[string]Deliveryservice `json:"deliveryServices"`
+	Caches          map[enum.CacheName]IsAvailable               `json:"caches"`
+	Deliveryservice map[enum.DeliveryServiceName]Deliveryservice `json:"deliveryServices"`
 }
 
 func NewCrstates() Crstates {
 	return Crstates{
-		Caches:          map[string]IsAvailable{},
-		Deliveryservice: map[string]Deliveryservice{},
+		Caches:          map[enum.CacheName]IsAvailable{},
+		Deliveryservice: map[enum.DeliveryServiceName]Deliveryservice{},
 	}
 }
 
@@ -28,16 +30,16 @@ func (a Crstates) Copy() Crstates {
 	return b
 }
 
-func (a Crstates) CopyDeliveryservices() map[string]Deliveryservice {
-	b := map[string]Deliveryservice{}
+func (a Crstates) CopyDeliveryservices() map[enum.DeliveryServiceName]Deliveryservice {
+	b := map[enum.DeliveryServiceName]Deliveryservice{}
 	for k, v := range a.Deliveryservice {
 		b[k] = v
 	}
 	return b
 }
 
-func (a Crstates) CopyCaches() map[string]IsAvailable {
-	b := map[string]IsAvailable{}
+func (a Crstates) CopyCaches() map[enum.CacheName]IsAvailable {
+	b := map[enum.CacheName]IsAvailable{}
 	for k, v := range a.Caches {
 		b[k] = v
 	}
@@ -49,8 +51,8 @@ type IsAvailable struct {
 }
 
 type Deliveryservice struct {
-	DisabledLocations []string `json:"disabledLocations"`
-	IsAvailable       bool     `json:"isAvailable"`
+	DisabledLocations []enum.CacheName `json:"disabledLocations"`
+	IsAvailable       bool             `json:"isAvailable"`
 }
 
 func CrstatesUnMarshall(body []byte) (Crstates, error) {
@@ -68,53 +70,43 @@ func CrstatesMarshall(states Crstates) ([]byte, error) {
 // TODO add separate locks for Caches and Deliveryservice maps?
 type CRStatesThreadsafe struct {
 	crStates *Crstates
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewCRStatesThreadsafe() CRStatesThreadsafe {
 	crs := NewCrstates()
-	return CRStatesThreadsafe{m: &sync.Mutex{}, crStates: &crs}
+	return CRStatesThreadsafe{m: &sync.RWMutex{}, crStates: &crs}
 }
 
 // TODO add GetCaches, GetDeliveryservices?
 func (t CRStatesThreadsafe) Get() Crstates {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.Copy()
 }
 
 // TODO add GetCaches, GetDeliveryservices?
-func (t CRStatesThreadsafe) GetDeliveryServices() map[string]Deliveryservice {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+func (t CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]Deliveryservice {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.CopyDeliveryservices()
 }
 
-func (t CRStatesThreadsafe) GetCache(name string) IsAvailable {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+func (t CRStatesThreadsafe) GetCache(name enum.CacheName) IsAvailable {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.Caches[name]
 }
 
-func (t CRStatesThreadsafe) GetCaches() map[string]IsAvailable {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+func (t CRStatesThreadsafe) GetCaches() map[enum.CacheName]IsAvailable {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.CopyCaches()
 }
 
-func (t CRStatesThreadsafe) GetDeliveryService(name string) Deliveryservice {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
+func (t CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) Deliveryservice {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.crStates.Deliveryservice[name]
 }
 
@@ -124,25 +116,25 @@ func (o CRStatesThreadsafe) Set(newCRStates Crstates) {
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) SetCache(cacheName string, available IsAvailable) {
+func (o CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
 	o.m.Lock()
 	o.crStates.Caches[cacheName] = available
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) DeleteCache(name string) {
+func (o CRStatesThreadsafe) DeleteCache(name enum.CacheName) {
 	o.m.Lock()
 	delete(o.crStates.Caches, name)
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) SetDeliveryService(name string, ds Deliveryservice) {
+func (o CRStatesThreadsafe) SetDeliveryService(name enum.DeliveryServiceName, ds Deliveryservice) {
 	o.m.Lock()
 	o.crStates.Deliveryservice[name] = ds
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[string]Deliveryservice) {
+func (o CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.DeliveryServiceName]Deliveryservice) {
 	o.m.Lock()
 	o.crStates.Deliveryservice = deliveryServices
 	o.m.Unlock()
@@ -150,26 +142,25 @@ func (o CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[string]Deli
 
 // This could be made lock-free, if the performance was necessary
 type CRStatesPeersThreadsafe struct {
-	crStates map[string]Crstates // TODO change string to type?
-	m        *sync.Mutex
+	crStates map[enum.TrafficMonitorName]Crstates
+	m        *sync.RWMutex
 }
 
 func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
-	return CRStatesPeersThreadsafe{m: &sync.Mutex{}, crStates: map[string]Crstates{}}
+	return CRStatesPeersThreadsafe{m: &sync.RWMutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}}
 }
 
-func (t CRStatesPeersThreadsafe) Get() map[string]Crstates {
-	t.m.Lock()
-	m := map[string]Crstates{}
+func (t CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
+	t.m.RLock()
+	m := map[enum.TrafficMonitorName]Crstates{}
 	for k, v := range t.crStates {
 		m[k] = v.Copy()
 	}
-	t.m.Unlock()
+	t.m.RUnlock()
 	return m
 }
 
-// TODO use reader-writer mutex
-func (o CRStatesPeersThreadsafe) Set(peerName string, peerState Crstates) {
+func (o CRStatesPeersThreadsafe) Set(peerName enum.TrafficMonitorName, peerState Crstates) {
 	o.m.Lock()
 	o.crStates[peerName] = peerState
 	o.m.Unlock()

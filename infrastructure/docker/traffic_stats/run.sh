@@ -25,26 +25,30 @@ init() {
 	TMP_TO_COOKIE="$(curl -v -s -k -X POST --data '{ "u":"'"$TRAFFIC_OPS_USER"'", "p":"'"$TRAFFIC_OPS_PASS"'" }' $TRAFFIC_OPS_URI/api/1.2/user/login 2>&1 | grep 'Set-Cookie' | sed -e 's/.*mojolicious=\(.*\); expires.*/\1/')"
 	echo "Got Cookie: $TMP_TO_COOKIE"
 
-  TMP_IP=$IP
+	TMP_IP=$IP
 	TMP_DOMAIN=$DOMAIN
 	TMP_GATEWAY=$GATEWAY
 
-	TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
-	echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
+	if [ "$CREATE_TO_DB_ENTRY" = "YES" ] ; then
 
-	TMP_SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="INFLUXDB"]; print match[0]')"
-	echo "Got server type ID: $TMP_SERVER_TYPE_ID"
+		TMP_CACHEGROUP_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cachegroups.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="mid-east"]; print match[0]')"
+		echo "Got cachegroup ID: $TMP_CACHEGROUP_ID"
 
-	TMP_SERVER_PROFILE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/profiles.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="INFLUXDB"]; print match[0]')"
-	echo "Got server profile ID: $TMP_SERVER_PROFILE_ID"
+		TMP_SERVER_TYPE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/types.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="INFLUXDB"]; print match[0]')"
+		echo "Got server type ID: $TMP_SERVER_TYPE_ID"
 
-	TMP_PHYS_LOCATION_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/phys_locations.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="plocation-nyc-1"]; print match[0]')"
-	echo "Got phys location ID: $TMP_PHYS_LOCATION_ID"
+		TMP_SERVER_PROFILE_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/profiles.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="INFLUXDB"]; print match[0]')"
+		echo "Got server profile ID: $TMP_SERVER_PROFILE_ID"
 
-	TMP_CDN_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cdns.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="cdn"]; print match[0]')"
-	echo "Got cdn ID: $TMP_CDN_ID"
+		TMP_PHYS_LOCATION_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/phys_locations.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="plocation-nyc-1"]; print match[0]')"
+		echo "Got phys location ID: $TMP_PHYS_LOCATION_ID"
 
-	curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" --data-urlencode "host_name=$HOSTNAME" --data-urlencode "domain_name=$TMP_DOMAIN" --data-urlencode "interface_name=eth0" --data-urlencode "ip_address=$TMP_IP" --data-urlencode "ip_netmask=255.255.0.0" --data-urlencode "ip_gateway=$TMP_GATEWAY" --data-urlencode "interface_mtu=9000" --data-urlencode "cdn=$TMP_CDN_ID" --data-urlencode "cachegroup=$TMP_CACHEGROUP_ID" --data-urlencode "phys_location=$TMP_PHYS_LOCATION_ID" --data-urlencode "type=$TMP_SERVER_TYPE_ID" --data-urlencode "profile=$TMP_SERVER_PROFILE_ID" --data-urlencode "tcp_port=80" $TRAFFIC_OPS_URI/server/create
+		TMP_CDN_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/cdns.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["name"]=="cdn"]; print match[0]')"
+		echo "Got cdn ID: $TMP_CDN_ID"
+
+		curl -v -k -X POST -H "Cookie: mojolicious=$TMP_TO_COOKIE" --data-urlencode "host_name=$HOSTNAME" --data-urlencode "domain_name=$TMP_DOMAIN" --data-urlencode "interface_name=eth0" --data-urlencode "ip_address=$TMP_IP" --data-urlencode "ip_netmask=255.255.0.0" --data-urlencode "ip_gateway=$TMP_GATEWAY" --data-urlencode "interface_mtu=9000" --data-urlencode "cdn=$TMP_CDN_ID" --data-urlencode "cachegroup=$TMP_CACHEGROUP_ID" --data-urlencode "phys_location=$TMP_PHYS_LOCATION_ID" --data-urlencode "type=$TMP_SERVER_TYPE_ID" --data-urlencode "profile=$TMP_SERVER_PROFILE_ID" --data-urlencode "tcp_port=80" $TRAFFIC_OPS_URI/server/create
+
+	fi 
 
 	TMP_SERVER_ID="$(curl -s -k -X GET -H "Cookie: mojolicious=$TMP_TO_COOKIE" $TRAFFIC_OPS_URI/api/1.2/servers.json | python -c 'import json,sys;obj=json.load(sys.stdin);match=[x["id"] for x in obj["response"] if x["hostName"]=="'"$HOSTNAME"'"]; print match[0]')"
 	echo "Got server ID: $TMP_SERVER_ID"
@@ -76,6 +80,10 @@ init() {
 	influx --execute 'CREATE CONTINUOUS QUERY connections_1min ON cache_stats BEGIN SELECT mean(value) AS "value" INTO "cache_stats"."monthly"."connections.1min" FROM "cache_stats"."daily"."ats.proxy.process.http.current_client_connections" GROUP BY time(1m), * END'
 	influx --execute 'CREATE CONTINUOUS QUERY bandwidth_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.cdn.1min" FROM "cache_stats"."monthly"."bandwidth.1min" GROUP BY time(1m), cdn END'
 	influx --execute 'CREATE CONTINUOUS QUERY connections_cdn_1min ON cache_stats BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn END'
+	influx --execute 'CREATE CONTINUOUS QUERY bandwidth_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."bandwidth.cdn.type.1min" FROM "cache_stats"."monthly"."bandwidth.1min" GROUP BY time(1m), cdn, type END'
+	influx --execute 'CREATE CONTINUOUS QUERY connections_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.type.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn, type END'
+	influx --execute 'CREATE CONTINUOUS QUERY maxKbps_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS value INTO cache_stats.monthly."maxkbps.1min" FROM cache_stats.daily.maxKbps GROUP BY time(1m), * END'
+	influx --execute 'CREATE CONTINUOUS QUERY maxkbps_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS value INTO cache_stats.monthly."maxkbps.cdn.1min" FROM cache_stats.monthly."maxkbps.1min" GROUP BY time(1m), cdn END'
 
 	influx --execute 'CREATE CONTINUOUS QUERY tps_2xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_2xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_2xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
 	influx --execute 'CREATE CONTINUOUS QUERY tps_3xx_ds_1min ON deliveryservice_stats BEGIN SELECT mean(value) AS "value" INTO "deliveryservice_stats"."monthly"."tps_3xx.ds.1min" FROM "deliveryservice_stats"."daily".tps_3xx WHERE cachegroup = '"'total'"' GROUP BY time(1m), * END'
@@ -89,9 +97,18 @@ init() {
 	service influxdb stop
 
 	sed -i -- 's/;protocol = http/protocol = https/g' /etc/grafana/grafana.ini
+	sed -i -- 's/;http_port = 3000/http_port = 1443/g' /etc/grafana/grafana.ini
 	sed -i -- 's#;cert_file =#cert_file = /etc/ssl/influxdb.crt#g' /etc/grafana/grafana.ini
 	sed -i -- 's#;cert_key =#cert_key = /etc/ssl/influxdb.key#g' /etc/grafana/grafana.ini
 	sed -i -n '1h;1!H;${g;s/access\n;enabled = false/access\nenabled = true/;p;}' /etc/grafana/grafana.ini
+
+	service grafana-server start
+	curl -k -H "Content-Type: application/json" -X POST https://admin:admin@localhost:1443/api/datasources -d '{"name":"cache_stats","type":"influxdb","url":"http://c28-ts-01.cdnlab.comcast.net:8086","access":"proxy","jsonData":{},"database":"cache_stats","user":"foo","password":"fooo"}'
+	curl -k -H "Content-Type: application/json" -X POST https://admin:admin@localhost:1443/api/datasources -d '{"name":"deliveryservice_stats","type":"influxdb","url":"http://c28-ts-01.cdnlab.comcast.net:8086","access":"proxy","jsonData":{},"database":"deliveryservice_stats","user":"foo","password":"fooo"}'
+	curl -k -H "Content-Type: application/json" -X POST https://admin:admin@localhost:1443/api/datasources -d '{"name":"telegraf","type":"influxdb","url":"http://c28-ts-01.cdnlab.comcast.net:8086","access":"proxy","jsonData":{},"database":"telegraf","user":"foo","password":"fooo"}'
+	curl -k -H "Content-Type: application/json" -X POST https://admin:admin@localhost:1443/api/datasources -d '{"name":"daily_stats","type":"influxdb","url":"http://c28-ts-01.cdnlab.comcast.net:8086","access":"proxy","jsonData":{},"database":"cache_stats","user":"foo","password":"fooo"}'
+	service grafana-server stop
+
 
 	echo "INITIALIZED=1" >> /etc/environment
 }

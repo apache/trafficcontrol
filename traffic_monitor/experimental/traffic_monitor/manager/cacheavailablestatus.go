@@ -15,7 +15,7 @@ type CacheAvailableStatus struct {
 
 type CacheAvailableStatusThreadsafe struct {
 	caches map[enum.CacheName]CacheAvailableStatus // TODO change string -> CacheName
-	m      *sync.Mutex
+	m      *sync.RWMutex
 }
 
 func copyCacheAvailableStatus(a map[enum.CacheName]CacheAvailableStatus) map[enum.CacheName]CacheAvailableStatus {
@@ -27,14 +27,12 @@ func copyCacheAvailableStatus(a map[enum.CacheName]CacheAvailableStatus) map[enu
 }
 
 func NewCacheAvailableStatusThreadsafe() CacheAvailableStatusThreadsafe {
-	return CacheAvailableStatusThreadsafe{m: &sync.Mutex{}, caches: map[enum.CacheName]CacheAvailableStatus{}}
+	return CacheAvailableStatusThreadsafe{m: &sync.RWMutex{}, caches: map[enum.CacheName]CacheAvailableStatus{}}
 }
 
 func (o *CacheAvailableStatusThreadsafe) Get() map[enum.CacheName]CacheAvailableStatus {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return copyCacheAvailableStatus(o.caches)
 }
 
