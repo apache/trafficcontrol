@@ -3,6 +3,7 @@ package manager
 import (
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
@@ -87,17 +88,19 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 			for _, srv := range monitorConfig.TrafficServer {
 				caches[srv.HostName] = srv.Status
 
+				cacheName := enum.CacheName(srv.HostName)
+
 				if srv.Status == "ONLINE" {
-					localStates.SetCache(srv.HostName, peer.IsAvailable{IsAvailable: true})
+					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: true})
 					continue
 				}
 				if srv.Status == "OFFLINE" {
-					localStates.SetCache(srv.HostName, peer.IsAvailable{IsAvailable: false})
+					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 					continue
 				}
 				// seed states with available = false until our polling cycle picks up a result
-				if _, exists := localStates.Get().Caches[srv.HostName]; !exists {
-					localStates.SetCache(srv.HostName, peer.IsAvailable{IsAvailable: false})
+				if _, exists := localStates.Get().Caches[cacheName]; !exists {
+					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 				}
 
 				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
@@ -127,10 +130,10 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 			healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: defaultCacheHealthPollingInterval}
 			peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: defaultPeerPollingInterval}
 
-			for k := range localStates.GetCaches() {
-				if _, exists := monitorConfig.TrafficServer[k]; !exists {
-					log.Warnf("Removing %s from localStates", k)
-					localStates.DeleteCache(k)
+			for cacheName := range localStates.GetCaches() {
+				if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {
+					log.Warnf("Removing %s from localStates", cacheName)
+					localStates.DeleteCache(cacheName)
 				}
 			}
 
@@ -141,9 +144,9 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 
 // addStateDeliveryServices adds delivery services in `mc` as keys in `deliveryServices`, with empty Deliveryservice values.
 // TODO add disabledLocations
-func addStateDeliveryServices(mc to.TrafficMonitorConfigMap, deliveryServices map[string]peer.Deliveryservice) {
+func addStateDeliveryServices(mc to.TrafficMonitorConfigMap, deliveryServices map[enum.DeliveryServiceName]peer.Deliveryservice) {
 	for _, ds := range mc.DeliveryService {
 		// since caches default to unavailable, also default DS false
-		deliveryServices[ds.XMLID] = peer.Deliveryservice{}
+		deliveryServices[enum.DeliveryServiceName(ds.XMLID)] = peer.Deliveryservice{}
 	}
 }

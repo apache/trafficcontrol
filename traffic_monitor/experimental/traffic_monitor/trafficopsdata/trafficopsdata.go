@@ -1,7 +1,5 @@
 package trafficopsdata
 
-// TODO move to its own package?
-
 import (
 	"encoding/json"
 	"fmt"
@@ -48,20 +46,20 @@ func NewRegexes() Regexes {
 }
 
 type TOData struct {
-	DeliveryServiceServers map[string][]string
-	ServerDeliveryServices map[string][]string
+	DeliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName
+	ServerDeliveryServices map[enum.CacheName][]enum.DeliveryServiceName
 	ServerTypes            map[enum.CacheName]enum.CacheType
-	DeliveryServiceTypes   map[string]enum.DSType
+	DeliveryServiceTypes   map[enum.DeliveryServiceName]enum.DSType
 	DeliveryServiceRegexes Regexes
 	ServerCachegroups      map[enum.CacheName]enum.CacheGroupName
 }
 
 func New() *TOData {
 	return &TOData{
-		DeliveryServiceServers: map[string][]string{},
-		ServerDeliveryServices: map[string][]string{},
+		DeliveryServiceServers: map[enum.DeliveryServiceName][]enum.CacheName{},
+		ServerDeliveryServices: map[enum.CacheName][]enum.DeliveryServiceName{},
 		ServerTypes:            map[enum.CacheName]enum.CacheType{},
-		DeliveryServiceTypes:   map[string]enum.DSType{},
+		DeliveryServiceTypes:   map[enum.DeliveryServiceName]enum.DSType{},
 		DeliveryServiceRegexes: NewRegexes(),
 		ServerCachegroups:      map[enum.CacheName]enum.CacheGroupName{},
 	}
@@ -94,13 +92,14 @@ func (d TODataThreadsafe) set(newTOData TOData) {
 }
 
 // CRConfig is the CrConfig data needed by TOData. Note this is not all data in the CRConfig.
+// TODO change strings to type?
 type CRConfig struct {
-	ContentServers map[string]struct {
-		DeliveryServices map[string][]string `json:"deliveryServices"`
-		CacheGroup       string              `json:"cacheGroup"`
-		Type             string              `json:"type"`
+	ContentServers map[enum.CacheName]struct {
+		DeliveryServices map[enum.DeliveryServiceName][]string `json:"deliveryServices"`
+		CacheGroup       string                                `json:"cacheGroup"`
+		Type             string                                `json:"type"`
 	} `json:"contentServers"`
-	DeliveryServices map[string]struct {
+	DeliveryServices map[enum.DeliveryServiceName]struct {
 		Matchsets []struct {
 			Protocol  string `json:"protocol"`
 			MatchList []struct {
@@ -155,10 +154,9 @@ func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error 
 }
 
 // getDeliveryServiceServers gets the servers on each delivery services, for the given CDN, from Traffic Ops.
-// Returns a map[deliveryService][]server, and a map[server]deliveryService
-func getDeliveryServiceServers(crc CRConfig) (map[string][]string, map[string][]string, error) {
-	dsServers := map[string][]string{}
-	serverDses := map[string][]string{}
+func getDeliveryServiceServers(crc CRConfig) (map[enum.DeliveryServiceName][]enum.CacheName, map[enum.CacheName][]enum.DeliveryServiceName, error) {
+	dsServers := map[enum.DeliveryServiceName][]enum.CacheName{}
+	serverDses := map[enum.CacheName][]enum.DeliveryServiceName{}
 
 	for serverName, serverData := range crc.ContentServers {
 		for deliveryServiceName, _ := range serverData.DeliveryServices {
@@ -172,7 +170,7 @@ func getDeliveryServiceServers(crc CRConfig) (map[string][]string, map[string][]
 // getDeliveryServiceRegexes gets the regexes of each delivery service, for the given CDN, from Traffic Ops.
 // Returns a map[deliveryService][]regex.
 func getDeliveryServiceRegexes(crc CRConfig) (Regexes, error) {
-	dsRegexes := map[string][]string{}
+	dsRegexes := map[enum.DeliveryServiceName][]string{}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		if len(dsData.Matchsets) < 1 {
@@ -190,15 +188,14 @@ func getDeliveryServiceRegexes(crc CRConfig) (Regexes, error) {
 }
 
 // TODO precompute, move to TOData; call when we get new delivery services, instead of every time we create new stats
-func createRegexes(dsToRegex map[string][]string) (Regexes, error) {
+func createRegexes(dsToRegex map[enum.DeliveryServiceName][]string) (Regexes, error) {
 	dsRegexes := Regexes{
 		DirectMatches:                      map[string]enum.DeliveryServiceName{},
 		DotStartSlashDotFooSlashDotDotStar: map[string]enum.DeliveryServiceName{},
 		RegexMatch:                         map[*regexp.Regexp]enum.DeliveryServiceName{},
 	}
 
-	for dsStr, regexStrs := range dsToRegex {
-		ds := enum.DeliveryServiceName(dsStr)
+	for ds, regexStrs := range dsToRegex {
 		for _, regexStr := range regexStrs {
 			prefix := `.*\.`
 			suffix := `\..*`
@@ -234,7 +231,7 @@ func getServerCachegroups(crc CRConfig) (map[enum.CacheName]enum.CacheGroupName,
 	serverCachegroups := map[enum.CacheName]enum.CacheGroupName{}
 
 	for server, serverData := range crc.ContentServers {
-		serverCachegroups[enum.CacheName(server)] = enum.CacheGroupName(serverData.CacheGroup)
+		serverCachegroups[server] = enum.CacheGroupName(serverData.CacheGroup)
 	}
 	return serverCachegroups, nil
 }
@@ -248,13 +245,13 @@ func getServerTypes(crc CRConfig) (map[enum.CacheName]enum.CacheType, error) {
 		if t == enum.CacheTypeInvalid {
 			return nil, fmt.Errorf("getServerTypes CRConfig unknown type for '%s': '%s'", server, serverData.Type)
 		}
-		serverTypes[enum.CacheName(server)] = t
+		serverTypes[server] = t
 	}
 	return serverTypes, nil
 }
 
-func getDeliveryServiceTypes(crc CRConfig) (map[string]enum.DSType, error) {
-	dsTypes := map[string]enum.DSType{}
+func getDeliveryServiceTypes(crc CRConfig) (map[enum.DeliveryServiceName]enum.DSType, error) {
+	dsTypes := map[enum.DeliveryServiceName]enum.DSType{}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		if len(dsData.Matchsets) < 1 {

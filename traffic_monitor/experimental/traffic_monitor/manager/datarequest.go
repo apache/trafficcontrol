@@ -168,7 +168,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 	}
 }
 
-func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result, lastHealthDurations map[enum.CacheName]time.Duration, cacheStates map[string]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
+func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result, lastHealthDurations map[enum.CacheName]time.Duration, cacheStates map[enum.CacheName]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get()
@@ -269,7 +269,7 @@ func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[e
 	return conns
 }
 
-func cacheDownCount(caches map[string]peer.IsAvailable) int {
+func cacheDownCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	count := 0
 	for _, available := range caches {
 		if !available.IsAvailable {
@@ -279,11 +279,11 @@ func cacheDownCount(caches map[string]peer.IsAvailable) int {
 	return count
 }
 
-func cacheAvailableCount(caches map[string]peer.IsAvailable) int {
+func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return len(caches) - cacheDownCount(caches)
 }
 
-func createApiPeerStates(peerStates map[string]peer.Crstates) ApiPeerStates {
+func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates) ApiPeerStates {
 	apiPeerStates := ApiPeerStates{Peers: map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{}}
 
 	for peer, state := range peerStates {

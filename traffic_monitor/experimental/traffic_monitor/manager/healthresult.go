@@ -1,7 +1,6 @@
 package manager
 
 import (
-	"sort"
 	"sync"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 )
 
 type DurationMapThreadsafe struct {
-	durationMap map[enum.CacheName]time.Duration // TODO change string -> CacheName
+	durationMap map[enum.CacheName]time.Duration
 	m           *sync.Mutex
 }
 
@@ -54,7 +53,7 @@ func (o *DurationMapThreadsafe) Set(cacheName enum.CacheName, d time.Duration) {
 }
 
 type TimeMapThreadsafe struct {
-	timeMap map[enum.CacheName]time.Time // TODO change string -> CacheName
+	timeMap map[enum.CacheName]time.Time
 	m       *sync.Mutex
 }
 
@@ -94,7 +93,7 @@ func (o *TimeMapThreadsafe) Set(cacheName enum.CacheName, d time.Time) {
 }
 
 type ResultsThreadsafe struct {
-	r map[enum.CacheName][]cache.Result // TODO change string -> CacheName
+	r map[enum.CacheName][]cache.Result
 	m *sync.Mutex
 }
 
@@ -183,10 +182,10 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s errors: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Errors)
-			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[enum.CacheName(healthResult.Id)].String(), Available: isAvailable})
+			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable})
 		}
 
-		localCacheStatus.Set(enum.CacheName(healthResult.Id), CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[healthResult.Id].Status}) // TODO move within localStates
+		localCacheStatus.Set(healthResult.Id, CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.Id)].Status}) // TODO move within localStates
 		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
 		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
 		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
@@ -207,7 +206,7 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 }
 
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, states peer.CRStatesThreadsafe) {
+func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
@@ -226,19 +225,4 @@ func calculateDeliveryServiceState(deliveryServiceServers map[string][]string, s
 		deliveryServices[deliveryServiceName] = deliveryServiceState
 	}
 	states.SetDeliveryServices(deliveryServices)
-}
-
-// intersection returns strings in both a and b.
-// Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
-func intersection(a []string, b []string) []string {
-	sort.Strings(a)
-	sort.Strings(b)
-	var c []string
-	for _, s := range a {
-		i := sort.SearchStrings(b, s)
-		if i < len(b) && b[i] == s {
-			c = append(c, s)
-		}
-	}
-	return c
 }
