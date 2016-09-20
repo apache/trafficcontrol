@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.CatalinaTrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
+import com.comcast.cdn.traffic_control.traffic_router.keystore.PrivateKeyDecoder;
 import org.apache.catalina.LifecycleException;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -155,29 +156,23 @@ public class ExternalTestSuite {
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(null, "testing-testing".toCharArray());
 
-		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-		byte[] keyBytes = Base64.getDecoder().decode(HTTPS_TEST_KEY.getBytes());
-		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-		PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+		PrivateKeyDecoder privateKeyDecoder = new PrivateKeyDecoder();
+		PrivateKey privateKey = privateKeyDecoder.decode(HTTPS_TEST_KEY);
 
 		keyStore.setKeyEntry("https-only-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
 
 		x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
 			.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(HTTP_AND_HTTPS_TEST_CERT)));
 
-		keyBytes = Base64.getDecoder().decode(HTTP_AND_HTTPS_TEST_KEY.getBytes());
-		keySpec = new PKCS8EncodedKeySpec(keyBytes);
-		privateKey = keyFactory.generatePrivate(keySpec);
+		privateKey = privateKeyDecoder.decode(HTTP_AND_HTTPS_TEST_KEY);
+
 
 		keyStore.setKeyEntry("http-and-https-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
 
 		x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
 			.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(HTTP_TO_HTTPS_TEST_CERT)));
 
-		keyBytes = Base64.getDecoder().decode(HTTP_TO_HTTPS_TEST_KEY.getBytes());
-		keySpec = new PKCS8EncodedKeySpec(keyBytes);
-		privateKey = keyFactory.generatePrivate(keySpec);
+		privateKey = privateKeyDecoder.decode(HTTP_TO_HTTPS_TEST_KEY);
 
 		keyStore.setKeyEntry("http-to-https-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
 
@@ -221,56 +216,55 @@ public class ExternalTestSuite {
 	// The following is just a self signed certificate and key to use for testing
 	// this is NOT private data from a CA
 	final static String HTTPS_TEST_CERT =
-		"MIID8jCCAtoCCQCnNzY6/zYPcDANBgkqhkiG9w0BAQsFADCBujELMAkGA1UEBhMC" +
-		"VVMxETAPBgNVBAgMCENvbG9yYWRvMQ8wDQYDVQQHDAZEZW52ZXIxFDASBgNVBAoM" +
-		"C0V4YW1wbGUgSW5jMRkwFwYDVQQLDBBVbmljb3JuIFRyYWluZXJzMSgwJgYDVQQD" +
-		"DB8qLmh0dHBzLXRlc3QudGhlY2RuLmV4YW1wbGUuY29tMSwwKgYJKoZIhvcNAQkB" +
-		"Fh1vcGVyYXRpb25zQHRoZWNkbi5leGFtcGxlLmNvbTAeFw0xNjA2MzAyMDU3MTha" +
-		"Fw0yNjA2MjgyMDU3MThaMIG6MQswCQYDVQQGEwJVUzERMA8GA1UECAwIQ29sb3Jh" +
-		"ZG8xDzANBgNVBAcMBkRlbnZlcjEUMBIGA1UECgwLRXhhbXBsZSBJbmMxGTAXBgNV" +
-		"BAsMEFVuaWNvcm4gVHJhaW5lcnMxKDAmBgNVBAMMHyouaHR0cHMtdGVzdC50aGVj" +
-		"ZG4uZXhhbXBsZS5jb20xLDAqBgkqhkiG9w0BCQEWHW9wZXJhdGlvbnNAdGhlY2Ru" +
-		"LmV4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAseev" +
-		"nM90V6cz7/SI3U59EG23DoVFYoHA6Hrd98xBcipq1qyB0w5/IfYVwI94Pw03CJ+S" +
-		"kui2Id4Zp3+aRT6gNxx61kdp1cUhpt1Y8lcUVIJrDQ3C3vjB6GwcKSXsFloKPNRM" +
-		"HTw0xFw4gIB9Gx+TztabPs/R+hp/o9kyeuoD2foG7sPnDV9O2d5A8bPX8XZcrgN9" +
-		"JtpTlwQ475sPoYDBVU2ncWmYyu7bPnfvPRPBncMRHjwK/bFlmK/+QNbPL0BA5zhd" +
-		"qDHDNF05qgehB7EPge8nYkpFtKAjbiMZA1T/4Y1G/bLA9lWWqBEEP86bX2EqRg9v" +
-		"aIOT2TO0H+Pc3t8qUwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCr82hSXa4Od5dd" +
-		"AzU18s3wg/5eZhq+pqmlv71CujH/P54u0RkS4U0/4K8QBO3uFttymrPjn4oYH2sk" +
-		"bKXGx8tvEnHCqLCOVY+G0CMAdbGJE1ztUuLByD0UC64Njat7pxyX1I5B8PTafvW3" +
-		"7aqMlQQMGRAk/bQZaPtoEmArgUeE+fQoACFCjYKtTaP/p81wrefWZs4INKo1bATO" +
-		"j30a3JwcWQunZDM2IMQwUPcjaXyfz3CRjTtZZ1ICGIyjKau8HXvYUnnoW63l1XYW" +
-		"OIErXkbyeY4CS14wDbKAEffOPTdBWlpxbWI8m/Ox0y8mTAJQWcbSGuTiTzFSV3Bi" +
-		"p4+a2PGN";
+		"MIIDSjCCAjICCQD3t6XVBNkGMTANBgkqhkiG9w0BAQUFADBnMQswCQYDVQQGEwJV" +
+		"UzELMAkGA1UECBMCQ08xDzANBgNVBAcTBkRlbnZlcjEMMAoGA1UEChMDRm9vMRAw" +
+		"DgYDVQQLEwdGb28gRGV2MRowGAYDVQQDFBEqLmZvby5leGFtcGxlLmNvbTAeFw0x" +
+		"NjA5MTYyMTMzMzJaFw0yNjA5MTQyMTMzMzJaMGcxCzAJBgNVBAYTAlVTMQswCQYD" +
+		"VQQIEwJDTzEPMA0GA1UEBxMGRGVudmVyMQwwCgYDVQQKEwNGb28xEDAOBgNVBAsT" +
+		"B0ZvbyBEZXYxGjAYBgNVBAMUESouZm9vLmV4YW1wbGUuY29tMIIBIjANBgkqhkiG" +
+		"9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqCYjDRdkX1gl0ayYJmMJtrVJnPCEIypy6Obt" +
+		"lIwjgPsevKHdMZlE+O1IgR4v3CwR1A/xKSh61Ru+bEggXBbyfSk7eT2v4l6GIN4B" +
+		"aylN4jhZv3IFCjbks5xzM/Fs+PGW2hHNjZ79J6lqI6cl7bCkqcG6lsbfMVK8Y3ec" +
+		"cQw+s9V7HMDMl83jt5i5t8X1eKFGgkrHwX02XHbY8OEzA75X1VQTvqtV4Azy/SZN" +
+		"jpBcnrYKPptDzuvCVLVBl0sm+mu3cqsaGAteP5BSNJhCPUXT+v5FQxLPUVq3AwPF" +
+		"1yIgduD/3UZzxl0RUgpWbHx9+Y8tkNweGbNKBdtpkgqm1dI1ZwIDAQABMA0GCSqG" +
+		"SIb3DQEBBQUAA4IBAQBiovAGhnqfsab8LoUljaojLyaegw5sq5/tytpEmMl7wxda" +
+		"KOxTCVpNLyNgy0l3XBCctp+QJUxqIFvidBmO4muVMmaJGfyBmBEYSIvtNDNDWIKC" +
+		"KMYgY+UrWhjE9b/UwvD+k0lZ/+IdTn+wA4SjWdypOtjihuCJ8XFKmyyU5/LplX3n" +
+		"HtFMI1k28H6jWY5umXqhjZg2iRspCANnFtIdVCtFTbCzK9fw3avREz7RBgH6Vg2M" +
+		"CBaKjFfJobHedFMpYcNAvxDp19lWttLdYS6YNzznZEkTwQx+ryfNc0tteeHTAd5n" +
+		"dRNQnAe374pvwYpALQWLBcsTYuxfIzTfTAWzR39r";
 
+	// This is a PKCS1 formatted key which is the typical case for
+	// keys created by clicking 'generate ssl keys' in Traffic Ops
 	static final String HTTPS_TEST_KEY =
-		"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCx56+cz3RXpzPv" +
-		"9IjdTn0QbbcOhUVigcDoet33zEFyKmrWrIHTDn8h9hXAj3g/DTcIn5KS6LYh3hmn" +
-		"f5pFPqA3HHrWR2nVxSGm3VjyVxRUgmsNDcLe+MHobBwpJewWWgo81EwdPDTEXDiA" +
-		"gH0bH5PO1ps+z9H6Gn+j2TJ66gPZ+gbuw+cNX07Z3kDxs9fxdlyuA30m2lOXBDjv" +
-		"mw+hgMFVTadxaZjK7ts+d+89E8GdwxEePAr9sWWYr/5A1s8vQEDnOF2oMcM0XTmq" +
-		"B6EHsQ+B7ydiSkW0oCNuIxkDVP/hjUb9ssD2VZaoEQQ/zptfYSpGD29og5PZM7Qf" +
-		"49ze3ypTAgMBAAECggEANPd92XoKcW5ekDqF5R3RLmr77V7QYZuwC4dJPtWZRpxK" +
-		"Ys/Jd0UBpOLXZxVP/7W3hOG9ie+vCjZN/QiIrcUPflkEWXe5kuO2OS/9o2k5rE+H" +
-		"/8LxGeGGGeTWHYok2CLGmYW7g5jBPRUX3Wpj1Qd5wkMyxWiqY4QwLGAmH2I881B1" +
-		"6DC3v7XeFF5eG5WlOQdg+4l7D283Zp4Jlq5K31WNyRarplXvEE+DOpd3iGIzGI+w" +
-		"0V3DdcbKT2pnqP4mpz6dVFC9xTBONX6nZHmPuIoZcEql49kKD833fU9WtnJ3bllM" +
-		"HRHnQDtyaCzVXOMCA2hHzNfZH60iLB2Wo19niSPMgQKBgQDoN+PBhLlBxamo6mi0" +
-		"qDtMpAq+n9PzMctYDyxt23xFxZy+wB2htAGxhnIKXcFZpE0Tbg8Y+HUFiag9sDh1" +
-		"3bhhLioki0QL1DPpVdlOdADkqnOXCcvepmYMZNeUpHA3R34lil3hXWx167LWxJ80" +
-		"rAPlPJq2HaTXsZzOXx4o1ee3mQKBgQDEH9rLXdsV3cb7ZqdjVGazNxKVRAemv2rW" +
-		"UZTsHfgikndu3z+4B++H1176ZC4LQfPSOG8B7ZcPeN/GMDAk+iJRCth0pzAB0mZx" +
-		"I/3GiAN7ACdosKzSoSwI0tXobXfBxMTJMx8ToUWrPKPncxkp8vDNhid/x7ENe6qY" +
-		"EbkR3PG0ywKBgQCs2Z0wWKjE6mqlDwatImQxYhGVXsaXSUNA4tqBU1SnYraPzdTA" +
-		"nop8J8UPLkZTgVbV1aBrR9VjL9oJQPhl04oA3CoGVZtq6qNRVdOQ8AwSKUYs8N/N" +
-		"dTKUmyNUwym8G/0r2FiU/cNT6wONlYGj5T5pDbljQaGH4+8CNg7u+nmmUQKBgFvw" +
-		"Gt7utn8/ocHEU3+K10H39Swn4fZXETw6rjcprWJ3iqlc2j/o6G6jlZCHWdZJKoVH" +
-		"kzIyMHg+T5hWipsq7t9S2DmHDkgsW316Q8LHi+ojHlZDTCDJER1pyIDWoCcjmKRA" +
-		"5LaNCV3GZYdgO1Gg4yVVWDrcX7FUYZo75KftDRmVAoGAa8OJerRIBCW6NVcVzILW" +
-		"IZaqRiHZaBEl3fy1tQ8QznMdwr5Z/RqD/R5uss0H8rmMU9TqZU7864nMYKaRAb3/" +
-		"pzEyKUZJcQO+o0rWMVM3GcTmVcg/z3kl7eo1ouYlvPkpWxbFQlvXbA6WMPmwqq1O" +
-		"tTHrGbnpc7Ey4W2MvXSvLMo=";
+		"-----BEGIN RSA PRIVATE KEY-----\n" +
+		"MIIEowIBAAKCAQEAqCYjDRdkX1gl0ayYJmMJtrVJnPCEIypy6ObtlIwjgPsevKHd\n" +
+		"MZlE+O1IgR4v3CwR1A/xKSh61Ru+bEggXBbyfSk7eT2v4l6GIN4BaylN4jhZv3IF\n" +
+		"Cjbks5xzM/Fs+PGW2hHNjZ79J6lqI6cl7bCkqcG6lsbfMVK8Y3eccQw+s9V7HMDM\n" +
+		"l83jt5i5t8X1eKFGgkrHwX02XHbY8OEzA75X1VQTvqtV4Azy/SZNjpBcnrYKPptD\n" +
+		"zuvCVLVBl0sm+mu3cqsaGAteP5BSNJhCPUXT+v5FQxLPUVq3AwPF1yIgduD/3UZz\n" +
+		"xl0RUgpWbHx9+Y8tkNweGbNKBdtpkgqm1dI1ZwIDAQABAoIBABsDrYPv6ydKQSEz\n" +
+		"imo4ZRoefAojtgb0TevPFgJUlWumbKS/mIrcZfFcJdbgo63Kwr6AJS2InFtajrhU\n" +
+		"yiYhZanoEu8CkxxaNVBYen/d7e5XQUv5pIeklA+rJfMFaY2BOswkKhMDpQZXOH8r\n" +
+		"3nMWew3u2uxYXQlOkoekctTSs8wuUFC7jPKlRrunDTBCBPZYkTyqHDov4k4NwoTX\n" +
+		"0WMQeFZgXoKJAqcxSDdAGTHImIPK941oKlPHJxEAg6XiAmzJ7ipj8VS2WElu+7Fa\n" +
+		"1SG1U1dD0lMn5oo+B4xw97EW0GzKqcAqOG/pyHy17rjjmEVOkCr/ntJdQVYYS0s9\n" +
+		"+wpRTUkCgYEA2XuBSyfNiU6vslliZBarX6kCLXCfOObzatYR0XpMNSCf+mxfVKzz\n" +
+		"ZWgsY6F6dE/twtJdhpdcnguZXGHXVitPJ5lCTLC14E+POiIItRaypcQZWmfMuWSg\n" +
+		"SbIvWxlokS0liWGa1ENxDze80oSc7KwOdIKEzWh9e/dg4TmYJ45G4csCgYEAxe3j\n" +
+		"b+DP3LvG5WUR9ya+Wtgh5doEwjUzqrqLJqCe0Idp/kM1rhcRTP3VgVS9izmeHEfy\n" +
+		"kTwYGuvHSrWR9RDY8kODHd3MdZpv/HfW2hc4x9bHHmDGfoTrNKD61FvfshD7Um4O\n" +
+		"LTWAXH1MYuRXEOdpyI34J8XA4xqSU4wVRW4AF1UCgYBYgpssKxbLOurmetpAQbmd\n" +
+		"RPtN4vfqAJQwds7pogxB0vVIxbJGk9y6+JqYMa/UhnMNRvApRpC7AZ14q5knyJh+\n" +
+		"VTFWZNSgZcC0uAUzLfmm3Rg0Yuo+yWUymQIM4VpdOzJ7pu2MVaY9u0Ftq+rxp1R6\n" +
+		"tmO19UCcoyEaiIYUEyNl4QKBgQC50xsZ2Y4tpZoZmmdgi95hedNxcdvP3ZURcCve\n" +
+		"ayRPkSLhFYabWIrkptfBoaaGxOR9lsrUsf/LnpsvuAI9e8DCysGZ07f2nbUP6g8s\n" +
+		"GGs1q56sFZ2mAPK2KYD0yQDes/TQsgTbSwSlUPnbSpe3hhwZr7hQ1ue+EB9bEwSR\n" +
+		"d7HcNQKBgA9g/ltyS8gwvP4PfVrwJLrmojJ4u2KW++PDngZTdMUC0GflbIE1qjPa\n" +
+		"RKiKr0t5PB7LJNk9aih2suQhBf+XqBuPWceqzZP7Djxb3980d5JOtgqT1HmyJlqj\n" +
+		"j/mOtWv+25AXx2IzbOo8KT2riNdbJR4lrFFPeGaUuTKcX0cUzsMC\n" +
+		"-----END RSA PRIVATE KEY-----";
 
 	// The following is just a self signed certificate and key to use for testing
 	// this is NOT private data from a CA
@@ -281,32 +275,34 @@ public class ExternalTestSuite {
 	// openssl x509 -req -days 3650 -in ~/tmp/http-and-https.csr -signkey ~/tmp/http-and-https.key -out ~/tmp/http-and-https.crt
 
 	final static String HTTP_AND_HTTPS_TEST_KEY =
-		"MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDjhGSGLMVtaY32" +
-		"aS7aBogJCVmWNb6esx7+W6ug/wwYgwrsCL0nl+J6snPBOG4HoHHU5pKisHVYAbUi" +
-		"3TUBgjeP/uCGxKIonjru5cbS7tRIoTqSX/PJOlm35i0sJ55A3UHZafH8C0xnSzQj" +
-		"Ti9Evot58wCza/zfHKp/01Ig0M38+BhU7jpDzEgNEbYfUVpgAkES0JoJBAvrzqKB" +
-		"IZHXtp9hMy6uG8cTOybFDZZGJfwfUpngWqQGfT2h91ah49gVbAlef//647EuW1Dw" +
-		"X7PQKb0rc1bPYtlaVfeEZNb+e+52hs/B/hL2rXJ++G2t+2skahi5Kq7bcycQGjr+" +
-		"OROkA5UbAgMBAAECggEBALqsif49Bc/752rianqhGUSw0zyX5Es6FJgGhw+VtEr4" +
-		"WiHIGcs+p6icerVyo3TGhB92/6FUvzLyU7jDXxZZzVTsfzSUaaiCC0Cwby3qn2ro" +
-		"PrKS3+efZLWqui2cZBA8eib08oMmkg2+eoztPYNeA/qPE2gjlltJnes7bAtYx2pi" +
-		"aQK5stsynOWyxYdDdmqC7VJxCtC9sTmubaAQXHBBzrQnmMt7XzYsc6X/WhbWIFbs" +
-		"CxvC6K0CSUD0DzPUz2eN8QERMQQZQMysq+DA73/G9Zrl4LFL4qLTooviVgzq1gjx" +
-		"5yzKYR93CNk0HFIJzREw/FPm9xKa6tH5ZnwpV6FVRSECgYEA+EfzX/vWGqTWH05X" +
-		"y1p1iNmNst9PbPVdJx/SqiitU0RsF+A2g1y/THEt67d6l4CD6OlsK/yTNHRr/dMm" +
-		"L9B0SLVYUNGNnphl3WF10VQ2Y+80dRyWSbJpqty7L3P3uLOmkZRX1/9X254ryVEj" +
-		"n6KmkKK056u7RZoQw1ZXMK8RkVUCgYEA6pcvCwJBgzIwc9LufIpLa7NurX249Bbp" +
-		"9B9LYS1vfS2GYAypZfvIwqUi8jAjH2SIaVzI7q3mzocn+lV93ZuvU/dHjYs1VTC3" +
-		"nW2G1sTk3nkSlrWnH0mDpkta9UK3/nD4gOmZmHD2rPyAvzj+RE3EAB0lzQGV9Squ" +
-		"aztpg7BsTK8CgYEA68xZxhUFmLRob78V/png+qGzw+f2JQM6/0dn6hdL1cMr7dkR" +
-		"rNzPCiiLdk0BbxWtMe1OwM/WdoEDd0OsBskxR0SDpe3/VFpklEZVgQM7zNmHtpn5" +
-		"2fBKDu4oEL9Qy+hDEAwVCZ0GshucdkxLSvdMvhzpNwWQjF/v/7TmheQfCSkCgYBM" +
-		"hdiAnNHF/B82CP5mfa4wia12xmYIqVjTm0m5f1q42JrWxgqUC9fnNnr5yZ4LZX3h" +
-		"8LRSt0Ns50WxMSYHnftJRoZ+s4RIL8YVgl7TvBJ0R8Y6hzLmz9Iz8qzPCF6Aj1Vg" +
-		"p9LEmUS+FPfiaLL4kO14pAlqoDPMb4nJzO2UWX5aXQKBgAmnvhj/aLcJnCJM0YnC" +
-		"/aRWTF5Q3HQmPOHx5fQlw9+hCjQUkaoPL5JVs4/Z/dOj1RsWYHg23fGy78zNHkQi" +
-		"zL6P2WpZ7pEpJbK4wobpfitzczKfNZROAzdJPDV4+ebtPHMkGA/ibN04AM2SWKTH" +
-		"UoGXvsZbRbb+j3EptEHBiNiN";
+		"-----BEGIN PRIVATE KEY-----\n" +
+		"MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDjhGSGLMVtaY32\n" +
+		"aS7aBogJCVmWNb6esx7+W6ug/wwYgwrsCL0nl+J6snPBOG4HoHHU5pKisHVYAbUi\n" +
+		"3TUBgjeP/uCGxKIonjru5cbS7tRIoTqSX/PJOlm35i0sJ55A3UHZafH8C0xnSzQj\n" +
+		"Ti9Evot58wCza/zfHKp/01Ig0M38+BhU7jpDzEgNEbYfUVpgAkES0JoJBAvrzqKB\n" +
+		"IZHXtp9hMy6uG8cTOybFDZZGJfwfUpngWqQGfT2h91ah49gVbAlef//647EuW1Dw\n" +
+		"X7PQKb0rc1bPYtlaVfeEZNb+e+52hs/B/hL2rXJ++G2t+2skahi5Kq7bcycQGjr+\n" +
+		"OROkA5UbAgMBAAECggEBALqsif49Bc/752rianqhGUSw0zyX5Es6FJgGhw+VtEr4\n" +
+		"WiHIGcs+p6icerVyo3TGhB92/6FUvzLyU7jDXxZZzVTsfzSUaaiCC0Cwby3qn2ro\n" +
+		"PrKS3+efZLWqui2cZBA8eib08oMmkg2+eoztPYNeA/qPE2gjlltJnes7bAtYx2pi\n" +
+		"aQK5stsynOWyxYdDdmqC7VJxCtC9sTmubaAQXHBBzrQnmMt7XzYsc6X/WhbWIFbs\n" +
+		"CxvC6K0CSUD0DzPUz2eN8QERMQQZQMysq+DA73/G9Zrl4LFL4qLTooviVgzq1gjx\n" +
+		"5yzKYR93CNk0HFIJzREw/FPm9xKa6tH5ZnwpV6FVRSECgYEA+EfzX/vWGqTWH05X\n" +
+		"y1p1iNmNst9PbPVdJx/SqiitU0RsF+A2g1y/THEt67d6l4CD6OlsK/yTNHRr/dMm\n" +
+		"L9B0SLVYUNGNnphl3WF10VQ2Y+80dRyWSbJpqty7L3P3uLOmkZRX1/9X254ryVEj\n" +
+		"n6KmkKK056u7RZoQw1ZXMK8RkVUCgYEA6pcvCwJBgzIwc9LufIpLa7NurX249Bbp\n" +
+		"9B9LYS1vfS2GYAypZfvIwqUi8jAjH2SIaVzI7q3mzocn+lV93ZuvU/dHjYs1VTC3\n" +
+		"nW2G1sTk3nkSlrWnH0mDpkta9UK3/nD4gOmZmHD2rPyAvzj+RE3EAB0lzQGV9Squ\n" +
+		"aztpg7BsTK8CgYEA68xZxhUFmLRob78V/png+qGzw+f2JQM6/0dn6hdL1cMr7dkR\n" +
+		"rNzPCiiLdk0BbxWtMe1OwM/WdoEDd0OsBskxR0SDpe3/VFpklEZVgQM7zNmHtpn5\n" +
+		"2fBKDu4oEL9Qy+hDEAwVCZ0GshucdkxLSvdMvhzpNwWQjF/v/7TmheQfCSkCgYBM\n" +
+		"hdiAnNHF/B82CP5mfa4wia12xmYIqVjTm0m5f1q42JrWxgqUC9fnNnr5yZ4LZX3h\n" +
+		"8LRSt0Ns50WxMSYHnftJRoZ+s4RIL8YVgl7TvBJ0R8Y6hzLmz9Iz8qzPCF6Aj1Vg\n" +
+		"p9LEmUS+FPfiaLL4kO14pAlqoDPMb4nJzO2UWX5aXQKBgAmnvhj/aLcJnCJM0YnC\n" +
+		"/aRWTF5Q3HQmPOHx5fQlw9+hCjQUkaoPL5JVs4/Z/dOj1RsWYHg23fGy78zNHkQi\n" +
+		"zL6P2WpZ7pEpJbK4wobpfitzczKfNZROAzdJPDV4+ebtPHMkGA/ibN04AM2SWKTH\n" +
+		"UoGXvsZbRbb+j3EptEHBiNiN\n"+
+		"-----END PRIVATE KEY-----";
 
 	final static String HTTP_AND_HTTPS_TEST_CERT =
 		"MIIDqjCCApICCQDx6373gd/QFDANBgkqhkiG9w0BAQsFADCBljELMAkGA1UEBhMC" +
@@ -339,32 +335,34 @@ public class ExternalTestSuite {
 	// openssl x509 -req -days 3650 -in ~/tmp/http-to-https.csr -signkey ~/tmp/http-to-https.key -out ~/tmp/http-to-https.crt
 
 	final static String HTTP_TO_HTTPS_TEST_KEY =
-		"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDKu4aRsrexzyck" +
-		"+IxuotTSfvt2YLhrhFRscSLQdo56+RE402e8FuJ4DONwPRxbNdjL+E7elLg+onOf" +
-		"gB9sYkzzFIy4CDp5qoGkencFNJrDwJ+KGxWzxTyPsy3rTGSx4hHj0o1AuE0k1Tgx" +
-		"A8XWtG7UE20iV6Gj5bzSqDLOR/fvsQESSdFFHKArO0fQcd8Z3LVdczv+3To10Mhu" +
-		"+zdltzjE7v4A38ewKVgFBk1BAOxc7y/ytP3iUH2YS99H3jB61Ej18e+VYe5oaw60" +
-		"/4r2PG0FlXORxJuB9rC7OydXvu6fvOE6lmcImnyXUrBf8C+bHgO4CWG6thOVW4el" +
-		"vOo8dFP3AgMBAAECggEAEFxr8swyiPYH2bL5WmBnvoki8B3EJGEskwfaYGqA+ymo" +
-		"myZsg8BxDHE11bQI2s+QrH1gmBP2fo+Ltz6Wyp9wSFnLNXrshS8egVCk1FW3e77K" +
-		"4VFoQfbT+WDjfs7OfZCaEwHGBogZKbTPcR011SsAmrrqns/lqp16zKFoYD9sofpJ" +
-		"AZHL6Biu9PTfob0W8Co6thiii1xn+TEdc1ESDYdkYM5xsphrLoYyM7n1VyXRl31g" +
-		"sewofW/ArF4K0Vl5iGygRKPw+Izqq4iCSqTzVr1T4Eh56k0cW0opOgww/LdybyGq" +
-		"EqvczqHkj0sjHX9WKbTkNGAcymCUAVyaCf4g8Upn0QKBgQD7c8zBPhj1NO42I+yJ" +
-		"+SkZKg24zudJb+ztjeBFg28Vg8n13xQIgHHMtIDaC8G/5vgrS0WFFVZuYTSLU2R3" +
-		"b954H65c+L5N1mDAD3EDE73+xHfbm8dEeJVeGK59x1CgkGbLtgiaf/d466KhOiQj" +
-		"xlsBEkByLIXfmrxXYZH54xD1GQKBgQDOZihiRKZ9oGUlGh4CWO/gh3RjrXhqxDES" +
-		"9OzMrpEJQLe3Af1rHUHkL1ugjkykYwqD8AvKnsoJ+2Bbri5dtmTE0f6R3K5QP8vH" +
-		"pShnFTxU6Q3/meDxwnIX6a5AfLXJsyxmVV1fmsD3UayN7lrAtWT4CNlicFrHUZJL" +
-		"S18epmEjjwKBgGZyRpDQyQBWQVtjhYKtNfZfsNmDyq2b4U7jx+TqaL6+Q/Fdot7X" +
-		"3gWF4R11Psn9w0x4TWmsSNuN1QeSwVL8DAqq9bJBUd+KoT5+zA9x4q3CxAaAUE5w" +
-		"RoLg0W7DXvEcBBWpI5Y23s+wSUEg3AqLTRaBpioeQ6jXdTawtPW3cng5AoGBAK2X" +
-		"nj+IHb9rN6aM4NB4nMfrJSjwrWaeu+eFt+Quri1qERoKwmlkohaY/id7h1p7Mkzl" +
-		"iAVSp/rdQZ3aUYTf8sDXHZTwVmuIPIwdjG2mnqeLnApuEZNER1F1aOkz+nE6EQ3A" +
-		"nlfagJGCT+7PmeSaq+ExECSK+s7I/JH3Qnk01l5hAoGAWSa7fzLS57XFTHTTYddt" +
-		"tK5W6hlKwEb/tBnI8iLnWa+KhmTo/VPsc1C4rV3FqVFfMN6ZHMCEdG/Hq9vQdkQZ" +
-		"35crLobjKIk5tlVzEbWxwl8EQez180r0O1VsRIiceIlzXRl3I17GeEKQHaORx/wS" +
-		"PkZQNvkYw/OLHPViXWBGCsQ=";
+		"-----BEGIN PRIVATE KEY-----\n" +
+		"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDKu4aRsrexzyck\n" +
+		"+IxuotTSfvt2YLhrhFRscSLQdo56+RE402e8FuJ4DONwPRxbNdjL+E7elLg+onOf\n" +
+		"gB9sYkzzFIy4CDp5qoGkencFNJrDwJ+KGxWzxTyPsy3rTGSx4hHj0o1AuE0k1Tgx\n" +
+		"A8XWtG7UE20iV6Gj5bzSqDLOR/fvsQESSdFFHKArO0fQcd8Z3LVdczv+3To10Mhu\n" +
+		"+zdltzjE7v4A38ewKVgFBk1BAOxc7y/ytP3iUH2YS99H3jB61Ej18e+VYe5oaw60\n" +
+		"/4r2PG0FlXORxJuB9rC7OydXvu6fvOE6lmcImnyXUrBf8C+bHgO4CWG6thOVW4el\n" +
+		"vOo8dFP3AgMBAAECggEAEFxr8swyiPYH2bL5WmBnvoki8B3EJGEskwfaYGqA+ymo\n" +
+		"myZsg8BxDHE11bQI2s+QrH1gmBP2fo+Ltz6Wyp9wSFnLNXrshS8egVCk1FW3e77K\n" +
+		"4VFoQfbT+WDjfs7OfZCaEwHGBogZKbTPcR011SsAmrrqns/lqp16zKFoYD9sofpJ\n" +
+		"AZHL6Biu9PTfob0W8Co6thiii1xn+TEdc1ESDYdkYM5xsphrLoYyM7n1VyXRl31g\n" +
+		"sewofW/ArF4K0Vl5iGygRKPw+Izqq4iCSqTzVr1T4Eh56k0cW0opOgww/LdybyGq\n" +
+		"EqvczqHkj0sjHX9WKbTkNGAcymCUAVyaCf4g8Upn0QKBgQD7c8zBPhj1NO42I+yJ\n" +
+		"+SkZKg24zudJb+ztjeBFg28Vg8n13xQIgHHMtIDaC8G/5vgrS0WFFVZuYTSLU2R3\n" +
+		"b954H65c+L5N1mDAD3EDE73+xHfbm8dEeJVeGK59x1CgkGbLtgiaf/d466KhOiQj\n" +
+		"xlsBEkByLIXfmrxXYZH54xD1GQKBgQDOZihiRKZ9oGUlGh4CWO/gh3RjrXhqxDES\n" +
+		"9OzMrpEJQLe3Af1rHUHkL1ugjkykYwqD8AvKnsoJ+2Bbri5dtmTE0f6R3K5QP8vH\n" +
+		"pShnFTxU6Q3/meDxwnIX6a5AfLXJsyxmVV1fmsD3UayN7lrAtWT4CNlicFrHUZJL\n" +
+		"S18epmEjjwKBgGZyRpDQyQBWQVtjhYKtNfZfsNmDyq2b4U7jx+TqaL6+Q/Fdot7X\n" +
+		"3gWF4R11Psn9w0x4TWmsSNuN1QeSwVL8DAqq9bJBUd+KoT5+zA9x4q3CxAaAUE5w\n" +
+		"RoLg0W7DXvEcBBWpI5Y23s+wSUEg3AqLTRaBpioeQ6jXdTawtPW3cng5AoGBAK2X\n" +
+		"nj+IHb9rN6aM4NB4nMfrJSjwrWaeu+eFt+Quri1qERoKwmlkohaY/id7h1p7Mkzl\n" +
+		"iAVSp/rdQZ3aUYTf8sDXHZTwVmuIPIwdjG2mnqeLnApuEZNER1F1aOkz+nE6EQ3A\n" +
+		"nlfagJGCT+7PmeSaq+ExECSK+s7I/JH3Qnk01l5hAoGAWSa7fzLS57XFTHTTYddt\n" +
+		"tK5W6hlKwEb/tBnI8iLnWa+KhmTo/VPsc1C4rV3FqVFfMN6ZHMCEdG/Hq9vQdkQZ\n" +
+		"35crLobjKIk5tlVzEbWxwl8EQez180r0O1VsRIiceIlzXRl3I17GeEKQHaORx/wS\n" +
+		"PkZQNvkYw/OLHPViXWBGCsQ=\n" +
+		"-----END PRIVATE KEY-----";
 
 	final static String HTTP_TO_HTTPS_TEST_CERT =
 		"MIIDpjCCAo4CCQDLCWeLJrqPvDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC" +
