@@ -392,8 +392,8 @@ sub parent_data {
 			my $port           = $profile_cache{$pid}->{port};
 			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
 			my $rank           = $profile_cache{$pid}->{rank};
-			my $parent         = $server->cachegroup->parent_cachegroup_id // -1;
-			my $secondary      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
+			my $primary_parent         = $server->cachegroup->parent_cachegroup_id // -1;
+			my $secondary_parent      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 				my %p = (
 					host_name      => $row->host_name,
@@ -403,8 +403,8 @@ sub parent_data {
 					use_ip_address => $use_ip_address,
 					rank           => $rank,
 					ip_address     => $row->ip_address,
-					primary_parent         => ( $parent == $row->cachegroup->id ) ? 1 : 0,
-					secondary_parent      => ( $secondary == $row->cachegroup->id ) ? 1 : 0,
+					primary_parent         => ( $primary_parent == $row->cachegroup->id ) ? 1 : 0,
+					secondary_parent      => ( $secondary_parent == $row->cachegroup->id ) ? 1 : 0,
 				);
 				push @{ $parent_info{$prefix} }, \%p;
 			}
