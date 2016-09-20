@@ -403,8 +403,8 @@ sub parent_data {
 					use_ip_address => $use_ip_address,
 					rank           => $rank,
 					ip_address     => $row->ip_address,
-					parent         => ( $parent == $row->cachegroup->id ) ? 1 : 0,
-					secondary      => ( $secondary == $row->cachegroup->id ) ? 1 : 0,
+					primary_parent         => ( $parent == $row->cachegroup->id ) ? 1 : 0,
+					secondary_parent      => ( $secondary == $row->cachegroup->id ) ? 1 : 0,
 				);
 				push @{ $parent_info{$prefix} }, \%p;
 			}
@@ -1128,10 +1128,10 @@ sub parent_dot_config {
 				my @secondary_parent_info;
 				my @null_parent_info;
 				foreach my $parent (@ranked_parents) {
-					if ( $parent->{parent} ) {
+					if ( $parent->{primary_parent} ) {
 						push @parent_info, format_parent_info($parent);
 					}
-					elsif ($parent ->{secondary} ) {
+					elsif ($parent ->{secondary_parent} ) {
 						push @secondary_parent_info, format_parent_info($parent);
 					}
 					else {
@@ -1205,10 +1205,10 @@ sub parent_dot_config {
 				my @secondary_parent_info;
 				foreach my $parent ( @{ $pinfo->{all_parents} } ) {
 					my $ptxt = format_parent_info($parent);
-					if ( $parent->{parent} ) {
+					if ( $parent->{primary_parent} ) {
 						push @parent_info, $ptxt;
 					}
-					elsif ( $parent->{secondary} ) {
+					elsif ( $parent->{secondary_parent} ) {
 						push @secondary_parent_info, $ptxt;
 					}
 				}
