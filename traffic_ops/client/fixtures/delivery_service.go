@@ -41,7 +41,7 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 				MissLat:              "44.654321",
 				MissLong:             "-99.123456",
 				Protocol:             "0",
-				IPv6RoutingEnabled:   true,
+				IPV6RoutingEnabled:   true,
 				RangeRequestHandling: "0",
 				TRResponseHeaders:    "Access-Control-Allow-Origin: *",
 				MultiSiteOrigin:      "0",
@@ -105,6 +105,25 @@ func DeliveryServiceCapacity() *client.DeliveryServiceCapacityResponse {
 	}
 
 	return &client.DeliveryServiceCapacityResponse{
+		Response: dsc,
+	}
+}
+
+// DeliveryServiceRouting returns a default DeliveryServiceRoutingResponse to be used for testing.
+func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
+	dsc := client.DeliveryServiceRouting{
+		StaticRoute:       1,
+		Miss:              2,
+		Geo:               3.33,
+		Err:               4,
+		CZ:                5.55,
+		DSR:               6.66,
+		Fed:               1,
+		RegionalAlternate: 1,
+		RegionalDenied:    1,
+	}
+
+	return &client.DeliveryServiceRoutingResponse{
 		Response: dsc,
 	}
 }

@@ -1,6 +1,9 @@
 package manager
 
 import (
+	"sort"
+
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 )
@@ -22,7 +25,7 @@ func StartPeerManager(peerChan <-chan peer.Result, localStates peer.CRStatesThre
 }
 
 // TODO JvD: add deliveryservice stuff
-func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crstates) peer.Crstates {
+func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, localStates peer.Crstates) peer.Crstates {
 	combinedStates := peer.NewCrstates()
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
@@ -70,4 +73,25 @@ func combineCrStates(peerStates map[string]peer.Crstates, localStates peer.Crsta
 	}
 
 	return combinedStates
+}
+
+type CacheNameSlice []enum.CacheName
+
+func (p CacheNameSlice) Len() int           { return len(p) }
+func (p CacheNameSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p CacheNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+// intersection returns strings in both a and b.
+// Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
+func intersection(a []enum.CacheName, b []enum.CacheName) []enum.CacheName {
+	sort.Sort(CacheNameSlice(a))
+	sort.Sort(CacheNameSlice(b))
+	var c []enum.CacheName
+	for _, s := range a {
+		i := sort.Search(len(b), func(i int) bool { return b[i] >= s })
+		if i < len(b) && b[i] == s {
+			c = append(c, s)
+		}
+	}
+	return c
 }

@@ -158,7 +158,7 @@ sub delete {
     my $id   = $self->param('id');
 
     if ( !&is_admin($self) ) {
-        $self->flash( alertmsg => "No can do. Get more privs." );
+        $self->flash( alertmsg => "You must be an ADMIN to perform this operation!" );
     }
     else {
         my $p_name = $self->db->resultset('Cdn')->search( { id => $id } )->get_column('name')->single();

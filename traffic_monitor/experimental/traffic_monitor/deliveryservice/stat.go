@@ -32,17 +32,17 @@ func NewStats() Stats {
 	return Stats{DeliveryService: map[enum.DeliveryServiceName]dsdata.Stat{}}
 }
 
-func setStaticData(dsStats Stats, dsServers map[string][]string) Stats {
+func setStaticData(dsStats Stats, dsServers map[enum.DeliveryServiceName][]enum.CacheName) Stats {
 	for ds, stat := range dsStats.DeliveryService {
-		stat.Common.CachesConfigured.Value = int64(len(dsServers[string(ds)]))
+		stat.Common.CachesConfigured.Value = int64(len(dsServers[ds]))
 		dsStats.DeliveryService[ds] = stat // TODO consider changing dsStats.DeliveryService[ds] to a pointer so this kind of thing isn't necessary; possibly more performant, as well
 	}
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[string][]string, serverTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result) (Stats, error) {
 	for cache, available := range crStates.Caches {
-		cacheGroup, ok := serverCachegroups[enum.CacheName(cache)]
+		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
 			log.Warnf("CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
 			continue
