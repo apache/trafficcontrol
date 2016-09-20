@@ -16,8 +16,8 @@ func NewDSStatsThreadsafe() DSStatsThreadsafe {
 }
 
 func (o *DSStatsThreadsafe) Get() ds.Stats {
-	o.m.RLock()
-	defer o.m.RUnlock()
+	o.m.Lock()
+	defer o.m.Unlock()
 	return o.dsStats.Copy()
 }
 
