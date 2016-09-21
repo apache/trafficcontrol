@@ -96,7 +96,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_keystore</artifactId>
+			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>

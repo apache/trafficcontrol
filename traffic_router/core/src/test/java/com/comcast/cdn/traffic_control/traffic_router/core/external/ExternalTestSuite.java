@@ -18,7 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.CatalinaTrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
-import com.comcast.cdn.traffic_control.traffic_router.keystore.PrivateKeyDecoder;
 import org.apache.catalina.LifecycleException;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -30,9 +29,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.FileVisitResult;
@@ -40,16 +37,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.security.KeyFactory;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -146,40 +135,8 @@ public class ExternalTestSuite {
 
 		System.setProperty("traffic_monitor.properties", "src/test/conf/traffic_monitor.properties");
 
-		X509Certificate x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
-			.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(HTTPS_TEST_CERT)));
-
-		final Properties properties = new Properties();
-		properties.setProperty("keypass", "testing-testing");
-		properties.store(new FileOutputStream(tmpDeployDir.getAbsolutePath() + "/conf/keystore.properties"), null);
-
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-		keyStore.load(null, "testing-testing".toCharArray());
-
-		PrivateKeyDecoder privateKeyDecoder = new PrivateKeyDecoder();
-		PrivateKey privateKey = privateKeyDecoder.decode(HTTPS_TEST_KEY);
-
-		keyStore.setKeyEntry("https-only-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
-
-		x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
-			.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(HTTP_AND_HTTPS_TEST_CERT)));
-
-		privateKey = privateKeyDecoder.decode(HTTP_AND_HTTPS_TEST_KEY);
-
-
-		keyStore.setKeyEntry("http-and-https-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
-
-		x509Certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
-			.generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(HTTP_TO_HTTPS_TEST_CERT)));
-
-		privateKey = privateKeyDecoder.decode(HTTP_TO_HTTPS_TEST_KEY);
-
-		keyStore.setKeyEntry("http-to-https-test.thecdn.example.com", privateKey, "testing-testing".toCharArray(), new X509Certificate[] {x509Certificate});
-
 		File dbDirectory = new File(tmpDeployDir, "db");
 		dbDirectory.mkdir();
-		File keystoreFile = new File(dbDirectory, ".keystore");
-		keyStore.store(new FileOutputStream(keystoreFile), "testing-testing".toCharArray());
 
 		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);

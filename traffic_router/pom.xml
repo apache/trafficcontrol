@@ -24,11 +24,11 @@
 	<name>traffic_router</name>
 
 	<modules>
-		<module>keystore</module>
 		<module>connector</module>
 		<module>configuration</module>
 		<module>geolocation</module>
 		<module>core</module>
+		<module>shared</module>
 	</modules>
 
 	<properties>

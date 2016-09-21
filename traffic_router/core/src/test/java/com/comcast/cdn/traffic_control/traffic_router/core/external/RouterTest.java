@@ -26,6 +26,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -34,7 +35,6 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -46,19 +46,20 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.isIn;
 import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.fail;
@@ -96,6 +97,7 @@ public class RouterTest {
 	private String routerHttpPort = System.getProperty("routerHttpPort", "8888");
 	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
 	private String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+	private KeyStore trustStore;
 
 	@Before
 	public void before() throws Exception {
@@ -206,6 +208,11 @@ public class RouterTest {
 
 		assertThat(validLocations.isEmpty(), equalTo(false));
 		assertThat(httpsOnlyLocations.isEmpty(), equalTo(false));
+
+		trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("keystore.jks");
+		trustStore.load(keystoreStream, "changeit".toCharArray());
+		TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init(trustStore);
 
 		httpClient = HttpClientBuilder.create()
 			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-only-test.thecdn.example.com"))
@@ -510,7 +517,7 @@ public class RouterTest {
 		private final String host;
 
 		public ClientSslSocketFactory(String host) throws Exception {
-			super(SSLContextBuilder.create().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build(),
+			super(SSLContextBuilder.create().loadTrustMaterial(trustStore, null).build(),
 				new TestHostnameVerifier());
 			this.host = host;
 		}

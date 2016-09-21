@@ -1,0 +1,68 @@
+package secure;
+
+import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataListener;
+import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import javax.management.AttributeChangeNotification;
+import javax.management.Notification;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(CertificateRegistry.class)
+public class CertificateDataListenerTest {
+
+	private CertificateRegistry certificateRegistry;
+
+	@Before
+	public void before() throws Exception {
+		certificateRegistry = mock(CertificateRegistry.class);
+		PowerMockito.mockStatic(CertificateRegistry.class);
+		when(CertificateRegistry.getInstance()).thenReturn(certificateRegistry);
+	}
+
+	@Test
+	public void itImportsCertificateDataToRegistry() throws Exception {
+		List<CertificateData> oldList = new ArrayList<>();
+		List<CertificateData> newList = new ArrayList<>();
+
+		Object notifier = "notifier";
+
+		Notification notification = new AttributeChangeNotification(notifier, 1L, System.currentTimeMillis(),
+			"CertificateDataList Changed", "CertificateDataList", "List<CertificateDataList>", oldList, newList);
+
+		CertificateDataListener certificateDataListener = new CertificateDataListener();
+		certificateDataListener.handleNotification(notification, null);
+		verify(certificateRegistry).importCertificateDataList(newList);
+	}
+
+	@Test
+	public void itIgnoresBadInput() throws Exception {
+		Notification notification = new Notification("notifier", "source", 1L, "hello world");
+		CertificateDataListener certificateDataListener = new CertificateDataListener();
+		certificateDataListener.handleNotification(notification, null);
+		verify(certificateRegistry, times(0)).importCertificateDataList(any());
+
+		List<String> badData = Arrays.asList("foo", "bar", "baz");
+
+		notification = new AttributeChangeNotification("notifier", 1L, System.currentTimeMillis(),
+			"CertificateDataList Changed", "CertificateDataList", "List<CertificateDataList>", null, badData);
+
+		certificateDataListener.handleNotification(notification, null);
+		verify(certificateRegistry, times(0)).importCertificateDataList(any());
+	}
+}

@@ -1,10 +1,13 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
+import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -19,6 +22,7 @@ public class CertificatesPoller implements ConfigurationListener {
 	private static final long defaultFixedRate = 3600 * 1000L;
 	private static final String intervalProperty = "certificates.polling.interval";
 	private long pollingInterval = defaultFixedRate;
+	private CertificateChecker certificateChecker;
 
 	@Autowired
 	private Environment environment;
@@ -49,7 +53,10 @@ public class CertificatesPoller implements ConfigurationListener {
 	public void start() {
 		final Runnable runnable = () -> {
 			try {
-				certificatesClient.refreshData();
+				List<CertificateData> certificateDataList = certificatesClient.refreshData();
+				if (certificateDataList != null) {
+					certificateChecker.setCertificateDataList(certificateDataList);
+				}
 			} catch (Throwable t) {
 				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage(), t);
 			}
@@ -101,6 +108,14 @@ public class CertificatesPoller implements ConfigurationListener {
 
 	public long getPollingInterval() {
 		return pollingInterval;
+	}
+
+	public CertificateChecker getCertificateChecker() {
+		return certificateChecker;
+	}
+
+	public void setCertificateChecker(final CertificateChecker certificateChecker) {
+		this.certificateChecker = certificateChecker;
 	}
 
 	@Override

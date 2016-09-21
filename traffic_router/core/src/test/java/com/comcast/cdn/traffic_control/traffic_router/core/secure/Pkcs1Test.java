@@ -1,6 +1,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.keystore.Pkcs1;
+import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1;
 import org.junit.Test;
 
 import java.math.BigInteger;

@@ -21,8 +21,8 @@ if [ ! -e /opt/tomcat/lib/traffic_router_connector.jar ]; then
 	/bin/ln -s /opt/traffic_router/lib/traffic_router_connector.jar /opt/tomcat/lib/traffic_router_connector.jar
 fi
 
-if [ ! -e /opt/tomcat/lib/traffic_router_keystore.jar ]; then
-	/bin/ln -s /opt/traffic_router/lib/traffic_router_keystore.jar /opt/tomcat/lib/traffic_router_keystore.jar
+if [ ! -e /opt/tomcat/lib/traffic_router_shared.jar ]; then
+	/bin/ln -s /opt/traffic_router/lib/traffic_router_shared.jar /opt/tomcat/lib/traffic_router_shared.jar
 fi
 
 if [ ! -d /opt/traffic_router/webapps/core ]; then

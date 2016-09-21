@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.UnknownHostException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller;
+import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,6 +56,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+
+import javax.management.Attribute;
+import javax.management.ObjectName;
 
 
 public class ConfigHandler {
@@ -138,6 +143,14 @@ public class ConfigHandler {
 					} catch (InterruptedException e) {
 						LOGGER.warn("Interrupted while sleeping between checks of https certificates");
 					}
+				}
+
+				try {
+					final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
+					final Attribute certificateDataList = new Attribute("CertificateDataList", certificateChecker.getCertificateDataList());
+					ManagementFactory.getPlatformMBeanServer().setAttribute(objectName, certificateDataList);
+				} catch (Exception e) {
+					LOGGER.error("Failed to add certificate data list as management MBean! " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
 				}
 
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
