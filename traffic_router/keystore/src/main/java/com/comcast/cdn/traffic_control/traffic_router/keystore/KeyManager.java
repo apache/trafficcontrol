@@ -95,21 +95,6 @@ public class KeyManager extends X509ExtendedKeyManager {
 		return null;
 	}
 
-	private X509Certificate[] reverse(X509Certificate[] x509Certificates) {
-		int low = 0;
-		int high = x509Certificates.length - 1;
-
-		while (low < high) {
-			final X509Certificate tmp = x509Certificates[low];
-			x509Certificates[low] = x509Certificates[high];
-			x509Certificates[high] = tmp;
-			low++;
-			high--;
-		}
-
-		return x509Certificates;
-	}
-
 	@Override
 	public X509Certificate[] getCertificateChain(final String s) {
 		try {
@@ -124,7 +109,7 @@ public class KeyManager extends X509ExtendedKeyManager {
 				}
 			}
 
-			return reverse(x509Certificates);
+			return x509Certificates;
 		} catch (Exception e) {
 			log.error("Failed retrieving certificate chain from keystore for alias '" + s + "' (" + e.getClass().getCanonicalName() + "): " + e.getMessage());
 		}
