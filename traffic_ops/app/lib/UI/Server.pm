@@ -943,14 +943,14 @@ sub postupdate {
 	my $updated   = $self->param("updated");
 	my $host_name = $self->param("host_name");
 	if ( !&is_admin($self) ) {
-		$self->render( text => "Unauthorized.", status => 401, layout => undef );
+		$self->render( text => "Forbidden", status => 403, layout => undef );
 		return;
 	}
 
 	if ( !defined($updated) ) {
 		$self->render(
 			text => "Failed request.  Must provide updated status",
-			status => 500,
+			status => 400,
 			layout => undef
 		);
 		return;
@@ -961,7 +961,7 @@ sub postupdate {
 	if ( !defined $serverid ) {
 		$self->render(
 			text => "Failed request.  Unknown server",
-			status => 500,
+			status => 404,
 			layout => undef
 		);
 		return;
