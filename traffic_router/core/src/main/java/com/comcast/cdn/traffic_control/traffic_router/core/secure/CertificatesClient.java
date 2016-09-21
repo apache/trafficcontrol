@@ -18,7 +18,6 @@ import java.util.List;
 public class CertificatesClient {
 	private static final Logger LOGGER = Logger.getLogger(CertificatesClient.class);
 	private TrafficOpsUtils trafficOpsUtils;
-	private static final String PEM_HEADER_PREFIX = "-----BEGIN";
 	private static final String PEM_FOOTER_PREFIX = "-----END";
 
 	public void refreshData() {
@@ -88,11 +87,6 @@ public class CertificatesClient {
 			if (line.startsWith(PEM_FOOTER_PREFIX)) {
 				encodedPemItems.add(builder.toString());
 				builder.setLength(0);
-				continue;
-			}
-
-			if (line.startsWith(PEM_HEADER_PREFIX)) {
-				continue;
 			}
 
 			builder.append(line);
