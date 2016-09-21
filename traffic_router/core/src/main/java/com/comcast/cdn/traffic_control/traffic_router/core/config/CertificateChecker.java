@@ -1,13 +1,16 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
-import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CertificateChecker {
 	private final static Logger LOGGER = Logger.getLogger(CertificateChecker.class);
-	private final KeyStoreHelper keyStoreHelper = KeyStoreHelper.getInstance();
+	private List<CertificateData> certificateDataList = new ArrayList<>();
 
 	public String getDeliveryServiceType(final JSONObject deliveryServiceJson) {
 		final JSONArray matchsets = deliveryServiceJson.optJSONArray("matchsets");
@@ -35,6 +38,13 @@ public class CertificateChecker {
 		return true;
 	}
 
+	public boolean hasCertificate(final String deliveryServiceId) {
+		return certificateDataList.stream()
+			.filter(cd -> cd.getDeliveryservice().equals(deliveryServiceId))
+			.findFirst()
+			.isPresent();
+	}
+
 	private Boolean deliveryServiceHasValidCertificates(final JSONObject deliveryServicesJson, final String deliveryServiceId) {
 		final JSONObject deliveryServiceJson = deliveryServicesJson.optJSONObject(deliveryServiceId);
 		final JSONObject protocolJson = deliveryServiceJson.optJSONObject("protocol");
@@ -56,10 +66,13 @@ public class CertificateChecker {
 				continue;
 			}
 
-			if (!keyStoreHelper.hasCertificate(domain)) {
-				LOGGER.error("Delivery Service " + deliveryServiceId + " with domain " + domain + " is marked to accept https traffic and does not have a certificate");
-				return false;
+			for (final CertificateData certificateData : certificateDataList) {
+				if (certificateData.getDeliveryservice().equals(deliveryServiceId)) {
+					return true;
+				}
 			}
+			LOGGER.error("No certificate data for https " + deliveryServiceId + " domain " + domain);
+			return false;
 		}
 
 		return true;
@@ -71,5 +84,13 @@ public class CertificateChecker {
 		}
 
 		return protocolJson != null ? protocolJson.optBoolean("acceptHttps", false) : false;
+	}
+
+	public List<CertificateData> getCertificateDataList() {
+		return certificateDataList;
+	}
+
+	public void setCertificateDataList(final List<CertificateData> certificateDataList) {
+		this.certificateDataList = certificateDataList;
 	}
 }

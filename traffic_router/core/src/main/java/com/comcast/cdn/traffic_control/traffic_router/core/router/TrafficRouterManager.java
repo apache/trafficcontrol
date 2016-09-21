@@ -21,6 +21,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import org.apache.log4j.Logger;
@@ -52,6 +53,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private SteeringRegistry steeringRegistry;
 	private ApplicationContext applicationContext;
 	private int apiPort = DEFAULT_API_PORT;
+	private CertificateChecker certificateChecker;
 
 	public NameServer getNameServer() {
 		return nameServer;
@@ -100,7 +102,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry);
+		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry, certificateChecker);
 		tr.setSteeringRegistry(steeringRegistry);
 		synchronized(this) {
 			if (state != null) {
@@ -159,5 +161,13 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 
 	public int getApiPort() {
 		return apiPort;
+	}
+
+	public CertificateChecker getCertificateChecker() {
+		return certificateChecker;
+	}
+
+	public void setCertificateChecker(final CertificateChecker certificateChecker) {
+		this.certificateChecker = certificateChecker;
 	}
 }

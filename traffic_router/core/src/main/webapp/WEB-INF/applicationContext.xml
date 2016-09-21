@@ -81,6 +81,7 @@
 		<property name="geolocationService" ref="maxmindGeolocationService" />
 		<property name="geolocationService6" ref="maxmindGeolocationService" />
 		<property name="steeringRegistry" ref="steeringRegistry" />
+		<property name="certificateChecker" ref="certificateChecker"/>
 	</bean>
 
 	<bean id="federationsRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry"/>
@@ -286,6 +287,7 @@
 
 	<bean name="certificatesPoller" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller" init-method="start">
 		<property name="certificatesClient" ref="certificatesClient"/>
-	</bean>
+		<property name="certificateChecker" ref="certificateChecker"/>
+ 	</bean>
 
 </beans>

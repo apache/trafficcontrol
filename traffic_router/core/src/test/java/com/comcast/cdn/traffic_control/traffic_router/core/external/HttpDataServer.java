@@ -121,13 +121,7 @@ public class HttpDataServer implements HttpHandler {
 
 				// pretend certificates have not been updated
 				if (!receivedCertificatesPost && "api/1.2/cdns/name/thecdn/sslkeys.json".equals(path)) {
-					try {
-						httpExchange.sendResponseHeaders(304, 0);
-					} catch (Exception e) {
-						System.out.println("Failed sending 304!: " + e.getClass().getCanonicalName() + " " + e.getMessage());
-					}
-
-					return;
+					path = path.replace("/sslkeys.json", "/sslkeys-missing-1.json");
 				}
 
 				if (path.contains("CrConfig") && receivedCrConfigPost) {
