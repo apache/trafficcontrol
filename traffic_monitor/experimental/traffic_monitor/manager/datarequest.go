@@ -317,6 +317,11 @@ type Stats struct {
 	QueryIntervalActual int    `json:"Query Interval Actual"`
 	SlowestCache        string `json:"Slowest Cache"`
 	LastQueryInterval   int    `json:"Last Query Interval"`
+	Microthreads        int    `json:"Goroutines"`
+	LastGC              string `json:"Last Garbage Collection"`
+	MemAllocBytes       uint64 `json:"Memory Bytes Allocated"`
+	MemTotalBytes       uint64 `json:"Total Bytes Allocated"`
+	MemSysBytes         uint64 `json:"System Bytes Allocated"`
 }
 
 func getLongestPoll(lastHealthTimes map[enum.CacheName]time.Duration) (enum.CacheName, time.Duration) {
@@ -354,6 +359,11 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.QueryIntervalActual = int(longestPollTime / time.Millisecond)
 	s.QueryIntervalDelta = s.QueryIntervalActual - s.QueryIntervalTarget
 	s.LastQueryInterval = int(math.Max(float64(s.QueryIntervalActual), float64(s.QueryIntervalTarget)))
+	s.Microthreads = runtime.NumGoroutine()
+	s.LastGC = time.Unix(0, int64(memStats.LastGC)).String()
+	s.MemAllocBytes = memStats.Alloc
+	s.MemTotalBytes = memStats.TotalAlloc
+	s.MemSysBytes = memStats.Sys
 
 	return json.Marshal(s)
 }
