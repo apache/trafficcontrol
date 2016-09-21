@@ -642,12 +642,12 @@ sub diff_crconfig_json {
     my @db_cfg_strings    = @$db_cfg_strings;
 
     my @ds_text     = &compare_lists( \@db_ds_strings,     \@disk_ds_strings,     "Section: Delivery Services" );
-    my @loc_text    = &compare_lists( \@db_loc_strings,    \@disk_loc_strings,    "Section: Locations" );
-    my @cs_text     = &compare_lists( \@db_cs_strings,     \@disk_cs_strings,     "Section: Content Servers" );
-    my @csds_text   = &compare_lists( \@db_csds_strings,   \@disk_csds_strings,   "Section: Content Server - Delivery Services" );
-    my @rascal_text = &compare_lists( \@db_rascal_strings, \@disk_rascal_strings, "Section: Rascals" );
-    my @ccr_text    = &compare_lists( \@db_ccr_strings,    \@disk_ccr_strings,    "Section: Content Routers" );
-    my @cfg_text    = &compare_lists( \@db_cfg_strings,    \@disk_cfg_strings,    "Section: Configs" );
+    my @loc_text    = &compare_lists( \@db_loc_strings,    \@disk_loc_strings,    "Section: Edge Cachegroups" );
+    my @cs_text     = &compare_lists( \@db_cs_strings,     \@disk_cs_strings,     "Section: Traffic Servers" );
+    my @csds_text   = &compare_lists( \@db_csds_strings,   \@disk_csds_strings,   "Section: Traffic Server - Delivery Services" );
+    my @rascal_text = &compare_lists( \@db_rascal_strings, \@disk_rascal_strings, "Section: Traffic Monitors" );
+    my @ccr_text    = &compare_lists( \@db_ccr_strings,    \@disk_ccr_strings,    "Section: Traffic Routers" );
+    my @cfg_text    = &compare_lists( \@db_cfg_strings,    \@disk_cfg_strings,    "Section: CDN Configs" );
 
     return ( \@ds_text, \@loc_text, \@cs_text, \@csds_text, \@rascal_text, \@ccr_text, \@cfg_text );
 }
@@ -890,7 +890,7 @@ sub compare_lists {
 
     my @db_only = $list_compare_obj->get_Lonly;
     if ( $#db_only >= 0 ) {
-        push( @compare_text, "    " . $text . " only in 12M:" );
+        push( @compare_text, "    " . $text . " only in Traffic Ops:" );
         foreach my $ds_string (@db_only) {
             push( @compare_text, "        " . $ds_string );
         }
@@ -903,7 +903,7 @@ sub compare_lists {
         }
     }
     if ( $#disk_only < 0 && $#db_only < 0 ) {
-        push( @compare_text, "    " . $text . " is the same." );
+        push( @compare_text, "    " . $text . " are the same." );
     }
     return @compare_text;
 }
