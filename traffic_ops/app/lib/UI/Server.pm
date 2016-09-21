@@ -943,13 +943,13 @@ sub postupdate {
 	my $updated   = $self->param("updated");
 	my $host_name = $self->param("host_name");
 	if ( !&is_admin($self) ) {
-		$self->render_text( "Unauthorized.", status => 401, layout => undef );
+		$self->render( text => "Unauthorized.", status => 401, layout => undef );
 		return;
 	}
 
 	if ( !defined($updated) ) {
-		$self->render_text(
-			"Failed request.  Must provide updated status",
+		$self->render(
+			text => "Failed request.  Must provide updated status",
 			status => 500,
 			layout => undef
 		);
@@ -959,8 +959,8 @@ sub postupdate {
 	# resolve server id
 	my $serverid = $self->db->resultset("Server")->search( { host_name => $host_name } )->get_column('id')->single;
 	if ( !defined $serverid ) {
-		$self->render_text(
-			"Failed request.  Unknown server",
+		$self->render(
+			text => "Failed request.  Unknown server",
 			status => 500,
 			layout => undef
 		);
@@ -973,7 +973,7 @@ sub postupdate {
 		$update_server->update( { upd_pending => $updated } );
 	}
 
-	# $self->render_text("Success", layout=>undef);
+	$self->render( text => "Success", layout=>undef);
 
 }
 
