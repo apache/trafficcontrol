@@ -113,7 +113,7 @@ func processStatResults(results []cache.Result, statHistory StatHistoryThreadsaf
 		log.Debugf("poll %v %v CreateStats start\n", result.PollID, time.Now())
 	}
 
-	newDsStats, newLastKbpsStats, err := ds.CreateStats(statHistory.Get(), toData, combinedStates, lastKbpsStats.Get(), time.Now())
+	newDsStats, newLastKbpsStats, err := ds.CreateStats(statHistory.Get(), toData, combinedStates, lastKbpsStats.Get().Copy(), time.Now())
 
 	for _, result := range results {
 		log.Debugf("poll %v %v CreateStats end\n", result.PollID, time.Now())
