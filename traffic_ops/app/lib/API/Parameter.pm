@@ -80,7 +80,7 @@ sub create {
     }
 
     if ( !&is_oper($self) ) {
-        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+        return $self->forbidden("You must be an admin or oper to perform this operation!");
     }
 
     if ( !defined($params->{parameters}) ) {
@@ -118,6 +118,9 @@ sub create {
                 $self->db->txn_rollback();
                 return $self->alert("secure must 0 or 1, parameter [name:".$param->{name}." , configFile:".$param->{configFile}." , value:".$param->{value}." , secure:".$param->{secure}."]");
             }
+            if ( $param->{secure} != 0 && !&is_admin($self)) {
+                return $self->forbidden("Parameter[name:".$param->{name}." , configFile:".$param->{configFile}." , value:".$param->{value}."] secure=1, You must be an admin to perform this operation!");
+            }
         }
 
         my $find = $self->db->resultset('Parameter')->find(
@@ -152,7 +155,7 @@ sub create {
     $self->db->txn_commit();
     my $response;
     $response->{parameters} = \@new_parameters;
-    return $self->success($response);
+    return $self->success($response, "Create ". scalar(@new_parameters) . " parameters successfully.");
 }
 
 sub edit {
@@ -165,15 +168,15 @@ sub edit {
     }
 
     if ( !&is_oper($self) ) {
-        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+        return $self->forbidden("You must be an admin or oper to perform this operation!");
     }
 
     my $find = $self->db->resultset('Parameter')->find({ id => $id } );
     if ( !defined($find) ) {
-        return $self->alert("parameter [id:".$id."] does not exist.");
+        return $self->not_found("parameter [id:".$id."] does not exist.");
     }
     if ( $find->secure != 0 && !&is_admin($self)) {
-        return $self->alert( { Error => " - You must be an admin to perform this operation!" } );
+        return $self->forbidden("You must be an admin to perform this operation!");
     }
 
     my $name = $params->{name} || $find->name;
@@ -200,7 +203,7 @@ sub edit {
     $response->{value}  = $find->value;
     $response->{secure} = $find->secure;
 
-    return $self->success($response);
+    return $self->success($response, "Parameter was successfully edited.");
 }
 
 sub delete {
@@ -209,12 +212,15 @@ sub delete {
     my $params = $self->req->json;
 
     if ( !&is_oper($self) ) {
-        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+        return $self->forbidden( "You must be an admin or oper to perform this operation!" );
     }
 
     my $find = $self->db->resultset('Parameter')->find({ id => $id } );
     if ( !defined($find) ) {
-        return $self->alert("parameter [id:".$id."] does not exist.");
+        return $self->not_found("parameter [id:".$id."] does not exist.");
+    }
+    if ( $find->secure != 0 && !&is_admin($self)) {
+        return $self->forbidden("You must be an admin to perform this operation!");
     }
 
     my $find_profile = $self->db->resultset('ProfileParameter')->find( { parameter => $id } );
@@ -260,7 +266,7 @@ sub validate {
     $response->{value}  = $find->value;
     $response->{secure} = $find->secure;
 
-    return $self->success($response);
+    return $self->success($response, "Parameter exists.");
 }
 
 1;

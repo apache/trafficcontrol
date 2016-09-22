@@ -177,6 +177,26 @@ Parameter
   | ``>secure``     | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
   +-----------------+---------+--------------------------------------------------------------------------------------+
 
+  
+  **Request Example** ::
+
+    {
+        "parameters":[
+            {
+                "name":"param1",
+                "configFile":"configFile1"
+                "value":"value1",
+                "secure":0,
+            },
+            {
+                "name":"param2",
+                "configFile":"configFile2"
+                "value":"value2",
+                "secure":1,
+            }
+        ]
+    }
+
   **Response Example** ::
 
     {
@@ -246,6 +266,15 @@ Parameter
   +------------------+---------+--------------------------------------------------------------------------------+
   | ``config_file``  | string  | The parameter config_file                                                      |
   +------------------+---------+--------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "name":"param1",
+        "configFile":"configFile1"
+        "value":"value1",
+        "secure":"0",
+    }
 
   **Response Example** ::
 
@@ -342,6 +371,14 @@ Parameter
   +------------------+---------+--------------------------------------------------------------------------------+
   | ``config_file``  | string  | The parameter config_file                                                      |
   +------------------+---------+--------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "name":"param1",
+        "configFile":"configFile1"
+        "value":"value1",
+    }
 
   **Response Example** ::
 

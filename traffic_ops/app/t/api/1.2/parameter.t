@@ -129,9 +129,8 @@ ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'
 		, 'Does the paramters modified return?';
 
 ok $t->put_ok('/api/1.2/parameters/0' => {Accept => 'application/json'} => json => {
-    })->status_is(400)
+    })->status_is(404)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/text" => "parameter [id:0] does not exist." )
 		, 'Does the paramters modified return?';
 
 ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(200)
@@ -203,21 +202,21 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
             'value'      => 'value3',
             'secure'     => '0'
         }]
-    })->status_is(400)
+    })->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/text" => "Error  - You must be an admin or oper to perform this operation!" )
+	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
 		, 'Does the paramters created return?';
 
 ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'} => json => {
-    })->status_is(400)
+    })->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/text" => "Error  - You must be an admin or oper to perform this operation!" )
+	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
 		, 'Does the paramters modified return?';
 
 $para_id = &get_param_id('param1');
-ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(400)
+ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/text" => "Error  - You must be an admin or oper to perform this operation!" )
+	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
 		, 'Does the paramter delete return?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
