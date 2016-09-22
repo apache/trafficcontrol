@@ -46,63 +46,6 @@ func (o *DurationMapThreadsafe) Set(d DurationMap) {
 	o.m.Unlock()
 }
 
-type TimeMapThreadsafe struct {
-	timeMap map[enum.CacheName]time.Time
-	m       *sync.RWMutex
-}
-
-func copyTimeMap(a map[enum.CacheName]time.Time) map[enum.CacheName]time.Time {
-	b := map[enum.CacheName]time.Time{}
-	for k, v := range a {
-		b[k] = v
-	}
-	return b
-}
-
-func NewTimeMapThreadsafe() TimeMapThreadsafe {
-	return TimeMapThreadsafe{m: &sync.RWMutex{}, timeMap: map[enum.CacheName]time.Time{}}
-}
-
-func (o TimeMapThreadsafe) Get() map[enum.CacheName]time.Time {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return copyTimeMap(o.timeMap)
-}
-
-func (o *TimeMapThreadsafe) GetTime(cacheName enum.CacheName) (time.Time, bool) {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	time, ok := o.timeMap[cacheName]
-	return time, ok
-}
-
-func (o *TimeMapThreadsafe) Set(cacheName enum.CacheName, d time.Time) {
-	o.m.Lock()
-	o.timeMap[cacheName] = d
-	o.m.Unlock()
-}
-
-type ResultsThreadsafe struct {
-	r map[enum.CacheName][]cache.Result
-	m *sync.RWMutex
-}
-
-func NewResultsThreadsafe() ResultsThreadsafe {
-	return ResultsThreadsafe{m: &sync.RWMutex{}, r: map[enum.CacheName][]cache.Result{}}
-}
-
-func (o *ResultsThreadsafe) Get(cacheName enum.CacheName) []cache.Result {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return o.r[cacheName]
-}
-
-func (o *ResultsThreadsafe) Set(cacheName enum.CacheName, newR []cache.Result) {
-	o.m.Lock()
-	o.r[cacheName] = newR
-	o.m.Unlock()
-}
-
 // StartHealthResultManager starts the goroutine which listens for health results.
 // Note this polls the brief stat endpoint from ATS Astats, not the full stats.
 // This poll should be quicker and less computationally expensive for ATS, but
@@ -154,7 +97,7 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 	}
 	toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy()
-	monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
+	monitorConfigCopy := monitorConfig.Get()
 	for _, healthResult := range results {
 		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
