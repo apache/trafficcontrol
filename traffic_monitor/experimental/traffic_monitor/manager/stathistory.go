@@ -103,7 +103,7 @@ func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates p
 	return statHistory, lastStatDurations, lastKbpsStats, dsStats
 }
 
-func processStatResults(results []cache.Result, statHistory StatHistoryThreadsafe, combinedStates peer.Crstates, lastKbpsStats StatsLastKbpsThreadsafe, toData todata.TOData, errorCount UintThreadsafe, dsStats DSStatsThreadsafe, lastStatEndTimes map[enum.CacheName]time.Time, lastStatDurations DurationMapThreadsafe) {
+func processStatResults(results []cache.Result, statHistory StatHistoryThreadsafe, combinedStates peer.Crstates, lastKbpsStats StatsLastKbpsThreadsafe, toData todata.TOData, errorCount UintThreadsafe, dsStats DSStatsThreadsafe, lastStatEndTimes map[enum.CacheName]time.Time, lastStatDurationsThreadsafe DurationMapThreadsafe) {
 	for _, result := range results {
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
 		statHistory.Add(result)
@@ -128,14 +128,16 @@ func processStatResults(results []cache.Result, statHistory StatHistoryThreadsaf
 	}
 
 	endTime := time.Now()
+	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
 	for _, result := range results {
 		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.Id)]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations.Set(enum.CacheName(result.Id), d) // TODO fix to acquire the mutex once
+			lastStatDurations[enum.CacheName(result.Id)] = d
 		}
 		lastStatEndTimes[enum.CacheName(result.Id)] = endTime
 
 		// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
 		result.PollFinished <- result.PollID
 	}
+	lastStatDurationsThreadsafe.Set(lastStatDurations)
 }
