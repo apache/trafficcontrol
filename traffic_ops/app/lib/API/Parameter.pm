@@ -119,6 +119,7 @@ sub create {
                 return $self->alert("secure must 0 or 1, parameter [name:".$param->{name}." , configFile:".$param->{configFile}." , value:".$param->{value}." , secure:".$param->{secure}."]");
             }
             if ( $param->{secure} != 0 && !&is_admin($self)) {
+                $self->db->txn_rollback();
                 return $self->forbidden("Parameter[name:".$param->{name}." , configFile:".$param->{configFile}." , value:".$param->{value}."] secure=1, You must be an admin to perform this operation!");
             }
         }
