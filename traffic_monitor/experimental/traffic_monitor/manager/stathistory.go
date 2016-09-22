@@ -13,42 +13,7 @@ import (
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
-// This could be made lock-free, if the performance was necessary
-// TODO add separate locks for Caches and Deliveryservice maps?
-type StatHistoryThreadsafe struct {
-	statHistory map[enum.CacheName][]cache.Result
-	m           *sync.RWMutex
-	max         uint64
-}
-
-func NewStatHistoryThreadsafe(maxHistory uint64) StatHistoryThreadsafe {
-	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: map[enum.CacheName][]cache.Result{}, max: maxHistory}
-}
-
-func (t *StatHistoryThreadsafe) GetStat(stat enum.CacheName) []cache.Result {
-	t.m.RLock()
-	defer t.m.RUnlock()
-	return copyStat(t.statHistory[stat])
-}
-
-func (t *StatHistoryThreadsafe) Get() map[enum.CacheName][]cache.Result {
-	t.m.RLock()
-	defer t.m.RUnlock()
-	return copyStats(t.statHistory)
-}
-
-func (t *StatHistoryThreadsafe) Add(stat cache.Result) {
-	t.m.Lock()
-	t.statHistory[enum.CacheName(stat.Id)] = pruneHistory(append(t.statHistory[enum.CacheName(stat.Id)], stat), t.max)
-	t.m.Unlock()
-}
-
-func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
-	if uint64(len(history)) > limit {
-		history = history[1:]
-	}
-	return history
-}
+type StatHistory map[enum.CacheName][]cache.Result
 
 func copyStat(a []cache.Result) []cache.Result {
 	b := make([]cache.Result, len(a), len(a))
@@ -58,12 +23,50 @@ func copyStat(a []cache.Result) []cache.Result {
 	return b
 }
 
-func copyStats(a map[enum.CacheName][]cache.Result) map[enum.CacheName][]cache.Result {
-	b := map[enum.CacheName][]cache.Result{}
+func (a StatHistory) Copy() StatHistory {
+	b := StatHistory{}
 	for k, v := range a {
 		b[k] = copyStat(v)
 	}
 	return b
+}
+
+// This could be made lock-free, if the performance was necessary
+// TODO add separate locks for Caches and Deliveryservice maps?
+type StatHistoryThreadsafe struct {
+	statHistory *StatHistory
+	m           *sync.RWMutex
+	max         uint64
+}
+
+func (h StatHistoryThreadsafe) Max() uint64 {
+	return h.max
+}
+
+func NewStatHistoryThreadsafe(maxHistory uint64) StatHistoryThreadsafe {
+	h := StatHistory{}
+	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: &h, max: maxHistory}
+}
+
+// Get returns the StatHistory. Callers MUST NOT modify. If mutation is necessary, call StatHistory.Copy()
+func (t *StatHistoryThreadsafe) Get() StatHistory {
+	t.m.RLock()
+	defer t.m.RUnlock()
+	return *t.statHistory
+}
+
+// Set sets the internal StatHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
+func (t *StatHistoryThreadsafe) Set(v StatHistory) {
+	t.m.Lock()
+	*t.statHistory = v
+	t.m.Unlock()
+}
+
+func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
+	if uint64(len(history)) > limit {
+		history = history[1:]
+	}
+	return history
 }
 
 // StartStatHistoryManager fetches the full statistics data from ATS Astats. This includes everything needed for all calculations, such as Delivery Services. This is expensive, though, and may be hard on ATS, so it should poll less often.
@@ -103,17 +106,21 @@ func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates p
 	return statHistory, lastStatDurations, lastKbpsStats, dsStats
 }
 
-func processStatResults(results []cache.Result, statHistory StatHistoryThreadsafe, combinedStates peer.Crstates, lastKbpsStats StatsLastKbpsThreadsafe, toData todata.TOData, errorCount UintThreadsafe, dsStats DSStatsThreadsafe, lastStatEndTimes map[enum.CacheName]time.Time, lastStatDurationsThreadsafe DurationMapThreadsafe) {
+// processStatResults processes the given results, creating and setting DSStats, LastKbps, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
+func processStatResults(results []cache.Result, statHistoryThreadsafe StatHistoryThreadsafe, combinedStates peer.Crstates, lastKbpsStats StatsLastKbpsThreadsafe, toData todata.TOData, errorCount UintThreadsafe, dsStats DSStatsThreadsafe, lastStatEndTimes map[enum.CacheName]time.Time, lastStatDurationsThreadsafe DurationMapThreadsafe) {
+	statHistory := statHistoryThreadsafe.Get().Copy()
+	maxStats := statHistoryThreadsafe.Max()
 	for _, result := range results {
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		statHistory.Add(result)
+		statHistory[enum.CacheName(result.Id)] = pruneHistory(append(statHistory[enum.CacheName(result.Id)], result), maxStats)
 	}
+	statHistoryThreadsafe.Set(statHistory)
 
 	for _, result := range results {
 		log.Debugf("poll %v %v CreateStats start\n", result.PollID, time.Now())
 	}
 
-	newDsStats, newLastKbpsStats, err := ds.CreateStats(statHistory.Get(), toData, combinedStates, lastKbpsStats.Get().Copy(), time.Now())
+	newDsStats, newLastKbpsStats, err := ds.CreateStats(statHistory, toData, combinedStates, lastKbpsStats.Get().Copy(), time.Now())
 
 	for _, result := range results {
 		log.Debugf("poll %v %v CreateStats end\n", result.PollID, time.Now())
