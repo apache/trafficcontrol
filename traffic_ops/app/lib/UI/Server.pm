@@ -363,7 +363,7 @@ sub check_server_input {
 
 	my $ip_used =
 		$self->db->resultset('Server')
-			->search( { -and => [ ip_address => $paramHashRef->{'ip_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+			->search( { -and => [ 'me.ip_address' => $paramHashRef->{'ip_address'}, 'profile.name' => $paramHashRef->{'profile'}, 'me.id' => { '!=' => $id } ] }, { join => [ 'profile' ] })->single();
 	if ( $ip_used ) {
 		$err .= $paramHashRef->{'ip_address'} . " is already being used by a server with the same profile" . $sep;
 	}
@@ -390,7 +390,7 @@ sub check_server_input {
 	if ( defined( $paramHashRef->{'ip6_address'} ) && $paramHashRef->{'ip6_address'} ne "" ) {
 		my $ip6_used =
 			$self->db->resultset('Server')
-				->search( { -and => [ ip6_address => $paramHashRef->{'ip6_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+				->search( { -and => [ 'me.ip6_address' => $paramHashRef->{'ip6_address'}, 'profile.name' => $paramHashRef->{'profile'}, 'me.id' => { '!=' => $id } ] }, { join => [ 'profile' ] })->single();
 		if ( $ip6_used ) {
 			$err .= $paramHashRef->{'ip6_address'} . " is already being used by a server with the same profile" . $sep;
 		}
