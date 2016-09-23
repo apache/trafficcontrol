@@ -175,6 +175,98 @@ sub copy {
     return $self->success($response);
 }
 
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $profile = $self->db->resultset('Profile')->find( { id => $id } );
+	if ( !defined($profile) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	my $name = $params->{name};
+	if ( !defined($name) ) {
+		return $self->alert("profile 'name' is not given.");
+	}
+	if ( $name eq "" ) {
+		return $self->alert("profile 'name' can't be null.");
+	}
+	if ( $name =~ /\s/ ) {
+		return $self->alert("Profile name cannot contain space(s).");
+	}
+	if ( $profile->name ne $name ) {
+		my $existing = $self->db->resultset('Profile')->find( { name => $name } );
+		if ( $existing ) {
+			return $self->alert("a profile with name " . $name . " already exists." );
+		}
+	}
+
+	my $description = $params->{description};
+	if ( !defined($description) ) {
+		return $self->alert("profile 'description' is not given.");
+	}
+	if ( $description eq "" ) {
+		return $self->alert("profile 'description' can't be null.");
+	}
+	if ( $profile->description ne $description ) {
+		my $existing = $self->db->resultset('Profile')->find( { description => $description } );
+		if ( $existing ) {
+			return $self->alert("a profile with the exact same description already exists." );
+		}
+	}
+
+	$profile->name($name);
+	$profile->description($description);
+	$profile->update();
+
+	&log( $self, "Update profile with name: $name", "APICHANGE" );
+
+	my $response;
+	$response->{id} = $id;
+	$response->{name} = $name;
+	$response->{description} = $description;
+	return $self->success($response, "Profile was updated: " . $id);
+}
+
+sub delete {
+	my $self   = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $profile = $self->db->resultset('Profile')->find( { id => $id } );
+	if ( !defined($profile) ) {
+		return $self->not_found();
+	}
+
+	my $server = $self->db->resultset('Server')->find( { profile => $profile->id } );
+	if ( defined($server) ) {
+		return $self->alert("the profile is used by some server(s).");
+	}
+	my $ds = $self->db->resultset('Deliveryservice')->find( { profile => $profile->id } );
+	if ( defined($ds) ) {
+		return $self->alert("the profile is used by some deliveryservice(s).");
+	}
+
+	my $profile_name = $profile->name;
+	$profile->delete();
+
+	&log( $self, "Delete profile with id: " . $id . " and name: " . $profile_name, "APICHANGE" );
+
+	return $self->success_message("Profile was deleted.");
+}
+
 sub availableprofile {
 	my $self = shift;
 	my @data;
