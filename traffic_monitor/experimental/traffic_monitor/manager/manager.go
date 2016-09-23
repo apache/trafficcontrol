@@ -32,8 +32,7 @@ type StaticAppData struct {
 // Kicks off the pollers and handlers
 //
 func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
-	toSession := towrap.ITrafficOpsSession(nil)
-
+	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
 	counters := fetcher.Counters{
 		Success: gmx.NewCounter("fetchSuccess"),
 		Fail:    gmx.NewCounter("fetchFail"),

@@ -1,34 +1,49 @@
 package trafficopswrapper
 
 import (
-	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+	"fmt"
 	"sync"
+
+	to "github.com/Comcast/traffic_control/traffic_ops/client"
 )
 
 type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
-	TrafficMonitorConfigMap(cdn string) (*traffic_ops.TrafficMonitorConfigMap, error)
+	TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error)
+	Set(session *to.Session)
 }
 
 type TrafficOpsSessionThreadsafe struct {
-	session *traffic_ops.Session
+	session **to.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
 	m       *sync.Mutex
 }
 
-func NewTrafficOpsSessionThreadsafe(s *traffic_ops.Session) TrafficOpsSessionThreadsafe {
-	return TrafficOpsSessionThreadsafe{s, &sync.Mutex{}}
+func NewTrafficOpsSessionThreadsafe(s *to.Session) TrafficOpsSessionThreadsafe {
+	return TrafficOpsSessionThreadsafe{&s, &sync.Mutex{}}
 }
 
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	s.m.Lock()
-	b, e := s.session.CRConfigRaw(cdn)
+	if s.session == nil || *s.session == nil {
+		return nil, fmt.Errorf("nil session")
+	}
+	b, e := (*s.session).CRConfigRaw(cdn)
 	s.m.Unlock()
 	return b, e
 }
 
-func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*traffic_ops.TrafficMonitorConfigMap, error) {
+func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error) {
 	s.m.Lock()
-	d, e := s.session.TrafficMonitorConfigMap(cdn)
+	if s.session == nil || *s.session == nil {
+		return nil, fmt.Errorf("nil session")
+	}
+	d, e := (*s.session).TrafficMonitorConfigMap(cdn)
 	s.m.Unlock()
 	return d, e
+}
+
+func (s TrafficOpsSessionThreadsafe) Set(session *to.Session) {
+	s.m.Lock()
+	*s.session = session
+	s.m.Unlock()
 }
