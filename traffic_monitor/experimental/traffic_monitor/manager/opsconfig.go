@@ -91,7 +91,7 @@ func opsConfigManagerListen(opsConfig OpsConfigThreadsafe, opsConfigChannel <-ch
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
 				continue
 			}
-			toSession = towrap.NewTrafficOpsSessionThreadsafe(realToSession)
+			toSession.Set(realToSession)
 
 			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
 				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
