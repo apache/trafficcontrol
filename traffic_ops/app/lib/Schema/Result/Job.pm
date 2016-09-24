@@ -38,39 +38,33 @@ __PACKAGE__->table("job");
 
 =head2 object_type
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 48
 
 =head2 object_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 keyword
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 parameters
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 asset_url
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 512
 
 =head2 asset_type
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 status
 
@@ -120,17 +114,17 @@ __PACKAGE__->add_columns(
   "agent",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "object_type",
-  { data_type => "varchar", is_nullable => 1, size => 48 },
+  { data_type => "text", is_nullable => 1 },
   "object_name",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "keyword",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "parameters",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "asset_url",
-  { data_type => "varchar", is_nullable => 0, size => 512 },
+  { data_type => "text", is_nullable => 0 },
   "asset_type",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "status",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "start_time",
@@ -250,8 +244,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:T5i3uwvyFcJs8DFwcTN2fQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fxLDNguat9DZz5WKrRH1kw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

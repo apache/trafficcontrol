@@ -32,9 +32,8 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 xml_id
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 active
 
@@ -64,21 +63,18 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 http_bypass_fqdn
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 255
 
 =head2 dns_bypass_ip
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 dns_bypass_ip6
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 dns_bypass_ttl
 
@@ -87,9 +83,8 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 org_server_fqdn
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 255
 
 =head2 type
 
@@ -126,21 +121,18 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 long_desc
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 long_desc_1
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 long_desc_2
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 max_dns_answers
 
@@ -150,25 +142,23 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 info_url
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 255
 
 =head2 miss_lat
 
-  data_type: 'numeric'
+  data_type: 'double precision'
   is_nullable: 1
 
 =head2 miss_long
 
-  data_type: 'numeric'
+  data_type: 'double precision'
   is_nullable: 1
 
 =head2 check_path
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 255
 
 =head2 last_updated
 
@@ -202,39 +192,33 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 edge_header_rewrite
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 2048
 
 =head2 origin_shield
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 mid_header_rewrite
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 2048
 
 =head2 regex_remap
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 cacheurl
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 remap_text
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 2048
 
 =head2 multi_site_origin
 
@@ -243,15 +227,13 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 display_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 tr_response_headers
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 initial_dispersion
 
@@ -261,15 +243,13 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 dns_bypass_cname
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 255
 
 =head2 tr_request_headers
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 regional_geo_blocking
 
@@ -284,9 +264,8 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 geo_limit_countries
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 750
 
 =head2 logs_enabled
 
@@ -300,9 +279,8 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 geolimit_redirect_url
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 255
 
 =cut
 
@@ -315,7 +293,7 @@ __PACKAGE__->add_columns(
     sequence          => "deliveryservice_id_seq",
   },
   "xml_id",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "active",
   { data_type => "smallint", is_nullable => 0 },
   "dscp",
@@ -327,15 +305,15 @@ __PACKAGE__->add_columns(
   "geo_limit",
   { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "http_bypass_fqdn",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "text", is_nullable => 1 },
   "dns_bypass_ip",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "dns_bypass_ip6",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "dns_bypass_ttl",
   { data_type => "bigint", is_nullable => 1 },
   "org_server_fqdn",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "text", is_nullable => 1 },
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "profile",
@@ -349,21 +327,21 @@ __PACKAGE__->add_columns(
   "global_max_tps",
   { data_type => "bigint", is_nullable => 1 },
   "long_desc",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "long_desc_1",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "long_desc_2",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "max_dns_answers",
   { data_type => "bigint", default_value => 0, is_nullable => 1 },
   "info_url",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "text", is_nullable => 1 },
   "miss_lat",
-  { data_type => "numeric", is_nullable => 1 },
+  { data_type => "double precision", is_nullable => 1 },
   "miss_long",
-  { data_type => "numeric", is_nullable => 1 },
+  { data_type => "double precision", is_nullable => 1 },
   "check_path",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -380,41 +358,41 @@ __PACKAGE__->add_columns(
   "range_request_handling",
   { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "edge_header_rewrite",
-  { data_type => "varchar", is_nullable => 1, size => 2048 },
+  { data_type => "text", is_nullable => 1 },
   "origin_shield",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "mid_header_rewrite",
-  { data_type => "varchar", is_nullable => 1, size => 2048 },
+  { data_type => "text", is_nullable => 1 },
   "regex_remap",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "cacheurl",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "remap_text",
-  { data_type => "varchar", is_nullable => 1, size => 2048 },
+  { data_type => "text", is_nullable => 1 },
   "multi_site_origin",
   { data_type => "smallint", is_nullable => 1 },
   "display_name",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "tr_response_headers",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "initial_dispersion",
   { data_type => "bigint", default_value => 1, is_nullable => 1 },
   "dns_bypass_cname",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "text", is_nullable => 1 },
   "tr_request_headers",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "regional_geo_blocking",
   { data_type => "smallint", is_nullable => 0 },
   "geo_provider",
   { data_type => "smallint", default_value => 0, is_nullable => 1 },
   "geo_limit_countries",
-  { data_type => "varchar", is_nullable => 1, size => 750 },
+  { data_type => "text", is_nullable => 1 },
   "logs_enabled",
   { data_type => "smallint", is_nullable => 1 },
   "multi_site_origin_algorithm",
   { data_type => "smallint", is_nullable => 1 },
   "geolimit_redirect_url",
-  { data_type => "varchar", is_nullable => 1, size => 255 },
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -433,7 +411,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_28672_ds_id_unique>
+=head2 C<idx_37254_ds_id_unique>
 
 =over 4
 
@@ -443,9 +421,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28672_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_37254_ds_id_unique", ["id"]);
 
-=head2 C<idx_28672_ds_name_unique>
+=head2 C<idx_37254_ds_name_unique>
 
 =over 4
 
@@ -455,7 +433,7 @@ __PACKAGE__->add_unique_constraint("idx_28672_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28672_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_37254_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -625,7 +603,7 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zK/6hgR8yYD0BnEUaUbJXg
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BYh7gNfayk/3Shm81W2Hew
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

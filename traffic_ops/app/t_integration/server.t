@@ -75,7 +75,7 @@ foreach my $server ( @{ $servers->{response} } ) {
 
 	if ( !$type_done{ $server->{type} } ) {
 
-		# diag Dumper($server);
+		#diag Dumper($server);
 		diag "Testing type " . $server->{type} . " with " . $server->{hostName};
 
 		# these are optional, show up as undef in json and '' in html
@@ -114,7 +114,7 @@ foreach my $server ( @{ $servers->{response} } ) {
 			->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 		$server->{router_host_name} = "UPDATED";
-		diag '/server/' . $server->{id};
+		#diag '/server/' . $server->{id};
 		$t->post_ok(
 			      '/server/'
 				. $server->{id}
@@ -142,6 +142,8 @@ foreach my $server ( @{ $servers->{response} } ) {
 				ilo_password     => $server->{iloPassword},
 				router_host_name => $server->{routerHostName},
 				router_port_name => $server->{routerPortName},
+				https_port       => $server->{httpsPort},
+				status           => $server->{status},
 				}
 		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -163,7 +165,7 @@ my $header =
 # Good Test
 my $content = join( "\n",
 	$header,
-	"good-host,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE,EDGE1_CDN1_421_SSL,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
+	"good-host,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
 );
 
 &build_tmpfile($content);
@@ -177,7 +179,7 @@ $t->post_ok(
 # Bad 'Type' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,EDGE1_CDN1_421_SSL,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
 );
 
 &build_tmpfile($content);
@@ -189,7 +191,7 @@ $t->post_ok(
 # Bad 'Profile' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago,plocation-chi-1,rack33,EDGE,EDGE1_CDN1_421_SSL-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago,plocation-chi-1,rack33,EDGE,1-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
 );
 
 &build_tmpfile($content);
@@ -201,14 +203,14 @@ $t->post_ok(
 # Bad 'Cache Group' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,EDGE1_CDN1_421_SSL,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
 );
 
 #----------------------------
 # Bad 'Physical Location' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,EDGE1_CDN1_421_SSL,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
 );
 
 &build_tmpfile($content);
