@@ -240,7 +240,7 @@ ok $t->post_ok(
 		'ds.dns_bypass_cname'            => 'updateby.knutsel.com',
 		'ds.dns_bypass_ttl'              => '31',
 		'ds.dscp'                        => '41',
-		'ds.geo_limit'                   => '2',
+		'ds.geo_limit'                   => '1',
 		'ds.geo_limit_countries'         => '',
 		'ds.geo_provider'                => '1',
 		'ds.global_max_mbps'             => '4T',
