@@ -270,7 +270,7 @@ sub checkNamedValues {
 			.= $errorLineDelim . "[LINE #:" . $lineNumber . "]<span style='color:blue;'>TYPE NOT VALID[" . $enteredType . "] CASE SENSITIVE.</span>";
 	}
 
-	if ( !exists $profileHashRef->{$enteredProfile} ) {
+	if ( !exists $profileHashRef->{$enteredProfile} && $enteredProfile !~ /\d+/) {
 		$processCSVErrors
 			.= $errorLineDelim . "[LINE #:" . $lineNumber . "]<span style='color:blue;'>PROFILE NOT VALID[" . $enteredProfile . "] CASE SENSITIVE.</span>";
 	}
