@@ -78,7 +78,7 @@ ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( su
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server1",
 			"domainName" => "example-domain.com",
-			"cachegroup" => "cg1-mid-northeast",
+			"cachegroup" => "cg2-mid-northwest",
 			"cdnName" => "cdn1",
 			"ipAddress" => "10.74.27.194",
 			"interfaceName" => "bond0",
@@ -94,7 +94,7 @@ ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => js
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server2",
 			"domainName" => "example-domain.com",
-			"cachegroup" => "mid-northeast-group",
+			"cachegroup" => "cg2-mid-northwest",
 			"cdnName" => "cdn1",
 			"ipAddress" => "10.74.27.194",
 			"interfaceName" => "bond0",
@@ -110,7 +110,7 @@ ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => js
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server3",
 			"domainName" => "example-domain.com",
-			"cachegroup" => "cg1-mid-northeast",
+			"cachegroup" => "cg2-mid-northwest",
 			"cdnName" => "cdn1",
 			"ipAddress" => "10.74.27.85",
 			"interfaceName" => "bond0",
@@ -128,7 +128,7 @@ ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => js
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server3",
 			"domainName" => "example-domain.com",
-			"cachegroup" => "mid-northeast-group",
+			"cachegroup" => "cg2-mid-northwest",
 			"cdnName" => "cdn1",
 			"ipAddress" => "10.74.27.77",
 			"interfaceName" => "bond0",
