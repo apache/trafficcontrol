@@ -71,7 +71,8 @@ sub gen_crconfig_json {
             select => [ 'cdn.id', 'me.profile', 'me.type', 'profile.id', 'type.id' ],
             join   => 'cdn',
             prefetch => [ 'profile', 'type' ],
-            distinct => 1
+            distinct => 1,
+            group_by => [ 'type.name', 'cdn.id', 'me.profile', 'me.type', 'profile.id', 'type.id'],
         }
     );
 

@@ -460,7 +460,12 @@ sub update {
 	#===
 
 
-	my $server_status = $self->db->resultset('Status')->search( { id => $self->param('status') } )->get_column('name')->single();
+	my $server_status;
+	if  ( $self->param('status') =~ /\d+/ ) {
+		$server_status = $self->db->resultset('Status')->search( { id => $self->param('status') } )->get_column('name')->single();
+	} else {
+		$server_status = $self->param('status');
+	}
 	my $offline_reason = &cgi_params_to_param_hash_ref($self)->{'offline_reason'};
 
 	if ($server_status ne "OFFLINE" && $server_status ne "ADMIN_DOWN") {
