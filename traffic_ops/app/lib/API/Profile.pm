@@ -194,14 +194,8 @@ sub update {
 	}
 
 	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("profile 'name' is not given.");
-	}
-	if ( $name eq "" ) {
-		return $self->alert("profile 'name' can't be null.");
-	}
-	if ( $name =~ /\s/ ) {
-		return $self->alert("Profile name cannot contain space(s).");
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
 	}
 	if ( $profile->name ne $name ) {
 		my $existing = $self->db->resultset('Profile')->find( { name => $name } );
@@ -211,11 +205,8 @@ sub update {
 	}
 
 	my $description = $params->{description};
-	if ( !defined($description) ) {
-		return $self->alert("profile 'description' is not given.");
-	}
-	if ( $description eq "" ) {
-		return $self->alert("profile 'description' can't be null.");
+	if ( !defined($description) || $description eq "" ) {
+		return $self->alert("profile 'description' is required.");
 	}
 	if ( $profile->description ne $description ) {
 		my $existing = $self->db->resultset('Profile')->find( { description => $description } );
@@ -228,7 +219,7 @@ sub update {
 	$profile->description($description);
 	$profile->update();
 
-	&log( $self, "Update profile with name: $name", "APICHANGE" );
+	&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
 
 	my $response;
 	$response->{id} = $id;
