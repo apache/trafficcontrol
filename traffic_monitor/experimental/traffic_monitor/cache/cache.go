@@ -38,6 +38,7 @@ func (h Handler) Precompute() bool {
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
+	MaxBytes             int64
 	Errors               []error
 	Reporting            bool
 }
@@ -150,6 +151,10 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 		log.Warnf("addkbps %s procnetdev empty\n", id)
 	}
 
+	if result.Astats.System.InfSpeed == 0 {
+		log.Warnf("addkbps %s inf.speed empty\n", id)
+	}
+
 	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
 
 	if err != nil {
@@ -201,6 +206,8 @@ func (handler Handler) precompute(result Result) Result {
 		result.PrecomputedData.OutBytes = 0
 		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
+
+	result.PrecomputedData.MaxBytes = int64(result.Astats.System.InfSpeed)
 
 	for stat, value := range result.Astats.Ats {
 		var err error

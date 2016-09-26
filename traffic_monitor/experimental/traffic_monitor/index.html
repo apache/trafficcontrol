@@ -116,6 +116,7 @@
 			 setInterval(getCacheCount, 4755);
 			 setInterval(getCacheAvailableCount, 4800);
 			 setInterval(getBandwidth, 4621);
+			 setInterval(getBandwidthCapacity, 4591);
 			 setInterval(getCacheDownCount, 4832);
 			 setInterval(getVersion, 10007); // change to retry on failure, and only do on startup
 			 setInterval(getTrafficOpsUri, 10019); // change to retry on failure, and only do on startup
@@ -160,6 +161,12 @@
 		 function getBandwidth() {
 			 ajax("/api/bandwidth-kbps", function(r) {
 				 document.getElementById("bandwidth").innerHTML = parseFloat(r).toFixed(2);
+			 });
+		 }
+
+		 function getBandwidthCapacity() {
+			 ajax("/api/bandwidth-capacity", function(r) {
+				 document.getElementById("bandwidth-capacity").innerHTML = parseInt(r);
 			 });
 		 }
 
@@ -399,7 +406,7 @@
 		<table id="top-bar" width="100%">
 			<tr>
 				<td> Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </td>
-				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-max">∞</span> </td>
+				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> </td>
 				<td>Source: <span id="source-uri"></span></td>
 				<td><span id="version">traffic_monitor</span></td>
 			</tr>
@@ -426,6 +433,7 @@
 				<li class="endpoint"><a href="/api/traffic-ops-uri">/api/traffic-ops-uri</a></li>
 				<li class="endpoint"><a href="/api/cache-statuses">/api/cache-statuses</a></li>
 				<li class="endpoint"><a href="/api/bandwidth-kbps">/api/bandwidth-kbps</a></li>
+				<li class="endpoint"><a href="/api/bandwidth-capacity">/api/bandwidth-capacity</a></li>
 			</ul>
 		</div>
 

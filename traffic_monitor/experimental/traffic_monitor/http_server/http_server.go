@@ -47,6 +47,7 @@ func (s Server) endpoints() (map[string]http.HandlerFunc, error) {
 		"/api/traffic-ops-uri":       s.dataRequestFunc(APITrafficOpsURI),
 		"/api/cache-statuses":        s.dataRequestFunc(APICacheStates),
 		"/api/bandwidth-kbps":        s.dataRequestFunc(APIBandwidthKbps),
+		"/api/bandwidth-capacity":    s.dataRequestFunc(APIBandwidthCapacity),
 		"/":             handleRoot,
 		"/sorttable.js": handleSortableJs,
 	}, nil
@@ -133,6 +134,7 @@ const (
 	APITrafficOpsURI
 	APICacheStates
 	APIBandwidthKbps
+	APIBandwidthCapacity
 )
 
 type Format int
