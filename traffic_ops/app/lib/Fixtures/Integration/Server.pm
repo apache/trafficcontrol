@@ -43,6 +43,7 @@ my %definition_for = (
 			ip_address => '10.10.2.2',
 			ip_gateway => '10.10.2.1',
 			tcp_port => '80',
+			https_port => 443,
 		},
 	},
 	## id => 2
@@ -80,6 +81,7 @@ my %definition_for = (
 			interface_name => 'bond0',
 			ip6_address => '2033:D0D0:3300::2:3/64',
 			mgmt_ip_address => '',
+			https_port => 443,
 		},
 	},
 	## id => 3
@@ -117,6 +119,7 @@ my %definition_for = (
 			ilo_ip_address => '172.16.2.8',
 			ip6_gateway => '2033:D0D0:3300::2:1',
 			ip_gateway => '10.10.2.1',
+			https_port => 443,
 		},
 	},
 	## id => 4
@@ -154,6 +157,7 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 			status => '6',
 			xmpp_passwd => 'X',
+			https_port => 443,
 		},
 	},
 	## id => 5
@@ -191,6 +195,7 @@ my %definition_for = (
 			ip6_gateway => '2033:D0D0:3300::2:1',
 			status => '6',
 			xmpp_passwd => 'X',
+			https_port => 443,
 		},
 	},
 	## id => 6
@@ -228,6 +233,7 @@ my %definition_for = (
 			type => '13',
 			cdn_id => '2',
 			ilo_ip_netmask => '255.255.255.0',
+			https_port => 443,
 		},
 	},
 	## id => 7
@@ -265,6 +271,7 @@ my %definition_for = (
 			domain_name => 'chi.kabletown.net',
 			ilo_ip_netmask => '255.255.255.0',
 			ilo_username => '',
+			https_port => 443,
 		},
 	},
 	## id => 8
@@ -302,6 +309,7 @@ my %definition_for = (
 			mgmt_ip_gateway => '',
 			cdn_id => '2',
 			type => '13',
+			https_port => 443,
 		},
 	},
 	## id => 9
@@ -339,6 +347,7 @@ my %definition_for = (
 			domain_name => 'chi.kabletown.net',
 			xmpp_id => 'atsec-chi-08-dummyxmpp',
 			xmpp_passwd => 'X',
+			https_port => 443,
 		},
 	},
 	## id => 10
@@ -376,6 +385,7 @@ my %definition_for = (
 			router_port_name => '5',
 			status => '6',
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 11
@@ -413,6 +423,7 @@ my %definition_for = (
 			phys_location => '5',
 			tcp_port => '80',
 			ip_gateway => '10.10.5.1',
+			https_port => 443,
 		},
 	},
 	## id => 12
@@ -450,6 +461,7 @@ my %definition_for = (
 			interface_name => 'bond0',
 			last_updated => '2015-12-10 15:44:37',
 			xmpp_passwd => 'X',
+			https_port => 443,
 		},
 	},
 	## id => 13
@@ -487,6 +499,7 @@ my %definition_for = (
 			ip_gateway => '10.10.5.1',
 			router_port_name => '5',
 			tcp_port => '80',
+			https_port => 443,
 		},
 	},
 	## id => 14
@@ -524,6 +537,7 @@ my %definition_for = (
 			mgmt_ip_netmask => '',
 			xmpp_id => 'atsec-den-04-dummyxmpp',
 			ilo_password => '',
+			https_port => 443,
 		},
 	},
 	## id => 15
@@ -561,6 +575,7 @@ my %definition_for = (
 			mgmt_ip_netmask => '',
 			phys_location => '6',
 			rack => 'RR 119.02',
+			https_port => 443,
 		},
 	},
 	## id => 16
@@ -598,6 +613,7 @@ my %definition_for = (
 			interface_mtu => '9000',
 			mgmt_ip_netmask => '',
 			type => '13',
+			https_port => 443,
 		},
 	},
 	## id => 17
@@ -635,6 +651,7 @@ my %definition_for = (
 			phys_location => '6',
 			upd_pending => '0',
 			ilo_ip_gateway => '172.16.5.1',
+			https_port => 443,
 		},
 	},
 	## id => 18
@@ -672,6 +689,7 @@ my %definition_for = (
 			ip6_address => '2033:D0D0:3300::5:10/64',
 			ip_gateway => '10.10.5.1',
 			ilo_username => '',
+			https_port => 443,
 		},
 	},
 	## id => 19
@@ -709,6 +727,7 @@ my %definition_for = (
 			phys_location => '7',
 			interface_mtu => '9000',
 			ip_netmask => '255.255.255.0',
+			https_port => 443,
 		},
 	},
 	## id => 20
@@ -746,6 +765,7 @@ my %definition_for = (
 			ip6_address => '2033:D0D0:3300::3:3/64',
 			last_updated => '2015-12-10 15:44:36',
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 21
@@ -783,6 +803,7 @@ my %definition_for = (
 			interface_mtu => '9000',
 			cachegroup => '12',
 			ilo_username => '',
+			https_port => 443,
 		},
 	},
 	## id => 22
@@ -820,6 +841,7 @@ my %definition_for = (
 			interface_name => 'bond0',
 			phys_location => '7',
 			rack => 'RR 119.02',
+			https_port => 443,
 		},
 	},
 	## id => 23
@@ -857,6 +879,7 @@ my %definition_for = (
 			ilo_ip_address => '172.16.3.10',
 			ilo_ip_gateway => '172.16.3.1',
 			phys_location => '8',
+			https_port => 443,
 		},
 	},
 	## id => 24
@@ -894,6 +917,7 @@ my %definition_for = (
 			mgmt_ip_address => '',
 			xmpp_id => 'atsec-hou-05-dummyxmpp',
 			router_port_name => '3',
+			https_port => 443,
 		},
 	},
 	## id => 25
@@ -931,6 +955,7 @@ my %definition_for = (
 			router_host_name => 'rtr-hou.kabletown.net',
 			type => '13',
 			ip_address => '10.10.3.8',
+			https_port => 443,
 		},
 	},
 	## id => 26
@@ -968,6 +993,7 @@ my %definition_for = (
 			mgmt_ip_address => '',
 			mgmt_ip_netmask => '',
 			phys_location => '8',
+			https_port => 443,
 		},
 	},
 	## id => 27
@@ -1005,6 +1031,7 @@ my %definition_for = (
 			router_port_name => '3',
 			cachegroup => '12',
 			phys_location => '8',
+			https_port => 443,
 		},
 	},
 	## id => 28
@@ -1042,6 +1069,7 @@ my %definition_for = (
 			xmpp_passwd => 'X',
 			ilo_ip_address => '172.16.1.6',
 			last_updated => '2015-12-10 15:44:37',
+			https_port => 443,
 		},
 	},
 	## id => 29
@@ -1079,6 +1107,7 @@ my %definition_for = (
 			router_host_name => 'rtr-lax.kabletown.net',
 			domain_name => 'lax.kabletown.net',
 			cachegroup => '7',
+			https_port => 443,
 		},
 	},
 	## id => 30
@@ -1116,6 +1145,7 @@ my %definition_for = (
 			ip_gateway => '10.10.1.1',
 			phys_location => '9',
 			status => '6',
+			https_port => 443,
 		},
 	},
 	## id => 31
@@ -1153,6 +1183,7 @@ my %definition_for = (
 			ilo_ip_netmask => '255.255.255.0',
 			mgmt_ip_netmask => '',
 			router_port_name => '1',
+			https_port => 443,
 		},
 	},
 	## id => 32
@@ -1190,6 +1221,7 @@ my %definition_for = (
 			xmpp_id => 'atsec-lax-04-dummyxmpp',
 			xmpp_passwd => 'X',
 			domain_name => 'lax.kabletown.net',
+			https_port => 443,
 		},
 	},
 	## id => 33
@@ -1227,6 +1259,7 @@ my %definition_for = (
 			type => '13',
 			rack => 'RR 119.02',
 			router_port_name => '1',
+			https_port => 443,
 		},
 	},
 	## id => 34
@@ -1264,6 +1297,7 @@ my %definition_for = (
 			xmpp_passwd => 'X',
 			ilo_ip_address => '172.16.1.12',
 			ilo_username => '',
+			https_port => 443,
 		},
 	},
 	## id => 35
@@ -1301,6 +1335,7 @@ my %definition_for = (
 			cachegroup => '7',
 			ip_address => '10.10.1.9',
 			last_updated => '2015-12-10 15:44:37',
+			https_port => 443,
 		},
 	},
 	## id => 36
@@ -1338,6 +1373,7 @@ my %definition_for = (
 			ip6_gateway => '2033:D0D0:3300::1:1',
 			ip_gateway => '10.10.1.1',
 			tcp_port => '80',
+			https_port => 443,
 		},
 	},
 	## id => 37
@@ -1375,6 +1411,7 @@ my %definition_for = (
 			router_port_name => '0',
 			ilo_ip_netmask => '255.255.255.0',
 			mgmt_ip_gateway => '',
+			https_port => 443,
 		},
 	},
 	## id => 38
@@ -1412,6 +1449,7 @@ my %definition_for = (
 			ilo_username => '',
 			profile => '5',
 			router_port_name => '0',
+			https_port => 443,
 		},
 	},
 	## id => 39
@@ -1449,6 +1487,7 @@ my %definition_for = (
 			mgmt_ip_gateway => '',
 			ilo_password => '',
 			ilo_username => '',
+			https_port => 443,
 		},
 	},
 	## id => 40
@@ -1486,6 +1525,7 @@ my %definition_for = (
 			interface_mtu => '9000',
 			interface_name => 'bond0',
 			cdn_id => '1',
+			https_port => 443,
 		},
 	},
 	## id => 41
@@ -1523,6 +1563,7 @@ my %definition_for = (
 			router_port_name => '0',
 			tcp_port => '80',
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 42
@@ -1560,6 +1601,7 @@ my %definition_for = (
 			domain_name => 'nyc.kabletown.net',
 			ilo_username => '',
 			tcp_port => '80',
+			https_port => 443,
 		},
 	},
 	## id => 43
@@ -1597,6 +1639,7 @@ my %definition_for = (
 			interface_name => 'bond0',
 			profile => '7',
 			cachegroup => '10',
+			https_port => 443,
 		},
 	},
 	## id => 44
@@ -1634,6 +1677,7 @@ my %definition_for = (
 			tcp_port => '80',
 			ip_address => '10.10.0.9',
 			router_host_name => 'rtr-nyc.kabletown.net',
+			https_port => 443,
 		},
 	},
 	## id => 45
@@ -1671,6 +1715,7 @@ my %definition_for = (
 			cdn_id => '2',
 			mgmt_ip_gateway => '',
 			phys_location => '12',
+			https_port => 443,
 		},
 	},
 	## id => 46
@@ -1708,6 +1753,7 @@ my %definition_for = (
 			mgmt_ip_gateway => '',
 			phys_location => '13',
 			rack => 'RR 119.02',
+			https_port => 443,
 		},
 	},
 	## id => 47
@@ -1745,6 +1791,7 @@ my %definition_for = (
 			xmpp_passwd => 'X',
 			interface_mtu => '9000',
 			mgmt_ip_gateway => '',
+			https_port => 443,
 		},
 	},
 	## id => 48
@@ -1782,6 +1829,7 @@ my %definition_for = (
 			domain_name => 'phl.kabletown.net',
 			ilo_ip_address => '172.16.4.8',
 			ip_gateway => '10.10.4.1',
+			https_port => 443,
 		},
 	},
 	## id => 49
@@ -1819,6 +1867,7 @@ my %definition_for = (
 			mgmt_ip_address => '',
 			router_host_name => 'rtr-phl.kabletown.net',
 			xmpp_id => 'atsec-phl-03-dummyxmpp',
+			https_port => 443,
 		},
 	},
 	## id => 50
@@ -1856,6 +1905,7 @@ my %definition_for = (
 			ip6_gateway => '2033:D0D0:3300::4:1',
 			mgmt_ip_netmask => '',
 			profile => '7',
+			https_port => 443,
 		},
 	},
 	## id => 51
@@ -1893,6 +1943,7 @@ my %definition_for = (
 			profile => '7',
 			rack => 'RR 119.02',
 			router_port_name => '4',
+			https_port => 443,
 		},
 	},
 	## id => 52
@@ -1930,6 +1981,7 @@ my %definition_for = (
 			upd_pending => '0',
 			domain_name => 'phl.kabletown.net',
 			xmpp_id => 'atsec-phl-06-dummyxmpp',
+			https_port => 443,
 		},
 	},
 	## id => 53
@@ -1967,6 +2019,7 @@ my %definition_for = (
 			interface_name => 'bond0',
 			ip6_address => '2033:D0D0:3300::4:9/64',
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 54
@@ -2004,6 +2057,7 @@ my %definition_for = (
 			ip_address => '10.10.4.10',
 			ip_gateway => '10.10.4.1',
 			status => '6',
+			https_port => 443,
 		},
 	},
 	## id => 55
@@ -2041,6 +2095,7 @@ my %definition_for = (
 			ip6_gateway => '2033:D0D1:3300::0:1',
 			phys_location => '11',
 			xmpp_passwd => 'X',
+			https_port => 443,
 		},
 	},
 	## id => 56
@@ -2078,6 +2133,7 @@ my %definition_for = (
 			interface_name => 'bond0',
 			ip_netmask => '255.255.255.0',
 			ip_address => '10.11.0.2',
+			https_port => 443,
 		},
 	},
 	## id => 57
@@ -2115,6 +2171,7 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 			router_host_name => 'rtr-east.kabletown.net',
 			mgmt_ip_netmask => '',
+			https_port => 443,
 		},
 	},
 	## id => 58
@@ -2152,6 +2209,7 @@ my %definition_for = (
 			ilo_ip_netmask => '255.255.255.0',
 			ip6_gateway => '2033:D0D1:3300::0:1',
 			domain_name => 'east.kabletown.net',
+			https_port => 443,
 		},
 	},
 	## id => 59
@@ -2189,6 +2247,7 @@ my %definition_for = (
 			ip_address => '10.11.0.5',
 			phys_location => '12',
 			type => '22',
+			https_port => 443,
 		},
 	},
 	## id => 60
@@ -2226,6 +2285,7 @@ my %definition_for = (
 			mgmt_ip_gateway => '',
 			rack => 'RR 119.02',
 			router_host_name => 'rtr-east.kabletown.net',
+			https_port => 443,
 		},
 	},
 	## id => 61
@@ -2263,6 +2323,7 @@ my %definition_for = (
 			ilo_ip_gateway => '172.17.0.1',
 			interface_mtu => '9000',
 			interface_name => 'bond0',
+			https_port => 443,
 		},
 	},
 	## id => 62
@@ -2300,6 +2361,7 @@ my %definition_for = (
 			cdn_id => '1',
 			ilo_password => '',
 			mgmt_ip_netmask => '',
+			https_port => 443,
 		},
 	},
 	## id => 63
@@ -2337,6 +2399,7 @@ my %definition_for = (
 			ilo_ip_gateway => '172.17.0.1',
 			ilo_username => '',
 			status => '4', #
+			https_port => 443,
 		},
 	},
 	## id => 64
@@ -2374,6 +2437,7 @@ my %definition_for = (
 			interface_mtu => '9000',
 			ip6_address => '2033:D0D1:3300::1:2/64',
 			ip6_gateway => '2033:D0D1:3300::1:1',
+			https_port => 443,
 		},
 	},
 	## id => 65
@@ -2411,6 +2475,7 @@ my %definition_for = (
 			ip_gateway => '10.11.1.1',
 			router_port_name => '1',
 			ilo_password => '',
+			https_port => 443,
 		},
 	},
 	## id => 66
@@ -2448,6 +2513,7 @@ my %definition_for = (
 			phys_location => '9',
 			interface_name => 'bond0',
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 67
@@ -2485,6 +2551,7 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 			type => '22',
 			xmpp_passwd => 'X',
+			https_port => 443,
 		},
 	},
 	## id => 68
@@ -2522,6 +2589,7 @@ my %definition_for = (
 			interface_mtu => '9000',
 			ip_address => '10.11.1.5',
 			rack => 'RR 119.02',
+			https_port => 443,
 		},
 	},
 	## id => 69
@@ -2559,6 +2627,7 @@ my %definition_for = (
 			ilo_password => '',
 			mgmt_ip_netmask => '',
 			status => '4', #
+			https_port => 443,
 		},
 	},
 	## id => 70
@@ -2596,6 +2665,7 @@ my %definition_for = (
 			ilo_ip_netmask => '255.255.255.0',
 			mgmt_ip_gateway => '',
 			rack => 'RR 119.02',
+			https_port => 443,
 		},
 	},
 	## id => 71
@@ -2633,6 +2703,7 @@ my %definition_for = (
 			type => '22',
 			ilo_ip_address => '172.17.1.13',
 			mgmt_ip_address => '',
+			https_port => 443,
 		},
 	},
 	## id => 72
@@ -2670,6 +2741,7 @@ my %definition_for = (
 			ilo_password => '',
 			mgmt_ip_address => '',
 			xmpp_id => 'atsmid-west-08-dummyxmpp',
+			https_port => 443,
 		},
 	},
 	## id => 73
@@ -2707,6 +2779,7 @@ my %definition_for = (
 			interface_mtu => '1500',
 			mgmt_ip_gateway => '',
 			phys_location => '11',
+			https_port => 443,
 		},
 	},
 	## id => 74
@@ -2744,6 +2817,7 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 			mgmt_ip_address => '',
 			mgmt_ip_gateway => '',
+			https_port => 443,
 		},
 	},
 	## id => 75
@@ -2781,6 +2855,7 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:36',
 			phys_location => '11',
 			type => '28',
+			https_port => 443,
 		},
 	},
 	## id => 76
@@ -2818,6 +2893,7 @@ my %definition_for = (
 			ilo_ip_address => undef,
 			ilo_ip_gateway => undef,
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 77
@@ -2855,6 +2931,7 @@ my %definition_for = (
 			last_updated => '2015-12-10 15:44:37',
 			router_host_name => undef,
 			type => '27',
+			https_port => 443,
 		},
 	},
 	## id => 78
@@ -2892,6 +2969,7 @@ my %definition_for = (
 			ip_netmask => '255.255.255.0',
 			last_updated => '2015-12-10 15:44:37',
 			phys_location => '1',
+			https_port => 443,
 		},
 	},
 	## id => 79
@@ -2929,6 +3007,7 @@ my %definition_for = (
 			cdn_id => '2',
 			ip_netmask => '255.255.255.0',
 			ip_address => '172.39.29.49',
+			https_port => 443,
 		},
 	},
 	## id => 80
@@ -2966,6 +3045,7 @@ my %definition_for = (
 			ilo_username => undef,
 			interface_name => 'bond0',
 			router_port_name => undef,
+			https_port => 443,
 		},
 	},
 	## id => 81
@@ -3003,6 +3083,7 @@ my %definition_for = (
 			tcp_port => '80',
 			ilo_password => undef,
 			ip_address => '172.39.99.49',
+			https_port => 443,
 		},
 	},
 	## id => 82
@@ -3040,6 +3121,7 @@ my %definition_for = (
 			phys_location => '1',
 			tcp_port => '80',
 			upd_pending => '0',
+			https_port => 443,
 		},
 	},
 	## id => 83
@@ -3077,6 +3159,7 @@ my %definition_for = (
 			ilo_ip_address => undef,
 			ip_gateway => '172.39.39.1',
 			xmpp_id => 'trtr-clw-02-dummyxmpp',
+			https_port => 443,
 		},
 	},
 );

@@ -32,15 +32,13 @@ __PACKAGE__->table("staticdnsentry");
 
 =head2 host
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 type
 
@@ -84,9 +82,9 @@ __PACKAGE__->add_columns(
     sequence          => "staticdnsentry_id_seq",
   },
   "host",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "address",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "ttl",
@@ -118,7 +116,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_28878_combi_unique>
+=head2 C<idx_37481_combi_unique>
 
 =over 4
 
@@ -135,7 +133,7 @@ __PACKAGE__->set_primary_key("id");
 =cut
 
 __PACKAGE__->add_unique_constraint(
-  "idx_28878_combi_unique",
+  "idx_37481_combi_unique",
   ["host", "address", "deliveryservice", "cachegroup"],
 );
 
@@ -192,8 +190,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:jKozxkP1ofFnskTp/PzbMA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/Zdg5RonFa4gMSavX7jD4g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

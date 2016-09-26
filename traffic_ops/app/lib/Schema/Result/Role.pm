@@ -32,15 +32,13 @@ __PACKAGE__->table("role");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 priv_level
 
@@ -58,9 +56,9 @@ __PACKAGE__->add_columns(
     sequence          => "role_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "priv_level",
   { data_type => "bigint", is_nullable => 0 },
 );
@@ -110,8 +108,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2SvNz8z/KCGe3y/IUrC9Uw
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:H1IMWUJB0LS45CR4DMgxtA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

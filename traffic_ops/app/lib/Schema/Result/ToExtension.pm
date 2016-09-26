@@ -32,27 +32,23 @@ __PACKAGE__->table("to_extension");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 version
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 info_url
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 script_file
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 isactive
 
@@ -61,27 +57,23 @@ __PACKAGE__->table("to_extension");
 
 =head2 additional_config_json
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 4096
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 4096
 
 =head2 servercheck_short_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 8
 
 =head2 servercheck_column_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 10
 
 =head2 type
 
@@ -107,23 +99,23 @@ __PACKAGE__->add_columns(
     sequence          => "to_extension_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "version",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "info_url",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "script_file",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "isactive",
   { data_type => "smallint", is_nullable => 0 },
   "additional_config_json",
-  { data_type => "varchar", is_nullable => 1, size => 4096 },
+  { data_type => "text", is_nullable => 1 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 4096 },
+  { data_type => "text", is_nullable => 1 },
   "servercheck_short_name",
-  { data_type => "varchar", is_nullable => 1, size => 8 },
+  { data_type => "text", is_nullable => 1 },
   "servercheck_column_name",
-  { data_type => "varchar", is_nullable => 1, size => 10 },
+  { data_type => "text", is_nullable => 1 },
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
@@ -165,8 +157,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:j1ATwfArX1YOGbCWTyf3cA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:UdLGEdrqxgDSbf5/555kLQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

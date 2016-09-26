@@ -44,15 +44,13 @@ __PACKAGE__->table("job_result");
 
 =head2 result
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 512
 
 =head2 last_updated
 
@@ -76,9 +74,9 @@ __PACKAGE__->add_columns(
   "agent",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "result",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 512 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -133,8 +131,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vP8tWgOfz97JhtkFTgHzLQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GBQ7+iskwtEsIJHcB3hEDw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

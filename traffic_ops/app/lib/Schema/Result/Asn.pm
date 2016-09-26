@@ -93,7 +93,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_28644_cr_id_unique>
+=head2 C<idx_37220_cr_id_unique>
 
 =over 4
 
@@ -103,7 +103,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28644_cr_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_37220_cr_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -123,8 +123,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yCK4Li2rpX8NDBK2BvDkkg
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dyUY51AKC+esN2vfVU9uLA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
