@@ -99,6 +99,8 @@ sub create {
 	$insert->insert();
 	my $new_id = $insert->id;
 
+	&log( $self, "Created profile with id: " . $new_id . " and name: " . $name, "APICHANGE" );
+
 	my $response;
 	$response->{id} = $new_id;
 	$response->{name} = $name;
@@ -115,12 +117,9 @@ sub copy {
 
 	my $name = $self->param('profile_name');
 	my $profile_copy_from_name = $self->param('profile_copy_from');
-    if ( !defined($name) ) {
-        return $self->alert("profile 'name' is not given.");
-    }
-    if ( $name eq "" ) {
-        return $self->alert("profile 'name' can't be null.");
-    }
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
+	}
     if ( defined($profile_copy_from_name) and ( $profile_copy_from_name eq "" ) ) {
         return $self->alert("profile name 'profile_copy_from' can't be null.");
     }
@@ -161,7 +160,9 @@ sub copy {
         }
     }
 
-    my $response;
+	&log( $self, "Created profile from copy with id: " . $new_id . " and name: " . $name, "APICHANGE" );
+
+	my $response;
     $response->{id} = $new_id;
     $response->{name} = $name;
     $response->{description} = $description;
