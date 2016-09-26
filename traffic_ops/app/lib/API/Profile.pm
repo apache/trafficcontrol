@@ -71,28 +71,23 @@ sub create {
   }
 
 	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("profile 'name' is not given.");
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
 	}
-	if ( $name eq "" ) {
-		return $self->alert("profile 'name' can't be null.");
-	}
-
-  if ( $name =~ /\s/ ) {
-    return $self->alert("Profile name cannot contain space(s).");
-  }
 
 	my $description = $params->{description};
-	if ( !defined($description) ) {
-		return $self->alert("profile 'description' is not given.");
-	}
-	if ( $description eq "" ) {
-		return $self->alert("profile 'description' can't be null.");
+	if ( !defined($description) || $description eq "" ) {
+		return $self->alert("profile 'description' is required.");
 	}
 
 	my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
 	if ( $existing_profile && $name eq $existing_profile ) {
 		return $self->alert("profile with name $name already exists.");
+	}
+
+	my $existing_desc = $self->db->resultset('Profile')->find( { description => $description } );
+	if ( $existing_desc ) {
+		return $self->alert("a profile with the exact same description already exists." );
 	}
 
 	my $insert = $self->db->resultset('Profile')->create(
