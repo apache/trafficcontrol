@@ -13,13 +13,15 @@ import (
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
+type DurationMap map[enum.CacheName]time.Duration
+
 type DurationMapThreadsafe struct {
-	durationMap map[enum.CacheName]time.Duration
+	durationMap *DurationMap
 	m           *sync.RWMutex
 }
 
-func copyDurationMap(a map[enum.CacheName]time.Duration) map[enum.CacheName]time.Duration {
-	b := map[enum.CacheName]time.Duration{}
+func (a DurationMap) Copy() DurationMap {
+	b := DurationMap{}
 	for k, v := range a {
 		b[k] = v
 	}
@@ -27,82 +29,20 @@ func copyDurationMap(a map[enum.CacheName]time.Duration) map[enum.CacheName]time
 }
 
 func NewDurationMapThreadsafe() DurationMapThreadsafe {
-	return DurationMapThreadsafe{m: &sync.RWMutex{}, durationMap: map[enum.CacheName]time.Duration{}}
+	m := DurationMap{}
+	return DurationMapThreadsafe{m: &sync.RWMutex{}, durationMap: &m}
 }
 
-func (o *DurationMapThreadsafe) Get() map[enum.CacheName]time.Duration {
+// Get returns the duration map. Callers MUST NOT mutate. If mutation is necessary, call DurationMap.Copy().
+func (o *DurationMapThreadsafe) Get() DurationMap {
 	o.m.RLock()
 	defer o.m.RUnlock()
-	return copyDurationMap(o.durationMap)
+	return *o.durationMap
 }
 
-func (o *DurationMapThreadsafe) GetDuration(cacheName enum.CacheName) (time.Duration, bool) {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	duration, ok := o.durationMap[cacheName]
-	return duration, ok
-}
-
-func (o *DurationMapThreadsafe) Set(cacheName enum.CacheName, d time.Duration) {
+func (o *DurationMapThreadsafe) Set(d DurationMap) {
 	o.m.Lock()
-	o.durationMap[cacheName] = d
-	o.m.Unlock()
-}
-
-type TimeMapThreadsafe struct {
-	timeMap map[enum.CacheName]time.Time
-	m       *sync.RWMutex
-}
-
-func copyTimeMap(a map[enum.CacheName]time.Time) map[enum.CacheName]time.Time {
-	b := map[enum.CacheName]time.Time{}
-	for k, v := range a {
-		b[k] = v
-	}
-	return b
-}
-
-func NewTimeMapThreadsafe() TimeMapThreadsafe {
-	return TimeMapThreadsafe{m: &sync.RWMutex{}, timeMap: map[enum.CacheName]time.Time{}}
-}
-
-func (o TimeMapThreadsafe) Get() map[enum.CacheName]time.Time {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return copyTimeMap(o.timeMap)
-}
-
-func (o *TimeMapThreadsafe) GetTime(cacheName enum.CacheName) (time.Time, bool) {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	time, ok := o.timeMap[cacheName]
-	return time, ok
-}
-
-func (o *TimeMapThreadsafe) Set(cacheName enum.CacheName, d time.Time) {
-	o.m.Lock()
-	o.timeMap[cacheName] = d
-	o.m.Unlock()
-}
-
-type ResultsThreadsafe struct {
-	r map[enum.CacheName][]cache.Result
-	m *sync.RWMutex
-}
-
-func NewResultsThreadsafe() ResultsThreadsafe {
-	return ResultsThreadsafe{m: &sync.RWMutex{}, r: map[enum.CacheName][]cache.Result{}}
-}
-
-func (o *ResultsThreadsafe) Get(cacheName enum.CacheName) []cache.Result {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return o.r[cacheName]
-}
-
-func (o *ResultsThreadsafe) Set(cacheName enum.CacheName, newR []cache.Result) {
-	o.m.Lock()
-	o.r[cacheName] = newR
+	*o.durationMap = d
 	o.m.Unlock()
 }
 
@@ -150,12 +90,14 @@ func healthResultManagerListen(cacheHealthChan <-chan cache.Result, toData todat
 	}
 }
 
-func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurations DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastHealthEndTimes map[enum.CacheName]time.Time, healthHistory map[enum.CacheName][]cache.Result, results []cache.Result, cfg config.Config) {
+// processHealthResult processes the given health results, adding their stats to the CacheAvailableStatus. Note this is NOT threadsafe, because it non-atomically gets CacheAvailableStatuses, Events, LastHealthDurations and later updates them. This MUST NOT be called from multiple threads.
+func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODataThreadsafe, localStates peer.CRStatesThreadsafe, lastHealthDurationsThreadsafe DurationMapThreadsafe, statHistory StatHistoryThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, fetchCount UintThreadsafe, errorCount UintThreadsafe, events EventsThreadsafe, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe, lastHealthEndTimes map[enum.CacheName]time.Time, healthHistory map[enum.CacheName][]cache.Result, results []cache.Result, cfg config.Config) {
 	if len(results) == 0 {
 		return
 	}
-	toDataCopy := toData.Get()               // create a copy, so the same data used for all processing of this cache health result
-	monitorConfigCopy := monitorConfig.Get() // copy now, so all calculations are on the same data
+	toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
+	localCacheStatus := localCacheStatusThreadsafe.Get().Copy()
+	monitorConfigCopy := monitorConfig.Get()
 	for _, healthResult := range results {
 		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
@@ -175,24 +117,27 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable})
 		}
 
-		localCacheStatus.Set(healthResult.Id, CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.Id)].Status}) // TODO move within localStates
+		localCacheStatus[healthResult.Id] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.Id)].Status} // TODO move within localStates?
 		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
 		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
 		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 		log.Debugf("poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
 	}
+	localCacheStatusThreadsafe.Set(localCacheStatus)
 	// TODO determine if we should combineCrStates() here
 
+	lastHealthDurations := lastHealthDurationsThreadsafe.Get().Copy()
 	for _, healthResult := range results {
 		if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
 			d := time.Since(lastHealthStart)
-			lastHealthDurations.Set(enum.CacheName(healthResult.Id), d)
+			lastHealthDurations[enum.CacheName(healthResult.Id)] = d
 		}
 		lastHealthEndTimes[enum.CacheName(healthResult.Id)] = time.Now()
 
 		log.Debugf("poll %v %v finish\n", healthResult.PollID, time.Now())
 		healthResult.PollFinished <- healthResult.PollID
 	}
+	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
 }
 
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`

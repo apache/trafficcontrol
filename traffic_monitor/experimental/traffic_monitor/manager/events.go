@@ -39,16 +39,19 @@ func NewEventsThreadsafe(maxEvents uint64) EventsThreadsafe {
 func (o *EventsThreadsafe) Get() []Event {
 	o.m.RLock()
 	defer o.m.RUnlock()
-	return copyEvents(*o.events)
+	return *o.events
 }
 
+// Add adds the given event. This is threadsafe for one writer, multiple readers. This MUST NOT be called by multiple threads, as it non-atomically fetches and adds.
 func (o *EventsThreadsafe) Add(e Event) {
-	o.m.Lock()
+	events := copyEvents(*o.events)
 	e.Index = *o.nextIndex
-	*o.nextIndex++
-	*o.events = append([]Event{e}, *o.events...)
-	if len(*o.events) > int(o.max) {
-		*o.events = (*o.events)[:o.max-1]
+	events = append([]Event{e}, events...)
+	if len(events) > int(o.max) {
+		events = (events)[:o.max-1]
 	}
+	o.m.Lock()
+	*o.events = events
+	*o.nextIndex++
 	o.m.Unlock()
 }
