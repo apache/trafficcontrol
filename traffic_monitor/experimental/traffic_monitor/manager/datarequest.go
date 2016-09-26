@@ -161,6 +161,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 			if err != nil {
 				errorCount.Inc()
 				log.Errorf("Request Error: %v\n", err)
+				req.Response <- nil
 			} else {
 				req.Response <- body
 			}

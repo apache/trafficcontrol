@@ -155,7 +155,8 @@ func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
 	if len(data) > 0 {
 		w.Write(data)
 	} else {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal Server Error"))
 	}
 }
 
