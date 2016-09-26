@@ -145,6 +145,14 @@ func main() {
 		fmt.Fprintln(os.Stderr, "\t\t[-workers <number of concurrent requests per delivery service>]")
 		fmt.Fprintln(os.Stderr, "\t\tmy-cdn.example.com delivery-service-1 delivery-service-2 ...")
 		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, "\tSome example locations of trusted certificate files to use for -cafile are:")
+		fmt.Fprintln(os.Stderr, "/etc/ssl/certs");
+		fmt.Fprintln(os.Stderr, "/etc/pki/tls/certs/ca-bundle.crt");
+		fmt.Fprintln(os.Stderr, "/etc/ssl/certs/ca-bundle.crt");
+		fmt.Fprintln(os.Stderr, "/etc/pki/tls/certs/ca-bundle.trust.crt");
+		fmt.Fprintln(os.Stderr, "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem");
+		fmt.Fprintln(os.Stderr, "/System/Library/OpenSSL");
+		fmt.Fprintln(os.Stderr)
 		flag.PrintDefaults()
 	}
 	flag.Parse()
