@@ -32,24 +32,22 @@ __PACKAGE__->table("cachegroup");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 short_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 255
 
 =head2 latitude
 
-  data_type: 'numeric'
+  data_type: 'double precision'
   is_nullable: 1
 
 =head2 longitude
 
-  data_type: 'numeric'
+  data_type: 'double precision'
   is_nullable: 1
 
 =head2 parent_cachegroup_id
@@ -88,13 +86,13 @@ __PACKAGE__->add_columns(
     sequence          => "cachegroup_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "short_name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
+  { data_type => "text", is_nullable => 0 },
   "latitude",
-  { data_type => "numeric", is_nullable => 1 },
+  { data_type => "double precision", is_nullable => 1 },
   "longitude",
-  { data_type => "numeric", is_nullable => 1 },
+  { data_type => "double precision", is_nullable => 1 },
   "parent_cachegroup_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "secondary_parent_cachegroup_id",
@@ -126,7 +124,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_28652_cg_name_unique>
+=head2 C<idx_37228_cg_name_unique>
 
 =over 4
 
@@ -136,9 +134,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28652_cg_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_37228_cg_name_unique", ["name"]);
 
-=head2 C<idx_28652_cg_short_unique>
+=head2 C<idx_37228_cg_short_unique>
 
 =over 4
 
@@ -148,9 +146,9 @@ __PACKAGE__->add_unique_constraint("idx_28652_cg_name_unique", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28652_cg_short_unique", ["short_name"]);
+__PACKAGE__->add_unique_constraint("idx_37228_cg_short_unique", ["short_name"]);
 
-=head2 C<idx_28652_lo_id_unique>
+=head2 C<idx_37228_lo_id_unique>
 
 =over 4
 
@@ -160,7 +158,7 @@ __PACKAGE__->add_unique_constraint("idx_28652_cg_short_unique", ["short_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28652_lo_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_37228_lo_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -310,8 +308,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XxJKXfCieQBB4qzklOJ8oA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:iKFHroKjMz4UK+To3QDUuQ
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

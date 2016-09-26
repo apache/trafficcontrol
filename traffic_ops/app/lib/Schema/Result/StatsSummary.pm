@@ -32,22 +32,19 @@ __PACKAGE__->table("stats_summary");
 
 =head2 cdn_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   default_value: 'all'
   is_nullable: 0
-  size: 255
 
 =head2 deliveryservice_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 255
 
 =head2 stat_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 255
 
 =head2 stat_value
 
@@ -77,16 +74,11 @@ __PACKAGE__->add_columns(
     sequence          => "stats_summary_id_seq",
   },
   "cdn_name",
-  {
-    data_type => "varchar",
-    default_value => "all",
-    is_nullable => 0,
-    size => 255,
-  },
+  { data_type => "text", default_value => "all", is_nullable => 0 },
   "deliveryservice_name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
+  { data_type => "text", is_nullable => 0 },
   "stat_name",
-  { data_type => "varchar", is_nullable => 0, size => 255 },
+  { data_type => "text", is_nullable => 0 },
   "stat_value",
   { data_type => "double precision", is_nullable => 0 },
   "summary_time",
@@ -113,8 +105,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lv8Yzs2hwRBDdZKjdugAdA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eN0450eMhq02t7IfDBx0/w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -32,21 +32,18 @@ __PACKAGE__->table("parameter");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 1024
 
 =head2 config_file
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 value
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 1024
 
 =head2 last_updated
 
@@ -72,11 +69,11 @@ __PACKAGE__->add_columns(
     sequence          => "parameter_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 1024 },
+  { data_type => "text", is_nullable => 0 },
   "config_file",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "value",
-  { data_type => "varchar", is_nullable => 0, size => 1024 },
+  { data_type => "text", is_nullable => 0 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -133,8 +130,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-08-08 10:49:59
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:zD0E40N9iKMy+W+eab6xRQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:4PhE4X3Ipimox2gRlbQhbA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

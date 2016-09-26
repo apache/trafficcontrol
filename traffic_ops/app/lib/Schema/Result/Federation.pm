@@ -32,15 +32,13 @@ __PACKAGE__->table("federation");
 
 =head2 cname
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 1024
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 1024
 
 =head2 ttl
 
@@ -65,9 +63,9 @@ __PACKAGE__->add_columns(
     sequence          => "federation_id_seq",
   },
   "cname",
-  { data_type => "varchar", is_nullable => 0, size => 1024 },
+  { data_type => "text", is_nullable => 0 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 1024 },
+  { data_type => "text", is_nullable => 1 },
   "ttl",
   { data_type => "integer", is_nullable => 0 },
   "last_updated",
@@ -139,8 +137,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:pur/jugLO0yYgpDGjIgQWg
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wG2P/1kLVqUU40YKW8F4pA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
