@@ -97,7 +97,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
 			case http_server.DSStats:
-				body, err = json.Marshal(ds.StatsJSON(dsStats.Get())) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+				body, err = json.Marshal(dsStats.Get().JSON()) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					err = fmt.Errorf("DsStats: %v", err)
 				}
