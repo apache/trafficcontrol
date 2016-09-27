@@ -16,6 +16,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.shared;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.management.AttributeChangeNotification;
 import javax.management.NotificationBroadcasterSupport;
 import java.util.List;
@@ -30,8 +33,8 @@ public class DeliveryServiceCertificates extends NotificationBroadcasterSupport 
 	}
 
 	@Override
-	public void setCertificateDataList(List<CertificateData> certificateDataList) {
-		List<CertificateData> oldCertificateDataList = this.certificateDataList;
+	public void setCertificateDataList(final List<CertificateData> certificateDataList) {
+		final List<CertificateData> oldCertificateDataList = this.certificateDataList;
 		this.certificateDataList = certificateDataList;
 
 		sendNotification(new AttributeChangeNotification(this, sequenceNumber, System.currentTimeMillis(), "CertificateDataList Changed",
@@ -40,13 +43,33 @@ public class DeliveryServiceCertificates extends NotificationBroadcasterSupport 
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
+	public void setCertificateDataListString(final String certificateDataListString) {
+		try {
+			final List<CertificateData> certificateDataList = new ObjectMapper().
+				readValue(certificateDataListString, new TypeReference<List<CertificateData>>() { });
+			setCertificateDataList(certificateDataList);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to convert json certificate data list to list of CertificateData objects", e);
+		}
+	}
 
-		DeliveryServiceCertificates that = (DeliveryServiceCertificates) o;
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
 
-		if (sequenceNumber != that.sequenceNumber) return false;
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		final DeliveryServiceCertificates that = (DeliveryServiceCertificates) o;
+
+		if (sequenceNumber != that.sequenceNumber) {
+			return false;
+		}
+
 		return certificateDataList != null ? certificateDataList.equals(that.certificateDataList) : that.certificateDataList == null;
 
 	}
