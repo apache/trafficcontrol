@@ -269,7 +269,7 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 		dsStat = *newStat
 	}
 
-	if err := addCacheStat(&dsStat.Total, statName, value); err != nil {
+	if err := addCacheStat(&dsStat.TotalStats, statName, value); err != nil {
 		return stats, err
 	}
 
@@ -277,13 +277,13 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 	if !ok {
 		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
 	}
-	dsStat.CacheGroups[cachegroup] = dsStat.Total
+	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
 
 	cacheType, ok := toData.ServerTypes[server]
 	if !ok {
 		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
 	}
-	dsStat.Type[cacheType] = dsStat.Total
+	dsStat.Types[cacheType] = dsStat.TotalStats
 	stats[ds] = dsStat
 	return stats, nil
 }
