@@ -179,6 +179,10 @@
 		 function getTrafficOpsUri() {
 			 ajax("/api/traffic-ops-uri", function(r) {
 				 document.getElementById("source-uri").innerHTML = "<a href='" + r + "'>" + r + "</a>";
+				 ajax("/publish/ConfigDoc", function(r) {
+					 var j = JSON.parse(r);
+					 document.getElementById("source-uri").innerHTML += "/" + j.cdnName;
+				 });
 			 });
 		 }
 
