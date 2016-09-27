@@ -32,6 +32,7 @@ public class HandshakeData {
 		this.hostname = hostname;
 		this.certificateChain = certificateChain;
 		this.privateKey = privateKey;
+		log.warn("Created handshake data " + deliveryService + " " + hostname + " cert chain length " + certificateChain.length);
 	}
 
 	public String getDeliveryService() {

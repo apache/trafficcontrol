@@ -37,7 +37,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -139,6 +141,7 @@ public class ConfigHandler {
 				LOGGER.warn("Waiting for all https delivery services to have valid certificates");
 				while (!certificateChecker.certificatesAreValid(deliveryServicesJson)) {
 					try {
+						LOGGER.warn("Waiting for https certificates to support new config");
 						Thread.sleep(1000L);
 					} catch (InterruptedException e) {
 						LOGGER.warn("Interrupted while sleeping between checks of https certificates");
@@ -147,7 +150,12 @@ public class ConfigHandler {
 
 				try {
 					final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
-					final Attribute certificateDataList = new Attribute("CertificateDataList", certificateChecker.getCertificateDataList());
+					final Attribute certificateDataList = new Attribute("CertificateDataListString",
+						new ObjectMapper().writeValueAsString(certificateChecker.getCertificateDataList()));
+					LOGGER.warn("All Delivery Services now have valid certificates available, handing cert data to tomcat connector side");
+					for (final CertificateData certificateData : certificateChecker.getCertificateDataList()) {
+						LOGGER.warn("Cert Data for " + certificateData.getDeliveryservice() + " " + certificateData.getHostname());
+					}
 					ManagementFactory.getPlatformMBeanServer().setAttribute(objectName, certificateDataList);
 				} catch (Exception e) {
 					LOGGER.error("Failed to add certificate data list as management MBean! " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);

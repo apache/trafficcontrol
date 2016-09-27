@@ -76,6 +76,12 @@ public class CertificateChecker {
 			return true;
 		}
 
+		if (domains.length() == 0) {
+			return true;
+		}
+
+		boolean hasValidCertificates = false;
+
 		for (int i = 0; i < domains.length(); i++) {
 			final String domain = domains.optString(i, "").replaceAll("^\\*\\.", "");
 			if (domain == null || domain.isEmpty()) {
@@ -84,14 +90,13 @@ public class CertificateChecker {
 
 			for (final CertificateData certificateData : certificateDataList) {
 				if (certificateData.getDeliveryservice().equals(deliveryServiceId)) {
-					return true;
+					hasValidCertificates = true;
 				}
 			}
 			LOGGER.error("No certificate data for https " + deliveryServiceId + " domain " + domain);
-			return false;
 		}
 
-		return true;
+		return hasValidCertificates;
 	}
 
 	private boolean supportsHttps(final JSONObject deliveryServiceJson, final JSONObject protocolJson) {

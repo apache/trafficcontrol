@@ -22,4 +22,5 @@ public interface DeliveryServiceCertificatesMBean {
 	String OBJECT_NAME = "traffic-router:name=DeliveryServiceCertificates";
 	List<CertificateData> getCertificateDataList();
 	void setCertificateDataList(List<CertificateData> certificateDataList);
+	void setCertificateDataListString(String certificateDataListString);
 }
