@@ -147,8 +147,6 @@ sub check_phys_location_input {
 
 sub update {
 	my $self       = shift;
-	my $id         = $self->param('id');
-	my @params     = $self->param;
 	my $regioninfo = $self->db->resultset('Region')->search( { id => $self->param('location.region') } )->single();
 	$self->stash(
 		fbox_layout => 1,
@@ -183,7 +181,7 @@ sub update {
 		$update->region( $self->param('location.region') );
 		$update->update();
 
-		my $name = defined( $self->param('name') ) ? $self->param('name') : "undef";
+		my $name = defined( $self->param('location.name') ) ? $self->param('location.name') : "undef";
 		my $id   = defined( $self->param('id') )   ? $self->param('id')   : "undef";
 
 		# if the update has failed, we don't even get here, we go to the exception page.

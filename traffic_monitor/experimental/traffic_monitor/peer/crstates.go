@@ -79,62 +79,62 @@ func NewCRStatesThreadsafe() CRStatesThreadsafe {
 }
 
 // TODO add GetCaches, GetDeliveryservices?
-func (t CRStatesThreadsafe) Get() Crstates {
+func (t *CRStatesThreadsafe) Get() Crstates {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.Copy()
 }
 
 // TODO add GetCaches, GetDeliveryservices?
-func (t CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]Deliveryservice {
+func (t *CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]Deliveryservice {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.CopyDeliveryservices()
 }
 
-func (t CRStatesThreadsafe) GetCache(name enum.CacheName) IsAvailable {
+func (t *CRStatesThreadsafe) GetCache(name enum.CacheName) IsAvailable {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.Caches[name]
 }
 
-func (t CRStatesThreadsafe) GetCaches() map[enum.CacheName]IsAvailable {
+func (t *CRStatesThreadsafe) GetCaches() map[enum.CacheName]IsAvailable {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.CopyCaches()
 }
 
-func (t CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) Deliveryservice {
+func (t *CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) Deliveryservice {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.crStates.Deliveryservice[name]
 }
 
-func (o CRStatesThreadsafe) Set(newCRStates Crstates) {
+func (o *CRStatesThreadsafe) Set(newCRStates Crstates) {
 	o.m.Lock()
 	*o.crStates = newCRStates
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
+func (o *CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
 	o.m.Lock()
 	o.crStates.Caches[cacheName] = available
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) DeleteCache(name enum.CacheName) {
+func (o *CRStatesThreadsafe) DeleteCache(name enum.CacheName) {
 	o.m.Lock()
 	delete(o.crStates.Caches, name)
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) SetDeliveryService(name enum.DeliveryServiceName, ds Deliveryservice) {
+func (o *CRStatesThreadsafe) SetDeliveryService(name enum.DeliveryServiceName, ds Deliveryservice) {
 	o.m.Lock()
 	o.crStates.Deliveryservice[name] = ds
 	o.m.Unlock()
 }
 
-func (o CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.DeliveryServiceName]Deliveryservice) {
+func (o *CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.DeliveryServiceName]Deliveryservice) {
 	o.m.Lock()
 	o.crStates.Deliveryservice = deliveryServices
 	o.m.Unlock()
@@ -150,7 +150,7 @@ func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
 	return CRStatesPeersThreadsafe{m: &sync.RWMutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}}
 }
 
-func (t CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
+func (t *CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
 	t.m.RLock()
 	m := map[enum.TrafficMonitorName]Crstates{}
 	for k, v := range t.crStates {
@@ -160,7 +160,7 @@ func (t CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
 	return m
 }
 
-func (o CRStatesPeersThreadsafe) Set(peerName enum.TrafficMonitorName, peerState Crstates) {
+func (o *CRStatesPeersThreadsafe) Set(peerName enum.TrafficMonitorName, peerState Crstates) {
 	o.m.Lock()
 	o.crStates[peerName] = peerState
 	o.m.Unlock()
