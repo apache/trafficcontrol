@@ -31,23 +31,23 @@ func (s Server) endpoints() (map[string]http.HandlerFunc, error) {
 
 	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
 	return map[string]http.HandlerFunc{
-		"/publish/CacheStats/":       s.dataRequestFunc(CacheStats),
-		"/publish/CrConfig":          s.dataRequestFunc(TRConfig),
-		"/publish/CrStates":          s.handleCrStatesFunc(),
-		"/publish/DsStats":           s.dataRequestFunc(DSStats),
-		"/publish/EventLog":          s.dataRequestFunc(EventLog),
-		"/publish/PeerStates":        s.dataRequestFunc(PeerStates),
-		"/publish/StatSummary":       s.dataRequestFunc(StatSummary),
-		"/publish/Stats":             s.dataRequestFunc(Stats),
-		"/publish/ConfigDoc":         s.dataRequestFunc(ConfigDoc),
-		"/api/cache-count":           s.dataRequestFunc(APICacheCount),
-		"/api/cache-available-count": s.dataRequestFunc(APICacheAvailableCount),
-		"/api/cache-down-count":      s.dataRequestFunc(APICacheDownCount),
-		"/api/version":               s.dataRequestFunc(APIVersion),
-		"/api/traffic-ops-uri":       s.dataRequestFunc(APITrafficOpsURI),
-		"/api/cache-statuses":        s.dataRequestFunc(APICacheStates),
-		"/api/bandwidth-kbps":        s.dataRequestFunc(APIBandwidthKbps),
-		"/api/bandwidth-capacity":    s.dataRequestFunc(APIBandwidthCapacity),
+		"/publish/CacheStats/":         s.dataRequestFunc(CacheStats),
+		"/publish/CrConfig":            s.dataRequestFunc(TRConfig),
+		"/publish/CrStates":            s.handleCrStatesFunc(),
+		"/publish/DsStats":             s.dataRequestFunc(DSStats),
+		"/publish/EventLog":            s.dataRequestFunc(EventLog),
+		"/publish/PeerStates":          s.dataRequestFunc(PeerStates),
+		"/publish/StatSummary":         s.dataRequestFunc(StatSummary),
+		"/publish/Stats":               s.dataRequestFunc(Stats),
+		"/publish/ConfigDoc":           s.dataRequestFunc(ConfigDoc),
+		"/api/cache-count":             s.dataRequestFunc(APICacheCount),
+		"/api/cache-available-count":   s.dataRequestFunc(APICacheAvailableCount),
+		"/api/cache-down-count":        s.dataRequestFunc(APICacheDownCount),
+		"/api/version":                 s.dataRequestFunc(APIVersion),
+		"/api/traffic-ops-uri":         s.dataRequestFunc(APITrafficOpsURI),
+		"/api/cache-statuses":          s.dataRequestFunc(APICacheStates),
+		"/api/bandwidth-kbps":          s.dataRequestFunc(APIBandwidthKbps),
+		"/api/bandwidth-capacity-kbps": s.dataRequestFunc(APIBandwidthCapacityKbps),
 		"/":             handleRoot,
 		"/sorttable.js": handleSortableJs,
 	}, nil
@@ -134,7 +134,7 @@ const (
 	APITrafficOpsURI
 	APICacheStates
 	APIBandwidthKbps
-	APIBandwidthCapacity
+	APIBandwidthCapacityKbps
 )
 
 type Format int

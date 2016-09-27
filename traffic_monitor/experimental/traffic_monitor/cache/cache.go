@@ -38,7 +38,7 @@ func (h Handler) Precompute() bool {
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
-	MaxBytes             int64
+	MaxKbps              int64
 	Errors               []error
 	Reporting            bool
 }
@@ -207,7 +207,8 @@ func (handler Handler) precompute(result Result) Result {
 		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
 
-	result.PrecomputedData.MaxBytes = int64(result.Astats.System.InfSpeed)
+	kbpsInMbps := int64(1000)
+	result.PrecomputedData.MaxKbps = int64(result.Astats.System.InfSpeed) * kbpsInMbps
 
 	for stat, value := range result.Astats.Ats {
 		var err error
