@@ -58,7 +58,7 @@ __PACKAGE__->table("server");
 =head2 interface_name
 
   data_type: 'text'
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 ip_address
 
@@ -68,12 +68,12 @@ __PACKAGE__->table("server");
 =head2 ip_netmask
 
   data_type: 'text'
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 ip_gateway
 
   data_type: 'text'
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 ip6_address
 
@@ -232,13 +232,13 @@ __PACKAGE__->add_columns(
   "xmpp_passwd",
   { data_type => "text", is_nullable => 1 },
   "interface_name",
-  { data_type => "text", is_nullable => 1 },
+  { data_type => "text", is_nullable => 0 },
   "ip_address",
   { data_type => "text", is_nullable => 0 },
   "ip_netmask",
-  { data_type => "text", is_nullable => 1 },
+  { data_type => "text", is_nullable => 0 },
   "ip_gateway",
-  { data_type => "text", is_nullable => 1 },
+  { data_type => "text", is_nullable => 0 },
   "ip6_address",
   { data_type => "text", is_nullable => 1 },
   "ip6_gateway",
@@ -323,7 +323,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_37461_ip6_profile>
+=head2 C<idx_55154_ip6_profile>
 
 =over 4
 
@@ -335,9 +335,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_37461_ip6_profile", ["ip6_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_55154_ip6_profile", ["ip6_address", "profile"]);
 
-=head2 C<idx_37461_ip_profile>
+=head2 C<idx_55154_ip_profile>
 
 =over 4
 
@@ -349,9 +349,9 @@ __PACKAGE__->add_unique_constraint("idx_37461_ip6_profile", ["ip6_address", "pro
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_37461_ip_profile", ["ip_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_55154_ip_profile", ["ip_address", "profile"]);
 
-=head2 C<idx_37461_se_id_unique>
+=head2 C<idx_55154_se_id_unique>
 
 =over 4
 
@@ -361,7 +361,7 @@ __PACKAGE__->add_unique_constraint("idx_37461_ip_profile", ["ip_address", "profi
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_37461_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_55154_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -501,8 +501,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:w+2xSrC9rQIxfLDSwvuU0A
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-27 10:16:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Dq/88exXe/bmWxd2GlDslg
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

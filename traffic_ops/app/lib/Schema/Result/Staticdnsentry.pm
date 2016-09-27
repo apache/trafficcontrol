@@ -116,7 +116,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_37481_combi_unique>
+=head2 C<idx_55174_combi_unique>
 
 =over 4
 
@@ -133,7 +133,7 @@ __PACKAGE__->set_primary_key("id");
 =cut
 
 __PACKAGE__->add_unique_constraint(
-  "idx_37481_combi_unique",
+  "idx_55174_combi_unique",
   ["host", "address", "deliveryservice", "cachegroup"],
 );
 
@@ -190,8 +190,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/Zdg5RonFa4gMSavX7jD4g
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-27 10:16:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7Z1OeqqXYtIaXWk0XqixGw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
