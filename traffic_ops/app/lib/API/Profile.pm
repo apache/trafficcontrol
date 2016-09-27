@@ -71,28 +71,23 @@ sub create {
   }
 
 	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("profile 'name' is not given.");
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
 	}
-	if ( $name eq "" ) {
-		return $self->alert("profile 'name' can't be null.");
-	}
-
-  if ( $name =~ /\s/ ) {
-    return $self->alert("Profile name cannot contain space(s).");
-  }
 
 	my $description = $params->{description};
-	if ( !defined($description) ) {
-		return $self->alert("profile 'description' is not given.");
-	}
-	if ( $description eq "" ) {
-		return $self->alert("profile 'description' can't be null.");
+	if ( !defined($description) || $description eq "" ) {
+		return $self->alert("profile 'description' is required.");
 	}
 
 	my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
 	if ( $existing_profile && $name eq $existing_profile ) {
 		return $self->alert("profile with name $name already exists.");
+	}
+
+	my $existing_desc = $self->db->resultset('Profile')->find( { description => $description } );
+	if ( $existing_desc ) {
+		return $self->alert("a profile with the exact same description already exists." );
 	}
 
 	my $insert = $self->db->resultset('Profile')->create(
@@ -103,6 +98,8 @@ sub create {
 	);
 	$insert->insert();
 	my $new_id = $insert->id;
+
+	&log( $self, "Created profile with id: " . $new_id . " and name: " . $name, "APICHANGE" );
 
 	my $response;
 	$response->{id} = $new_id;
@@ -120,12 +117,9 @@ sub copy {
 
 	my $name = $self->param('profile_name');
 	my $profile_copy_from_name = $self->param('profile_copy_from');
-    if ( !defined($name) ) {
-        return $self->alert("profile 'name' is not given.");
-    }
-    if ( $name eq "" ) {
-        return $self->alert("profile 'name' can't be null.");
-    }
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
+	}
     if ( defined($profile_copy_from_name) and ( $profile_copy_from_name eq "" ) ) {
         return $self->alert("profile name 'profile_copy_from' can't be null.");
     }
@@ -166,7 +160,9 @@ sub copy {
         }
     }
 
-    my $response;
+	&log( $self, "Created profile from copy with id: " . $new_id . " and name: " . $name, "APICHANGE" );
+
+	my $response;
     $response->{id} = $new_id;
     $response->{name} = $name;
     $response->{description} = $description;
@@ -194,14 +190,8 @@ sub update {
 	}
 
 	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("profile 'name' is not given.");
-	}
-	if ( $name eq "" ) {
-		return $self->alert("profile 'name' can't be null.");
-	}
-	if ( $name =~ /\s/ ) {
-		return $self->alert("Profile name cannot contain space(s).");
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
 	}
 	if ( $profile->name ne $name ) {
 		my $existing = $self->db->resultset('Profile')->find( { name => $name } );
@@ -211,11 +201,8 @@ sub update {
 	}
 
 	my $description = $params->{description};
-	if ( !defined($description) ) {
-		return $self->alert("profile 'description' is not given.");
-	}
-	if ( $description eq "" ) {
-		return $self->alert("profile 'description' can't be null.");
+	if ( !defined($description) || $description eq "" ) {
+		return $self->alert("profile 'description' is required.");
 	}
 	if ( $profile->description ne $description ) {
 		my $existing = $self->db->resultset('Profile')->find( { description => $description } );
@@ -228,7 +215,7 @@ sub update {
 	$profile->description($description);
 	$profile->update();
 
-	&log( $self, "Update profile with name: $name", "APICHANGE" );
+	&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
 
 	my $response;
 	$response->{id} = $id;
