@@ -1037,4 +1037,25 @@ sub postupdatequeue {
 	return $self->success($response);
 }
 
+sub profile {
+	my $self = shift;
+
+	my $id = $self->param('profile_id');
+
+	my $profile = $self->db->resultset('Profile')->find( { id => $id } );
+	if ( !defined($profile) ) {
+		return $self->not_found();
+	}
+
+	my @server_ids = ();
+	my $servers = $self->db->resultset('Server')->search( { profile => $profile->id } );
+	while ( my $row = $servers->next ) {
+		push(@server_ids, $row->id);
+	}
+
+	my $response;
+	$response->{serverIds} = \@server_ids;
+	return $self->success($response, "Get servers by profile completed.");
+}
+
 1;

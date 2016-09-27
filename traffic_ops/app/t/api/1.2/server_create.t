@@ -164,6 +164,11 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
         "physLocation" => "HotAtlanta" })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+my $svr_ids = &get_svr_ids_by_profile(1);
+ok $t->get_ok('/api/1.2/servers/profile/1' => {Accept => 'application/json'})->status_is(200)
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/serverIds", $svr_ids )
+            , "Does the server ids return?";
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
@@ -178,4 +183,18 @@ sub get_svr_id {
     $get_svr->finish();
     my $id = $p->[0]->{id};
     return $id;
+}
+
+sub get_svr_ids_by_profile {
+    my $profile_id = shift;
+    my $q      = "select * from server where profile = \'$profile_id\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my @ids;
+    foreach my $svr (@$p) {
+        push(@ids, $svr->{id});
+    }
+    return \@ids;
 }

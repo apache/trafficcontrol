@@ -650,6 +650,7 @@ sub api_routes {
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
 	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete',   namespace => $namespace );
 	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
+	$r->get( "/api/$version/servers/profile/:profile_id" )->over( authenticated => 1 )->to( 'Server#profile',   namespace => $namespace );
     $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
     $r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#update', namespace => $namespace );
     $r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#delete', namespace => $namespace );

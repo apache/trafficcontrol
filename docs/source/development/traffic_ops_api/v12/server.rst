@@ -939,3 +939,53 @@ Server
 
 |
 
+**GET /api/1.2/servers/profile/{:profile_id}**
+
+  Allow user to get all servers associated to a profile.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +------------+----------+---------------------------------+
+  | Name       | Required | Description                     |
+  +============+==========+=================================+
+  | profile_id | yes      | The profile id.                 |
+  +------------+----------+---------------------------------+
+  
+  **Response Properties**
+
+  +----------------+--------+----------------------------------+
+  |  Parameter     |  Type  |           Description            |
+  +================+========+==================================+
+  | ``response``   |        |                                  |
+  +----------------+--------+----------------------------------+
+  | ``>serverIds`` | array  | Array of server_ids.             |
+  +----------------+--------+----------------------------------+
+  | ``alerts``     | array  | A collection of alert messages.  |
+  +----------------+--------+----------------------------------+
+  | ``>level``     | string | Success, info, warning or error. |
+  +----------------+--------+----------------------------------+
+  | ``>text``      | string | Alert message.                   |
+  +----------------+--------+----------------------------------+
+  | ``version``    | string |                                  |
+  +----------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response":{
+        "serverIds": [ 5, 9, 10, 11 ]
+      },
+      "alerts":[
+        {
+          "level": "success",
+          "text": "Get servers by profile completed."
+        }
+      ]
+    }
+
+|
+
