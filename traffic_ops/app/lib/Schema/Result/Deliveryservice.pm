@@ -147,12 +147,12 @@ __PACKAGE__->table("deliveryservice");
 
 =head2 miss_lat
 
-  data_type: 'double precision'
+  data_type: 'numeric'
   is_nullable: 1
 
 =head2 miss_long
 
-  data_type: 'double precision'
+  data_type: 'numeric'
   is_nullable: 1
 
 =head2 check_path
@@ -337,9 +337,9 @@ __PACKAGE__->add_columns(
   "info_url",
   { data_type => "text", is_nullable => 1 },
   "miss_lat",
-  { data_type => "double precision", is_nullable => 1 },
+  { data_type => "numeric", is_nullable => 1 },
   "miss_long",
-  { data_type => "double precision", is_nullable => 1 },
+  { data_type => "numeric", is_nullable => 1 },
   "check_path",
   { data_type => "text", is_nullable => 1 },
   "last_updated",
@@ -411,7 +411,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_37254_ds_id_unique>
+=head2 C<idx_54947_ds_id_unique>
 
 =over 4
 
@@ -421,9 +421,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_37254_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_54947_ds_id_unique", ["id"]);
 
-=head2 C<idx_37254_ds_name_unique>
+=head2 C<idx_54947_ds_name_unique>
 
 =over 4
 
@@ -433,7 +433,7 @@ __PACKAGE__->add_unique_constraint("idx_37254_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_37254_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_54947_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -603,7 +603,7 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BYh7gNfayk/3Shm81W2Hew
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-27 10:16:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:oRI0j54jL5ypnpXOsbAVEw
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
