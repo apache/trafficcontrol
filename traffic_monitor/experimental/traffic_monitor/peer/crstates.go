@@ -140,6 +140,12 @@ func (o *CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.Deliv
 	o.m.Unlock()
 }
 
+func (o *CRStatesThreadsafe) DeleteDeliveryService(name enum.DeliveryServiceName) {
+	o.m.Lock()
+	delete(o.crStates.Deliveryservice, name)
+	o.m.Unlock()
+}
+
 // This could be made lock-free, if the performance was necessary
 type CRStatesPeersThreadsafe struct {
 	crStates map[enum.TrafficMonitorName]Crstates

@@ -134,16 +134,18 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 				}
 			}
 
-			addStateDeliveryServices(monitorConfig, localStates.Get().Deliveryservice)
+			// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
+			for _, ds := range monitorConfig.DeliveryService {
+				// since caches default to unavailable, also default DS false
+				if _, exists := localStates.Get().Deliveryservice[enum.DeliveryServiceName(ds.XMLID)]; !exists {
+					localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
+				}
+			}
+			for ds, _ := range localStates.Get().Deliveryservice {
+				if _, exists := monitorConfig.DeliveryService[string(ds)]; !exists {
+					localStates.DeleteDeliveryService(ds)
+				}
+			}
 		}
-	}
-}
-
-// addStateDeliveryServices adds delivery services in `mc` as keys in `deliveryServices`, with empty Deliveryservice values.
-// TODO add disabledLocations
-func addStateDeliveryServices(mc to.TrafficMonitorConfigMap, deliveryServices map[enum.DeliveryServiceName]peer.Deliveryservice) {
-	for _, ds := range mc.DeliveryService {
-		// since caches default to unavailable, also default DS false
-		deliveryServices[enum.DeliveryServiceName(ds.XMLID)] = peer.Deliveryservice{}
 	}
 }
