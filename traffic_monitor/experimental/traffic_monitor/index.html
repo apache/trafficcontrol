@@ -125,6 +125,11 @@
 			 setInterval(getDsStats, 4003);
 		 }
 
+		 // source: http://stackoverflow.com/a/2901298/292623
+		 function numberStrWithCommas(x) {
+			 return x.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		 }
+
 		 function openTab(tabName) {
 			 var i, x, tablinks;
 			 x = document.getElementsByClassName("tabcontent");
@@ -160,10 +165,13 @@
 
 		 function getBandwidth() {
 			 ajax("/api/bandwidth-kbps", function(r) {
-				 document.getElementById("bandwidth").innerHTML = parseFloat(r).toFixed(2);
-				 ajax("/api/bandwidth-capacity-kbps", function(r) {
-					 document.getElementById("bandwidth-capacity").innerHTML = parseInt(r);
-				 });
+				 document.getElementById("bandwidth").innerHTML = numberStrWithCommas(parseFloat(r).toFixed(2));
+			 });
+		 }
+
+		 function getBandwidthCapacity() {
+			 ajax("/api/bandwidth-capacity-kbps", function(r) {
+				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(parseInt(r).toString());
 			 });
 		 }
 
