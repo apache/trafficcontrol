@@ -27,6 +27,11 @@ func (a Stats) Copy() Stats {
 	return b
 }
 
+func (a Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
+	ds, ok := a.DeliveryService[name]
+	return ds, ok
+}
+
 // TODO rename to just 'New'?
 func NewStats() Stats {
 	return Stats{DeliveryService: map[enum.DeliveryServiceName]dsdata.Stat{}}
@@ -34,7 +39,7 @@ func NewStats() Stats {
 
 func setStaticData(dsStats Stats, dsServers map[enum.DeliveryServiceName][]enum.CacheName) Stats {
 	for ds, stat := range dsStats.DeliveryService {
-		stat.Common.CachesConfigured.Value = int64(len(dsServers[ds]))
+		stat.CommonStats.CachesConfiguredNum.Value = int64(len(dsServers[ds]))
 		dsStats.DeliveryService[ds] = stat // TODO consider changing dsStats.DeliveryService[ds] to a pointer so this kind of thing isn't necessary; possibly more performant, as well
 	}
 	return dsStats
@@ -72,15 +77,15 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 
 			if available.IsAvailable {
 				// c.IsAvailable.Value
-				stat.Common.IsAvailable.Value = true
-				stat.Common.CachesAvailable.Value++
+				stat.CommonStats.IsAvailable.Value = true
+				stat.CommonStats.CachesAvailableNum.Value++
 				cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
 				cacheGroupStats.IsAvailable.Value = true
 				stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
-				stat.Total.IsAvailable.Value = true
-				typeStats := stat.Type[cacheType]
+				stat.TotalStats.IsAvailable.Value = true
+				typeStats := stat.Types[cacheType]
 				typeStats.IsAvailable.Value = true
-				stat.Type[cacheType] = typeStats
+				stat.Types[cacheType] = typeStats
 			}
 
 			// TODO fix nested ifs
@@ -90,7 +95,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 				} else {
 					result := results[0]
 					if result.PrecomputedData.Reporting {
-						stat.Common.CachesReporting[enum.CacheName(cache)] = true
+						stat.CommonStats.CachesReporting[enum.CacheName(cache)] = true
 					} else {
 						log.Debugf("no reporting %v %v\n", cache, deliveryService)
 					}
@@ -192,7 +197,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			stat.CacheGroups[cgName] = cacheStats
 		}
 
-		for cacheType, cacheStats := range stat.Type {
+		for cacheType, cacheStats := range stat.Types {
 			lastKbpsData, _ := lastKbpsStat.Type[cacheType]
 			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
 				if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
@@ -201,7 +206,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 						lastKbpsData.Kbps = 0
 					}
 					cacheStats.Kbps.Value = lastKbpsData.Kbps
-					stat.Type[cacheType] = cacheStats
+					stat.Types[cacheType] = cacheStats
 					continue
 				}
 				if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
@@ -212,23 +217,23 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 					cacheStats.Kbps.Value = 0
 				}
 				lastKbpsStat.Type[cacheType] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
-				stat.Type[cacheType] = cacheStats
+				stat.Types[cacheType] = cacheStats
 			}
 		}
 
-		totalChanged := lastKbpsStat.Total.Bytes != stat.Total.OutBytes.Value
+		totalChanged := lastKbpsStat.Total.Bytes != stat.TotalStats.OutBytes.Value
 		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
-			stat.Total.Kbps.Value = float64(stat.Total.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds() / BytesPerKbps
-			if stat.Total.Kbps.Value < 0 {
-				stat.Total.Kbps.Value = 0
-				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.Total.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
+			stat.TotalStats.Kbps.Value = float64(stat.TotalStats.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds() / BytesPerKbps
+			if stat.TotalStats.Kbps.Value < 0 {
+				stat.TotalStats.Kbps.Value = 0
+				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.TotalStats.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
 			}
 		} else {
-			stat.Total.Kbps.Value = lastKbpsStat.Total.Kbps
+			stat.TotalStats.Kbps.Value = lastKbpsStat.Total.Kbps
 		}
 
 		if totalChanged {
-			lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.Total.OutBytes.Value, Kbps: stat.Total.Kbps.Value}
+			lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.TotalStats.OutBytes.Value, Kbps: stat.TotalStats.Kbps.Value}
 		}
 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
@@ -332,9 +337,9 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 				continue
 			}
 			httpDsStat := dsStats.DeliveryService[ds]
-			httpDsStat.Total = httpDsStat.Total.Sum(resultStat.Total)
+			httpDsStat.TotalStats = httpDsStat.TotalStats.Sum(resultStat.TotalStats)
 			httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultStat.CacheGroups[cachegroup])
-			httpDsStat.Type[serverType] = httpDsStat.Type[serverType].Sum(resultStat.Type[serverType])
+			httpDsStat.Types[serverType] = httpDsStat.Types[serverType].Sum(resultStat.Types[serverType])
 			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
 		}
 	}
@@ -344,61 +349,50 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	return kbpsStats, kbpsStatsLastKbps, kbpsErr
 }
 
-type StatName string
-type StatOld struct {
-	Time  int64  `json:"time"`
-	Value string `json:"value"`
-	Span  int    `json:"span,omitempty"`  // TODO set? remove?
-	Index int    `json:"index,omitempty"` // TODO set? remove?
-}
-type StatsOld struct {
-	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
-}
-
-func addStatCacheStats(s *StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64) *StatsOld {
-	s.DeliveryService[deliveryService][StatName(prefix+".out_bytes")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.OutBytes.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".isAvailable")] = []StatOld{StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
-	s.DeliveryService[deliveryService][StatName(prefix+".status_5xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Status5xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".status_4xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Status4xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".status_3xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Status3xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".status_2xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Status2xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".in_bytes")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.InBytes.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".kbps")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Kbps.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".tps_5xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Tps5xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".tps_4xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Tps4xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".tps_3xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Tps3xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".tps_2xx")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.Tps2xx.Value))}}
-	s.DeliveryService[deliveryService][StatName(prefix+".error-string")] = []StatOld{StatOld{Time: t, Value: c.ErrorString.Value}}
-	s.DeliveryService[deliveryService][StatName(prefix+".tps_total")] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.TpsTotal.Value))}}
+func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64) *dsdata.StatsOld {
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".out_bytes")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.OutBytes.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".isAvailable")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_5xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status5xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_4xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status4xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_3xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status3xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_2xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status2xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".in_bytes")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.InBytes.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".kbps")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Kbps.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_5xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps5xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_4xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps4xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_3xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps3xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_2xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps2xx.Value))}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".error-string")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.ErrorString.Value}}
+	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_total")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.TpsTotal.Value))}}
 	return s
 }
 
-func addCommonData(s *StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64) *StatsOld {
-	s.DeliveryService[deliveryService]["caches-configured"] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.CachesConfigured.Value))}}
-	s.DeliveryService[deliveryService]["caches-reporting"] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(len(c.CachesReporting))}}
-	s.DeliveryService[deliveryService]["error-string"] = []StatOld{StatOld{Time: t, Value: c.ErrorString.Value}}
-	s.DeliveryService[deliveryService]["status"] = []StatOld{StatOld{Time: t, Value: c.Status.Value}}
-	s.DeliveryService[deliveryService]["isHealthy"] = []StatOld{StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsHealthy.Value)}}
-	s.DeliveryService[deliveryService]["isAvailable"] = []StatOld{StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
-	s.DeliveryService[deliveryService]["caches-available"] = []StatOld{StatOld{Time: t, Value: strconv.Itoa(int(c.CachesAvailable.Value))}}
+func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64) *dsdata.StatsOld {
+	s.DeliveryService[deliveryService]["caches-configured"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.CachesConfiguredNum.Value))}}
+	s.DeliveryService[deliveryService]["caches-reporting"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(len(c.CachesReporting))}}
+	s.DeliveryService[deliveryService]["error-string"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.ErrorStr.Value}}
+	s.DeliveryService[deliveryService]["status"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.StatusStr.Value}}
+	s.DeliveryService[deliveryService]["isHealthy"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsHealthy.Value)}}
+	s.DeliveryService[deliveryService]["isAvailable"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
+	s.DeliveryService[deliveryService]["caches-available"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.CachesAvailableNum.Value))}}
 	return s
 }
 
 // StatsJSON returns an object formatted as expected to be serialized to JSON and served.
-func StatsJSON(dsStats Stats) StatsOld {
+func (dsStats Stats) JSON() dsdata.StatsOld {
 	now := time.Now().Unix()
-	jsonObj := &StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[StatName][]StatOld{}}
+	jsonObj := &dsdata.StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{}}
 
 	for deliveryService, stat := range dsStats.DeliveryService {
-		jsonObj.DeliveryService[deliveryService] = map[StatName][]StatOld{}
-		jsonObj = addCommonData(jsonObj, &stat.Common, deliveryService, now)
+		jsonObj.DeliveryService[deliveryService] = map[dsdata.StatName][]dsdata.StatOld{}
+		jsonObj = addCommonData(jsonObj, &stat.CommonStats, deliveryService, now)
 		for cacheGroup, cacheGroupStats := range stat.CacheGroups {
 			jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, string("location."+cacheGroup), now)
 		}
-		for cacheType, typeStats := range stat.Type {
+		for cacheType, typeStats := range stat.Types {
 			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String(), now)
 		}
-		jsonObj = addStatCacheStats(jsonObj, stat.Total, deliveryService, "total", now)
+		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total", now)
 	}
 	return *jsonObj
 }

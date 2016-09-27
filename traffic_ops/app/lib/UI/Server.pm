@@ -365,7 +365,7 @@ sub check_server_input {
 
 	my $ip_used =
 		$self->db->resultset('Server')
-			->search( { -and => [ ip_address => $paramHashRef->{'ip_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+			->search( { -and => [ 'me.ip_address' => $paramHashRef->{'ip_address'}, 'profile.name' => $paramHashRef->{'profile'}, 'me.id' => { '!=' => $id } ] }, { join => [ 'profile' ] })->single();
 	if ( $ip_used ) {
 		$err .= $paramHashRef->{'ip_address'} . " is already being used by a server with the same profile" . $sep;
 	}
@@ -392,7 +392,7 @@ sub check_server_input {
 	if ( defined( $paramHashRef->{'ip6_address'} ) && $paramHashRef->{'ip6_address'} ne "" ) {
 		my $ip6_used =
 			$self->db->resultset('Server')
-				->search( { -and => [ ip6_address => $paramHashRef->{'ip6_address'}, profile => $paramHashRef->{'profile'}, id => { '!=' => $id } ] })->single();
+				->search( { -and => [ 'me.ip6_address' => $paramHashRef->{'ip6_address'}, 'profile.name' => $paramHashRef->{'profile'}, 'me.id' => { '!=' => $id } ] }, { join => [ 'profile' ] })->single();
 		if ( $ip6_used ) {
 			$err .= $paramHashRef->{'ip6_address'} . " is already being used by a server with the same profile" . $sep;
 		}
@@ -948,14 +948,14 @@ sub postupdate {
 	my $updated   = $self->param("updated");
 	my $host_name = $self->param("host_name");
 	if ( !&is_admin($self) ) {
-		$self->render_text( "Unauthorized.", status => 401, layout => undef );
+		$self->render( text => "Forbidden", status => 403, layout => undef );
 		return;
 	}
 
 	if ( !defined($updated) ) {
-		$self->render_text(
-			"Failed request.  Must provide updated status",
-			status => 500,
+		$self->render(
+			text => "Failed request.  Must provide updated status",
+			status => 400,
 			layout => undef
 		);
 		return;
@@ -964,9 +964,9 @@ sub postupdate {
 	# resolve server id
 	my $serverid = $self->db->resultset("Server")->search( { host_name => $host_name } )->get_column('id')->single;
 	if ( !defined $serverid ) {
-		$self->render_text(
-			"Failed request.  Unknown server",
-			status => 500,
+		$self->render(
+			text => "Failed request.  Unknown server",
+			status => 404,
 			layout => undef
 		);
 		return;
@@ -978,7 +978,7 @@ sub postupdate {
 		$update_server->update( { upd_pending => $updated } );
 	}
 
-	# $self->render_text("Success", layout=>undef);
+	$self->render( text => "Success", layout=>undef);
 
 }
 

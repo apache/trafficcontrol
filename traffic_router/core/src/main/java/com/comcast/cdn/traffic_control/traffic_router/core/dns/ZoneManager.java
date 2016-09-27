@@ -254,8 +254,8 @@ public class ZoneManager extends Resolver {
 			}
 
 			final File zoneFile = new File(getZoneDirectory(), zone.getOrigin().toString());
-			LOGGER.info("writing: " + zoneFile.getAbsolutePath());
 			final FileWriter w = new FileWriter(zoneFile);
+			LOGGER.info("writing: " + zoneFile.getAbsolutePath());
 			IOUtils.write(zone.toMasterFile(), w);
 			w.flush();
 			w.close();

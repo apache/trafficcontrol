@@ -2,6 +2,7 @@ package manager
 
 import (
 	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
+	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"sync"
 )
 
@@ -10,15 +11,19 @@ type DSStatsThreadsafe struct {
 	m       *sync.RWMutex
 }
 
+type DSStatsReader interface {
+	Get() dsdata.StatsReadonly
+}
+
 func NewDSStatsThreadsafe() DSStatsThreadsafe {
 	s := ds.NewStats()
 	return DSStatsThreadsafe{m: &sync.RWMutex{}, dsStats: &s}
 }
 
-func (o *DSStatsThreadsafe) Get() ds.Stats {
+func (o *DSStatsThreadsafe) Get() dsdata.StatsReadonly {
 	o.m.RLock()
 	defer o.m.RUnlock()
-	return o.dsStats.Copy()
+	return *o.dsStats
 }
 
 func (o *DSStatsThreadsafe) Set(newDsStats ds.Stats) {

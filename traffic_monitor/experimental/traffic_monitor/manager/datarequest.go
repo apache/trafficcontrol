@@ -97,7 +97,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
 			case http_server.DSStats:
-				body, err = json.Marshal(ds.StatsJSON(dsStats.Get())) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+				body, err = json.Marshal(dsStats.Get().JSON()) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					err = fmt.Errorf("DsStats: %v", err)
 				}
@@ -154,6 +154,16 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 					sum += data.Kbps
 				}
 				body = []byte(fmt.Sprintf("%f", sum))
+			case http_server.APIBandwidthCapacity:
+				statHistory := statHistory.Get()
+				cap := int64(0)
+				for _, results := range statHistory {
+					if len(results) == 0 {
+						continue
+					}
+					cap += results[0].MaxBytes
+				}
+				body = []byte(fmt.Sprintf("%d", cap))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}
@@ -161,6 +171,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 			if err != nil {
 				errorCount.Inc()
 				log.Errorf("Request Error: %v\n", err)
+				req.Response <- nil
 			} else {
 				req.Response <- body
 			}
@@ -317,6 +328,11 @@ type Stats struct {
 	QueryIntervalActual int    `json:"Query Interval Actual"`
 	SlowestCache        string `json:"Slowest Cache"`
 	LastQueryInterval   int    `json:"Last Query Interval"`
+	Microthreads        int    `json:"Goroutines"`
+	LastGC              string `json:"Last Garbage Collection"`
+	MemAllocBytes       uint64 `json:"Memory Bytes Allocated"`
+	MemTotalBytes       uint64 `json:"Total Bytes Allocated"`
+	MemSysBytes         uint64 `json:"System Bytes Allocated"`
 }
 
 func getLongestPoll(lastHealthTimes map[enum.CacheName]time.Duration) (enum.CacheName, time.Duration) {
@@ -354,6 +370,11 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.QueryIntervalActual = int(longestPollTime / time.Millisecond)
 	s.QueryIntervalDelta = s.QueryIntervalActual - s.QueryIntervalTarget
 	s.LastQueryInterval = int(math.Max(float64(s.QueryIntervalActual), float64(s.QueryIntervalTarget)))
+	s.Microthreads = runtime.NumGoroutine()
+	s.LastGC = time.Unix(0, int64(memStats.LastGC)).String()
+	s.MemAllocBytes = memStats.Alloc
+	s.MemTotalBytes = memStats.TotalAlloc
+	s.MemSysBytes = memStats.Sys
 
 	return json.Marshal(s)
 }

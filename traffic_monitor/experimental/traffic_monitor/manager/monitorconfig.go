@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-func copyTMConfig(a to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
+func CopyTrafficMonitorConfigMap(a *to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
 	b := to.TrafficMonitorConfigMap{}
 	b.TrafficServer = map[string]to.TrafficServer{}
 	b.CacheGroup = map[string]to.TMCacheGroup{}
@@ -41,10 +41,6 @@ func copyTMConfig(a to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
 	return b
 }
 
-// TrafficMonitorConfigMap ...
-type TrafficMonitorConfigMap struct {
-}
-
 type TrafficMonitorConfigMapThreadsafe struct {
 	monitorConfig *to.TrafficMonitorConfigMap
 	m             *sync.RWMutex
@@ -54,15 +50,17 @@ func NewTrafficMonitorConfigMapThreadsafe() TrafficMonitorConfigMapThreadsafe {
 	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
 }
 
+// Get returns the TrafficMonitorConfigMap. Callers MUST NOT modify, it is not threadsafe for mutation. If mutation is necessary, call CopyTrafficMonitorConfigMap().
 func (t *TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	return copyTMConfig(*t.monitorConfig)
+	return *t.monitorConfig
 }
 
-func (t *TrafficMonitorConfigMapThreadsafe) Set(newMonitorConfig to.TrafficMonitorConfigMap) {
+// Set sets the TrafficMonitorConfigMap. This is only safe for one writer. This MUST NOT be called by multiple threads.
+func (t *TrafficMonitorConfigMapThreadsafe) Set(c to.TrafficMonitorConfigMap) {
 	t.m.Lock()
-	*t.monitorConfig = copyTMConfig(newMonitorConfig)
+	*t.monitorConfig = c
 	t.m.Unlock()
 }
 
