@@ -36,6 +36,10 @@ sub index {
 			@data, {
 				"id"   => $row->id,
 				"name" => $row->name,
+				"division" => {
+                    "id" => $row->division->id,
+                    "name" => $row->division->name
+                }
 			}
 		);
 	}
