@@ -9,8 +9,8 @@ import (
 	"time"
 
 	_ "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/manager"
 	_ "github.com/davecheney/gmx"
 )

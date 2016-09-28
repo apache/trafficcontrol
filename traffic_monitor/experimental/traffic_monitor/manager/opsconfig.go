@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"

@@ -3,8 +3,8 @@ package manager
 import (
 	"sort"
 
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 )
 
