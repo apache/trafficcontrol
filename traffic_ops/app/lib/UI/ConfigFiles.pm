@@ -945,7 +945,7 @@ sub remap_dot_config {
 			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
 				next;    # Live local delivery services skip mids
 			}
-			if ( defined( $mid_remap{ defined( $remap->{org} ) } ) ) {
+			if ( defined( $remap->{org}) && defined ( $mid_remap{$remap->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
 
