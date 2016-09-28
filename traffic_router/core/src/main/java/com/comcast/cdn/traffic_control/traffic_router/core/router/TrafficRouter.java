@@ -30,7 +30,6 @@ import java.util.Random;
 import java.util.Set;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
-import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
@@ -86,22 +85,19 @@ public class TrafficRouter {
 
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
-	private final CertificateChecker certificateChecker;
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
 			final StatTracker statTracker,
 			final TrafficOpsUtils trafficOpsUtils,
-			final FederationRegistry federationRegistry,
-            final CertificateChecker certificateChecker) throws IOException, JSONException {
+			final FederationRegistry federationRegistry) throws IOException, JSONException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = cr.getConfig().optBoolean("consistent.dns.routing", false); // previous/default behavior
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
-		this.certificateChecker = certificateChecker;
 	}
 
 	public ZoneManager getZoneManager() {
@@ -481,7 +477,6 @@ public class TrafficRouter {
 			return routeResult;
 		}
 
-		deliveryService.setHasX509Cert(certificateChecker.hasCertificate(deliveryService.getId()));
 		final String uriString = deliveryService.createURIString(request, cache);
 		routeResult.setUrl(new URL(uriString));
 		return routeResult;

@@ -21,12 +21,10 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class CertificateChecker {
 	private final static Logger LOGGER = Logger.getLogger(CertificateChecker.class);
-	private List<CertificateData> certificateDataList = new ArrayList<>();
 
 	public String getDeliveryServiceType(final JSONObject deliveryServiceJson) {
 		final JSONArray matchsets = deliveryServiceJson.optJSONArray("matchsets");
@@ -45,23 +43,23 @@ public class CertificateChecker {
 		return null;
 	}
 
-	public boolean certificatesAreValid(final JSONObject deliveryServicesJson) {
+	public boolean certificatesAreValid(final List<CertificateData> certificateDataList, final JSONObject deliveryServicesJson) {
 		for (final String deliveryServiceId : JSONObject.getNames(deliveryServicesJson)) {
-			if (!deliveryServiceHasValidCertificates(deliveryServicesJson, deliveryServiceId)) {
+			if (!deliveryServiceHasValidCertificates(certificateDataList, deliveryServicesJson, deliveryServiceId)) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	public boolean hasCertificate(final String deliveryServiceId) {
+	public boolean hasCertificate(final List<CertificateData> certificateDataList, final String deliveryServiceId) {
 		return certificateDataList.stream()
 			.filter(cd -> cd.getDeliveryservice().equals(deliveryServiceId))
 			.findFirst()
 			.isPresent();
 	}
 
-	private Boolean deliveryServiceHasValidCertificates(final JSONObject deliveryServicesJson, final String deliveryServiceId) {
+	private Boolean deliveryServiceHasValidCertificates(final List<CertificateData> certificateDataList, final JSONObject deliveryServicesJson, final String deliveryServiceId) {
 		final JSONObject deliveryServiceJson = deliveryServicesJson.optJSONObject(deliveryServiceId);
 		final JSONObject protocolJson = deliveryServiceJson.optJSONObject("protocol");
 
@@ -105,13 +103,5 @@ public class CertificateChecker {
 		}
 
 		return protocolJson != null ? protocolJson.optBoolean("acceptHttps", false) : false;
-	}
-
-	public List<CertificateData> getCertificateDataList() {
-		return certificateDataList;
-	}
-
-	public void setCertificateDataList(final List<CertificateData> certificateDataList) {
-		this.certificateDataList = certificateDataList;
 	}
 }

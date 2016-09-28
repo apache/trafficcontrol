@@ -30,8 +30,6 @@ public class CertificateDataListener implements NotificationListener {
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	@Override
 	public void handleNotification(final Notification notification, final Object handback) {
-		log.warn("Got a notification " + notification.getType() + " " + notification.getMessage());
-
 		if (!(notification instanceof AttributeChangeNotification)) {
 			return;
 		}
@@ -39,11 +37,9 @@ public class CertificateDataListener implements NotificationListener {
 		List<CertificateData> certificateDataList = new ArrayList<>();
 
 		final Object newValue = ((AttributeChangeNotification) notification).getNewValue();
-		log.warn("Got value " + newValue);
 
 		if (certificateDataList.getClass().isInstance(newValue)) {
 			certificateDataList = (List<CertificateData>) newValue;
-			log.warn("Going to put " + certificateDataList.size() + " into cert registry");
 			try {
 				CertificateRegistry.getInstance().importCertificateDataList(certificateDataList);
 			} catch (Throwable t) {

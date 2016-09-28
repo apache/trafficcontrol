@@ -31,17 +31,13 @@ public class CertificateDataConverter {
 
 	public HandshakeData toHandshakeData(final CertificateData certificateData) {
 		try {
-			log.warn("Decoding private key");
 			final PrivateKey privateKey = privateKeyDecoder.decode(certificateData.getCertificate().getKey());
-			log.warn("Getting encoded certificates");
 			final List<String> encodedCertificates = certificateDecoder.doubleDecode(certificateData.getCertificate().getCrt());
 
-			log.warn("Got " + encodedCertificates.size() + " encoded certificates in chain");
 			final List<X509Certificate> x509Chain = encodedCertificates.stream()
 				.map(encodedCertificate -> certificateDecoder.toCertificate(encodedCertificate))
 				.collect(Collectors.toList());
 
-			log.warn("Decoded and converted into " + x509Chain.size() + " x509 certs");
 			return new HandshakeData(certificateData.getDeliveryservice(), certificateData.getHostname(),
 				x509Chain.toArray(new X509Certificate[x509Chain.size()]), privateKey);
 

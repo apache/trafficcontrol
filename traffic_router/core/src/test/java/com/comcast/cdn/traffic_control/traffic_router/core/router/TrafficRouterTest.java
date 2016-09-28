@@ -90,7 +90,6 @@ public class TrafficRouterTest {
         setInternalState(trafficRouter, "federationRegistry", federationRegistry);
         setInternalState(trafficRouter, "consistentHasher", consistentHasher);
         setInternalState(trafficRouter, "steeringRegistry", mock(SteeringRegistry.class));
-        setInternalState(trafficRouter, "certificateChecker", mock(CertificateChecker.class));
 
         when(trafficRouter.route(any(DNSRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.route(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();

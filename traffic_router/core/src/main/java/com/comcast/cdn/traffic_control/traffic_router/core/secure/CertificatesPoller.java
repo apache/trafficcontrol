@@ -17,13 +17,14 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
-import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -38,7 +39,8 @@ public class CertificatesPoller implements ConfigurationListener {
 	private static final long defaultFixedRate = 3600 * 1000L;
 	private static final String intervalProperty = "certificates.polling.interval";
 	private long pollingInterval = defaultFixedRate;
-	private CertificateChecker certificateChecker;
+	private BlockingQueue<List<CertificateData>> certificatesQueue;
+	private List<CertificateData> lastFetchedData = new ArrayList<>();
 
 	@Autowired
 	private Environment environment;
@@ -70,8 +72,15 @@ public class CertificatesPoller implements ConfigurationListener {
 		final Runnable runnable = () -> {
 			try {
 				List<CertificateData> certificateDataList = certificatesClient.refreshData();
-				if (certificateDataList != null) {
-					certificateChecker.setCertificateDataList(certificateDataList);
+				if (certificateDataList == null) {
+					return;
+				}
+
+				if (!lastFetchedData.equals(certificateDataList)) {
+					certificatesQueue.put(certificateDataList);
+					lastFetchedData = certificateDataList;
+				} else {
+					certificatesQueue.put(lastFetchedData);
 				}
 			} catch (Throwable t) {
 				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage(), t);
@@ -126,16 +135,16 @@ public class CertificatesPoller implements ConfigurationListener {
 		return pollingInterval;
 	}
 
-	public CertificateChecker getCertificateChecker() {
-		return certificateChecker;
-	}
-
-	public void setCertificateChecker(final CertificateChecker certificateChecker) {
-		this.certificateChecker = certificateChecker;
-	}
-
 	@Override
 	public void configurationChanged() {
 		restart();
+	}
+
+	public BlockingQueue<List<CertificateData>> getCertificatesQueue() {
+		return certificatesQueue;
+	}
+
+	public void setCertificatesQueue(final BlockingQueue<List<CertificateData>> certificatesQueue) {
+		this.certificatesQueue = certificatesQueue;
 	}
 }

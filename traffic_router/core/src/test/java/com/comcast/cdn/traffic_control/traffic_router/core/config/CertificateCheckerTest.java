@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class CertificateCheckerTest {
 
-	private JSONObject deliveryServicesMap;
+	private JSONObject deliveryServicesJson;
 	private List<CertificateData> certificateDataList;
 
 	@Before
@@ -98,7 +98,7 @@ public class CertificateCheckerTest {
 			.put("matchsets", new JSONArray().put(0, matchSetItem3))
 			.put("domains", domainsArray3);
 
-		deliveryServicesMap = new JSONObject()
+		deliveryServicesJson = new JSONObject()
 			.put("https-delivery-service", httpsDeliveryServiceJson)
 			.put("http-delivery-service", httpDeliveryServiceJson)
 			.put("dnssec-delivery-service", dnssecDeliveryServiceJson);
@@ -107,9 +107,8 @@ public class CertificateCheckerTest {
 	@Test
 	public void itReturnsTrueWhenAllHttpsDeliveryServicesHaveCertificates() throws Exception {
 		CertificateChecker certificateChecker = new CertificateChecker();
-		certificateChecker.setCertificateDataList(certificateDataList);
 
-		assertThat(certificateChecker.certificatesAreValid(deliveryServicesMap), equalTo(true));
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(true));
 	}
 
 	@Test
@@ -130,8 +129,8 @@ public class CertificateCheckerTest {
 			.put("matchsets", matchsetsArray)
 			.put("domains", domainsArray);
 
-		deliveryServicesMap.put("bad-https-delivery-service", httpsDeliveryServiceJson);
+		deliveryServicesJson.put("bad-https-delivery-service", httpsDeliveryServiceJson);
 
-		assertThat(new CertificateChecker().certificatesAreValid(deliveryServicesMap), equalTo(false));
+		assertThat(new CertificateChecker().certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
 	}
 }
