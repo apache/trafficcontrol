@@ -278,4 +278,31 @@ sub availableprofile {
 	$self->success( \@data );
 }
 
+sub parameter {
+	my $self = shift;
+	my $parameter_id = $self->param('parameter_id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $parameter = $self->db->resultset('Parameter')->find( { id => $parameter_id } );
+	if ( !defined($parameter) ) {
+		return $self->not_found();
+	}
+
+	my @profiles = ();
+	my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter->id } );
+	while ( my $row = $rs->next ) {
+		push(@profiles, { "id" => $row->profile->id,
+			"name" => $row->profile->name,
+			"description" => $row->profile->description,
+		});
+	}
+
+	my $response;
+	$response->{profiles} = \@profiles;
+	return $self->success($response, "Get profiles by parameter completed.");
+}
+
 1;

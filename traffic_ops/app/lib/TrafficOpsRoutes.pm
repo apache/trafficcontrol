@@ -533,6 +533,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get( "/api/$version/profileparameters" => [ format => [qw(json)] ] )->over( authenticated => 1 )
 		->to( 'ProfileParameter#index', namespace => $namespace );
+	$r->post( "/api/$version/profileparameters/:id" )->over( authenticated => 1 )->to( 'ProfileParameter#create', namespace => $namespace );
+	$r->delete( "/api/$version/profileparameters/:profile_id/:parameter_id" )->over( authenticated => 1 )->to( 'ProfileParameter#delete', namespace => $namespace );
 
 	# -- REGION #NEW
 	# Supports ?orderby=key
@@ -645,6 +647,7 @@ sub api_routes {
     $r->post( "/api/$version/profiles/name/:profile_name/copy/:profile_copy_from" )->over( authenticated => 1 )->to( 'Profile#copy', namespace => $namespace );
     $r->put("/api/$version/profiles/:id")->over( authenticated => 1 )->to( 'Profile#update', namespace => $namespace );
     $r->delete("/api/$version/profiles/:id")->over( authenticated => 1 )->to( 'Profile#delete', namespace => $namespace );
+    $r->get( "/api/$version/profiles/parameter/:parameter_id" )->over( authenticated => 1 )->to( 'Profile#parameter', namespace => $namespace );
     $r->post("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#create', namespace => $namespace );
     $r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create', namespace => $namespace );
     $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
