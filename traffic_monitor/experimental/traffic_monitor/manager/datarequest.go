@@ -47,8 +47,9 @@ func StartDataRequestManager(dr <-chan http_server.DataRequest, opsConfig OpsCon
 
 func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
 	for {
-		select {
-		case req := <-dr:
+		req := <-dr
+		// TODO change this func to a http.HandlerFunc, and pass to OpsConfigManager, who will pass to http_server
+		go func() {
 			defer close(req.Response)
 
 			var body []byte
@@ -175,7 +176,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 			} else {
 				req.Response <- body
 			}
-		}
+		}()
 	}
 }
 
