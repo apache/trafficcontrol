@@ -39,7 +39,9 @@ public class HttpDataServer implements HttpHandler {
 	}
 	private boolean receivedSteeringPost = false;
 	private boolean receivedCertificatesPost = false;
-	private boolean receivedCrConfigPost = false;
+	private boolean receivedCrConfig2Post = false;
+	private boolean receivedCrConfig3Post = false;
+	private boolean receivedCrConfig4Post = false;
 
 // Useful for producing an access log
 //	static {
@@ -80,8 +82,22 @@ public class HttpDataServer implements HttpHandler {
 						receivedCertificatesPost = true;
 					}
 
-					if (!receivedCrConfigPost && "/crconfig".equals(httpExchange.getRequestURI().getPath())) {
-						receivedCrConfigPost = true;
+					if (!receivedCrConfig2Post && "/crconfig-2".equals(httpExchange.getRequestURI().getPath())) {
+						receivedCrConfig2Post = true;
+						receivedCrConfig3Post = false;
+						receivedCrConfig4Post = false;
+					}
+
+					if (!receivedCrConfig3Post && "/crconfig-3".equals(httpExchange.getRequestURI().getPath())) {
+						receivedCrConfig2Post = false;
+						receivedCrConfig3Post = true;
+						receivedCrConfig4Post = false;
+					}
+
+					if (!receivedCrConfig4Post && "/crconfig-4".equals(httpExchange.getRequestURI().getPath())) {
+						receivedCrConfig2Post = false;
+						receivedCrConfig3Post = false;
+						receivedCrConfig4Post = true;
 					}
 
 					try {
@@ -124,8 +140,16 @@ public class HttpDataServer implements HttpHandler {
 					path = path.replace("/sslkeys.json", "/sslkeys-missing-1.json");
 				}
 
-				if (path.contains("CrConfig") && receivedCrConfigPost) {
+				if (path.contains("CrConfig") && receivedCrConfig2Post) {
 					path = path.replace("CrConfig", "CrConfig2");
+				}
+
+				if (path.contains("CrConfig") && receivedCrConfig3Post) {
+					path = path.replace("CrConfig", "CrConfig3");
+				}
+
+				if (path.contains("CrConfig") && receivedCrConfig4Post) {
+					path = path.replace("CrConfig", "CrConfig4");
 				}
 
 				InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);

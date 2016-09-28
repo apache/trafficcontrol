@@ -449,7 +449,7 @@ public class RouterTest {
 		}
 		
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
-		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig");
+		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-2");
 		httpClient.execute(httpPost).close();
 
 		// Default interval for polling cr config is 10 seconds
@@ -458,6 +458,7 @@ public class RouterTest {
 		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
 
+		// verify we do not yet use the new configuration
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			String location = response.getFirstHeader("Location").getValue();
@@ -479,13 +480,48 @@ public class RouterTest {
 			// Expected, this means we're doing the right thing
 		}
 
-		// Update certificates so new ds is valid
+		// verify that if we get a new cr-config that turns off https for the problematic delivery service
+		// that it's able to get through while TR is still concurrently trying to get certs
+
 		String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/crconfig-3");
+		httpClient.execute(httpPost).close();
+
+		// Default interval for polling cr config is 10 seconds
+		Thread.sleep(30 * 1000);
+
+		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+
+		// verify we now use the new configuration
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			String location = response.getFirstHeader("Location").getValue();
+			assertThat(location, isOneOf(
+				"http://edge-cache-900.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+				"http://edge-cache-901.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+				"http://edge-cache-902.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+			));
+		}
+
+		// Go back to the cr-config that makes the delivery service https again
+		// Pretend someone did a cr-config snapshot that would have updated the location to be different
+		httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-4");
+		httpClient.execute(httpPost).close();
+
+		// Default interval for polling cr config is 10 seconds
+		Thread.sleep(15 * 1000);
+
+		// Update certificates so new ds is valid
+		testHttpPort = System.getProperty("testHttpServerPort", "8889");
 		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
 		httpClient.execute(httpPost).close();
 
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
+
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));

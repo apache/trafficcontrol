@@ -94,7 +94,6 @@ public class StatsTest {
 				"staticRouteCount", "fedCount", "regionalDeniedCount", "regionalAlternateCount"));
 
 			Map<String, Object> updateTracker = (Map<String, Object>) statsData.get("updateTracker");
-			updateTracker.keySet().forEach(System.out::println);
 			Set<String> keys = updateTracker.keySet();
 			List<String> expectedStats = Arrays.asList("lastCacheStateCheck", "lastCacheStateChange", "lastConfigCheck", "lastConfigChange");
 

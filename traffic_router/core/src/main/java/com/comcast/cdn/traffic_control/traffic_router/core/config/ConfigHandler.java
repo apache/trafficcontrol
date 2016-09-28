@@ -17,10 +17,10 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.net.UnknownHostException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Iterator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher;
@@ -37,9 +40,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller;
-import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
-import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPublisher;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,10 +60,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 
-import javax.management.Attribute;
-import javax.management.ObjectName;
-
-
+@SuppressWarnings("PMD.TooManyFields")
 public class ConfigHandler {
 	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
 
@@ -81,8 +79,11 @@ public class ConfigHandler {
 	private FederationsWatcher federationsWatcher;
 	private RegionalGeoUpdater regionalGeoUpdater;
 	private SteeringWatcher steeringWatcher;
-	private CertificateChecker certificateChecker;
 	private CertificatesPoller certificatesPoller;
+	private CertificatesPublisher certificatesPublisher;
+	private BlockingQueue<Boolean> publishStatusQueue;
+	private final AtomicBoolean cancelled = new AtomicBoolean(false);
+	private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
 	public String getConfigDir() {
 		return configDir;
@@ -103,22 +104,32 @@ public class ConfigHandler {
 		return regionalGeoUpdater;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.AvoidCatchingThrowable"})
 	public boolean processConfig(final String jsonStr) throws JSONException, IOException  {
+		isProcessing.set(true);
+		LOGGER.info("Entered processConfig");
 		if (jsonStr == null) {
 			trafficRouterManager.setCacheRegister(null);
+			cancelled.set(false);
+			isProcessing.set(false);
+			publishStatusQueue.clear();
 			return false;
 		}
 
+		Date date;
 		synchronized(configSync) {
 			final JSONObject jo = new JSONObject(jsonStr);
-			LOGGER.info("Enter: processConfig");
 			final JSONObject config = jo.getJSONObject("config");
 			final JSONObject stats = jo.getJSONObject("stats");
 
 			final long sts = getSnapshotTimestamp(stats);
+			date = new Date(sts * 1000L);
 
 			if (sts <= getLastSnapshotTimestamp()) {
 				LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
+				cancelled.set(false);
+				isProcessing.set(false);
+				publishStatusQueue.clear();
 				return false;
 			}
 
@@ -134,33 +145,50 @@ public class ConfigHandler {
 				cacheRegister.setStats(stats);
 				parseTrafficOpsConfig(config, stats);
 
+				final Map<String, DeliveryService> deliveryServiceMap = parseDeliveryServiceConfig(jo.getJSONObject(deliveryServicesKey));
+
 				parseCertificatesConfig(config);
+				certificatesPublisher.setDeliveryServicesJson(deliveryServicesJson);
+				final ArrayList<DeliveryService> deliveryServices = new ArrayList<>();
+
+				if (deliveryServiceMap != null && !deliveryServiceMap.values().isEmpty()) {
+					deliveryServices.addAll(deliveryServiceMap.values());
+				}
+
+				if (deliveryServiceMap != null && !deliveryServiceMap.values().isEmpty()) {
+					certificatesPublisher.setDeliveryServices(deliveryServices);
+				}
+
 				certificatesPoller.restart();
-				parseDeliveryServiceConfig(jo.getJSONObject(deliveryServicesKey), cacheRegister);
 
-				LOGGER.warn("Waiting for all https delivery services to have valid certificates");
-				while (!certificateChecker.certificatesAreValid(deliveryServicesJson)) {
+				final List<DeliveryService> httpsDeliveryServices = deliveryServices.stream().filter(ds -> !ds.isDns() && ds.isSslEnabled()).collect(Collectors.toList());
+				httpsDeliveryServices.forEach(ds -> LOGGER.info("Checking for certificate for " + ds.getId()));
+
+				if (!httpsDeliveryServices.isEmpty()) {
 					try {
-						LOGGER.warn("Waiting for https certificates to support new config");
-						Thread.sleep(1000L);
+						publishStatusQueue.put(true);
 					} catch (InterruptedException e) {
-						LOGGER.warn("Interrupted while sleeping between checks of https certificates");
+						LOGGER.warn("Failed to notify certificates publisher we're waiting for certificates", e);
+					}
+
+					while (!cancelled.get() && !publishStatusQueue.isEmpty()) {
+						try {
+							LOGGER.info("Waiting for https certificates to support new config" + String.format("%x", publishStatusQueue.hashCode()));
+							Thread.sleep(1000L);
+						} catch (Throwable t) {
+							LOGGER.warn("Interrupted while waiting for status on publishing ssl certs", t);
+						}
 					}
 				}
 
-				try {
-					final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
-					final Attribute certificateDataList = new Attribute("CertificateDataListString",
-						new ObjectMapper().writeValueAsString(certificateChecker.getCertificateDataList()));
-					LOGGER.warn("All Delivery Services now have valid certificates available, handing cert data to tomcat connector side");
-					for (final CertificateData certificateData : certificateChecker.getCertificateDataList()) {
-						LOGGER.warn("Cert Data for " + certificateData.getDeliveryservice() + " " + certificateData.getHostname());
-					}
-					ManagementFactory.getPlatformMBeanServer().setAttribute(objectName, certificateDataList);
-				} catch (Exception e) {
-					LOGGER.error("Failed to add certificate data list as management MBean! " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+				if (cancelled.get()) {
+					cancelled.set(false);
+					isProcessing.set(false);
+					publishStatusQueue.clear();
+					return false;
 				}
 
+				parseDeliveryServiceMatchSets(deliveryServicesJson, deliveryServiceMap, cacheRegister);
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
@@ -173,13 +201,18 @@ public class ConfigHandler {
 				trafficRouterManager.getTrafficRouter().configurationChanged();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
-				LOGGER.error(e, e);
+				LOGGER.error("Failed to process config for snapshot from " + date, e);
+				isProcessing.set(false);
+				cancelled.set(false);
+				publishStatusQueue.clear();
 				return false;
 			}
 		}
 
-		LOGGER.info("Exit: processConfig");
-
+		LOGGER.info("Exit: processConfig, successfully applied snapshot from " + date);
+		isProcessing.set(false);
+		cancelled.set(false);
+		publishStatusQueue.clear();
 		return true;
 	}
 
@@ -321,26 +354,39 @@ public class ConfigHandler {
 		statTracker.initialize(statMap, cacheRegister);
 	}
 
-	/**
-	 * Parses the {@link DeliveryService} information from the configuration and updates the
-	 * {@link DeliveryServiceManager}.
-	 * @param cacheRegister
-	 *
-	 * @param trConfig
-	 *            the {@link TrafficRouterConfiguration}
-	 * @throws JSONException 
-	 */
-	private void parseDeliveryServiceConfig(final JSONObject deliveryServices, final CacheRegister cacheRegister) throws JSONException {
-		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<>();
-		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<>();
+	private Map<String, DeliveryService> parseDeliveryServiceConfig(final JSONObject allDeliveryServices) throws JSONException {
 		final Map<String,DeliveryService> deliveryServiceMap = new HashMap<>();
 
-		for (final String deliveryServiceId : JSONObject.getNames(deliveryServices)) {
-			final JSONObject deliveryServicesJson = deliveryServices.getJSONObject(deliveryServiceId);
-			final JSONArray matchsets = deliveryServicesJson.getJSONArray("matchsets");
-			final DeliveryService deliveryService = new DeliveryService(deliveryServiceId, deliveryServicesJson);
+		for (final String deliveryServiceId : JSONObject.getNames(allDeliveryServices)) {
+			final JSONObject deliveryServiceJson = allDeliveryServices.getJSONObject(deliveryServiceId);
+			final DeliveryService deliveryService = new DeliveryService(deliveryServiceId, deliveryServiceJson);
 			boolean isDns = false;
+
+			final JSONArray matchsets = deliveryServiceJson.getJSONArray("matchsets");
+
+			for (int i = 0; i < matchsets.length(); i++) {
+				final JSONObject matchset = matchsets.getJSONObject(i);
+				final String protocol = matchset.getString("protocol");
+				if ("DNS".equals(protocol)) {
+					isDns = true;
+				}
+			}
+
+			deliveryService.setDns(isDns);
 			deliveryServiceMap.put(deliveryServiceId, deliveryService);
+		}
+
+		return deliveryServiceMap;
+	}
+
+	private void parseDeliveryServiceMatchSets(final JSONObject allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) throws JSONException {
+		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<>();
+		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<>();
+
+		for (final String deliveryServiceId : JSONObject.getNames(allDeliveryServices)) {
+			final JSONObject deliveryServiceJson = allDeliveryServices.getJSONObject(deliveryServiceId);
+			final JSONArray matchsets = deliveryServiceJson.getJSONArray("matchsets");
+			final DeliveryService deliveryService = deliveryServiceMap.get(deliveryServiceId);
 
 			for (int i = 0; i < matchsets.length(); i++) {
 				final JSONObject matchset = matchsets.getJSONObject(i);
@@ -352,7 +398,6 @@ public class ConfigHandler {
 					httpServiceMatchers.add(deliveryServiceMatcher);
 				} else if ("DNS".equals(protocol)) {
 					dnsServiceMatchers.add(deliveryServiceMatcher);
-					isDns = true;
 				}
 
 				final JSONArray list = matchset.getJSONArray("matchlist");
@@ -363,8 +408,6 @@ public class ConfigHandler {
 					deliveryServiceMatcher.addMatch(type, matcherJo.getString("regex"), target);
 				}
 			}
-
-			deliveryService.setDns(isDns);
 		}
 
 		cacheRegister.setDeliveryServiceMap(deliveryServiceMap);
@@ -603,11 +646,33 @@ public class ConfigHandler {
 		this.steeringWatcher = steeringWatcher;
 	}
 
-	public void setCertificateChecker(final CertificateChecker certificateChecker) {
-		this.certificateChecker = certificateChecker;
-	}
-
 	public void setCertificatesPoller(final CertificatesPoller certificatesPoller) {
 		this.certificatesPoller = certificatesPoller;
+	}
+
+	public CertificatesPublisher getCertificatesPublisher() {
+		return certificatesPublisher;
+	}
+
+	public void setCertificatesPublisher(final CertificatesPublisher certificatesPublisher) {
+		this.certificatesPublisher = certificatesPublisher;
+	}
+
+	public BlockingQueue<Boolean> getPublishStatusQueue() {
+		return publishStatusQueue;
+	}
+
+	public void setPublishStatusQueue(final BlockingQueue<Boolean> publishStatusQueue) {
+		this.publishStatusQueue = publishStatusQueue;
+	}
+
+	public void cancelProcessConfig() {
+		if (isProcessing.get()) {
+			cancelled.set(true);
+		}
+	}
+
+	public boolean isProcessingConfig() {
+		return isProcessing.get();
 	}
 }
