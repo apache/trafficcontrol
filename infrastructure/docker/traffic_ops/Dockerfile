@@ -14,8 +14,7 @@
 FROM centos:7
 MAINTAINER Dan Kirkwood
 
-RUN yum install -y tar gcc-c++ openssl-devel expect postgresql-devel libcurl
-RUN yum install -y perl cpanminus perl-Test-CPAN-Meta.noarch
+RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
 RUN cpanm Carton
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
