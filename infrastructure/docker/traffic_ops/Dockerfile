@@ -16,7 +16,7 @@
 # under the License.
 ############################################################
 # Dockerfile to build Traffic Ops 1.6.0 container images
-# Based on CentOS 6.6
+# Based on CentOS 7.2
 ############################################################
 
 # Example Build and Run:
@@ -27,16 +27,11 @@
 #
 # docker run --name my-traffic-ops --hostname my-traffic-ops --net cdnet --publish 443:443 --env MYSQL_IP=my-traffic-ops-mysql --env MYSQL_PORT=3306 --env MYSQL_ROOT_PASS=secretrootpass --env MYSQL_TRAFFIC_OPS_PASS=supersecretpassword --env ADMIN_USER=superroot --env ADMIN_PASS=supersecreterpassward --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_VAULT_PASS=marginallylesssecret --env DOMAIN=cdnet --detach traffic_ops:1.5.1
 
-FROM centos:6.6
+FROM centos:7
 MAINTAINER Dan Kirkwood
 
-RUN yum -y update 
-RUN yum install -y tar gcc-c++ perl perl-core openssl-devel mysql-devel expect curl
-RUN yum clean all
-
-RUN curl -L https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm | perl - App::cpanminus \
-    && cpanm Carton \
-    && rm -rf /root/.cpanm
+RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
+RUN cpanm Carton
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
 ARG RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm
@@ -47,13 +42,6 @@ RUN yum install -y /$(basename $RPM)
 RUN rm /$(basename $RPM)
 
 RUN cd /opt/traffic_ops/app && carton
-
-# TODO: workaround for installing on CentOS 7 -- fix this!
-RUN chmod a+x /opt/traffic_ops/app/bin/* \
-	 /opt/traffic_ops/app/script/* \
-	 /opt/traffic_ops/app/db/*.pl \
-	 /opt/traffic_ops/app/db/*.sh \
-	 /opt/traffic_ops/install/bin/*
 
 RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
 	&& export TERM=xterm \
