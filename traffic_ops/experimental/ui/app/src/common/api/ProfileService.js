@@ -1,15 +1,15 @@
 var ProfileService = function(Restangular, messageModel) {
 
     this.getProfiles = function() {
-        return Restangular.all('profile').getList();
+        return Restangular.all('profiles').getList();
     };
 
     this.getProfile = function(id) {
-        return Restangular.one("profile", id).get();
+        return Restangular.one("profiles", id).get();
     };
 
     this.createProfile = function(profile) {
-        return Restangular.service('profile').post(profile)
+        return Restangular.service('profiles').post(profile)
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
@@ -33,7 +33,7 @@ var ProfileService = function(Restangular, messageModel) {
     };
 
     this.deleteProfile = function(id) {
-        return Restangular.one("profile", id).remove()
+        return Restangular.one("profiles", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Profile deleted' } ], true);

@@ -1,15 +1,15 @@
 var ParameterService = function(Restangular, messageModel) {
 
     this.getParameters = function() {
-        return Restangular.all('parameter').getList();
+        return Restangular.all('parameters').getList();
     };
 
     this.getParameter = function(id) {
-        return Restangular.one("parameter", id).get();
+        return Restangular.one("parameters", id).get();
     };
 
     this.createParameter = function(parameter) {
-        return Restangular.service('parameter').post(parameter)
+        return Restangular.service('parameters').post(parameter)
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
@@ -33,7 +33,7 @@ var ParameterService = function(Restangular, messageModel) {
     };
 
     this.deleteParameter = function(id) {
-        return Restangular.one("parameter", id).remove()
+        return Restangular.one("parameters", id).remove()
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter deleted' } ], true);

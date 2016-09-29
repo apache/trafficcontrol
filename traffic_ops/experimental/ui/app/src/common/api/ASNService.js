@@ -1,15 +1,15 @@
 var ASNService = function(Restangular, messageModel) {
 
     this.getASNs = function() {
-        return Restangular.all('asn').getList();
+        return Restangular.all('asns').getList();
     };
 
     this.getASN = function(id) {
-        return Restangular.one("asn", id).get();
+        return Restangular.one("asns", id).get();
     };
 
     this.createASN = function(asn) {
-        return Restangular.service('asn').post(asn)
+        return Restangular.service('asns').post(asn)
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
@@ -33,7 +33,7 @@ var ASNService = function(Restangular, messageModel) {
     };
 
     this.deleteASN = function(id) {
-        return Restangular.one("asn", id).remove()
+        return Restangular.one("asns", id).remove()
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'ASN deleted' } ], true);
