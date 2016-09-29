@@ -581,10 +581,12 @@ sub api_routes {
 		->to( 'DeliveryServiceServer#index', namespace => $namespace );
 
 	# -- DIVISIONS
+	$r->get("/api/$version/divisions")->over( authenticated => 1 )
+		->to( 'Division#index', namespace => $namespace );
+	$r->get("/api/$version/divisions/:id")->over( authenticated => 1 )
+		->to( 'Division#show', namespace => $namespace );
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
-	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
-		->to( 'Region#create', namespace => $namespace );
 
 	# -- FEDERATIONS
 	$r->get( "/internal/api/$version/federations")->over( authenticated => 1 )
@@ -655,6 +657,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/regions")->over( authenticated => 1 )
 		->to( 'Region#index', namespace => $namespace );
+	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
+		->to( 'Region#create', namespace => $namespace );
 
 	# -- ROLES
 	# Supports ?orderby=key
