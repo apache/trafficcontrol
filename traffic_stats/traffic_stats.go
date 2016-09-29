@@ -58,38 +58,38 @@ const (
 
 // StartupConfig contains all fields necessary to create a traffic stats session.
 type StartupConfig struct {
-	ToUser                      string                  `json:"toUser"`
-	ToPasswd                    string                  `json:"toPasswd"`
-	ToURL                       string                  `json:"toUrl"`
-	InfluxUser                  string                  `json:"influxUser"`
-	InfluxPassword              string                  `json:"influxPassword"`
-	InfluxProtocol              string                  `json:"influxProtocol"`
-	PollingInterval             int                     `json:"pollingInterval"`
-	DailySummaryPollingInterval int                     `json:"dailySummaryPollingInterval"`
-	PublishingInterval          int                     `json:"publishingInterval"`
-	ConfigInterval              int                     `json:"configInterval"`
-	MaxPublishSize              int                     `json:"maxPublishSize"`
-	StatusToMon                 string                  `json:"statusToMon"`
-	SeelogConfig                string                  `json:"seelogConfig"`
-	CacheRetentionPolicy        string                  `json:"cacheRetentionPolicy"`
-	DsRetentionPolicy           string                  `json:"dsRetentionPolicy"`
-	DailySummaryRetentionPolicy string                  `json:"dailySummaryRetentionPolicy"`
-	BpsChan                     chan influx.BatchPoints `json:"-"`
+	ToUser                      string   `json:"toUser"`
+	ToPasswd                    string   `json:"toPasswd"`
+	ToURL                       string   `json:"toUrl"`
+	InfluxUser                  string   `json:"influxUser"`
+	InfluxPassword              string   `json:"influxPassword"`
+	InfluxProtocol              string   `json:"influxProtocol"`
+	InfluxURLs                  []string `json:"influxUrls"`
+	PollingInterval             int      `json:"pollingInterval"`
+	DailySummaryPollingInterval int      `json:"dailySummaryPollingInterval"`
+	PublishingInterval          int      `json:"publishingInterval"`
+	ConfigInterval              int      `json:"configInterval"`
+	MaxPublishSize              int      `json:"maxPublishSize"`
+	StatusToMon                 string   `json:"statusToMon"`
+	SeelogConfig                string   `json:"seelogConfig"`
+	CacheRetentionPolicy        string   `json:"cacheRetentionPolicy"`
+	DsRetentionPolicy           string   `json:"dsRetentionPolicy"`
+	DailySummaryRetentionPolicy string   `json:"dailySummaryRetentionPolicy"`
+	BpsChan                     chan influx.BatchPoints
+	InfluxDBs                   []*InfluxDBProps
 }
 
 // RunningConfig is used to store runtime configuration for Traffic Stats.  This includes information
-// about caches, cachegroups, health urls, and online InfluxDB servers
+// about caches, cachegroups, and health urls
 type RunningConfig struct {
 	HealthUrls      map[string]map[string]string  // the 1st map key is CDN_name, the second is DsStats or CacheStats
 	CacheMap        map[string]traffic_ops.Server // map hostName to cache
-	InfluxDBs       []*InfluxDBProps
 	LastSummaryTime time.Time
 }
 
-//InfluxDBProps contains information about online InfluxDB servers.
+//InfluxDBProps contains URL and connection information for InfluxDB servers
 type InfluxDBProps struct {
-	Fqdn         string
-	Port         int64
+	URL          string
 	InfluxClient influx.Client
 }
 
@@ -138,7 +138,6 @@ func main() {
 		case <-hupChan:
 			log.Info("HUP Received - reloading config")
 			newConfig, err := loadStartupConfig(*configFile, config)
-
 			if err != nil {
 				errHndlr(err, ERROR)
 			} else {
@@ -237,10 +236,19 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 
 	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
 	if err != nil {
-		errHndlr(fmt.Errorf("error reading Seelog config %s", config.SeelogConfig), ERROR)
-	} else {
-		log.ReplaceLogger(logger)
-		log.Info("Replaced logger, see log file according to", config.SeelogConfig)
+		return config, fmt.Errorf("error reading Seelog config %s", config.SeelogConfig)
+	}
+	log.ReplaceLogger(logger)
+	log.Info("Replaced logger, see log file according to", config.SeelogConfig)
+
+	if len(config.InfluxURLs) == 0 {
+		return config, fmt.Errorf("No InfluxDB urls provided in influxUrls, please provide at least one valid URL.  e.g. \"influxUrls\": [\"http://localhost:8086\"]")
+	}
+	for _, url := range config.InfluxURLs {
+		influxDBProps := InfluxDBProps{
+			URL: url,
+		}
+		config.InfluxDBs = append(config.InfluxDBs, &influxDBProps)
 	}
 
 	return config, nil
@@ -254,7 +262,7 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
 		// influx connection
-		influxClient, err := influxConnect(config, runningConfig)
+		influxClient, err := influxConnect(config)
 		if err != nil {
 			log.Error("Could not connect to InfluxDb to get daily summary stats!!")
 			errHndlr(err, ERROR)
@@ -317,7 +325,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 						statTime,
 					)
 					if err != nil {
-						log.Error("error adding data point for max Gbps...%v\n", err)
+						log.Errorf("error adding data point for max Gbps...%v\n", err)
 						continue
 					}
 					bp.AddPoint(pt)
@@ -437,18 +445,6 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	runningConfig.CacheMap = make(map[string]traffic_ops.Server)
 	for _, server := range servers {
 		runningConfig.CacheMap[server.HostName] = server
-		if server.Type == "INFLUXDB" && server.Status == "ONLINE" {
-			fqdn := server.HostName + "." + server.DomainName
-			port, err := strconv.ParseInt(server.TCPPort, 10, 32)
-			if err != nil {
-				port = 8086 //default port
-			}
-			influxDBProps := InfluxDBProps{
-				Fqdn: fqdn,
-				Port: port,
-			}
-			runningConfig.InfluxDBs = append(runningConfig.InfluxDBs, &influxDBProps)
-		}
 	}
 
 	cacheStatPath := "/publish/CacheStats?hc=1&stats="
@@ -547,25 +543,6 @@ func errHndlr(err error, severity int) {
 	}
 }
 
-/* the ds json looks like:
-{
-  "deliveryService": {
-    "linear-gbr-hls-sbr": {
-      "	.us-ma-woburn.kbps": [{
-        "index": 520281,
-        "time": 1398893383605,
-        "value": "0",
-        "span": 520024
-      }],
-      "location.us-de-newcastle.kbps": [{
-        "index": 520281,
-        "time": 1398893383605,
-        "value": "0",
-        "span": 517707
-      }],
-    }
- }
-*/
 func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
 	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
@@ -646,32 +623,6 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	log.Info("Collected ", statCount, " deliveryservice stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
-
-/* The caches json looks like:
-{
-	caches: {
-		odol-atsmid-est-01: { },
-		odol-atsec-sfb-05: {
-			ats.proxy.process.net.read_bytes: [
-				{
-					index: 332545,
-					time: 1396711793883,
-					value: "5547585527895",
-					span: 1
-				}
-			],
-			ats.proxy.process.http.transaction_counts.hit_fresh.process: [
-				{
-					index: 332545,
-					time: 1396711793883,
-					value: "2109053611",
-					span: 1
-				}
-			],
-		}
-	}
-}
-*/
 
 func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]traffic_ops.Server, config StartupConfig) error {
 
@@ -764,13 +715,13 @@ func getURL(url string) ([]byte, error) {
 	return body, nil
 }
 
-func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Client, error) {
+func influxConnect(config StartupConfig) (influx.Client, error) {
 	var hosts []*InfluxDBProps
-	for _, InfluxHost := range runningConfig.InfluxDBs {
+	for _, InfluxHost := range config.InfluxDBs {
 		if InfluxHost.InfluxClient == nil {
 			if config.InfluxProtocol == "udp" {
 				conf := influx.UDPConfig{
-					Addr: fmt.Sprintf("%s:%d", InfluxHost.Fqdn, InfluxHost.Port),
+					Addr: InfluxHost.URL,
 				}
 				con, err := influx.NewUDPClient(conf)
 				if err != nil {
@@ -781,7 +732,7 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 
 			} else {
 				conf := influx.HTTPConfig{
-					Addr:     fmt.Sprintf("%s://%s:%d", config.InfluxProtocol, InfluxHost.Fqdn, InfluxHost.Port),
+					Addr:     InfluxHost.URL,
 					Username: config.InfluxUser,
 					Password: config.InfluxPassword,
 				}
@@ -813,12 +764,12 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		return con, nil
 	}
 
-	err := errors.New("Could not connect to any of the InfluxDb servers that are ONLINE in traffic ops.")
+	err := errors.New("Could not connect to any of the InfluxDb servers defined in the influxUrls config.")
 	return nil, err
 }
 
 func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints, retry bool) {
-	influxClient, err := influxConnect(config, runningConfig)
+	influxClient, err := influxConnect(config)
 	if err != nil {
 		if retry {
 			config.BpsChan <- bps
