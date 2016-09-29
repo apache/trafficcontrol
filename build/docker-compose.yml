@@ -1,0 +1,18 @@
+---
+
+# Build configuration for traffic_control
+version: '2'
+
+volumes:
+  traffic_control:
+
+services:
+  traffic_ops:
+    build:
+      dockerfile: Dockerfile-traffic_ops
+      context: .
+    environment:
+      - BRANCH
+    volumes:
+      - traffic_control:/traffic_control
+
