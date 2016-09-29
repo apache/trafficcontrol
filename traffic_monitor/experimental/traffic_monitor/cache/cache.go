@@ -83,9 +83,8 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 
 	stats.Caches = map[string]map[string][]Stat{}
 
-	count := 1
-
 	for id, history := range statHistory {
+		count := 1
 		for _, result := range history {
 			for stat, value := range result.Astats.Ats {
 				s := Stat{
@@ -105,7 +104,6 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 			if historyCount > 0 && count == historyCount {
 				break
 			}
-
 			count++
 		}
 	}
