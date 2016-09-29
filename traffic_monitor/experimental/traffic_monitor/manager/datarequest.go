@@ -76,9 +76,10 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			date: "Thu Oct 09 20:28:36 UTC 2014"
 		*/
 		params := req.Parameters
+		fmt.Printf("datarequest params %+v\n", params)
 		hc := 1
-		if _, exists := params["hc"]; exists {
-			v, err := strconv.Atoi(params["hc"][0])
+		if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
+			v, err := strconv.Atoi(paramHc[0])
 			if err == nil {
 				hc = v
 			}
