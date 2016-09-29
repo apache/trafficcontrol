@@ -41,142 +41,130 @@ type CacheStatus struct {
 	ConnectionCount       *int64   `json:"connection_count,omitempty"`
 }
 
-func StartDataRequestManager(dr <-chan http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
-	go dataRequestManagerListen(dr, opsConfig, toSession, localStates, peerStates, combinedStates, statHistory, dsStats, events, staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, toData, localCacheStatus, lastKbpsStats)
-}
+func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) []byte {
+	var body []byte
+	var err error
 
-func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
-	for {
-		req := <-dr
-		// TODO change this func to a http.HandlerFunc, and pass to OpsConfigManager, who will pass to http_server
-		go func() {
-			defer close(req.Response)
-
-			var body []byte
-			var err error
-
-			switch req.Type {
-			case http_server.TRConfig:
-				cdnName := opsConfig.Get().CdnName
-				if toSession == nil {
-					err = fmt.Errorf("Unable to connect to Traffic Ops")
-				} else if cdnName == "" {
-					err = fmt.Errorf("No CDN Configured")
-				} else {
-					body, err = toSession.CRConfigRaw(cdnName)
-				}
-				if err != nil {
-					err = fmt.Errorf("TR Config: %v", err)
-				}
-			case http_server.TRStateDerived:
-				body, err = peer.CrstatesMarshall(combinedStates.Get())
-				if err != nil {
-					err = fmt.Errorf("TR State (derived): %v", err)
-				}
-			case http_server.TRStateSelf:
-				body, err = peer.CrstatesMarshall(localStates.Get())
-				if err != nil {
-					err = fmt.Errorf("TR State (self): %v", err)
-				}
-			case http_server.CacheStats:
-				// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
-				// add pp and date to the json:
-				/*
-					pp: "0=[my-ats-edge-cache-1], hc=[1]",
-					date: "Thu Oct 09 20:28:36 UTC 2014"
-				*/
-				params := req.Parameters
-				hc := 1
-				if _, exists := params["hc"]; exists {
-					v, err := strconv.Atoi(params["hc"][0])
-					if err == nil {
-						hc = v
-					}
-				}
-				body, err = cache.StatsMarshall(statHistory.Get(), hc)
-				if err != nil {
-					err = fmt.Errorf("CacheStats: %v", err)
-				}
-			case http_server.DSStats:
-				body, err = json.Marshal(dsStats.Get().JSON()) // TODO marshall beforehand, for performance? (test to see how often requests are made)
-				if err != nil {
-					err = fmt.Errorf("DsStats: %v", err)
-				}
-			case http_server.EventLog:
-				body, err = json.Marshal(JSONEvents{Events: events.Get()})
-				if err != nil {
-					err = fmt.Errorf("EventLog: %v", err)
-				}
-			case http_server.PeerStates:
-				body, err = json.Marshal(createApiPeerStates(peerStates.Get()))
-			case http_server.StatSummary:
-				body = []byte("TODO implement")
-			case http_server.Stats:
-				body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
-				if err != nil {
-					err = fmt.Errorf("Stats: %v", err)
-				}
-			case http_server.ConfigDoc:
-				opsConfigCopy := opsConfig.Get()
-				// if the password is blank, leave it blank, so callers can see it's missing.
-				if opsConfigCopy.Password != "" {
-					opsConfigCopy.Password = "*****"
-				}
-				body, err = json.Marshal(opsConfigCopy)
-				if err != nil {
-					err = fmt.Errorf("Config Doc: %v", err)
-				}
-			case http_server.APICacheCount: // TODO determine if this should use peerStates
-				body = []byte(strconv.Itoa(len(localStates.Get().Caches)))
-			case http_server.APICacheAvailableCount:
-				body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches)))
-			case http_server.APICacheDownCount:
-				body = []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches)))
-			case http_server.APIVersion:
-				s := "traffic_monitor-" + staticAppData.Version + "."
-				if len(staticAppData.GitRevision) > 6 {
-					s += staticAppData.GitRevision[:6]
-				} else {
-					s += staticAppData.GitRevision
-				}
-				body = []byte(s)
-			case http_server.APITrafficOpsURI:
-				body = []byte(opsConfig.Get().Url)
-			case http_server.APICacheStates:
-				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
-			case http_server.APIBandwidthKbps:
-				serverTypes := toData.Get().ServerTypes
-				kbpsStats := lastKbpsStats.Get()
-				sum := float64(0.0)
-				for cache, data := range kbpsStats.Caches {
-					if serverTypes[cache] != enum.CacheTypeEdge {
-						continue
-					}
-					sum += data.Kbps
-				}
-				body = []byte(fmt.Sprintf("%f", sum))
-			case http_server.APIBandwidthCapacityKbps:
-				statHistory := statHistory.Get()
-				cap := int64(0)
-				for _, results := range statHistory {
-					if len(results) == 0 {
-						continue
-					}
-					cap += results[0].MaxKbps
-				}
-				body = []byte(fmt.Sprintf("%d", cap))
-			default:
-				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
+	switch req.Type {
+	case http_server.TRConfig:
+		cdnName := opsConfig.Get().CdnName
+		if toSession == nil {
+			err = fmt.Errorf("Unable to connect to Traffic Ops")
+		} else if cdnName == "" {
+			err = fmt.Errorf("No CDN Configured")
+		} else {
+			body, err = toSession.CRConfigRaw(cdnName)
+		}
+		if err != nil {
+			err = fmt.Errorf("TR Config: %v", err)
+		}
+	case http_server.TRStateDerived:
+		body, err = peer.CrstatesMarshall(combinedStates.Get())
+		if err != nil {
+			err = fmt.Errorf("TR State (derived): %v", err)
+		}
+	case http_server.TRStateSelf:
+		body, err = peer.CrstatesMarshall(localStates.Get())
+		if err != nil {
+			err = fmt.Errorf("TR State (self): %v", err)
+		}
+	case http_server.CacheStats:
+		// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
+		// add pp and date to the json:
+		/*
+			pp: "0=[my-ats-edge-cache-1], hc=[1]",
+			date: "Thu Oct 09 20:28:36 UTC 2014"
+		*/
+		params := req.Parameters
+		hc := 1
+		if _, exists := params["hc"]; exists {
+			v, err := strconv.Atoi(params["hc"][0])
+			if err == nil {
+				hc = v
 			}
-
-			if err != nil {
-				errorCount.Inc()
-				log.Errorf("Request Error: %v\n", err)
-				req.Response <- nil
-			} else {
-				req.Response <- body
+		}
+		body, err = cache.StatsMarshall(statHistory.Get(), hc)
+		if err != nil {
+			err = fmt.Errorf("CacheStats: %v", err)
+		}
+	case http_server.DSStats:
+		body, err = json.Marshal(dsStats.Get().JSON()) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+		if err != nil {
+			err = fmt.Errorf("DsStats: %v", err)
+		}
+	case http_server.EventLog:
+		body, err = json.Marshal(JSONEvents{Events: events.Get()})
+		if err != nil {
+			err = fmt.Errorf("EventLog: %v", err)
+		}
+	case http_server.PeerStates:
+		body, err = json.Marshal(createApiPeerStates(peerStates.Get()))
+	case http_server.StatSummary:
+		body = []byte("TODO implement")
+	case http_server.Stats:
+		body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
+		if err != nil {
+			err = fmt.Errorf("Stats: %v", err)
+		}
+	case http_server.ConfigDoc:
+		opsConfigCopy := opsConfig.Get()
+		// if the password is blank, leave it blank, so callers can see it's missing.
+		if opsConfigCopy.Password != "" {
+			opsConfigCopy.Password = "*****"
+		}
+		body, err = json.Marshal(opsConfigCopy)
+		if err != nil {
+			err = fmt.Errorf("Config Doc: %v", err)
+		}
+	case http_server.APICacheCount: // TODO determine if this should use peerStates
+		body = []byte(strconv.Itoa(len(localStates.Get().Caches)))
+	case http_server.APICacheAvailableCount:
+		body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches)))
+	case http_server.APICacheDownCount:
+		body = []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches)))
+	case http_server.APIVersion:
+		s := "traffic_monitor-" + staticAppData.Version + "."
+		if len(staticAppData.GitRevision) > 6 {
+			s += staticAppData.GitRevision[:6]
+		} else {
+			s += staticAppData.GitRevision
+		}
+		body = []byte(s)
+	case http_server.APITrafficOpsURI:
+		body = []byte(opsConfig.Get().Url)
+	case http_server.APICacheStates:
+		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
+	case http_server.APIBandwidthKbps:
+		serverTypes := toData.Get().ServerTypes
+		kbpsStats := lastKbpsStats.Get()
+		sum := float64(0.0)
+		for cache, data := range kbpsStats.Caches {
+			if serverTypes[cache] != enum.CacheTypeEdge {
+				continue
 			}
-		}()
+			sum += data.Kbps
+		}
+		body = []byte(fmt.Sprintf("%f", sum))
+	case http_server.APIBandwidthCapacity:
+		statHistory := statHistory.Get()
+		cap := int64(0)
+		for _, results := range statHistory {
+			if len(results) == 0 {
+				continue
+			}
+			cap += results[0].MaxBytes
+		}
+		body = []byte(fmt.Sprintf("%d", cap))
+	default:
+		err = fmt.Errorf("Unknown Request Type: %v", req.Type)
+	}
+
+	if err != nil {
+		errorCount.Inc()
+		log.Errorf("Request Error: %v\n", err)
+		return nil
+	} else {
+		return body
 	}
 }
 

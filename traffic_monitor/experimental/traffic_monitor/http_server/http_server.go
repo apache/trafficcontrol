@@ -15,7 +15,7 @@ import (
 // each time the previous running server will be stopped, and the server will be
 // restarted with the new port address and data request channel.
 type Server struct {
-	mgrReqChan                 chan<- DataRequest
+	getData                    GetDataFunc
 	stoppableListener          *stoppableListener.StoppableListener
 	stoppableListenerWaitGroup sync.WaitGroup
 }
@@ -67,7 +67,7 @@ func (s Server) registerEndpoints(sm *http.ServeMux) error {
 // Run runs a new HTTP service at the given addr, making data requests to the given c.
 // Run may be called repeatedly, and each time, will shut down any existing service first.
 // Run is NOT threadsafe, and MUST NOT be called concurrently by multiple goroutines.
-func (s Server) Run(c chan<- DataRequest, addr string) error {
+func (s Server) Run(f GetDataFunc, addr string) error {
 	// TODO make an object, which itself is not threadsafe, but which encapsulates all data so multiple
 	//      objects can be created and Run.
 
@@ -87,7 +87,7 @@ func (s Server) Run(c chan<- DataRequest, addr string) error {
 		return err
 	}
 
-	s.mgrReqChan = c
+	s.getData = f
 
 	sm := http.NewServeMux()
 	err = s.registerEndpoints(sm)
@@ -147,34 +147,28 @@ const (
 type DataRequest struct {
 	Type
 	Format
-	Response   chan<- []byte
 	Date       string
 	Parameters map[string][]string
 }
 
-func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
-	data := <-response
+type GetDataFunc func(DataRequest) []byte
+
+func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
+	//pp: "0=[my-ats-edge-cache-0], hc=[1]",
+	//dateLayout := "Thu Oct 09 20:28:36 UTC 2014"
+	dateLayout := "Mon Jan 02 15:04:05 MST 2006"
+	data := s.getData(DataRequest{
+		Type:       t,
+		Format:     f,
+		Date:       time.Now().UTC().Format(dateLayout),
+		Parameters: req.URL.Query(),
+	})
 	if len(data) > 0 {
 		w.Write(data)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal Server Error"))
 	}
-}
-
-func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
-	//pp: "0=[my-ats-edge-cache-0], hc=[1]",
-	//dateLayout := "Thu Oct 09 20:28:36 UTC 2014"
-	dateLayout := "Mon Jan 02 15:04:05 MST 2006"
-	response := make(chan []byte, 1) // must be buffered, so if this is killed, the writer doesn't block forever
-	s.mgrReqChan <- DataRequest{
-		Type:       t,
-		Format:     f,
-		Response:   response,
-		Date:       time.Now().UTC().Format(dateLayout),
-		Parameters: req.URL.Query(),
-	}
-	writeResponse(w, f, response)
 }
 
 func (s Server) handleRootFunc() (http.HandlerFunc, error) {
