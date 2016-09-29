@@ -134,26 +134,28 @@ func ExerciseDeliveryService(tlsConfig *tls.Config, host string, numRequests int
 
 func main() {
 	txCountFlag := flag.Int("txcount", 100, "Number of transactions to execute per delivery service")
-	workersFlag := flag.Int("workers", 10, "Number of concurrent d")
+	connectionsFlag := flag.Int("connections", 10, "Number of concurrent connections")
 	cafileFlag := flag.String("cafile", "ca.crt", "root Certificate Authority file")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "\tloadtest")
-		fmt.Fprintln(os.Stderr, "\t\t[-cafile <file name>]")
-		fmt.Fprintln(os.Stderr, "\t\t[-txcount <number of transactions per delivery service>]")
-		fmt.Fprintln(os.Stderr, "\t\t[-workers <number of concurrent requests per delivery service>]")
-		fmt.Fprintln(os.Stderr, "\t\tmy-cdn.example.com delivery-service-1 delivery-service-2 ...")
 		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "\tSome example locations of trusted certificate files to use for -cafile are:")
-		fmt.Fprintln(os.Stderr, "/etc/ssl/certs");
-		fmt.Fprintln(os.Stderr, "/etc/pki/tls/certs/ca-bundle.crt");
-		fmt.Fprintln(os.Stderr, "/etc/ssl/certs/ca-bundle.crt");
-		fmt.Fprintln(os.Stderr, "/etc/pki/tls/certs/ca-bundle.trust.crt");
-		fmt.Fprintln(os.Stderr, "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem");
-		fmt.Fprintln(os.Stderr, "/System/Library/OpenSSL");
+		fmt.Fprintln(os.Stderr, "  loadtest [options] my-cdn.example.com delivery-service-1 delivery-service-2 ...")
+		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, "Options:")
 		fmt.Fprintln(os.Stderr)
 		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, "Some typical locations of trusted certificate files to use for -cafile are:")
+		fmt.Fprintln(os.Stderr, "\t/etc/ssl/certs");
+		fmt.Fprintln(os.Stderr, "\t/etc/pki/tls/certs/ca-bundle.crt");
+		fmt.Fprintln(os.Stderr, "\t/etc/ssl/certs/ca-bundle.crt");
+		fmt.Fprintln(os.Stderr, "\t/etc/pki/tls/certs/ca-bundle.trust.crt");
+		fmt.Fprintln(os.Stderr, "\t/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem");
+		fmt.Fprintln(os.Stderr, "\t/System/Library/OpenSSL");
+		fmt.Fprintln(os.Stderr)
+    fmt.Fprintln(os.Stderr, "Or you could create your own self signed certificate authority and use that as your cafile");
+		fmt.Fprintln(os.Stderr)
 	}
 	flag.Parse()
 
@@ -179,7 +181,7 @@ func main() {
 			host := strings.Join([]string{ds, cdnDomain}, ".")
 			fmt.Println(host)
 			tlsConfig := MustGetTlsConfiguration(host, *cafileFlag)
-			ExerciseDeliveryService(tlsConfig, host, *txCountFlag, *workersFlag)
+			ExerciseDeliveryService(tlsConfig, host, *txCountFlag, *connectionsFlag)
 		}(deliveryService)
 	}
 
