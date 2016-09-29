@@ -7,9 +7,12 @@ RUN	yum -y install \
 		git \
 		rpm-build
 
-# all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
 ENV GITREPO=https://github.com/Comcast/traffic_control
 ENV BRANCH=master
+
+RUN set -x && git clone $GITREPO traffic_control
+WORKDIR /traffic_control
+RUN git fetch && git checkout $BRANCH && git pull origin $BRANCH
 
 #############################################################################
 # Above are common for all sub-projects.
@@ -21,7 +24,5 @@ RUN	yum -y install \
 RUN	mkdir -p /dist
 VOLUME	/dist
 
-WORKDIR /
-CMD	echo "GITREPO=$GITREPO BRANCH=$BRANCH" && git clone --branch $BRANCH $GITREPO && cd traffic_control && git status && \
-	./traffic_ops/build/build_rpm.sh && \
-	cp -f dist/* /dist/.
+WORKDIR /traffic_control/traffic_ops
+CMD ./build/build_rpm.sh
