@@ -76,15 +76,23 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			date: "Thu Oct 09 20:28:36 UTC 2014"
 		*/
 		params := req.Parameters
-		fmt.Printf("datarequest params %+v\n", params)
-		hc := 1
+		historyCount := 1
 		if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
 			v, err := strconv.Atoi(paramHc[0])
 			if err == nil {
-				hc = v
+				historyCount = v
 			}
 		}
-		body, err = cache.StatsMarshall(statHistory.Get(), hc)
+
+		statsToUse := map[string]struct{}{}
+		if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
+			commaStats := strings.Split(paramStats[0], ",")
+			for _, stat := range commaStats {
+				statsToUse[stat] = struct{}{}
+			}
+		}
+
+		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse)
 		if err != nil {
 			err = fmt.Errorf("CacheStats: %v", err)
 		}
