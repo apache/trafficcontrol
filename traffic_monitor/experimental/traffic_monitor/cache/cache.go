@@ -72,6 +72,12 @@ type Stats struct {
 	Caches map[enum.CacheName]map[string][]Stat `json:"caches"`
 }
 
+type Filter interface {
+	UseStat(name string) bool
+	UseCache(name enum.CacheName) bool
+	WithinStatHistoryMax(int) bool
+}
+
 const (
 	NOTIFY_NEVER = iota
 	NOTIFY_CHANGE
@@ -79,41 +85,27 @@ const (
 )
 
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}, wildcard bool, cacheType enum.CacheType, cacheTypes map[enum.CacheName]enum.CacheType, hosts map[enum.CacheName]struct{}) ([]byte, error) {
+func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter) ([]byte, error) {
 	var stats Stats
 
 	stats.Caches = map[enum.CacheName]map[string][]Stat{}
 
+	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
+
 	for id, history := range statHistory {
-		if _, inHosts := hosts[id]; len(hosts) != 0 && !inHosts {
+		if !filter.UseCache(id) {
 			continue
 		}
-		if cacheType != enum.CacheTypeInvalid && cacheTypes[id] != cacheType {
-			continue
-		}
-
-		count := 1
+		historyCount := 1
 		for _, result := range history {
+			if !filter.WithinStatHistoryMax(historyCount) {
+				break
+			}
+			historyCount++
 			for stat, value := range result.Astats.Ats {
-				if len(statsToUse) != 0 {
-					if !wildcard {
-						if _, use := statsToUse[stat]; !use {
-							continue
-						}
-					} else {
-						contained := false
-						for statToUse, _ := range statsToUse {
-							if strings.Contains(stat, statToUse) {
-								contained = true
-								break
-							}
-						}
-						if !contained {
-							continue
-						}
-					}
+				if !filter.UseStat(stat) {
+					continue
 				}
-
 				s := Stat{
 					Time:  result.Time.UnixNano() / 1000000,
 					Value: value,
@@ -127,11 +119,6 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, st
 
 				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
 			}
-
-			if historyCount > 0 && count == historyCount {
-				break
-			}
-			count++
 		}
 	}
 

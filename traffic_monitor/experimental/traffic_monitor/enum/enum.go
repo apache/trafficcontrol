@@ -20,7 +20,7 @@ type CacheType string
 
 const CacheTypeEdge = CacheType("EDGE")
 const CacheTypeMid = CacheType("MID")
-const CacheTypeInvalid = CacheType("INVALID")
+const CacheTypeInvalid = CacheType("")
 
 func (t CacheType) String() string {
 	switch t {
