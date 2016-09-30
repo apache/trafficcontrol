@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -35,6 +36,29 @@ version: '2'
 services:
   traffic_monitor_build:
     image: traffic_monitor_builder
+=======
+---
+
+# Build configuration for traffic_control
+version: '2'
+
+volumes:
+  repo:
+
+services:
+  clone:
+    build:
+      dockerfile: Dockerfile-clone
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+
+  traffic_monitor_build:
+    depends_on: [ clone ]
+>>>>>>> 343f0b7... move docker-compose files to infrastructure
     build:
       dockerfile: Dockerfile-traffic_monitor
       context: .
@@ -42,10 +66,18 @@ services:
       - GITREPO
       - BRANCH
     volumes:
+<<<<<<< HEAD
       - ./artifacts:/artifacts
 
   traffic_ops_build:
     image: traffic_ops_builder
+=======
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_ops_build:
+    depends_on: [ clone ]
+>>>>>>> 343f0b7... move docker-compose files to infrastructure
     build:
       dockerfile: Dockerfile-traffic_ops
       context: .
@@ -53,10 +85,18 @@ services:
       - GITREPO
       - BRANCH
     volumes:
+<<<<<<< HEAD
       - ./artifacts:/artifacts
 
   traffic_portal_build:
     image: traffic_portal_builder
+=======
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_portal_build:
+    depends_on: [ clone ]
+>>>>>>> 343f0b7... move docker-compose files to infrastructure
     build:
       dockerfile: Dockerfile-traffic_portal
       context: .
@@ -64,10 +104,18 @@ services:
       - GITREPO
       - BRANCH
     volumes:
+<<<<<<< HEAD
       - ./artifacts:/artifacts
 
   traffic_router_build:
     image: traffic_router_builder
+=======
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_router_build:
+    depends_on: [ clone ]
+>>>>>>> 343f0b7... move docker-compose files to infrastructure
     build:
       dockerfile: Dockerfile-traffic_router
       context: .
@@ -75,10 +123,18 @@ services:
       - GITREPO
       - BRANCH
     volumes:
+<<<<<<< HEAD
       - ./artifacts:/artifacts
 
   traffic_stats_build:
     image: traffic_stats_builder
+=======
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_stats_build:
+    depends_on: [ clone ]
+>>>>>>> 343f0b7... move docker-compose files to infrastructure
     build:
       dockerfile: Dockerfile-traffic_stats
       context: .
@@ -86,4 +142,8 @@ services:
       - GITREPO
       - BRANCH
     volumes:
+<<<<<<< HEAD
+=======
+      - repo:/repo
+>>>>>>> 343f0b7... move docker-compose files to infrastructure
       - ./artifacts:/artifacts
