@@ -20,12 +20,14 @@ public class CertificatesPublisher {
 	private final static Logger LOGGER = Logger.getLogger(CertificatesPublisher.class);
 	private JSONObject deliveryServicesJson;
 	private List<DeliveryService> deliveryServices = new ArrayList<>();
+	private boolean running = true;
+	final Thread worker;
 
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	public CertificatesPublisher(final BlockingQueue<List<CertificateData>> certificatesQueue, final BlockingQueue<Boolean> publishStatusQueue, final CertificateChecker certificateChecker) {
 
-		new Thread(() -> {
-			while (true) {
+		worker = new Thread(() -> {
+			while (running) {
 				try {
 					final List<CertificateData> certificateDataList = certificatesQueue.take();
 					if (certificateDataList == null) {
@@ -41,10 +43,16 @@ public class CertificatesPublisher {
 						publishStatusQueue.poll(2, TimeUnit.SECONDS);
 					}
 				} catch (Throwable e) {
+					if (!running) {
+						return;
+					}
+
 					LOGGER.warn("Interrupted while waiting for new certificate data list, trying again...",e);
 				}
 			}
-		}).start();
+		});
+
+		worker.start();
 	}
 
 	private void publishCertificateList(final List<CertificateData> certificateDataList) {
@@ -71,5 +79,11 @@ public class CertificatesPublisher {
 
 	public void setDeliveryServices(final List<DeliveryService> deliveryServices) {
 		this.deliveryServices = deliveryServices;
+	}
+
+	public void destroy() {
+		LOGGER.warn("Detected destroy setting running to false");
+		running = false;
+		worker.interrupt();
 	}
 }

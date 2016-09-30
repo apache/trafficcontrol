@@ -33,6 +33,7 @@ public class CertificatesClient {
 	private TrafficOpsUtils trafficOpsUtils;
 	private static final String PEM_FOOTER_PREFIX = "-----END";
 	private long lastValidfetchTimestamp = 0L;
+	private boolean shutdown = false;
 
 	public List<CertificateData> refreshData() {
 		final StringBuilder stringBuilder = new StringBuilder();
@@ -42,7 +43,11 @@ public class CertificatesClient {
 			try {
 				Thread.sleep(trafficOpsUtils.getConfigLongValue("certificates.retry.interval", 30 * 1000L));
 			} catch (InterruptedException e) {
-				LOGGER.warn("Interrupted while pausing to fetch certificates from traffic ops", e);
+				if (!shutdown) {
+					LOGGER.warn("Interrupted while pausing to fetch certificates from traffic ops", e);
+				} else {
+					return null;
+				}
 			}
 			status = fetchRawData(stringBuilder);
 		}
@@ -117,5 +122,9 @@ public class CertificatesClient {
 
 	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
 		this.trafficOpsUtils = trafficOpsUtils;
+	}
+
+	public void setShutdown(final boolean shutdown) {
+		this.shutdown = true;
 	}
 }
