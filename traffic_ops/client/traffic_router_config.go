@@ -161,30 +161,42 @@ type SOA struct {
 	Expire  int    `json:"expire"`
 }
 
-// TrafficRouterConfigMap gets a bunch of maps
+// TrafficRouterConfigMap Deprecated: use GetTrafficRouterConfigMap instead.
 func (to *Session) TrafficRouterConfigMap(cdn string) (*TrafficRouterConfigMap, error) {
-	trConfig, err := to.TrafficRouterConfig(cdn)
+	cfg, _, err := to.GetTrafficRouterConfigMap(cdn)
+	return cfg, err
+}
+
+// TrafficRouterConfigMap gets a bunch of maps
+func (to *Session) GetTrafficRouterConfigMap(cdn string) (*TrafficRouterConfigMap, CacheHitStatus, error) {
+	trConfig, cacheHitStatus, err := to.GetTrafficRouterConfig(cdn)
 	if err != nil {
-		return nil, err
+		return nil, CacheHitStatusInvalid, err
 	}
 
 	trConfigMap := TRTransformToMap(*trConfig)
-	return &trConfigMap, nil
+	return &trConfigMap, cacheHitStatus, nil
 }
 
-// TrafficRouterConfig gets the json arrays
+// TrafficRouterConfig Deprecated: use GetTrafficRouterConfig instead.
 func (to *Session) TrafficRouterConfig(cdn string) (*TrafficRouterConfig, error) {
+	cfg, _, err := to.GetTrafficRouterConfig(cdn)
+	return cfg, err
+}
+
+// GetTrafficRouterConfig gets the json arrays
+func (to *Session) GetTrafficRouterConfig(cdn string) (*TrafficRouterConfig, CacheHitStatus, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/routing.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
+	body, cacheHitStatus, err := to.getBytesWithTTL(url, tmPollingInterval)
 	if err != nil {
-		return nil, err
+		return nil, CacheHitStatusInvalid, err
 	}
 
 	var data TRConfigResponse
 	if err := json.Unmarshal(body, &data); err != nil {
-		return nil, err
+		return nil, CacheHitStatusInvalid, err
 	}
-	return &data.Response, nil
+	return &data.Response, cacheHitStatus, nil
 }
 
 // TRTransformToMap ...

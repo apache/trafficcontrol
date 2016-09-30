@@ -154,14 +154,14 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 					sum += data.Kbps
 				}
 				body = []byte(fmt.Sprintf("%f", sum))
-			case http_server.APIBandwidthCapacity:
+			case http_server.APIBandwidthCapacityKbps:
 				statHistory := statHistory.Get()
 				cap := int64(0)
 				for _, results := range statHistory {
 					if len(results) == 0 {
 						continue
 					}
-					cap += results[0].MaxBytes
+					cap += results[0].MaxKbps
 				}
 				body = []byte(fmt.Sprintf("%d", cap))
 			default:

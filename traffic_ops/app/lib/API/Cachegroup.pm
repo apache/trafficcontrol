@@ -97,6 +97,31 @@ sub index_trimmed {
 	$self->success( \@data );
 }
 
+sub show {
+    my $self = shift;
+    my $id   = $self->param('id');
+
+    my $rs_data = $self->db->resultset("Cachegroup")->search( { id => $id } );
+
+    my @data = ();
+    while ( my $row = $rs_data->next ) {
+        push(
+            @data, {
+                "id"   => $row->id,
+                "name" => $row->name,
+                "shortName" => $row->short_name,
+                "latitude" => $row->latitude,
+                "longitude" => $row->longitude,
+                "parentCachegroupId" => $row->parent_cachegroup_id,
+                "secondaryParentCachegroupId" => $row->secondary_parent_cachegroup_id,
+                "type" => $row->type->id,
+                "lastUpdated" => $row->last_updated
+            }
+        );
+    }
+    $self->success( \@data );
+}
+
 sub by_parameter_id {
 	my $self    = shift;
 	my $paramid = $self->param('paramid');

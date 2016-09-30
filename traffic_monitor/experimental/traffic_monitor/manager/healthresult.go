@@ -149,7 +149,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 			continue
 		}
 		deliveryServiceState.IsAvailable = false
-		deliveryServiceState.DisabledLocations = nil
+		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 		for _, server := range deliveryServiceServers[deliveryServiceName] {
 			if states.GetCache(server).IsAvailable {
 				deliveryServiceState.IsAvailable = true
