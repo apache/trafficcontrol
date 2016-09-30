@@ -4,15 +4,27 @@
 version: '2'
 
 volumes:
-  traffic_control:
+  repo:
 
 services:
-  traffic_ops:
+  clone:
+    build:
+      dockerfile: Dockerfile-clone
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+
+  traffic_ops_build:
+    depends_on: [ clone ]
     build:
       dockerfile: Dockerfile-traffic_ops
       context: .
     environment:
+      - GITREPO
       - BRANCH
     volumes:
-      - traffic_control:/traffic_control
-
+      - repo:/repo
+      - ./artifacts:/artifacts

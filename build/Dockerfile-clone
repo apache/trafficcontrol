@@ -1,0 +1,19 @@
+FROM centos:7
+
+MAINTAINER Dan Kirkwood
+
+RUN	yum -y install \
+		epel-release \
+		git \
+		golang  \
+		rpm-build && \
+	yum -y clean all
+
+ENV GITREPO=https://github.com/Comcast/traffic_control
+ENV BRANCH=master
+
+WORKDIR /repo
+RUN echo $'pwd; git clone $GITREPO -b $BRANCH traffic_control\n\
+' >/run.sh
+
+CMD sh -x /run.sh
