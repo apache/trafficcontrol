@@ -18,12 +18,14 @@ package client
 
 import "fmt"
 
-// CRConfigRaw ...
+// CRConfigRaw Deprecated: use GetCRConfig instead
 func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
+	bytes, _, err := to.GetCRConfig(cdn)
+	return bytes, err
+}
+
+// GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
+func (to *Session) GetCRConfig(cdn string) ([]byte, CacheHitStatus, error) {
 	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
-	body, err := to.getBytesWithTTL(url, tmPollingInterval)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
+	return to.getBytesWithTTL(url, tmPollingInterval)
 }

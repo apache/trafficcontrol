@@ -52,7 +52,7 @@ func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, local
 	}
 
 	for deliveryServiceName, localDeliveryService := range localStates.Deliveryservice {
-		deliveryService := peer.Deliveryservice{}
+		deliveryService := peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
 		if localDeliveryService.IsAvailable {
 			deliveryService.IsAvailable = true
 		}
@@ -86,7 +86,7 @@ func (p CacheNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func intersection(a []enum.CacheName, b []enum.CacheName) []enum.CacheName {
 	sort.Sort(CacheNameSlice(a))
 	sort.Sort(CacheNameSlice(b))
-	var c []enum.CacheName
+	c := []enum.CacheName{} // important to initialize, so JSON is `[]` not `null`
 	for _, s := range a {
 		i := sort.Search(len(b), func(i int) bool { return b[i] >= s })
 		if i < len(b) && b[i] == s {

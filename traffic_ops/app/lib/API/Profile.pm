@@ -71,28 +71,23 @@ sub create {
   }
 
 	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("profile 'name' is not given.");
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
 	}
-	if ( $name eq "" ) {
-		return $self->alert("profile 'name' can't be null.");
-	}
-
-  if ( $name =~ /\s/ ) {
-    return $self->alert("Profile name cannot contain space(s).");
-  }
 
 	my $description = $params->{description};
-	if ( !defined($description) ) {
-		return $self->alert("profile 'description' is not given.");
-	}
-	if ( $description eq "" ) {
-		return $self->alert("profile 'description' can't be null.");
+	if ( !defined($description) || $description eq "" ) {
+		return $self->alert("profile 'description' is required.");
 	}
 
 	my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
 	if ( $existing_profile && $name eq $existing_profile ) {
 		return $self->alert("profile with name $name already exists.");
+	}
+
+	my $existing_desc = $self->db->resultset('Profile')->find( { description => $description } );
+	if ( $existing_desc ) {
+		return $self->alert("a profile with the exact same description already exists." );
 	}
 
 	my $insert = $self->db->resultset('Profile')->create(
@@ -103,6 +98,8 @@ sub create {
 	);
 	$insert->insert();
 	my $new_id = $insert->id;
+
+	&log( $self, "Created profile with id: " . $new_id . " and name: " . $name, "APICHANGE" );
 
 	my $response;
 	$response->{id} = $new_id;
@@ -120,12 +117,9 @@ sub copy {
 
 	my $name = $self->param('profile_name');
 	my $profile_copy_from_name = $self->param('profile_copy_from');
-    if ( !defined($name) ) {
-        return $self->alert("profile 'name' is not given.");
-    }
-    if ( $name eq "" ) {
-        return $self->alert("profile 'name' can't be null.");
-    }
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
+	}
     if ( defined($profile_copy_from_name) and ( $profile_copy_from_name eq "" ) ) {
         return $self->alert("profile name 'profile_copy_from' can't be null.");
     }
@@ -166,13 +160,98 @@ sub copy {
         }
     }
 
-    my $response;
+	&log( $self, "Created profile from copy with id: " . $new_id . " and name: " . $name, "APICHANGE" );
+
+	my $response;
     $response->{id} = $new_id;
     $response->{name} = $name;
     $response->{description} = $description;
     $response->{profileCopyFrom} = $profile_copy_from_name;
     $response->{idCopyFrom} = $profile_copy_from_id;
     return $self->success($response);
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $profile = $self->db->resultset('Profile')->find( { id => $id } );
+	if ( !defined($profile) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	my $name = $params->{name};
+	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
+		return $self->alert("profile 'name' is required and cannot contain spaces.");
+	}
+	if ( $profile->name ne $name ) {
+		my $existing = $self->db->resultset('Profile')->find( { name => $name } );
+		if ( $existing ) {
+			return $self->alert("a profile with name " . $name . " already exists." );
+		}
+	}
+
+	my $description = $params->{description};
+	if ( !defined($description) || $description eq "" ) {
+		return $self->alert("profile 'description' is required.");
+	}
+	if ( $profile->description ne $description ) {
+		my $existing = $self->db->resultset('Profile')->find( { description => $description } );
+		if ( $existing ) {
+			return $self->alert("a profile with the exact same description already exists." );
+		}
+	}
+
+	$profile->name($name);
+	$profile->description($description);
+	$profile->update();
+
+	&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
+
+	my $response;
+	$response->{id} = $id;
+	$response->{name} = $name;
+	$response->{description} = $description;
+	return $self->success($response, "Profile was updated: " . $id);
+}
+
+sub delete {
+	my $self   = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $profile = $self->db->resultset('Profile')->find( { id => $id } );
+	if ( !defined($profile) ) {
+		return $self->not_found();
+	}
+
+	my $server = $self->db->resultset('Server')->find( { profile => $profile->id } );
+	if ( defined($server) ) {
+		return $self->alert("the profile is used by some server(s).");
+	}
+	my $ds = $self->db->resultset('Deliveryservice')->find( { profile => $profile->id } );
+	if ( defined($ds) ) {
+		return $self->alert("the profile is used by some deliveryservice(s).");
+	}
+
+	my $profile_name = $profile->name;
+	$profile->delete();
+
+	&log( $self, "Delete profile with id: " . $id . " and name: " . $profile_name, "APICHANGE" );
+
+	return $self->success_message("Profile was deleted.");
 }
 
 sub availableprofile {

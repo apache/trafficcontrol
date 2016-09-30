@@ -97,7 +97,7 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 					err = fmt.Errorf("CacheStats: %v", err)
 				}
 			case http_server.DSStats:
-				body, err = json.Marshal(ds.StatsJSON(dsStats.Get())) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+				body, err = json.Marshal(dsStats.Get().JSON()) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 				if err != nil {
 					err = fmt.Errorf("DsStats: %v", err)
 				}
@@ -154,6 +154,16 @@ func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsCo
 					sum += data.Kbps
 				}
 				body = []byte(fmt.Sprintf("%f", sum))
+			case http_server.APIBandwidthCapacityKbps:
+				statHistory := statHistory.Get()
+				cap := int64(0)
+				for _, results := range statHistory {
+					if len(results) == 0 {
+						continue
+					}
+					cap += results[0].MaxKbps
+				}
+				body = []byte(fmt.Sprintf("%d", cap))
 			default:
 				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
 			}

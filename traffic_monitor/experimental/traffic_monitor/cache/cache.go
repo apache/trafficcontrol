@@ -38,6 +38,7 @@ func (h Handler) Precompute() bool {
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
+	MaxKbps              int64
 	Errors               []error
 	Reporting            bool
 }
@@ -150,6 +151,10 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 		log.Warnf("addkbps %s procnetdev empty\n", id)
 	}
 
+	if result.Astats.System.InfSpeed == 0 {
+		log.Warnf("addkbps %s inf.speed empty\n", id)
+	}
+
 	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
 
 	if err != nil {
@@ -201,6 +206,9 @@ func (handler Handler) precompute(result Result) Result {
 		result.PrecomputedData.OutBytes = 0
 		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
+
+	kbpsInMbps := int64(1000)
+	result.PrecomputedData.MaxKbps = int64(result.Astats.System.InfSpeed) * kbpsInMbps
 
 	for stat, value := range result.Astats.Ats {
 		var err error
@@ -269,7 +277,7 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 		dsStat = *newStat
 	}
 
-	if err := addCacheStat(&dsStat.Total, statName, value); err != nil {
+	if err := addCacheStat(&dsStat.TotalStats, statName, value); err != nil {
 		return stats, err
 	}
 
@@ -277,13 +285,13 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 	if !ok {
 		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
 	}
-	dsStat.CacheGroups[cachegroup] = dsStat.Total
+	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
 
 	cacheType, ok := toData.ServerTypes[server]
 	if !ok {
 		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
 	}
-	dsStat.Type[cacheType] = dsStat.Total
+	dsStat.Types[cacheType] = dsStat.TotalStats
 	stats[ds] = dsStat
 	return stats, nil
 }

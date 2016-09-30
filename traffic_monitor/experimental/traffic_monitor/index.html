@@ -116,12 +116,18 @@
 			 setInterval(getCacheCount, 4755);
 			 setInterval(getCacheAvailableCount, 4800);
 			 setInterval(getBandwidth, 4621);
+			 setInterval(getBandwidthCapacity, 4591);
 			 setInterval(getCacheDownCount, 4832);
 			 setInterval(getVersion, 10007); // change to retry on failure, and only do on startup
 			 setInterval(getTrafficOpsUri, 10019); // change to retry on failure, and only do on startup
 			 setInterval(getEvents, 2004); // change to retry on failure, and only do on startup
 			 setInterval(getCacheStatuses, 5009);
 			 setInterval(getDsStats, 4003);
+		 }
+
+		 // source: http://stackoverflow.com/a/2901298/292623
+		 function numberStrWithCommas(x) {
+			 return x.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 		 }
 
 		 function openTab(tabName) {
@@ -159,7 +165,19 @@
 
 		 function getBandwidth() {
 			 ajax("/api/bandwidth-kbps", function(r) {
-				 document.getElementById("bandwidth").innerHTML = parseFloat(r).toFixed(2);
+				 document.getElementById("bandwidth").innerHTML = numberStrWithCommas(parseFloat(r).toFixed(2));
+			 });
+		 }
+
+		 function getBandwidthCapacity() {
+			 ajax("/api/bandwidth-capacity-kbps", function(r) {
+				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(parseInt(r).toString());
+			 });
+		 }
+
+		 function getBandwidthCapacity() {
+			 ajax("/api/bandwidth-capacity", function(r) {
+				 document.getElementById("bandwidth-capacity").innerHTML = parseInt(r);
 			 });
 		 }
 
@@ -179,6 +197,10 @@
 		 function getTrafficOpsUri() {
 			 ajax("/api/traffic-ops-uri", function(r) {
 				 document.getElementById("source-uri").innerHTML = "<a href='" + r + "'>" + r + "</a>";
+				 ajax("/publish/ConfigDoc", function(r) {
+					 var j = JSON.parse(r);
+					 document.getElementById("source-uri").innerHTML += "/" + j.cdnName;
+				 });
 			 });
 		 }
 
@@ -399,7 +421,7 @@
 		<table id="top-bar" width="100%">
 			<tr>
 				<td> Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </td>
-				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-max">∞</span> </td>
+				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> </td>
 				<td>Source: <span id="source-uri"></span></td>
 				<td><span id="version">traffic_monitor</span></td>
 			</tr>
@@ -426,6 +448,7 @@
 				<li class="endpoint"><a href="/api/traffic-ops-uri">/api/traffic-ops-uri</a></li>
 				<li class="endpoint"><a href="/api/cache-statuses">/api/cache-statuses</a></li>
 				<li class="endpoint"><a href="/api/bandwidth-kbps">/api/bandwidth-kbps</a></li>
+				<li class="endpoint"><a href="/api/bandwidth-capacity-kbps">/api/bandwidth-capacity-kbps</a></li>
 			</ul>
 		</div>
 
