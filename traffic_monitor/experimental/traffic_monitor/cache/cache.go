@@ -69,7 +69,7 @@ type Stat struct {
 }
 
 type Stats struct {
-	Caches map[string]map[string][]Stat `json:"caches"`
+	Caches map[enum.CacheName]map[string][]Stat `json:"caches"`
 }
 
 const (
@@ -78,13 +78,17 @@ const (
 	NOTIFY_ALWAYS
 )
 
-// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded.
-func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}, wildcard bool) ([]byte, error) {
+// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned.
+func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}, wildcard bool, cacheType enum.CacheType, cacheTypes map[enum.CacheName]enum.CacheType) ([]byte, error) {
 	var stats Stats
 
-	stats.Caches = map[string]map[string][]Stat{}
+	stats.Caches = map[enum.CacheName]map[string][]Stat{}
 
 	for id, history := range statHistory {
+		if cacheType != enum.CacheTypeInvalid && cacheTypes[id] != cacheType {
+			continue
+		}
+
 		count := 1
 		for _, result := range history {
 			for stat, value := range result.Astats.Ats {
@@ -112,13 +116,13 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, st
 					Value: value,
 				}
 
-				_, exists := stats.Caches[string(id)]
+				_, exists := stats.Caches[id]
 
 				if !exists {
-					stats.Caches[string(id)] = map[string][]Stat{}
+					stats.Caches[id] = map[string][]Stat{}
 				}
 
-				stats.Caches[string(id)][stat] = append(stats.Caches[string(id)][stat], s)
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
 			}
 
 			if historyCount > 0 && count == historyCount {

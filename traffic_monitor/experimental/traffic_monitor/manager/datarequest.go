@@ -97,7 +97,12 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
 		}
 
-		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse, wildcard)
+		cacheType := enum.CacheTypeInvalid
+		if paramType, exists := params["type"]; exists && len(paramType) > 0 {
+			cacheType = enum.CacheTypeFromString(paramType[0])
+		}
+
+		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse, wildcard, cacheType, toData.Get().ServerTypes)
 		if err != nil {
 			err = fmt.Errorf("CacheStats: %v", err)
 		}
