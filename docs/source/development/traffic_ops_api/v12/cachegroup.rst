@@ -87,7 +87,7 @@ Cache Group
 
 |
 
-**GET /api/1.2/cachegroups/trimmed.json**
+**GET /api/1.2/cachegroups/trimmed**
 
   Authentication Required: Yes
 
@@ -116,7 +116,54 @@ Cache Group
 
 |
 
-**GET /api/1.2/cachegroup/:parameter_id/parameter.json**
+**GET /api/1.1/cachegroups/:id**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | Parameter              | Type   | Description                                                              |
+  +========================+========+==========================================================================+
+  | ``longitude``          | string | Longitude for the Cache Group                                            |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``parentCachegroupId`` | string | Identifier that refers to the 'id' field of different Cache Group entry. |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``lastUpdated``        | string | The Time / Date this entry was last updated                              |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``type``               | string | The id of the type of Cache Group entry                                  |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``name``               | string | The name of the Cache Group entry                                        |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``latitude``           | string | Latitude for the Cache Group                                             |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``id``                 | string | Local unique identifier for the Cache Group                              |
+  +------------------------+--------+--------------------------------------------------------------------------+
+  | ``shortName``          | string | Abbreviation of the Cache Group Name                                     |
+  +------------------------+--------+--------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+           "longitude": "0",
+           "parentCachegroupId": null,
+           "lastUpdated": "2012-09-25 20:32:03",
+           "name": "dc-cmc",
+           "typeId": "4",
+           "latitude": "0",
+           "id": "22",
+           "shortName": "dccmc"
+        }
+     ],
+    }
+
+|
+
+**GET /api/1.2/cachegroup/:parameter_id/parameter**
 
   Authentication Required: Yes
 
@@ -161,7 +208,7 @@ Cache Group
 
 |
 
-**GET /api/1.2/cachegroupparameters.json**
+**GET /api/1.2/cachegroupparameters**
 
   Authentication Required: Yes
 
@@ -207,7 +254,7 @@ Cache Group
 
 |
 
-**GET /api/1.2/cachegroups/:parameter_id/parameter/available.json**
+**GET /api/1.2/cachegroups/:parameter_id/parameter/available**
 
   Authentication Required: Yes
 
