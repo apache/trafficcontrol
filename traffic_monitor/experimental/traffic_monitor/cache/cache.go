@@ -79,7 +79,7 @@ const (
 )
 
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded.
-func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}) ([]byte, error) {
+func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}, wildcard bool) ([]byte, error) {
 	var stats Stats
 
 	stats.Caches = map[string]map[string][]Stat{}
@@ -88,9 +88,25 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, st
 		count := 1
 		for _, result := range history {
 			for stat, value := range result.Astats.Ats {
-				if _, use := statsToUse[stat]; len(statsToUse) != 0 && !use {
-					continue
+				if len(statsToUse) != 0 {
+					if !wildcard {
+						if _, use := statsToUse[stat]; !use {
+							continue
+						}
+					} else {
+						contained := false
+						for statToUse, _ := range statsToUse {
+							if strings.Contains(stat, statToUse) {
+								contained = true
+								break
+							}
+						}
+						if !contained {
+							continue
+						}
+					}
 				}
+
 				s := Stat{
 					Time:  result.Time.UnixNano() / 1000000,
 					Value: value,

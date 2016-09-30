@@ -92,7 +92,12 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			}
 		}
 
-		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse)
+		wildcard := false
+		if paramWildcard, exists := params["wildcard"]; exists && len(paramWildcard) > 0 {
+			wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
+		}
+
+		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse, wildcard)
 		if err != nil {
 			err = fmt.Errorf("CacheStats: %v", err)
 		}
