@@ -107,6 +107,7 @@ public class CertificatesPoller implements ConfigurationListener {
 	}
 
 	public void destroy() {
+		certificatesClient.setShutdown(true);
 		executor.shutdownNow();
 	}
 
