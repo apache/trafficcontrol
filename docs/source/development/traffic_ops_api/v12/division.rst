@@ -22,6 +22,76 @@ Divisions
 .. _to-api-v12-division-route:
 
 /api/1.2/divisions
+++++++++++++++++
+
+**GET /api/1.2/divisions**
+  Get all divisions.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +----------------------+--------+-------------------------------------------------+
+  | Parameter            | Type   | Description                                     |
+  +======================+========+=================================================+
+  |``id``                | string | Division id                                     |
+  +----------------------+--------+-------------------------------------------------+
+  |``name``              | string | Division name                                   |
+  +----------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+           "id": "1"
+           "name": "Central"
+        },
+        {
+           "id": "2"
+           "name": "West"
+        }
+     ],
+    }
+
+|
+
+/api/1.2/divisions/:id
+++++++++++++++++
+
+**GET /api/1.2/divisions/:id**
+  Get division by Id.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +----------------------+--------+-------------------------------------------------+
+  | Parameter            | Type   | Description                                     |
+  +======================+========+=================================================+
+  |``id``                | string | Division id                                     |
+  +----------------------+--------+-------------------------------------------------+
+  |``name``              | string | Division name                                   |
+  +----------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+           "id": "1"
+           "name": "Central"
+        }
+     ],
+    }
+
+|
+
+/api/1.2/divisions
 ++++++++++++++++++
 
 **POST /api/1.2/divisions**

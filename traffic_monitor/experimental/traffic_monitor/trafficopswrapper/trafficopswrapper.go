@@ -27,7 +27,7 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	if s.session == nil || *s.session == nil {
 		return nil, fmt.Errorf("nil session")
 	}
-	b, e := (*s.session).CRConfigRaw(cdn)
+	b, _, e := (*s.session).GetCRConfig(cdn)
 	s.m.Unlock()
 	return b, e
 }

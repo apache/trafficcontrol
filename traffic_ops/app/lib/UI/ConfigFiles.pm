@@ -220,7 +220,7 @@ sub ds_data {
 		my $multi_site_origin           = $row->multi_site_origin;
 		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
 
-		if ( $re_type eq 'HOST_REGEXP' ) {
+		if ( $re_type eq 'HOST_REGEXP' && $ds_type ne 'ANY_MAP' ) {
 			my $host_re = $row->pattern;
 			my $map_to  = $org_server . "/";
 			if ( $host_re =~ /\.\*$/ ) {
@@ -945,7 +945,7 @@ sub remap_dot_config {
 			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
 				next;    # Live local delivery services skip mids
 			}
-			if ( defined( $mid_remap{ $remap->{org} } ) ) {
+			if ( defined( $remap->{org} ) && defined( $mid_remap{$remap->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
 
