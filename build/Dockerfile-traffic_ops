@@ -5,24 +5,20 @@ MAINTAINER Dan Kirkwood
 RUN	yum -y install \
 		epel-release \
 		git \
-		rpm-build
-
-ENV GITREPO=https://github.com/Comcast/traffic_control
-ENV BRANCH=master
-
-RUN set -x && git clone $GITREPO traffic_control
-WORKDIR /traffic_control
-RUN git fetch && git checkout $BRANCH && git pull origin $BRANCH
-
-#############################################################################
-# Above are common for all sub-projects.
-
-RUN	yum -y install \
-		golang && \
+		golang  \
+		rpm-build && \
 	yum -y clean all
 
-RUN	mkdir -p /dist
-VOLUME	/dist
+# wait for clone to be available, then
+# build the rpm and copy to /artifacts
 
-WORKDIR /traffic_control/traffic_ops
-CMD ./build/build_rpm.sh
+RUN echo $'\n\
+tc=/repo/traffic_control\n\
+while [ ! -d $tc/traffic_ops ]; do sleep 1; done\n\
+cd $tc/traffic_ops\n\
+./build/build_rpm.sh\n\
+mkdir -p /artifacts\n\
+cp $tc/dist/* /artifacts/.\n\
+' >/run.sh
+
+CMD sh -x /run.sh
