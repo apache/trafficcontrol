@@ -78,13 +78,16 @@ const (
 	NOTIFY_ALWAYS
 )
 
-// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned.
-func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}, wildcard bool, cacheType enum.CacheType, cacheTypes map[enum.CacheName]enum.CacheType) ([]byte, error) {
+// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
+func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int, statsToUse map[string]struct{}, wildcard bool, cacheType enum.CacheType, cacheTypes map[enum.CacheName]enum.CacheType, hosts map[enum.CacheName]struct{}) ([]byte, error) {
 	var stats Stats
 
 	stats.Caches = map[enum.CacheName]map[string][]Stat{}
 
 	for id, history := range statHistory {
+		if _, inHosts := hosts[id]; len(hosts) != 0 && !inHosts {
+			continue
+		}
 		if cacheType != enum.CacheTypeInvalid && cacheTypes[id] != cacheType {
 			continue
 		}

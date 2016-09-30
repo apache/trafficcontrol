@@ -102,7 +102,21 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			cacheType = enum.CacheTypeFromString(paramType[0])
 		}
 
-		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse, wildcard, cacheType, toData.Get().ServerTypes)
+		hosts := map[enum.CacheName]struct{}{}
+		if paramHosts, exists := params["hosts"]; exists && len(paramHosts) > 0 {
+			commaHosts := strings.Split(paramHosts[0], ",")
+			for _, host := range commaHosts {
+				hosts[enum.CacheName(host)] = struct{}{}
+			}
+		}
+		// parameters without values are considered hosts, e.g. `?my-cache-0`
+		for maybeHost, val := range params {
+			if len(val) == 0 || (len(val) == 1 && val[0] == "") {
+				hosts[enum.CacheName(maybeHost)] = struct{}{}
+			}
+		}
+
+		body, err = cache.StatsMarshall(statHistory.Get(), historyCount, statsToUse, wildcard, cacheType, toData.Get().ServerTypes, hosts)
 		if err != nil {
 			err = fmt.Errorf("CacheStats: %v", err)
 		}
