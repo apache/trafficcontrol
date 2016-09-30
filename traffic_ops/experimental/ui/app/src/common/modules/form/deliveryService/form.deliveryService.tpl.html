@@ -66,7 +66,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="deliveryService._links.type.id" ng-options="type.id as type.name for type in types" required>
+                    <select id="type" name="type" class="form-control" ng-model="deliveryService.type" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
@@ -75,7 +75,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService._links.cdn.id" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                    <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
@@ -84,7 +84,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService._links.profile.id" ng-options="profile.id as profile.name for profile in profiles" required>
+                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profile" ng-options="profile.id as profile.name for profile in profiles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.profile, 'required')">Required</small>

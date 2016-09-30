@@ -21,7 +21,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(asnForm.cachegroup), 'has-feedback': hasError(asnForm.cachegroup)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Group *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="asn._links.cachegroup.id" ng-options="cachegroup.id as cachegroup.name for cachegroup in cachegroups" required>
+                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="asn.cachegroup" ng-options="cachegroup.id as cachegroup.name for cachegroup in cachegroups" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(asnForm.cachegroup, 'required')">Required</small>
