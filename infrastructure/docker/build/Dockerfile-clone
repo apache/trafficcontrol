@@ -14,6 +14,9 @@ ENV BRANCH=master
 
 WORKDIR /repo
 RUN echo $'pwd; git clone $GITREPO -b $BRANCH traffic_control\n\
+touch clone-finished\n\
 ' >/run.sh
 
 CMD sh -x /run.sh
+
+# vi:syntax=Dockerfile

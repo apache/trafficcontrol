@@ -5,20 +5,23 @@ MAINTAINER Dan Kirkwood
 RUN	yum -y install \
 		epel-release \
 		git \
-		golang  \
-		rpm-build && \
-	yum -y clean all
+		rpm-build
+
+RUN	yum -y install \
+		golang
 
 # wait for clone to be available, then
 # build the rpm and copy to /artifacts
-
 RUN echo $'\n\
+while [ ! -f /repo/clone-finished ]; do sleep 1; done\n\
+\n\
 tc=/repo/traffic_control\n\
-while [ ! -d $tc/traffic_ops ]; do sleep 1; done\n\
-cd $tc/traffic_ops\n\
+cd $tc/traffic_stats\n\
 ./build/build_rpm.sh\n\
 mkdir -p /artifacts\n\
 cp $tc/dist/* /artifacts/.\n\
 ' >/run.sh
 
 CMD sh -x /run.sh
+
+# vi:syntax=Dockerfile

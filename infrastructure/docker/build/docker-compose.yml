@@ -1,0 +1,78 @@
+---
+
+# Build configuration for traffic_control
+version: '2'
+
+volumes:
+  repo:
+
+services:
+  clone:
+    build:
+      dockerfile: Dockerfile-clone
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+
+  traffic_monitor_build:
+    depends_on: [ clone ]
+    build:
+      dockerfile: Dockerfile-traffic_monitor
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_ops_build:
+    depends_on: [ clone ]
+    build:
+      dockerfile: Dockerfile-traffic_ops
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_portal_build:
+    depends_on: [ clone ]
+    build:
+      dockerfile: Dockerfile-traffic_portal
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_router_build:
+    depends_on: [ clone ]
+    build:
+      dockerfile: Dockerfile-traffic_router
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+      - ./artifacts:/artifacts
+
+  traffic_stats_build:
+    depends_on: [ clone ]
+    build:
+      dockerfile: Dockerfile-traffic_stats
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - repo:/repo
+      - ./artifacts:/artifacts

@@ -1,0 +1,38 @@
+FROM centos:7
+
+MAINTAINER Dan Kirkwood
+
+RUN	yum -y install \
+		epel-release \
+		git \
+		rpm-build
+
+RUN	yum -y install \
+		libffi-devel \
+		make \
+		nodejs \
+		npm \
+		ruby-devel \
+		rubygems
+
+RUN	gem install compass
+RUN	npm -g install bower grunt-cli
+
+# bower will not run as root by default
+RUN	echo '{ "allow_root": true }' > /root/.bowerrc
+
+# wait for clone to be available, then
+# build the rpm and copy to /artifacts
+RUN echo $'\n\
+while [ ! -f /repo/clone-finished ]; do sleep 1; done\n\
+\n\
+tc=/repo/traffic_control\n\
+cd $tc/traffic_portal\n\
+./build/build_rpm.sh\n\
+mkdir -p /artifacts\n\
+cp $tc/dist/* /artifacts/.\n\
+' >/run.sh
+
+CMD sh -x /run.sh
+
+# vi:syntax=Dockerfile
