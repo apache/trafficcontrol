@@ -401,6 +401,8 @@ sub api_routes {
 		->to( 'Cachegroup#index', namespace => $namespace );
 	$r->get( "/api/$version/cachegroups/trimmed")->over( authenticated => 1 )
 		->to( 'Cachegroup#index_trimmed', namespace => $namespace );
+	$r->get("/api/$version/cachegroups/:id")->over( authenticated => 1 )
+		->to( 'Cachegroup#show', namespace => $namespace );
 	$r->post("/api/$version/cachegroups")->over( authenticated => 1 )
 		->to( 'Cachegroup#create', namespace => $namespace );
 	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )
