@@ -277,6 +277,126 @@ func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enu
 	}, nil
 }
 
+// PeerStateFilter fulfills the cache.Filter interface, for filtering stats. See the `NewPeerStateFilter` documentation for details on which query parameters are used to filter.
+type PeerStateFilter struct {
+	historyCount int
+	cachesToUse  map[enum.CacheName]struct{}
+	peersToUse   map[enum.TrafficMonitorName]struct{}
+	wildcard     bool
+	cacheType    enum.CacheType
+	cacheTypes   map[enum.CacheName]enum.CacheType
+}
+
+func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
+	if _, inPeers := f.peersToUse[name]; len(f.peersToUse) != 0 && !inPeers {
+		return false
+	}
+	return true
+}
+
+func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
+	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
+		return false
+	}
+
+	if len(f.cachesToUse) == 0 {
+		return true
+	}
+
+	if !f.wildcard {
+		_, ok := f.cachesToUse[name]
+		return ok
+	}
+	for cacheToUse, _ := range f.cachesToUse {
+		if strings.Contains(string(name), string(cacheToUse)) {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
+	if f.historyCount == 0 {
+		return true
+	}
+	if n <= f.historyCount {
+		return true
+	}
+	return false
+}
+
+// NewPeerStateFilter takes the HTTP query parameters and creates a cache.Filter, filtering according to the query parameters passed.
+// Query parameters used are `hc`, `stats`, `wildcard`, `typep`, and `hosts`. The `stats` param filters caches. The `hosts` param filters peer Traffic Monitors. The `type` param filters cache types (edge, mid).
+// If `hc` is 0, all history is returned. If `hc` is empty, 1 history is returned.
+// If `stats` is empty, all stats are returned.
+// If `wildcard` is empty, `stats` is considered exact.
+// If `type` is empty, all cache types are returned.
+func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (*PeerStateFilter, error) {
+	// TODO change legacy `stats` and `hosts` to `caches` and `monitors` (or `peers`).
+	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "peers": struct{}{}}
+	if len(params) > len(validParams) {
+		return nil, fmt.Errorf("invalid query parameters")
+	}
+	for param, _ := range params {
+		if _, ok := validParams[param]; !ok {
+			return nil, fmt.Errorf("invalid query parameter '%v'", param)
+		}
+	}
+
+	historyCount := 1
+	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
+		v, err := strconv.Atoi(paramHc[0])
+		if err == nil {
+			historyCount = v
+		}
+	}
+
+	cachesToUse := map[enum.CacheName]struct{}{}
+	// TODO rename 'stats' to 'caches'
+	if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
+		commaStats := strings.Split(paramStats[0], ",")
+		for _, stat := range commaStats {
+			cachesToUse[enum.CacheName(stat)] = struct{}{}
+		}
+	}
+
+	wildcard := false
+	if paramWildcard, exists := params["wildcard"]; exists && len(paramWildcard) > 0 {
+		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
+	}
+
+	cacheType := enum.CacheTypeInvalid
+	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
+		cacheType = enum.CacheTypeFromString(paramType[0])
+		if cacheType == enum.CacheTypeInvalid {
+			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {edge, mid}", paramType[0])
+		}
+	}
+
+	peersToUse := map[enum.TrafficMonitorName]struct{}{}
+	if paramNames, exists := params["peers"]; exists && len(paramNames) > 0 {
+		commaNames := strings.Split(paramNames[0], ",")
+		for _, name := range commaNames {
+			peersToUse[enum.TrafficMonitorName(name)] = struct{}{}
+		}
+	}
+	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
+	for maybeName, val := range params {
+		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
+			peersToUse[enum.TrafficMonitorName(maybeName)] = struct{}{}
+		}
+	}
+
+	return &PeerStateFilter{
+		historyCount: historyCount,
+		cachesToUse:  cachesToUse,
+		wildcard:     wildcard,
+		cacheType:    cacheType,
+		peersToUse:   peersToUse,
+		cacheTypes:   cacheTypes,
+	}, nil
+}
+
 // DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
 func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) (body []byte, responseCode int) {
 
@@ -343,7 +463,13 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 		body, err = json.Marshal(JSONEvents{Events: events.Get()})
 		return commonReturn(body, err, req.Type)
 	case http_server.PeerStates:
-		body, err = json.Marshal(createApiPeerStates(peerStates.Get()))
+		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
+		if err != nil {
+			handleErr(err, req.Type)
+			return []byte(err.Error()), http.StatusBadRequest
+		}
+
+		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter))
 		return commonReturn(body, err, req.Type)
 	case http_server.StatSummary:
 		return nil, http.StatusNotImplemented
@@ -519,18 +645,24 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return len(caches) - cacheDownCount(caches)
 }
 
-func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates) ApiPeerStates {
+func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter) ApiPeerStates {
 	apiPeerStates := ApiPeerStates{Peers: map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{}}
 
 	for peer, state := range peerStates {
-		if _, ok := apiPeerStates.Peers[enum.TrafficMonitorName(peer)]; !ok {
-			apiPeerStates.Peers[enum.TrafficMonitorName(peer)] = map[enum.CacheName][]CacheState{}
+		if !filter.UsePeer(peer) {
+			continue
 		}
-		peerState := apiPeerStates.Peers[enum.TrafficMonitorName(peer)]
+		if _, ok := apiPeerStates.Peers[peer]; !ok {
+			apiPeerStates.Peers[peer] = map[enum.CacheName][]CacheState{}
+		}
+		peerState := apiPeerStates.Peers[peer]
 		for cache, available := range state.Caches {
-			peerState[enum.CacheName(cache)] = []CacheState{CacheState{Value: available.IsAvailable}}
+			if !filter.UseCache(cache) {
+				continue
+			}
+			peerState[cache] = []CacheState{CacheState{Value: available.IsAvailable}}
 		}
-		apiPeerStates.Peers[enum.TrafficMonitorName(peer)] = peerState
+		apiPeerStates.Peers[peer] = peerState
 	}
 	return apiPeerStates
 }
