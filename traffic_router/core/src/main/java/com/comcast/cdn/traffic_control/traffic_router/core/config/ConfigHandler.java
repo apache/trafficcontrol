@@ -113,6 +113,7 @@ public class ConfigHandler {
 			cancelled.set(false);
 			isProcessing.set(false);
 			publishStatusQueue.clear();
+			LOGGER.info("Exiting processConfig: No json data to process");
 			return false;
 		}
 
@@ -126,10 +127,10 @@ public class ConfigHandler {
 			date = new Date(sts * 1000L);
 
 			if (sts <= getLastSnapshotTimestamp()) {
-				LOGGER.warn("Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
 				cancelled.set(false);
 				isProcessing.set(false);
 				publishStatusQueue.clear();
+				LOGGER.info("Exiting processConfig: Incoming TrConfig snapshot timestamp (" + sts + ") is older or equal to the loaded timestamp (" + getLastSnapshotTimestamp() + "); unable to process");
 				return false;
 			}
 
@@ -173,7 +174,7 @@ public class ConfigHandler {
 
 					while (!cancelled.get() && !publishStatusQueue.isEmpty()) {
 						try {
-							LOGGER.info("Waiting for https certificates to support new config" + String.format("%x", publishStatusQueue.hashCode()));
+							LOGGER.info("Waiting for https certificates to support new config " + String.format("%x", publishStatusQueue.hashCode()));
 							Thread.sleep(1000L);
 						} catch (Throwable t) {
 							LOGGER.warn("Interrupted while waiting for status on publishing ssl certs", t);
@@ -185,6 +186,7 @@ public class ConfigHandler {
 					cancelled.set(false);
 					isProcessing.set(false);
 					publishStatusQueue.clear();
+					LOGGER.info("Exiting processConfig: processing of config with timestamp " + date + " was cancelled");
 					return false;
 				}
 
@@ -201,10 +203,10 @@ public class ConfigHandler {
 				trafficRouterManager.getTrafficRouter().configurationChanged();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
-				LOGGER.error("Failed to process config for snapshot from " + date, e);
 				isProcessing.set(false);
 				cancelled.set(false);
 				publishStatusQueue.clear();
+				LOGGER.error("Exiting processConfig: Failed to process config for snapshot from " + date, e);
 				return false;
 			}
 		}
