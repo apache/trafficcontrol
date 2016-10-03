@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -211,6 +212,26 @@ type DataRequest struct {
 }
 
 type GetDataFunc func(DataRequest) ([]byte, int)
+
+// ParametersStr takes the URL query parameters, and returns a string as used by the Traffic Monitor 1.0 endpoints "pp" key.
+func ParametersStr(params url.Values) string {
+	fmt.Println("debug4 ParametersStr 0")
+	pp := ""
+	for param, vals := range params {
+		for _, val := range vals {
+			pp += param + "=[" + val + "], "
+		}
+	}
+	if len(pp) > 2 {
+		pp = pp[:len(pp)-2]
+	}
+	return pp
+}
+
+// DateStr returns the given time in the format expected by Traffic Monitor 1.0 API users
+func DateStr(t time.Time) string {
+	return t.UTC().Format("Mon Jan 02 15:04:05 UTC 2006")
+}
 
 func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	//pp: "0=[my-ats-edge-cache-0], hc=[1]",

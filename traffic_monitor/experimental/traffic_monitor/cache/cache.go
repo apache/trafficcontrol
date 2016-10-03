@@ -5,10 +5,12 @@ import (
 	"fmt"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -69,7 +71,9 @@ type Stat struct {
 }
 
 type Stats struct {
-	Caches map[enum.CacheName]map[string][]Stat `json:"caches"`
+	Caches      map[enum.CacheName]map[string][]Stat `json:"caches"`
+	QueryParams string                               `json:"pp"`
+	DateStr     string                               `json:"date"`
 }
 
 type Filter interface {
@@ -85,10 +89,12 @@ const (
 )
 
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter) ([]byte, error) {
-	var stats Stats
-
-	stats.Caches = map[enum.CacheName]map[string][]Stat{}
+func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, params url.Values) ([]byte, error) {
+	stats := Stats{
+		Caches:      map[enum.CacheName]map[string][]Stat{},
+		QueryParams: http_server.ParametersStr(params),
+		DateStr:     http_server.DateStr(time.Now()),
+	}
 
 	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
 

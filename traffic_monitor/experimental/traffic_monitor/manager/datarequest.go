@@ -31,7 +31,9 @@ type CacheState struct {
 }
 
 type ApiPeerStates struct {
-	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	Peers       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	QueryParams string                                                      `json:"pp"`
+	DateStr     string                                                      `json:"date"`
 }
 
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
@@ -436,19 +438,13 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 		body, err = peer.CrstatesMarshall(localStates.Get())
 		return commonReturn(body, err, req.Type)
 	case http_server.CacheStats:
-		// TODO add pp and date to the json:
-		/*
-			pp: "0=[my-ats-edge-cache-1], hc=[1]",
-			date: "Thu Oct 09 20:28:36 UTC 2014"
-		*/
-
 		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err, req.Type)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 
-		body, err = cache.StatsMarshall(statHistory.Get(), filter)
+		body, err = cache.StatsMarshall(statHistory.Get(), filter, req.Parameters)
 		return commonReturn(body, err, req.Type)
 	case http_server.DSStats:
 		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
@@ -457,7 +453,7 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			handleErr(err, req.Type)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
-		body, err = json.Marshal(dsStats.Get().JSON(filter)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+		body, err = json.Marshal(dsStats.Get().JSON(filter, req.Parameters)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 		return commonReturn(body, err, req.Type)
 	case http_server.EventLog:
 		body, err = json.Marshal(JSONEvents{Events: events.Get()})
@@ -469,7 +465,7 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 
-		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter))
+		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter, req.Parameters))
 		return commonReturn(body, err, req.Type)
 	case http_server.StatSummary:
 		return nil, http.StatusNotImplemented
@@ -645,8 +641,12 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return len(caches) - cacheDownCount(caches)
 }
 
-func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter) ApiPeerStates {
-	apiPeerStates := ApiPeerStates{Peers: map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{}}
+func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) ApiPeerStates {
+	apiPeerStates := ApiPeerStates{
+		Peers:       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
+		QueryParams: http_server.ParametersStr(params),
+		DateStr:     http_server.DateStr(time.Now()),
+	}
 
 	for peer, state := range peerStates {
 		if !filter.UsePeer(peer) {

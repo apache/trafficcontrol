@@ -5,9 +5,11 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -389,9 +391,13 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 }
 
 // StatsJSON returns an object formatted as expected to be serialized to JSON and served.
-func (dsStats Stats) JSON(filter dsdata.Filter) dsdata.StatsOld {
+func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	now := time.Now().Unix()
-	jsonObj := &dsdata.StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{}}
+	jsonObj := &dsdata.StatsOld{
+		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
+		QueryParams:     http_server.ParametersStr(params),
+		DateStr:         http_server.DateStr(time.Now()),
+	}
 
 	for deliveryService, stat := range dsStats.DeliveryService {
 		if !filter.UseDeliveryService(deliveryService) {
