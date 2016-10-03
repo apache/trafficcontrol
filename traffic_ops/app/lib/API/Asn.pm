@@ -54,8 +54,11 @@ sub show {
 			@data, {
 				"id"          => $row->id,
 				"asn"         => $row->asn,
-				"cachegroup"  => $row->cachegroup->name,
-				"lastUpdated" => $row->last_updated
+				"lastUpdated" => $row->last_updated,
+				"cachegroup"  => {
+					"id" => $row->cachegroup->id,
+					"name" => $row->cachegroup->name
+				}
 			}
 		);
 	}
