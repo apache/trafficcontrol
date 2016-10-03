@@ -42,6 +42,29 @@ sub index {
 	$self->success( \@data );
 }
 
+# Show
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Asn")->search( { 'me.id' => $id }, { prefetch => [ 'cachegroup' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"asn"         => $row->asn,
+				"lastUpdated" => $row->last_updated,
+				"cachegroup"  => {
+					"id" => $row->cachegroup->id,
+					"name" => $row->cachegroup->name
+				}
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 # Index
 sub v11_index {
 	my $self = shift;
