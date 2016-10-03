@@ -120,15 +120,34 @@ sub show {
 				"ip6Gateway"     => $row->ip6_gateway,
 				"interfaceMtu"   => $row->interface_mtu,
 				"cachegroup"     => $row->cachegroup->name,
-				"physLocation"   => $row->phys_location->name,
+				"cachegroup"     => {
+					"id"			=> $row->cachegroup->id,
+					"name"			=> $row->cachegroup->name
+
+				},
+				"physLocation"   => {
+					"id" => $row->phys_location->id,
+					"name" => $row->phys_location->name
+				},
 				"guid"           => $row->guid,
 				"rack"           => $row->rack,
-				"type"           => $row->type->name,
-				"status"         => $row->status->name,
+				"type"   => {
+					"id" => $row->type->id,
+					"name" => $row->type->name
+				},
+				"status"   => {
+					"id" => $row->status->id,
+					"name" => $row->status->name
+				},
 				"offline_reason" => $row->offline_reason,
-				"profile"        => $row->profile->name,
-				"profileDesc"    => $row->profile->description,
-				"cdnName"        => $row->cdn->name,
+				"profile"   => {
+					"id" => $row->profile->id,
+					"name" => $row->profile->name
+				},
+				"cdn"        => {
+					"id" => $row->cdn->id,
+					"name" => $row->cdn->name
+				},
 				"mgmtIpAddress"  => $row->mgmt_ip_address,
 				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
