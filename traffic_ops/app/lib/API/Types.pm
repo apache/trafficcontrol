@@ -25,10 +25,19 @@ use Data::Dumper;
 
 # Index
 sub index {
-	my $self = shift;
+	my $self         = shift;
+	my $use_in_table = $self->param('useInTable');
+	my $orderby      = $self->param('orderby') || "name";
+
 	my @data;
-	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("Type")->search( undef, { order_by => $orderby } );
+	my %criteria;
+
+	if ( defined $use_in_table ) {
+		$criteria{'me.use_in_table'} = $use_in_table;
+	}
+
+	my $rs_data = $self->db->resultset("Type")->search( \%criteria, { order_by => $orderby } );
+
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
