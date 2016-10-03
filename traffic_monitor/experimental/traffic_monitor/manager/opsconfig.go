@@ -98,7 +98,7 @@ func StartOpsConfigManager(
 					log.Errorf("OpsConfigManager: %v\n", err)
 				}
 
-				err = httpServer.Run(func(req http_server.DataRequest) []byte {
+				err = httpServer.Run(func(req http_server.DataRequest) ([]byte, int) {
 					return DataRequest(req, opsConfig, toSession, localStates, peerStates, combinedStates, statHistory, dsStats, events, staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, toData, localCacheStatus, lastKbpsStats)
 				}, listenAddress)
 				if err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"math"
+	"net/http"
 	"net/url"
 	"runtime"
 	"strconv"
@@ -95,7 +96,17 @@ func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) cache.Filter {
+func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (cache.Filter, error) {
+	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "hosts": struct{}{}}
+	if len(params) > len(validParams) {
+		return nil, fmt.Errorf("invalid query parameters")
+	}
+	for param, _ := range params {
+		if _, ok := validParams[param]; !ok {
+			return nil, fmt.Errorf("invalid query parameter '%v'", param)
+		}
+	}
+
 	historyCount := 1
 	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
 		v, err := strconv.Atoi(paramHc[0])
@@ -120,6 +131,9 @@ func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	cacheType := enum.CacheTypeInvalid
 	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
 		cacheType = enum.CacheTypeFromString(paramType[0])
+		if cacheType == enum.CacheTypeInvalid {
+			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {edge, mid}", paramType[0])
+		}
 	}
 
 	hosts := map[enum.CacheName]struct{}{}
@@ -143,7 +157,7 @@ func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 		cacheType:    cacheType,
 		hosts:        hosts,
 		cacheTypes:   cacheTypes,
-	}
+	}, nil
 }
 
 // DSStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewDSStatFilter` documentation for details on which query parameters are used to filter.
@@ -198,7 +212,17 @@ func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all types are returned.
-func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enum.DSType) dsdata.Filter {
+func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enum.DSType) (dsdata.Filter, error) {
+	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "deliveryservices": struct{}{}}
+	if len(params) > len(validParams) {
+		return nil, fmt.Errorf("invalid query parameters")
+	}
+	for param, _ := range params {
+		if _, ok := validParams[param]; !ok {
+			return nil, fmt.Errorf("invalid query parameter '%v'", param)
+		}
+	}
+
 	historyCount := 1
 	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
 		v, err := strconv.Atoi(paramHc[0])
@@ -223,6 +247,9 @@ func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enu
 	dsType := enum.DSTypeInvalid
 	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
 		dsType = enum.DSTypeFromString(paramType[0])
+		if dsType == enum.DSTypeInvalid {
+			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {http, dns}", paramType[0])
+		}
 	}
 
 	deliveryServices := map[enum.DeliveryServiceName]struct{}{}
@@ -247,67 +274,82 @@ func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enu
 		dsType:           dsType,
 		deliveryServices: deliveryServices,
 		dsTypes:          dsTypes,
-	}
+	}, nil
 }
 
-func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) []byte {
-	var body []byte
-	var err error
+// DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
+func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) (body []byte, responseCode int) {
 
+	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
+	handleErr := func(err error, requestType http_server.Type) {
+		if err == nil {
+			return
+		}
+		errorCount.Inc()
+		log.Errorf("Request Error: %v\n", fmt.Errorf(requestType.String()+": %v", err))
+	}
+
+	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `http_server`.
+	commonReturn := func(body []byte, err error, requestType http_server.Type) ([]byte, int) {
+		if err == nil {
+			return body, http.StatusOK
+		}
+		handleErr(err, requestType)
+		return nil, http.StatusInternalServerError
+	}
+
+	var err error
 	switch req.Type {
 	case http_server.TRConfig:
 		cdnName := opsConfig.Get().CdnName
 		if toSession == nil {
-			err = fmt.Errorf("Unable to connect to Traffic Ops")
-		} else if cdnName == "" {
-			err = fmt.Errorf("No CDN Configured")
-		} else {
-			body, err = toSession.CRConfigRaw(cdnName)
+			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"), req.Type)
 		}
-		if err != nil {
-			err = fmt.Errorf("TR Config: %v", err)
+		if cdnName == "" {
+			return commonReturn(nil, fmt.Errorf("No CDN Configured"), req.Type)
 		}
+		return commonReturn(body, err, req.Type)
 	case http_server.TRStateDerived:
 		body, err = peer.CrstatesMarshall(combinedStates.Get())
-		if err != nil {
-			err = fmt.Errorf("TR State (derived): %v", err)
-		}
+		return commonReturn(body, err, req.Type)
 	case http_server.TRStateSelf:
 		body, err = peer.CrstatesMarshall(localStates.Get())
-		if err != nil {
-			err = fmt.Errorf("TR State (self): %v", err)
-		}
+		return commonReturn(body, err, req.Type)
 	case http_server.CacheStats:
-		// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
-		// add pp and date to the json:
+		// TODO add pp and date to the json:
 		/*
 			pp: "0=[my-ats-edge-cache-1], hc=[1]",
 			date: "Thu Oct 09 20:28:36 UTC 2014"
 		*/
 
-		body, err = cache.StatsMarshall(statHistory.Get(), NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes))
+		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
-			err = fmt.Errorf("CacheStats: %v", err)
+			handleErr(err, req.Type)
+			return []byte(err.Error()), http.StatusBadRequest
 		}
+
+		body, err = cache.StatsMarshall(statHistory.Get(), filter)
+		return commonReturn(body, err, req.Type)
 	case http_server.DSStats:
-		body, err = json.Marshal(dsStats.Get().JSON(NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes))) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
+
 		if err != nil {
-			err = fmt.Errorf("DsStats: %v", err)
+			handleErr(err, req.Type)
+			return []byte(err.Error()), http.StatusBadRequest
 		}
+		body, err = json.Marshal(dsStats.Get().JSON(filter)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+		return commonReturn(body, err, req.Type)
 	case http_server.EventLog:
 		body, err = json.Marshal(JSONEvents{Events: events.Get()})
-		if err != nil {
-			err = fmt.Errorf("EventLog: %v", err)
-		}
+		return commonReturn(body, err, req.Type)
 	case http_server.PeerStates:
 		body, err = json.Marshal(createApiPeerStates(peerStates.Get()))
+		return commonReturn(body, err, req.Type)
 	case http_server.StatSummary:
-		body = []byte("TODO implement")
+		return nil, http.StatusNotImplemented
 	case http_server.Stats:
 		body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
-		if err != nil {
-			err = fmt.Errorf("Stats: %v", err)
-		}
+		return commonReturn(body, err, req.Type)
 	case http_server.ConfigDoc:
 		opsConfigCopy := opsConfig.Get()
 		// if the password is blank, leave it blank, so callers can see it's missing.
@@ -315,15 +357,13 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			opsConfigCopy.Password = "*****"
 		}
 		body, err = json.Marshal(opsConfigCopy)
-		if err != nil {
-			err = fmt.Errorf("Config Doc: %v", err)
-		}
+		return commonReturn(body, err, req.Type)
 	case http_server.APICacheCount: // TODO determine if this should use peerStates
-		body = []byte(strconv.Itoa(len(localStates.Get().Caches)))
+		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
 	case http_server.APICacheAvailableCount:
-		body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches)))
+		return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches))), http.StatusOK
 	case http_server.APICacheDownCount:
-		body = []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches)))
+		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches))), http.StatusOK
 	case http_server.APIVersion:
 		s := "traffic_monitor-" + staticAppData.Version + "."
 		if len(staticAppData.GitRevision) > 6 {
@@ -331,11 +371,13 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 		} else {
 			s += staticAppData.GitRevision
 		}
-		body = []byte(s)
+		return []byte(s), http.StatusOK
 	case http_server.APITrafficOpsURI:
-		body = []byte(opsConfig.Get().Url)
+		return []byte(opsConfig.Get().Url), http.StatusOK
 	case http_server.APICacheStates:
-		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
+		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
+			lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
+		return commonReturn(body, err, req.Type)
 	case http_server.APIBandwidthKbps:
 		serverTypes := toData.Get().ServerTypes
 		kbpsStats := lastKbpsStats.Get()
@@ -346,7 +388,7 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			}
 			sum += data.Kbps
 		}
-		body = []byte(fmt.Sprintf("%f", sum))
+		return []byte(fmt.Sprintf("%f", sum)), http.StatusOK
 	case http_server.APIBandwidthCapacityKbps:
 		statHistory := statHistory.Get()
 		cap := int64(0)
@@ -356,17 +398,9 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			}
 			cap += results[0].MaxKbps
 		}
-		body = []byte(fmt.Sprintf("%d", cap))
+		return []byte(fmt.Sprintf("%d", cap)), http.StatusOK
 	default:
-		err = fmt.Errorf("Unknown Request Type: %v", req.Type)
-	}
-
-	if err != nil {
-		errorCount.Inc()
-		log.Errorf("Request Error: %v\n", err)
-		return nil
-	} else {
-		return body
+		return commonReturn(nil, fmt.Errorf("Unknown Request Type"), req.Type)
 	}
 }
 

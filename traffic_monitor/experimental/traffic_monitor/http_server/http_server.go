@@ -132,7 +132,6 @@ func (s Server) Run(f GetDataFunc, addr string) error {
 
 type Type int
 
-// TODO rename these, all caps isn't recommended Go style
 const (
 	TRConfig Type = (1 << iota)
 	TRStateDerived
@@ -154,6 +153,49 @@ const (
 	APIBandwidthCapacityKbps
 )
 
+func (t Type) String() string {
+	switch t {
+	case TRConfig:
+		return "TRConfig"
+	case TRStateDerived:
+		return "TRStateDerived"
+	case TRStateSelf:
+		return "TRStateSelf"
+	case CacheStats:
+		return "CacheStats"
+	case DSStats:
+		return "DSStats"
+	case EventLog:
+		return "EventLog"
+	case PeerStates:
+		return "PeerStates"
+	case StatSummary:
+		return "StatSummary"
+	case Stats:
+		return "Stats"
+	case ConfigDoc:
+		return "ConfigDoc"
+	case APICacheCount:
+		return "APICacheCount"
+	case APICacheAvailableCount:
+		return "APICacheAvailableCount"
+	case APICacheDownCount:
+		return "APICacheDownCount"
+	case APIVersion:
+		return "APIVersion"
+	case APITrafficOpsURI:
+		return "APITrafficOpsURI"
+	case APICacheStates:
+		return "APICacheStates"
+	case APIBandwidthKbps:
+		return "APIBandwidthKbps"
+	case APIBandwidthCapacityKbps:
+		return "APIBandwidthCapacityKbps"
+	default:
+		return "Invalid"
+	}
+}
+
 type Format int
 
 const (
@@ -168,19 +210,20 @@ type DataRequest struct {
 	Parameters map[string][]string
 }
 
-type GetDataFunc func(DataRequest) []byte
+type GetDataFunc func(DataRequest) ([]byte, int)
 
 func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	//pp: "0=[my-ats-edge-cache-0], hc=[1]",
 	//dateLayout := "Thu Oct 09 20:28:36 UTC 2014"
 	dateLayout := "Mon Jan 02 15:04:05 MST 2006"
-	data := s.getData(DataRequest{
+	data, responseCode := s.getData(DataRequest{
 		Type:       t,
 		Format:     f,
 		Date:       time.Now().UTC().Format(dateLayout),
 		Parameters: req.URL.Query(),
 	})
 	if len(data) > 0 {
+		w.WriteHeader(responseCode)
 		w.Write(data)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
