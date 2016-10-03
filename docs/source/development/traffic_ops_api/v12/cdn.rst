@@ -24,7 +24,7 @@ CDN
 /api/1.2/cdns
 +++++++++++++
 
-**GET /api/1.2/cdns.json**
+**GET /api/1.1/cdns**
 
   Authentication Required: Yes
 
@@ -39,7 +39,7 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` | string | 0=false, 1=true                                 |
+  | ``dnssecEnabled`` | string | DNSSEC enabled (0 or 1).                        |
   +-------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -47,9 +47,44 @@ CDN
     {
      "response": [
            {
-              "id": "1",
+              "id": 1
+              "name": "over-the-top",
+              "dnssecEnabled": "0"
+           }
+        ]
+    }
+
+|
+
+**GET /api/1.1/cdns/:id**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +-------------------+--------+-------------------------------------------------+
+  |    Parameter      |  Type  |                   Description                   |
+  +===================+========+=================================================+
+  | ``id``            | string | CDN id.                                         |
+  +-------------------+--------+-------------------------------------------------+
+  | ``name``          | string | CDN name.                                       |
+  +-------------------+--------+-------------------------------------------------+
+  | ``dnssecEnabled`` | string | DNSSEC enabled (0 or 1).                        |
+  +-------------------+--------+-------------------------------------------------+
+  | ``lastUpdated``   | string | Date of last update.                            |
+  +-------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+           {
+              "id": 1
               "name": "over-the-top",
               "dnssecEnabled": "0",
+              "lastUpdated": "2015-12-16 15:36:47"
            }
         ]
     }

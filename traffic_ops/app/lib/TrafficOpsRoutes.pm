@@ -422,6 +422,8 @@ sub api_routes {
 	# -- CDNS: CRUD
 	$r->get( "/api/$version/cdns")->over( authenticated => 1 )
 		->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns/:id")->over( authenticated => 1 )
+		->to( 'Cdn#show', namespace => $namespace );
 	$r->get( "/api/$version/cdns/name/:name")->over( authenticated => 1 )
 		->to( 'Cdn#name',  namespace => $namespace );
 	$r->post( "/api/$version/cdns" )->over( authenticated => 1 )

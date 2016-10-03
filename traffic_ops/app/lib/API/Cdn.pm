@@ -46,6 +46,25 @@ sub index {
 	$self->success( \@data );
 }
 
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Cdn")->search( { id => $id } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"  			 => $row->id,
+				"name"        => $row->name,
+				"dnssecEnabled" => $row->dnssec_enabled,
+				"lastUpdated" => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub name {
 	my $self = shift;
 	my $cdn  = $self->param('name');
