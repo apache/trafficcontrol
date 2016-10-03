@@ -88,8 +88,7 @@ sub index {
 					"iloPassword"    => $is_admin ? $row->ilo_password : "********",
 					"routerHostName" => $row->router_host_name,
 					"routerPortName" => $row->router_port_name,
-					"lastUpdated"    => $row->last_updated,
-
+					"lastUpdated"    => $row->last_updated
 				}
 			);
 		}
@@ -97,6 +96,56 @@ sub index {
 
 	return defined($forbidden) ? $self->forbidden("Forbidden. Delivery service not assigned to user.") : $self->success( \@data );
 }
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Server")->search( { id => $id } );
+	my @data = ();
+	my $is_admin = &is_admin($self);
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"             => $row->id,
+				"hostName"       => $row->host_name,
+				"domainName"     => $row->domain_name,
+				"tcpPort"        => $row->tcp_port,
+				"httpsPort"      => $row->https_port,
+				"interfaceName"  => $row->interface_name,
+				"ipAddress"      => $row->ip_address,
+				"ipNetmask"      => $row->ip_netmask,
+				"ipGateway"      => $row->ip_gateway,
+				"ip6Address"     => $row->ip6_address,
+				"ip6Gateway"     => $row->ip6_gateway,
+				"interfaceMtu"   => $row->interface_mtu,
+				"cachegroup"     => $row->cachegroup->name,
+				"physLocation"   => $row->phys_location->name,
+				"guid"           => $row->guid,
+				"rack"           => $row->rack,
+				"type"           => $row->type->name,
+				"status"         => $row->status->name,
+				"offline_reason" => $row->offline_reason,
+				"profile"        => $row->profile->name,
+				"profileDesc"    => $row->profile->description,
+				"cdnName"        => $row->cdn->name,
+				"mgmtIpAddress"  => $row->mgmt_ip_address,
+				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+				"iloIpAddress"   => $row->ilo_ip_address,
+				"iloIpNetmask"   => $row->ilo_ip_netmask,
+				"iloIpGateway"   => $row->ilo_ip_gateway,
+				"iloUsername"    => $row->ilo_username,
+				"iloPassword"    => $is_admin ? $row->ilo_password : "********",
+				"routerHostName" => $row->router_host_name,
+				"routerPortName" => $row->router_port_name,
+				"lastUpdated"    => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 
 sub get_servers {
 	my $self              = shift;
