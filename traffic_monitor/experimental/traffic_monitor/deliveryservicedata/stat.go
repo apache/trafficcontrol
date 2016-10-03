@@ -5,6 +5,14 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 )
 
+// Filter encapsulates functions to filter a given set of Stats, e.g. from HTTP query parameters.
+// TODO combine with cache.Filter?
+type Filter interface {
+	UseStat(name string) bool
+	UseDeliveryService(name enum.DeliveryServiceName) bool
+	WithinStatHistoryMax(int) bool
+}
+
 type StatName string
 type StatOld struct {
 	Time  int64  `json:"time"`
@@ -18,7 +26,7 @@ type StatsOld struct {
 
 type StatsReadonly interface {
 	Get(name enum.DeliveryServiceName) (StatReadonly, bool)
-	JSON() StatsOld
+	JSON(filter Filter) StatsOld
 }
 
 type StatReadonly interface {

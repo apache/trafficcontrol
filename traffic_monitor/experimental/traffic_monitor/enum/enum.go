@@ -18,9 +18,11 @@ type DeliveryServiceName string
 // TODO move and rename more generically
 type CacheType string
 
-const CacheTypeEdge = CacheType("EDGE")
-const CacheTypeMid = CacheType("MID")
-const CacheTypeInvalid = CacheType("")
+const (
+	CacheTypeEdge    = CacheType("EDGE")
+	CacheTypeMid     = CacheType("MID")
+	CacheTypeInvalid = CacheType("")
+)
 
 func (t CacheType) String() string {
 	switch t {
@@ -46,12 +48,12 @@ func CacheTypeFromString(s string) CacheType {
 }
 
 // DSType is the Delivery Service type. HTTP, DNS, etc.
-type DSType int64
+type DSType string
 
 const (
-	DSTypeHTTP = iota
-	DSTypeDNS
-	DSTypeInvalid
+	DSTypeHTTP    = DSType("http")
+	DSTypeDNS     = DSType("dns")
+	DSTypeInvalid = DSType("")
 )
 
 func (t DSType) String() string {

@@ -349,50 +349,63 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	return kbpsStats, kbpsStatsLastKbps, kbpsErr
 }
 
-func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64) *dsdata.StatsOld {
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".out_bytes")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.OutBytes.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".isAvailable")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_5xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status5xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_4xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status4xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_3xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status3xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_2xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status2xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".in_bytes")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.InBytes.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".kbps")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Kbps.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_5xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps5xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_4xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps4xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_3xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps3xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_2xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps2xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".error-string")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.ErrorString.Value}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_total")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.TpsTotal.Value))}}
+func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64, filter dsdata.Filter) *dsdata.StatsOld {
+	add := func(name, val string) {
+		if filter.UseStat(name) {
+			s.DeliveryService[deliveryService][dsdata.StatName(prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+		}
+	}
+	add("out_bytes", strconv.Itoa(int(c.OutBytes.Value)))
+	add("isAvailable", fmt.Sprintf("%t", c.IsAvailable.Value))
+	add("status_5xx", strconv.Itoa(int(c.Status5xx.Value)))
+	add("status_4xx", strconv.Itoa(int(c.Status4xx.Value)))
+	add("status_3xx", strconv.Itoa(int(c.Status3xx.Value)))
+	add("status_2xx", strconv.Itoa(int(c.Status2xx.Value)))
+	add("in_bytes", strconv.Itoa(int(c.InBytes.Value)))
+	add("kbps", strconv.Itoa(int(c.Kbps.Value)))
+	add("tps_5xx", strconv.Itoa(int(c.Tps5xx.Value)))
+	add("tps_4xx", strconv.Itoa(int(c.Tps4xx.Value)))
+	add("tps_3xx", strconv.Itoa(int(c.Tps3xx.Value)))
+	add("tps_2xx", strconv.Itoa(int(c.Tps2xx.Value)))
+	add("error", c.ErrorString.Value)
+	add("tps_total", strconv.Itoa(int(c.TpsTotal.Value)))
 	return s
 }
 
-func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64) *dsdata.StatsOld {
-	s.DeliveryService[deliveryService]["caches-configured"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.CachesConfiguredNum.Value))}}
-	s.DeliveryService[deliveryService]["caches-reporting"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(len(c.CachesReporting))}}
-	s.DeliveryService[deliveryService]["error-string"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.ErrorStr.Value}}
-	s.DeliveryService[deliveryService]["status"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.StatusStr.Value}}
-	s.DeliveryService[deliveryService]["isHealthy"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsHealthy.Value)}}
-	s.DeliveryService[deliveryService]["isAvailable"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
-	s.DeliveryService[deliveryService]["caches-available"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.CachesAvailableNum.Value))}}
+func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64, filter dsdata.Filter) *dsdata.StatsOld {
+	add := func(name, val string) {
+		if filter.UseStat(name) {
+			s.DeliveryService[deliveryService][dsdata.StatName(name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+		}
+	}
+	add("caches-configured", strconv.Itoa(int(c.CachesConfiguredNum.Value)))
+	add("caches-reporting", strconv.Itoa(len(c.CachesReporting)))
+	add("error-string", strconv.Itoa(len(c.CachesReporting)))
+	add("status", c.StatusStr.Value)
+	add("isHealthy", fmt.Sprintf("%t", c.IsHealthy.Value))
+	add("isAvailable", fmt.Sprintf("%t", c.IsAvailable.Value))
+	add("caches-available", strconv.Itoa(int(c.CachesAvailableNum.Value)))
 	return s
 }
 
 // StatsJSON returns an object formatted as expected to be serialized to JSON and served.
-func (dsStats Stats) JSON() dsdata.StatsOld {
+func (dsStats Stats) JSON(filter dsdata.Filter) dsdata.StatsOld {
 	now := time.Now().Unix()
 	jsonObj := &dsdata.StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{}}
 
 	for deliveryService, stat := range dsStats.DeliveryService {
+		if !filter.UseDeliveryService(deliveryService) {
+			continue
+		}
 		jsonObj.DeliveryService[deliveryService] = map[dsdata.StatName][]dsdata.StatOld{}
-		jsonObj = addCommonData(jsonObj, &stat.CommonStats, deliveryService, now)
+		jsonObj = addCommonData(jsonObj, &stat.CommonStats, deliveryService, now, filter)
 		for cacheGroup, cacheGroupStats := range stat.CacheGroups {
-			jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, string("location."+cacheGroup), now)
+			jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, "location."+string(cacheGroup)+".", now, filter)
 		}
 		for cacheType, typeStats := range stat.Types {
-			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String(), now)
+			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String()+".", now, filter)
 		}
-		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total", now)
+		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total.", now, filter)
 	}
 	return *jsonObj
 }
