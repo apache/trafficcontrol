@@ -46,7 +46,7 @@ public class LanguidProtocol extends Http11Protocol {
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void start() throws Exception {
-		log.info("*************** Start called; waiting for initialization to occur");
+		log.info("Start called; waiting for initialization to occur");
 
 		while (!isInitialized()) {
 			Thread.sleep(100);
