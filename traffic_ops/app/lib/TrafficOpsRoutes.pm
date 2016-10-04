@@ -644,6 +644,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get( "/api/$version/profiles")->over( authenticated => 1 )
 		->to( 'Profile#index', namespace => $namespace );
+	$r->get( "/api/$version/profiles/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Profile#show', namespace => $namespace );
 	$r->get( "/api/$version/profiles/trimmed")->over( authenticated => 1 )
 		->to( 'Profile#index_trimmed', namespace => $namespace );
 	$r->post( "/api/$version/profiles" )->over( authenticated => 1 )

@@ -25,7 +25,7 @@ Profiles
 /api/1.2/profiles
 +++++++++++++++++
 
-**GET /api/1.2/profiles.json**
+**GET /api/1.2/profiles**
 
 	Authentication Required: Yes
 
@@ -60,7 +60,7 @@ Profiles
 
 |
 
-**GET /api/1.2/profiles/trimmed.json**
+**GET /api/1.2/profiles/trimmed**
 
 	Authentication Required: Yes
 
@@ -85,6 +85,50 @@ Profiles
     }
 
 |
+
+**GET /api/1.2/profiles/:id**
+
+	Authentication Required: Yes
+
+	Role(s) Required: None
+
+	**Request Route Parameters**
+
+	+-----------------+------------+------------------------------------------------+
+	|    Parameter    |  Required  |                    Description                 |
+	+=================+============+================================================+
+	| ``id``          |    yes     | The ID of the profile.                         |
+	+-----------------+------------+------------------------------------------------+
+
+	**Response Properties**
+
+	+-----------------+--------+----------------------------------------------------+
+	|    Parameter    |  Type  |                    Description                     |
+	+=================+========+====================================================+
+	| ``lastUpdated`` | array  | The Time / Date this server entry was last updated |
+	+-----------------+--------+----------------------------------------------------+
+	| ``name``        | string | The name for the profile                           |
+	+-----------------+--------+----------------------------------------------------+
+	| ``id``          | string | Primary key                                        |
+	+-----------------+--------+----------------------------------------------------+
+	| ``description`` | string | The description for the profile                    |
+	+-----------------+--------+----------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+            "lastUpdated": "2012-10-08 19:34:45",
+            "name": "CCR_TOP",
+            "id": "8",
+            "description": "Content Router for top.foobar.net"
+        }
+     ]
+    }
+
+|
+
 
 **POST /api/1.2/profiles**
     Create a new empty  profile. 
