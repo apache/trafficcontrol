@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
 	"runtime"
 	"time"
 
@@ -18,21 +20,42 @@ import (
 var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevision=${git rev-parse HEAD}'"
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
 
+// getHostNameWithoutDomain returns the machine hostname, without domain information.
+// Modified from http://stackoverflow.com/a/34331660/292623
+func getHostNameWithoutDomain() (string, error) {
+	cmd := exec.Command("/bin/hostname", "-s")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	hostname := out.String()
+	if len(hostname) < 1 {
+		return "", fmt.Errorf("OS returned empty hostname")
+	}
+	hostname = hostname[:len(hostname)-1] // removing EOL
+	return hostname, nil
+}
+
 // getStaticAppData returns app data available at start time.
 // This should be called immediately, as it includes calculating when the app was started.
 func getStaticAppData() (manager.StaticAppData, error) {
 	var d manager.StaticAppData
+	var err error
 	d.StartTime = time.Now()
 	d.GitRevision = GitRevision
 	d.FreeMemoryMB = math.MaxUint64 // TODO remove if/when nothing needs this
 	d.Version = Version
-	wd, err := os.Getwd()
-	if err != nil {
+	if d.WorkingDir, err = os.Getwd(); err != nil {
 		return manager.StaticAppData{}, err
 	}
-	d.WorkingDir = wd
 	d.Name = os.Args[0]
 	d.BuildTimestamp = BuildTimestamp
+	if d.Hostname, err = getHostNameWithoutDomain(); err != nil {
+		return manager.StaticAppData{}, err
+	}
+
 	return d, nil
 }
 
