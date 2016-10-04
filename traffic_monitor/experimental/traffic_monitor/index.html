@@ -171,13 +171,7 @@
 
 		 function getBandwidthCapacity() {
 			 ajax("/api/bandwidth-capacity-kbps", function(r) {
-				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(parseInt(r).toString());
-			 });
-		 }
-
-		 function getBandwidthCapacity() {
-			 ajax("/api/bandwidth-capacity", function(r) {
-				 document.getElementById("bandwidth-capacity").innerHTML = parseInt(r);
+				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(r);
 			 });
 		 }
 
