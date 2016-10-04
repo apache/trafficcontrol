@@ -736,6 +736,8 @@ sub api_routes {
 		->to( 'Types#index', namespace => $namespace );
 	$r->get("/api/$version/types/trimmed")->over( authenticated => 1 )
 		->to( 'Types#index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/types/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Types#show',  namespace => $namespace );
 
 	# -- USERS
 	$r->get( "/api/$version/users")->over( authenticated => 1 )
