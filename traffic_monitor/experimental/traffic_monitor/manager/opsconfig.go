@@ -16,18 +16,16 @@ import (
 // This could be made lock-free, if the performance was necessary
 type OpsConfigThreadsafe struct {
 	opsConfig *handler.OpsConfig
-	m         *sync.Mutex
+	m         *sync.RWMutex
 }
 
 func NewOpsConfigThreadsafe() OpsConfigThreadsafe {
-	return OpsConfigThreadsafe{m: &sync.Mutex{}, opsConfig: &handler.OpsConfig{}}
+	return OpsConfigThreadsafe{m: &sync.RWMutex{}, opsConfig: &handler.OpsConfig{}}
 }
 
 func (o *OpsConfigThreadsafe) Get() handler.OpsConfig {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
+	o.m.RLock()
+	defer o.m.RUnlock()
 	return *o.opsConfig
 }
 
@@ -93,7 +91,7 @@ func opsConfigManagerListen(opsConfig OpsConfigThreadsafe, opsConfigChannel <-ch
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
 				continue
 			}
-			toSession = towrap.NewTrafficOpsSessionThreadsafe(realToSession)
+			toSession.Set(realToSession)
 
 			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
 				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))

@@ -24,9 +24,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
 	"time"
 
-	"github.com/cihub/seelog"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -150,7 +150,6 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 		return nil, err
 	}
 
-	seelog.Debugf("logged into Traffic Ops: %s", toURL)
 	return &to, nil
 }
 
@@ -188,35 +187,60 @@ func (to *Session) request(path string, body []byte) (*http.Response, error) {
 		return nil, &e
 	}
 
-	seelog.Infof("request %s, StatusCode[%d]", url, resp.StatusCode)
 	return resp, nil
+}
+
+type CacheHitStatus string
+
+const CacheHitStatusHit = CacheHitStatus("hit")
+const CacheHitStatusExpired = CacheHitStatus("expired")
+const CacheHitStatusMiss = CacheHitStatus("miss")
+const CacheHitStatusInvalid = CacheHitStatus("")
+
+func (s CacheHitStatus) String() string {
+	return string(s)
+}
+
+func StringToCacheHitStatus(s string) CacheHitStatus {
+	s = strings.ToLower(s)
+	switch s {
+	case "hit":
+		return CacheHitStatusHit
+	case "expired":
+		return CacheHitStatusExpired
+	case "miss":
+		return CacheHitStatusMiss
+	default:
+		return CacheHitStatusInvalid
+	}
 }
 
 // getBytesWithTTL - get the path, and cache in the session
 // return from cache is found and the ttl isn't expired, otherwise get it and
 // store it in cache
-func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
+func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStatus, error) {
 	var body []byte
 	var err error
+	var cacheHitStatus CacheHitStatus
 	getFresh := false
 	if cacheEntry, ok := to.Cache[path]; ok {
 		if cacheEntry.Entered > time.Now().Unix()-ttl {
-			seelog.Debugf("Cache HIT for %s%s", to.URL, path)
+			cacheHitStatus = CacheHitStatusHit
 			body = cacheEntry.Bytes
 		} else {
-			seelog.Debugf("Cache HIT but EXPIRED for %s%s", to.URL, path)
+			cacheHitStatus = CacheHitStatusExpired
 			getFresh = true
 		}
 	} else {
 		to.Cache = make(map[string]CacheEntry)
-		seelog.Debugf("Cache MISS for %s%s", to.URL, path)
+		cacheHitStatus = CacheHitStatusMiss
 		getFresh = true
 	}
 
 	if getFresh {
 		body, err = to.getBytes(path)
 		if err != nil {
-			return nil, err
+			return nil, CacheHitStatusInvalid, err
 		}
 
 		newEntry := CacheEntry{
@@ -226,7 +250,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, error) {
 		to.Cache[path] = newEntry
 	}
 
-	return body, nil
+	return body, cacheHitStatus, nil
 }
 
 // GetBytes - get []bytes array for a certain path on the to session.

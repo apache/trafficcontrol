@@ -220,11 +220,11 @@ sub is_valid {
 			my $data = $rs_param->single;
 			my $original_secure = $data->{'_column_data'}{'secure'};
 			if ( $original_secure == 1 ) {
-				$self->field('parameter.name')->is_equal( "", "You do not have the permissions to modify a secure parameter!" );
+				$self->field('parameter.name')->is_equal( "", "You must be an ADMIN to modify a secure parameter!" );
 			}
 		} else {
 			if ( $secure == 1 ) {
-				$self->field('parameter.name')->is_equal( "", "You do not have the permissions to create a secure parameter!" );
+				$self->field('parameter.name')->is_equal( "", "You must be an ADMIN to create a secure parameter!" );
 			}
 		}
 	}

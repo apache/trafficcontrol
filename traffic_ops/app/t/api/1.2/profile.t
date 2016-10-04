@@ -69,6 +69,52 @@ ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
 	"name" => "CCR_CREATE", "description" => "ccr description"})->status_is(400);
 
+my $profile_id = &get_profile_id('CCR_CREATE');
+
+ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
+        "name" => "CCR_UPDATE",
+        "description" => "CCR_UPDATE description"
+        })
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/id" => "$profile_id")
+    ->json_is( "/response/name" => "CCR_UPDATE")
+    ->json_is( "/response/description" => "CCR_UPDATE description")
+            , 'Does the profile details return?';
+
+ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
+	"name" => "contain space", "description" => "some description"})->status_is(400);
+
+ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
+	"name" => "CCR_COPY", "description" => "some description"})->status_is(400);
+
+ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
+	"name" => "CCR_UPDATE"})->status_is(400);
+
+ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
+	"name" => "CCR_UPDATE", "description" => ""})->status_is(400);
+
+ok $t->delete_ok('/api/1.2/profiles/' . $profile_id)->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/alerts/0/level", "success" )
+	->json_is( "/alerts/0/text", "Profile was deleted." );
+
+ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
+        "name" => "CCR_UPDATE",
+        "description" => "CCR_UPDATE description"
+        })
+    ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
+sub get_profile_id {
+    my $profile_name = shift;
+    my $q      = "select id from profile where name = \'$profile_name\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}

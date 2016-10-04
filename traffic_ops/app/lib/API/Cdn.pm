@@ -39,6 +39,7 @@ sub index {
 			@data, {
 				"id"   => $row->id,
 				"name" => $row->name,
+				"dnssecEnabled" => $row->dnssec_enabled
 			}
 		);
 	}
@@ -54,8 +55,10 @@ sub name {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
+				"id"   => $row->id,
 				"name"        => $row->name,
-				"lastUpdated" => $row->last_updated,
+				"dnssecEnabled" => $row->dnssec_enabled,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}

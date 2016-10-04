@@ -44,6 +44,8 @@ const (
 	FATAL = iota
 	// ERROR will just keep going, print error
 	ERROR = iota
+	// WARN will keep going and print a warning
+	WARN = iota
 )
 
 const (
@@ -315,7 +317,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 						statTime,
 					)
 					if err != nil {
-						fmt.Printf("error adding creating data point for max Gbps...%v\n", err)
+						log.Error("error adding data point for max Gbps...%v\n", err)
 						continue
 					}
 					bp.AddPoint(pt)
@@ -534,6 +536,8 @@ func calcMetrics(cdnName string, url string, cacheMap map[string]traffic_ops.Ser
 func errHndlr(err error, severity int) {
 	if err != nil {
 		switch {
+		case severity == WARN:
+			log.Warn(err)
 		case severity == ERROR:
 			log.Error(err)
 		case severity == FATAL:
@@ -802,8 +806,7 @@ func influxConnect(config StartupConfig, runningConfig RunningConfig) (influx.Cl
 		if config.InfluxProtocol != "udp" {
 			_, _, err := con.Ping(10)
 			if err != nil {
-				errHndlr(err, ERROR)
-				host.InfluxClient = nil
+				errHndlr(err, WARN)
 				continue
 			}
 		}

@@ -120,7 +120,7 @@ sub delete {
 	my $id   = $self->param('id');
 
 	if ( !&is_admin($self) ) {
-		$self->flash( message => "No can do. Get more privs." );
+		$self->flash( message => "You must be an ADMIN to perform this operation!" );
 	}
 	else {
 		my $p_name = $self->db->resultset('Profile')->search( { id => $id } )->get_column('name')->single();
@@ -223,7 +223,7 @@ sub create {
 	my $p_name = $self->param('profile.name');
 	my $p_desc = $self->param('profile.description');
 	if ( !&is_admin($self) ) {
-		my $err = "You do not have enough privileges to modify this." . "__NEWLINE__";
+		my $err = "You must be an ADMIN to perform this operation!" . "__NEWLINE__";
 		return $self->flash( message => $err );
 	}
 	if ( $self->check_profile_input("add") ) {

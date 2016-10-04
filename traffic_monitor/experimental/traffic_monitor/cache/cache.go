@@ -38,12 +38,13 @@ func (h Handler) Precompute() bool {
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
+	MaxKbps              int64
 	Errors               []error
 	Reporting            bool
 }
 
 type Result struct {
-	Id        string
+	Id        enum.CacheName
 	Available bool
 	Errors    []error
 	Astats    Astats
@@ -115,7 +116,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([
 func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollId, time.Now())
 	result := Result{
-		Id:           id,
+		Id:           enum.CacheName(id),
 		Available:    false,
 		Errors:       []error{},
 		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
@@ -148,6 +149,10 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 
 	if result.Astats.System.ProcNetDev == "" {
 		log.Warnf("addkbps %s procnetdev empty\n", id)
+	}
+
+	if result.Astats.System.InfSpeed == 0 {
+		log.Warnf("addkbps %s inf.speed empty\n", id)
 	}
 
 	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
@@ -202,6 +207,9 @@ func (handler Handler) precompute(result Result) Result {
 		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
 
+	kbpsInMbps := int64(1000)
+	result.PrecomputedData.MaxKbps = int64(result.Astats.System.InfSpeed) * kbpsInMbps
+
 	for stat, value := range result.Astats.Ats {
 		var err error
 		stats, err = processStat(result.Id, stats, todata, stat, value)
@@ -216,7 +224,7 @@ func (handler Handler) precompute(result Result) Result {
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
 // TODO fix this being crazy slow. THIS IS THE BOTTLENECK
-func processStat(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -234,7 +242,7 @@ func processStat(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, 
 	}
 }
 
-func processStatPlugin(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -246,7 +254,7 @@ func processStatPlugin(server string, stats map[enum.DeliveryServiceName]dsdata.
 	}
 }
 
-func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 2 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
@@ -269,21 +277,21 @@ func processStatPluginRemapStats(server string, stats map[enum.DeliveryServiceNa
 		dsStat = *newStat
 	}
 
-	if err := addCacheStat(&dsStat.Total, statName, value); err != nil {
+	if err := addCacheStat(&dsStat.TotalStats, statName, value); err != nil {
 		return stats, err
 	}
 
-	cachegroup, ok := toData.ServerCachegroups[enum.CacheName(server)]
+	cachegroup, ok := toData.ServerCachegroups[server]
 	if !ok {
 		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
 	}
-	dsStat.CacheGroups[cachegroup] = dsStat.Total
+	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
 
-	cacheType, ok := toData.ServerTypes[enum.CacheName(server)]
+	cacheType, ok := toData.ServerTypes[server]
 	if !ok {
 		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
 	}
-	dsStat.Type[cacheType] = dsStat.Total
+	dsStat.Types[cacheType] = dsStat.TotalStats
 	stats[ds] = dsStat
 	return stats, nil
 }

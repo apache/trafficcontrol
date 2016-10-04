@@ -32,15 +32,13 @@ __PACKAGE__->table("job_status");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 48
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 last_updated
 
@@ -60,9 +58,9 @@ __PACKAGE__->add_columns(
     sequence          => "job_status_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 1, size => 48 },
+  { data_type => "text", is_nullable => 1 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -102,8 +100,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2Fbz65j2qExnZE0sWUs4hw
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:k3ImHzjl2lv2+UR3/Zp8rQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

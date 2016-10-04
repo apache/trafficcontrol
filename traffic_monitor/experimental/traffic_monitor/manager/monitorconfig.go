@@ -3,6 +3,8 @@ package manager
 import (
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
@@ -10,7 +12,7 @@ import (
 	"sync"
 )
 
-func copyTMConfig(a to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
+func CopyTrafficMonitorConfigMap(a *to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
 	b := to.TrafficMonitorConfigMap{}
 	b.TrafficServer = map[string]to.TrafficServer{}
 	b.CacheGroup = map[string]to.TMCacheGroup{}
@@ -39,42 +41,38 @@ func copyTMConfig(a to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
 	return b
 }
 
-// TrafficMonitorConfigMap ...
-type TrafficMonitorConfigMap struct {
-}
-
 type TrafficMonitorConfigMapThreadsafe struct {
 	monitorConfig *to.TrafficMonitorConfigMap
-	m             *sync.Mutex
+	m             *sync.RWMutex
 }
 
 func NewTrafficMonitorConfigMapThreadsafe() TrafficMonitorConfigMapThreadsafe {
-	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.Mutex{}}
+	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
 }
 
+// Get returns the TrafficMonitorConfigMap. Callers MUST NOT modify, it is not threadsafe for mutation. If mutation is necessary, call CopyTrafficMonitorConfigMap().
 func (t *TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
-	t.m.Lock()
-	defer func() {
-		t.m.Unlock()
-	}()
-	return copyTMConfig(*t.monitorConfig)
+	t.m.RLock()
+	defer t.m.RUnlock()
+	return *t.monitorConfig
 }
 
-func (t *TrafficMonitorConfigMapThreadsafe) Set(newMonitorConfig to.TrafficMonitorConfigMap) {
+// Set sets the TrafficMonitorConfigMap. This is only safe for one writer. This MUST NOT be called by multiple threads.
+func (t *TrafficMonitorConfigMapThreadsafe) Set(c to.TrafficMonitorConfigMap) {
 	t.m.Lock()
-	*t.monitorConfig = copyTMConfig(newMonitorConfig)
+	*t.monitorConfig = c
 	t.m.Unlock()
 }
 
-func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) TrafficMonitorConfigMapThreadsafe {
+func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config) TrafficMonitorConfigMapThreadsafe {
 	monitorConfig := NewTrafficMonitorConfigMapThreadsafe()
-	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber)
+	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber, cfg)
 	return monitorConfig
 }
 
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
-func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig) {
+func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config) {
 	for {
 		select {
 		case monitorConfig := <-monitorConfigPollChan:
@@ -87,17 +85,19 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 			for _, srv := range monitorConfig.TrafficServer {
 				caches[srv.HostName] = srv.Status
 
+				cacheName := enum.CacheName(srv.HostName)
+
 				if srv.Status == "ONLINE" {
-					localStates.SetCache(srv.HostName, peer.IsAvailable{IsAvailable: true})
+					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: true})
 					continue
 				}
 				if srv.Status == "OFFLINE" {
-					localStates.SetCache(srv.HostName, peer.IsAvailable{IsAvailable: false})
+					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 					continue
 				}
 				// seed states with available = false until our polling cycle picks up a result
-				if _, exists := localStates.Get().Caches[srv.HostName]; !exists {
-					localStates.SetCache(srv.HostName, peer.IsAvailable{IsAvailable: false})
+				if _, exists := localStates.Get().Caches[cacheName]; !exists {
+					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 				}
 
 				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
@@ -123,27 +123,29 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 				peerUrls[srv.HostName] = url
 			}
 
-			statUrlSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: defaultCacheStatPollingInterval}
-			healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: defaultCacheHealthPollingInterval}
-			peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: defaultPeerPollingInterval}
+			statUrlSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: cfg.CacheStatPollingInterval}
+			healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: cfg.CacheHealthPollingInterval}
+			peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: cfg.PeerPollingInterval}
 
-			for k := range localStates.GetCaches() {
-				if _, exists := monitorConfig.TrafficServer[k]; !exists {
-					log.Warnf("Removing %s from localStates", k)
-					localStates.DeleteCache(k)
+			for cacheName := range localStates.GetCaches() {
+				if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {
+					log.Warnf("Removing %s from localStates", cacheName)
+					localStates.DeleteCache(cacheName)
 				}
 			}
 
-			addStateDeliveryServices(monitorConfig, localStates.Get().Deliveryservice)
+			// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
+			for _, ds := range monitorConfig.DeliveryService {
+				// since caches default to unavailable, also default DS false
+				if _, exists := localStates.Get().Deliveryservice[enum.DeliveryServiceName(ds.XMLID)]; !exists {
+					localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
+				}
+			}
+			for ds, _ := range localStates.Get().Deliveryservice {
+				if _, exists := monitorConfig.DeliveryService[string(ds)]; !exists {
+					localStates.DeleteDeliveryService(ds)
+				}
+			}
 		}
-	}
-}
-
-// addStateDeliveryServices adds delivery services in `mc` as keys in `deliveryServices`, with empty Deliveryservice values.
-// TODO add disabledLocations
-func addStateDeliveryServices(mc to.TrafficMonitorConfigMap, deliveryServices map[string]peer.Deliveryservice) {
-	for _, ds := range mc.DeliveryService {
-		// since caches default to unavailable, also default DS false
-		deliveryServices[ds.XMLID] = peer.Deliveryservice{}
 	}
 }

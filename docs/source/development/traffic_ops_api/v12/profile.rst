@@ -187,3 +187,119 @@ Profiles
     }
 
 |
+
+**PUT /api/1.2/profiles/{:id}**
+
+    Allows user to edit a profile.
+
+	Authentication Required: Yes
+
+	Role(s) Required:  admin or oper
+
+	**Request Route Parameters**
+
+	+-----------------+----------+---------------------------------------------------+
+	| Name            | Required | Description                                       |
+	+=================+==========+===================================================+
+	| ``id``          | yes      | profile id.                                       |
+	+-----------------+----------+---------------------------------------------------+
+
+	**Request Properties**
+
+	+-----------------+----------+---------------------------------------------------+
+	| Parameter       | Required | Description                                       |
+	+=================+==========+===================================================+
+	| ``name``        | yes      | The new name for the profile.                     |
+	+-----------------+----------+---------------------------------------------------+
+	| ``description`` | yes      | The new description for the profile.              |
+	+-----------------+----------+---------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+      "name": "CCR_UPDATE",
+      "description": "CCR_UPDATE description"
+    }
+
+ 	**Response Properties**
+
+	+------------------+--------+----------------------------------+
+	|  Parameter       |  Type  |           Description            |
+	+==================+========+==================================+
+	| ``response``     |        | The updated profile info.        |
+	+------------------+--------+----------------------------------+
+	| ``>id``          | string | Profile id.                      |
+	+------------------+--------+----------------------------------+
+	| ``>name``        | string | Profile name.                    |
+	+------------------+--------+----------------------------------+
+	| ``>description`` | string | Profile description.             |
+	+------------------+--------+----------------------------------+
+	| ``alerts``       | array  | A collection of alert messages.  |
+	+------------------+--------+----------------------------------+
+	| ``>level``       | string | success, info, warning or error. |
+	+------------------+--------+----------------------------------+
+	| ``>text``        | string | Alert message.                   |
+	+------------------+--------+----------------------------------+
+	| ``version``      | string |                                  |
+	+------------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response":{
+        "id": "219",
+        "name": "CCR_UPDATE",
+        "description": "CCR_UPDATE description"
+      }
+      "alerts":[
+        {
+          "level": "success",
+          "text": "Profile was updated: 219"
+        }
+      ]
+    }
+
+|
+
+**DELETE /api/1.2/profiles/{:id}**
+
+  Allows user to delete a profile.
+
+	Authentication Required: Yes
+
+	Role(s) Required:  admin or oper
+
+	**Request Route Parameters**
+
+	+-----------------+----------+----------------------------+
+	| Name            | Required | Description                |
+	+=================+==========+============================+
+	| ``id``          | yes      | profile id.                |
+	+-----------------+----------+----------------------------+
+
+ 	**Response Properties**
+
+	+-------------+--------+----------------------------------+
+	|  Parameter  |  Type  |           Description            |
+	+=============+========+==================================+
+	| ``alerts``  | array  | A collection of alert messages.  |
+	+-------------+--------+----------------------------------+
+	| ``>level``  | string | success, info, warning or error. |
+	+-------------+--------+----------------------------------+
+	| ``>text``   | string | Alert message.                   |
+	+-------------+--------+----------------------------------+
+	| ``version`` | string |                                  |
+	+-------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+      "alerts": [
+        {
+          "level": "success",
+          "text": "Profile was deleted."
+        }
+      ]
+    }
+
+|

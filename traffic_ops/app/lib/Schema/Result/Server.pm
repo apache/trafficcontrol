@@ -32,15 +32,13 @@ __PACKAGE__->table("server");
 
 =head2 host_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 63
 
 =head2 domain_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 63
 
 =head2 tcp_port
 
@@ -49,51 +47,43 @@ __PACKAGE__->table("server");
 
 =head2 xmpp_id
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 xmpp_passwd
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 interface_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 ip_address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 ip_netmask
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 ip_gateway
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 ip6_address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 50
 
 =head2 ip6_gateway
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 50
 
 =head2 interface_mtu
 
@@ -109,9 +99,8 @@ __PACKAGE__->table("server");
 
 =head2 rack
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 64
 
 =head2 cachegroup
 
@@ -134,10 +123,8 @@ __PACKAGE__->table("server");
 
 =head2 offline_reason
 
-  data_type: 'varchar'
-  default_value: 'N/A'
-  is_nullable: 0
-  size: 256
+  data_type: 'text'
+  is_nullable: 1
 
 =head2 upd_pending
 
@@ -159,69 +146,58 @@ __PACKAGE__->table("server");
 
 =head2 mgmt_ip_address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 mgmt_ip_netmask
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 mgmt_ip_gateway
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 ilo_ip_address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 ilo_ip_netmask
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 ilo_ip_gateway
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 ilo_username
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 ilo_password
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 router_host_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 router_port_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 guid
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 last_updated
 
@@ -246,33 +222,33 @@ __PACKAGE__->add_columns(
     sequence          => "server_id_seq",
   },
   "host_name",
-  { data_type => "varchar", is_nullable => 0, size => 63 },
+  { data_type => "text", is_nullable => 0 },
   "domain_name",
-  { data_type => "varchar", is_nullable => 0, size => 63 },
+  { data_type => "text", is_nullable => 0 },
   "tcp_port",
   { data_type => "bigint", is_nullable => 1 },
   "xmpp_id",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "xmpp_passwd",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "interface_name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "ip_address",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "ip_netmask",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "ip_gateway",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "ip6_address",
-  { data_type => "varchar", is_nullable => 1, size => 50 },
+  { data_type => "text", is_nullable => 1 },
   "ip6_gateway",
-  { data_type => "varchar", is_nullable => 1, size => 50 },
+  { data_type => "text", is_nullable => 1 },
   "interface_mtu",
   { data_type => "bigint", default_value => 9000, is_nullable => 0 },
   "phys_location",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "rack",
-  { data_type => "varchar", is_nullable => 1, size => 64 },
+  { data_type => "text", is_nullable => 1 },
   "cachegroup",
   {
     data_type      => "bigint",
@@ -285,12 +261,7 @@ __PACKAGE__->add_columns(
   "status",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "offline_reason",
-  {
-    data_type => "varchar",
-    default_value => "N/A",
-    is_nullable => 0,
-    size => 256,
-  },
+  { data_type => "text", is_nullable => 1 },
   "upd_pending",
   { data_type => "smallint", default_value => 0, is_nullable => 0 },
   "profile",
@@ -298,27 +269,27 @@ __PACKAGE__->add_columns(
   "cdn_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "mgmt_ip_address",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "mgmt_ip_netmask",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "mgmt_ip_gateway",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "ilo_ip_address",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "ilo_ip_netmask",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "ilo_ip_gateway",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "ilo_username",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "ilo_password",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "router_host_name",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "router_port_name",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "guid",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -352,7 +323,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_28858_ip6_profile>
+=head2 C<idx_55154_ip6_profile>
 
 =over 4
 
@@ -364,9 +335,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28858_ip6_profile", ["ip6_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_55154_ip6_profile", ["ip6_address", "profile"]);
 
-=head2 C<idx_28858_ip_profile>
+=head2 C<idx_55154_ip_profile>
 
 =over 4
 
@@ -378,9 +349,9 @@ __PACKAGE__->add_unique_constraint("idx_28858_ip6_profile", ["ip6_address", "pro
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28858_ip_profile", ["ip_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_55154_ip_profile", ["ip_address", "profile"]);
 
-=head2 C<idx_28858_se_id_unique>
+=head2 C<idx_55154_se_id_unique>
 
 =over 4
 
@@ -390,7 +361,7 @@ __PACKAGE__->add_unique_constraint("idx_28858_ip_profile", ["ip_address", "profi
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28858_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_55154_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -530,8 +501,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:5K4RR/LKnc4laLjOXHbk3Q
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-27 10:16:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Dq/88exXe/bmWxd2GlDslg
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete

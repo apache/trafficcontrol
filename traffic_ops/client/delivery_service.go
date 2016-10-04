@@ -57,11 +57,11 @@ type DeliveryService struct {
 	CheckPath            string `json:"checkPath"`
 	LastUpdated          string `json:"lastUpdated"`
 	Protocol             string `json:"protocol"`
-	IPv6RoutingEnabled   bool   `json:"ipv6RoutingEnabled"`
+	IPV6RoutingEnabled   bool   `json:"ipv6RoutingEnabled"`
 	RangeRequestHandling string `json:"rangeRequestHandling"`
 	HeaderRewrite        string `json:"headerRewrite"`
 	EdgeHeaderRewrite    string `json:"edgeHeaderRewrite"`
-	MidHeaderReqrite     string `json:"midHeaderRewrite"`
+	MidHeaderRewrite     string `json:"midHeaderRewrite"`
 	TRResponseHeaders    string `json:"trResponseHeaders"`
 	RegexRemap           string `json:"regexRemap"`
 	CacheURL             string `json:"cacheurl"`
@@ -128,17 +128,29 @@ type DeliveryServiceCapacity struct {
 	MaintenancePercent float64 `json:"maintenancePercent"`
 }
 
+// DeliveryServiceRoutingResponse ...
+type DeliveryServiceRoutingResponse struct {
+	Response DeliveryServiceRouting `json:"response"`
+}
+
+// DeliveryServiceRouting ...
+type DeliveryServiceRouting struct {
+	StaticRoute       int     `json:"staticRoute"`
+	Miss              int     `json:"miss"`
+	Geo               float64 `json:"geo"`
+	Err               int     `json:"err"`
+	CZ                float64 `json:"cz"`
+	DSR               float64 `json:"dsr"`
+	Fed               int     `json:"fed"`
+	RegionalAlternate int     `json:"regionalAlternate"`
+	RegionalDenied    int     `json:"regionalDenied"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
-	url := "/api/1.2/deliveryservices.json"
-	resp, err := to.request(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServicesEp(), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -147,15 +159,9 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 
 // DeliveryService gets the DeliveryService for the ID it's passed
 func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
-	url := "/api/1.2/deliveryservices/" + id + ".json"
-	resp, err := to.request(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -164,15 +170,9 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
 func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/state.json"
-	resp, err := to.request(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceStateResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceStateEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -181,15 +181,9 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
 func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/health.json"
-	resp, err := to.request(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceHealthResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceHealthEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -198,17 +192,35 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
 func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
-	url := "/api/1.2/deliveryservices/" + id + "/capacity.json"
-	resp, err := to.request(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data DeliveryServiceCapacityResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	err := get(to, deliveryServiceCapacityEp(id), &data)
+	if err != nil {
 		return nil, err
 	}
 
 	return &data.Response, nil
+}
+
+// DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
+func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
+	var data DeliveryServiceRoutingResponse
+	err := get(to, deliveryServiceRoutingEp(id), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+func get(to *Session, endpoint string, respStruct interface{}) error {
+	resp, err := to.request(endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
+		return err
+	}
+
+	return nil
 }

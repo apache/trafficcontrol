@@ -32,15 +32,13 @@ __PACKAGE__->table("job_agent");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 512
 
 =head2 active
 
@@ -66,9 +64,9 @@ __PACKAGE__->add_columns(
     sequence          => "job_agent_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 512 },
+  { data_type => "text", is_nullable => 1 },
   "active",
   { data_type => "integer", default_value => 0, is_nullable => 0 },
   "last_updated",
@@ -125,8 +123,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2016-07-05 09:49:28
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:VhA5vjqAqU2cZr2hN588qQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-24 13:32:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yqiH5n8tatz6jSPoS1nGUw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

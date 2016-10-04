@@ -13,13 +13,15 @@ type CacheAvailableStatus struct {
 	Status    string
 }
 
+type CacheAvailableStatuses map[enum.CacheName]CacheAvailableStatus
+
 type CacheAvailableStatusThreadsafe struct {
-	caches map[enum.CacheName]CacheAvailableStatus // TODO change string -> CacheName
-	m      *sync.Mutex
+	caches *CacheAvailableStatuses
+	m      *sync.RWMutex
 }
 
-func copyCacheAvailableStatus(a map[enum.CacheName]CacheAvailableStatus) map[enum.CacheName]CacheAvailableStatus {
-	b := map[enum.CacheName]CacheAvailableStatus{}
+func (a CacheAvailableStatuses) Copy() CacheAvailableStatuses {
+	b := CacheAvailableStatuses(map[enum.CacheName]CacheAvailableStatus{})
 	for k, v := range a {
 		b[k] = v
 	}
@@ -27,19 +29,18 @@ func copyCacheAvailableStatus(a map[enum.CacheName]CacheAvailableStatus) map[enu
 }
 
 func NewCacheAvailableStatusThreadsafe() CacheAvailableStatusThreadsafe {
-	return CacheAvailableStatusThreadsafe{m: &sync.Mutex{}, caches: map[enum.CacheName]CacheAvailableStatus{}}
+	c := CacheAvailableStatuses(map[enum.CacheName]CacheAvailableStatus{})
+	return CacheAvailableStatusThreadsafe{m: &sync.RWMutex{}, caches: &c}
 }
 
-func (o *CacheAvailableStatusThreadsafe) Get() map[enum.CacheName]CacheAvailableStatus {
-	o.m.Lock()
-	defer func() {
-		o.m.Unlock()
-	}()
-	return copyCacheAvailableStatus(o.caches)
+func (o *CacheAvailableStatusThreadsafe) Get() CacheAvailableStatuses {
+	o.m.RLock()
+	defer o.m.RUnlock()
+	return *o.caches
 }
 
-func (o *CacheAvailableStatusThreadsafe) Set(cache enum.CacheName, status CacheAvailableStatus) {
+func (o *CacheAvailableStatusThreadsafe) Set(v CacheAvailableStatuses) {
 	o.m.Lock()
-	o.caches[cache] = status
+	*o.caches = v
 	o.m.Unlock()
 }

@@ -32,9 +32,8 @@ __PACKAGE__->table("federation_resolver");
 
 =head2 ip_address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 50
 
 =head2 type
 
@@ -60,7 +59,7 @@ __PACKAGE__->add_columns(
     sequence          => "federation_resolver_id_seq",
   },
   "ip_address",
-  { data_type => "varchar", is_nullable => 0, size => 50 },
+  { data_type => "text", is_nullable => 0 },
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
@@ -86,7 +85,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_28726_federation_resolver_ip_address>
+=head2 C<idx_55004_federation_resolver_ip_address>
 
 =over 4
 
@@ -96,7 +95,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_28726_federation_resolver_ip_address", ["ip_address"]);
+__PACKAGE__->add_unique_constraint("idx_55004_federation_resolver_ip_address", ["ip_address"]);
 
 =head1 RELATIONS
 
@@ -131,8 +130,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-02 08:47:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:g/6WruY2R7RNrZg7VLX/Ng
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-27 10:16:26
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:b4rXEzsWJPX0oUdDAbiQFw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
