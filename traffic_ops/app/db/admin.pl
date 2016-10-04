@@ -55,7 +55,7 @@ my $db_protocol;
 # This is defaulted to 'to_development' so
 # you don't have to specify --env=development for dev workstations
 my $db_name     = 'to_development';
-my $db_username = 'to_user';
+my $db_username = 'to_development';
 my $db_password = '';
 my $host_ip     = '';
 my $host_port   = '';
@@ -134,9 +134,9 @@ else {
 exit(0);
 
 sub parse_dbconf_yml_pg_driver {
-	my $db_conf 			= LoadFile('db/dbconf.yml');
+	my $db_conf       = LoadFile('db/dbconf.yml');
 	my $db_connection = $db_conf->{$environment};
-	$db_protocol 			= $db_connection->{driver};
+	$db_protocol = $db_connection->{driver};
 	my $open = $db_connection->{open};
 
 	# Goose requires the 'open' line in the dbconf file to be a scalar.
@@ -147,11 +147,11 @@ sub parse_dbconf_yml_pg_driver {
 	$open = join "\n", map { s/=/ : /; $_ } split " ", $open;
 	my $hash = Load $open;
 
-	$host_ip 					= $hash->{host};
-	$host_port 				= $hash->{port};
-	$db_name 					= $hash->{dbname};
-	$db_username 			= $hash->{user};
-	$db_password 			= $hash->{password};
+	$host_ip     = $hash->{host};
+	$host_port   = $hash->{port};
+	$db_name     = $hash->{dbname};
+	$db_username = $hash->{user};
+	$db_password = $hash->{password};
 }
 
 sub migrate {
@@ -193,16 +193,16 @@ sub showusers {
 
 sub reverse_schema {
 
-  my $db_info = Schema->get_dbinfo();
-  my $user    = $db_info->{user};
-  my $pass    = $db_info->{password};
-  my $dsn     = Schema->get_dsn();
-  make_schema_at(
-    'Schema', {
-      debug                   => 1,
-      dump_directory          => './lib',
-      overwrite_modifications => 1,
-    },
-    [ $dsn, $user, $pass ],
-  );
+	my $db_info = Schema->get_dbinfo();
+	my $user    = $db_info->{user};
+	my $pass    = $db_info->{password};
+	my $dsn     = Schema->get_dsn();
+	make_schema_at(
+		'Schema', {
+			debug                   => 1,
+			dump_directory          => './lib',
+			overwrite_modifications => 1,
+		},
+		[ $dsn, $user, $pass ],
+	);
 }
