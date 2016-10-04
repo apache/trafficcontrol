@@ -109,6 +109,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 			}
 			historyCount++
 			for stat, value := range result.Astats.Ats {
+				stat = "ats." + stat // TM 1.0 prefixes ATS stats with 'ats.'
 				if !filter.UseStat(stat) {
 					continue
 				}
