@@ -392,6 +392,8 @@ sub api_routes {
 		->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get( "/api/1.2/asns")->over( authenticated => 1 )
 		->to( 'Asn#index',     namespace => $namespace );
+	$r->get( "/api/1.2/asns/:id")->over( authenticated => 1 )
+		->to( 'Asn#show',     namespace => $namespace );
 
 	# -- CACHEGROUPS
 	# -- CACHEGROUPS: CRUD
@@ -422,6 +424,8 @@ sub api_routes {
 	# -- CDNS: CRUD
 	$r->get( "/api/$version/cdns")->over( authenticated => 1 )
 		->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns/:id" => [ id => qr/\d+/ ])->over( authenticated => 1 )
+		->to( 'Cdn#show', namespace => $namespace );
 	$r->get( "/api/$version/cdns/name/:name")->over( authenticated => 1 )
 		->to( 'Cdn#name',  namespace => $namespace );
 	$r->post( "/api/$version/cdns" )->over( authenticated => 1 )
@@ -632,6 +636,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#index', namespace => $namespace );
+	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'PhysLocation#show', namespace => $namespace );
 	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )
 		->to( 'PhysLocation#index_trimmed', namespace => $namespace );
 	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )
@@ -642,6 +648,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get( "/api/$version/profiles")->over( authenticated => 1 )
 		->to( 'Profile#index', namespace => $namespace );
+	$r->get( "/api/$version/profiles/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Profile#show', namespace => $namespace );
 	$r->get( "/api/$version/profiles/trimmed")->over( authenticated => 1 )
 		->to( 'Profile#index_trimmed', namespace => $namespace );
 	$r->post( "/api/$version/profiles" )->over( authenticated => 1 )
@@ -671,6 +679,9 @@ sub api_routes {
 	# -- SERVERS: CRUD
 	$r->get( "/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#index',  namespace => $namespace );
+	$r->get( "/api/$version/servers/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Server#show',  namespace => $namespace );
+
 	$r->post("/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )

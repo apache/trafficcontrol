@@ -25,7 +25,7 @@ ASN
 /api/1.2/asns
 +++++++++++++
 
-**GET /api/1.2/asns.json**
+**GET /api/1.2/asns**
 
   Authentication Required: Yes
 
@@ -36,13 +36,13 @@ ASN
   +------------------+--------+-------------------------------------------------------------------------+
   |    Parameter     |  Type  |                               Description                               |
   +==================+========+=========================================================================+
-  | ``lastUpdated`` | string | The Time / Date this server entry was last updated                       |
+  | ``lastUpdated``  | string | The Time / Date this server entry was last updated                      |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``id``          | string | Local unique identifier for the ASN                                      |
+  | ``id``           | string | Local unique identifier for the ASN                                     |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``asn``         | string | Autonomous System Numbers per APNIC for identifying a service provider.  |
+  | ``asn``          | string | Autonomous System Numbers per APNIC for identifying a service provider. |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``cachegroup``  | string | Related cachegroup name                                                  |
+  | ``cachegroup``   | string | Related cachegroup name                                                 |
   +------------------+--------+-------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -65,3 +65,53 @@ ASN
     }
 
 |
+
+**GET /api/1.2/asns/:id**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +-----------+----------+---------------------------------------------+
+  |   Name    | Required |                Description                  |
+  +===========+==========+=============================================+
+  |   ``id``  |   yes    | ASN id.                                     |
+  +-----------+----------+---------------------------------------------+
+
+  **Response Properties**
+
+  +------------------+--------+-------------------------------------------------------------------------+
+  |    Parameter     |  Type  |                               Description                               |
+  +==================+========+=========================================================================+
+  | ``lastUpdated``  | string | The Time / Date this server entry was last updated                      |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``id``           | string | Local unique identifier for the ASN                                     |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``asn``          | string | Autonomous System Numbers per APNIC for identifying a service provider. |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``cachegroup``   |  hash  | Related cachegroup                                                      |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``>>id``         | string | Related cachegroup ID                                                   |
+  +------------------+--------+-------------------------------------------------------------------------+
+  | ``>>name``       | string | Related cachegroup name                                                 |
+  +------------------+--------+-------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+          "lastUpdated": "2012-09-17 21:41:22",
+          "id": "27",
+          "asn": "7015",
+          "cachegroup": {
+          	"id": "1",
+          	"name": "us-ma-woburn"
+          }
+      ]
+    }
+
+|
+

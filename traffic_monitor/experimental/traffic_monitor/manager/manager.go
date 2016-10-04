@@ -10,7 +10,6 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
@@ -52,7 +51,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	errorCount := NewUintThreadsafe()
 
 	toData := todata.NewThreadsafe()
-	dr := make(chan http_server.DataRequest)
 
 	cacheHealthHandler := cache.NewHandler()
 	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler)
@@ -66,14 +64,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	go cacheHealthPoller.Poll()
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
-
-	opsConfig := StartOpsConfigManager(
-		opsConfigFile,
-		dr,
-		toSession,
-		toData,
-		[]chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel},
-		[]chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel})
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,
@@ -96,14 +86,18 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		fetchCount,
 		errorCount,
 		cfg)
-	StartDataRequestManager(
-		dr,
-		opsConfig,
+
+	StartOpsConfigManager(
+		opsConfigFile,
 		toSession,
+		toData,
+		[]chan<- handler.OpsConfig{monitorConfigPoller.OpsConfigChannel},
+		[]chan<- towrap.ITrafficOpsSession{monitorConfigPoller.SessionChannel},
 		localStates,
 		peerStates,
 		combinedStates,
 		statHistory,
+		lastKbpsStats,
 		dsStats,
 		events,
 		staticAppData,
@@ -112,9 +106,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		fetchCount,
 		healthIteration,
 		errorCount,
-		toData,
-		localCacheStatus,
-		lastKbpsStats)
+		localCacheStatus)
 
 	healthTickListener(cacheHealthPoller.TickChan, healthIteration)
 }

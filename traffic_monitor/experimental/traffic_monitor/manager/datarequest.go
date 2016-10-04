@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"math"
+	"net/http"
+	"net/url"
 	"runtime"
 	"strconv"
 	"strings"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
+	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
@@ -28,7 +31,9 @@ type CacheState struct {
 }
 
 type ApiPeerStates struct {
-	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	Peers       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	QueryParams string                                                      `json:"pp"`
+	DateStr     string                                                      `json:"date"`
 }
 
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
@@ -41,141 +46,483 @@ type CacheStatus struct {
 	ConnectionCount       *int64   `json:"connection_count,omitempty"`
 }
 
-func StartDataRequestManager(dr <-chan http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
-	go dataRequestManagerListen(dr, opsConfig, toSession, localStates, peerStates, combinedStates, statHistory, dsStats, events, staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, toData, localCacheStatus, lastKbpsStats)
+// CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.
+type CacheStatFilter struct {
+	historyCount int
+	statsToUse   map[string]struct{}
+	wildcard     bool
+	cacheType    enum.CacheType
+	hosts        map[enum.CacheName]struct{}
+	cacheTypes   map[enum.CacheName]enum.CacheType
 }
 
-func dataRequestManagerListen(dr <-chan http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) {
-	for {
-		select {
-		case req := <-dr:
-			defer close(req.Response)
+func (f *CacheStatFilter) UseCache(name enum.CacheName) bool {
+	if _, inHosts := f.hosts[name]; len(f.hosts) != 0 && !inHosts {
+		return false
+	}
+	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
+		return false
+	}
+	return true
+}
 
-			var body []byte
-			var err error
-
-			switch req.Type {
-			case http_server.TRConfig:
-				cdnName := opsConfig.Get().CdnName
-				if toSession == nil {
-					err = fmt.Errorf("Unable to connect to Traffic Ops")
-				} else if cdnName == "" {
-					err = fmt.Errorf("No CDN Configured")
-				} else {
-					body, err = toSession.CRConfigRaw(cdnName)
-				}
-				if err != nil {
-					err = fmt.Errorf("TR Config: %v", err)
-				}
-			case http_server.TRStateDerived:
-				body, err = peer.CrstatesMarshall(combinedStates.Get())
-				if err != nil {
-					err = fmt.Errorf("TR State (derived): %v", err)
-				}
-			case http_server.TRStateSelf:
-				body, err = peer.CrstatesMarshall(localStates.Get())
-				if err != nil {
-					err = fmt.Errorf("TR State (self): %v", err)
-				}
-			case http_server.CacheStats:
-				// TODO: add support for ?hc=N query param, stats=, wildcard, individual caches
-				// add pp and date to the json:
-				/*
-					pp: "0=[my-ats-edge-cache-1], hc=[1]",
-					date: "Thu Oct 09 20:28:36 UTC 2014"
-				*/
-				params := req.Parameters
-				hc := 1
-				if _, exists := params["hc"]; exists {
-					v, err := strconv.Atoi(params["hc"][0])
-					if err == nil {
-						hc = v
-					}
-				}
-				body, err = cache.StatsMarshall(statHistory.Get(), hc)
-				if err != nil {
-					err = fmt.Errorf("CacheStats: %v", err)
-				}
-			case http_server.DSStats:
-				body, err = json.Marshal(dsStats.Get().JSON()) // TODO marshall beforehand, for performance? (test to see how often requests are made)
-				if err != nil {
-					err = fmt.Errorf("DsStats: %v", err)
-				}
-			case http_server.EventLog:
-				body, err = json.Marshal(JSONEvents{Events: events.Get()})
-				if err != nil {
-					err = fmt.Errorf("EventLog: %v", err)
-				}
-			case http_server.PeerStates:
-				body, err = json.Marshal(createApiPeerStates(peerStates.Get()))
-			case http_server.StatSummary:
-				body = []byte("TODO implement")
-			case http_server.Stats:
-				body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
-				if err != nil {
-					err = fmt.Errorf("Stats: %v", err)
-				}
-			case http_server.ConfigDoc:
-				opsConfigCopy := opsConfig.Get()
-				// if the password is blank, leave it blank, so callers can see it's missing.
-				if opsConfigCopy.Password != "" {
-					opsConfigCopy.Password = "*****"
-				}
-				body, err = json.Marshal(opsConfigCopy)
-				if err != nil {
-					err = fmt.Errorf("Config Doc: %v", err)
-				}
-			case http_server.APICacheCount: // TODO determine if this should use peerStates
-				body = []byte(strconv.Itoa(len(localStates.Get().Caches)))
-			case http_server.APICacheAvailableCount:
-				body = []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches)))
-			case http_server.APICacheDownCount:
-				body = []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches)))
-			case http_server.APIVersion:
-				s := "traffic_monitor-" + staticAppData.Version + "."
-				if len(staticAppData.GitRevision) > 6 {
-					s += staticAppData.GitRevision[:6]
-				} else {
-					s += staticAppData.GitRevision
-				}
-				body = []byte(s)
-			case http_server.APITrafficOpsURI:
-				body = []byte(opsConfig.Get().Url)
-			case http_server.APICacheStates:
-				body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
-			case http_server.APIBandwidthKbps:
-				serverTypes := toData.Get().ServerTypes
-				kbpsStats := lastKbpsStats.Get()
-				sum := float64(0.0)
-				for cache, data := range kbpsStats.Caches {
-					if serverTypes[cache] != enum.CacheTypeEdge {
-						continue
-					}
-					sum += data.Kbps
-				}
-				body = []byte(fmt.Sprintf("%f", sum))
-			case http_server.APIBandwidthCapacityKbps:
-				statHistory := statHistory.Get()
-				cap := int64(0)
-				for _, results := range statHistory {
-					if len(results) == 0 {
-						continue
-					}
-					cap += results[0].MaxKbps
-				}
-				body = []byte(fmt.Sprintf("%d", cap))
-			default:
-				err = fmt.Errorf("Unknown Request Type: %v", req.Type)
-			}
-
-			if err != nil {
-				errorCount.Inc()
-				log.Errorf("Request Error: %v\n", err)
-				req.Response <- nil
-			} else {
-				req.Response <- body
-			}
+func (f *CacheStatFilter) UseStat(statName string) bool {
+	if len(f.statsToUse) == 0 {
+		return true
+	}
+	if !f.wildcard {
+		_, ok := f.statsToUse[statName]
+		return ok
+	}
+	for statToUse, _ := range f.statsToUse {
+		if strings.Contains(statName, statToUse) {
+			return true
 		}
+	}
+	return false
+}
+
+func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
+	if f.historyCount == 0 {
+		return true
+	}
+	if n <= f.historyCount {
+		return true
+	}
+	return false
+}
+
+// NewCacheStatFilter takes the HTTP query parameters and creates a CacheStatFilter which fulfills the `cache.Filter` interface, filtering according to the query parameters passed.
+// Query parameters used are `hc`, `stats`, `wildcard`, `type`, and `hosts`.
+// If `hc` is 0, all history is returned. If `hc` is empty, 1 history is returned.
+// If `stats` is empty, all stats are returned.
+// If `wildcard` is empty, `stats` is considered exact.
+// If `type` is empty, all cache types are returned.
+func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (cache.Filter, error) {
+	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "hosts": struct{}{}}
+	if len(params) > len(validParams) {
+		return nil, fmt.Errorf("invalid query parameters")
+	}
+	for param, _ := range params {
+		if _, ok := validParams[param]; !ok {
+			return nil, fmt.Errorf("invalid query parameter '%v'", param)
+		}
+	}
+
+	historyCount := 1
+	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
+		v, err := strconv.Atoi(paramHc[0])
+		if err == nil {
+			historyCount = v
+		}
+	}
+
+	statsToUse := map[string]struct{}{}
+	if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
+		commaStats := strings.Split(paramStats[0], ",")
+		for _, stat := range commaStats {
+			statsToUse[stat] = struct{}{}
+		}
+	}
+
+	wildcard := false
+	if paramWildcard, exists := params["wildcard"]; exists && len(paramWildcard) > 0 {
+		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
+	}
+
+	cacheType := enum.CacheTypeInvalid
+	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
+		cacheType = enum.CacheTypeFromString(paramType[0])
+		if cacheType == enum.CacheTypeInvalid {
+			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {edge, mid}", paramType[0])
+		}
+	}
+
+	hosts := map[enum.CacheName]struct{}{}
+	if paramHosts, exists := params["hosts"]; exists && len(paramHosts) > 0 {
+		commaHosts := strings.Split(paramHosts[0], ",")
+		for _, host := range commaHosts {
+			hosts[enum.CacheName(host)] = struct{}{}
+		}
+	}
+	// parameters without values are considered hosts, e.g. `?my-cache-0`
+	for maybeHost, val := range params {
+		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
+			hosts[enum.CacheName(maybeHost)] = struct{}{}
+		}
+	}
+
+	return &CacheStatFilter{
+		historyCount: historyCount,
+		statsToUse:   statsToUse,
+		wildcard:     wildcard,
+		cacheType:    cacheType,
+		hosts:        hosts,
+		cacheTypes:   cacheTypes,
+	}, nil
+}
+
+// DSStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewDSStatFilter` documentation for details on which query parameters are used to filter.
+type DSStatFilter struct {
+	historyCount     int
+	statsToUse       map[string]struct{}
+	wildcard         bool
+	dsType           enum.DSType
+	deliveryServices map[enum.DeliveryServiceName]struct{}
+	dsTypes          map[enum.DeliveryServiceName]enum.DSType
+}
+
+func (f *DSStatFilter) UseDeliveryService(name enum.DeliveryServiceName) bool {
+	if _, inDSes := f.deliveryServices[name]; len(f.deliveryServices) != 0 && !inDSes {
+		return false
+	}
+	if f.dsType != enum.DSTypeInvalid && f.dsTypes[name] != f.dsType {
+		return false
+	}
+	return true
+}
+
+func (f *DSStatFilter) UseStat(statName string) bool {
+	if len(f.statsToUse) == 0 {
+		return true
+	}
+	if !f.wildcard {
+		_, ok := f.statsToUse[statName]
+		return ok
+	}
+	for statToUse, _ := range f.statsToUse {
+		if strings.Contains(statName, statToUse) {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
+	if f.historyCount == 0 {
+		return true
+	}
+	if n <= f.historyCount {
+		return true
+	}
+	return false
+}
+
+// NewDSStatFilter takes the HTTP query parameters and creates a cache.Filter, filtering according to the query parameters passed.
+// Query parameters used are `hc`, `stats`, `wildcard`, `type`, and `deliveryservices`.
+// If `hc` is 0, all history is returned. If `hc` is empty, 1 history is returned.
+// If `stats` is empty, all stats are returned.
+// If `wildcard` is empty, `stats` is considered exact.
+// If `type` is empty, all types are returned.
+func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enum.DSType) (dsdata.Filter, error) {
+	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "deliveryservices": struct{}{}}
+	if len(params) > len(validParams) {
+		return nil, fmt.Errorf("invalid query parameters")
+	}
+	for param, _ := range params {
+		if _, ok := validParams[param]; !ok {
+			return nil, fmt.Errorf("invalid query parameter '%v'", param)
+		}
+	}
+
+	historyCount := 1
+	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
+		v, err := strconv.Atoi(paramHc[0])
+		if err == nil {
+			historyCount = v
+		}
+	}
+
+	statsToUse := map[string]struct{}{}
+	if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
+		commaStats := strings.Split(paramStats[0], ",")
+		for _, stat := range commaStats {
+			statsToUse[stat] = struct{}{}
+		}
+	}
+
+	wildcard := false
+	if paramWildcard, exists := params["wildcard"]; exists && len(paramWildcard) > 0 {
+		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
+	}
+
+	dsType := enum.DSTypeInvalid
+	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
+		dsType = enum.DSTypeFromString(paramType[0])
+		if dsType == enum.DSTypeInvalid {
+			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {http, dns}", paramType[0])
+		}
+	}
+
+	deliveryServices := map[enum.DeliveryServiceName]struct{}{}
+	// TODO rename 'hosts' to 'names' for consistency
+	if paramNames, exists := params["deliveryservices"]; exists && len(paramNames) > 0 {
+		commaNames := strings.Split(paramNames[0], ",")
+		for _, name := range commaNames {
+			deliveryServices[enum.DeliveryServiceName(name)] = struct{}{}
+		}
+	}
+	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
+	for maybeName, val := range params {
+		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
+			deliveryServices[enum.DeliveryServiceName(maybeName)] = struct{}{}
+		}
+	}
+
+	return &DSStatFilter{
+		historyCount:     historyCount,
+		statsToUse:       statsToUse,
+		wildcard:         wildcard,
+		dsType:           dsType,
+		deliveryServices: deliveryServices,
+		dsTypes:          dsTypes,
+	}, nil
+}
+
+// PeerStateFilter fulfills the cache.Filter interface, for filtering stats. See the `NewPeerStateFilter` documentation for details on which query parameters are used to filter.
+type PeerStateFilter struct {
+	historyCount int
+	cachesToUse  map[enum.CacheName]struct{}
+	peersToUse   map[enum.TrafficMonitorName]struct{}
+	wildcard     bool
+	cacheType    enum.CacheType
+	cacheTypes   map[enum.CacheName]enum.CacheType
+}
+
+func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
+	if _, inPeers := f.peersToUse[name]; len(f.peersToUse) != 0 && !inPeers {
+		return false
+	}
+	return true
+}
+
+func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
+	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
+		return false
+	}
+
+	if len(f.cachesToUse) == 0 {
+		return true
+	}
+
+	if !f.wildcard {
+		_, ok := f.cachesToUse[name]
+		return ok
+	}
+	for cacheToUse, _ := range f.cachesToUse {
+		if strings.Contains(string(name), string(cacheToUse)) {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
+	if f.historyCount == 0 {
+		return true
+	}
+	if n <= f.historyCount {
+		return true
+	}
+	return false
+}
+
+// NewPeerStateFilter takes the HTTP query parameters and creates a cache.Filter, filtering according to the query parameters passed.
+// Query parameters used are `hc`, `stats`, `wildcard`, `typep`, and `hosts`. The `stats` param filters caches. The `hosts` param filters peer Traffic Monitors. The `type` param filters cache types (edge, mid).
+// If `hc` is 0, all history is returned. If `hc` is empty, 1 history is returned.
+// If `stats` is empty, all stats are returned.
+// If `wildcard` is empty, `stats` is considered exact.
+// If `type` is empty, all cache types are returned.
+func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (*PeerStateFilter, error) {
+	// TODO change legacy `stats` and `hosts` to `caches` and `monitors` (or `peers`).
+	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "peers": struct{}{}}
+	if len(params) > len(validParams) {
+		return nil, fmt.Errorf("invalid query parameters")
+	}
+	for param, _ := range params {
+		if _, ok := validParams[param]; !ok {
+			return nil, fmt.Errorf("invalid query parameter '%v'", param)
+		}
+	}
+
+	historyCount := 1
+	if paramHc, exists := params["hc"]; exists && len(paramHc) > 0 {
+		v, err := strconv.Atoi(paramHc[0])
+		if err == nil {
+			historyCount = v
+		}
+	}
+
+	cachesToUse := map[enum.CacheName]struct{}{}
+	// TODO rename 'stats' to 'caches'
+	if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
+		commaStats := strings.Split(paramStats[0], ",")
+		for _, stat := range commaStats {
+			cachesToUse[enum.CacheName(stat)] = struct{}{}
+		}
+	}
+
+	wildcard := false
+	if paramWildcard, exists := params["wildcard"]; exists && len(paramWildcard) > 0 {
+		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
+	}
+
+	cacheType := enum.CacheTypeInvalid
+	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
+		cacheType = enum.CacheTypeFromString(paramType[0])
+		if cacheType == enum.CacheTypeInvalid {
+			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {edge, mid}", paramType[0])
+		}
+	}
+
+	peersToUse := map[enum.TrafficMonitorName]struct{}{}
+	if paramNames, exists := params["peers"]; exists && len(paramNames) > 0 {
+		commaNames := strings.Split(paramNames[0], ",")
+		for _, name := range commaNames {
+			peersToUse[enum.TrafficMonitorName(name)] = struct{}{}
+		}
+	}
+	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
+	for maybeName, val := range params {
+		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
+			peersToUse[enum.TrafficMonitorName(maybeName)] = struct{}{}
+		}
+	}
+
+	return &PeerStateFilter{
+		historyCount: historyCount,
+		cachesToUse:  cachesToUse,
+		wildcard:     wildcard,
+		cacheType:    cacheType,
+		peersToUse:   peersToUse,
+		cacheTypes:   cacheTypes,
+	}, nil
+}
+
+// DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
+func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) (body []byte, responseCode int) {
+
+	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
+	handleErr := func(err error, requestType http_server.Type) {
+		if err == nil {
+			return
+		}
+		errorCount.Inc()
+		log.Errorf("Request Error: %v\n", fmt.Errorf(requestType.String()+": %v", err))
+	}
+
+	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `http_server`.
+	commonReturn := func(body []byte, err error, requestType http_server.Type) ([]byte, int) {
+		if err == nil {
+			return body, http.StatusOK
+		}
+		handleErr(err, requestType)
+		return nil, http.StatusInternalServerError
+	}
+
+	var err error
+	switch req.Type {
+	case http_server.TRConfig:
+		cdnName := opsConfig.Get().CdnName
+		if toSession == nil {
+			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"), req.Type)
+		}
+		if cdnName == "" {
+			return commonReturn(nil, fmt.Errorf("No CDN Configured"), req.Type)
+		}
+		return commonReturn(body, err, req.Type)
+	case http_server.TRStateDerived:
+		body, err = peer.CrstatesMarshall(combinedStates.Get())
+		return commonReturn(body, err, req.Type)
+	case http_server.TRStateSelf:
+		body, err = peer.CrstatesMarshall(localStates.Get())
+		return commonReturn(body, err, req.Type)
+	case http_server.CacheStats:
+		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
+		if err != nil {
+			handleErr(err, req.Type)
+			return []byte(err.Error()), http.StatusBadRequest
+		}
+
+		body, err = cache.StatsMarshall(statHistory.Get(), filter, req.Parameters)
+		return commonReturn(body, err, req.Type)
+	case http_server.DSStats:
+		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
+
+		if err != nil {
+			handleErr(err, req.Type)
+			return []byte(err.Error()), http.StatusBadRequest
+		}
+		body, err = json.Marshal(dsStats.Get().JSON(filter, req.Parameters)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
+		return commonReturn(body, err, req.Type)
+	case http_server.EventLog:
+		body, err = json.Marshal(JSONEvents{Events: events.Get()})
+		return commonReturn(body, err, req.Type)
+	case http_server.PeerStates:
+		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
+		if err != nil {
+			handleErr(err, req.Type)
+			return []byte(err.Error()), http.StatusBadRequest
+		}
+
+		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter, req.Parameters))
+		return commonReturn(body, err, req.Type)
+	case http_server.StatSummary:
+		return nil, http.StatusNotImplemented
+	case http_server.Stats:
+		body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
+		return commonReturn(body, err, req.Type)
+	case http_server.ConfigDoc:
+		opsConfigCopy := opsConfig.Get()
+		// if the password is blank, leave it blank, so callers can see it's missing.
+		if opsConfigCopy.Password != "" {
+			opsConfigCopy.Password = "*****"
+		}
+		body, err = json.Marshal(opsConfigCopy)
+		return commonReturn(body, err, req.Type)
+	case http_server.APICacheCount: // TODO determine if this should use peerStates
+		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
+	case http_server.APICacheAvailableCount:
+		return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches))), http.StatusOK
+	case http_server.APICacheDownCount:
+		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches))), http.StatusOK
+	case http_server.APIVersion:
+		s := "traffic_monitor-" + staticAppData.Version + "."
+		if len(staticAppData.GitRevision) > 6 {
+			s += staticAppData.GitRevision[:6]
+		} else {
+			s += staticAppData.GitRevision
+		}
+		return []byte(s), http.StatusOK
+	case http_server.APITrafficOpsURI:
+		return []byte(opsConfig.Get().Url), http.StatusOK
+	case http_server.APICacheStates:
+		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
+			lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
+		return commonReturn(body, err, req.Type)
+	case http_server.APIBandwidthKbps:
+		serverTypes := toData.Get().ServerTypes
+		kbpsStats := lastKbpsStats.Get()
+		sum := float64(0.0)
+		for cache, data := range kbpsStats.Caches {
+			if serverTypes[cache] != enum.CacheTypeEdge {
+				continue
+			}
+			sum += data.Kbps
+		}
+		return []byte(fmt.Sprintf("%f", sum)), http.StatusOK
+	case http_server.APIBandwidthCapacityKbps:
+		statHistory := statHistory.Get()
+		cap := int64(0)
+		for _, results := range statHistory {
+			if len(results) == 0 {
+				continue
+			}
+			cap += results[0].MaxKbps
+		}
+		return []byte(fmt.Sprintf("%d", cap)), http.StatusOK
+	default:
+		return commonReturn(nil, fmt.Errorf("Unknown Request Type"), req.Type)
 	}
 }
 
@@ -294,18 +641,28 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return len(caches) - cacheDownCount(caches)
 }
 
-func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates) ApiPeerStates {
-	apiPeerStates := ApiPeerStates{Peers: map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{}}
+func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) ApiPeerStates {
+	apiPeerStates := ApiPeerStates{
+		Peers:       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
+		QueryParams: http_server.ParametersStr(params),
+		DateStr:     http_server.DateStr(time.Now()),
+	}
 
 	for peer, state := range peerStates {
-		if _, ok := apiPeerStates.Peers[enum.TrafficMonitorName(peer)]; !ok {
-			apiPeerStates.Peers[enum.TrafficMonitorName(peer)] = map[enum.CacheName][]CacheState{}
+		if !filter.UsePeer(peer) {
+			continue
 		}
-		peerState := apiPeerStates.Peers[enum.TrafficMonitorName(peer)]
+		if _, ok := apiPeerStates.Peers[peer]; !ok {
+			apiPeerStates.Peers[peer] = map[enum.CacheName][]CacheState{}
+		}
+		peerState := apiPeerStates.Peers[peer]
 		for cache, available := range state.Caches {
-			peerState[enum.CacheName(cache)] = []CacheState{CacheState{Value: available.IsAvailable}}
+			if !filter.UseCache(cache) {
+				continue
+			}
+			peerState[cache] = []CacheState{CacheState{Value: available.IsAvailable}}
 		}
-		apiPeerStates.Peers[enum.TrafficMonitorName(peer)] = peerState
+		apiPeerStates.Peers[peer] = peerState
 	}
 	return apiPeerStates
 }
