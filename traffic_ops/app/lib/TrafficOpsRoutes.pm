@@ -721,6 +721,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/statuses")->over( authenticated => 1 )
 		->to( 'Status#index', namespace => $namespace );
+	$r->get( "/api/$version/statuses/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Status#show',  namespace => $namespace );
 
 	# -- STATIC DNS ENTRIES
 	$r->get("/api/$version/staticdnsentries")->over( authenticated => 1 )
