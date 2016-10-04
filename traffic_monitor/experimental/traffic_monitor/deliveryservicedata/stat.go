@@ -3,7 +3,16 @@ package deliveryservicedata // TODO rename?
 import (
 	"errors"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"net/url"
 )
+
+// Filter encapsulates functions to filter a given set of Stats, e.g. from HTTP query parameters.
+// TODO combine with cache.Filter?
+type Filter interface {
+	UseStat(name string) bool
+	UseDeliveryService(name enum.DeliveryServiceName) bool
+	WithinStatHistoryMax(int) bool
+}
 
 type StatName string
 type StatOld struct {
@@ -13,12 +22,15 @@ type StatOld struct {
 	Index int    `json:"index,omitempty"` // TODO set? remove?
 }
 type StatsOld struct {
+	// TODO move QueryParams, DateStr to a 'EndpointCommon' struct
 	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
+	QueryParams     string                                              `json:"pp"`
+	DateStr         string                                              `json:"date"`
 }
 
 type StatsReadonly interface {
-	Get(name enum.DeliveryServiceName) (StatReadonly, bool)
-	JSON() StatsOld
+	Get(enum.DeliveryServiceName) (StatReadonly, bool)
+	JSON(Filter, url.Values) StatsOld
 }
 
 type StatReadonly interface {
