@@ -39,7 +39,26 @@ services:
 =======
 ---
 
+# IMPORTANT: Prior to starting another build, the containers and build_repo
+#   volume must be deleted:
+#    docker-compose down -v
+#
+#
 # Build configuration for traffic_control
+# Usage:
+#    GITREPO=...  BRANCH=...  docker-compose up [<service>...]
+#
+# where GITREPO is https path to traffic_control clone
+#   (default: https://github.com/Comcast/traffic_control)
+# and <branch> is name of branch to test
+#   (default: master).
+#
+# [<service>...] (optional) is one or more of the services listed below, e.g.
+# traffic_ops_build.  (not necessary to list clone -- all others depend on
+# it..).  Default is to build all.
+#
+# All rpms are delivered to ./artifacts.
+#
 version: '2'
 
 volumes:
