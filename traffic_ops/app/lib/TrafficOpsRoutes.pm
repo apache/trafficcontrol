@@ -667,6 +667,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/regions")->over( authenticated => 1 )
 		->to( 'Region#index', namespace => $namespace );
+	$r->get( "/api/$version/regions/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Region#show',  namespace => $namespace );
 	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
 		->to( 'Region#create', namespace => $namespace );
 

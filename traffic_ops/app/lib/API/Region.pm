@@ -46,6 +46,27 @@ sub index {
 	$self->success( \@data );
 }
 
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Region")->search( { 'me.id' => $id }, { prefetch => ['division'] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"       => $row->id,
+				"name"     => $row->name,
+				"division" => {
+					"id"   => $row->division->id,
+					"name" => $row->division->name
+				}
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub create {
 	my $self          = shift;
 	my $division_name = $self->param('division_name');
