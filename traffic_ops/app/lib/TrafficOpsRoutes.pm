@@ -422,7 +422,7 @@ sub api_routes {
 	# -- CDNS: CRUD
 	$r->get( "/api/$version/cdns")->over( authenticated => 1 )
 		->to( 'Cdn#index', namespace => $namespace );
-	$r->get( "/api/$version/cdns/:id")->over( authenticated => 1 )
+	$r->get( "/api/$version/cdns/:id" => [ id => qr/\d+/ ])->over( authenticated => 1 )
 		->to( 'Cdn#show', namespace => $namespace );
 	$r->get( "/api/$version/cdns/name/:name")->over( authenticated => 1 )
 		->to( 'Cdn#name',  namespace => $namespace );
