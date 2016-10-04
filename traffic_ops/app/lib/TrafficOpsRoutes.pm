@@ -673,8 +673,9 @@ sub api_routes {
 	# -- SERVERS: CRUD
 	$r->get( "/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#index',  namespace => $namespace );
-	$r->get( "/api/$version/servers/:id")->over( authenticated => 1 )
+	$r->get( "/api/$version/servers/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Server#show',  namespace => $namespace );
+
 	$r->post("/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )
