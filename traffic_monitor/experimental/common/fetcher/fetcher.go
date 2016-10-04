@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/davecheney/gmx"
 )
 
@@ -34,7 +35,7 @@ type Counters struct {
 }
 
 func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedChan chan<- uint64) {
-	fmt.Printf("DEBUG poll %v %v fetch start\n", pollId, time.Now())
+	log.Debugf("poll %v %v fetch start\n", pollId, time.Now())
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
 	req.Header.Set("User-Agent", "traffic_monitor/1.0") // TODO change to 2.0?
@@ -67,7 +68,7 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 		if f.Success != nil {
 			f.Success.Inc()
 		}
-		fmt.Printf("DEBUG poll %v %v fetch end\n", pollId, time.Now())
+		log.Debugf("poll %v %v fetch end\n", pollId, time.Now())
 		f.Handler.Handle(id, response.Body, err, pollId, pollFinishedChan)
 	} else {
 		if f.Fail != nil {

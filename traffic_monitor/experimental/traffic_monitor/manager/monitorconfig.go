@@ -2,10 +2,10 @@ package manager
 
 import (
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
 	"strings"
