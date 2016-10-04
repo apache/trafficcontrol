@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type LogLocation string
+
+const LogLocationStdout = "stdout"
+const LogLocationStderr = "stderr"
+const LogLocationNull = "null"
+
 type Config struct {
 	CacheHealthPollingInterval   time.Duration `json:"-"`
 	CacheStatPollingInterval     time.Duration `json:"-"`
@@ -17,6 +23,10 @@ type Config struct {
 	MaxHealthHistory             uint64        `json:"max_health_history"`
 	HealthFlushInterval          time.Duration `json:"-"`
 	StatFlushInterval            time.Duration `json:"-"`
+	LogLocationError             string        `json:"log_location_error"`
+	LogLocationWarning           string        `json:"log_location_warning"`
+	LogLocationInfo              string        `json:"log_location_info"`
+	LogLocationDebug             string        `json:"log_location_debug"`
 }
 
 var DefaultConfig = Config{
@@ -30,6 +40,10 @@ var DefaultConfig = Config{
 	MaxHealthHistory:             5,
 	HealthFlushInterval:          200 * time.Millisecond,
 	StatFlushInterval:            200 * time.Millisecond,
+	LogLocationError:             LogLocationStderr,
+	LogLocationWarning:           LogLocationStdout,
+	LogLocationInfo:              LogLocationNull,
+	LogLocationDebug:             LogLocationNull,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/

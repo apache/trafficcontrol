@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math"
 	"os"
 	"runtime"
@@ -36,14 +38,45 @@ func getStaticAppData() (manager.StaticAppData, error) {
 	return d, nil
 }
 
+func getLogWriter(location string) (io.Writer, error) {
+	switch location {
+	case config.LogLocationStdout:
+		return os.Stdout, nil
+	case config.LogLocationStderr:
+		return os.Stderr, nil
+	case config.LogLocationNull:
+		return ioutil.Discard, nil
+	default:
+		return os.Open(location)
+	}
+}
+func getLogWriters(errLoc, warnLoc, infoLoc, debugLoc string) (io.Writer, io.Writer, io.Writer, io.Writer, error) {
+	errW, err := getLogWriter(errLoc)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
+	}
+	warnW, err := getLogWriter(warnLoc)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
+	}
+	infoW, err := getLogWriter(infoLoc)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
+	}
+	debugW, err := getLogWriter(debugLoc)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
+	}
+	return errW, warnW, infoW, debugW, nil
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	log.Init(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 
 	staticData, err := getStaticAppData()
 	if err != nil {
-		log.Errorf("failed to get static app data: %v\n", err)
-		return
+		fmt.Printf("Error starting service: failed to get static app data: %v\n", err)
+		os.Exit(1)
 	}
 
 	opsConfigFile := flag.String("opsCfg", "", "The traffic ops config file")
@@ -51,16 +84,23 @@ func main() {
 	flag.Parse()
 
 	if *opsConfigFile == "" {
-		fmt.Println("The --opsCfg argument is required")
+		fmt.Println("Error starting service: The --opsCfg argument is required")
 		os.Exit(1)
 	}
 
 	// TODO add hot reloading (like opsConfigFile)?
 	cfg, err := config.Load(*configFileName)
 	if err != nil {
-		log.Errorf("failed to load config: %v\n", err)
+		fmt.Printf("Error starting service: failed to load config: %v\n", err)
 		os.Exit(1)
 	}
+
+	errW, warnW, infoW, debugW, err := getLogWriters(cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug)
+	if err != nil {
+		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
+		os.Exit(1)
+	}
+	log.Init(errW, warnW, infoW, debugW)
 
 	log.Infof("Starting with config %+v\n", cfg)
 
