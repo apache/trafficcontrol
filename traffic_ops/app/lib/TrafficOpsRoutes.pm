@@ -392,7 +392,7 @@ sub api_routes {
 		->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get( "/api/1.2/asns")->over( authenticated => 1 )
 		->to( 'Asn#index',     namespace => $namespace );
-	$r->get( "/api/1.2/asns/:id")->over( authenticated => 1 )
+	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Asn#show',     namespace => $namespace );
 
 	# -- CACHEGROUPS
@@ -403,7 +403,7 @@ sub api_routes {
 		->to( 'Cachegroup#index', namespace => $namespace );
 	$r->get( "/api/$version/cachegroups/trimmed")->over( authenticated => 1 )
 		->to( 'Cachegroup#index_trimmed', namespace => $namespace );
-	$r->get("/api/$version/cachegroups/:id")->over( authenticated => 1 )
+	$r->get("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Cachegroup#show', namespace => $namespace );
 	$r->post("/api/$version/cachegroups")->over( authenticated => 1 )
 		->to( 'Cachegroup#create', namespace => $namespace );
@@ -504,7 +504,7 @@ sub api_routes {
 	# -- DELIVERYSERVICES: CRUD
 	$r->get( "/api/$version/deliveryservices")->over( authenticated => 1 )
 		->to( 'DeliveryService#delivery_services', namespace => $namespace );
-	$r->get( "/api/$version/deliveryservices/:id")->over( authenticated => 1 )
+	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#delivery_services', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices")->over( authenticated => 1 )
 		->to( 'DeliveryService#create', namespace => $namespace );
@@ -589,7 +589,7 @@ sub api_routes {
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#index', namespace => $namespace );
-	$r->get("/api/$version/divisions/:id")->over( authenticated => 1 )
+	$r->get("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Division#show', namespace => $namespace );
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
@@ -667,6 +667,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/regions")->over( authenticated => 1 )
 		->to( 'Region#index', namespace => $namespace );
+	$r->get( "/api/$version/regions/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Region#show',  namespace => $namespace );
 	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
 		->to( 'Region#create', namespace => $namespace );
 
