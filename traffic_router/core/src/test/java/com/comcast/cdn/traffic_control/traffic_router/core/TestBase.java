@@ -16,6 +16,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
+import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
+import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -23,6 +25,13 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
 
 import static org.springframework.util.SocketUtils.findAvailableTcpPort;
 import static org.springframework.util.SocketUtils.findAvailableUdpPort;
@@ -42,6 +51,14 @@ public class TestBase {
 
 		if (context != null) {
 			return context;
+		}
+
+		final MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+		try {
+			final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
+			platformMBeanServer.registerMBean(new DeliveryServiceCertificates(), objectName);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));

@@ -20,6 +20,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
@@ -31,7 +32,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
-import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.Type;
@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -91,10 +90,6 @@ public class TrafficRouterTest {
         setInternalState(trafficRouter, "federationRegistry", federationRegistry);
         setInternalState(trafficRouter, "consistentHasher", consistentHasher);
         setInternalState(trafficRouter, "steeringRegistry", mock(SteeringRegistry.class));
-        KeyStoreHelper keyStoreHelper = mock(KeyStoreHelper.class);
-        when(keyStoreHelper.getAliases()).thenReturn(new Vector<String>().elements());
-        setInternalState(trafficRouter, "keyStoreHelper", keyStoreHelper);
-
 
         when(trafficRouter.route(any(DNSRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.route(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();

@@ -32,3 +32,5 @@ rm -rf /opt/traffic_router/webapps/*
 rm -rf /opt/tomcat/webapps/*
 rm -f /opt/tomcat/bin/*.bat
 chmod +x /opt/tomcat/bin/*.sh
+
+for brokenlink in $(find /opt/tomcat/lib -type l ! -exec test -e {} \; -print) ; do rm $brokenlink ; done

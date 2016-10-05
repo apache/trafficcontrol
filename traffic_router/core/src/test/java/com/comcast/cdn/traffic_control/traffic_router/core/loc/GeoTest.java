@@ -34,8 +34,6 @@ import java.nio.file.Paths;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.core.IsNull.nullValue;
 
 @Category(IntegrationTest.class)
 public class GeoTest {
