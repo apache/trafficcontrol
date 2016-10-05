@@ -26,6 +26,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -34,7 +35,6 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -46,19 +46,20 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.isIn;
 import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.fail;
@@ -96,6 +97,7 @@ public class RouterTest {
 	private String routerHttpPort = System.getProperty("routerHttpPort", "8888");
 	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
 	private String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+	private KeyStore trustStore;
 
 	@Before
 	public void before() throws Exception {
@@ -206,6 +208,11 @@ public class RouterTest {
 
 		assertThat(validLocations.isEmpty(), equalTo(false));
 		assertThat(httpsOnlyLocations.isEmpty(), equalTo(false));
+
+		trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		InputStream keystoreStream = getClass().getClassLoader().getResourceAsStream("keystore.jks");
+		trustStore.load(keystoreStream, "changeit".toCharArray());
+		TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init(trustStore);
 
 		httpClient = HttpClientBuilder.create()
 			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-only-test.thecdn.example.com"))
@@ -442,7 +449,7 @@ public class RouterTest {
 		}
 		
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
-		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig");
+		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-2");
 		httpClient.execute(httpPost).close();
 
 		// Default interval for polling cr config is 10 seconds
@@ -451,6 +458,7 @@ public class RouterTest {
 		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
 
+		// verify we do not yet use the new configuration
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			String location = response.getFirstHeader("Location").getValue();
@@ -472,13 +480,48 @@ public class RouterTest {
 			// Expected, this means we're doing the right thing
 		}
 
-		// Update certificates so new ds is valid
+		// verify that if we get a new cr-config that turns off https for the problematic delivery service
+		// that it's able to get through while TR is still concurrently trying to get certs
+
 		String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/crconfig-3");
+		httpClient.execute(httpPost).close();
+
+		// Default interval for polling cr config is 10 seconds
+		Thread.sleep(30 * 1000);
+
+		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
+
+		// verify we now use the new configuration
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+			String location = response.getFirstHeader("Location").getValue();
+			assertThat(location, isOneOf(
+				"http://edge-cache-900.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+				"http://edge-cache-901.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+				"http://edge-cache-902.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+			));
+		}
+
+		// Go back to the cr-config that makes the delivery service https again
+		// Pretend someone did a cr-config snapshot that would have updated the location to be different
+		httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-4");
+		httpClient.execute(httpPost).close();
+
+		// Default interval for polling cr config is 10 seconds
+		Thread.sleep(15 * 1000);
+
+		// Update certificates so new ds is valid
+		testHttpPort = System.getProperty("testHttpServerPort", "8889");
 		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
 		httpClient.execute(httpPost).close();
 
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
+
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
@@ -510,7 +553,7 @@ public class RouterTest {
 		private final String host;
 
 		public ClientSslSocketFactory(String host) throws Exception {
-			super(SSLContextBuilder.create().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build(),
+			super(SSLContextBuilder.create().loadTrustMaterial(trustStore, null).build(),
 				new TestHostnameVerifier());
 			this.host = host;
 		}

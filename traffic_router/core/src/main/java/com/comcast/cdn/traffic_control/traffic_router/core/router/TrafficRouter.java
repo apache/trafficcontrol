@@ -35,7 +35,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -86,7 +85,6 @@ public class TrafficRouter {
 
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
-	private final KeyStoreHelper keyStoreHelper = KeyStoreHelper.getInstance();
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
@@ -479,7 +477,6 @@ public class TrafficRouter {
 			return routeResult;
 		}
 
-		deliveryService.setHasX509Cert(keyStoreHelper.hasCertificate(deliveryService.getId()));
 		final String uriString = deliveryService.createURIString(request, cache);
 		routeResult.setUrl(new URL(uriString));
 		return routeResult;

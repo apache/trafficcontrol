@@ -25,18 +25,25 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.junit.Assert.fail;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.core.IsEqual.equalTo;
+import java.util.Set;
+import java.util.StringJoiner;
 
 @Category(ExternalTest.class)
 public class StatsTest {
@@ -87,7 +94,18 @@ public class StatsTest {
 				"staticRouteCount", "fedCount", "regionalDeniedCount", "regionalAlternateCount"));
 
 			Map<String, Object> updateTracker = (Map<String, Object>) statsData.get("updateTracker");
-			assertThat(updateTracker.keySet(), hasItems("lastCacheStateCheck", "lastCacheStateChange", "lastConfigCheck", "lastConfigChange"));
+			Set<String> keys = updateTracker.keySet();
+			List<String> expectedStats = Arrays.asList("lastCacheStateCheck", "lastCacheStateChange", "lastConfigCheck", "lastConfigChange");
+
+			if (!keys.containsAll(expectedStats)) {
+
+				StringJoiner joiner = new StringJoiner(",");
+				for(String stat : expectedStats) {
+					joiner.add(stat);
+				}
+
+				fail("Missing at least one of the following keys '" + joiner.toString() + "'");
+			}
 
 		} finally {
 			if (httpResponse != null) httpResponse.close();
