@@ -35,11 +35,9 @@ sub index {
 		push(
 			@data, {
 				"id"       => $row->id,
-				"name"     => $row->name,
-				"division" => {
-					"id"   => $row->division->id,
-					"name" => $row->division->name
-				}
+				"name"     => $row->division->name,
+				"division" => $row->division->id,
+				"divisionName" => $row->name
 			}
 		);
 	}
@@ -56,11 +54,9 @@ sub show {
 		push(
 			@data, {
 				"id"       => $row->id,
-				"name"     => $row->name,
-				"division" => {
-					"id"   => $row->division->id,
-					"name" => $row->division->name
-				}
+				"name"     => $row->division->name,
+				"division" => $row->division->id,
+				"divisionName" => $row->name
 			}
 		);
 	}

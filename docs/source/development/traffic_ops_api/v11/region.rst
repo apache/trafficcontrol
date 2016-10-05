@@ -39,11 +39,9 @@ Regions
   +----------------------+--------+------------------------------------------------+
   |``name``              | string | Region name.                                   |
   +----------------------+--------+------------------------------------------------+
-  |``division``          | string | The division the region belongs to.            |
+  |``division``          | string | Division ID.                                   |
   +----------------------+--------+------------------------------------------------+
-  |``>>id``              | string | Division ID.                                   |
-  +----------------------+--------+------------------------------------------------+
-  |``>>name``            | string | Division name.                                 |
+  |``divisionName``      | string | Division name.                                 |
   +----------------------+--------+------------------------------------------------+
 
   **Response Example** ::
@@ -53,19 +51,15 @@ Regions
         {
            "id": "6",
            "name": "Atlanta",
-           "division": {
-                "id": "1",
-                "name": "Central"
-           }
+           "division": "2",
+           "divisionName": "West"
         },
         {
            "id": "7",
            "name": "Denver",
-           "division": {
-                "id": "2",
-                "name": "West"
-           }
-        }
+           "division": "2",
+           "divisionName": "West"
+        },
      ]
     }
 
@@ -93,11 +87,9 @@ Regions
   +----------------------+--------+------------------------------------------------+
   |``name``              | string | Region name.                                   |
   +----------------------+--------+------------------------------------------------+
-  |``division``          | string | The division the region belongs to.            |
+  |``division``          | string | Division ID.                                   |
   +----------------------+--------+------------------------------------------------+
-  |``>>id``              | string | Division ID.                                   |
-  +----------------------+--------+------------------------------------------------+
-  |``>>name``            | string | Division name.                                 |
+  |``divisionName``      | string | Division name.                                 |
   +----------------------+--------+------------------------------------------------+
 
   **Response Example** ::
@@ -107,10 +99,8 @@ Regions
         {
            "id": "6",
            "name": "Atlanta",
-           "division": {
-                "id": "1",
-                "name": "Central"
-           }
+           "division": "2",
+           "divisionName": "West"
         }
      ]
     }
