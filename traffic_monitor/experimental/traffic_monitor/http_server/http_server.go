@@ -2,7 +2,7 @@ package http_server
 
 import (
 	"fmt"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/hydrogen18/stoppableListener"
 	"io/ioutil"
 	"net"

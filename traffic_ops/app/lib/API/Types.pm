@@ -23,7 +23,6 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 
-# Index
 sub index {
 	my $self         = shift;
 	my $use_in_table = $self->param('useInTable');
@@ -45,14 +44,13 @@ sub index {
 				"name"        => $row->name,
 				"description" => $row->description,
 				"useInTable"  => $row->use_in_table,
-				"lastUpdated" => $row->last_updated,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
 	$self->success( \@data );
 }
 
-# Read
 sub index_trimmed {
 	my $self = shift;
 	my @data;
@@ -61,7 +59,27 @@ sub index_trimmed {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"name" => $row->name,
+				"name" => $row->name
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Type")->search( { id => $id } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"description" => $row->description,
+				"useInTable"  => $row->use_in_table,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}

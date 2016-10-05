@@ -317,7 +317,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 						statTime,
 					)
 					if err != nil {
-						log.Error("error adding data point for max Gbps...%v\n", err)
+						log.Errorf("error adding data point for max Gbps...%v\n", err)
 						continue
 					}
 					bp.AddPoint(pt)

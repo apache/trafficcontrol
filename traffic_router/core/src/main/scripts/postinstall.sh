@@ -17,17 +17,14 @@
 chkconfig --add tomcat
 chkconfig tomcat on
 
-if [ ! -e /opt/tomcat/lib/traffic_router_connector.jar ]; then
-	/bin/ln -s /opt/traffic_router/lib/traffic_router_connector.jar /opt/tomcat/lib/traffic_router_connector.jar
-fi
+for JAR in traffic_router_connector.jar traffic_router_shared.jar jackson-core.jar jackson-annotations.jar jackson-databind.jar; do
+    if [ ! -e /opt/tomcat/lib/$JAR ]; then
+        echo "Creating symbolic link from /opt/traffic_router/lib/$JAR to /opt/tomcat/lib"
+        /bin/ln -s /opt/traffic_router/lib/$JAR /opt/tomcat/lib/$JAR
+    fi
+done
 
-if [ ! -e /opt/tomcat/lib/traffic_router_keystore.jar ]; then
-	/bin/ln -s /opt/traffic_router/lib/traffic_router_keystore.jar /opt/tomcat/lib/traffic_router_keystore.jar
-fi
-
-if [ ! -d /opt/traffic_router/webapps/core ]; then
-    /bin/mkdir /opt/traffic_router/webapps/core
-fi
+mkdir -p /opt/traffic_router/webapps/core
 
 if [ ! -e /opt/traffic_router/webapps/core/ROOT.war ]; then
     #echo "Symlinking /opt/traffic_router/webapps/traffic_router_core.war to /opt/traffic_router/webapps/core/ROOT.war"

@@ -392,8 +392,8 @@ sub parent_data {
 			my $port           = $profile_cache{$pid}->{port};
 			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
 			my $rank           = $profile_cache{$pid}->{rank};
-			my $parent         = $server->cachegroup->parent_cachegroup_id // -1;
-			my $secondary      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
+			my $primary_parent         = $server->cachegroup->parent_cachegroup_id // -1;
+			my $secondary_parent      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 				my %p = (
 					host_name      => $row->host_name,
@@ -403,8 +403,8 @@ sub parent_data {
 					use_ip_address => $use_ip_address,
 					rank           => $rank,
 					ip_address     => $row->ip_address,
-					parent         => ( $parent == $row->cachegroup->id ) ? 1 : 0,
-					secondary      => ( $secondary == $row->cachegroup->id ) ? 1 : 0,
+					primary_parent         => ( $primary_parent == $row->cachegroup->id ) ? 1 : 0,
+					secondary_parent      => ( $secondary_parent == $row->cachegroup->id ) ? 1 : 0,
 				);
 				push @{ $parent_info{$prefix} }, \%p;
 			}
@@ -1114,30 +1114,48 @@ sub parent_dot_config {
 					$pinfo = $self->parent_data($server);
 				}
 
+
 				my @ranked_parents = ();
 				if ( exists( $pinfo->{$org_uri->host} ) ) {
 					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_uri->host} };
 				}
 				else {
 					$self->app->log->debug( "BUG: Did not match an origin: " . $org_uri );
-        }
+				}
+
 
 				my @parent_info;
+				my @secondary_parent_info;
+				my @null_parent_info;
 				foreach my $parent (@ranked_parents) {
-					push @parent_info, format_parent_info($parent);
+					if ( $parent->{primary_parent} ) {
+						push @parent_info, format_parent_info($parent);
+					}
+					elsif ($parent ->{secondary_parent} ) {
+						push @secondary_parent_info, format_parent_info($parent);
+					}
+					else {
+						push @null_parent_info, format_parent_info($parent);
+					}
 				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
-				my $parents = 'parent="' . join( '', @parent_info ) . '"';
-
+				if ( scalar @secondary_parent_info > 0 ) {
+					my %seen;
+					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
+				}
+				if ( scalar @null_parent_info > 0 ) {
+					my %seen;
+					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
+				}
+                                my $parents = 'parent="' . join( '', @parent_info ) . '' . join ( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
 				my $mso_algorithm = "";
 				if ( $multi_site_origin_algorithm == 0 ) {
 					$mso_algorithm = "consistent_hash";
 					if ( $ds->{qstring_ignore} == 0 ) {
 						$parent_qstring = "consider";
 					}
-
 				}
 				elsif ( $multi_site_origin_algorithm == 1 ) {
 					$mso_algorithm = "false";
@@ -1187,10 +1205,10 @@ sub parent_dot_config {
 				my @secondary_parent_info;
 				foreach my $parent ( @{ $pinfo->{all_parents} } ) {
 					my $ptxt = format_parent_info($parent);
-					if ( $parent->{parent} ) {
+					if ( $parent->{primary_parent} ) {
 						push @parent_info, $ptxt;
 					}
-					elsif ( $parent->{secondary} ) {
+					elsif ( $parent->{secondary_parent} ) {
 						push @secondary_parent_info, $ptxt;
 					}
 				}

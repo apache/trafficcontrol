@@ -1,16 +1,29 @@
+/*
+ * Copyright 2016 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
 import java.net.HttpURLConnection;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -19,8 +32,10 @@ public class CertificatesClient {
 	private static final Logger LOGGER = Logger.getLogger(CertificatesClient.class);
 	private TrafficOpsUtils trafficOpsUtils;
 	private static final String PEM_FOOTER_PREFIX = "-----END";
+	private long lastValidfetchTimestamp = 0L;
+	private boolean shutdown = false;
 
-	public void refreshData() {
+	public List<CertificateData> refreshData() {
 		final StringBuilder stringBuilder = new StringBuilder();
 		int status = fetchRawData(stringBuilder);
 
@@ -28,36 +43,38 @@ public class CertificatesClient {
 			try {
 				Thread.sleep(trafficOpsUtils.getConfigLongValue("certificates.retry.interval", 30 * 1000L));
 			} catch (InterruptedException e) {
-				LOGGER.warn("Interrupted while pausing to fetch certificates from traffic ops", e);
+				if (!shutdown) {
+					LOGGER.warn("Interrupted while pausing to fetch certificates from traffic ops", e);
+				} else {
+					return null;
+				}
 			}
 			status = fetchRawData(stringBuilder);
 		}
 
 		if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
-			return;
+			return null;
 		}
 
-		final List<CertificateData> certificateDataList = getCertificateData(stringBuilder.toString());
-
-		if (certificateDataList.isEmpty()) {
-			return;
-		}
-
-		persistCertificates(certificateDataList);
+		lastValidfetchTimestamp = System.currentTimeMillis();
+		return getCertificateData(stringBuilder.toString());
 	}
 
 	public int fetchRawData(final StringBuilder stringBuilder) {
-		if (trafficOpsUtils == null || trafficOpsUtils.getHostname() == null || trafficOpsUtils.getHostname().isEmpty()) {
+		while (trafficOpsUtils == null || trafficOpsUtils.getHostname() == null || trafficOpsUtils.getHostname().isEmpty()) {
 			LOGGER.error("No traffic ops hostname yet!");
-			return -1;
+			try {
+				Thread.sleep(5000L);
+			} catch (Exception e) {
+				LOGGER.info("Interrupted while pausing for check of traffic ops config");
+			}
 		}
 
 		final String certificatesUrl = trafficOpsUtils.getUrl("certificate.api.url", "https://${toHostname}/api/1.2/cdns/name/${cdnName}/sslkeys.json");
 
 		try {
 			final ProtectedFetcher fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), 15000);
-			final FileTime fileTime = Files.getLastModifiedTime(Paths.get(getKeystorePath()));
-			return fetcher.getIfModifiedSince(certificatesUrl, fileTime.toMillis(), stringBuilder);
+			return fetcher.getIfModifiedSince(certificatesUrl, lastValidfetchTimestamp, stringBuilder);
 		} catch (Exception e) {
 			LOGGER.warn("Failed to fetch data for certificates from " + certificatesUrl + "(" + e.getClass().getSimpleName() + ") : " + e.getMessage(), e);
 		}
@@ -103,34 +120,11 @@ public class CertificatesClient {
 		return encodedPemItems.toArray(new String[encodedPemItems.size()]);
 	}
 
-	public boolean persistCertificates(final List<CertificateData> certificateDataList) {
-		boolean allCertificatesPersisted = true;
-		final KeyStoreHelper keyStoreHelper = KeyStoreHelper.getInstance();
-
-		keyStoreHelper.clearCertificates();
-
-		for (final CertificateData certificateData : certificateDataList) {
-			final String alias = certificateData.getHostname().replaceAll("^\\*\\.", "");
-			final String key = doubleDecode(certificateData.getCertificate().getKey())[0];
-			final String[] chain = doubleDecode(certificateData.getCertificate().getCrt());
-
-			if (!keyStoreHelper.importCertificateChain(alias, key, chain)) {
-				allCertificatesPersisted = false;
-			} else {
-				LOGGER.info("Persisted certificate for alias '" + alias + "'");
-			}
-		}
-
-		keyStoreHelper.save();
-		keyStoreHelper.reload();
-		return allCertificatesPersisted;
-	}
-
-	public String getKeystorePath() {
-		return System.getProperty("deploy.dir", "/opt/traffic_router") + "/db/.keystore";
-	}
-
 	public void setTrafficOpsUtils(final TrafficOpsUtils trafficOpsUtils) {
 		this.trafficOpsUtils = trafficOpsUtils;
+	}
+
+	public void setShutdown(final boolean shutdown) {
+		this.shutdown = true;
 	}
 }

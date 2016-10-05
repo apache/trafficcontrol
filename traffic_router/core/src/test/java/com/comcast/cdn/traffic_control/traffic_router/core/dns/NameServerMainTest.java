@@ -20,26 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServerMain;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.Protocol;
 
-@RunWith(JMock.class)
-public class NameServerMainTest {
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-    private final Mockery context = new JUnit4Mockery() {
-        {
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }
-    };
+public class NameServerMainTest {
 
     private ExecutorService executorService;
     private List<Protocol> protocols;
@@ -49,12 +38,12 @@ public class NameServerMainTest {
 
     @Before
     public void setUp() throws Exception {
-        p1 = context.mock(Protocol.class, "p1");
-        p2 = context.mock(Protocol.class, "p2");
-        protocols = new ArrayList<Protocol>();
+        p1 = mock(Protocol.class);
+        p2 = mock(Protocol.class);
+        protocols = new ArrayList<>();
         protocols.add(p1);
         protocols.add(p2);
-        executorService = context.mock(ExecutorService.class);
+        executorService = mock(ExecutorService.class);
 
         main = new NameServerMain();
         main.setProtocols(protocols);
@@ -63,25 +52,16 @@ public class NameServerMainTest {
 
     @Test
     public void testDestroy() throws Exception {
-        context.checking(new Expectations() {
-            {
-                one(p1).shutdown();
-                one(p2).shutdown();
-                one(executorService).shutdownNow();
-            }
-        });
         main.destroy();
+        verify(p1).shutdown();
+        verify(p2).shutdown();
     }
 
     @Test
     public void testInit() throws Exception {
-        context.checking(new Expectations() {
-            {
-                one(executorService).submit(p1);
-                one(executorService).submit(p2);
-            }
-        });
         main.init();
+        verify(executorService).submit(p1);
+        verify(executorService).submit(p2);
     }
 
 }

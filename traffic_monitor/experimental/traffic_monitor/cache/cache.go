@@ -3,34 +3,36 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
 type Handler struct {
-	ResultChannel chan Result
-	Notify        int
-	ToData        *todata.TODataThreadsafe
-	PeerStates    *peer.CRStatesPeersThreadsafe
+	ResultChannel      chan Result
+	Notify             int
+	ToData             *todata.TODataThreadsafe
+	PeerStates         *peer.CRStatesPeersThreadsafe
+	MultipleSpaceRegex *regexp.Regexp
 }
 
 // NewHandler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
 func NewHandler() Handler {
-	return Handler{ResultChannel: make(chan Result)}
+	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
 
 // NewPrecomputeHandler precomputes stat data and populates result.Precomputed before passing to ResultChannel.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
-	return Handler{ResultChannel: make(chan Result), ToData: &toData, PeerStates: &peerStates}
+	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
 func (h Handler) Precompute() bool {
@@ -194,7 +196,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-func outBytes(procNetDev, iface string) (int64, error) {
+func outBytes(procNetDev, iface string, multipleSpaceRegex *regexp.Regexp) (int64, error) {
 	if procNetDev == "" {
 		return 0, fmt.Errorf("procNetDev empty")
 	}
@@ -208,10 +210,13 @@ func outBytes(procNetDev, iface string) (int64, error) {
 
 	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
 	procNetDevIfaceBytes = strings.TrimLeft(procNetDevIfaceBytes, " ")
-	spacePos := strings.Index(procNetDevIfaceBytes, " ")
-	if spacePos != -1 {
-		procNetDevIfaceBytes = procNetDevIfaceBytes[:spacePos]
+	procNetDevIfaceBytes = multipleSpaceRegex.ReplaceAllLiteralString(procNetDevIfaceBytes, " ")
+	procNetDevIfaceBytesArr := strings.Split(procNetDevIfaceBytes, " ") // this could be made faster with a custom function (DFA?) that splits and ignores duplicate spaces at the same time
+	if len(procNetDevIfaceBytesArr) < 10 {
+		return 0, fmt.Errorf("proc.net.dev iface '%v' unknown format '%s'", iface, procNetDev)
 	}
+	procNetDevIfaceBytes = procNetDevIfaceBytesArr[8]
+
 	return strconv.ParseInt(procNetDevIfaceBytes, 10, 64)
 }
 
@@ -221,7 +226,7 @@ func (handler Handler) precompute(result Result) Result {
 	stats := map[enum.DeliveryServiceName]dsdata.Stat{}
 
 	var err error
-	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName); err != nil {
+	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName, handler.MultipleSpaceRegex); err != nil {
 		result.PrecomputedData.OutBytes = 0
 		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
