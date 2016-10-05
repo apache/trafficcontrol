@@ -160,7 +160,7 @@ type LastKbpsData struct {
 	Time  time.Time
 }
 
-const BytesPerKbps = 1024
+const BytesPerKilobit = 125
 
 // addKbps adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
 //
@@ -187,7 +187,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			}
 
 			if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
-				cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+				cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
 			}
 
 			if cacheStats.Kbps.Value < 0 {
@@ -212,7 +212,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 					continue
 				}
 				if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
-					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
 				}
 				if cacheStats.Kbps.Value < 0 {
 					log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value.\n")
@@ -225,7 +225,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 
 		totalChanged := lastKbpsStat.Total.Bytes != stat.TotalStats.OutBytes.Value
 		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
-			stat.TotalStats.Kbps.Value = float64(stat.TotalStats.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds() / BytesPerKbps
+			stat.TotalStats.Kbps.Value = float64(stat.TotalStats.OutBytes.Value-lastKbpsStat.Total.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
 			if stat.TotalStats.Kbps.Value < 0 {
 				stat.TotalStats.Kbps.Value = 0
 				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.TotalStats.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
@@ -278,7 +278,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			continue
 		}
 
-		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / result.Time.Sub(lastCacheKbpsData.Time).Seconds() / BytesPerKbps
+		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / BytesPerKilobit / result.Time.Sub(lastCacheKbpsData.Time).Seconds()
 		if lastCacheKbpsData.Bytes == 0 {
 			kbps = 0
 			log.Errorf("addkbps cache %v lastCacheKbpsData.Bytes zero\n", cacheName)
