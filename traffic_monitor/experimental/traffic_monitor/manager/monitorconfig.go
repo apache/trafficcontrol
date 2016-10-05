@@ -64,15 +64,15 @@ func (t *TrafficMonitorConfigMapThreadsafe) Set(c to.TrafficMonitorConfigMap) {
 	t.m.Unlock()
 }
 
-func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config) TrafficMonitorConfigMapThreadsafe {
+func StartMonitorConfigManager(monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config, staticAppData StaticAppData) TrafficMonitorConfigMapThreadsafe {
 	monitorConfig := NewTrafficMonitorConfigMapThreadsafe()
-	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber, cfg)
+	go monitorConfigListen(monitorConfig, monitorConfigPollChan, localStates, statUrlSubscriber, healthUrlSubscriber, peerUrlSubscriber, cfg, staticAppData)
 	return monitorConfig
 }
 
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
-func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config) {
+func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, monitorConfigPollChan <-chan to.TrafficMonitorConfigMap, localStates peer.CRStatesThreadsafe, statUrlSubscriber chan<- poller.HttpPollerConfig, healthUrlSubscriber chan<- poller.HttpPollerConfig, peerUrlSubscriber chan<- poller.HttpPollerConfig, cfg config.Config, staticAppData StaticAppData) {
 	for {
 		select {
 		case monitorConfig := <-monitorConfigPollChan:
@@ -115,6 +115,9 @@ func monitorConfigListen(monitorConfigTS TrafficMonitorConfigMapThreadsafe, moni
 			}
 
 			for _, srv := range monitorConfig.TrafficMonitor {
+				if srv.HostName == staticAppData.Hostname {
+					continue
+				}
 				if srv.Status != "ONLINE" {
 					continue
 				}

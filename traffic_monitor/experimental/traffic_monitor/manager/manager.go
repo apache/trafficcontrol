@@ -25,6 +25,7 @@ type StaticAppData struct {
 	WorkingDir     string
 	Name           string
 	BuildTimestamp string
+	Hostname       string
 }
 
 //
@@ -71,7 +72,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel,
-		cfg)
+		cfg,
+		staticAppData)
 
 	combinedStates := StartPeerManager(peerHandler.ResultChannel, localStates, peerStates)
 	statHistory, _, lastKbpsStats, dsStats := StartStatHistoryManager(cacheStatHandler.ResultChannel, combinedStates, toData, errorCount, cfg)
