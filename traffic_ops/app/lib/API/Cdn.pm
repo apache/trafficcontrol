@@ -38,8 +38,9 @@ sub index {
 		push(
 			@data, {
 				"id"            => $row->id,
-				"name"          => $row->name,
-				"dnssecEnabled" => $row->dnssec_enabled
+				"dnssecEnabled" => $row->dnssec_enabled,
+				"lastUpdated" 	=> $row->last_updated,
+				"name"          => $row->name
 			}
 		);
 	}
@@ -56,9 +57,9 @@ sub show {
 		push(
 			@data, {
 				"id"            => $row->id,
-				"name"          => $row->name,
 				"dnssecEnabled" => $row->dnssec_enabled,
-				"lastUpdated"   => $row->last_updated
+				"lastUpdated" 	=> $row->last_updated,
+				"name"          => $row->name
 			}
 		);
 	}
@@ -75,9 +76,9 @@ sub name {
 		push(
 			@data, {
 				"id"            => $row->id,
-				"name"          => $row->name,
 				"dnssecEnabled" => $row->dnssec_enabled,
-				"lastUpdated"   => $row->last_updated
+				"lastUpdated"   => $row->last_updated,
+				"name"          => $row->name
 			}
 		);
 	}

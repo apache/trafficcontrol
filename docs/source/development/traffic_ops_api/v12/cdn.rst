@@ -24,7 +24,7 @@ CDN
 /api/1.2/cdns
 +++++++++++++
 
-**GET /api/1.1/cdns**
+**GET /api/1.2/cdns**
 
   Authentication Required: Yes
 
@@ -41,22 +41,31 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``dnssecEnabled`` | string | DNSSEC enabled (0 or 1).                        |
   +-------------------+--------+-------------------------------------------------+
+  | ``lastUpdated``   | string | DNSSEC enabled (0 or 1).                        |
+  +-------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
 
     {
      "response": [
            {
-              "id": 1
+              "id": "1"
               "name": "over-the-top",
-              "dnssecEnabled": "0"
+              "dnssecEnabled": "0",
+              "lastUpdated": "2014-10-02 08:22:43",
+           },
+           {
+              "id": "2"
+              "name": "cdn2",
+              "dnssecEnabled": "0",
+              "lastUpdated": "2014-10-02 08:22:43",
            }
         ]
     }
 
 |
 
-**GET /api/1.1/cdns/:id**
+**GET /api/1.2/cdns/:id**
 
   Authentication Required: Yes
 
@@ -89,10 +98,10 @@ CDN
     {
      "response": [
            {
-              "id": 1
-              "name": "over-the-top",
+              "id": "2"
+              "name": "cdn2",
               "dnssecEnabled": "0",
-              "lastUpdated": "2015-12-16 15:36:47"
+              "lastUpdated": "2014-10-02 08:22:43",
            }
         ]
     }
@@ -105,6 +114,14 @@ CDN
 
   Role(s) Required: None
 
+  **Request Route Parameters**
+
+  +-----------+----------+---------------------------------------------+
+  |   Name    | Required |                Description                  |
+  +===========+==========+=============================================+
+  |  ``name`` |   yes    | CDN name.                                   |
+  +-----------+----------+---------------------------------------------+
+
   **Response Properties**
 
   +-------------------+--------+-------------------------------------------------+
@@ -114,9 +131,9 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` | string | 0=false, 1=true                                 |
+  | ``dnssecEnabled`` | string | DNSSEC enabled (0 or 1).                        |
   +-------------------+--------+-------------------------------------------------+
-  | ``lastUpdated``   | string | Date/time of last update                        |
+  | ``lastUpdated``   | string | Date of last update.                            |
   +-------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -124,10 +141,10 @@ CDN
     {
      "response": [
            {
-              "id": "1",
-              "name": "over-the-top",
+              "id": "2"
+              "name": "cdn2",
               "dnssecEnabled": "0",
-              "lastUpdated": "2015-12-16 15:36:58"
+              "lastUpdated": "2014-10-02 08:22:43",
            }
         ]
     }

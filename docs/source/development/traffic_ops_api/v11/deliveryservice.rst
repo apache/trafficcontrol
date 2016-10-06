@@ -25,7 +25,7 @@ Delivery Service
 /api/1.1/deliveryservices
 +++++++++++++++++++++++++
 
-**GET /api/1.1/deliveryservices.json**
+**GET /api/1.1/deliveryservices**
 
   Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
@@ -38,19 +38,19 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   |        Parameter         |  Type  |                                                             Description                                                              |
   +==========================+========+======================================================================================================================================+
-  | ``xmlId``                | string | Unique string that describes this deliveryservice.                                                                                   |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``active``               |  bool  | true if active, false if inactive.                                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``cacheurl``             | string | Cache URL rule to apply to this delivery service.                                                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``protocol``             | string | - 0: serve with http:// at EDGE                                                                                                      |
-  |                          |        | - 1: serve with https:// at EDGE                                                                                                     |
-  |                          |        | - 2: serve with both http:// and https:// at EDGE                                                                                    |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``            | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdnId``                | string | Id of the CDN to which the delivery service belongs to.                                                                              |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassIp``          | string | The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the                                   |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
@@ -64,12 +64,20 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``edgeHeaderRewrite``    | string | The EDGE header rewrite actions to perform.                                                                                          |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``exampleURLs``          |  array | Entry points into the CDN for this deliveryservice.                                                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitRedirectUrl``  | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``geoLimit``             | string | - 0: None - no limitations                                                                                                           |
   |                          |        | - 1: Only route on CZF file hit                                                                                                      |
   |                          |        | - 2: Only route on CZF hit or when from USA                                                                                          |
   |                          |        |                                                                                                                                      |
   |                          |        | Note that this does not prevent access to content or makes content secure; it just prevents                                          |
   |                          |        | routing to the content by Traffic Router.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitCountries``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoProvider``          | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``globalMaxMbps``        | string | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the                                 |
   |                          |        | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.                                           |
@@ -78,8 +86,6 @@ Delivery Service
   |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
   |                          |        | HTTP deliveryservices                                                                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``headerRewrite``        | string | The EDGE header rewrite actions to perform.                                                                                          |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -87,7 +93,13 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``infoUrl``              | string | Use this to add a URL that points to more information about that deliveryservice.                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``initialDispersion``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ipv6RoutingEnabled``   |  bool  | false: send IPv4 address of Traffic Router to client on HTTP type del.                                                               |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``lastUpdated``          | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``logsEnabled``          |  bool  |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``longDesc``             | string | Description field 1.                                                                                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -106,31 +118,34 @@ Delivery Service
   | ``maxDnsAnswers``        | string | The maximum number of IPs to put in a A/AAAA response for a DNS deliveryservice (0 means all                                         |
   |                          |        | available).                                                                                                                          |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLat``              | string | The latitude to use when the client cannot be found in the CZF or the Geo lookup.                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLong``             | string | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
+  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``      | string | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``originShield``         | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``profileDescription``   | string | The description of the Traffic Router Profile with which this deliveryservice is associated.                                         |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``profileId``            | string | The id of the Traffic Router Profile with which this deliveryservice is associated.                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``profileName``          | string | The name of the Traffic Router Profile with which this deliveryservice is associated.                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``protocol``             | string | - 0: serve with http:// at EDGE                                                                                                      |
+  |                          |        | - 1: serve with https:// at EDGE                                                                                                     |
+  |                          |        | - 2: serve with both http:// and https:// at EDGE                                                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``qstringIgnore``        | string | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.                                         |
   |                          |        | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                                                       |
   |                          |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``regexRemap``           | string | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
-  |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling`` | string | How to treat range requests:                                                                                                         |
   |                          |        |                                                                                                                                      |
@@ -138,9 +153,26 @@ Delivery Service
   |                          |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                          |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regexRemap``           | string | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalGeoBlocking``  |  bool  | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
+  |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``sslKeyVersion``        | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``type``                 | string | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``exampleURLs``          | string | Entry points into the CDN for this deliveryservice.                                                                                  |
+  | ``typeId``               | string | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``xmlId``                | string | Unique string that describes this deliveryservice.                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -148,59 +180,79 @@ Delivery Service
     {
       "response": [
         {
-          "active": true,
-          "cacheurl": null,
-          "protocol": "0",
-          "ccrDnsTtl": "3600",
-          "checkPath": "/crossdomain.xml",
-          "dnsBypassIp": "",
-          "dnsBypassIp6": null,
-          "dnsBypassTtl": null,
-          "dscp": "40",
-          "geoLimit": "0",
-          "globalMaxMbps": "0",
-          "globalMaxTps": "0",
-          "headerRewrite": "add-header X-Powered-By: KABLETOWN [L]",
-          "edgeHeaderRewrite": "add-header X-Powered-By: KABLETOWN [L]",
-          "midHeaderRewrite": null,
-          "httpBypassFqdn": "",
-          "rangeRequestHandling": "0",
-          "id": "12",
-          "infoUrl": "",
-          "ipv6RoutingEnabled": false,
-          "longDesc": "long_desc",
-          "longDesc1": "long_desc_1",
-          "longDesc2": "long_desc_2",
-          "matchList": [
-            {
-              "type": "HOST_REGEXP",
-              "setNumber": "0",
-              "pattern": ".*\\.images\\..*"
-            }
-          ],
-          "maxDnsAnswers": "0",
-          "missLat": "41.881944",
-          "missLong": "-87.627778",
-          "orgServerFqdn": "http://cdl.origin.kabletown.net",
-          "profileDescription": "Content Router for cdn2.comcast.net",
-          "profileName": "EDGE_CDN2",
-          "qstringIgnore": "0",
-          "remapText": null,
-          "regexRemap": null,
-          "signed": true,
-          "type": "HTTP",
-          "xmlId": "cdl-c2",
-          "exampleURLs": []
-        },
+            "active": true,
+            "cacheurl": null,
+            "ccrDnsTtl": "3600",
+            "cdnId": "2",
+            "cdnName": "over-the-top",
+            "checkPath": "",
+            "displayName": "My Cool Delivery Service",
+            "dnsBypassCname": "",
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": "30",
+            "dscp": "40",
+            "edgeHeaderRewrite": null,
+            "exampleURLs": [
+                "http://edge.foo-ds.foo.bar.net"
+            ],
+            "geoLimit": "0",
+            "geoLimitCountries": null,
+            "geoLimitRedirectURL": null,
+            "geoProvider": "0",
+            "globalMaxMbps": null,
+            "globalMaxTps": "0",
+            "httpBypassFqdn": "",
+            "id": "442",
+            "infoUrl": "",
+            "initialDispersion": "1",
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2016-01-26 08:49:35",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.foo-ds\\..*",
+                    "setNumber": "0",
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": "0",
+            "midHeaderRewrite": null,
+            "missLat": "41.881944",
+            "missLong": "-87.627778",
+            "multiSiteOrigin": false,
+            "multiSiteOriginAlgorithm": null,
+            "orgServerFqdn": "http://baz.boo.net",
+            "originShield": null,
+            "profileDescription": "Content Router for over-the-top",
+            "profileId": "5",
+            "profileName": "ROUTER_TOP",
+            "protocol": "0",
+            "qstringIgnore": "1",
+            "rangeRequestHandling": "0",
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "signed": false,
+            "sslKeyVersion": "0",
+            "trRequestHeaders": null,
+            "trResponseHeaders": "Access-Control-Allow-Origin: *",
+            "type": "HTTP",
+            "typeId": "8",
+            "xmlId": "foo-ds"
+        }
         { .. },
         { .. }
-      ],
+      ]
     }
-
 
 |
 
-**GET /api/1.1/deliveryservices/:id.json**
+
+**GET /api/1.1/deliveryservices/:id**
 
   Retrieves a specific delivery service. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
@@ -213,19 +265,19 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   |        Parameter         |  Type  |                                                             Description                                                              |
   +==========================+========+======================================================================================================================================+
-  | ``xmlId``                | string | Unique string that describes this deliveryservice.                                                                                   |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``active``               |  bool  | true if active, false if inactive.                                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``cacheurl``             | string | Cache URL rule to apply to this delivery service.                                                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``protocol``             | string | - 0: serve with http:// at EDGE                                                                                                      |
-  |                          |        | - 1: serve with https:// at EDGE                                                                                                     |
-  |                          |        | - 2: serve with both http:// and https:// at EDGE                                                                                    |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ccrDnsTtl``            | string | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdnId``                | string | Id of the CDN to which the delivery service belongs to.                                                                              |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassIp``          | string | The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the                                   |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
@@ -239,12 +291,20 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``edgeHeaderRewrite``    | string | The EDGE header rewrite actions to perform.                                                                                          |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``exampleURLs``          |  array | Entry points into the CDN for this deliveryservice.                                                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitRedirectUrl``  | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``geoLimit``             | string | - 0: None - no limitations                                                                                                           |
   |                          |        | - 1: Only route on CZF file hit                                                                                                      |
   |                          |        | - 2: Only route on CZF hit or when from USA                                                                                          |
   |                          |        |                                                                                                                                      |
   |                          |        | Note that this does not prevent access to content or makes content secure; it just prevents                                          |
   |                          |        | routing to the content by Traffic Router.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitCountries``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoProvider``          | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``globalMaxMbps``        | string | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the                                 |
   |                          |        | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.                                           |
@@ -253,8 +313,6 @@ Delivery Service
   |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
   |                          |        | HTTP deliveryservices                                                                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``headerRewrite``        | string | The EDGE header rewrite actions to perform.                                                                                          |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -262,7 +320,13 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``infoUrl``              | string | Use this to add a URL that points to more information about that deliveryservice.                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``initialDispersion``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``ipv6RoutingEnabled``   |  bool  | false: send IPv4 address of Traffic Router to client on HTTP type del.                                                               |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``lastUpdated``          | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``logsEnabled``          |  bool  |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``longDesc``             | string | Description field 1.                                                                                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -281,29 +345,34 @@ Delivery Service
   | ``maxDnsAnswers``        | string | The maximum number of IPs to put in a A/AAAA response for a DNS deliveryservice (0 means all                                         |
   |                          |        | available).                                                                                                                          |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLat``              | string | The latitude to use when the client cannot be found in the CZF or the Geo lookup.                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLong``             | string | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
+  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``originShield``         | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``profileDescription``   | string | The description of the Traffic Router Profile with which this deliveryservice is associated.                                         |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``profileId``            | string | The id of the Traffic Router Profile with which this deliveryservice is associated.                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``profileName``          | string | The name of the Traffic Router Profile with which this deliveryservice is associated.                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``protocol``             | string | - 0: serve with http:// at EDGE                                                                                                      |
+  |                          |        | - 1: serve with https:// at EDGE                                                                                                     |
+  |                          |        | - 2: serve with both http:// and https:// at EDGE                                                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``qstringIgnore``        | string | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.                                         |
   |                          |        | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                                                       |
   |                          |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``regexRemap``           | string | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
-  |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``rangeRequestHandling`` | string | How to treat range requests:                                                                                                         |
   |                          |        |                                                                                                                                      |
@@ -311,65 +380,102 @@ Delivery Service
   |                          |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
   |                          |        | - 2 Use the cache_range_requests plugin.                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regexRemap``           | string | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalGeoBlocking``  |  bool  | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
+  |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``sslKeyVersion``        | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``type``                 | string | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``exampleURLs``          | string | Entry points in to the CDN for this deliveryservice.                                                                                 |
+  | ``typeId``               | string | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``xmlId``                | string | Unique string that describes this deliveryservice.                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
 
-
     {
       "response": [
         {
-          "active": true,
-          "cacheurl": null,
-          "protocol": "0",
-          "ccrDnsTtl": "3600",
-          "checkPath": "/crossdomain.xml",
-          "dnsBypassIp": "",
-          "dnsBypassIp6": null,
-          "dnsBypassTtl": null,
-          "dscp": "40",
-          "geoLimit": "0",
-          "globalMaxMbps": "0",
-          "globalMaxTps": "0",
-          "headerRewrite": "add-header X-Powered-By: KABLETOWN [L]",
-          "edgeHeaderRewrite": "add-header X-Powered-By: KABLETOWN [L]",
-          "midHeaderRewrite": null,
-          "httpBypassFqdn": "",
-          "rangeRequestHandling": "0",
-          "id": "12",
-          "infoUrl": "",
-          "ipv6RoutingEnabled": false,
-          "longDesc": "long_desc",
-          "longDesc1": "long_desc_1",
-          "longDesc2": "long_desc_2",
-          "matchList": [
-            {
-              "type": "HOST_REGEXP",
-              "setNumber": "0",
-              "pattern": ".*\\.images\\..*"
-            }
-          ],
-          "maxDnsAnswers": "0",
-          "missLat": "41.881944",
-          "missLong": "-87.627778",
-          "orgServerFqdn": "http://cdl.origin.kabletown.net",
-          "profileDescription": "Content Router for cdn2.comcast.net",
-          "profileName": "EDGE_CDN2",
-          "qstringIgnore": "0",
-          "remapText": null,
-          "regexRemap": null,
-          "signed": true,
-          "type": "HTTP",
-          "xmlId": "cdl-c2",
-          "exampleURLs": []
+            "active": true,
+            "cacheurl": null,
+            "ccrDnsTtl": "3600",
+            "cdnId": "2",
+            "cdnName": "over-the-top",
+            "checkPath": "",
+            "displayName": "My Cool Delivery Service",
+            "dnsBypassCname": "",
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": "30",
+            "dscp": "40",
+            "edgeHeaderRewrite": null,
+            "exampleURLs": [
+                "http://edge.foo-ds.foo.bar.net"
+            ],
+            "geoLimit": "0",
+            "geoLimitCountries": null,
+            "geoLimitRedirectURL": null,
+            "geoProvider": "0",
+            "globalMaxMbps": null,
+            "globalMaxTps": "0",
+            "httpBypassFqdn": "",
+            "id": "442",
+            "infoUrl": "",
+            "initialDispersion": "1",
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2016-01-26 08:49:35",
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.foo-ds\\..*",
+                    "setNumber": "0",
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": "0",
+            "midHeaderRewrite": null,
+            "missLat": "41.881944",
+            "missLong": "-87.627778",
+            "multiSiteOrigin": false,
+            "multiSiteOriginAlgorithm": null,
+            "orgServerFqdn": "http://baz.boo.net",
+            "originShield": null,
+            "profileDescription": "Content Router for over-the-top",
+            "profileId": "5",
+            "profileName": "ROUTER_TOP",
+            "protocol": "0",
+            "qstringIgnore": "1",
+            "rangeRequestHandling": "0",
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "signed": false,
+            "sslKeyVersion": "0",
+            "trRequestHeaders": null,
+            "trResponseHeaders": "Access-Control-Allow-Origin: *",
+            "type": "HTTP",
+            "typeId": "8",
+            "xmlId": "foo-ds"
         }
-      ],
+      ]
     }
 
 |
+
 
 .. _to-api-v11-ds-health:
 

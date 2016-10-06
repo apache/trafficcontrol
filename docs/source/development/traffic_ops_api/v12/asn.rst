@@ -44,6 +44,8 @@ ASN
   +------------------+--------+-------------------------------------------------------------------------+
   | ``cachegroup``   | string | Related cachegroup name                                                 |
   +------------------+--------+-------------------------------------------------------------------------+
+  | ``cachegroupId`` | string | Related cachegroup id                                                   |
+  +------------------+--------+-------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -53,13 +55,15 @@ ASN
           "lastUpdated": "2012-09-17 21:41:22",
           "id": "27",
           "asn": "7015",
-          "cachegroup": "us-ma-woburn"
+          "cachegroup": "us-ma-woburn",
+          "cachegroupId": "27",
         },
         {
           "lastUpdated": "2012-09-17 21:41:22",
           "id": "28",
           "asn": "7016",
-          "cachegroup": "us-pa-pittsburgh"
+          "cachegroup": "us-pa-pittsburgh",
+          "cachegroupId": "13"
         }
       ]
     }
@@ -91,11 +95,9 @@ ASN
   +------------------+--------+-------------------------------------------------------------------------+
   | ``asn``          | string | Autonomous System Numbers per APNIC for identifying a service provider. |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``cachegroup``   |  hash  | Related cachegroup                                                      |
+  | ``cachegroup``   | string | Related cachegroup name                                                 |
   +------------------+--------+-------------------------------------------------------------------------+
-  | ``>>id``         | string | Related cachegroup ID                                                   |
-  +------------------+--------+-------------------------------------------------------------------------+
-  | ``>>name``       | string | Related cachegroup name                                                 |
+  | ``cachegroupId`` | string | Related cachegroup id                                                   |
   +------------------+--------+-------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -104,12 +106,11 @@ ASN
      "response": [
         {
           "lastUpdated": "2012-09-17 21:41:22",
-          "id": "27",
-          "asn": "7015",
-          "cachegroup": {
-          	"id": "1",
-          	"name": "us-ma-woburn"
-          }
+          "id": "28",
+          "asn": "7016",
+          "cachegroup": "us-pa-pittsburgh",
+          "cachegroupId": "13"
+        }
       ]
     }
 
