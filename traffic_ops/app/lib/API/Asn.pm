@@ -34,8 +34,9 @@ sub index {
 			@data, {
 				"id"          => $row->id,
 				"asn"         => $row->asn,
+				"cachegroupId"  => $row->cachegroup->id,
 				"cachegroup"  => $row->cachegroup->name,
-				"lastUpdated" => $row->last_updated,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
@@ -54,11 +55,9 @@ sub show {
 			@data, {
 				"id"          => $row->id,
 				"asn"         => $row->asn,
-				"lastUpdated" => $row->last_updated,
-				"cachegroup"  => {
-					"id" => $row->cachegroup->id,
-					"name" => $row->cachegroup->name
-				}
+				"cachegroupId"  => $row->cachegroup->id,
+				"cachegroup"  => $row->cachegroup->name,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}

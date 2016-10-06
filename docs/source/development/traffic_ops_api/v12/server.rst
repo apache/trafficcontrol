@@ -49,7 +49,11 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   |     Parameter      |  Type  |                                                Description                                                 |
   +====================+========+============================================================================================================+
-  | ``cachegroup``     | string | The cache group name (see :ref:`to-api-v12-cachegroup`).                                                   |
+  | ``cachegroup``     | string | The cache group name (see :ref:`to-api-v11-cachegroup`).                                                   |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``cachegroupId``   | string | The cache group id.                                                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``cdnId``          | string | Id of the CDN to which the server belongs to.                                                              |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``cdnName``        | string | Name of the CDN to which the server belongs to.                                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -58,6 +62,8 @@ Server
   | ``guid``           | string | An identifier used to uniquely identify the server.                                                        |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``hostName``       | string | The host name part of the cache.                                                                           |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``httpsPort``      | string | The HTTPS port on which the main application listens (443 in most cases).                                  |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``id``             | string | The server id (database row number).                                                                       |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -95,11 +101,15 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``offlineReason``  | string | A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status.                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``physLocation``   | string | The physical location name (see :ref:`to-api-v12-phys-loc`).                                               |
+  | ``physLocation``   | string | The physical location name (see :ref:`to-api-v11-phys-loc`).                                               |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``profile``        | string | The assigned profile name (see :ref:`to-api-v12-profile`).                                                 |
+  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-v11-phys-loc`).                                                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``profileDesc``    | string | The assigned profile description (see :ref:`to-api-v12-profile`).                                          |
+  | ``profile``        | string | The assigned profile name (see :ref:`to-api-v11-profile`).                                                 |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``profileDesc``    | string | The assigned profile description (see :ref:`to-api-v11-profile`).                                          |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``profileId``      | string | The assigned profile Id (see :ref:`to-api-v11-profile`).                                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``rack``           | string | A string indicating rack location.                                                                         |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -107,13 +117,17 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``routerPortName`` | string | The human readable name of the router port.                                                                |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``status``         | string | The Status string (See :ref:`to-api-v12-status`).                                                          |
+  | ``status``         | string | The Status string (See :ref:`to-api-v11-status`).                                                          |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``statusId``       | string | The Status id (See :ref:`to-api-v11-status`).                                                              |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``tcpPort``        | string | The default TCP port on which the main application listens (80 for a cache in most cases).                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``httpsPort``      | string | The HTTPS port on which the main application listens (443 in most cases).                                  |
+  | ``type``           | string | The name of the type of this server (see :ref:`to-api-v11-type`).                                          |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``type``           | string | The name of the type of this server (see :ref:`to-api-v12-type`).                                          |
+  | ``typeId``         | string | The id of the type of this server (see :ref:`to-api-v11-type`).                                            |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``updPending``     | string | 0=false, 1=true                                                                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -122,6 +136,8 @@ Server
       "response": [
           {
               "cachegroup": "us-il-chicago",
+              "cachegroupId": "3",
+              "cdnId": "3",
               "cdnName": "CDN-1",
               "domainName": "chi.kabletown.net",
               "guid": null,
@@ -145,15 +161,20 @@ Server
               "mgmtIpNetmask": "",
               "offlineReason": "N/A",
               "physLocation": "plocation-chi-1",
+              "physLocationId": "9",
               "profile": "EDGE1_CDN1_421_SSL",
               "profileDesc": "EDGE1_CDN1_421_SSL profile",
+              "profileId": "12",
               "rack": "RR 119.02",
               "routerHostName": "rtr-chi.kabletown.net",
               "routerPortName": "2",
               "status": "ONLINE",
+              "statusId": "6",
               "tcpPort": "80",
               "httpsPort": "443",
-              "type": "EDGE"
+              "type": "EDGE",
+              "typeId": "3",
+              "updPending": "0"
           },
           {
           ... more server data
@@ -163,7 +184,7 @@ Server
 
 |
 
-**GET /api/1.1/servers/:id**
+**GET /api/1.2/servers/:id**
 
   Retrieves properties of a CDN server by server ID.
 
@@ -184,23 +205,21 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   |     Parameter      |  Type  |                                                Description                                                 |
   +====================+========+============================================================================================================+
-  | ``cachegroup``     | string | The cache group (see :ref:`to-api-v12-cachegroup`).                                                        |
+  | ``cachegroup``     | string | The cache group name (see :ref:`to-api-v11-cachegroup`).                                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>id``           | string | The cache group id.                                                                                        |
+  | ``cachegroupId``   | string | The cache group id.                                                                                        |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>name``         | string | The cache group name.                                                                                      |
+  | ``cdnId``          | string | Id of the CDN to which the server belongs to.                                                              |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``cdn``            | string | The CDN to which the server belongs to.                                                                    |
-  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>id``           | string | The CDN id.                                                                                                |
-  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>name``         | string | The CDN name.                                                                                              |
+  | ``cdnName``        | string | Name of the CDN to which the server belongs to.                                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``domainName``     | string | The domain name part of the FQDN of the cache.                                                             |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``guid``           | string | An identifier used to uniquely identify the server.                                                        |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``hostName``       | string | The host name part of the cache.                                                                           |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``httpsPort``      | string | The HTTPS port on which the main application listens (443 in most cases).                                  |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``id``             | string | The server id (database row number).                                                                       |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -238,17 +257,15 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``offlineReason``  | string | A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status.                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``physLocation``   | string | The physical location (see :ref:`to-api-v12-phys-loc`).                                                    |
+  | ``physLocation``   | string | The physical location name (see :ref:`to-api-v11-phys-loc`).                                               |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>id``           | string | The physical location id.                                                                                  |
+  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-v11-phys-loc`).                                                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>name``         | string | The physical location name.                                                                                |
+  | ``profile``        | string | The assigned profile name (see :ref:`to-api-v11-profile`).                                                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``profile``        | string | The assigned profile (see :ref:`to-api-v12-profile`).                                                      |
+  | ``profileDesc``    | string | The assigned profile description (see :ref:`to-api-v11-profile`).                                          |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>id``           | string | The assigned profile name.                                                                                 |
-  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>name``         | string | The assigned profile name.                                                                                 |
+  | ``profileId``      | string | The assigned profile Id (see :ref:`to-api-v11-profile`).                                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``rack``           | string | A string indicating rack location.                                                                         |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -256,21 +273,17 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``routerPortName`` | string | The human readable name of the router port.                                                                |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``status``         | string | The server status (See :ref:`to-api-v12-status`).                                                          |
+  | ``status``         | string | The Status string (See :ref:`to-api-v11-status`).                                                          |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>id``           | string | The status ID.                                                                                             |
-  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>name``         | string | The Status name.                                                                                           |
+  | ``statusId``       | string | The Status id (See :ref:`to-api-v11-status`).                                                              |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``tcpPort``        | string | The default TCP port on which the main application listens (80 for a cache in most cases).                 |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``httpsPort``      | string | The HTTPS port on which the main application listens (443 in most cases).                                  |
+  | ``type``           | string | The name of the type of this server (see :ref:`to-api-v11-type`).                                          |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``type``           | string | The server type (see :ref:`to-api-v12-type`).                                                              |
+  | ``typeId``         | string | The id of the type of this server (see :ref:`to-api-v11-type`).                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>id``           | string | The server type ID.                                                                                        |
-  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``>>name``         | string | The server type name.                                                                                      |
+  | ``updPending``     | string | 0=false, 1=true                                                                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -278,14 +291,10 @@ Server
    {
       "response": [
           {
-              "cachegroup": {
-              	"id": "1",
-              	"name": "us-il-chicago"
-              },
-              "cdn": {
-              	"id": "1",
-              	"name": "cdn-1"
-              },
+              "cachegroup": "us-il-chicago",
+              "cachegroupId": "3",
+              "cdnId": "3",
+              "cdnName": "CDN-1",
               "domainName": "chi.kabletown.net",
               "guid": null,
               "hostName": "atsec-chi-00",
@@ -306,28 +315,22 @@ Server
               "mgmtIpAddress": "",
               "mgmtIpGateway": "",
               "mgmtIpNetmask": "",
-              "offlineReason": "N/A:,
-              "physLocation": {
-              	"id": "1",
-              	"name": "plocation-chi-1"
-              },
-              "profile": {
-              	"id": "1",
-              	"name": "EDGE1_CDN1_421_SSL"
-              },
+              "offlineReason": "N/A",
+              "physLocation": "plocation-chi-1",
+              "physLocationId": "9",
+              "profile": "EDGE1_CDN1_421_SSL",
+              "profileDesc": "EDGE1_CDN1_421_SSL profile",
+              "profileId": "12",
               "rack": "RR 119.02",
               "routerHostName": "rtr-chi.kabletown.net",
               "routerPortName": "2",
-              "status": {
-              	"id": "1",
-              	"name": "ONLINE"
-              },
+              "status": "ONLINE",
+              "statusId": "6",
               "tcpPort": "80",
               "httpsPort": "443",
-              "type": {
-              	"id": "1",
-              	"name": "EDGE"
-              }
+              "type": "EDGE",
+              "typeId": "3",
+              "updPending": "0"
           }
         ]
     }

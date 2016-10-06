@@ -52,43 +52,48 @@ sub index {
 	if ( defined($servers) ) {
 		my $is_admin = &is_admin($self);
 		while ( my $row = $servers->next ) {
-			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
-
 			push(
 				@data, {
-					"id"             => $row->id,
-					"hostName"       => $row->host_name,
-					"domainName"     => $row->domain_name,
-					"tcpPort"        => $row->tcp_port,
-					"httpsPort"      => $row->https_port,
-					"interfaceName"  => $row->interface_name,
-					"ipAddress"      => $row->ip_address,
-					"ipNetmask"      => $row->ip_netmask,
-					"ipGateway"      => $row->ip_gateway,
-					"ip6Address"     => $row->ip6_address,
-					"ip6Gateway"     => $row->ip6_gateway,
-					"interfaceMtu"   => $row->interface_mtu,
 					"cachegroup"     => $row->cachegroup->name,
-					"physLocation"   => $row->phys_location->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
 					"guid"           => $row->guid,
-					"rack"           => $row->rack,
-					"type"           => $row->type->name,
-					"status"         => $row->status->name,
-					"offline_reason" => $row->offline_reason,
-					"profile"        => $row->profile->name,
-					"profileDesc"    => $row->profile->description,
-					"cdnName"        => $cdn_name,
-					"mgmtIpAddress"  => $row->mgmt_ip_address,
-					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
-					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
 					"iloIpAddress"   => $row->ilo_ip_address,
 					"iloIpNetmask"   => $row->ilo_ip_netmask,
 					"iloIpGateway"   => $row->ilo_ip_gateway,
 					"iloUsername"    => $row->ilo_username,
 					"iloPassword"    => $is_admin ? $row->ilo_password : "********",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offline_reason" => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
 					"routerHostName" => $row->router_host_name,
 					"routerPortName" => $row->router_port_name,
-					"lastUpdated"    => $row->last_updated
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => $row->upd_pending
 				}
 			);
 		}
@@ -107,58 +112,46 @@ sub show {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"            => $row->id,
-				"hostName"      => $row->host_name,
-				"domainName"    => $row->domain_name,
-				"tcpPort"       => $row->tcp_port,
-				"httpsPort"     => $row->https_port,
-				"interfaceName" => $row->interface_name,
-				"ipAddress"     => $row->ip_address,
-				"ipNetmask"     => $row->ip_netmask,
-				"ipGateway"     => $row->ip_gateway,
-				"ip6Address"    => $row->ip6_address,
-				"ip6Gateway"    => $row->ip6_gateway,
-				"interfaceMtu"  => $row->interface_mtu,
-				"cachegroup"    => $row->cachegroup->name,
-				"cachegroup"    => {
-					"id"   => $row->cachegroup->id,
-					"name" => $row->cachegroup->name
-
-				},
-				"physLocation" => {
-					"id"   => $row->phys_location->id,
-					"name" => $row->phys_location->name
-				},
-				"guid" => $row->guid,
-				"rack" => $row->rack,
-				"type" => {
-					"id"   => $row->type->id,
-					"name" => $row->type->name
-				},
-				"status" => {
-					"id"   => $row->status->id,
-					"name" => $row->status->name
-				},
-				"offline_reason" => $row->offline_reason,
-				"profile"        => {
-					"id"   => $row->profile->id,
-					"name" => $row->profile->name
-				},
-				"cdn" => {
-					"id"   => $row->cdn->id,
-					"name" => $row->cdn->name
-				},
-				"mgmtIpAddress"  => $row->mgmt_ip_address,
-				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
-				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+				"cachegroup"     => $row->cachegroup->name,
+				"cachegroupId"   => $row->cachegroup->id,
+				"cdnId"          => $row->cdn->id,
+				"cdnName"        => $row->cdn->name,
+				"domainName"     => $row->domain_name,
+				"guid"           => $row->guid,
+				"hostName"       => $row->host_name,
+				"httpsPort"      => $row->https_port,
+				"id"             => $row->id,
 				"iloIpAddress"   => $row->ilo_ip_address,
 				"iloIpNetmask"   => $row->ilo_ip_netmask,
 				"iloIpGateway"   => $row->ilo_ip_gateway,
 				"iloUsername"    => $row->ilo_username,
 				"iloPassword"    => $is_admin ? $row->ilo_password : "********",
+				"interfaceMtu"   => $row->interface_mtu,
+				"interfaceName"  => $row->interface_name,
+				"ip6Address"     => $row->ip6_address,
+				"ip6Gateway"     => $row->ip6_gateway,
+				"ipAddress"      => $row->ip_address,
+				"ipNetmask"      => $row->ip_netmask,
+				"ipGateway"      => $row->ip_gateway,
+				"lastUpdated"    => $row->last_updated,
+				"mgmtIpAddress"  => $row->mgmt_ip_address,
+				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+				"offline_reason" => $row->offline_reason,
+				"physLocation"   => $row->phys_location->name,
+				"physLocationId" => $row->phys_location->id,
+				"profile"        => $row->profile->name,
+				"profileId"      => $row->profile->id,
+				"profileDesc"    => $row->profile->description,
+				"rack"           => $row->rack,
 				"routerHostName" => $row->router_host_name,
 				"routerPortName" => $row->router_port_name,
-				"lastUpdated"    => $row->last_updated
+				"status"         => $row->status->name,
+				"statusId"       => $row->status->id,
+				"tcpPort"        => $row->tcp_port,
+				"type"           => $row->type->name,
+				"typeId"         => $row->type->id,
+				"updPending"     => $row->upd_pending
 			}
 		);
 	}
