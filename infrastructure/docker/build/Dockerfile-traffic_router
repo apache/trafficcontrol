@@ -7,16 +7,8 @@ RUN	yum -y install \
 		git \
 		rpm-build
 
-# all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
-ENV GITREPO=https://github.com/Comcast/traffic_control
-ENV BRANCH=master
-
-#############################################################################
-# Above are common for all sub-projects.
-
 RUN	yum -y install \
-		which && \
-	yum -y clean all
+		which
 
 ### java/mvn
 WORKDIR /opt
@@ -31,12 +23,19 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --set jar /opt/java/bin/jar && \
     alternatives --set javac /opt/java/bin/javac && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
-###
 
-RUN	mkdir -p /dist
-VOLUME	/dist
+# wait for clone to be available, then
+# build the rpm and copy to /artifacts
+RUN echo $'\n\
+while [ ! -f /repo/clone-finished ]; do sleep 1; done\n\
+\n\
+tc=/repo/traffic_control\n\
+cd $tc/traffic_router\n\
+./build/build_rpm.sh\n\
+mkdir -p /artifacts\n\
+cp $tc/dist/* /artifacts/.\n\
+' >/run.sh
 
-WORKDIR /
-CMD	git clone --branch $BRANCH $GITREPO && cd traffic_control && \
-	./traffic_monitor/build/build_rpm.sh && \
-	cp -f dist/* /dist/.
+CMD sh -x /run.sh
+
+# vi:syntax=Dockerfile
