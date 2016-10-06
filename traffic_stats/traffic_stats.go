@@ -713,60 +713,41 @@ func getURL(url string) ([]byte, error) {
 }
 
 func influxConnect(config StartupConfig) (influx.Client, error) {
-	var hosts []*InfluxDBProps
-	for _, InfluxHost := range config.InfluxDBs {
-		if InfluxHost.InfluxClient == nil {
-			parsedURL, err := url.Parse(InfluxHost.URL)
-			if err != nil {
-				errHndlr(fmt.Errorf("could not parse URL from %s\n", InfluxHost.URL), ERROR)
-				continue
-			}
-			if parsedURL.Scheme == "udp" {
-				conf := influx.UDPConfig{
-					Addr: parsedURL.Host,
-				}
-				con, err := influx.NewUDPClient(conf)
-				if err != nil {
-					errHndlr(fmt.Errorf("An error occurred creating udp client. %v\n", err), ERROR)
-					continue
-				}
-				InfluxHost.InfluxClient = con
-
-			} else { //if not udp assume HTTP client
-				conf := influx.HTTPConfig{
-					Addr:     parsedURL.String(),
-					Username: config.InfluxUser,
-					Password: config.InfluxPassword,
-				}
-				con, err := influx.NewHTTPClient(conf)
-				if err != nil {
-					errHndlr(fmt.Errorf("An error occurred creating HTTP client.  %v\n", err), ERROR)
-					continue
-				}
-				InfluxHost.InfluxClient = con
-			}
-		}
-
-		hosts = append(hosts, InfluxHost)
-	}
-
+	hosts := config.InfluxDBs
 	for len(hosts) > 0 {
 		n := rand.Intn(len(hosts))
 		host := hosts[n]
 		hosts = append(hosts[:n], hosts[n+1:]...)
-		con := host.InfluxClient
-		//influxdb client does not currently support udp queries
 		parsedURL, _ := url.Parse(host.URL)
-		if parsedURL.Scheme == "http" {
-			_, _, err := con.Ping(10)
+		if parsedURL.Scheme == "udp" {
+			conf := influx.UDPConfig{
+				Addr: parsedURL.Host,
+			}
+			con, err := influx.NewUDPClient(conf)
 			if err != nil {
-				errHndlr(err, WARN)
+				errHndlr(fmt.Errorf("An error occurred creating udp client. %v\n", err), ERROR)
 				continue
 			}
+			return con, nil
+		}
+		//if not udp assume HTTP client
+		conf := influx.HTTPConfig{
+			Addr:     parsedURL.String(),
+			Username: config.InfluxUser,
+			Password: config.InfluxPassword,
+		}
+		con, err := influx.NewHTTPClient(conf)
+		if err != nil {
+			errHndlr(fmt.Errorf("An error occurred creating HTTP client.  %v\n", err), ERROR)
+			continue
+		}
+		_, _, err = con.Ping(10)
+		if err != nil {
+			errHndlr(err, WARN)
+			continue
 		}
 		return con, nil
 	}
-
 	err := errors.New("Could not connect to any of the InfluxDb servers defined in the influxUrls config.")
 	return nil, err
 }
