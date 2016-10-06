@@ -127,7 +127,7 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``typeId``         | string | The id of the type of this server (see :ref:`to-api-v11-type`).                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``updPending``     | string | 0=false, 1=true                                                                                            |
+  | ``updPending``     |  bool  |                                                                                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -174,7 +174,7 @@ Server
               "httpsPort": "443",
               "type": "EDGE",
               "typeId": "3",
-              "updPending": "0"
+              "updPending": false
           },
           {
           ... more server data
@@ -283,7 +283,7 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``typeId``         | string | The id of the type of this server (see :ref:`to-api-v11-type`).                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``updPending``     | string | 0=false, 1=true                                                                                            |
+  | ``updPending``     |  bool  |                                                                                                            |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -330,7 +330,7 @@ Server
               "httpsPort": "443",
               "type": "EDGE",
               "typeId": "3",
-              "updPending": "0"
+              "updPending": false
           }
         ]
     }
@@ -338,7 +338,7 @@ Server
 |
 
 
-**GET /api/1.2/servers/summary.json**
+**GET /api/1.2/servers/summary**
 
   Retrieves a count of CDN servers by type.
 
@@ -384,7 +384,7 @@ Server
 
 |
 
-**GET /api/1.2/servers/hostname/:name/details.json**
+**GET /api/1.2/servers/hostname/:name/details**
 
   Retrieves the details of a server.
 

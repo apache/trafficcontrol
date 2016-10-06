@@ -93,7 +93,7 @@ sub index {
 					"tcpPort"        => $row->tcp_port,
 					"type"           => $row->type->name,
 					"typeId"         => $row->type->id,
-					"updPending"     => $row->upd_pending
+					"updPending"     => \$row->upd_pending
 				}
 			);
 		}
@@ -151,7 +151,7 @@ sub show {
 				"tcpPort"        => $row->tcp_port,
 				"type"           => $row->type->name,
 				"typeId"         => $row->type->id,
-				"updPending"     => $row->upd_pending
+				"updPending"     => \$row->upd_pending
 			}
 		);
 	}
