@@ -716,10 +716,14 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 	var hosts []*InfluxDBProps
 	for _, InfluxHost := range config.InfluxDBs {
 		if InfluxHost.InfluxClient == nil {
-			if strings.HasPrefix(InfluxHost.URL, "udp") {
-				parsed_url, err := url.Parse(InfluxHost.URL)
+			parsedURL, err := url.Parse(InfluxHost.URL)
+			if err != nil {
+				errHndlr(fmt.Errorf("could not parse URL from %s\n", InfluxHost.URL), ERROR)
+				continue
+			}
+			if parsedURL.Scheme == "udp" {
 				conf := influx.UDPConfig{
-					Addr: parsed_url.Host,
+					Addr: parsedURL.Host,
 				}
 				con, err := influx.NewUDPClient(conf)
 				if err != nil {
@@ -730,7 +734,7 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 
 			} else { //if not udp assume HTTP client
 				conf := influx.HTTPConfig{
-					Addr:     InfluxHost.URL,
+					Addr:     parsedURL.String(),
 					Username: config.InfluxUser,
 					Password: config.InfluxPassword,
 				}
@@ -751,8 +755,9 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 		host := hosts[n]
 		hosts = append(hosts[:n], hosts[n+1:]...)
 		con := host.InfluxClient
-		//client currently does not support udp queries
-		if !strings.HasPrefix(host.URL, "udp") {
+		//influxdb client does not currently support udp queries
+		parsedURL, _ := url.Parse(host.URL)
+		if parsedURL.Scheme == "http" {
 			_, _, err := con.Ping(10)
 			if err != nil {
 				errHndlr(err, WARN)
