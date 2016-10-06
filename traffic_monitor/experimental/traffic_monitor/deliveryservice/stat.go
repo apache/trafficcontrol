@@ -224,8 +224,11 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 		}
 
 		totalChanged := lastKbpsStat.Total.Bytes != stat.TotalStats.OutBytes.Value
-		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
+		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged && lastKbpsStat.Total.Bytes != 0 {
 			stat.TotalStats.Kbps.Value = float64(stat.TotalStats.OutBytes.Value-lastKbpsStat.Total.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
+			if dsName == "le-vod-g2" {
+				fmt.Printf("debug9 changing le-vod-g2 from %v to %v\n", lastKbpsStat.Total.Bytes, stat.TotalStats.OutBytes.Value)
+			}
 			if stat.TotalStats.Kbps.Value < 0 {
 				stat.TotalStats.Kbps.Value = 0
 				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.TotalStats.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
