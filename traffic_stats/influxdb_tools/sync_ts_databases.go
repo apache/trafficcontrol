@@ -439,7 +439,7 @@ func getDeliveryServiceStats(res []influx.Result) map[string]deliveryServiceStat
 
 func getDailyStats(res []influx.Result) map[string]dailyStats {
 	response := make(map[string]dailyStats)
-	if res != nil && len(res[0].Series) > 0 {
+	if len(res) > 0 && len(res[0].Series) > 0 {
 		for _, row := range res[0].Series {
 			for _, record := range row.Values {
 				data := new(dailyStats)
