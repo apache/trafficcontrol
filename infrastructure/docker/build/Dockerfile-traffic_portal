@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,8 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-=======
->>>>>>> 343f0b7... move docker-compose files to infrastructure
 FROM centos:7
 
 MAINTAINER Dan Kirkwood
@@ -24,7 +21,6 @@ MAINTAINER Dan Kirkwood
 RUN	yum -y install \
 		epel-release \
 		git \
-<<<<<<< HEAD
 		rpm-build && \
 	yum -y clean all
 
@@ -36,11 +32,6 @@ WORKDIR /repo
 # traffic_portal specific
 RUN	yum -y install \
 		gcc \
-=======
-		rpm-build
-
-RUN	yum -y install \
->>>>>>> 343f0b7... move docker-compose files to infrastructure
 		libffi-devel \
 		make \
 		nodejs \
@@ -54,7 +45,6 @@ RUN	npm -g install bower grunt-cli
 # bower will not run as root by default
 RUN	echo '{ "allow_root": true }' > /root/.bowerrc
 
-<<<<<<< HEAD
 ###
 
 VOLUME ./artifacts:/artifacts
@@ -62,20 +52,5 @@ VOLUME ./artifacts:/artifacts
 ADD run-build.sh .
 
 CMD ./run-build.sh traffic_portal 2>&1 | tee /artifacts/build-traffic_portal.log
-=======
-# wait for clone to be available, then
-# build the rpm and copy to /artifacts
-RUN echo $'\n\
-while [ ! -f /repo/clone-finished ]; do sleep 1; done\n\
-\n\
-tc=/repo/traffic_control\n\
-cd $tc/traffic_portal\n\
-./build/build_rpm.sh\n\
-mkdir -p /artifacts\n\
-cp $tc/dist/* /artifacts/.\n\
-' >/run.sh
-
-CMD sh -x /run.sh
->>>>>>> 343f0b7... move docker-compose files to infrastructure
 
 # vi:syntax=Dockerfile
