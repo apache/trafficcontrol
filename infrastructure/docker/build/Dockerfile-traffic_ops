@@ -5,7 +5,8 @@ MAINTAINER Dan Kirkwood
 RUN	yum -y install \
 		epel-release \
 		git \
-		rpm-build
+		rpm-build && \
+	yum -y clean all
 
 RUN	yum -y install \
 		golang
