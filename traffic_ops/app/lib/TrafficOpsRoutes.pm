@@ -625,6 +625,8 @@ sub api_routes {
 		->to( 'Parameter#index', namespace => $namespace );
 
 	# -- PARAMETERS: PROFILE PARAMETERS
+	$r->get( "/api/$version/parameters/:id")->over( authenticated => 1 )
+        ->to( 'Parameter#get', namespace => $namespace );
 	$r->get( "/api/$version/profileparameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#index', namespace => $namespace );
 	$r->get( "/api/$version/parameters/profile/:name")->over( authenticated => 1 )

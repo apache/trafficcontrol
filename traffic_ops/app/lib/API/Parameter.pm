@@ -83,14 +83,15 @@ sub create {
         return $self->forbidden("You must be an admin or oper to perform this operation!");
     }
 
-    if ( !defined($params->{parameters}) ) {
-        return $self->alert("parameter parameters is must.");
-    }
+    $self->app->log->info("params = " . Dumper($params));
 
-    if ( ref($params->{parameters}) ne 'ARRAY' ) {
-        return $self->alert("parameter parameters must be array.");
+    if ( ref($params) ne 'ARRAY' ) {
+        #not a array, create single parameter
+        my @temparry;
+        push(@temparry, $params);
+        $params = \@temparry;
     }
-    if ( scalar($params->{parameters}) == 0 ) {
+    if ( scalar($params) == 0 ) {
         return $self->alert("parameters array length is 0.");
     }
 
@@ -98,7 +99,7 @@ sub create {
     my @new_parameters = ();
     $self->db->txn_begin();
     my $param;
-    foreach $param (@{ $params->{parameters} }) {
+    foreach $param (@{ $params }) {
         if ( !defined($param->{name}) ) {
             $self->db->txn_rollback();
             return $self->alert("there is parameter name does not provide , configFile:".$param->{configFile}." , value:".$param->{value});
@@ -156,9 +157,30 @@ sub create {
             })
     }
     $self->db->txn_commit();
-    my $response;
-    $response->{parameters} = \@new_parameters;
+    my $response  = \@new_parameters;
     return $self->success($response, "Create ". scalar(@new_parameters) . " parameters successfully.");
+}
+
+sub get {
+    my $self = shift;
+    my $id     = $self->param('id');
+
+    my $find = $self->db->resultset('Parameter')->find({ id => $id } );
+    if ( !defined($find) ) {
+        return $self->not_found("parameter [id:".$id."] does not exist.");
+    }
+    if ( $find->secure != 0 && !&is_admin($self)) {
+        return $self->forbidden("You must be an admin to perform this operation!");
+    }
+
+    my $response;
+    $response->{id}     = $find->id;
+    $response->{name}   = $find->name;
+    $response->{configFile} = $find->config_file;
+    $response->{value}  = $find->value;
+    $response->{secure} = $find->secure;
+
+    return $self->success($response, "Get parameter successfully.");
 }
 
 sub edit {
@@ -244,13 +266,13 @@ sub validate {
     }
 
     if ( !defined($params->{name}) ) {
-        return $self->alert("Parameter name is must.");
+        return $self->alert("Parameter name is required.");
     }
     if ( !defined($params->{configFile}) ) {
-        return $self->alert("Parameter configFile is must.");
+        return $self->alert("Parameter configFile is required.");
     }
     if ( !defined($params->{value}) ) {
-        return $self->alert("Parameter value is must.");
+        return $self->alert("Parameter value is required.");
     }
 
     my $find = $self->db->resultset('Parameter')->find({ 
