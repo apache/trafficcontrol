@@ -2,12 +2,14 @@ package deliveryservice
 
 import (
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -132,24 +134,37 @@ func (a StatsLastKbps) Copy() StatsLastKbps {
 
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type StatLastKbps struct {
+	Caches      map[enum.CacheName]LastKbpsData
 	CacheGroups map[enum.CacheGroupName]LastKbpsData
 	Type        map[enum.CacheType]LastKbpsData
 	Total       LastKbpsData
 }
 
 func (a StatLastKbps) Copy() StatLastKbps {
-	b := StatLastKbps{CacheGroups: map[enum.CacheGroupName]LastKbpsData{}, Type: map[enum.CacheType]LastKbpsData{}, Total: a.Total}
+	b := StatLastKbps{
+		CacheGroups: map[enum.CacheGroupName]LastKbpsData{},
+		Type:        map[enum.CacheType]LastKbpsData{},
+		Caches:      map[enum.CacheName]LastKbpsData{},
+		Total:       a.Total,
+	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
 	}
 	for k, v := range a.Type {
 		b.Type[k] = v
 	}
+	for k, v := range a.Caches {
+		b.Caches[k] = v
+	}
 	return b
 }
 
 func newStatLastKbps() StatLastKbps {
-	return StatLastKbps{CacheGroups: map[enum.CacheGroupName]LastKbpsData{}, Type: map[enum.CacheType]LastKbpsData{}}
+	return StatLastKbps{
+		CacheGroups: map[enum.CacheGroupName]LastKbpsData{},
+		Type:        map[enum.CacheType]LastKbpsData{},
+		Caches:      map[enum.CacheName]LastKbpsData{},
+	}
 }
 
 type LastKbpsData struct {
@@ -158,7 +173,7 @@ type LastKbpsData struct {
 	Time  time.Time
 }
 
-const BytesPerKbps = 1024
+const BytesPerKilobit = 125
 
 // addKbps adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
 //
@@ -168,73 +183,81 @@ const BytesPerKbps = 1024
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time) (Stats, StatsLastKbps, error) {
+// TODO break this function up, it's too big.
+func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, StatsLastKbps, error) {
 	for dsName, stat := range dsStats.DeliveryService {
 		lastKbpsStat, lastKbpsStatExists := lastKbpsStats.DeliveryServices[dsName]
 		if !lastKbpsStatExists {
 			lastKbpsStat = newStatLastKbps()
 		}
 
-		for cgName, cacheStats := range stat.CacheGroups {
-			lastKbpsData, _ := lastKbpsStat.CacheGroups[cgName]
+		for cacheName, cacheStats := range stat.Caches {
+			lastCacheStat, lastCacheStatExists := lastKbpsStat.Caches[cacheName]
 
-			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
-				cacheStats.Kbps.Value = lastKbpsData.Kbps
-				stat.CacheGroups[cgName] = cacheStats
+			if cacheStats.OutBytes.Value == lastCacheStat.Bytes {
+				cacheStats.Kbps.Value = lastCacheStat.Kbps
+				stat.Caches[cacheName] = cacheStats
 				continue
 			}
 
-			if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
-				cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+			if lastCacheStatExists && lastCacheStat.Bytes != 0 {
+				lastCacheStat.Kbps = float64(cacheStats.OutBytes.Value-lastCacheStat.Bytes) / BytesPerKilobit / stat.CachesTimeReceived[cacheName].Sub(lastCacheStat.Time).Seconds()
 			}
+			lastCacheStat.Bytes = cacheStats.OutBytes.Value
+			lastCacheStat.Time = stat.CachesTimeReceived[cacheName]
+			lastKbpsStat.Caches[cacheName] = lastCacheStat
 
-			if cacheStats.Kbps.Value < 0 {
-				cacheStats.Kbps.Value = 0
-				log.Errorf("addkbps negative cachegroup cacheStats.Kbps.Value: '%v' '%v' %v - %v / %v\n", dsName, cgName, cacheStats.OutBytes.Value, lastKbpsData.Bytes, dsStatsTime.Sub(lastKbpsData.Time).Seconds())
-			}
-
-			lastKbpsStat.CacheGroups[cgName] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
-			stat.CacheGroups[cgName] = cacheStats
+			cacheStats.Kbps.Value = lastCacheStat.Kbps // TODO determine if necessary
+			stat.Caches[cacheName] = cacheStats
 		}
 
-		for cacheType, cacheStats := range stat.Types {
-			lastKbpsData, _ := lastKbpsStat.Type[cacheType]
-			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
-				if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
-					if lastKbpsData.Kbps < 0 {
-						log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value!\n")
-						lastKbpsData.Kbps = 0
-					}
-					cacheStats.Kbps.Value = lastKbpsData.Kbps
-					stat.Types[cacheType] = cacheStats
-					continue
-				}
-				if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
-					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
-				}
-				if cacheStats.Kbps.Value < 0 {
-					log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value.\n")
-					cacheStats.Kbps.Value = 0
-				}
-				lastKbpsStat.Type[cacheType] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
-				stat.Types[cacheType] = cacheStats
+		// TODO don't add kbps for caches which didn't respond to their last request
+		cacheGroups := map[enum.CacheGroupName]LastKbpsData{}
+		cacheTypes := map[enum.CacheType]LastKbpsData{}
+		total := LastKbpsData{}
+		for cacheName, cacheStats := range lastKbpsStat.Caches {
+			if !stat.CommonStats.CachesReporting[cacheName] {
+				continue
 			}
+
+			cacheGroup, ok := serverCachegroups[cacheName]
+			if !ok {
+				log.Errorf("addkbps cache %v not in cachegroups\n", cacheName)
+			} else {
+				c := cacheGroups[cacheGroup]
+				c.Kbps += cacheStats.Kbps
+				cacheGroups[cacheGroup] = c
+			}
+
+			cacheType, ok := serverTypes[cacheName]
+			if !ok {
+				log.Errorf("addkbps cache %v not in types\n", cacheName)
+			} else {
+				c := cacheTypes[cacheType]
+				c.Kbps += cacheStats.Kbps
+				cacheTypes[cacheType] = c
+			}
+
+			total.Kbps += cacheStats.Kbps
 		}
 
-		totalChanged := lastKbpsStat.Total.Bytes != stat.TotalStats.OutBytes.Value
-		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
-			stat.TotalStats.Kbps.Value = float64(stat.TotalStats.OutBytes.Value-lastKbpsStat.Total.Bytes) / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds() / BytesPerKbps
-			if stat.TotalStats.Kbps.Value < 0 {
-				stat.TotalStats.Kbps.Value = 0
-				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.TotalStats.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
-			}
-		} else {
-			stat.TotalStats.Kbps.Value = lastKbpsStat.Total.Kbps
+		for cacheGroup, lastKbpsData := range cacheGroups {
+			g := stat.CacheGroups[cacheGroup]
+			g.Kbps.Value = lastKbpsData.Kbps
+			stat.CacheGroups[cacheGroup] = g
 		}
 
-		if totalChanged {
-			lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.TotalStats.OutBytes.Value, Kbps: stat.TotalStats.Kbps.Value}
+		for cacheType, lastKbpsData := range cacheTypes {
+			t := stat.Types[cacheType]
+			t.Kbps.Value = lastKbpsData.Kbps
+			stat.Types[cacheType] = t
 		}
+
+		lastKbpsStat.CacheGroups = cacheGroups
+		lastKbpsStat.Type = cacheTypes
+		lastKbpsStat.Total = total
+
+		stat.TotalStats.Kbps.Value = total.Kbps
 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
 		dsStats.DeliveryService[dsName] = stat
@@ -276,7 +299,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 			continue
 		}
 
-		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / result.Time.Sub(lastCacheKbpsData.Time).Seconds() / BytesPerKbps
+		kbps := float64(outBytes-lastCacheKbpsData.Bytes) / BytesPerKilobit / result.Time.Sub(lastCacheKbpsData.Time).Seconds()
 		if lastCacheKbpsData.Bytes == 0 {
 			kbps = 0
 			log.Errorf("addkbps cache %v lastCacheKbpsData.Bytes zero\n", cacheName)
@@ -340,59 +363,79 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			httpDsStat.TotalStats = httpDsStat.TotalStats.Sum(resultStat.TotalStats)
 			httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultStat.CacheGroups[cachegroup])
 			httpDsStat.Types[serverType] = httpDsStat.Types[serverType].Sum(resultStat.Types[serverType])
+			httpDsStat.Caches[server] = httpDsStat.Caches[server].Sum(resultStat.Caches[server])
+			httpDsStat.CachesTimeReceived[server] = resultStat.CachesTimeReceived[server]
+			httpDsStat.CommonStats = dsStats.DeliveryService[ds].CommonStats
 			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
 		}
 	}
 
-	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(statHistory, dsStats, lastKbpsStats, now)
+	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(statHistory, dsStats, lastKbpsStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	return kbpsStats, kbpsStatsLastKbps, kbpsErr
 }
 
-func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64) *dsdata.StatsOld {
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".out_bytes")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.OutBytes.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".isAvailable")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_5xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status5xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_4xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status4xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_3xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status3xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".status_2xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Status2xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".in_bytes")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.InBytes.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".kbps")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Kbps.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_5xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps5xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_4xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps4xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_3xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps3xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_2xx")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.Tps2xx.Value))}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".error-string")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.ErrorString.Value}}
-	s.DeliveryService[deliveryService][dsdata.StatName(prefix+".tps_total")] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.TpsTotal.Value))}}
+func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64, filter dsdata.Filter) *dsdata.StatsOld {
+	add := func(name, val string) {
+		if filter.UseStat(name) {
+			s.DeliveryService[deliveryService][dsdata.StatName(prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+		}
+	}
+	add("out_bytes", strconv.Itoa(int(c.OutBytes.Value)))
+	add("isAvailable", fmt.Sprintf("%t", c.IsAvailable.Value))
+	add("status_5xx", strconv.Itoa(int(c.Status5xx.Value)))
+	add("status_4xx", strconv.Itoa(int(c.Status4xx.Value)))
+	add("status_3xx", strconv.Itoa(int(c.Status3xx.Value)))
+	add("status_2xx", strconv.Itoa(int(c.Status2xx.Value)))
+	add("in_bytes", strconv.Itoa(int(c.InBytes.Value)))
+	add("kbps", strconv.Itoa(int(c.Kbps.Value)))
+	add("tps_5xx", strconv.Itoa(int(c.Tps5xx.Value)))
+	add("tps_4xx", strconv.Itoa(int(c.Tps4xx.Value)))
+	add("tps_3xx", strconv.Itoa(int(c.Tps3xx.Value)))
+	add("tps_2xx", strconv.Itoa(int(c.Tps2xx.Value)))
+	add("error", c.ErrorString.Value)
+	add("tps_total", strconv.Itoa(int(c.TpsTotal.Value)))
 	return s
 }
 
-func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64) *dsdata.StatsOld {
-	s.DeliveryService[deliveryService]["caches-configured"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.CachesConfiguredNum.Value))}}
-	s.DeliveryService[deliveryService]["caches-reporting"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(len(c.CachesReporting))}}
-	s.DeliveryService[deliveryService]["error-string"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.ErrorStr.Value}}
-	s.DeliveryService[deliveryService]["status"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: c.StatusStr.Value}}
-	s.DeliveryService[deliveryService]["isHealthy"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsHealthy.Value)}}
-	s.DeliveryService[deliveryService]["isAvailable"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: fmt.Sprintf("%t", c.IsAvailable.Value)}}
-	s.DeliveryService[deliveryService]["caches-available"] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: strconv.Itoa(int(c.CachesAvailableNum.Value))}}
+func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64, filter dsdata.Filter) *dsdata.StatsOld {
+	add := func(name, val string) {
+		if filter.UseStat(name) {
+			s.DeliveryService[deliveryService][dsdata.StatName(name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+		}
+	}
+	add("caches-configured", strconv.Itoa(int(c.CachesConfiguredNum.Value)))
+	add("caches-reporting", strconv.Itoa(len(c.CachesReporting)))
+	add("error-string", strconv.Itoa(len(c.CachesReporting)))
+	add("status", c.StatusStr.Value)
+	add("isHealthy", fmt.Sprintf("%t", c.IsHealthy.Value))
+	add("isAvailable", fmt.Sprintf("%t", c.IsAvailable.Value))
+	add("caches-available", strconv.Itoa(int(c.CachesAvailableNum.Value)))
 	return s
 }
 
 // StatsJSON returns an object formatted as expected to be serialized to JSON and served.
-func (dsStats Stats) JSON() dsdata.StatsOld {
+func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	now := time.Now().Unix()
-	jsonObj := &dsdata.StatsOld{DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{}}
+	jsonObj := &dsdata.StatsOld{
+		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
+		QueryParams:     http_server.ParametersStr(params),
+		DateStr:         http_server.DateStr(time.Now()),
+	}
 
 	for deliveryService, stat := range dsStats.DeliveryService {
+		if !filter.UseDeliveryService(deliveryService) {
+			continue
+		}
 		jsonObj.DeliveryService[deliveryService] = map[dsdata.StatName][]dsdata.StatOld{}
-		jsonObj = addCommonData(jsonObj, &stat.CommonStats, deliveryService, now)
+		jsonObj = addCommonData(jsonObj, &stat.CommonStats, deliveryService, now, filter)
 		for cacheGroup, cacheGroupStats := range stat.CacheGroups {
-			jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, string("location."+cacheGroup), now)
+			jsonObj = addStatCacheStats(jsonObj, cacheGroupStats, deliveryService, "location."+string(cacheGroup)+".", now, filter)
 		}
 		for cacheType, typeStats := range stat.Types {
-			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String(), now)
+			jsonObj = addStatCacheStats(jsonObj, typeStats, deliveryService, "type."+cacheType.String()+".", now, filter)
 		}
-		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total", now)
+		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total.", now, filter)
 	}
 	return *jsonObj
 }

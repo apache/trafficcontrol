@@ -64,6 +64,10 @@ Configure Multi Site Origin
 +------------------+--------------------------------------------------------------------------------------------------------------------+
 | Primary/back     | Round robin selection does not occur. The first origin server is selected unless it fails.                         |
 |                  | If the first fails, the second and other following origin servers will be tried by order.                          |
+|                  | Order is defined by 2 factors - if the origin server's cachegroup is configured as the                             |
+|                  | parent cachegroup for the mid, then this server will be used as the primary. The same rules                        |
+|                  | apply for secondary parents, in order.  Within the cachegroups, the rank parameter will sort                       |
+|                  | order further. If no parents are defined at the mid, then only rank is considered.                                 |  
 +------------------+--------------------------------------------------------------------------------------------------------------------+
 | Strict           | MID caches serve requests strictly in turn. For example: origin server 1 serves the first request,                 |
 | round-robin      | origin server 2 serves the second request, and so on.                                                              |
@@ -72,7 +76,7 @@ Configure Multi Site Origin
 | round-robin      |                                                                                                                    |
 +------------------+--------------------------------------------------------------------------------------------------------------------+
 
-7) Optionally, if "Primary/backup" is selected for "Multi Site Origin Algorithm", a new parameter “rank” should be configured for each origin server profile. Origin servers with lower values of rank have higher ranking in the origin server list on MID caches, e.g. OS with rank of "2" precedes OS with the rank of "5". For any OS, if rank value is not defined in its profile, its rank value will default to “1”.
+7) Optionally, there are two configuration options that can set the order of the origins used if "Primary/backup" is selected for "Multi Site Origin Algorithm". By creating location-based cachegroups and assigning the origin servers accordingly and defining these cachegroups as parents for specific mids, location-based primary/secondary selection can be made.   If primary/secondary selection should be the same for all mids, then a new parameter “rank” should be configured for each origin server profile. Origin servers with lower values of rank have higher ranking in the origin server list on MID caches, e.g. OS with rank of "2" precedes OS with the rank of "5". For any OS, if rank value is not defined in its profile, its rank value will default to “1”.  In the event that both location based cachegroups are used alongside rank, sorting will be by cachegroup first and rank second.  In this way it is possible to have specific backup servers for use at specific locations.
 
 .. image:: mso-rank.png
 	:scale: 60%

@@ -2,11 +2,12 @@ package http_server
 
 import (
 	"fmt"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/hydrogen18/stoppableListener"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -15,7 +16,7 @@ import (
 // each time the previous running server will be stopped, and the server will be
 // restarted with the new port address and data request channel.
 type Server struct {
-	mgrReqChan                 chan<- DataRequest
+	getData                    GetDataFunc
 	stoppableListener          *stoppableListener.StoppableListener
 	stoppableListenerWaitGroup sync.WaitGroup
 }
@@ -31,23 +32,40 @@ func (s Server) endpoints() (map[string]http.HandlerFunc, error) {
 
 	// note: with the trailing slash, any non-trailing slash requests will get a 301 redirect
 	return map[string]http.HandlerFunc{
-		"/publish/CacheStats/":         s.dataRequestFunc(CacheStats),
-		"/publish/CrConfig":            s.dataRequestFunc(TRConfig),
-		"/publish/CrStates":            s.handleCrStatesFunc(),
-		"/publish/DsStats":             s.dataRequestFunc(DSStats),
-		"/publish/EventLog":            s.dataRequestFunc(EventLog),
-		"/publish/PeerStates":          s.dataRequestFunc(PeerStates),
-		"/publish/StatSummary":         s.dataRequestFunc(StatSummary),
-		"/publish/Stats":               s.dataRequestFunc(Stats),
-		"/publish/ConfigDoc":           s.dataRequestFunc(ConfigDoc),
-		"/api/cache-count":             s.dataRequestFunc(APICacheCount),
-		"/api/cache-available-count":   s.dataRequestFunc(APICacheAvailableCount),
-		"/api/cache-down-count":        s.dataRequestFunc(APICacheDownCount),
-		"/api/version":                 s.dataRequestFunc(APIVersion),
-		"/api/traffic-ops-uri":         s.dataRequestFunc(APITrafficOpsURI),
-		"/api/cache-statuses":          s.dataRequestFunc(APICacheStates),
-		"/api/bandwidth-kbps":          s.dataRequestFunc(APIBandwidthKbps),
-		"/api/bandwidth-capacity-kbps": s.dataRequestFunc(APIBandwidthCapacityKbps),
+		"/publish/CacheStats/":          s.dataRequestFunc(CacheStats),
+		"/publish/CacheStats":           s.dataRequestFunc(CacheStats),
+		"/publish/CrConfig/":            s.dataRequestFunc(TRConfig),
+		"/publish/CrConfig":             s.dataRequestFunc(TRConfig),
+		"/publish/CrStates/":            s.handleCrStatesFunc(),
+		"/publish/CrStates":             s.handleCrStatesFunc(),
+		"/publish/DsStats/":             s.dataRequestFunc(DSStats),
+		"/publish/DsStats":              s.dataRequestFunc(DSStats),
+		"/publish/EventLog/":            s.dataRequestFunc(EventLog),
+		"/publish/EventLog":             s.dataRequestFunc(EventLog),
+		"/publish/PeerStates/":          s.dataRequestFunc(PeerStates),
+		"/publish/PeerStates":           s.dataRequestFunc(PeerStates),
+		"/publish/StatSummary/":         s.dataRequestFunc(StatSummary),
+		"/publish/StatSummary":          s.dataRequestFunc(StatSummary),
+		"/publish/Stats/":               s.dataRequestFunc(Stats),
+		"/publish/Stats":                s.dataRequestFunc(Stats),
+		"/publish/ConfigDoc/":           s.dataRequestFunc(ConfigDoc),
+		"/publish/ConfigDoc":            s.dataRequestFunc(ConfigDoc),
+		"/api/cache-count/":             s.dataRequestFunc(APICacheCount),
+		"/api/cache-count":              s.dataRequestFunc(APICacheCount),
+		"/api/cache-available-count/":   s.dataRequestFunc(APICacheAvailableCount),
+		"/api/cache-available-count":    s.dataRequestFunc(APICacheAvailableCount),
+		"/api/cache-down-count/":        s.dataRequestFunc(APICacheDownCount),
+		"/api/cache-down-count":         s.dataRequestFunc(APICacheDownCount),
+		"/api/version/":                 s.dataRequestFunc(APIVersion),
+		"/api/version":                  s.dataRequestFunc(APIVersion),
+		"/api/traffic-ops-uri/":         s.dataRequestFunc(APITrafficOpsURI),
+		"/api/traffic-ops-uri":          s.dataRequestFunc(APITrafficOpsURI),
+		"/api/cache-statuses/":          s.dataRequestFunc(APICacheStates),
+		"/api/cache-statuses":           s.dataRequestFunc(APICacheStates),
+		"/api/bandwidth-kbps/":          s.dataRequestFunc(APIBandwidthKbps),
+		"/api/bandwidth-kbps":           s.dataRequestFunc(APIBandwidthKbps),
+		"/api/bandwidth-capacity-kbps/": s.dataRequestFunc(APIBandwidthCapacityKbps),
+		"/api/bandwidth-capacity-kbps":  s.dataRequestFunc(APIBandwidthCapacityKbps),
 		"/":             handleRoot,
 		"/sorttable.js": handleSortableJs,
 	}, nil
@@ -67,7 +85,7 @@ func (s Server) registerEndpoints(sm *http.ServeMux) error {
 // Run runs a new HTTP service at the given addr, making data requests to the given c.
 // Run may be called repeatedly, and each time, will shut down any existing service first.
 // Run is NOT threadsafe, and MUST NOT be called concurrently by multiple goroutines.
-func (s Server) Run(c chan<- DataRequest, addr string) error {
+func (s Server) Run(f GetDataFunc, addr string) error {
 	// TODO make an object, which itself is not threadsafe, but which encapsulates all data so multiple
 	//      objects can be created and Run.
 
@@ -87,7 +105,7 @@ func (s Server) Run(c chan<- DataRequest, addr string) error {
 		return err
 	}
 
-	s.mgrReqChan = c
+	s.getData = f
 
 	sm := http.NewServeMux()
 	err = s.registerEndpoints(sm)
@@ -115,7 +133,6 @@ func (s Server) Run(c chan<- DataRequest, addr string) error {
 
 type Type int
 
-// TODO rename these, all caps isn't recommended Go style
 const (
 	TRConfig Type = (1 << iota)
 	TRStateDerived
@@ -137,6 +154,49 @@ const (
 	APIBandwidthCapacityKbps
 )
 
+func (t Type) String() string {
+	switch t {
+	case TRConfig:
+		return "TRConfig"
+	case TRStateDerived:
+		return "TRStateDerived"
+	case TRStateSelf:
+		return "TRStateSelf"
+	case CacheStats:
+		return "CacheStats"
+	case DSStats:
+		return "DSStats"
+	case EventLog:
+		return "EventLog"
+	case PeerStates:
+		return "PeerStates"
+	case StatSummary:
+		return "StatSummary"
+	case Stats:
+		return "Stats"
+	case ConfigDoc:
+		return "ConfigDoc"
+	case APICacheCount:
+		return "APICacheCount"
+	case APICacheAvailableCount:
+		return "APICacheAvailableCount"
+	case APICacheDownCount:
+		return "APICacheDownCount"
+	case APIVersion:
+		return "APIVersion"
+	case APITrafficOpsURI:
+		return "APITrafficOpsURI"
+	case APICacheStates:
+		return "APICacheStates"
+	case APIBandwidthKbps:
+		return "APIBandwidthKbps"
+	case APIBandwidthCapacityKbps:
+		return "APIBandwidthCapacityKbps"
+	default:
+		return "Invalid"
+	}
+}
+
 type Format int
 
 const (
@@ -147,34 +207,49 @@ const (
 type DataRequest struct {
 	Type
 	Format
-	Response   chan<- []byte
 	Date       string
 	Parameters map[string][]string
 }
 
-func writeResponse(w http.ResponseWriter, f Format, response <-chan []byte) {
-	data := <-response
-	if len(data) > 0 {
-		w.Write(data)
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+type GetDataFunc func(DataRequest) ([]byte, int)
+
+// ParametersStr takes the URL query parameters, and returns a string as used by the Traffic Monitor 1.0 endpoints "pp" key.
+func ParametersStr(params url.Values) string {
+	fmt.Println("debug4 ParametersStr 0")
+	pp := ""
+	for param, vals := range params {
+		for _, val := range vals {
+			pp += param + "=[" + val + "], "
+		}
 	}
+	if len(pp) > 2 {
+		pp = pp[:len(pp)-2]
+	}
+	return pp
+}
+
+// DateStr returns the given time in the format expected by Traffic Monitor 1.0 API users
+func DateStr(t time.Time) string {
+	return t.UTC().Format("Mon Jan 02 15:04:05 UTC 2006")
 }
 
 func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f Format) {
 	//pp: "0=[my-ats-edge-cache-0], hc=[1]",
 	//dateLayout := "Thu Oct 09 20:28:36 UTC 2014"
 	dateLayout := "Mon Jan 02 15:04:05 MST 2006"
-	response := make(chan []byte, 1) // must be buffered, so if this is killed, the writer doesn't block forever
-	s.mgrReqChan <- DataRequest{
+	data, responseCode := s.getData(DataRequest{
 		Type:       t,
 		Format:     f,
-		Response:   response,
 		Date:       time.Now().UTC().Format(dateLayout),
 		Parameters: req.URL.Query(),
+	})
+	if len(data) > 0 {
+		w.WriteHeader(responseCode)
+		w.Write(data)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal Server Error"))
 	}
-	writeResponse(w, f, response)
 }
 
 func (s Server) handleRootFunc() (http.HandlerFunc, error) {

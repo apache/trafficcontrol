@@ -1,4 +1,4 @@
-var FormASNController = function(asn, $scope, formUtils, stringUtils, locationUtils, cacheGroupService) {
+var FormASNController = function(asn, $scope, formUtils, locationUtils, cacheGroupService) {
 
     var getCacheGroups = function() {
         cacheGroupService.getCacheGroups()
@@ -8,12 +8,6 @@ var FormASNController = function(asn, $scope, formUtils, stringUtils, locationUt
     };
 
     $scope.asn = asn;
-
-    $scope.props = [
-        { name: 'asn', type: 'number', required: true, maxLength: 11 },
-    ];
-
-    $scope.labelize = stringUtils.labelize;
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -28,5 +22,5 @@ var FormASNController = function(asn, $scope, formUtils, stringUtils, locationUt
 
 };
 
-FormASNController.$inject = ['asn', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService'];
+FormASNController.$inject = ['asn', '$scope', 'formUtils', 'locationUtils', 'cacheGroupService'];
 module.exports = FormASNController;

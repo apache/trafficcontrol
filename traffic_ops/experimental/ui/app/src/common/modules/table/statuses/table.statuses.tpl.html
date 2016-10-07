@@ -12,11 +12,13 @@
             <thead>
             <tr class="headings">
                 <th>name</th>
+                <th>description</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editStatus(status.id)" ng-repeat="status in statuses">
                 <td>{{status.name}}</td>
+                <td>{{status.description}}</td>
             </tr>
             </tbody>
         </table>

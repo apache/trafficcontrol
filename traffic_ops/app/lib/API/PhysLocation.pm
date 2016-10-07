@@ -37,22 +37,53 @@ sub index {
 
 		push(
 			@data, {
-				"id"        => $row->id,
-				"name"      => $row->name,
-				"shortName" => $row->short_name,
-				"address"   => $row->address,
-				"city"      => $row->city,
-				"state"     => $row->state,
-				"zip"       => $row->zip,
-				"poc"       => $row->poc,
-				"phone"     => $row->phone,
-				"email"     => $row->email,
-				"comments"  => $row->comments,
-				"region"    => $row->region->name,
+                "address"   => $row->address,
+                "city"      => $row->city,
+                "comments"  => $row->comments,
+                "email"     => $row->email,
+                "id"        => $row->id,
+                "lastUpdated" => $row->last_updated,
+                "name"      => $row->name,
+                "phone"     => $row->phone,
+                "poc"       => $row->poc,
+                "region"    => $row->region->name,
+                "regionId"  => $row->region->id,
+                "shortName" => $row->short_name,
+                "state"     => $row->state,
+                "zip"       => $row->zip
 			}
 		);
 	}
 	$self->success( \@data );
+}
+
+sub show {
+    my $self = shift;
+    my $id   = $self->param('id');
+
+    my $rs_data = $self->db->resultset("PhysLocation")->search( { 'me.id' => $id }, { prefetch => ['region'] } );
+    my @data = ();
+    while ( my $row = $rs_data->next ) {
+        push(
+            @data, {
+                "address"   => $row->address,
+                "city"      => $row->city,
+                "comments"  => $row->comments,
+                "email"     => $row->email,
+                "id"        => $row->id,
+                "lastUpdated" => $row->last_updated,
+                "name"      => $row->name,
+                "phone"     => $row->phone,
+                "poc"       => $row->poc,
+                "region"    => $row->region->name,
+                "regionId"  => $row->region->id,
+                "shortName" => $row->short_name,
+                "state"     => $row->state,
+                "zip"       => $row->zip
+            }
+        );
+    }
+    $self->success( \@data );
 }
 
 sub index_trimmed {

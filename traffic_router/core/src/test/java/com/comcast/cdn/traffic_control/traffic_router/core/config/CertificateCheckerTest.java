@@ -1,36 +1,53 @@
+/*
+ * Copyright 2016 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
-import com.comcast.cdn.traffic_control.traffic_router.keystore.KeyStoreHelper;
+import com.comcast.cdn.traffic_control.traffic_router.shared.Certificate;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(KeyStoreHelper.class)
 public class CertificateCheckerTest {
 
-	private KeyStoreHelper keyStoreHelper;
-	private JSONObject deliveryServicesMap;
+	private JSONObject deliveryServicesJson;
+	private List<CertificateData> certificateDataList;
 
 	@Before
 	public void before() throws Exception {
-		keyStoreHelper = mock(KeyStoreHelper.class);
-		when(keyStoreHelper.hasCertificate("https-delivery-service.thecdn.example.com")).thenReturn(true);
+		Certificate certificate = new Certificate();
+		certificate.setCrt("the-crt");
+		certificate.setKey("the-key");
 
-		mockStatic(KeyStoreHelper.class);
-		PowerMockito.when(KeyStoreHelper.getInstance()).thenReturn(keyStoreHelper);
+		CertificateData certificateData = new CertificateData();
+		certificateData.setHostname("https-delivery-service.thecdn.example.com");
+		certificateData.setDeliveryservice("https-delivery-service");
+		certificateData.setCertificate(certificate);
+
+		certificateDataList = Arrays.asList(
+			certificateData
+		);
 
 		JSONObject matchItem1 = new JSONObject().put("regex", ".*\\.https-delivery-service\\..*");
 		JSONArray matchListArray1 = new JSONArray().put(0, matchItem1);
@@ -81,7 +98,7 @@ public class CertificateCheckerTest {
 			.put("matchsets", new JSONArray().put(0, matchSetItem3))
 			.put("domains", domainsArray3);
 
-		deliveryServicesMap = new JSONObject()
+		deliveryServicesJson = new JSONObject()
 			.put("https-delivery-service", httpsDeliveryServiceJson)
 			.put("http-delivery-service", httpDeliveryServiceJson)
 			.put("dnssec-delivery-service", dnssecDeliveryServiceJson);
@@ -89,8 +106,9 @@ public class CertificateCheckerTest {
 
 	@Test
 	public void itReturnsTrueWhenAllHttpsDeliveryServicesHaveCertificates() throws Exception {
-		assertThat(new CertificateChecker().certificatesAreValid(deliveryServicesMap), equalTo(true));
-		verify(keyStoreHelper).hasCertificate("https-delivery-service.thecdn.example.com");
+		CertificateChecker certificateChecker = new CertificateChecker();
+
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(true));
 	}
 
 	@Test
@@ -111,9 +129,8 @@ public class CertificateCheckerTest {
 			.put("matchsets", matchsetsArray)
 			.put("domains", domainsArray);
 
-		deliveryServicesMap.put("bad-https-delivery-service", httpsDeliveryServiceJson);
+		deliveryServicesJson.put("bad-https-delivery-service", httpsDeliveryServiceJson);
 
-		assertThat(new CertificateChecker().certificatesAreValid(deliveryServicesMap), equalTo(false));
-		verify(keyStoreHelper).hasCertificate("bad-https-delivery-service.thecdn.example.com");
+		assertThat(new CertificateChecker().certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
 	}
 }

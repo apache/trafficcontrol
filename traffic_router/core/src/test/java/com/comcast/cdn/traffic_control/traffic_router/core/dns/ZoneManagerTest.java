@@ -18,9 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.collection.IsCollectionContaining.hasItem;
-import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

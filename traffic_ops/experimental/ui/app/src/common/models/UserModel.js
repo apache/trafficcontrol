@@ -1,19 +1,8 @@
-var UserModel = function($rootScope, $window, jwtHelper) {
+var UserModel = function($rootScope) {
 
     this.loaded = false;
 
-    this.userId = angular.isDefined($window.sessionStorage.token) ? jwtHelper.decodeToken($window.sessionStorage.token)['userid'] : 0;
-
     this.user = {};
-
-    var removeToken = function() {
-        $window.sessionStorage.removeItem('token');
-    };
-
-    this.setToken = function(token) {
-        $window.sessionStorage.token = token;
-        this.userId = jwtHelper.decodeToken(token)['userid'];
-    };
 
     this.setUser = function(userData) {
         this.loaded = true;
@@ -22,7 +11,6 @@ var UserModel = function($rootScope, $window, jwtHelper) {
     };
 
     this.resetUser = function() {
-        removeToken();
         this.loaded = false;
         this.userId = 0;
         this.user = {};
@@ -31,5 +19,5 @@ var UserModel = function($rootScope, $window, jwtHelper) {
 
 };
 
-UserModel.$inject = ['$rootScope', '$window', 'jwtHelper'];
+UserModel.$inject = ['$rootScope'];
 module.exports = UserModel;

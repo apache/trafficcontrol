@@ -39,7 +39,7 @@ function initBuildArea() {
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; exit 1; }
 	rsync -av ./ "$ts_dest"/ || \
-		 { echo "Could not copy to $to_dest: $?"; exit 1; }
+		 { echo "Could not copy to $ts_dest: $?"; exit 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
 

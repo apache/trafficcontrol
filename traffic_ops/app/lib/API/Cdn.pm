@@ -37,9 +37,29 @@ sub index {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"   => $row->id,
-				"name" => $row->name,
-				"dnssecEnabled" => $row->dnssec_enabled
+				"id"            => $row->id,
+				"dnssecEnabled" => \$row->dnssec_enabled,
+				"lastUpdated" 	=> $row->last_updated,
+				"name"          => $row->name
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Cdn")->search( { id => $id } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"            => $row->id,
+				"dnssecEnabled" => \$row->dnssec_enabled,
+				"lastUpdated" 	=> $row->last_updated,
+				"name"          => $row->name
 			}
 		);
 	}
@@ -55,16 +75,15 @@ sub name {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"   => $row->id,
-				"name"        => $row->name,
-				"dnssecEnabled" => $row->dnssec_enabled,
-				"lastUpdated" => $row->last_updated
+				"id"            => $row->id,
+				"dnssecEnabled" => \$row->dnssec_enabled,
+				"lastUpdated"   => $row->last_updated,
+				"name"          => $row->name
 			}
 		);
 	}
 	$self->success( \@data );
 }
-
 
 sub create {
 	my $self   = shift;
@@ -78,21 +97,19 @@ sub create {
 		return $self->alert("parameters must be in JSON format.");
 	}
 
-	if ( !defined($params->{name}) ) {
+	if ( !defined( $params->{name} ) ) {
 		return $self->alert("CDN 'name' is required.");
 	}
 
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
-	if ( $existing ) {
+	if ($existing) {
 		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
-		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
+		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
-	my $value = {
-		name => $params->{name},
-	};
-    	if ( defined($params->{dnssecEnabled}) ) {
-	    $value->{dnssec_enabled} = $params->{dnssecEnabled}
+	my $value = { name => $params->{name}, };
+	if ( defined( $params->{dnssecEnabled} ) ) {
+		$value->{dnssec_enabled} = $params->{dnssecEnabled};
 	}
 
 	my $insert = $self->db->resultset('Cdn')->create($value);
@@ -101,11 +118,11 @@ sub create {
 	my $rs = $self->db->resultset('Cdn')->find( { id => $insert->id } );
 	if ( defined($rs) ) {
 		my $response;
-		$response->{id} = $rs->id;
-		$response->{name} = $rs->name;
+		$response->{id}            = $rs->id;
+		$response->{name}          = $rs->name;
 		$response->{dnssecEnabled} = $rs->dnssec_enabled;
 		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
-		return $self->success($response, "cdn was created.");
+		return $self->success( $response, "cdn was created." );
 	}
 	return $self->alert("create cdn failed.");
 }
@@ -128,40 +145,37 @@ sub update {
 		return $self->alert("parameters must be in JSON format.");
 	}
 
-	if ( !defined($params->{name}) ) {
+	if ( !defined( $params->{name} ) ) {
 		return $self->alert("CDN 'name' is required.");
 	}
 
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
 	if ( $existing && $existing->id != $cdn->id ) {
 		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
-		return $self->alert("a cdn with name " . $params->{name} . " already exists." );
+		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
-
-	my $value = {
-		name => $params->{name},
-	};
-    	if ( defined($params->{dnssecEnabled}) ) {
-		$value->{dnssec_enabled} = $params->{dnssecEnabled}
+	my $value = { name => $params->{name}, };
+	if ( defined( $params->{dnssecEnabled} ) ) {
+		$value->{dnssec_enabled} = $params->{dnssecEnabled};
 	}
 	$cdn->update($value);
 
 	my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
 	if ( defined($rs) ) {
 		my $response;
-		$response->{id} = $rs->id;
-		$response->{name} = $rs->name;
+		$response->{id}            = $rs->id;
+		$response->{name}          = $rs->name;
 		$response->{dnssecEnabled} = $rs->dnssec_enabled;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
-		return $self->success($response, "cdn was updated.");
+		return $self->success( $response, "cdn was updated." );
 	}
 	return $self->alert("update cdn failed.");
 }
 
 sub delete {
-	my $self   = shift;
-	my $id     = $self->param('id');
+	my $self = shift;
+	my $id   = $self->param('id');
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
@@ -174,13 +188,13 @@ sub delete {
 
 	my $rs = $self->db->resultset('Server')->search( { cdn_id => $id } );
 	if ( $rs->count() > 0 ) {
-		$self->app->log->error( "Failed to delete cdn id = $id has servers" );
+		$self->app->log->error("Failed to delete cdn id = $id has servers");
 		return $self->alert("Failed to delete cdn id = $id has servers");
 	}
 
 	$rs = $self->db->resultset('Deliveryservice')->search( { cdn_id => $id } );
 	if ( $rs->count() > 0 ) {
-		$self->app->log->error( "Failed to delete cdn id = $id has delivery services" );
+		$self->app->log->error("Failed to delete cdn id = $id has delivery services");
 		return $self->alert("Failed to delete cdn id = $id has delivery services");
 	}
 
@@ -290,10 +304,11 @@ sub get_traffic_monitor_config {
 		my $delivery_service;
 
 		# MAT: Do we move this to the DB? Rascal needs to know if it should monitor a DS or not, and the status=REPORTED is what we do for caches.
-		$delivery_service->{'xmlId'}              = $row->xml_id;
-		$delivery_service->{'status'}             = "REPORTED";
-		$delivery_service->{'totalKbpsThreshold'} = (defined($row->global_max_mbps) && $row->global_max_mbps > 0) ? ($row->global_max_mbps * 1000) : 0;
-		$delivery_service->{'totalTpsThreshold'}  = int( $row->global_max_tps || 0 );
+		$delivery_service->{'xmlId'}  = $row->xml_id;
+		$delivery_service->{'status'} = "REPORTED";
+		$delivery_service->{'totalKbpsThreshold'} =
+			( defined( $row->global_max_mbps ) && $row->global_max_mbps > 0 ) ? ( $row->global_max_mbps * 1000 ) : 0;
+		$delivery_service->{'totalTpsThreshold'} = int( $row->global_max_tps || 0 );
 		push( @{ $data_obj->{'deliveryServices'} }, $delivery_service );
 	}
 	my $rs_caches = $self->db->resultset('Server')->search(
@@ -963,13 +978,10 @@ sub dnssec_keys {
 			return $self->success($keys);
 		}
 		else {
-			return $self->alert(
-				{   Error =>
-						" - Dnssec keys for $cdn_name do not exist!  Response was: "
-						. $get_keys->content});
+			return $self->alert( { Error => " - Dnssec keys for $cdn_name do not exist!  Response was: " . $get_keys->content } );
 		}
 	}
-	return $self->alert({ Error => " - You must be an ADMIN to perform this operation!" });
+	return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 }
 
 #checks if keys are expired and re-generates them if they are.
@@ -1000,7 +1012,7 @@ sub refresh_keys {
 	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
 
 	while ( my $row = $rs_data->next ) {
-		if ($row->dnssec_enabled == 1) {
+		if ( $row->dnssec_enabled == 1 ) {
 			my $cdn_name = $row->name;
 			my $keys;
 			my $response_container = $self->riak_get( "dnssec", $cdn_name );
@@ -1022,44 +1034,32 @@ sub refresh_keys {
 				'parameter.name' => 'tld.ttls.DNSKEY',
 				'profile.name'   => $profile_id
 			);
-			my $rs_pp = $self->db->resultset('ProfileParameter')->search(
-				\%condition,
-				{   prefetch =>
-						[ { 'parameter' => undef }, { 'profile' => undef } ] }	)->single;
+			my $rs_pp =
+				$self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )
+				->single;
 			$rs_pp ? $dnskey_ttl = $rs_pp->parameter->value : $dnskey_ttl = '60';
 
 			%condition = (
 				'parameter.name' => 'DNSKEY.generation.multiplier',
 				'profile.name'   => $profile_id
 			);
-			$rs_pp = $self->db->resultset('ProfileParameter')->search(
-				\%condition,
-				{   prefetch =>
-						[ { 'parameter' => undef }, { 'profile' => undef } ]
-				}
-			)->single;
+			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )
+				->single;
 			$rs_pp
-				? $dnskey_gen_multiplier
-				= $rs_pp->parameter->value
+				? $dnskey_gen_multiplier = $rs_pp->parameter->value
 				: $dnskey_gen_multiplier = '10';
 
 			%condition = (
 				'parameter.name' => 'DNSKEY.effective.multiplier',
 				'profile.name'   => $profile_id
 			);
-			$rs_pp = $self->db->resultset('ProfileParameter')->search(
-				\%condition,
-				{   prefetch =>
-						[ { 'parameter' => undef }, { 'profile' => undef } ]
-				}
-			)->single;
+			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } )
+				->single;
 			$rs_pp
-				? $dnskey_effective_multiplier
-				= $rs_pp->parameter->value
+				? $dnskey_effective_multiplier = $rs_pp->parameter->value
 				: $dnskey_effective_multiplier = '10';
 
-			my $key_expiration
-				= time() + ( $dnskey_ttl * $dnskey_gen_multiplier );
+			my $key_expiration = time() + ( $dnskey_ttl * $dnskey_gen_multiplier );
 
 			#get default expiration days and ttl for DSs from CDN record
 			my $default_k_exp_days = "365";
@@ -1067,8 +1067,7 @@ sub refresh_keys {
 			my $cdn_ksk            = $keys->{$cdn_name}->{ksk};
 			foreach my $cdn_krecord (@$cdn_ksk) {
 				my $cdn_kstatus = $cdn_krecord->{status};
-				if ( $cdn_kstatus eq 'new' )
-				{    #ignore anything other than the 'new' record
+				if ( $cdn_kstatus eq 'new' ) {    #ignore anything other than the 'new' record
 					my $cdn_k_exp   = $cdn_krecord->{expirationDate};
 					my $cdn_k_incep = $cdn_krecord->{inceptionDate};
 					$default_k_exp_days = ( $cdn_k_exp - $cdn_k_incep ) / 86400;
@@ -1077,8 +1076,7 @@ sub refresh_keys {
 			my $cdn_zsk = $keys->{$cdn_name}->{zsk};
 			foreach my $cdn_zrecord (@$cdn_zsk) {
 				my $cdn_zstatus = $cdn_zrecord->{status};
-				if ( $cdn_zstatus eq 'new' )
-				{    #ignore anything other than the 'new' record
+				if ( $cdn_zstatus eq 'new' ) {    #ignore anything other than the 'new' record
 					my $cdn_z_exp   = $cdn_zrecord->{expirationDate};
 					my $cdn_z_incep = $cdn_zrecord->{inceptionDate};
 					$default_z_exp_days = ( $cdn_z_exp - $cdn_z_incep ) / 86400;
@@ -1087,13 +1085,9 @@ sub refresh_keys {
 					if ( $cdn_z_exp < $key_expiration ) {
 
 						#if expired create new keys
-						$self->app->log->info(
-							"The ZSK keys for $cdn_name are expired!");
-						my $effective_date = $cdn_z_exp
-							- ( $dnskey_ttl * $dnskey_effective_multiplier );
-						my $new_dnssec_keys
-							= $self->regen_expired_keys( "zsk", $cdn_name, $keys,
-							$effective_date );
+						$self->app->log->info("The ZSK keys for $cdn_name are expired!");
+						my $effective_date = $cdn_z_exp - ( $dnskey_ttl * $dnskey_effective_multiplier );
+						my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $cdn_name, $keys, $effective_date );
 						$keys->{$cdn_name} = $new_dnssec_keys;
 					}
 				}
@@ -1101,14 +1095,14 @@ sub refresh_keys {
 
 			#get DeliveryServices for CDN
 			my %search = ( profile => $profile_id );
-			my @ds_rs
-				= $self->db->resultset('Deliveryservice')->search( \%search );
+			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
 					&& $ds->type->name !~ m/^DNS/ )
 				{
 					next;
 				}
+
 				#check if keys exist for ds
 				my $xml_id  = $ds->xml_id;
 				my $ds_keys = $keys->{$xml_id};
@@ -1119,40 +1113,25 @@ sub refresh_keys {
 					my $ds_id = $ds->id;
 
 					#create the ds domain name for dnssec keys
-					my $domain_name
-						= UI::DeliveryService::get_cdn_domain( $self, $ds_id );
-					my $deliveryservice_regexes
-						= UI::DeliveryService::get_regexp_set( $self, $ds_id );
-					my $rs_ds = $self->db->resultset('Deliveryservice')->search(
-						{ 'me.xml_id' => $xml_id },
-						{   prefetch =>
-								[ { 'type' => undef }, { 'profile' => undef } ]
-						}
-					);
+					my $domain_name = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+					my $deliveryservice_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
+					my $rs_ds = $self->db->resultset('Deliveryservice')
+						->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 					my $data = $rs_ds->single;
-					my @example_urls
-						= UI::DeliveryService::get_example_urls( $self, $ds_id,
-						$deliveryservice_regexes, $data, $domain_name,
-						$data->protocol );
+					my @example_urls =
+						UI::DeliveryService::get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
 
 					#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 					my $ds_name = $example_urls[0] . ".";
 					my $length = length($ds_name) - CORE::index( $ds_name, "." );
-					$ds_name
-						= substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+					$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
 
-					my $inception = time();
-					my $z_expiration
-						= $inception + ( 86400 * $default_z_exp_days );
-					my $k_expiration
-						= $inception + ( 86400 * $default_k_exp_days );
+					my $inception    = time();
+					my $z_expiration = $inception + ( 86400 * $default_z_exp_days );
+					my $k_expiration = $inception + ( 86400 * $default_k_exp_days );
 
-					my $zsk
-						= $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl,
-						$inception, $z_expiration, "new", $inception );
-					my $ksk
-						= $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl,
-						$inception, $k_expiration, "new", $inception );
+					my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl, $inception, $z_expiration, "new", $inception );
+					my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception, $k_expiration, "new", $inception );
 
 					#add to keys hash
 					$keys->{$xml_id} = { zsk => [$zsk], ksk => [$ksk] };
@@ -1166,21 +1145,14 @@ sub refresh_keys {
 					my $ksk = $ds_keys->{ksk};
 					foreach my $krecord (@$ksk) {
 						my $kstatus = $krecord->{status};
-						if ( $kstatus eq 'new' )
-						{    #ignore anything other than the 'new' record
-							    #check if expired
+						if ( $kstatus eq 'new' ) {    #ignore anything other than the 'new' record
+							                          #check if expired
 							if ( $krecord->{expirationDate} < $key_expiration ) {
 
 								#if expired create new keys
-								$self->app->log->info(
-									"The KSK keys for $xml_id are expired!");
-								my $effective_date
-									= $krecord->{expirationDate}
-									- (
-									$dnskey_ttl * $dnskey_effective_multiplier );
-								my $new_dnssec_keys
-									= $self->regen_expired_keys( "ksk", $xml_id,
-									$keys, $effective_date );
+								$self->app->log->info("The KSK keys for $xml_id are expired!");
+								my $effective_date = $krecord->{expirationDate} - ( $dnskey_ttl * $dnskey_effective_multiplier );
+								my $new_dnssec_keys = $self->regen_expired_keys( "ksk", $xml_id, $keys, $effective_date );
 								$keys->{$xml_id} = $new_dnssec_keys;
 
 								#update is_updated param
@@ -1195,15 +1167,9 @@ sub refresh_keys {
 							if ( $zrecord->{expirationDate} < $key_expiration ) {
 
 								#if expired create new keys
-								$self->app->log->info(
-									"The ZSK keys for $xml_id are expired!");
-								my $effective_date
-									= $zrecord->{expirationDate}
-									- (
-									$dnskey_ttl * $dnskey_effective_multiplier );
-								my $new_dnssec_keys
-									= $self->regen_expired_keys( "zsk", $xml_id,
-									$keys, $effective_date );
+								$self->app->log->info("The ZSK keys for $xml_id are expired!");
+								my $effective_date = $zrecord->{expirationDate} - ( $dnskey_ttl * $dnskey_effective_multiplier );
+								my $new_dnssec_keys = $self->regen_expired_keys( "zsk", $xml_id, $keys, $effective_date );
 								$keys->{$xml_id} = $new_dnssec_keys;
 
 								#update is_updated param
@@ -1215,14 +1181,14 @@ sub refresh_keys {
 			}
 
 			if ( $is_updated == 1 ) {
+
 				# #convert hash to json and store in Riak
 				my $json_data = encode_json($keys);
-				$response_container
-					= $self->riak_put( "dnssec", $cdn_name, $json_data );
+				$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
 			}
 
 			my $response = $response_container->{"response"};
-			if (!$response->is_success()){
+			if ( !$response->is_success() ) {
 				$error_message = "DNSSEC keys could not be stored for $cdn_name!  Response was: " . $response->content;
 				$self->app->log->warn($error_message);
 				next;
@@ -1341,37 +1307,38 @@ sub delete_dnssec_keys {
 }
 
 sub ssl_keys {
-	my $self       = shift;
+	my $self = shift;
 	if ( !&is_admin($self) ) {
-		return $self->alert({ Error => " - You must be an ADMIN to perform this operation!" });
+		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 
 	my $cdn_name = $self->param('name');
 	my $keys;
+
 	#get "latest" ssl records for all DSs in the CDN
 	my $response_container = $self->riak_search( "sslkeys", "q=cdn:$cdn_name&fq=_yz_rk:*latest&start=0&rows=1000" );
 	my $response = $response_container->{'response'};
 	if ( $response->is_success() ) {
-		my $content = decode_json($response->content)->{response}->{docs};
-		unless (scalar(@$content) > 0) {
-			return $self->render(json => {"message" => "No SSL certificates found for $cdn_name"}, status => 404);
+		my $content = decode_json( $response->content )->{response}->{docs};
+		unless ( scalar(@$content) > 0 ) {
+			return $self->render( json => { "message" => "No SSL certificates found for $cdn_name" }, status => 404 );
 		}
 		foreach my $record (@$content) {
-			push(@$keys, {
-				deliveryservice => $record->{deliveryservice},
-				certificate => {
-					crt => $record->{'certificate.crt'},
-					key => $record->{'certificate.key'},
-				},
-				hostname => $record->{hostname}
-			});
+			push(
+				@$keys, {
+					deliveryservice => $record->{deliveryservice},
+					certificate     => {
+						crt => $record->{'certificate.crt'},
+						key => $record->{'certificate.key'},
+					},
+					hostname => $record->{hostname}
+				}
+			);
 		}
 		return $self->success($keys);
 	}
 
-	return $self->alert(
-		{ Error => " - Could not retrieve SSL records for $cdn_name!  Response was: " . $response->content }
-	);
+	return $self->alert( { Error => " - Could not retrieve SSL records for $cdn_name!  Response was: " . $response->content } );
 }
 
 sub tool_logout {

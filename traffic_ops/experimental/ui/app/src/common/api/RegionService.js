@@ -1,15 +1,15 @@
 var RegionService = function(Restangular, messageModel) {
 
     this.getRegions = function() {
-        return Restangular.all('region').getList();
+        return Restangular.all('regions').getList();
     };
 
     this.getRegion = function(id) {
-        return Restangular.one("region", id).get();
+        return Restangular.one("regions", id).get();
     };
 
     this.createRegion = function(region) {
-        return Restangular.service('region').post(region)
+        return Restangular.service('regions').post(region)
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Region created' } ], true);
@@ -33,7 +33,7 @@ var RegionService = function(Restangular, messageModel) {
     };
 
     this.deleteRegion = function(id) {
-        return Restangular.one("region", id).remove()
+        return Restangular.one("regions", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);

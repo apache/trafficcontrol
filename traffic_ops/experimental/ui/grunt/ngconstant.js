@@ -9,7 +9,7 @@ module.exports = {
         constants: {
             ENV: {
                 api: {
-                    "root": "/api/2.0/" // api base_url is defined in server.js
+                    "root": "/api/1.2/" // api base_url is defined in server.js
                 }
             }
         }
@@ -18,7 +18,7 @@ module.exports = {
         constants: {
             ENV: {
                 api: {
-                    "root": "/api/2.0/" // api base_url is defined in server.js
+                    "root": "/api/1.2/" // api base_url is defined in server.js
                 }
             }
         }

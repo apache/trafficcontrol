@@ -16,25 +16,27 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.Flags;
 import org.xbill.DNS.Message;
@@ -49,14 +51,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP.UDPPacketHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 
-@RunWith(JMock.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({AbstractProtocol.class, Message.class})
 public class UDPTest {
-
-    private final Mockery context = new JUnit4Mockery() {
-        {
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }
-    };
 
     private DatagramSocket datagramSocket;
     private ExecutorService executorService;
@@ -66,9 +63,9 @@ public class UDPTest {
 
     @Before
     public void setUp() throws Exception {
-        datagramSocket = context.mock(DatagramSocket.class);
-        executorService = context.mock(ExecutorService.class);
-        nameServer = context.mock(NameServer.class);
+        datagramSocket = mock(DatagramSocket.class);
+        executorService = mock(ExecutorService.class);
+        nameServer = mock(NameServer.class);
         udp = new UDP();
         udp.setDatagramSocket(datagramSocket);
         udp.setExecutorService(executorService);
@@ -101,13 +98,9 @@ public class UDPTest {
 
     @Test
     public void testSubmit() {
-        final Runnable r = context.mock(Runnable.class);
-        context.checking(new Expectations() {
-            {
-                one(executorService).submit(r);
-            }
-        });
+        final Runnable r = mock(Runnable.class);
         udp.submit(r);
+        verify(executorService).submit(r);
     }
 
     @Test
@@ -128,16 +121,19 @@ public class UDPTest {
 
         final DatagramPacket packet = new DatagramPacket(wireRequest, wireRequest.length, client, port);
 
-        context.checking(new Expectations() {
-            {
-                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
-                will(returnValue(response));
+        when(nameServer.query(any(Message.class), eq(client), any(DNSAccessRecord.Builder.class))).thenReturn(response);
 
-                one(datagramSocket).send(with(aDatagramPacketWithThePayload(wireResponse)));
-            }
-        });
+        final AtomicInteger count = new AtomicInteger(0);
+        doAnswer(invocation -> {
+            DatagramPacket datagramPacket = (DatagramPacket) invocation.getArguments()[0];
+            assertThat(datagramPacket.getData(), equalTo(wireResponse));
+            count.incrementAndGet();
+            return null;
+        }).when(datagramSocket).send(any(DatagramPacket.class));
+
         final UDPPacketHandler handler = udp.new UDPPacketHandler(packet);
         handler.run();
+        assertThat(count.get(), equalTo(1));
     }
 
     @Test
@@ -165,48 +161,31 @@ public class UDPTest {
 
         final Message response = new Message();
         response.setHeader(request.getHeader());
+
         for (int i = 0; i < 4; i++) {
             response.removeAllRecords(i);
         }
+
         response.addRecord(question, Section.QUESTION);
         response.getHeader().setRcode(Rcode.SERVFAIL);
+
         final byte[] wireResponse = response.toWire();
 
         final DatagramPacket packet = new DatagramPacket(wireRequest, wireRequest.length, client, port);
 
-        context.checking(new Expectations() {
-            {
-                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
-                will(throwException(new Exception()));
+        final AtomicInteger count = new AtomicInteger(0);
 
-                one(datagramSocket).send(with(aDatagramPacketWithThePayload(wireResponse)));
-            }
-        });
+        when(nameServer.query(any(Message.class), eq(client), any(DNSAccessRecord.Builder.class))).thenThrow(new RuntimeException("Boom! UDP Query"));
+
+        doAnswer(invocation -> {
+            DatagramPacket datagramPacket = (DatagramPacket) invocation.getArguments()[0];
+            assertThat(datagramPacket.getData(), equalTo(wireResponse));
+            count.incrementAndGet();
+            return null;
+        }).when(datagramSocket).send(any(DatagramPacket.class));
+
         final UDPPacketHandler handler = udp.new UDPPacketHandler(packet);
         handler.run();
-    }
-
-    private static Matcher<DatagramPacket> aDatagramPacketWithThePayload(final byte[] payload) {
-        return new DatagramPacketPayloadMatcher(payload);
-    }
-
-    private static class DatagramPacketPayloadMatcher extends TypeSafeMatcher<DatagramPacket> {
-
-        private final byte[] payload;
-
-        private DatagramPacketPayloadMatcher(final byte[] payload) {
-            this.payload = payload;
-        }
-
-        @Override
-        public void describeTo(final Description description) {
-            description.appendText("a DatagramPacket with the specified payload.");
-        }
-
-        @Override
-        public boolean matchesSafely(final DatagramPacket item) {
-            return Arrays.equals(payload, item.getData());
-        }
-
+        assertThat(count.get(), equalTo(1));
     }
 }

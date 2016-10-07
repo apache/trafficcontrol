@@ -1,10 +1,30 @@
+/*
+ * Copyright 2016 Comcast Cable Communications Management, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
+import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -19,6 +39,8 @@ public class CertificatesPoller implements ConfigurationListener {
 	private static final long defaultFixedRate = 3600 * 1000L;
 	private static final String intervalProperty = "certificates.polling.interval";
 	private long pollingInterval = defaultFixedRate;
+	private BlockingQueue<List<CertificateData>> certificatesQueue;
+	private List<CertificateData> lastFetchedData = new ArrayList<>();
 
 	@Autowired
 	private Environment environment;
@@ -49,7 +71,17 @@ public class CertificatesPoller implements ConfigurationListener {
 	public void start() {
 		final Runnable runnable = () -> {
 			try {
-				certificatesClient.refreshData();
+				List<CertificateData> certificateDataList = certificatesClient.refreshData();
+				if (certificateDataList == null) {
+					return;
+				}
+
+				if (!lastFetchedData.equals(certificateDataList)) {
+					certificatesQueue.put(certificateDataList);
+					lastFetchedData = certificateDataList;
+				} else {
+					certificatesQueue.put(lastFetchedData);
+				}
 			} catch (Throwable t) {
 				LOGGER.warn("Failed to refresh certificate data: " + t.getClass().getCanonicalName() + " " + t.getMessage(), t);
 			}
@@ -75,6 +107,7 @@ public class CertificatesPoller implements ConfigurationListener {
 	}
 
 	public void destroy() {
+		certificatesClient.setShutdown(true);
 		executor.shutdownNow();
 	}
 
@@ -106,5 +139,13 @@ public class CertificatesPoller implements ConfigurationListener {
 	@Override
 	public void configurationChanged() {
 		restart();
+	}
+
+	public BlockingQueue<List<CertificateData>> getCertificatesQueue() {
+		return certificatesQueue;
+	}
+
+	public void setCertificatesQueue(final BlockingQueue<List<CertificateData>> certificatesQueue) {
+		this.certificatesQueue = certificatesQueue;
 	}
 }

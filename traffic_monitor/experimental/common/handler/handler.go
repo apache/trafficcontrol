@@ -2,8 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
+
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 )
 
 const (
@@ -39,7 +40,7 @@ func (handler OpsConfigFileHandler) Listen() {
 		err := json.Unmarshal(result.([]byte), &toc)
 
 		if err != nil {
-			fmt.Printf("Error unmarshalling JSON: %s\n", err)
+			log.Errorf("unmarshalling JSON: %s\n", err)
 		} else {
 			handler.OpsConfigChannel <- toc
 		}

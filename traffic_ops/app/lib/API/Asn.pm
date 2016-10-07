@@ -34,8 +34,30 @@ sub index {
 			@data, {
 				"id"          => $row->id,
 				"asn"         => $row->asn,
+				"cachegroupId"  => $row->cachegroup->id,
 				"cachegroup"  => $row->cachegroup->name,
-				"lastUpdated" => $row->last_updated,
+				"lastUpdated" => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+# Show
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Asn")->search( { 'me.id' => $id }, { prefetch => [ 'cachegroup' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"asn"         => $row->asn,
+				"cachegroupId"  => $row->cachegroup->id,
+				"cachegroup"  => $row->cachegroup->name,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
