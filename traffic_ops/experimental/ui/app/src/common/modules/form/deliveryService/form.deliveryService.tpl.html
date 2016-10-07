@@ -392,7 +392,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Info URL</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="infoUrl" name="longDesc2" type="text" class="form-control" ng-model="deliveryService.infoUrl" ng-maxlength="255" autofocus>
+                    <input id="infoUrl" name="infoUrl" type="text" class="form-control" ng-model="deliveryService.infoUrl" ng-maxlength="255" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
