@@ -394,6 +394,9 @@ sub api_routes {
 		->to( 'Asn#index',     namespace => $namespace );
 	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Asn#show',     namespace => $namespace );
+	$r->put("/api/$version/asns/:id")->over( authenticated => 1 )
+		->to( 'Asn#update', namespace => $namespace );
+
 
 	# -- CACHEGROUPS
 	# -- CACHEGROUPS: CRUD

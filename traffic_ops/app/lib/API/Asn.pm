@@ -32,11 +32,11 @@ sub index {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"          => $row->id,
-				"asn"         => $row->asn,
-				"cachegroupId"  => $row->cachegroup->id,
-				"cachegroup"  => $row->cachegroup->name,
-				"lastUpdated" => $row->last_updated
+				"id"           => $row->id,
+				"asn"          => $row->asn,
+				"cachegroupId" => $row->cachegroup->id,
+				"cachegroup"   => $row->cachegroup->name,
+				"lastUpdated"  => $row->last_updated
 			}
 		);
 	}
@@ -48,20 +48,68 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Asn")->search( { 'me.id' => $id }, { prefetch => [ 'cachegroup' ] } );
+	my $rs_data = $self->db->resultset("Asn")->search( { 'me.id' => $id }, { prefetch => ['cachegroup'] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"          => $row->id,
-				"asn"         => $row->asn,
-				"cachegroupId"  => $row->cachegroup->id,
-				"cachegroup"  => $row->cachegroup->name,
-				"lastUpdated" => $row->last_updated
+				"id"           => $row->id,
+				"asn"          => $row->asn,
+				"cachegroupId" => $row->cachegroup->id,
+				"cachegroup"   => $row->cachegroup->name,
+				"lastUpdated"  => $row->last_updated
 			}
 		);
 	}
 	$self->success( \@data );
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $asn = $self->db->resultset('Asn')->find( { id => $id } );
+	if ( !defined($asn) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	if ( !defined( $params->{asn} ) ) {
+		return $self->alert("ASN is required.");
+	}
+
+	if ( !defined( $params->{cachegroupId} ) ) {
+		return $self->alert("Cachegroup is required.");
+	}
+
+	my $values = {
+		asn        => $params->{asn},
+		cachegroup => $params->{cachegroupId}
+	};
+
+	if ( $asn->update($values) ) {
+		my $rs = $self->db->resultset('Asn')->find( { id => $id } );
+		my $response;
+		$response->{id}           = $rs->id;
+		$response->{asn}          = $rs->asn;
+		$response->{cachegroupId} = $rs->cachegroup->id;
+		$response->{cachegroup}   = $rs->cachegroup->name;
+		$response->{lastUpdated}  = $rs->last_updated;
+		&log( $self, "Updated ASN name '" . $rs->asn . "' for id: " . $rs->id, "APICHANGE" );
+		return $self->success( $response, "ASN update was successful." );
+	}
+	else {
+		return $self->alert("ASN update failed.");
+	}
+
 }
 
 # Index
