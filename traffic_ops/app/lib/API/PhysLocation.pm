@@ -104,6 +104,89 @@ sub index_trimmed {
 	$self->success( \@data );
 }
 
+sub update {
+    my $self   = shift;
+    my $id     = $self->param('id');
+    my $params = $self->req->json;
+
+    if ( !&is_oper($self) ) {
+        return $self->forbidden();
+    }
+
+    my $phys_location = $self->db->resultset('PhysLocation')->find( { id => $id } );
+    if ( !defined($phys_location) ) {
+        return $self->not_found();
+    }
+
+    if ( !defined($params) ) {
+        return $self->alert("Parameters must be in JSON format.");
+    }
+
+    if ( !defined( $params->{name} ) ) {
+        return $self->alert("Name is required.");
+    }
+
+    if ( !defined( $params->{shortName} ) ) {
+        return $self->alert("Short name is required.");
+    }
+
+    if ( !defined( $params->{city} ) ) {
+        return $self->alert("City is required.");
+    }
+
+    if ( !defined( $params->{state} ) ) {
+        return $self->alert("State is required.");
+    }
+
+    if ( !defined( $params->{zip} ) ) {
+        return $self->alert("State is required.");
+    }
+
+    if ( !defined( $params->{regionId} ) ) {
+        return $self->alert("Region Id is required.");
+    }
+
+    my $values = {
+        address        => $params->{address},
+        city => $params->{city},
+        comments => $params->{cachegroupId},
+        email => $params->{email},
+        name => $params->{name},
+        phone => $params->{phone},
+        poc => $params->{poc},
+        region => $params->{regionId},
+        short_name => $params->{shortName},
+        state => $params->{state},
+        zip => $params->{zip}
+    };
+
+    my $rs = $phys_location->update($values);
+    if ( $rs ) {
+        my $response;
+        $response->{id}           = $rs->id;
+        $response->{address}          = $rs->address;
+        $response->{city}          = $rs->city;
+        $response->{comments}          = $rs->comments;
+        $response->{email}          = $rs->email;
+        $response->{lastUpdated}          = $rs->last_updated;
+        $response->{name}          = $rs->name;
+        $response->{phone}          = $rs->phone;
+        $response->{poc}          = $rs->poc;
+        $response->{region}          = $rs->region->name;
+        $response->{regionId}          = $rs->region->id;
+        $response->{shortName}          = $rs->short_name;
+        $response->{state}          = $rs->state;
+        $response->{zip}          = $rs->zip;
+        &log( $self, "Updated Physical location name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+        return $self->success( $response, "Physical location update was successful." );
+    }
+    else {
+        return $self->alert("Physical location update failed.");
+    }
+
+}
+
+
 sub create{
     my $self = shift;
     my $region_name = $self->param('region_name');
