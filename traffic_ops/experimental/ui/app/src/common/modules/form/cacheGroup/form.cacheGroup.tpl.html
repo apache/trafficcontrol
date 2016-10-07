@@ -22,7 +22,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.type), 'has-feedback': hasError(cacheGroupForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="cacheGroup.type" ng-options="type.id as type.name for type in types" required>
+                    <select id="type" name="type" class="form-control" ng-model="cacheGroup.typeId" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.type, 'required')">Required</small>

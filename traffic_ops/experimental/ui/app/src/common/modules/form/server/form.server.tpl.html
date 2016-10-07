@@ -22,7 +22,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.cdn), 'has-feedback': hasError(serverForm.cdn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cdn" name="cdn" class="form-control" ng-model="server.cdn_id" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                    <select id="cdn" name="cdn" class="form-control" ng-model="server.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.cdn, 'required')">Required</small>
@@ -31,7 +31,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.location), 'has-feedback': hasError(serverForm.location)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Location *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="location" name="location" class="form-control" ng-model="server.phys_location" ng-options="location.id as location.name for location in locations" required>
+                    <select id="location" name="location" class="form-control" ng-model="server.physLocationId" ng-options="location.id as location.name for location in locations" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.location, 'required')">Required</small>
@@ -40,7 +40,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.cachegroup), 'has-feedback': hasError(serverForm.cachegroup)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache Group *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server.cachegroup" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups" required>
+                    <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server.cachegroupId" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.cachegroup, 'required')">Required</small>
@@ -49,7 +49,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.type), 'has-feedback': hasError(serverForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="server.type" ng-options="type.id as type.name for type in types" required>
+                    <select id="type" name="type" class="form-control" ng-model="server.typeId" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>
@@ -58,7 +58,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.status), 'has-feedback': hasError(serverForm.status)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Status *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="status" name="status" class="form-control" ng-model="server.status" ng-options="status.id as status.name for status in statuses" required>
+                    <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.status, 'required')">Required</small>
@@ -67,12 +67,20 @@
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.profile), 'has-feedback': hasError(serverForm.profile)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="profile" name="profile" class="form-control" ng-model="server.profile" ng-options="profile.id as profile.name for profile in profiles" required>
+                    <select id="profile" name="profile" class="form-control" ng-model="server.profileId" ng-options="profile.id as profile.name for profile in profiles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.profile, 'required')">Required</small>
                 </div>
             </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.updPending), 'has-feedback': hasError(serverForm.updPending)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Update Pending *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="updPending" name="updPending" class="form-control" ng-model="server.updPending" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.updPending, 'required')">Required</small>
+                </div>
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(server)">Delete</button>
                 <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
