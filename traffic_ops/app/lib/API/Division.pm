@@ -15,8 +15,8 @@ sub index {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"   => $row->id,
-				"name" => $row->name,
+				"id"          => $row->id,
+				"name"        => $row->name,
 				"lastUpdated" => $row->last_updated
 			}
 		);
@@ -33,13 +33,52 @@ sub show {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"   => $row->id,
-				"name" => $row->name,
+				"id"          => $row->id,
+				"name"        => $row->name,
 				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
 	$self->success( \@data );
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $division = $self->db->resultset('Division')->find( { id => $id } );
+	if ( !defined($division) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format.");
+	}
+
+	if ( !defined( $params->{name} ) ) {
+		return $self->alert("Division name is required.");
+	}
+
+	my $values = { name => $params->{name} };
+
+	my $rs = $division->update($values);
+	if ($rs) {
+		my $response;
+		$response->{id}          = $rs->id;
+		$response->{name}        = $rs->name;
+		$response->{lastUpdated} = $rs->last_updated;
+		&log( $self, "Updated Division name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		return $self->success( $response, "Division update was successful." );
+	}
+	else {
+		return $self->alert("Division update failed.");
+	}
+
 }
 
 sub create {

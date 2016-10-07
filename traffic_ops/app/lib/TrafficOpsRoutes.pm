@@ -594,6 +594,9 @@ sub api_routes {
 		->to( 'Division#index', namespace => $namespace );
 	$r->get("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Division#show', namespace => $namespace );
+	$r->put("/api/$version/divisions/:id")->over( authenticated => 1 )
+		->to( 'Division#update', namespace => $namespace );
+
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
 
