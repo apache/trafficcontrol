@@ -216,6 +216,10 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastK
 		cacheTypes := map[enum.CacheType]LastKbpsData{}
 		total := LastKbpsData{}
 		for cacheName, cacheStats := range lastKbpsStat.Caches {
+			if !stat.CommonStats.CachesReporting[cacheName] {
+				continue
+			}
+
 			cacheGroup, ok := serverCachegroups[cacheName]
 			if !ok {
 				log.Errorf("addkbps cache %v not in cachegroups\n", cacheName)
