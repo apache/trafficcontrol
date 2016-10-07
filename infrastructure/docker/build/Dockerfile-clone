@@ -8,14 +8,16 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-ENV GITREPO=https://github.com/Comcast/traffic_control
-ENV BRANCH=master
+ENV GITREPO https://github.com/Comcast/traffic_control
+ENV BRANCH master
 
 WORKDIR /repo
-RUN echo $'pwd; git clone $GITREPO -b $BRANCH traffic_control\n\
-touch clone-finished\n\
-' >/run.sh
+RUN echo $'\n\
+echo GITREPO=${GITREPO:=https://github.com/Comcast/traffic_control}\n\
+echo BRANCH=${BRANCH:=master}\n\
+git clone $GITREPO -b $BRANCH traffic_control && touch clone-finished\n\
+' >run.sh
 
-CMD sh -x /run.sh
+CMD sh -x /repo/run.sh
 
 # vi:syntax=Dockerfile
