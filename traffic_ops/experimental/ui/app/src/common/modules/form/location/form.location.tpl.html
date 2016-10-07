@@ -21,7 +21,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(locationForm.region), 'has-feedback': hasError(locationForm.region)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Region *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="region" name="region" class="form-control" ng-model="location._links.region.id" ng-options="region.id as region.name for region in regions" required>
+                    <select id="region" name="region" class="form-control" ng-model="location.regionId" ng-options="region.id as region.name for region in regions" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(locationForm.region, 'required')">Required</small>

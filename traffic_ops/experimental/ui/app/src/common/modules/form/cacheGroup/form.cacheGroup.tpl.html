@@ -22,7 +22,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.type), 'has-feedback': hasError(cacheGroupForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="cacheGroup._links.type.id" ng-options="type.id as type.name for type in types" required>
+                    <select id="type" name="type" class="form-control" ng-model="cacheGroup.typeId" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.type, 'required')">Required</small>
@@ -31,7 +31,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.parentCacheGroup), 'has-feedback': hasError(cacheGroupForm.parentCacheGroup)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Parent Cache Group *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="parentCacheGroup" name="parentCacheGroup" class="form-control" ng-model="cacheGroup._links.parent_cachegroup.id" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups" required>
+                    <select id="parentCacheGroup" name="parentCacheGroup" class="form-control" ng-model="cacheGroup.parentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.parentCacheGroup, 'required')">Required</small>
@@ -40,7 +40,7 @@
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Secondary Parent Cache Group</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="secondaryParentCacheGroup" name="secondaryParentCacheGroup" class="form-control" ng-model="cacheGroup._links.secondary_parent_cachegroup.id" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
+                    <select id="secondaryParentCacheGroup" name="secondaryParentCacheGroup" class="form-control" ng-model="cacheGroup.secondaryParentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
                         <option value="">Select...</option>
                     </select>
                 </div>
