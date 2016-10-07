@@ -159,18 +159,17 @@ sub update {
 	if ( defined( $params->{dnssecEnabled} ) ) {
 		$value->{dnssec_enabled} = $params->{dnssecEnabled};
 	}
-	$cdn->update($value);
 
-	my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
-	if ( defined($rs) ) {
+	if ( $cdn->update($value) ) {
+		my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
 		$response->{dnssecEnabled} = $rs->dnssec_enabled;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
-		return $self->success( $response, "cdn was updated." );
+		return $self->success( $response, "CDN update was successful." );
 	}
-	return $self->alert("update cdn failed.");
+	return $self->alert("CDN update failed.");
 }
 
 sub delete {
