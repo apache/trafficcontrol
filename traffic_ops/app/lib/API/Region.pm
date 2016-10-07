@@ -34,9 +34,9 @@ sub index {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"       => $row->id,
-				"name"     => $row->name,
-				"division" => $row->division->id,
+				"id"           => $row->id,
+				"name"         => $row->name,
+				"division"     => $row->division->id,
 				"divisionName" => $row->division->name
 			}
 		);
@@ -53,14 +53,61 @@ sub show {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"id"       => $row->id,
-				"name"     => $row->name,
-				"division" => $row->division->id,
+				"id"           => $row->id,
+				"name"         => $row->name,
+				"division"     => $row->division->id,
 				"divisionName" => $row->division->name
 			}
 		);
 	}
 	$self->success( \@data );
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $region = $self->db->resultset('Region')->find( { id => $id } );
+	if ( !defined($region) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined($params) ) {
+		return $self->alert("Parameters must be in JSON format.");
+	}
+
+	if ( !defined( $params->{name} ) ) {
+		return $self->alert("Region name is required.");
+	}
+
+	if ( !defined( $params->{division} ) ) {
+		return $self->alert("Division Id is required.");
+	}
+
+	my $values = {
+		name     => $params->{name},
+		division => $params->{division}
+	};
+
+	my $rs = $region->update($values);
+	if ($rs) {
+		my $response;
+		$response->{id}          = $rs->id;
+		$response->{name}        = $rs->name;
+		$response->{division}    = $rs->division->id;
+		$response->{lastUpdated} = $rs->last_updated;
+		&log( $self, "Updated Region name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		return $self->success( $response, "Region update was successful." );
+	}
+	else {
+		return $self->alert("Region update failed.");
+	}
+
 }
 
 sub create {
