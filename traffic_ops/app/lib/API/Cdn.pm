@@ -160,8 +160,8 @@ sub update {
 		$value->{dnssec_enabled} = $params->{dnssecEnabled};
 	}
 
-	if ( $cdn->update($value) ) {
-		my $rs = $self->db->resultset('Cdn')->find( { id => $id } );
+	my $rs = $cdn->update($value);
+	if ( $rs ) {
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;

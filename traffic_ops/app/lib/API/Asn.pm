@@ -95,8 +95,8 @@ sub update {
 		cachegroup => $params->{cachegroupId}
 	};
 
-	if ( $asn->update($values) ) {
-		my $rs = $self->db->resultset('Asn')->find( { id => $id } );
+	my $rs = $asn->update($values);
+	if ( $rs ) {
 		my $response;
 		$response->{id}           = $rs->id;
 		$response->{asn}          = $rs->asn;
