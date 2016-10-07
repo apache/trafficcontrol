@@ -1,18 +1,18 @@
-.. 
+..
 .. Copyright 2015 Comcast Cable Communications Management, LLC
-.. 
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 Traffic Stats
 *************
@@ -25,20 +25,21 @@ Software Requirements
 =====================
 To work on Traffic Stats you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-	* `Go 1.5.x or above <https://golang.org/doc/install>`_
+	* `Go 1.7.x or above <https://golang.org/doc/install>`_
 	* Access to a working instance of Traffic Ops
 	* Access to a working instance of Traffic Monitor
-	* `InfluxDb version 0.10.0 or greater <https://influxdb.com/download/index.html>`_
+	* `InfluxDb version 1.0.0 or greater <https://influxdb.com/download/index.html>`_
 
 Traffic Stats Project Tree Overview
 =====================================
 	* **traffic_control/traffic_stats** - contains Go source files and Files used to create the Traffic Stats rpm.
 	* **traffic_control/traffic_stats/grafana/** - contains a javascript file which is installed on the grafana server.  This allows Traffic Ops to create custom dashboards for Delivery Services, Caches, etc.
+	* **traffic_control/traffic_stats/influxdb_tools/** - contains one tool to create the databases and retention policies needed by Traffic Stats as well as continuous queries to downsample data; contains another tool to sync downsampled data between influxdb instances.  This is is helpful if you have multiple instances and they get out of sync with data.
 
 
-Go Formatting Conventions 
+Go Formatting Conventions
 ============================
-In general `Go fmt <https://golang.org/cmd/gofmt/>`_ is the standard for formatting go code.
+In general `Go fmt <https://golang.org/cmd/gofmt/>`_ is the standard for formatting go code.  It is also recommended to use `Go lint <https://github.com/golang/lint>`_.
 
 Installing The Developer Environment
 ====================================
@@ -54,6 +55,5 @@ To install the Traffic Ops Developer environment:
 
 Test Cases
 ==========
-	Currently there are not automated tests for Traffic Stats :(.  
-	We hope to remedy this problem very soon! 
+	Currently there are no automated tests for Traffic Stats :( but pull requests are always welcome to fix this problem!
 
