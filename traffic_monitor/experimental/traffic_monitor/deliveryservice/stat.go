@@ -134,24 +134,37 @@ func (a StatsLastKbps) Copy() StatsLastKbps {
 
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type StatLastKbps struct {
+	Caches      map[enum.CacheName]LastKbpsData
 	CacheGroups map[enum.CacheGroupName]LastKbpsData
 	Type        map[enum.CacheType]LastKbpsData
 	Total       LastKbpsData
 }
 
 func (a StatLastKbps) Copy() StatLastKbps {
-	b := StatLastKbps{CacheGroups: map[enum.CacheGroupName]LastKbpsData{}, Type: map[enum.CacheType]LastKbpsData{}, Total: a.Total}
+	b := StatLastKbps{
+		CacheGroups: map[enum.CacheGroupName]LastKbpsData{},
+		Type:        map[enum.CacheType]LastKbpsData{},
+		Caches:      map[enum.CacheName]LastKbpsData{},
+		Total:       a.Total,
+	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
 	}
 	for k, v := range a.Type {
 		b.Type[k] = v
 	}
+	for k, v := range a.Caches {
+		b.Caches[k] = v
+	}
 	return b
 }
 
 func newStatLastKbps() StatLastKbps {
-	return StatLastKbps{CacheGroups: map[enum.CacheGroupName]LastKbpsData{}, Type: map[enum.CacheType]LastKbpsData{}}
+	return StatLastKbps{
+		CacheGroups: map[enum.CacheGroupName]LastKbpsData{},
+		Type:        map[enum.CacheType]LastKbpsData{},
+		Caches:      map[enum.CacheName]LastKbpsData{},
+	}
 }
 
 type LastKbpsData struct {
@@ -170,73 +183,81 @@ const BytesPerKilobit = 125
 //
 // This specifically returns the given dsStats and lastKbpsStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time) (Stats, StatsLastKbps, error) {
+// TODO break this function up, it's too big.
+func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastKbpsStats StatsLastKbps, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, StatsLastKbps, error) {
 	for dsName, stat := range dsStats.DeliveryService {
 		lastKbpsStat, lastKbpsStatExists := lastKbpsStats.DeliveryServices[dsName]
 		if !lastKbpsStatExists {
 			lastKbpsStat = newStatLastKbps()
 		}
 
-		for cgName, cacheStats := range stat.CacheGroups {
-			lastKbpsData, _ := lastKbpsStat.CacheGroups[cgName]
+		for cacheName, cacheStats := range stat.Caches {
+			lastCacheStat, lastCacheStatExists := lastKbpsStat.Caches[cacheName]
 
-			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
-				cacheStats.Kbps.Value = lastKbpsData.Kbps
-				stat.CacheGroups[cgName] = cacheStats
+			if cacheStats.OutBytes.Value == lastCacheStat.Bytes {
+				cacheStats.Kbps.Value = lastCacheStat.Kbps
+				stat.Caches[cacheName] = cacheStats
 				continue
 			}
 
-			if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
-				cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
+			if lastCacheStatExists && lastCacheStat.Bytes != 0 {
+				lastCacheStat.Kbps = float64(cacheStats.OutBytes.Value-lastCacheStat.Bytes) / BytesPerKilobit / stat.CachesTimeReceived[cacheName].Sub(lastCacheStat.Time).Seconds()
 			}
+			lastCacheStat.Bytes = cacheStats.OutBytes.Value
+			lastCacheStat.Time = stat.CachesTimeReceived[cacheName]
+			lastKbpsStat.Caches[cacheName] = lastCacheStat
 
-			if cacheStats.Kbps.Value < 0 {
-				cacheStats.Kbps.Value = 0
-				log.Errorf("addkbps negative cachegroup cacheStats.Kbps.Value: '%v' '%v' %v - %v / %v\n", dsName, cgName, cacheStats.OutBytes.Value, lastKbpsData.Bytes, dsStatsTime.Sub(lastKbpsData.Time).Seconds())
-			}
-
-			lastKbpsStat.CacheGroups[cgName] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
-			stat.CacheGroups[cgName] = cacheStats
+			cacheStats.Kbps.Value = lastCacheStat.Kbps // TODO determine if necessary
+			stat.Caches[cacheName] = cacheStats
 		}
 
-		for cacheType, cacheStats := range stat.Types {
-			lastKbpsData, _ := lastKbpsStat.Type[cacheType]
-			if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
-				if cacheStats.OutBytes.Value == lastKbpsData.Bytes {
-					if lastKbpsData.Kbps < 0 {
-						log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value!\n")
-						lastKbpsData.Kbps = 0
-					}
-					cacheStats.Kbps.Value = lastKbpsData.Kbps
-					stat.Types[cacheType] = cacheStats
-					continue
-				}
-				if lastKbpsStatExists && lastKbpsData.Bytes != 0 {
-					cacheStats.Kbps.Value = float64(cacheStats.OutBytes.Value-lastKbpsData.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsData.Time).Seconds()
-				}
-				if cacheStats.Kbps.Value < 0 {
-					log.Errorf("addkbps negative cachetype cacheStats.Kbps.Value.\n")
-					cacheStats.Kbps.Value = 0
-				}
-				lastKbpsStat.Type[cacheType] = LastKbpsData{Time: dsStatsTime, Bytes: cacheStats.OutBytes.Value, Kbps: cacheStats.Kbps.Value}
-				stat.Types[cacheType] = cacheStats
+		// TODO don't add kbps for caches which didn't respond to their last request
+		cacheGroups := map[enum.CacheGroupName]LastKbpsData{}
+		cacheTypes := map[enum.CacheType]LastKbpsData{}
+		total := LastKbpsData{}
+		for cacheName, cacheStats := range lastKbpsStat.Caches {
+			if !stat.CommonStats.CachesReporting[cacheName] {
+				continue
 			}
+
+			cacheGroup, ok := serverCachegroups[cacheName]
+			if !ok {
+				log.Errorf("addkbps cache %v not in cachegroups\n", cacheName)
+			} else {
+				c := cacheGroups[cacheGroup]
+				c.Kbps += cacheStats.Kbps
+				cacheGroups[cacheGroup] = c
+			}
+
+			cacheType, ok := serverTypes[cacheName]
+			if !ok {
+				log.Errorf("addkbps cache %v not in types\n", cacheName)
+			} else {
+				c := cacheTypes[cacheType]
+				c.Kbps += cacheStats.Kbps
+				cacheTypes[cacheType] = c
+			}
+
+			total.Kbps += cacheStats.Kbps
 		}
 
-		totalChanged := lastKbpsStat.Total.Bytes != stat.TotalStats.OutBytes.Value
-		if lastKbpsStatExists && lastKbpsStat.Total.Bytes != 0 && totalChanged {
-			stat.TotalStats.Kbps.Value = float64(stat.TotalStats.OutBytes.Value-lastKbpsStat.Total.Bytes) / BytesPerKilobit / dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds()
-			if stat.TotalStats.Kbps.Value < 0 {
-				stat.TotalStats.Kbps.Value = 0
-				log.Errorf("addkbps negative stat.Total.Kbps.Value! Deliveryservice '%v' %v - %v / %v\n", dsName, stat.TotalStats.OutBytes.Value, lastKbpsStat.Total.Bytes, dsStatsTime.Sub(lastKbpsStat.Total.Time).Seconds())
-			}
-		} else {
-			stat.TotalStats.Kbps.Value = lastKbpsStat.Total.Kbps
+		for cacheGroup, lastKbpsData := range cacheGroups {
+			g := stat.CacheGroups[cacheGroup]
+			g.Kbps.Value = lastKbpsData.Kbps
+			stat.CacheGroups[cacheGroup] = g
 		}
 
-		if totalChanged {
-			lastKbpsStat.Total = LastKbpsData{Time: dsStatsTime, Bytes: stat.TotalStats.OutBytes.Value, Kbps: stat.TotalStats.Kbps.Value}
+		for cacheType, lastKbpsData := range cacheTypes {
+			t := stat.Types[cacheType]
+			t.Kbps.Value = lastKbpsData.Kbps
+			stat.Types[cacheType] = t
 		}
+
+		lastKbpsStat.CacheGroups = cacheGroups
+		lastKbpsStat.Type = cacheTypes
+		lastKbpsStat.Total = total
+
+		stat.TotalStats.Kbps.Value = total.Kbps
 
 		lastKbpsStats.DeliveryServices[dsName] = lastKbpsStat
 		dsStats.DeliveryService[dsName] = stat
@@ -342,11 +363,14 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			httpDsStat.TotalStats = httpDsStat.TotalStats.Sum(resultStat.TotalStats)
 			httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultStat.CacheGroups[cachegroup])
 			httpDsStat.Types[serverType] = httpDsStat.Types[serverType].Sum(resultStat.Types[serverType])
+			httpDsStat.Caches[server] = httpDsStat.Caches[server].Sum(resultStat.Caches[server])
+			httpDsStat.CachesTimeReceived[server] = resultStat.CachesTimeReceived[server]
+			httpDsStat.CommonStats = dsStats.DeliveryService[ds].CommonStats
 			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
 		}
 	}
 
-	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(statHistory, dsStats, lastKbpsStats, now)
+	kbpsStats, kbpsStatsLastKbps, kbpsErr := addKbps(statHistory, dsStats, lastKbpsStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	return kbpsStats, kbpsStatsLastKbps, kbpsErr
 }

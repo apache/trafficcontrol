@@ -236,7 +236,7 @@ func (handler Handler) precompute(result Result) Result {
 
 	for stat, value := range result.Astats.Ats {
 		var err error
-		stats, err = processStat(result.Id, stats, todata, stat, value)
+		stats, err = processStat(result.Id, stats, todata, stat, value, result.Time)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
 			log.Errorf("precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
@@ -248,7 +248,7 @@ func (handler Handler) precompute(result Result) Result {
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
 // TODO fix this being crazy slow. THIS IS THE BOTTLENECK
-func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -256,7 +256,7 @@ func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdat
 
 	switch parts[0] {
 	case "plugin":
-		return processStatPlugin(server, stats, toData, stat, parts[1:], value)
+		return processStatPlugin(server, stats, toData, stat, parts[1:], value, timeReceived)
 	case "proxy":
 		return stats, dsdata.ErrNotProcessedStat
 	case "server":
@@ -266,19 +266,19 @@ func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdat
 	}
 }
 
-func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
 	switch statParts[0] {
 	case "remap_stats":
-		return processStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value)
+		return processStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value, timeReceived)
 	default:
 		return stats, fmt.Errorf("stat has unknown plugin part '%s'", statParts[0])
 	}
 }
 
-func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 2 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
@@ -316,6 +316,10 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
 	}
 	dsStat.Types[cacheType] = dsStat.TotalStats
+
+	dsStat.Caches[server] = dsStat.TotalStats
+
+	dsStat.CachesTimeReceived[server] = timeReceived
 	stats[ds] = dsStat
 	return stats, nil
 }
