@@ -333,9 +333,6 @@
 							 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = perSec.toFixed(2);
 						 }
 						 if (previousDeliveryserviceStats2xx[deliveryService] != new2xx && previousDeliveryserviceStats2xx.hasOwnProperty(deliveryService)) {
-							 /* if(deliveryService == 'le-vod-g2') {
-									alert("previous le-vod-g2 2xx " + previousDeliveryserviceStats2xx[deliveryService] + " new " + new2xx)
-									} */
 						 	previousDeliveryserviceStatsTime2xx[deliveryService] = now;
 						 }
 						 previousDeliveryserviceStats2xx[deliveryService] = new2xx;

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
 	"net/url"
+	"time"
 )
 
 // Filter encapsulates functions to filter a given set of Stats, e.g. from HTTP query parameters.
@@ -161,25 +162,46 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 }
 
 type Stat struct {
-	CommonStats StatCommon
-	CacheGroups map[enum.CacheGroupName]StatCacheStats
-	Types       map[enum.CacheType]StatCacheStats
-	TotalStats  StatCacheStats
+	CommonStats        StatCommon
+	CacheGroups        map[enum.CacheGroupName]StatCacheStats
+	Types              map[enum.CacheType]StatCacheStats
+	Caches             map[enum.CacheName]StatCacheStats
+	CachesTimeReceived map[enum.CacheName]time.Time
+	TotalStats         StatCacheStats
 }
 
 var ErrNotProcessedStat = errors.New("This stat is not used.")
 
 func NewStat() *Stat {
-	return &Stat{CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Types: map[enum.CacheType]StatCacheStats{}, CommonStats: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
+	return &Stat{
+		CacheGroups:        map[enum.CacheGroupName]StatCacheStats{},
+		Types:              map[enum.CacheType]StatCacheStats{},
+		CommonStats:        StatCommon{CachesReporting: map[enum.CacheName]bool{}},
+		Caches:             map[enum.CacheName]StatCacheStats{},
+		CachesTimeReceived: map[enum.CacheName]time.Time{},
+	}
 }
 
 func (a Stat) Copy() Stat {
-	b := Stat{CommonStats: a.CommonStats.Copy(), TotalStats: a.TotalStats, CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Types: map[enum.CacheType]StatCacheStats{}}
+	b := Stat{
+		CommonStats:        a.CommonStats.Copy(),
+		TotalStats:         a.TotalStats,
+		CacheGroups:        map[enum.CacheGroupName]StatCacheStats{},
+		Types:              map[enum.CacheType]StatCacheStats{},
+		Caches:             map[enum.CacheName]StatCacheStats{},
+		CachesTimeReceived: map[enum.CacheName]time.Time{},
+	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
 	}
 	for k, v := range a.Types {
 		b.Types[k] = v
+	}
+	for k, v := range a.Caches {
+		b.Caches[k] = v
+	}
+	for k, v := range a.CachesTimeReceived {
+		b.CachesTimeReceived[k] = v
 	}
 	return b
 }
