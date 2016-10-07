@@ -18,7 +18,7 @@
 Traffic Stats Administration
 ****************************
 
-Traffic Stats actually consists of three seperate components:  Traffic Stats, InfluxDB, and Grafana.  See below for information on installing and configuring each component as well as configuring the integration between the three and Traffic Ops.
+Traffic Stats consists of three seperate components:  Traffic Stats, InfluxDB, and Grafana.  See below for information on installing and configuring each component as well as configuring the integration between the three and Traffic Ops.
 
 Installation
 ========================
@@ -31,14 +31,14 @@ Installation
 
 **Installing InfluxDB:**
 
-	**As of Traffic Stats 1.4.0, InfluxDb 0.9.6 or higher is required.  For InfluxDb versions less than 0.9.6 use Traffic Stats 1.3.0**
+	**As of Traffic Stats 1.8.0, InfluxDb 1.0.0 or higher is required.  For InfluxDb versions less than 1.0.0 use Traffic Stats 1.7.x**
 
-	In order to store traffic stats data you will need to install InfluxDB.  It is recommended InfluxDB be installed in a 3 server cluster; VMs are acceptable. The documentation for installing InfluxDB can be found on the InfluxDB `website <https://docs.influxdata.com/influxdb/latest/introduction/installation/>`_.
+	In order to store traffic stats data you will need to install `InfluxDB <https://docs.influxdata.com/influxdb/latest/introduction/installation/>`_.  While not required, it is recommended to use some sort of high availability option like `Influx enterprise <https://portal.influxdata.com/>`_, `Influxdb Relay <https://github.com/influxdata/influxdb-relay>`_, or another `high availability option <https://www.influxdata.com/high-availability/>`_.
 
 
 **Installing Grafana:**
 
-	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and be accessed by Traffic Ops.  Documentation on installing Grafana can be found `here <http://docs.grafana.org/installation/>`_.
+	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and can be accessed by Traffic Ops.  Documentation on installing Grafana can be found on the `Grafana website <http://docs.grafana.org/installation/>`_.
 
 Configuration
 =========================
@@ -53,25 +53,26 @@ Configuration
 	     - *toUrl:*  The URL of the Traffic Ops server used by Traffic Stats
 	     - *influxUser:*  The user to use when connecting to InfluxDB (if configured on InfluxDB, else leave default)
 	     - *influxPassword:*  That password to use when connecting to InfluxDB (if configured, else leave blank)
-	     - *polling interval:*  The interval at which Traffic Monitor is polled and stats are stored in InfluxDB
+	     - *pollingInterval:*  The interval at which Traffic Monitor is polled and stats are stored in InfluxDB
 	     - *statusToMon:*  The status of Traffic Monitor to poll (poll ONLINE or OFFLINE traffic monitors)
 	     - *seelogConfig:*  The absolute path of the seelong config file
 	     - *dailySummaryPollingInterval:* The interval, in seconds, at which Traffic Stats checks to see if daily stats need to be computed and stored.
 	     - *cacheRetentionPolicy:* The default retention policy for cache stats
 	     - *dsRetentionPolicy:* The default retention policy for deliveryservice stats
 	     - *dailySummaryRetentionPolicy:* The retention policy to be used for the daily stats
+	     - *influxUrls:* An array of influxdb hosts for Traffic Stats to write stats to.
 
 **Configuring InfluxDB:**
 
-	It is HIGHLY recommended that InfluxDB be configured for clustering.  Documentation on clustering configuration can be found on the clustering page of the `InfluxDB Website <https://docs.influxdata.com/influxdb/latest/clustering/>`_.
+	As mentioned above, it is recommended that InfluxDb be running in some sort of high availability configuration.  There are several ways to achieve high availabilty so it is best to consult the high availability options on the `InfuxDB website <https://www.influxdata.com/high-availability/>`_.
 
-	Once InfluxDB is installed and clustering is configured, Databases and Retention Policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
+	Once InfluxDB is installed and configured, databases and retention policies need to be created.  Traffic Stats writes to three different databases: cache_stats, deliveryservice_stats, and daily_stats.  More information about the databases and what data is stored in each can be found on the `overview <../overview/traffic_stats.html>`_ page.
 
-	To easily create databases, retention policies, and continuous queries, run create_ts_databases.go from the influxdb_tools directory.  See the `InfluxDb Tools <traffic_stats.html#influxdb-tools>`_ section below for more information.
+	To easily create databases, retention policies, and continuous queries, run create_ts_databases from the /opt/traffic_stats/influxdb_tools directory on your Traffic Stats server.  See the `InfluxDb Tools <traffic_stats.html#influxdb-tools>`_ section below for more information.
 
 **Configuring Grafana:**
 
-		In Traffic Ops the Health -> Graph View tab can be configured to display grafana graphs using influxDb data.  In order for this to work correctly, you will need two things 1) a parameter added to traffic ops with the graph URL (we will discuss later) and 2) the graphs created in grafana.  See below for how to create some simple graphs in grafana.  These instructions assume that InfluxDB has been installed and conifugred and that data has been written to it.  If this is not true, you will not see any graphs.
+		In Traffic Ops the Health -> Graph View tab can be configured to display grafana graphs using influxDb data.  In order for this to work correctly, you will need two things 1) a parameter added to traffic ops with the graph URL (more information below) and 2) the graphs created in grafana.  See below for how to create some simple graphs in grafana.  These instructions assume that InfluxDB has been configured and that data has been written to it.  If this is not true, you will not see any graphs.
 
 		- Login to grafana as an admin user http://grafana_url:3000/login
 		- Choose Data Sources and then Add New
