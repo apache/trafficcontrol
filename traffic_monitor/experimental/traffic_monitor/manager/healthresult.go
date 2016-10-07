@@ -103,17 +103,19 @@ func processHealthResult(cacheHealthChan <-chan cache.Result, toData todata.TODa
 		fetchCount.Inc()
 		var prevResult cache.Result
 		healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
-		// healthResultHistory := healthHistory.Get(enum.CacheName(healthResult.Id))
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
 
-		health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
-		// healthHistory.Set(enum.CacheName(healthResult.Id), pruneHistory(append(healthHistory.Get(enum.CacheName(healthResult.Id)), healthResult), defaultMaxHistory))
+		if healthResult.Error == nil {
+			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
+		}
+
 		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), cfg.MaxHealthHistory)
+
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s errors: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Errors)
+			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
 			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable})
 		}
 
