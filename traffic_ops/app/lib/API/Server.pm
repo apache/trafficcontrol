@@ -35,6 +35,7 @@ sub index {
 	my $ds_id        = $self->param('dsId');
 	my $type         = $self->param('type');
 	my $status       = $self->param('status');
+	my $profile      = $self->param('profile');
 
 	my $servers;
 	my $forbidden;
@@ -43,6 +44,13 @@ sub index {
 	}
 	elsif ( defined $type ) {
 		$servers = $self->get_servers_by_type( $current_user, $type, $status );
+	}
+	elsif ( defined $profile ) {
+		my $profile_forbidden;
+		( $profile_forbidden, $servers ) = $self->get_servers_by_profile( $current_user, $profile, $status );
+		if ( defined($profile_forbidden) ) {
+			return $self->forbidden("Forbidden. Insufficent permissions.");
+		}
 	}
 	else {
 		$servers = $self->get_servers( $current_user, $status );
@@ -1037,25 +1045,21 @@ sub postupdatequeue {
 	return $self->success($response);
 }
 
-sub profile {
-	my $self = shift;
+sub get_servers_by_profile {
+	my $self              = shift;
+	my $current_user      = shift;
+	my $profile_id        = shift;
+	my $status            = shift;
 
-	my $id = $self->param('profile_id');
-
-	my $profile = $self->db->resultset('Profile')->find( { id => $id } );
-	if ( !defined($profile) ) {
-		return $self->not_found();
+	my $forbidden;
+	my $servers;
+	if ( !&is_oper($self) ) {
+		$forbidden = "true";
+		return ( $forbidden, $servers );
 	}
 
-	my @server_ids = ();
-	my $servers = $self->db->resultset('Server')->search( { profile => $profile->id } );
-	while ( my $row = $servers->next ) {
-		push(@server_ids, $row->id);
-	}
-
-	my $response;
-	$response->{serverIds} = \@server_ids;
-	return $self->success($response, "Get servers by profile completed.");
+	my $servers = $self->db->resultset('Server')->search( { profile => $profile_id } );
+	return ( $forbidden, $servers );
 }
 
 1;

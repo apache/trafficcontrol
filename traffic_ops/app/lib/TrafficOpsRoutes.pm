@@ -698,10 +698,6 @@ sub api_routes {
 	$r->post("/api/$version/servercheck")->over( authenticated => 1 )
 		->to( 'ServerCheck#update', namespace => $namespace );
 
-	# -- SERVERS: PROFILE
-	$r->get( "/api/$version/servers/profile/:profile_id" )->over( authenticated => 1 )
-		->to( 'Server#profile', namespace => $namespace );
-
 	# -- STATS
 	$r->get( "/api/$version/stats_summary")->over( authenticated => 1 )
 		->to( 'StatsSummary#index', namespace => $namespace );
