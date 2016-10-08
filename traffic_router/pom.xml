@@ -24,7 +24,7 @@
 	<name>traffic_router</name>
 
 	<modules>
-		<module>keystore</module>
+		<module>shared</module>
 		<module>connector</module>
 		<module>configuration</module>
 		<module>geolocation</module>

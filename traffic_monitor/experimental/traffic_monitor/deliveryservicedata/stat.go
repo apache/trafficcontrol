@@ -3,7 +3,17 @@ package deliveryservicedata // TODO rename?
 import (
 	"errors"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"net/url"
+	"time"
 )
+
+// Filter encapsulates functions to filter a given set of Stats, e.g. from HTTP query parameters.
+// TODO combine with cache.Filter?
+type Filter interface {
+	UseStat(name string) bool
+	UseDeliveryService(name enum.DeliveryServiceName) bool
+	WithinStatHistoryMax(int) bool
+}
 
 type StatName string
 type StatOld struct {
@@ -13,12 +23,15 @@ type StatOld struct {
 	Index int    `json:"index,omitempty"` // TODO set? remove?
 }
 type StatsOld struct {
+	// TODO move QueryParams, DateStr to a 'EndpointCommon' struct
 	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
+	QueryParams     string                                              `json:"pp"`
+	DateStr         string                                              `json:"date"`
 }
 
 type StatsReadonly interface {
-	Get(name enum.DeliveryServiceName) (StatReadonly, bool)
-	JSON() StatsOld
+	Get(enum.DeliveryServiceName) (StatReadonly, bool)
+	JSON(Filter, url.Values) StatsOld
 }
 
 type StatReadonly interface {
@@ -149,25 +162,46 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 }
 
 type Stat struct {
-	CommonStats StatCommon
-	CacheGroups map[enum.CacheGroupName]StatCacheStats
-	Types       map[enum.CacheType]StatCacheStats
-	TotalStats  StatCacheStats
+	CommonStats        StatCommon
+	CacheGroups        map[enum.CacheGroupName]StatCacheStats
+	Types              map[enum.CacheType]StatCacheStats
+	Caches             map[enum.CacheName]StatCacheStats
+	CachesTimeReceived map[enum.CacheName]time.Time
+	TotalStats         StatCacheStats
 }
 
 var ErrNotProcessedStat = errors.New("This stat is not used.")
 
 func NewStat() *Stat {
-	return &Stat{CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Types: map[enum.CacheType]StatCacheStats{}, CommonStats: StatCommon{CachesReporting: map[enum.CacheName]bool{}}}
+	return &Stat{
+		CacheGroups:        map[enum.CacheGroupName]StatCacheStats{},
+		Types:              map[enum.CacheType]StatCacheStats{},
+		CommonStats:        StatCommon{CachesReporting: map[enum.CacheName]bool{}},
+		Caches:             map[enum.CacheName]StatCacheStats{},
+		CachesTimeReceived: map[enum.CacheName]time.Time{},
+	}
 }
 
 func (a Stat) Copy() Stat {
-	b := Stat{CommonStats: a.CommonStats.Copy(), TotalStats: a.TotalStats, CacheGroups: map[enum.CacheGroupName]StatCacheStats{}, Types: map[enum.CacheType]StatCacheStats{}}
+	b := Stat{
+		CommonStats:        a.CommonStats.Copy(),
+		TotalStats:         a.TotalStats,
+		CacheGroups:        map[enum.CacheGroupName]StatCacheStats{},
+		Types:              map[enum.CacheType]StatCacheStats{},
+		Caches:             map[enum.CacheName]StatCacheStats{},
+		CachesTimeReceived: map[enum.CacheName]time.Time{},
+	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
 	}
 	for k, v := range a.Types {
 		b.Types[k] = v
+	}
+	for k, v := range a.Caches {
+		b.Caches[k] = v
+	}
+	for k, v := range a.CachesTimeReceived {
+		b.CachesTimeReceived[k] = v
 	}
 	return b
 }

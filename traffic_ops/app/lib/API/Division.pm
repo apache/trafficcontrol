@@ -16,7 +16,8 @@ sub index {
 		push(
 			@data, {
 				"id"   => $row->id,
-				"name" => $row->name
+				"name" => $row->name,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
@@ -33,7 +34,8 @@ sub show {
 		push(
 			@data, {
 				"id"   => $row->id,
-				"name" => $row->name
+				"name" => $row->name,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}

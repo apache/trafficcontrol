@@ -1,15 +1,15 @@
 var TypeService = function(Restangular, messageModel) {
 
     this.getTypes = function() {
-        return Restangular.all('type').getList();
+        return Restangular.all('types').getList();
     };
 
     this.getType = function(id) {
-        return Restangular.one("type", id).get();
+        return Restangular.one("types", id).get();
     };
 
     this.createType = function(type) {
-        return Restangular.service('type').post(type)
+        return Restangular.service('types').post(type)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
@@ -33,7 +33,7 @@ var TypeService = function(Restangular, messageModel) {
     };
 
     this.deleteType = function(id) {
-        return Restangular.one("type", id).remove()
+        return Restangular.one("types", id).remove()
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Type deleted' } ], true);

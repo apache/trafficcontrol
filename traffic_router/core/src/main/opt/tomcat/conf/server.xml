@@ -19,14 +19,14 @@
 <Server port="8005" shutdown="SHUTDOWN">
 
 	<!--APR library loader. Documentation at /docs/apr.html -->
-	<Listener className="org.apache.catalina.core.AprLifecycleListener"
-		SSLEngine="on" />
+	<Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
 	<!-- Prevent memory leaks due to use of particular java/javax APIs -->
 	<Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
 	<!-- JMX Support for the Tomcat server. Documentation at /docs/non-existent.html -->
 	<Listener className="org.apache.catalina.mbeans.ServerLifecycleListener" />
 	<Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
 
+	<Listener className="com.comcast.cdn.traffic_control.traffic_router.tomcat.TomcatLifecycleListener" />
 	<!-- A "Service" is a collection of one or more "Connectors" that share 
 		a single "Container" Note: A "Service" is not itself a "Container", so you 
 		may not define subcomponents such as "Valves" at this level. Documentation 

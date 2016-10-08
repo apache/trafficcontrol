@@ -171,13 +171,7 @@
 
 		 function getBandwidthCapacity() {
 			 ajax("/api/bandwidth-capacity-kbps", function(r) {
-				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(parseInt(r).toString());
-			 });
-		 }
-
-		 function getBandwidthCapacity() {
-			 ajax("/api/bandwidth-capacity", function(r) {
-				 document.getElementById("bandwidth-capacity").innerHTML = parseInt(r);
+				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(r);
 			 });
 		 }
 
@@ -338,7 +332,7 @@
 							 var perSec = (new2xx - previousDeliveryserviceStats2xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime2xx[deliveryService]) / millisecondsInSecond);
 							 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = perSec.toFixed(2);
 						 }
-						 if (previousDeliveryserviceStats2xx[deliveryService] != new2xx) {
+						 if (previousDeliveryserviceStats2xx[deliveryService] != new2xx && previousDeliveryserviceStats2xx.hasOwnProperty(deliveryService)) {
 						 	previousDeliveryserviceStatsTime2xx[deliveryService] = now;
 						 }
 						 previousDeliveryserviceStats2xx[deliveryService] = new2xx;
@@ -349,7 +343,7 @@
 							 var perSec = (new3xx - previousDeliveryserviceStats3xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime3xx[deliveryService]) / millisecondsInSecond);
 							 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = perSec.toFixed(2);
 						 }
-						 if (previousDeliveryserviceStats3xx[deliveryService] != new3xx) {
+						 if (previousDeliveryserviceStats3xx[deliveryService] != new3xx && previousDeliveryserviceStats3xx.hasOwnProperty(deliveryService)) {
 						 	previousDeliveryserviceStatsTime3xx[deliveryService] = now;
 						 }
 						 previousDeliveryserviceStats3xx[deliveryService] = new3xx;
@@ -360,7 +354,7 @@
 							 var perSec = (new4xx - previousDeliveryserviceStats4xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime4xx[deliveryService]) / millisecondsInSecond);
 							 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = perSec.toFixed(2);
 						 }
-						 if (previousDeliveryserviceStats4xx[deliveryService] != new4xx) {
+						 if (previousDeliveryserviceStats4xx[deliveryService] != new4xx && previousDeliveryserviceStats4xx.hasOwnProperty(deliveryService)) {
 						 	previousDeliveryserviceStatsTime4xx[deliveryService] = now;
 						 }
 						 previousDeliveryserviceStats4xx[deliveryService] = new4xx;
@@ -371,7 +365,7 @@
 							 var perSec = (new5xx - previousDeliveryserviceStats5xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime5xx[deliveryService]) / millisecondsInSecond);
 							 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = perSec.toFixed(2);
 						 }
-						 if (previousDeliveryserviceStats5xx[deliveryService] != new5xx) {
+						 if (previousDeliveryserviceStats5xx[deliveryService] != new5xx && previousDeliveryserviceStats5xx.hasOwnProperty(deliveryService)) {
 						 	previousDeliveryserviceStatsTime5xx[deliveryService] = now;
 						 }
 						 previousDeliveryserviceStats5xx[deliveryService] = new5xx;

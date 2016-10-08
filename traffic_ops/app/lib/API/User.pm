@@ -79,29 +79,65 @@ sub index {
 	while ( my $row = $dbh->next ) {
 		push(
 			@data, {
-				"id"              => $row->id,
-				"username"        => $row->username,
-				"publicSshKey"    => $row->public_ssh_key,
-				"role"            => $row->role->id,
-				"uid"             => $row->uid,
-				"gid"             => $row->gid,
-				"rolename"        => $row->role->name,
-				"company"         => $row->company,
-				"email"           => $row->email,
-				"fullName"        => $row->full_name,
-				"newUser"         => \$row->new_user,
-				"localUser"       => \1,
 				"addressLine1"    => $row->address_line1,
 				"addressLine2"    => $row->address_line2,
 				"city"            => $row->city,
-				"stateOrProvince" => $row->state_or_province,
+				"company"         => $row->company,
+				"country"         => $row->country,
+				"email"           => $row->email,
+				"fullName"        => $row->full_name,
+				"gid"             => $row->gid,
+				"id"              => $row->id,
+				"lastUpdated"     => $row->last_updated,
+				"newUser"         => \$row->new_user,
 				"phoneNumber"     => $row->phone_number,
 				"postalCode"      => $row->postal_code,
-				"country"         => $row->country,
+				"publicSshKey"    => $row->public_ssh_key,
+				"registrationSent"=> \$row->registration_sent,
+				"role"            => $row->role->id,
+				"rolename"        => $row->role->name,
+				"stateOrProvince" => $row->state_or_province,
+				"uid"             => $row->uid,
+				"username"        => $row->username
 			}
 		);
 	}
 	$self->render( json => \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"addressLine1"    => $row->address_line1,
+				"addressLine2"    => $row->address_line2,
+				"city"            => $row->city,
+				"company"         => $row->company,
+				"country"         => $row->country,
+				"email"           => $row->email,
+				"fullName"        => $row->full_name,
+				"gid"             => $row->gid,
+				"id"              => $row->id,
+				"lastUpdated"     => $row->last_updated,
+				"newUser"         => \$row->new_user,
+				"phoneNumber"     => $row->phone_number,
+				"postalCode"      => $row->postal_code,
+				"publicSshKey"    => $row->public_ssh_key,
+				"registrationSent"=> \$row->registration_sent,
+				"role"            => $row->role->id,
+				"rolename"        => $row->role->name,
+				"stateOrProvince" => $row->state_or_province,
+				"uid"             => $row->uid,
+				"username"        => $row->username
+			}
+		);
+	}
+	$self->success( \@data );
 }
 
 # Reset the User Profile password
@@ -171,7 +207,6 @@ sub current {
 				"email"           => "",
 				"fullName"        => "",
 				"newUser"         => \0,
-				"localUser"       => \0,
 				"addressLine1"    => "",
 				"addressLine2"    => "",
 				"city"            => "",
@@ -199,7 +234,6 @@ sub current {
 					"email"           => $row->email,
 					"fullName"        => $row->full_name,
 					"newUser"         => \$row->new_user,
-					"localUser"       => \1,
 					"addressLine1"    => $row->address_line1,
 					"addressLine2"    => $row->address_line2,
 					"city"            => $row->city,

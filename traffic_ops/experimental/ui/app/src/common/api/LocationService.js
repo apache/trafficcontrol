@@ -1,15 +1,15 @@
 var LocationService = function(Restangular, messageModel) {
 
     this.getLocations = function() {
-        return Restangular.all('phys_location').getList();
+        return Restangular.all('phys_locations').getList();
     };
 
     this.getLocation = function(id) {
-        return Restangular.one("phys_location", id).get();
+        return Restangular.one("phys_locations", id).get();
     };
 
     this.createLocation = function(location) {
-        return Restangular.service('phys_location').post(location)
+        return Restangular.service('phys_locations').post(location)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location created' } ], true);
@@ -33,7 +33,7 @@ var LocationService = function(Restangular, messageModel) {
     };
 
     this.deleteLocation = function(id) {
-        return Restangular.one("phys_location", id).remove()
+        return Restangular.one("phys_locations", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location deleted' } ], true);

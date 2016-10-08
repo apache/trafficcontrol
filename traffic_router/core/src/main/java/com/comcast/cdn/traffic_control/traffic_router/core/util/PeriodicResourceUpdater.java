@@ -56,33 +56,12 @@ public class PeriodicResourceUpdater {
 				.setConnectionTimeoutInMs(10000)
 				.build());
 
-	protected int urlSelectStrategy = 0; // 0 = ordered, 1 = random select
-	protected int lastSuccessfulUrl = 0; 
 	protected String databaseLocation;
 	protected final ResourceUrl urls;
 	protected ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	protected long pollingInterval;
-	protected boolean sourceCompressed = true;
 
 	protected ScheduledFuture<?> scheduledService;
-
-	public PeriodicResourceUpdater(final AbstractUpdatable listener, final ResourceUrl urls, 
-			final String location, final long interval, final boolean pauseTilLoaded) {
-		this.listener = listener;
-		this.urls = urls;
-		databaseLocation = location;
-		pollingInterval = interval;
-		this.pauseTilLoaded = pauseTilLoaded;
-	}
-
-	public PeriodicResourceUpdater(final AbstractUpdatable listener, final String[] urla,
-			final String location, final int interval, final boolean pauseTilLoaded) {
-		this.listener = listener;
-		this.urls = new DefaultResourceUrl(urla);
-		databaseLocation = location;
-		pollingInterval = interval;
-		this.pauseTilLoaded = pauseTilLoaded;
-	}
 
 	public PeriodicResourceUpdater(final AbstractUpdatable listener, final ResourceUrl urls, final String location, final int interval, final boolean pauseTilLoaded) {
 		this.listener = listener;
@@ -168,10 +147,11 @@ public class PeriodicResourceUpdater {
 		return false;
 	}
 
-	public synchronized boolean updateDatabase(final String newDB) {
+	public boolean updateDatabase(final String newDB) {
 		final File existingDB = new File(databaseLocation);
 		try {
 			if (newDB != null && !filesEqual(existingDB, newDB)) {
+				listener.cancelUpdate();
 				if (listener.update(newDB)) {
 					copyDatabase(existingDB, newDB);
 					LOGGER.info("updated " + existingDB.getAbsolutePath());
