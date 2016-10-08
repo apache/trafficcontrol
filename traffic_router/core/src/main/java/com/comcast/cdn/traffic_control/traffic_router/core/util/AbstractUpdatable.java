@@ -33,5 +33,5 @@ public abstract class AbstractUpdatable {
 	public void setLastUpdated(final long lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
-
+	public void cancelUpdate() {}
 }

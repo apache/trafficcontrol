@@ -139,6 +139,11 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 					setBootstrapped(true);
 				}
 			}
+
+			@Override
+			public void cancelUpdate() {
+				configHandler.cancelProcessConfig();
+			}
 		};
 
 		processConfig();

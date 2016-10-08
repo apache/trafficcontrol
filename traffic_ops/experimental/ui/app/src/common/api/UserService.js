@@ -1,11 +1,33 @@
-var UserService = function(Restangular, userModel, messageModel) {
+var UserService = function(Restangular, $http, $location, $q, authService, userModel, messageModel, ENV) {
+
+    var service = this;
 
     this.getCurrentUser = function() {
-        return Restangular.one("tm_user", userModel.userId).get()
-            .then(function(user) {
-                userModel.setUser(user);
-            });
+        var token = $location.search().token,
+            deferred = $q.defer();
+
+        if (angular.isDefined(token)) {
+            $location.search('token', null); // remove the token query param
+            authService.tokenLogin(token)
+                .then(
+                    function(response) {
+                        service.getCurrentUser();
+                    }
+                );
+        } else {
+            $http.get(ENV.api['root'] + "user/current.json")
+                .success(function(result) {
+                    userModel.setUser(result.response);
+                    deferred.resolve(result.response);
+                })
+                .error(function(fault) {
+                    deferred.reject(fault);
+                });
+
+            return deferred.promise;
+        }
     };
+
 
     this.updateCurrentUser = function(user) {
         return user.put()
@@ -21,15 +43,15 @@ var UserService = function(Restangular, userModel, messageModel) {
     };
 
     this.getUsers = function() {
-        return Restangular.all('tm_user').getList();
+        return Restangular.all('users').getList();
     };
 
     this.getUser = function(id) {
-        return Restangular.one("tm_user", id).get();
+        return Restangular.one("users", id).get();
     };
 
     this.createUser = function(user) {
-        return Restangular.service('tm_user').post(user)
+        return Restangular.service('users').post(user)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
@@ -53,7 +75,7 @@ var UserService = function(Restangular, userModel, messageModel) {
     };
 
     this.deleteUser = function(id) {
-        return Restangular.one("tm_user", id).remove()
+        return Restangular.one("users", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
@@ -66,5 +88,5 @@ var UserService = function(Restangular, userModel, messageModel) {
 
 };
 
-UserService.$inject = ['Restangular', 'userModel', 'messageModel'];
+UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'userModel', 'messageModel', 'ENV'];
 module.exports = UserService;

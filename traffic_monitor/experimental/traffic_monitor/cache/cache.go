@@ -3,32 +3,36 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/log"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
 type Handler struct {
-	ResultChannel chan Result
-	Notify        int
-	ToData        *todata.TODataThreadsafe
-	PeerStates    *peer.CRStatesPeersThreadsafe
+	ResultChannel      chan Result
+	Notify             int
+	ToData             *todata.TODataThreadsafe
+	PeerStates         *peer.CRStatesPeersThreadsafe
+	MultipleSpaceRegex *regexp.Regexp
 }
 
 // NewHandler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
 func NewHandler() Handler {
-	return Handler{ResultChannel: make(chan Result)}
+	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
 
 // NewPrecomputeHandler precomputes stat data and populates result.Precomputed before passing to ResultChannel.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
-	return Handler{ResultChannel: make(chan Result), ToData: &toData, PeerStates: &peerStates}
+	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
 func (h Handler) Precompute() bool {
@@ -69,7 +73,15 @@ type Stat struct {
 }
 
 type Stats struct {
-	Caches map[string]map[string][]Stat `json:"caches"`
+	Caches      map[enum.CacheName]map[string][]Stat `json:"caches"`
+	QueryParams string                               `json:"pp"`
+	DateStr     string                               `json:"date"`
+}
+
+type Filter interface {
+	UseStat(name string) bool
+	UseCache(name enum.CacheName) bool
+	WithinStatHistoryMax(int) bool
 }
 
 const (
@@ -78,35 +90,44 @@ const (
 	NOTIFY_ALWAYS
 )
 
-func StatsMarshall(statHistory map[enum.CacheName][]Result, historyCount int) ([]byte, error) {
-	var stats Stats
+// StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
+func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, params url.Values) ([]byte, error) {
+	stats := Stats{
+		Caches:      map[enum.CacheName]map[string][]Stat{},
+		QueryParams: http_server.ParametersStr(params),
+		DateStr:     http_server.DateStr(time.Now()),
+	}
 
-	stats.Caches = map[string]map[string][]Stat{}
-
-	count := 1
+	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
 
 	for id, history := range statHistory {
+		if !filter.UseCache(id) {
+			continue
+		}
+		historyCount := 1
 		for _, result := range history {
+			if !filter.WithinStatHistoryMax(historyCount) {
+				break
+			}
+			historyCount++
 			for stat, value := range result.Astats.Ats {
+				stat = "ats." + stat // TM 1.0 prefixes ATS stats with 'ats.'
+				if !filter.UseStat(stat) {
+					continue
+				}
 				s := Stat{
 					Time:  result.Time.UnixNano() / 1000000,
 					Value: value,
 				}
 
-				_, exists := stats.Caches[string(id)]
+				_, exists := stats.Caches[id]
 
 				if !exists {
-					stats.Caches[string(id)] = map[string][]Stat{}
+					stats.Caches[id] = map[string][]Stat{}
 				}
 
-				stats.Caches[string(id)][stat] = append(stats.Caches[string(id)][stat], s)
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
 			}
-
-			if historyCount > 0 && count == historyCount {
-				break
-			}
-
-			count++
 		}
 	}
 
@@ -175,7 +196,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-func outBytes(procNetDev, iface string) (int64, error) {
+func outBytes(procNetDev, iface string, multipleSpaceRegex *regexp.Regexp) (int64, error) {
 	if procNetDev == "" {
 		return 0, fmt.Errorf("procNetDev empty")
 	}
@@ -189,10 +210,13 @@ func outBytes(procNetDev, iface string) (int64, error) {
 
 	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
 	procNetDevIfaceBytes = strings.TrimLeft(procNetDevIfaceBytes, " ")
-	spacePos := strings.Index(procNetDevIfaceBytes, " ")
-	if spacePos != -1 {
-		procNetDevIfaceBytes = procNetDevIfaceBytes[:spacePos]
+	procNetDevIfaceBytes = multipleSpaceRegex.ReplaceAllLiteralString(procNetDevIfaceBytes, " ")
+	procNetDevIfaceBytesArr := strings.Split(procNetDevIfaceBytes, " ") // this could be made faster with a custom function (DFA?) that splits and ignores duplicate spaces at the same time
+	if len(procNetDevIfaceBytesArr) < 10 {
+		return 0, fmt.Errorf("proc.net.dev iface '%v' unknown format '%s'", iface, procNetDev)
 	}
+	procNetDevIfaceBytes = procNetDevIfaceBytesArr[8]
+
 	return strconv.ParseInt(procNetDevIfaceBytes, 10, 64)
 }
 
@@ -202,7 +226,7 @@ func (handler Handler) precompute(result Result) Result {
 	stats := map[enum.DeliveryServiceName]dsdata.Stat{}
 
 	var err error
-	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName); err != nil {
+	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName, handler.MultipleSpaceRegex); err != nil {
 		result.PrecomputedData.OutBytes = 0
 		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
 	}
@@ -212,7 +236,7 @@ func (handler Handler) precompute(result Result) Result {
 
 	for stat, value := range result.Astats.Ats {
 		var err error
-		stats, err = processStat(result.Id, stats, todata, stat, value)
+		stats, err = processStat(result.Id, stats, todata, stat, value, result.Time)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
 			log.Errorf("precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
@@ -224,7 +248,7 @@ func (handler Handler) precompute(result Result) Result {
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
 // TODO fix this being crazy slow. THIS IS THE BOTTLENECK
-func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -232,7 +256,7 @@ func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdat
 
 	switch parts[0] {
 	case "plugin":
-		return processStatPlugin(server, stats, toData, stat, parts[1:], value)
+		return processStatPlugin(server, stats, toData, stat, parts[1:], value, timeReceived)
 	case "proxy":
 		return stats, dsdata.ErrNotProcessedStat
 	case "server":
@@ -242,19 +266,19 @@ func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdat
 	}
 }
 
-func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
 	switch statParts[0] {
 	case "remap_stats":
-		return processStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value)
+		return processStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value, timeReceived)
 	default:
 		return stats, fmt.Errorf("stat has unknown plugin part '%s'", statParts[0])
 	}
 }
 
-func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 2 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
@@ -292,6 +316,10 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
 	}
 	dsStat.Types[cacheType] = dsStat.TotalStats
+
+	dsStat.Caches[server] = dsStat.TotalStats
+
+	dsStat.CachesTimeReceived[server] = timeReceived
 	stats[ds] = dsStat
 	return stats, nil
 }

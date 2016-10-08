@@ -1,11 +1,11 @@
 var RoleService = function(Restangular, messageModel) {
 
     this.getRoles = function() {
-        return Restangular.all('role').getList();
+        return Restangular.all('roles').getList();
     };
 
     this.getRole = function(id) {
-        return Restangular.one("role", id).get();
+        return Restangular.one("roles", id).get();
     };
 
     this.updateRole = function(role) {
@@ -21,7 +21,7 @@ var RoleService = function(Restangular, messageModel) {
     };
 
     this.deleteRole = function(id) {
-        return Restangular.one("role", id).remove()
+        return Restangular.one("roles", id).remove()
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Role deleted' } ], true);

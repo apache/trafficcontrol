@@ -392,6 +392,8 @@ sub api_routes {
 		->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get( "/api/1.2/asns")->over( authenticated => 1 )
 		->to( 'Asn#index',     namespace => $namespace );
+	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Asn#show',     namespace => $namespace );
 
 	# -- CACHEGROUPS
 	# -- CACHEGROUPS: CRUD
@@ -401,6 +403,8 @@ sub api_routes {
 		->to( 'Cachegroup#index', namespace => $namespace );
 	$r->get( "/api/$version/cachegroups/trimmed")->over( authenticated => 1 )
 		->to( 'Cachegroup#index_trimmed', namespace => $namespace );
+	$r->get("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Cachegroup#show', namespace => $namespace );
 	$r->post("/api/$version/cachegroups")->over( authenticated => 1 )
 		->to( 'Cachegroup#create', namespace => $namespace );
 	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )
@@ -420,6 +424,8 @@ sub api_routes {
 	# -- CDNS: CRUD
 	$r->get( "/api/$version/cdns")->over( authenticated => 1 )
 		->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns/:id" => [ id => qr/\d+/ ])->over( authenticated => 1 )
+		->to( 'Cdn#show', namespace => $namespace );
 	$r->get( "/api/$version/cdns/name/:name")->over( authenticated => 1 )
 		->to( 'Cdn#name',  namespace => $namespace );
 	$r->post( "/api/$version/cdns" )->over( authenticated => 1 )
@@ -498,7 +504,7 @@ sub api_routes {
 	# -- DELIVERYSERVICES: CRUD
 	$r->get( "/api/$version/deliveryservices")->over( authenticated => 1 )
 		->to( 'DeliveryService#delivery_services', namespace => $namespace );
-	$r->get( "/api/$version/deliveryservices/:id")->over( authenticated => 1 )
+	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'DeliveryService#delivery_services', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices")->over( authenticated => 1 )
 		->to( 'DeliveryService#create', namespace => $namespace );
@@ -583,7 +589,7 @@ sub api_routes {
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#index', namespace => $namespace );
-	$r->get("/api/$version/divisions/:id")->over( authenticated => 1 )
+	$r->get("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Division#show', namespace => $namespace );
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
@@ -634,6 +640,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#index', namespace => $namespace );
+	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'PhysLocation#show', namespace => $namespace );
 	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )
 		->to( 'PhysLocation#index_trimmed', namespace => $namespace );
 	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )
@@ -644,6 +652,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get( "/api/$version/profiles")->over( authenticated => 1 )
 		->to( 'Profile#index', namespace => $namespace );
+	$r->get( "/api/$version/profiles/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Profile#show', namespace => $namespace );
 	$r->get( "/api/$version/profiles/trimmed")->over( authenticated => 1 )
 		->to( 'Profile#index_trimmed', namespace => $namespace );
 	$r->post( "/api/$version/profiles" )->over( authenticated => 1 )
@@ -665,6 +675,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/regions")->over( authenticated => 1 )
 		->to( 'Region#index', namespace => $namespace );
+	$r->get( "/api/$version/regions/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Region#show',  namespace => $namespace );
 	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
 		->to( 'Region#create', namespace => $namespace );
 
@@ -677,6 +689,9 @@ sub api_routes {
 	# -- SERVERS: CRUD
 	$r->get( "/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#index',  namespace => $namespace );
+	$r->get( "/api/$version/servers/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Server#show',  namespace => $namespace );
+
 	$r->post("/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )
@@ -716,6 +731,8 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/statuses")->over( authenticated => 1 )
 		->to( 'Status#index', namespace => $namespace );
+	$r->get( "/api/$version/statuses/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Status#show',  namespace => $namespace );
 
 	# -- STATIC DNS ENTRIES
 	$r->get("/api/$version/staticdnsentries")->over( authenticated => 1 )
@@ -731,10 +748,15 @@ sub api_routes {
 		->to( 'Types#index', namespace => $namespace );
 	$r->get("/api/$version/types/trimmed")->over( authenticated => 1 )
 		->to( 'Types#index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/types/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Types#show',  namespace => $namespace );
 
 	# -- USERS
 	$r->get( "/api/$version/users")->over( authenticated => 1 )
 		->to( 'User#index', namespace => $namespace );
+	$r->get( "/api/$version/users/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'User#show',  namespace => $namespace );
+
 
 	# -- USERS: CURRENT USER
 	$r->get( "/api/$version/user/current")->over( authenticated => 1 )

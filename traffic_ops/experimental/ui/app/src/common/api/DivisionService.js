@@ -1,15 +1,15 @@
 var DivisionService = function(Restangular, messageModel) {
 
     this.getDivisions = function() {
-        return Restangular.all('division').getList();
+        return Restangular.all('divisions').getList();
     };
 
     this.getDivision = function(id) {
-        return Restangular.one("division", id).get();
+        return Restangular.one("divisions", id).get();
     };
 
     this.createDivision = function(division) {
-        return Restangular.service('division').post(division)
+        return Restangular.service('divisions').post(division)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division created' } ], true);
@@ -33,7 +33,7 @@ var DivisionService = function(Restangular, messageModel) {
     };
 
     this.deleteDivision = function(id) {
-        return Restangular.one("division", id).remove()
+        return Restangular.one("divisions", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division deleted' } ], true);

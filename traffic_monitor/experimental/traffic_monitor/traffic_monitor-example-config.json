@@ -8,5 +8,9 @@
 	"max_stat_history": 5,
 	"max_health_history": 5,
 	"health_flush_interval_ms": 200,
-	"stat_flush_interval_ms": 200
+	"stat_flush_interval_ms": 200,
+	"log_location_error": "stderr",
+	"log_location_warning": "stdout",
+	"log_location_info": "null",
+	"log_location_debug": "null"
 }
