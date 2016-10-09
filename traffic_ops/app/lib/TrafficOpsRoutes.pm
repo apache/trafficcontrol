@@ -621,7 +621,7 @@ sub api_routes {
 	# -- PARAMETERS: PROFILE PARAMETERS
 	$r->get( "/api/$version/profileparameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#index', namespace => $namespace );
-	$r->post( "/api/$version/profileparameters/:id" )->over( authenticated => 1 )
+	$r->post( "/api/$version/profileparameters" )->over( authenticated => 1 )
 		->to( 'ProfileParameter#create', namespace => $namespace );
 	$r->delete( "/api/$version/profileparameters/:profile_id/:parameter_id" )->over( authenticated => 1 )
 		->to( 'ProfileParameter#delete', namespace => $namespace );
@@ -658,6 +658,8 @@ sub api_routes {
 		->to( 'Profile#index_trimmed', namespace => $namespace );
 	$r->post( "/api/$version/profiles" )->over( authenticated => 1 )
 		->to( 'Profile#create', namespace => $namespace );
+	$r->post( "/api/$version/profiles/parameters" )->over( authenticated => 1 )
+		->to( 'ProfileParameter#addex', namespace => $namespace );
 	$r->put("/api/$version/profiles/:id")->over( authenticated => 1 )
 		->to( 'Profile#update', namespace => $namespace );
 	$r->delete("/api/$version/profiles/:id")->over( authenticated => 1 )
@@ -666,10 +668,6 @@ sub api_routes {
 	# -- PROFILES: COPY
 	$r->post( "/api/$version/profiles/name/:profile_name/copy/:profile_copy_from" )->over( authenticated => 1 )
 		->to( 'Profile#copy', namespace => $namespace );
-
-	# -- PROFILES: PROFILE PARAMETERS
-	$r->get( "/api/$version/profiles/parameter/:parameter_id" )->over( authenticated => 1 )
-		->to( 'Profile#parameter', namespace => $namespace );
 
 	# -- REGIONS
 	# Supports ?orderby=key

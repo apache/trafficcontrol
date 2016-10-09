@@ -104,14 +104,14 @@ ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/jso
         })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/profiles/parameter/9' => {Accept => 'application/json'})->status_is(200)
+ok $t->get_ok('/api/1.2/profiles?param=9' => {Accept => 'application/json'})->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/profiles/0/id" => "1" )
-	->json_is( "/response/profiles/0/name" => "EDGE1" )
-	->json_is( "/response/profiles/0/description" => "edge description" )
-	->json_is( "/response/profiles/1/id" => "2" )
-	->json_is( "/response/profiles/1/name" => "MID1" )
-	->json_is( "/response/profiles/1/description" => "mid description" )
+	->json_is( "/response/0/id" => "1" )
+	->json_is( "/response/0/name" => "EDGE1" )
+	->json_is( "/response/0/description" => "edge description" )
+	->json_is( "/response/1/id" => "2" )
+	->json_is( "/response/1/name" => "MID1" )
+	->json_is( "/response/1/description" => "mid description" )
 		, 'Does the profile details return?';
 
 ok $t->get_ok('/api/1.2/profiles/parameter/1' => {Accept => 'application/json'})->status_is(404);

@@ -25,69 +25,106 @@ Profile parameters
 /api/1.2/profileparameters
 ++++++++++++++++++++++++++
 
-**POST /api/1.2/profileparameters/{:id}**
+**POST /api/1.2/profileparameters**
 
-    Associate parameters to a profile.
+    Associate parameter to profile.
 
 	Authentication Required: Yes
 
 	Role(s) Required:  admin or oper
 
-	**Request Route Parameters**
-
-	+------------------+----------+----------------------------------------------------+
-	| Name             | Required | Description                                        |
-	+==================+==========+====================================================+
-	| ``id``           | yes      | profile id.                                        |
-	+------------------+----------+----------------------------------------------------+
-
 	**Request Properties**
+	This accept two formats: single profile-parameter, profile-parameter array.
+
+	Single profile-parameter format:
 
 	+------------------+----------+----------------------------------------------------+
 	| Parameter        | Required | Description                                        |
 	+==================+==========+====================================================+
-	| ``parametersId`` | yes      | id array of parameters to associate to the profile,|
-	|                  |          | for example: [ 1, 2, 32 ]                          |
+	| ``profileId``    | yes      | profile id.                                        |
+	+------------------+----------+----------------------------------------------------+
+	| ``parameterId``  | yes      | parameter id.                                      |
+	+------------------+----------+----------------------------------------------------+
+
+	Profile-parameter array format:
+
+	+------------------+----------+----------------------------------------------------+
+	| Parameter        | Required | Description                                        |
+	+==================+==========+====================================================+
+	|                  | yes      | profile-parameter array.                           |
+	+------------------+----------+----------------------------------------------------+
+	| ``>profileId``   | yes      | profile id.                                        |
+	+------------------+----------+----------------------------------------------------+
+	| ``>parameterId`` | yes      | parameter id.                                      |
 	+------------------+----------+----------------------------------------------------+
 
   **Request Example** ::
 
+    Single profile-parameter format:
+
     {
-      "parametersId": [ 4, 5 ]
+      "profileId": 2,
+      "parameterId": 6
     }
+
+    Profile-parameter array format:
+
+    [
+        {
+          "profileId": 2,
+          "parameterId": 6
+        },
+        {
+          "profileId": 2,
+          "parameterId": 7
+        },
+        {
+          "profileId": 3,
+          "parameterId": 6
+        }
+    ]
 
  	**Response Properties**
 
-	+-------------------+--------+-----------------------------------------------------+
-	|  Parameter        |  Type  |           Description                               |
-	+===================+========+=====================================================+
-	| ``response``      |        | Parameters associated with the profile.             |
-	+-------------------+--------+-----------------------------------------------------+
-	| ``>id``           | string | Profile id.                                         |
-	+-------------------+--------+-----------------------------------------------------+
-	| ``>parametersId`` | array  | id array of parameters associated with the profile, |
-	|                   |        | for example [ 1, 2, 32, 100 ]                       |
-	+-------------------+--------+-----------------------------------------------------+
-	| ``alerts``        | array  | A collection of alert messages.                     |
-	+-------------------+--------+-----------------------------------------------------+
-	| ``>level``        | string | success, info, warning or error.                    |
-	+-------------------+--------+-----------------------------------------------------+
-	| ``>text``         | string | Alert message.                                      |
-	+-------------------+--------+-----------------------------------------------------+
-	| ``version``       | string |                                                     |
-	+-------------------+--------+-----------------------------------------------------+
+	+-------------------+---------+-----------------------------------------------------+
+	|  Parameter        |  Type   |           Description                               |
+	+===================+=========+=====================================================+
+	| ``response``      | array   | Profile-parameter associations.                     |
+	+-------------------+---------+-----------------------------------------------------+
+	| ``>profileId``    | string  | Profile id.                                         |
+	+-------------------+---------+-----------------------------------------------------+
+	| ``>parameterId``  | string  | Parameter id.                                       |
+	+-------------------+---------+-----------------------------------------------------+
+	| ``alerts``        | array   | A collection of alert messages.                     |
+	+-------------------+---------+-----------------------------------------------------+
+	| ``>level``        | string  | success, info, warning or error.                    |
+	+-------------------+---------+-----------------------------------------------------+
+	| ``>text``         | string  | Alert message.                                      |
+	+-------------------+---------+-----------------------------------------------------+
+	| ``version``       | string  |                                                     |
+	+-------------------+---------+-----------------------------------------------------+
 
   **Response Example** ::
 
     {
-      "response":{
-        "id": "3",
-        "parametersId": [ 3, 4, 5 ]
-      }
+      "response":[
+        {
+          "profileId": "2",
+          "parameterId": "6"
+        },
+        {
+          "profileId": "2",
+          "parameterId": "7"
+        },
+        {
+          "profileId": "3",
+          "parameterId": "6"
+        }
+      ]
       "alerts":[
         {
           "level": "success",
-          "text": "Parameters were associated to profile: 3"
+          "text": "Profile parameter associations were created."
         }
       ]
     }
@@ -138,3 +175,115 @@ Profile parameters
     }
 
 |
+
+**POST /api/1.2/profiles/parameters**
+
+    Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter already associate the profile, keep the association.
+    If the profile does not exist, the API returns fail.
+
+    Authentication Required: Yes
+
+    Role(s) Required:  admin or oper. If there is parameter's secure equals 1 in the request properties, need admin role. 
+
+
+    **Request Properties**
+
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | Name            | Required | Type    | Description                                                                          |
+    +=================+==========+=========+======================================================================================+
+    | ``profileName`` | yes      | string  | profile name                                                                         |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``parameters``  | yes      | array   | parameters array                                                                     |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>name``       | yes      | string  | parameter name                                                                       |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>configFile`` | yes      | string  | parameter config_file                                                                |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>value``      | yes      | string  | parameter value                                                                      |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>secure``     | yes      | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "profileName": "CCR1",
+        "parameters":[
+            {
+                "name":"param1",
+                "configFile":"configFile1"
+                "value":"value1",
+                "secure":0,
+            },
+            {
+                "name":"param2",
+                "configFile":"configFile2"
+                "value":"value2",
+                "secure":1,
+            }
+        ]
+    }
+
+  **Response Properties**
+
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | Name             | Type    | Description                                                                          |
+    +==================+=========+======================================================================================+
+    | ``response``     |         | Parameters associated with the profile.                                              |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>profileName`` | string  | profile name                                                                         |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>profileId``   | integer | profile index                                                                        |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>parameters``  | array   | parameters array                                                                     |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>id``         | integer | parameter index                                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>name``       | string  | parameter name                                                                       |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>configFile`` | string  | parameter config_file                                                                |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>value``      | string  | parameter value                                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>secure``     | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``alerts``       | array   | A collection of alert messages.                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>level``       | string  | success, info, warning or error.                                                     |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>text``        | string  | Alert message.                                                                       |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``version``      | string  |                                                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response":{
+        "profileName": "CCR1",
+        "profileId" : "12",
+        "parameters":[
+            {
+                "name":"param1",
+                "configFile":"configFile1"
+                "value":"value1",
+                "secure":"0",
+            },
+            {
+                "name":"param2",
+                "configFile":"configFile2"
+                "value":"value2",
+                "secure":"1",
+            }
+        ]
+      }
+      "alerts":[
+        {
+          "level": "success",
+          "text": ""Assign parameters successfully to profile CCR1"
+        }
+      ]
+    }
+
+|
+

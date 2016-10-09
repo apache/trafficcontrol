@@ -39,20 +39,31 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/profileparameters/3' => {Accept => 'application/json'} => json => {
-	"parametersId" => [4,5] })->status_is(200)
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
+	"profileId" => 3, "parameterId" => 4 })->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/id" => "3" )
-	->json_is( "/response/parametersId/0" => "3" )
-	->json_is( "/response/parametersId/1" => "4" )
-	->json_is( "/response/parametersId/2" => "5" )
+	->json_is( "/response/0/profileId" => "3" )
+	->json_is( "/response/0/parameterId" => "4" )
 		, 'Does the profile parameter details return?';
 
-ok $t->post_ok('/api/1.2/profileparameters/3' => {Accept => 'application/json'} => json => {
-	"parametersId" => [] })->status_is(400);
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => [
+	{ "profileId" => 3, "parameterId" => 5 },
+	{ "profileId" => 3, "parameterId" => 6 }
+	])->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/profileId" => "3" )
+	->json_is( "/response/0/parameterId" => "5" )
+	->json_is( "/response/1/profileId" => "3" )
+	->json_is( "/response/1/parameterId" => "6" )
+		, 'Does the profile parameter details return?';
 
-ok $t->post_ok('/api/1.2/profileparameters/3' => {Accept => 'application/json'} => json => {
-	"parametersId" => [2] })->status_is(400);
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => [])->status_is(400);
+
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
+	"profileId" => 3, "parameterId" => 4 })->status_is(400);
+
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
+	"profileId" => 3, "parameterId" => 2 })->status_is(400);
 
 ok $t->delete_ok('/api/1.2/profileparameters/3/5' => {Accept => 'application/json'})->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -60,10 +71,117 @@ ok $t->delete_ok('/api/1.2/profileparameters/3/5' => {Accept => 'application/jso
 	->json_is( "/alerts/0/text", "Profile parameter association was deleted." );
 
 my @associated_params = &get_parameter_ids(3);
-my @expected = (3,4);
+my @expected = (3,4,6);
 ok( @associated_params ~~ @expected );
 
 ok $t->delete_ok('/api/1.2/profileparameters/3/5' => {Accept => 'application/json'})->status_is(400);
+
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR1",
+        "parameters" => [
+            {
+                "name"          => "param1",
+                "configFile"    => "configFile1",
+                "value"         => "value1"
+            },
+            {
+                "name"          => "param2",
+                "configFile"    => "configFile2",
+                "value"         => "value2"
+            },
+        ] }) ->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/profileName" => "CCR1" )
+	->json_is( "/response/parameters/0/name" => "param1" )
+	->json_is( "/response/parameters/0/configFile" => "configFile1" )
+	->json_is( "/response/parameters/0/value" => "value1" )
+	->json_is( "/response/parameters/0/secure" => "0" )
+	->json_is( "/response/parameters/1/name" => "param2" )
+	->json_is( "/response/parameters/1/configFile" => "configFile2" )
+	->json_is( "/response/parameters/1/value" => "value2" )
+	->json_is( "/response/parameters/1/secure" => "0" )
+		, 'Does the profile_parameters create details return?';
+
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR1",
+        "parameters" => [
+            {
+                "name"          => "param1",
+                "configFile"    => "configFile1",
+                "value"         => "value1",
+                "secure"        => "0"
+            },
+            {
+                "name"          => "param3",
+                "configFile"    => "configFile3",
+                "value"         => "value3",
+                "secure"        => "0"
+            },
+        ] }) ->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		, 'Does the profile_parameters create details return?';
+
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR1",
+        "parameters" => [
+            {
+                "configFile"    => "configFile1",
+                "value"         => "value1",
+                "secure"        => "0"
+            },
+        ] }) ->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_like( "/alerts/0/text" => qr/^there is parameter name does not provide/ )
+		, 'Does the profile_parameters create details return?';
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR1",
+        "parameters" => [
+            {
+                "name"          => "param1",
+                "value"         => "value1",
+                "secure"        => "0"
+            },
+        ] }) ->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_like( "/alerts/0/text" => qr/^there is parameter configFile does not provide/ )
+		, 'Does the profile_parameters create details return?';
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR1",
+        "parameters" => [
+            {
+                "name"          => "param1",
+                "configFile"    => "configFile1",
+                "secure"        => "0"
+            },
+        ] }) ->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_like( "/alerts/0/text" => qr/^there is parameter value does not provide/ )
+		, 'Does the profile_parameters create details return?';
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR1",
+        "parameters" => [
+            {
+                "name"          => "param1",
+                "configFile"    => "configFile1",
+                "value"         => "value1",
+                "secure"        => "abc"
+            },
+        ] }) ->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_like( "/alerts/0/text" => qr/^secure must 0 or 1/ )
+		, 'Does the profile_parameters create details return?';
+
+ok $t->post_ok('/api/1.2/profiles/parameters' => {Accept => 'application/json'} => json => {
+        "profileName" => "CCR11",
+        "parameters" => [
+            {
+                "name"          => "param1",
+                "configFile"    => "configFile1",
+                "value"         => "value1"
+            },
+        ] }) ->status_is(404)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		, 'Does the profile_parameters create details return?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

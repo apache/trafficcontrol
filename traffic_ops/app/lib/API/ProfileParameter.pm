@@ -43,60 +43,49 @@ sub index {
 
 sub create {
 	my $self = shift;
-	my $profile_id = $self->param('id');
 	my $params = $self->req->json;
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
 
-	my $profile = $self->db->resultset('Profile')->find( { id => $profile_id } );
-	if ( !defined($profile) ) {
-		return $self->not_found();
-	}
-
 	if ( !defined($params) ) {
 		return $self->alert("parameters must be in JSON format.");
 	}
-	if ( !defined($params->{parametersId}) ) {
-		return $self->alert("parameter parametersId is must.");
+	if ( ref($params) ne 'ARRAY' ) {
+		my @temparry;
+		push(@temparry, $params);
+		$params = \@temparry;
 	}
-	if ( ref($params->{parametersId}) ne 'ARRAY' ) {
-		return $self->alert("parameter parametersId must be array.");
-	}
-	if ( scalar(@{ $params->{parametersId} }) == 0 ) {
-		return $self->alert("parametersId array length is 0.");
+	if ( scalar(@{ $params }) == 0 ) {
+		return $self->alert("parameters array length is 0.");
 	}
 
-	my @param_ids = ();
-	foreach my $param (@{ $params->{parametersId} }) {
-		my $param_exist = $self->db->resultset('Parameter')->find( { id => $param } );
+	$self->db->txn_begin();
+	foreach my $param (@{ $params }) {
+		my $profile_exist = $self->db->resultset('Profile')->find( { id => $param->{profileId} } );
+		if ( !defined($profile_exist) ) {
+			$self->db->txn_rollback();
+			return $self->alert("profile with id: " . $param->{profileId} . " isn't existed.");
+		}
+		my $param_exist = $self->db->resultset('Parameter')->find( { id => $param->{parameterId} } );
 		if ( !defined($param_exist) ) {
-			return $self->alert("parameter with id: $param isn't existed.");
+			$self->db->txn_rollback();
+			return $self->alert("parameter with id: " . $param->{parameterId} . " isn't existed.");
 		}
-		my $profile_param_exist = $self->db->resultset('ProfileParameter')->find( { parameter => $param_exist->id, profile => $profile->id } );
+		my $profile_param_exist = $self->db->resultset('ProfileParameter')->find( { parameter => $param_exist->id, profile => $profile_exist->id } );
 		if ( defined($profile_param_exist) ) {
-			return $self->alert("parameter: $param already associated with profile: $profile_id");
+			$self->db->txn_rollback();
+			return $self->alert("parameter: " . $param->{parameterId} . " already associated with profile: " . $param->{profileId});
 		}
-		push(@param_ids, $param_exist->id);
+		$self->db->resultset('ProfileParameter')->create( { parameter => $param_exist->id, profile => $profile_exist->id } )->insert();
 	}
+	$self->db->txn_commit();
 
-	foreach my $param_id (@param_ids) {
-		$self->db->resultset('ProfileParameter')->create( { parameter => $param_id, profile => $profile->id } )->insert();
-	}
+	&log( $self, "New profile parameter associations were created.", "APICHANGE" );
 
-	&log( $self, "Associate new parameters to profile: $profile_id", "APICHANGE" );
-
-	my @new_params = ();
-	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $profile->id } );
-	while ( my $row = $rs->next ) {
-		push(@new_params, $row->parameter->id)
-	}
-
-	my $response;
-	$response->{id} = $profile_id;
-	$response->{parametersId} = \@new_params;
-	return $self->success($response, "Parameters were associated to profile: " . $profile_id);
+	my $response = $params;
+	return $self->success($response, "Profile parameter associations were created.");
 }
 
 sub delete {
@@ -128,6 +117,111 @@ sub delete {
 	&log( $self, "Delete profile parameter " . $profile->name . " <-> " . $parameter->name, "APICHANGE" );
 
 	return $self->success_message("Profile parameter association was deleted.");
+}
+
+sub addex {
+	my $self = shift;
+	my $json = $self->req->json;
+	if ( !&is_oper($self) ) {
+		return $self->forbidden("You must be an admin or oper to perform this operation!");
+	}
+
+    if ( !defined($json->{profileName}) ) {
+        return $self->alert("'profileName' is not given.");
+    }
+    my $profile_find = $self->db->resultset('Profile')->find({ name => $json->{profileName} });
+    if ( !defined($profile_find) ){
+        return $self->not_found("profile ". $json->{profileName}. " does not exist.");
+    }
+
+    my @new_parameters = ();
+    $self->db->txn_begin();
+    foreach my $param (@{ $json->{parameters} }) {
+        if ( !defined($param->{name}) ) {
+            $self->db->txn_rollback();
+            return $self->alert("there is parameter name does not provide , configFile:".$param->{configFile}." , value:".$param->{value});
+        }
+        if ( !defined($param->{configFile}) ) {
+            $self->db->txn_rollback();
+            return $self->alert("there is parameter configFile does not provide , name:".$param->{name}." , value:".$param->{value});
+        }
+        if ( !defined($param->{value}) ) {
+            $self->db->txn_rollback();
+            return $self->alert("there is parameter value does not provide , name:".$param->{name}." , configFile:".$param->{configFile});
+        }
+        if ( !defined($param->{secure}) ) {
+            $param->{secure} = 0
+        } else {
+            if (($param->{secure} ne '0') && ($param->{secure} ne '1')) {
+                $self->db->txn_rollback();
+                return $self->alert("secure must 0 or 1, parameter [name:".$param->{name}." , configFile:".$param->{configFile}." , value:".$param->{value}." , secure:".$param->{secure}."]");
+            }
+            $param->{secure} = 0 if ($param->{secure} eq '0' );
+            $param->{secure} = 1 if ($param->{secure} eq '1' );
+            if ( $param->{secure} != 0 && !&is_admin($self)) {
+                $self->db->txn_rollback();
+                return $self->forbidden("Parameter[name:".$param->{name}." , configFile:".$param->{configFile}." , value:".$param->{value}."] secure=1, You must be an admin to perform this operation!");
+            }
+        }
+
+        my $param_find = $self->db->resultset('Parameter')->find({ 
+                name => $param->{name},
+                config_file => $param->{configFile},
+                value => $param->{value},
+            } ) ;
+        my $param_id = undef;
+        if ( !defined($param_find) ){
+            my $insert = $self->db->resultset('Parameter')->create(
+                {
+                    name            => $param->{name},
+                    config_file     => $param->{configFile},
+                    value           => $param->{value},
+                    secure          => $param->{secure}
+                }
+            );
+            $insert->insert();
+            $param_id = $insert->id;
+            push(@new_parameters, {
+                    'id'            => $insert->id,
+                    'name'          => $insert->name,
+                    'configFile'    => $insert->config_file,
+                    'value'         => $insert->value,
+                    'secure'        => $insert->secure
+                })
+        } else {
+            $param_id = $param_find->id;
+            push(@new_parameters, {
+                    'id'            => $param_find->id,
+                    'name'          => $param_find->name,
+                    'configFile'    => $param_find->config_file,
+                    'value'         => $param_find->value,
+                    'secure'        => $param_find->secure
+                })
+        }
+
+        my $profile_parameter_find = $self->db->resultset("ProfileParameter")->find( {
+                profile     => $profile_find->id,
+                parameter   => $param_id
+            } );
+        if ( !defined($profile_parameter_find) ) {
+            my $insert = $self->db->resultset('ProfileParameter')->create(
+                {
+                    profile     => $profile_find->id,
+                    parameter   => $param_id
+                }
+            );
+            $insert->insert();
+        } else {
+            $self->app->log->warn("parameter [name:".$param_find->name." , configFile:".$param_find->config_file." , value:".$param_find->value."] has already assigned to profile ". $json->{profileName});
+        }
+    }
+    $self->db->txn_commit();
+
+    my $response;
+    $response->{profileName} = $json->{profileName};
+    $response->{profileId}   = $profile_find->id;
+    $response->{parameters}  = \@new_parameters;
+    $self->success($response, "Assign parameters successfully to profile ". $response->{profileName});
 }
 
 1;

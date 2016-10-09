@@ -31,6 +31,14 @@ Profiles
 
 	Role(s) Required: None
 
+	**Request Query Parameters**
+
+	+---------------+----------+----------------------------------------------------+
+	|    Name       | Required |                    Description                     |
+	+===============+==========+====================================================+
+	| ``param``     |   no     | Used to filter profiles by parameter.              |
+	+---------------+----------+----------------------------------------------------+
+
 	**Response Properties**
 
 	+-----------------+--------+----------------------------------------------------+
@@ -342,73 +350,6 @@ Profiles
         {
           "level": "success",
           "text": "Profile was deleted."
-        }
-      ]
-    }
-
-|
-
-**GET /api/1.2/profiles/parameter/:parameter_id**
-
-    Get profiles associated to a parameter
-
-	Authentication Required: Yes
-
-	Role(s) Required: admin or oper
-
-	**Request Route Parameters**
-   
-	+--------------------+----------+---------------------------------------------------+
-	| Name               | Required | Description                                       |
-	+====================+==========+===================================================+
-	| ``parameter_id``   | yes      | The parameter id                                  |
-	+--------------------+----------+---------------------------------------------------+
-
-	**Response Properties**
-
-	+--------------------+--------+-----------------------------------------------------+
-	|  Parameter         |  Type  |           Description                               |
-	+====================+========+=====================================================+
-	| ``response``       |        |                                                     |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``>profiles``      | array  | Parameters associated with the profile.             |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``>>id``           | string | Primary key.                                        |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``>>name``         | string | The name for the profile.                           |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``>>description``  | string | The description for the profile.                    |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``alerts``         | array  | A collection of alert messages.                     |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``>level``         | string | success, info, warning or error.                    |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``>text``          | string | Alert message.                                      |
-	+--------------------+--------+-----------------------------------------------------+
-	| ``version``        | string |                                                     |
-	+--------------------+--------+-----------------------------------------------------+
-
-  **Response Example** ::
-
-    {
-      "response":{
-        "profiles": [
-            {
-                "id": "1",
-                "name": "EDGE1",
-                "description": "edge description"
-            },
-            {
-                "id": "2",
-                "name": "MID1",
-                "description": "mid description"
-            }
-        ]
-      },
-      "alerts":[
-        {
-          "level": "success",
-          "text": "Get profiles by parameter completed."
         }
       ]
     }
