@@ -173,14 +173,18 @@ sub get {
         return $self->forbidden("You must be an admin to perform this operation!");
     }
 
-    my $response;
-    $response->{id}     = $find->id;
-    $response->{name}   = $find->name;
-    $response->{configFile} = $find->config_file;
-    $response->{value}  = $find->value;
-    $response->{secure} = $find->secure;
-
-    return $self->success($response, "Get parameter successfully.");
+	my @data = ();
+	push(
+		@data, {
+			"id"          => $find->id,
+			"name"        => $find->name,
+			"configFile"  => $find->config_file,
+			"value"       => $find->value,
+			"secure"      => \$find->secure,
+			"lastUpdated" => $find->last_updated
+		}
+	);
+	$self->success( \@data );
 }
 
 sub edit {

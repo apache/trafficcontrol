@@ -100,14 +100,19 @@ Parameter
 
   **Response Example** ::
 
+  **Response Example** ::
+
     {
-     "response": {
-           "id": 1,
+     "response": [
+        {
+           "last_updated": "2012-09-17 21:41:22",
            "secure": 0,
            "value": "foo.bar.net",
            "name": "domain_name",
+           "id": "27",
            "config_file": "FooConfig.xml"
         }
+     ]
     }
 
 |
