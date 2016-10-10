@@ -28,10 +28,7 @@ sub index {
 	my $self = shift;
 	my @data;
 	my $orderby = $self->param('orderby') || "me.name";
-	my $rs_data
-		= $self->db->resultset("Profile")
-		->search( undef,
-		{ order_by => $orderby } );
+	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
@@ -44,6 +41,7 @@ sub index {
 	}
 	$self->success( \@data );
 }
+
 sub index_trimmed {
 	my $self = shift;
 	my @data;
@@ -79,15 +77,15 @@ sub show {
 }
 
 sub create {
-  my $self = shift;
-  my $params = $self->req->json;
-  if ( !defined($params) ) {
-      return $self->alert("parameters must be in JSON format,  please check!");
-  }
+	my $self   = shift;
+	my $params = $self->req->json;
+	if ( !defined($params) ) {
+		return $self->alert("parameters must be in JSON format,  please check!");
+	}
 
-  if ( !&is_oper($self) ) {
-      return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
-  }
+	if ( !&is_oper($self) ) {
+		return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+	}
 
 	my $name = $params->{name};
 	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
@@ -99,14 +97,14 @@ sub create {
 		return $self->alert("profile 'description' is required.");
 	}
 
-	my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
+	my $existing_profile = $self->db->resultset('Profile')->search( { name => $name } )->get_column('name')->single();
 	if ( $existing_profile && $name eq $existing_profile ) {
 		return $self->alert("profile with name $name already exists.");
 	}
 
 	my $existing_desc = $self->db->resultset('Profile')->find( { description => $description } );
-	if ( $existing_desc ) {
-		return $self->alert("a profile with the exact same description already exists." );
+	if ($existing_desc) {
+		return $self->alert("a profile with the exact same description already exists.");
 	}
 
 	my $insert = $self->db->resultset('Profile')->create(
@@ -121,73 +119,74 @@ sub create {
 	&log( $self, "Created profile with id: " . $new_id . " and name: " . $name, "APICHANGE" );
 
 	my $response;
-	$response->{id} = $new_id;
-	$response->{name} = $name;
+	$response->{id}          = $new_id;
+	$response->{name}        = $name;
 	$response->{description} = $description;
 	return $self->success($response);
 }
 
 sub copy {
-    my $self = shift;
+	my $self = shift;
 
-    if ( !&is_oper($self) ) {
-        return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
-    }
+	if ( !&is_oper($self) ) {
+		return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+	}
 
-	my $name = $self->param('profile_name');
+	my $name                   = $self->param('profile_name');
 	my $profile_copy_from_name = $self->param('profile_copy_from');
 	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
 		return $self->alert("profile 'name' is required and cannot contain spaces.");
 	}
-    if ( defined($profile_copy_from_name) and ( $profile_copy_from_name eq "" ) ) {
-        return $self->alert("profile name 'profile_copy_from' can't be null.");
-    }
+	if ( defined($profile_copy_from_name) and ( $profile_copy_from_name eq "" ) ) {
+		return $self->alert("profile name 'profile_copy_from' can't be null.");
+	}
 
-    my $existing_profile = $self->db->resultset('Profile')->search( { name        => $name } )->get_column('name')->single();
-    if ( $existing_profile && $name eq $existing_profile ) {
-        return $self->alert("profile with name $name already exists.");
-    }
+	my $existing_profile = $self->db->resultset('Profile')->search( { name => $name } )->get_column('name')->single();
+	if ( $existing_profile && $name eq $existing_profile ) {
+		return $self->alert("profile with name $name already exists.");
+	}
 
-    my $rs = $self->db->resultset('Profile')->search( { name => $profile_copy_from_name } );
-    my $row1 = $rs->next;
-    if ( !$row1 ) {
-        return $self->alert("profile_copy_from $profile_copy_from_name doesn't exist.");
-    }
-    my $profile_copy_from_id = $row1->id;
-    my $description = $row1->description;
+	my $rs = $self->db->resultset('Profile')->search( { name => $profile_copy_from_name } );
+	my $row1 = $rs->next;
+	if ( !$row1 ) {
+		return $self->alert("profile_copy_from $profile_copy_from_name doesn't exist.");
+	}
+	my $profile_copy_from_id = $row1->id;
+	my $description          = $row1->description;
 
-    my $insert = $self->db->resultset('Profile')->create(
-        {
-            name        => $name,
-            description => $description,
-        }
-    );
-    $insert->insert();
-    my $new_id = $insert->id;
+	my $insert = $self->db->resultset('Profile')->create(
+		{
+			name        => $name,
+			description => $description,
+		}
+	);
+	$insert->insert();
+	my $new_id = $insert->id;
 
-    if ( defined($profile_copy_from_name) ) {
-        my $rs_param =
-        $self->db->resultset('ProfileParameter')->search( { profile => $profile_copy_from_id }, { prefetch => [ { profile => undef }, { parameter => undef } ] } );
-        while ( my $row = $rs_param->next ) {
-            my $insert = $self->db->resultset('ProfileParameter')->create(
-                {
-                    profile   => $new_id,
-                    parameter => $row->parameter->id,
-                }
-            );
-            $insert->insert();
-        }
-    }
+	if ( defined($profile_copy_from_name) ) {
+		my $rs_param =
+			$self->db->resultset('ProfileParameter')
+			->search( { profile => $profile_copy_from_id }, { prefetch => [ { profile => undef }, { parameter => undef } ] } );
+		while ( my $row = $rs_param->next ) {
+			my $insert = $self->db->resultset('ProfileParameter')->create(
+				{
+					profile   => $new_id,
+					parameter => $row->parameter->id,
+				}
+			);
+			$insert->insert();
+		}
+	}
 
 	&log( $self, "Created profile from copy with id: " . $new_id . " and name: " . $name, "APICHANGE" );
 
 	my $response;
-    $response->{id} = $new_id;
-    $response->{name} = $name;
-    $response->{description} = $description;
-    $response->{profileCopyFrom} = $profile_copy_from_name;
-    $response->{idCopyFrom} = $profile_copy_from_id;
-    return $self->success($response);
+	$response->{id}              = $new_id;
+	$response->{name}            = $name;
+	$response->{description}     = $description;
+	$response->{profileCopyFrom} = $profile_copy_from_name;
+	$response->{idCopyFrom}      = $profile_copy_from_id;
+	return $self->success($response);
 }
 
 sub update {
@@ -214,8 +213,8 @@ sub update {
 	}
 	if ( $profile->name ne $name ) {
 		my $existing = $self->db->resultset('Profile')->find( { name => $name } );
-		if ( $existing ) {
-			return $self->alert("a profile with name " . $name . " already exists." );
+		if ($existing) {
+			return $self->alert( "a profile with name " . $name . " already exists." );
 		}
 	}
 
@@ -225,27 +224,33 @@ sub update {
 	}
 	if ( $profile->description ne $description ) {
 		my $existing = $self->db->resultset('Profile')->find( { description => $description } );
-		if ( $existing ) {
-			return $self->alert("a profile with the exact same description already exists." );
+		if ($existing) {
+			return $self->alert("a profile with the exact same description already exists.");
 		}
 	}
 
-	$profile->name($name);
-	$profile->description($description);
-	$profile->update();
+	my $values = {
+		name        => $name,
+		description => $description
+	};
 
-	&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
-
-	my $response;
-	$response->{id} = $id;
-	$response->{name} = $name;
-	$response->{description} = $description;
-	return $self->success($response, "Profile was updated: " . $id);
+	my $rs = $profile->update($values);
+	if ($rs) {
+		my $response;
+		$response->{id}          = $id;
+		$response->{name}        = $name;
+		$response->{description} = $description;
+		&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
+		return $self->success( $response, "Profile was updated: " . $id );
+	}
+	else {
+		return $self->alert("Profile update failed.");
+	}
 }
 
 sub delete {
-	my $self   = shift;
-	my $id     = $self->param('id');
+	my $self = shift;
+	my $id   = $self->param('id');
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
