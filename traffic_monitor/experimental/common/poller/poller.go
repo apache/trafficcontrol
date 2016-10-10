@@ -1,7 +1,6 @@
 package poller
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
 	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
 	to "github.com/Comcast/traffic_control/traffic_ops/client"
 )
@@ -85,23 +85,23 @@ func (p MonitorConfigPoller) Poll() {
 	for {
 		select {
 		case opsConfig := <-p.OpsConfigChannel:
-			fmt.Println("MonitorConfigPoller: received new opsConfig: %v", opsConfig)
+			log.Infof("MonitorConfigPoller: received new opsConfig: %v\n", opsConfig)
 			p.OpsConfig = opsConfig
 		case session := <-p.SessionChannel:
-			//			fmt.Println("MonitorConfigPoller: received new session: %v", session)
+			log.Infof("MonitorConfigPoller: received new session: %v\n", session)
 			p.Session = session
 		case <-tick.C:
 			if p.Session != nil && p.OpsConfig.CdnName != "" {
 				monitorConfig, err := p.Session.TrafficMonitorConfigMap(p.OpsConfig.CdnName)
 
 				if err != nil {
-					fmt.Printf("MonitorConfigPoller Error: %s\n %v", err, monitorConfig)
+					log.Errorf("MonitorConfigPoller: %s\n %v\n", err, monitorConfig)
 				} else {
-					//fmt.Printf("MonitorConfigPoller: fetched monitorConfig\n")
+					log.Infoln("MonitorConfigPoller: fetched monitorConfig")
 					p.ConfigChannel <- *monitorConfig
 				}
 			} else {
-				fmt.Println("MonitorConfigPoller: skipping this iteration, Session is nil")
+				log.Warnln("MonitorConfigPoller: skipping this iteration, Session is nil")
 			}
 		}
 	}
@@ -179,7 +179,7 @@ func (p FilePoller) Poll() {
 	contents, err := ioutil.ReadFile(p.File)
 
 	if err != nil {
-		fmt.Printf("Error reading %s: %s\n", p.File, err)
+		log.Errorf("reading %s: %s\n", p.File, err)
 		os.Exit(1) // TODO: this is a little drastic -jse
 	} else {
 		p.ResultChannel <- contents
@@ -195,13 +195,13 @@ func (p FilePoller) Poll() {
 				contents, err := ioutil.ReadFile(p.File)
 
 				if err != nil {
-					fmt.Printf("Error opening %s: %s\n", p.File, err)
+					log.Errorf("opening %s: %s\n", p.File, err)
 				} else {
 					p.ResultChannel <- contents
 				}
 			}
 		case err := <-watcher.Errors:
-			fmt.Println(time.Now(), "error:", err)
+			log.Errorln(time.Now(), "error:", err)
 		}
 	}
 }
@@ -216,13 +216,13 @@ func pollHttp(interval time.Duration, id string, url string, fetcher fetcher.Fet
 			realInterval := now.Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
 				instr.TimerFail.Inc()
-				fmt.Printf("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
+				log.Infof("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
 			}
 			lastTime = time.Now()
 
 			pollId := atomic.AddUint64(&debugPollNum, 1)
 			pollFinishedChan := make(chan uint64)
-			fmt.Printf("DEBUG poll %v %v start\n", pollId, time.Now())
+			log.Debugf("poll %v %v start\n", pollId, time.Now())
 			go fetcher.Fetch(id, url, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 			<-pollFinishedChan
 		case <-die:

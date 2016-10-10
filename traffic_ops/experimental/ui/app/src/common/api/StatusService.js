@@ -1,15 +1,15 @@
 var StatusService = function(Restangular, messageModel) {
 
     this.getStatuses = function() {
-        return Restangular.all('status').getList();
+        return Restangular.all('statuses').getList();
     };
 
     this.getStatus = function(id) {
-        return Restangular.one("status", id).get();
+        return Restangular.one("statuses", id).get();
     };
 
     this.createStatus = function(status) {
-        return Restangular.service('status').post(status)
+        return Restangular.service('statuses').post(status)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
@@ -33,7 +33,7 @@ var StatusService = function(Restangular, messageModel) {
     };
 
     this.deleteStatus = function(id) {
-        return Restangular.one("status", id).remove()
+        return Restangular.one("statuses", id).remove()
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);

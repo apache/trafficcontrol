@@ -1,4 +1,4 @@
-var ApplicationService = function($rootScope, $anchorScroll) {
+var ApplicationService = function($rootScope, $anchorScroll, $http) {
 
     this.startup = function() {
         // anything you need to do at startup
@@ -8,7 +8,12 @@ var ApplicationService = function($rootScope, $anchorScroll) {
         $anchorScroll(); // scrolls window to top
     });
 
+    var init = function() {
+        $http.defaults.withCredentials = true;
+    };
+    init();
+
 };
 
-ApplicationService.$inject = ['$rootScope', '$anchorScroll'];
+ApplicationService.$inject = ['$rootScope', '$anchorScroll', '$http'];
 module.exports = ApplicationService;

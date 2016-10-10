@@ -14,5 +14,3 @@
 /core/src/test/db
 /core/src/test/conf/traffic_monitor.properties
 /core/src/test/conf/traffic_ops.properties
-**/.keystore
-**/keystore.properties

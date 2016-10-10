@@ -24,7 +24,7 @@ CDN
 /api/1.2/cdns
 +++++++++++++
 
-**GET /api/1.2/cdns.json**
+**GET /api/1.2/cdns**
 
   Authentication Required: Yes
 
@@ -39,7 +39,9 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` | string | 0=false, 1=true                                 |
+  | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
+  +-------------------+--------+-------------------------------------------------+
+  | ``lastUpdated``   | string |                                                 |
   +-------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -47,20 +49,35 @@ CDN
     {
      "response": [
            {
-              "id": "1",
+              "id": "1"
               "name": "over-the-top",
-              "dnssecEnabled": "0",
+              "dnssecEnabled": false,
+              "lastUpdated": "2014-10-02 08:22:43"
+           },
+           {
+              "id": "2"
+              "name": "cdn2",
+              "dnssecEnabled": true,
+              "lastUpdated": "2014-10-02 08:22:43"
            }
         ]
     }
 
 |
 
-**GET /api/1.2/cdns/name/:name.json**
+**GET /api/1.2/cdns/:id**
 
   Authentication Required: Yes
 
   Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +-----------+----------+---------------------------------------------+
+  |   Name    | Required |                Description                  |
+  +===========+==========+=============================================+
+  |   ``id``  |   yes    | CDN id.                                     |
+  +-----------+----------+---------------------------------------------+
 
   **Response Properties**
 
@@ -71,9 +88,9 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` | string | 0=false, 1=true                                 |
+  | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
   +-------------------+--------+-------------------------------------------------+
-  | ``lastUpdated``   | string | Date/time of last update                        |
+  | ``lastUpdated``   | string |                                                 |
   +-------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -81,10 +98,53 @@ CDN
     {
      "response": [
            {
-              "id": "1",
-              "name": "over-the-top",
-              "dnssecEnabled": "0",
-              "lastUpdated": "2015-12-16 15:36:58"
+              "id": "2"
+              "name": "cdn2",
+              "dnssecEnabled": false,
+              "lastUpdated": "2014-10-02 08:22:43"
+           }
+        ]
+    }
+
+|
+
+**GET /api/1.2/cdns/name/:name**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +-----------+----------+---------------------------------------------+
+  |   Name    | Required |                Description                  |
+  +===========+==========+=============================================+
+  |  ``name`` |   yes    | CDN name.                                   |
+  +-----------+----------+---------------------------------------------+
+
+  **Response Properties**
+
+  +-------------------+--------+-------------------------------------------------+
+  |    Parameter      |  Type  |                   Description                   |
+  +===================+========+=================================================+
+  | ``id``            | string | CDN id.                                         |
+  +-------------------+--------+-------------------------------------------------+
+  | ``name``          | string | CDN name.                                       |
+  +-------------------+--------+-------------------------------------------------+
+  | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
+  +-------------------+--------+-------------------------------------------------+
+  | ``lastUpdated``   | string |                                                 |
+  +-------------------+--------+-------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+           {
+              "id": "2"
+              "name": "cdn2",
+              "dnssecEnabled": false,
+              "lastUpdated": "2014-10-02 08:22:43"
            }
         ]
     }
@@ -277,7 +337,7 @@ Health
 
 .. _to-api-v12-cdn-health-route:
 
-**GET /api/1.2/cdns/health.json**
+**GET /api/1.2/cdns/health**
 
   Retrieves the health of all locations (cache groups) for all CDNs.
 
@@ -327,7 +387,7 @@ Health
 
 |
 
-**GET /api/1.2/cdns/:name/health.json**
+**GET /api/1.2/cdns/:name/health**
 
   Retrieves the health of all locations (cache groups) for a given CDN.
 
@@ -387,7 +447,7 @@ Health
 
 |
 
-**GET /api/1.2/cdns/usage/overview.json**
+**GET /api/1.2/cdns/usage/overview**
 
   Retrieves the high-level CDN usage metrics.
 
@@ -419,7 +479,7 @@ Health
 
 |
 
-**GET /api/1.2/cdns/capacity.json**
+**GET /api/1.2/cdns/capacity**
 
   Retrieves the aggregate capacity percentages of all locations (cache groups) for a given CDN.
 
@@ -459,7 +519,7 @@ Health
 Routing
 +++++++
 
-**GET /api/1.2/cdns/routing.json**
+**GET /api/1.2/cdns/routing**
 
   Retrieves the aggregate routing percentages of all locations (cache groups) for a given CDN.
 
@@ -505,7 +565,7 @@ Routing
 Metrics
 +++++++
 
-**GET /api/1.2/cdns/metric_types/:metric/start_date/:start/end_date/:end.json**
+**GET /api/1.2/cdns/metric_types/:metric/start_date/:start/end_date/:end**
 
   Retrieves edge metrics of one or all locations (cache groups).
 
@@ -594,7 +654,7 @@ Metrics
 Domains
 +++++++
 
-**GET /api/1.2/cdns/domains.json**
+**GET /api/1.2/cdns/domains**
 
   Authentication Required: Yes
 
@@ -644,7 +704,7 @@ Domains
 Topology
 ++++++++
 
-**GET /api/1.2/cdns/:cdn_name/configs.json**
+**GET /api/1.2/cdns/:cdn_name/configs**
 
   Retrieves CDN config information.
 
@@ -678,7 +738,7 @@ Topology
 
 |
 
-**GET /api/1.2/cdns/:name/configs/monitoring.json**
+**GET /api/1.2/cdns/:name/configs/monitoring**
 
   Retrieves CDN monitoring information.
 
@@ -816,7 +876,7 @@ Topology
 
 |
 
-**GET /api/1.2/cdns/:name/configs/routing.json**
+**GET /api/1.2/cdns/:name/configs/routing**
 
   Retrieves CDN routing information.
 
@@ -1034,7 +1094,7 @@ Topology
 DNSSEC Keys
 +++++++++++
 
-**GET /api/1.2/cdns/name/:name/dnsseckeys.json**
+**GET /api/1.2/cdns/name/:name/dnsseckeys**
 
   Gets a list of dnsseckeys for a CDN and all associated Delivery Services.
 
@@ -1131,7 +1191,7 @@ DNSSEC Keys
 
 |
 
-**GET /api/1.2/cdns/name/:name/dnsseckeys/delete.json**
+**GET /api/1.2/cdns/name/:name/dnsseckeys/delete**
 
   Delete dnssec keys for a cdn and all associated delivery services.
 
@@ -1220,7 +1280,7 @@ DNSSEC Keys
 SSL Keys
 +++++++++++
 
-**GET /api/1.2/cdns/name/:name/sslkeys.json**
+**GET /api/1.2/cdns/name/:name/sslkeys**
 
   Returns ssl certificates for all Delivery Services that are a part of the CDN.
 

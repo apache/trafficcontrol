@@ -8,6 +8,11 @@ var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUt
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.falseTrue = [
+        { value: false, label: 'false' },
+        { value: true, label: 'true' }
+    ];
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

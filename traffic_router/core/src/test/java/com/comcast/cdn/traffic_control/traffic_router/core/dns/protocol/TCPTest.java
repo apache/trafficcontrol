@@ -16,26 +16,31 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.eq;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Name;
@@ -48,30 +53,33 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP.TCPSocketHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 
-@RunWith(JMock.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({AbstractProtocol.class, Message.class})
 public class TCPTest {
-    private final Mockery context = new JUnit4Mockery() {
-        {
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }
-    };
-
     private Socket socket;
     private ExecutorService executorService;
     private NameServer nameServer;
 
     private TCP tcp;
+    private InetAddress client;
+    private ByteArrayInputStream in;
+    private ByteArrayOutputStream out;
 
     @Before
     public void setUp() throws Exception {
-        ServerSocket serverSocket = context.mock(ServerSocket.class);
-        socket = context.mock(Socket.class);
-        executorService = context.mock(ExecutorService.class);
-        nameServer = context.mock(NameServer.class);
+        ServerSocket serverSocket = mock(ServerSocket.class);
+        socket = mock(Socket.class);
+        executorService = mock(ExecutorService.class);
+        nameServer = mock(NameServer.class);
         tcp = new TCP();
         tcp.setServerSocket(serverSocket);
         tcp.setExecutorService(executorService);
         tcp.setNameServer(nameServer);
+
+        in = mock(ByteArrayInputStream.class);
+        client = InetAddress.getLocalHost();
+        when(socket.getInetAddress()).thenReturn(client);
+        when(socket.getInputStream()).thenReturn(in);
     }
 
     @Test
@@ -81,18 +89,14 @@ public class TCPTest {
 
     @Test
     public void testSubmit() {
-        final Runnable r = context.mock(Runnable.class);
-        context.checking(new Expectations() {
-            {
-                one(executorService).submit(r);
-            }
-        });
+        final Runnable r = mock(Runnable.class);
         tcp.submit(r);
+        verify(executorService).submit(r);
     }
 
     @Test
     public void testTCPSocketHandler() throws Exception {
-        final InetAddress client = InetAddress.getLocalHost();
+        client = InetAddress.getLocalHost();
         final TCPSocketHandler handler = tcp.new TCPSocketHandler(socket);
 
         final Name name = Name.fromString("www.foo.bar.");
@@ -100,32 +104,20 @@ public class TCPTest {
         final Message request = Message.newQuery(question);
         final byte[] wireRequest = request.toWire();
 
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final DataOutputStream dos = new DataOutputStream(baos);
+        final ByteArrayOutputStream requestOut = new ByteArrayOutputStream();
+        final DataOutputStream dos = new DataOutputStream(requestOut);
         dos.writeShort(wireRequest.length);
         dos.write(wireRequest);
 
-        final ByteArrayInputStream in = new ByteArrayInputStream(baos.toByteArray());
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        in = new ByteArrayInputStream(requestOut.toByteArray());
+        out = new ByteArrayOutputStream();
 
-        context.checking(new Expectations() {
-            {
-                one(socket).getInetAddress();
-                will(returnValue(client));
-                one(socket).getInputStream();
-                will(returnValue(in));
-                one(socket).getOutputStream();
-                will(returnValue(out));
-                one(socket).close();
+        when(socket.getInputStream()).thenReturn(in);
+        when(socket.getOutputStream()).thenReturn(out);
 
-                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
-                will(returnValue(request));
-            }
-        });
+        when(nameServer.query(any(Message.class), eq(client), any(DNSAccessRecord.Builder.class))).thenReturn(request);
         handler.run();
-        final byte[] expected = baos.toByteArray();
-        final byte[] actual = out.toByteArray();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(requestOut.toByteArray(), out.toByteArray());
     }
 
     @Test
@@ -140,76 +132,53 @@ public class TCPTest {
         dos.writeShort(wireRequest.length);
         dos.write(wireRequest);
 
-        final ByteArrayInputStream in = new ByteArrayInputStream(baos.toByteArray());
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        context.checking(new Expectations() {
-            {
-                one(socket).getInetAddress();
-                will(returnValue(client));
-                one(socket).getInputStream();
-                will(returnValue(in));
-                one(socket).getOutputStream();
-                will(returnValue(out));
-                one(socket).close();
-            }
-        });
+        when(socket.getOutputStream()).thenReturn(out);
+
         handler.run();
-        final byte[] expected = new byte[0];
-        final byte[] actual = out.toByteArray();
-        assertArrayEquals(expected, actual);
+        assertThat(out.toByteArray().length, equalTo(0));
     }
 
     @Test
     public void testTCPSocketHandlerQueryFail() throws Exception {
         final InetAddress client = InetAddress.getLocalHost();
-        final TCPSocketHandler handler = tcp.new TCPSocketHandler(socket);
 
         final Name name = Name.fromString("www.foo.bar.");
         final Record question = Record.newRecord(name, Type.A, DClass.IN);
         final Message request = Message.newQuery(question);
-        final byte[] wireRequest = request.toWire();
-
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeShort(wireRequest.length);
-        dos.write(wireRequest);
-
-        final ByteArrayInputStream in = new ByteArrayInputStream(baos.toByteArray());
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         final Message response = new Message();
         response.setHeader(request.getHeader());
+
         for (int i = 0; i < 4; i++) {
             response.removeAllRecords(i);
         }
+
         response.addRecord(question, Section.QUESTION);
         response.getHeader().setRcode(Rcode.SERVFAIL);
+
         final byte[] serverFail = response.toWire();
 
-        final ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
-        final DataOutputStream dos2 = new DataOutputStream(baos2);
+        final ByteArrayOutputStream expectedResponseOut = new ByteArrayOutputStream();
+        final DataOutputStream dos2 = new DataOutputStream(expectedResponseOut);
         dos2.writeShort(serverFail.length);
         dos2.write(serverFail);
 
-        context.checking(new Expectations() {
-            {
-                one(socket).getInetAddress();
-                will(returnValue(client));
-                one(socket).getInputStream();
-                will(returnValue(in));
-                one(socket).getOutputStream();
-                will(returnValue(out));
-                one(socket).close();
-                will(throwException(new IOException()));
+        final ByteArrayOutputStream responseOut = new ByteArrayOutputStream();
+        when(socket.getOutputStream()).thenReturn(responseOut);
+        when(nameServer.query(any(Message.class), eq(client), any(DNSAccessRecord.Builder.class))).thenThrow(new RuntimeException("TCP Query Boom!"));
 
-                one(nameServer).query(with(any(Message.class)), with(same(client)), with(any(DNSAccessRecord.Builder.class)));
-                will(throwException(new Exception()));
-            }
-        });
+        Message tmp = new Message();
+        whenNew(Message.class).withParameterTypes(byte[].class).withArguments(any(byte[].class)).thenReturn(request);
+        whenNew(Message.class).withNoArguments().thenReturn(tmp);
+
+        final TCPSocketHandler handler = tcp.new TCPSocketHandler(socket);
         handler.run();
-        final byte[] expected = baos2.toByteArray();
-        final byte[] actual = out.toByteArray();
+        verify(socket).close();
+
+        final byte[] expected = expectedResponseOut.toByteArray();
+        final byte[] actual = responseOut.toByteArray();
         assertArrayEquals(expected, actual);
     }
 

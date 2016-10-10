@@ -34,11 +34,11 @@ sub index {
 		{ order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
-			@data,
-			{   "id"          => $row->id,
+			@data, {
+				"id"          => $row->id,
 				"name"        => $row->name,
 				"description" => $row->description,
-				"lastUpdated" => $row->last_updated,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
@@ -57,6 +57,25 @@ sub index_trimmed {
 		);
 	}
 	$self->render( json => \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Profile")->search( { id => $id } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"description" => $row->description,
+				"lastUpdated" => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
 }
 
 sub create {

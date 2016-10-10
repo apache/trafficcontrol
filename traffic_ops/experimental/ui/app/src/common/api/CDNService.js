@@ -1,15 +1,15 @@
 var CDNService = function(Restangular, messageModel) {
 
     this.getCDNs = function() {
-        return Restangular.all('cdn').getList();
+        return Restangular.all('cdns').getList();
     };
 
     this.getCDN = function(id) {
-        return Restangular.one("cdn", id).get();
+        return Restangular.one("cdns", id).get();
     };
 
     this.createCDN = function(cdn) {
-        return Restangular.service('cdn').post(cdn)
+        return Restangular.service('cdns').post(cdn)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
@@ -33,7 +33,7 @@ var CDNService = function(Restangular, messageModel) {
     };
 
     this.deleteCDN = function(id) {
-        return Restangular.one("cdn", id).remove()
+        return Restangular.one("cdns", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN deleted' } ], true);

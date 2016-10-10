@@ -62,7 +62,6 @@ sub delivery_services {
 	my @data;
 	if ( defined($rs) ) {
 		while ( my $row = $rs->next ) {
-			my $cdn_name  = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			my $re_rs     = $row->deliveryservice_regexes;
 			my @matchlist = ();
 
@@ -82,54 +81,61 @@ sub delivery_services {
 
 			push(
 				@data, {
-					"id"                       => $row->id,
-					"xmlId"                    => $row->xml_id,
+					"active"                   => \$row->active,
+					"cacheurl"                 => $row->cacheurl,
+					"ccrDnsTtl"                => $row->ccr_dns_ttl,
+					"cdnId"                    => $row->cdn->id,
+					"cdnName"                  => $row->cdn->name,
+					"checkPath"                => $row->check_path,
 					"displayName"              => $row->display_name,
-					"dscp"                     => $row->dscp,
-					"signed"                   => \$row->signed,
-					"qstringIgnore"            => $row->qstring_ignore,
-					"geoLimit"                 => $row->geo_limit,
-					"geoLimitCountries"        => $row->geo_limit_countries,
-					"geoLimitRedirectURL"      => $row->geolimit_redirect_url,
-					"geoProvider"              => $row->geo_provider,
-					"httpBypassFqdn"           => $row->http_bypass_fqdn,
+					"dnsBypassCname"           => $row->dns_bypass_cname,
 					"dnsBypassIp"              => $row->dns_bypass_ip,
 					"dnsBypassIp6"             => $row->dns_bypass_ip6,
-					"dnsBypassCname"           => $row->dns_bypass_cname,
 					"dnsBypassTtl"             => $row->dns_bypass_ttl,
-					"orgServerFqdn"            => $row->org_server_fqdn,
-					"multiSiteOrigin"          => $row->multi_site_origin,
-					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
-					"ccrDnsTtl"                => $row->ccr_dns_ttl,
-					"type"                     => $row->type->name,
-					"profileName"              => $row->profile->name,
-					"profileDescription"       => $row->profile->description,
-					"cdnName"                  => $cdn_name,
+					"dscp"                     => $row->dscp,
+					"edgeHeaderRewrite"        => $row->edge_header_rewrite,
+					"exampleURLs"              => \@example_urls,
+					"geoLimitRedirectURL"      => $row->geolimit_redirect_url,
+					"geoLimit"                 => $row->geo_limit,
+					"geoLimitCountries"        => $row->geo_limit_countries,
+					"geoProvider"              => $row->geo_provider,
 					"globalMaxMbps"            => $row->global_max_mbps,
 					"globalMaxTps"             => $row->global_max_tps,
-					"headerRewrite"            => $row->edge_header_rewrite,
-					"edgeHeaderRewrite"        => $row->edge_header_rewrite,
-					"midHeaderRewrite"         => $row->mid_header_rewrite,
-					"trResponseHeaders"        => $row->tr_response_headers,
-					"regexRemap"               => $row->regex_remap,
+					"httpBypassFqdn"           => $row->http_bypass_fqdn,
+					"id"                       => $row->id,
+					"infoUrl"                  => $row->info_url,
+					"initialDispersion"        => $row->initial_dispersion,
+					"ipv6RoutingEnabled"       => \$row->ipv6_routing_enabled,
+					"lastUpdated"              => $row->last_updated,
+					"logsEnabled"              => \$row->logs_enabled,
 					"longDesc"                 => $row->long_desc,
 					"longDesc1"                => $row->long_desc_1,
 					"longDesc2"                => $row->long_desc_2,
+					"matchList"                => \@matchlist,
 					"maxDnsAnswers"            => $row->max_dns_answers,
-					"infoUrl"                  => $row->info_url,
+					"midHeaderRewrite"         => $row->mid_header_rewrite,
 					"missLat"                  => $row->miss_lat,
 					"missLong"                 => $row->miss_long,
-					"checkPath"                => $row->check_path,
-					"matchList"                => \@matchlist,
-					"active"                   => \$row->active,
+					"multiSiteOrigin"          => \$row->multi_site_origin,
+					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
+					"orgServerFqdn"            => $row->org_server_fqdn,
+					"originShield"             => $row->origin_shield,
+					"profileId"                => $row->profile->id,
+					"profileName"              => $row->profile->name,
+					"profileDescription"       => $row->profile->description,
 					"protocol"                 => $row->protocol,
-					"ipv6RoutingEnabled"       => \$row->ipv6_routing_enabled,
+					"qstringIgnore"            => $row->qstring_ignore,
 					"rangeRequestHandling"     => $row->range_request_handling,
-					"cacheurl"                 => $row->cacheurl,
+					"regexRemap"               => $row->regex_remap,
+					"regionalGeoBlocking"      => \$row->regional_geo_blocking,
 					"remapText"                => $row->remap_text,
-					"initialDispersion"        => $row->initial_dispersion,
-					"exampleURLs"              => \@example_urls,
-					"logsEnabled"              => \$row->logs_enabled,
+					"signed"                   => \$row->signed,
+					"sslKeyVersion"            => $row->ssl_key_version,
+					"trRequestHeaders"         => $row->tr_request_headers,
+					"trResponseHeaders"        => $row->tr_response_headers,
+					"type"                     => $row->type->name,
+					"typeId"                   => $row->type->id,
+					"xmlId"                    => $row->xml_id
 				}
 			);
 		}
@@ -179,7 +185,7 @@ sub get_delivery_service_params {
 		else {
 			$condition = ( { 'me.logs_enabled' => $logs_enabled } );
 		}
-		my @ds_ids = $rs =
+		$rs =
 			$self->db->resultset('Deliveryservice')->search( $condition, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
 	}
 	elsif ( $self->is_delivery_service_assigned($id) ) {

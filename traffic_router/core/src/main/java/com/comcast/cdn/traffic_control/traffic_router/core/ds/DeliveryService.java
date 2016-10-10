@@ -97,10 +97,11 @@ public class DeliveryService {
 		this.id = id;
 		this.props = dsJo;
 		this.ttls = dsJo.optJSONObject("ttls");
-		if(this.ttls == null) {
+
+		if (this.ttls == null) {
 			LOGGER.warn("ttls is null for:" + id);
-			LOGGER.warn(dsJo.toString(2));
 		}
+
 		this.coverageZoneOnly = dsJo.getBoolean("coverageZoneOnly");
 		this.geoEnabled = dsJo.optJSONArray("geoEnabled");
 		String rurl = dsJo.optString("geoLimitRedirectURL", null);

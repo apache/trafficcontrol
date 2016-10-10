@@ -17,6 +17,10 @@
 *****************************
 Traffic Router Administration
 *****************************
+.. contents::
+  :depth: 2
+  :backlinks: top
+
 Installing Traffic Router
 ==========================
 The following are requirements to ensure an accurate set up:
@@ -386,4 +390,106 @@ The following needs to be completed for Steering to work correctly:
 #. If desired, the steering user can create filters for the target delivery services.
 
 For more information see the `steering how-to guide <quick_howto/steering.html>`_.
+
+HTTPS for Http Type Delivery Services
+=====================================
+
+Starting with version 1.7 Traffic Router added the ability to allow https traffic between itself and clients on a per http type delivery service basis.
+
+.. Warning::
+  The establishing of an HTTPS connection is much more computationally demanding than an HTTP connection.
+  Since each client will in turn get redirected to ATS, Traffic Router is most always creating a new HTTPS connection for all HTTPS traffic.
+  It is likely to mean that an existing Traffic Router will have some decrease in performance depending on the amount of https traffic you want to support
+  As noted for DNSSEC, you may need to plan to scale Traffic Router vertically and/or horizontally to handle the new load
+
+The summary for setting up https is to:
+
+#. Select one of 'https', 'http and https', or 'http to https' for the delivery service 
+#. Generate private keys for the delivery service using a wildcard domain such as ``*.my-delivery-service.my-cdn.example.com``
+#. Obtain and import signed certificate chain
+#. Snapshot CR Config
+
+Clients may make HTTPS requests delivery services only after Traffic Router receives the certificate chain from Traffic Ops and the new CR Config.
+
+Protocol Options
+----------------
+
+*https only*
+  Traffic Router will only redirect (send a 302) to clients communicating with a secure connection, all other clients will receive a 503
+*http and https*
+  Traffic Router will redirect both secure and non-secure clients
+*http to https*
+  Traffic Router will redirect non-secure clients with a 302 and a location that is secure (i.e. starting with 'https' instead of 'http'), secure clients will remain on https
+*http*
+  Any secure client will get an SSL handshake error. Non-secure clients will experience the same behavior as prior to 1.7
+
+Certificate Retrieval
+---------------------
+
+.. Warning::
+  If you have https delivery services in your CDN, Traffic Router will not accept **any** connections until it is able to
+  fetch certificates from Traffic Ops and load them into memory. Traffic Router does not persist certificates to the java keystore or anywhere else.
+
+Traffic Router fetches certificates into memory:
+
+* At startup time
+* When it receives a new CR Config
+* Once an hour from whenever the most recent of the last of the above occurred
+
+.. Note::
+  To adjust the frequency when Traffic Router fetches certificates add the parameter 'certificates.polling.interval' to CR Config and 
+  setting it to the desired time in milliseconds.
+
+.. Note::
+  Taking a snapshot of CR Config may be used at times to avoid waiting the entire polling cycle for a new set of certificates.
+
+.. Warning::
+  If a snapshot of CR Config is made that involves a delivery service missing its certificates, Traffic Router will ignore **ALL** changes in that CR-Config
+  until one of the following occurs:
+  * It receives certificates for that delivery service 
+  * Another snapshot of CR Config is created and the delivery service without certificates is changed so it's HTTP protocol is set to 'http'
+
+Certificate Chain Ordering
+--------------------------
+
+The ordering of certificates within the certificate bundle matters. It must be:
+
+#. Primary Certificate (e.g. the one created for ``*.my-delivery-service.my-cdn.example.com``)
+#. Intermediate Certificate(s)
+#. Root Certificate from CA (optional)
+
+.. Warning::
+  If something is wrong with the certificate chain (e.g. the order of the certificates is backwards or for the wrong domain) the
+  client will get an SSL handshake.  Inspection of /opt/tomcat/logs/catalina.out is likely to yield information to reveal this.
+
+To see the ordering of certificates you may have to manually split up your certificate chain and use openssl on each individual certificate
+
+Suggested Way of Setting up an HTTPS Delivery Service
+-----------------------------------------------------
+
+Do the following in Traffic Ops:
+
+#. Select one of 'https', 'http and https', or 'http to https' for the protocol field of a delivery service and click 'Save'.
+#. Click 'Manage SSL Keys'.
+#. Click 'Generate New Keys'.
+#. Copy the contents of the Certificate Signing Request field and save it locally.
+#. Click 'Load Keys'.
+#. Select 'http' for the protocol field of the delivery service and click 'Save' (to avoid preventing other CR Config updates from being blocked by Traffic Router)
+#. Follow your standard procedure for obtaining your signed certificate chain from a CA.
+#. After receiving your certificate chain import it into Traffic Ops.
+#. Edit the delivery service.
+#. Restore your original choice for the protocol field and click save.
+#. Click 'Manage SSL Keys'.
+#. Click 'Paste Existing Keys'.
+#. Paste the certificate chain into the CRT field.
+#. Click 'Load Keys'.
+#. Take a new snapshot of CR Config.
+
+Once this is done you should be able to test you are getting correctly redirected by Traffic Router using curl commands to https destinations on your delivery service.
+
+A new testing tool was created for load testing traffic router, it allows you to generate requests from your local box to multiple delivery services of a single cdn.
+You can control which cdn, delivery services, how many transactions per delivery service, and how many concurrent requests.
+During the test it will provide feedback about request latency and transactions per second.
+
+While it is running it is suggested that you monitor your Traffic Router nodes for memory and CPU utilization.
 

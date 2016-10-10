@@ -72,6 +72,11 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.falseTrue = [
+        { value: false, label: 'false' },
+        { value: true, label: 'true' }
+    ];
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

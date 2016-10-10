@@ -23,7 +23,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(userForm.role), 'has-feedback': hasError(userForm.role)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Role *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="role" name="role" class="form-control" ng-model="user._links.role.id" ng-options="role.id as role.name for role in roles" required>
+                    <select id="role" name="role" class="form-control" ng-model="user.role" ng-options="role.id as role.name for role in roles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(userForm.role, 'required')">Required</small>

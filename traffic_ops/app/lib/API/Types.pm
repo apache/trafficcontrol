@@ -23,12 +23,20 @@ use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 
-# Index
 sub index {
-	my $self = shift;
+	my $self         = shift;
+	my $use_in_table = $self->param('useInTable');
+	my $orderby      = $self->param('orderby') || "name";
+
 	my @data;
-	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("Type")->search( undef, { order_by => $orderby } );
+	my %criteria;
+
+	if ( defined $use_in_table ) {
+		$criteria{'me.use_in_table'} = $use_in_table;
+	}
+
+	my $rs_data = $self->db->resultset("Type")->search( \%criteria, { order_by => $orderby } );
+
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
@@ -36,14 +44,13 @@ sub index {
 				"name"        => $row->name,
 				"description" => $row->description,
 				"useInTable"  => $row->use_in_table,
-				"lastUpdated" => $row->last_updated,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
 	$self->success( \@data );
 }
 
-# Read
 sub index_trimmed {
 	my $self = shift;
 	my @data;
@@ -52,7 +59,27 @@ sub index_trimmed {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"name" => $row->name,
+				"name" => $row->name
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Type")->search( { id => $id } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"description" => $row->description,
+				"useInTable"  => $row->use_in_table,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
