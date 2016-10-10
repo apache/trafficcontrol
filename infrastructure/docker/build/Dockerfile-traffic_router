@@ -8,10 +8,15 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
+ENV GITREPO https://github.com/Comcast/traffic_control
+ENV BRANCH master
+
+WORKDIR /repo
+
+### traffic_router specific
 RUN	yum -y install \
 		which
 
-### java/mvn
 WORKDIR /opt
 RUN curl -L -b "oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-x64.tar.gz | tar xzf - && \
     curl -L http://mirror.nexcess.net/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar xzf -
@@ -24,19 +29,12 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --set jar /opt/java/bin/jar && \
     alternatives --set javac /opt/java/bin/javac && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
+###
 
-# wait for clone to be available, then
-# build the rpm and copy to /artifacts
-RUN echo $'\n\
-while [ ! -f /repo/clone-finished ]; do sleep 1; done\n\
-\n\
-tc=/repo/traffic_control\n\
-cd $tc/traffic_router\n\
-./build/build_rpm.sh\n\
-mkdir -p /artifacts\n\
-cp $tc/dist/* /artifacts/.\n\
-' >/run.sh
+VOLUME ./artifacts:/artifacts
 
-CMD sh -x /run.sh
+ADD run-build.sh .
+
+CMD ./run-build.sh traffic_router 2>&1 | tee /artifacts/build-traffic_router.log
 
 # vi:syntax=Dockerfile

@@ -8,21 +8,20 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
+ENV GITREPO https://github.com/Comcast/traffic_control
+ENV BRANCH master
+
+WORKDIR /repo
+
+# traffic_ops specific
 RUN	yum -y install \
 		golang
+###
 
-# wait for clone to be available, then
-# build the rpm and copy to /artifacts
-RUN echo $'\n\
-while [ ! -f /repo/clone-finished ]; do sleep 1; done\n\
-\n\
-tc=/repo/traffic_control\n\
-cd $tc/traffic_ops\n\
-./build/build_rpm.sh\n\
-mkdir -p /artifacts\n\
-cp $tc/dist/* /artifacts/.\n\
-' >/run.sh
+VOLUME ./artifacts:/artifacts
 
-CMD sh -x /run.sh
+ADD run-build.sh .
+
+CMD ./run-build.sh traffic_ops 2>&1 | tee /artifacts/build-traffic_ops.log
 
 # vi:syntax=Dockerfile

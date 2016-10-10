@@ -1,10 +1,5 @@
 ---
 
-# IMPORTANT: Prior to starting another build, the containers and build_repo
-#   volume must be deleted:
-#    docker-compose down -v
-#
-#
 # Build configuration for traffic_control
 # Usage:
 #    GITREPO=...  BRANCH=...  docker-compose up [<service>...]
@@ -15,29 +10,15 @@
 #   (default: master).
 #
 # [<service>...] (optional) is one or more of the services listed below, e.g.
-# traffic_ops_build.  (not necessary to list clone -- all others depend on
-# it..).  Default is to build all.
+# traffic_ops_build.  Default is to build all.
 #
 # All rpms are delivered to ./artifacts.
 #
 version: '2'
 
-volumes:
-  repo:
-
 services:
-  clone:
-    build:
-      dockerfile: Dockerfile-clone
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
-    volumes:
-      - repo:/repo
-
   traffic_monitor_build:
-    depends_on: [ clone ]
+    image: traffic_monitor_builder
     build:
       dockerfile: Dockerfile-traffic_monitor
       context: .
@@ -45,11 +26,10 @@ services:
       - GITREPO
       - BRANCH
     volumes:
-      - repo:/repo
       - ./artifacts:/artifacts
 
   traffic_ops_build:
-    depends_on: [ clone ]
+    image: traffic_ops_builder
     build:
       dockerfile: Dockerfile-traffic_ops
       context: .
@@ -57,11 +37,10 @@ services:
       - GITREPO
       - BRANCH
     volumes:
-      - repo:/repo
       - ./artifacts:/artifacts
 
   traffic_portal_build:
-    depends_on: [ clone ]
+    image: traffic_portal_builder
     build:
       dockerfile: Dockerfile-traffic_portal
       context: .
@@ -69,11 +48,10 @@ services:
       - GITREPO
       - BRANCH
     volumes:
-      - repo:/repo
       - ./artifacts:/artifacts
 
   traffic_router_build:
-    depends_on: [ clone ]
+    image: traffic_router_builder
     build:
       dockerfile: Dockerfile-traffic_router
       context: .
@@ -81,11 +59,10 @@ services:
       - GITREPO
       - BRANCH
     volumes:
-      - repo:/repo
       - ./artifacts:/artifacts
 
   traffic_stats_build:
-    depends_on: [ clone ]
+    image: traffic_stats_builder
     build:
       dockerfile: Dockerfile-traffic_stats
       context: .
@@ -93,5 +70,4 @@ services:
       - GITREPO
       - BRANCH
     volumes:
-      - repo:/repo
       - ./artifacts:/artifacts
