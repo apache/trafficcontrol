@@ -232,10 +232,10 @@ ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(403)
 
 ok $t->get_ok('/api/1.2/parameters/3')->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "domain_name" )
-	->json_is( "/response/value" => "foo.com" )
-	->json_is( "/response/configFile" => "CRConfig.json" )
-	->json_is( "/response/secure" => "0" )
+	->json_is( "/response/0/name" => "domain_name" )
+	->json_is( "/response/0/value" => "foo.com" )
+	->json_is( "/response/0/configFile" => "CRConfig.json" )
+	->json_is( "/response/0/secure" => "0" )
 		, 'Does the paramter get return?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
