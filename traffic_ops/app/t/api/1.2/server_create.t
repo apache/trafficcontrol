@@ -164,7 +164,7 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
         "physLocation" => "HotAtlanta" })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/servers?profile=5' => {Accept => 'application/json'})->status_is(200)
+ok $t->get_ok('/api/1.2/servers?profileId=5' => {Accept => 'application/json'})->status_is(200)
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/0/id", 5 )
     ->json_is( "/response/1/id", 9 )
