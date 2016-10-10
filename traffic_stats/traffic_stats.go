@@ -248,6 +248,13 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		config.InfluxDBs = append(config.InfluxDBs, &influxDBProps)
 	}
 
+	//Close old connections explicitly
+	for _, host := range oldConfig.InfluxDBs {
+		if host.InfluxClient != nil {
+			host.InfluxClient.Close()
+		}
+	}
+
 	return config, nil
 }
 
@@ -741,6 +748,11 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 			errHndlr(fmt.Errorf("An error occurred creating HTTP client.  %v\n", err), ERROR)
 			continue
 		}
+		//Close old connections explicitly
+		if host.InfluxClient != nil {
+			host.InfluxClient.Close()
+		}
+		host.InfluxClient = con
 		_, _, err = con.Ping(10)
 		if err != nil {
 			errHndlr(err, WARN)
