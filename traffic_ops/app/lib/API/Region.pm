@@ -100,6 +100,7 @@ sub update {
 		$response->{id}          = $rs->id;
 		$response->{name}        = $rs->name;
 		$response->{division}    = $rs->division->id;
+		$response->{divisionName}= $rs->division->name;
 		$response->{lastUpdated} = $rs->last_updated;
 		&log( $self, "Updated Region name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "Region update was successful." );

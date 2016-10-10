@@ -642,10 +642,10 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#index', namespace => $namespace );
-	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'PhysLocation#show', namespace => $namespace );
 	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )
 		->to( 'PhysLocation#index_trimmed', namespace => $namespace );
+	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'PhysLocation#show', namespace => $namespace );
 	$r->put("/api/$version/phys_locations/:id")->over( authenticated => 1 )
 		->to( 'PhysLocation#update', namespace => $namespace );
 

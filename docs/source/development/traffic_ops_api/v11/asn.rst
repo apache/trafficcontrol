@@ -25,7 +25,7 @@ ASN
 /api/1.1/asns
 +++++++++++++
 
-**GET /api/1.1/asns.json**
+**GET /api/1.1/asns**
 
   Authentication Required: Yes
 
