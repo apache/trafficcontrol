@@ -621,12 +621,12 @@ sub api_routes {
 	# -- PARAMETERS: PROFILE PARAMETERS
 	$r->get( "/api/$version/profileparameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#index', namespace => $namespace );
+	$r->get( "/api/$version/profiles/:name/parameters")->over( authenticated => 1 )
+		->to( 'Parameter#profile', namespace => $namespace );
 	$r->post( "/api/$version/profileparameters" )->over( authenticated => 1 )
 		->to( 'ProfileParameter#create', namespace => $namespace );
 	$r->delete( "/api/$version/profileparameters/:profile_id/:parameter_id" )->over( authenticated => 1 )
 		->to( 'ProfileParameter#delete', namespace => $namespace );
-	$r->get( "/api/$version/parameters/profile/:name")->over( authenticated => 1 )
-		->to( 'Parameter#profile', namespace => $namespace );
 
 	# -- PARAMETERS: CACHEGROUP PARAMETERS
 	$r->get( "/api/$version/cachegroup/:parameter_id/parameter")->over( authenticated => 1 )

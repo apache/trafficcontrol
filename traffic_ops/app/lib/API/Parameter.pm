@@ -40,8 +40,8 @@ sub index {
 				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
 				"value"       => $value,
-				"secure"      => $row->parameter->secure,
-				"lastUpdated" => $row->parameter->last_updated,
+				"secure"      => \$row->parameter->secure,
+				"lastUpdated" => $row->parameter->last_updated
 			}
 		);
 	}
@@ -63,8 +63,8 @@ sub profile {
 				"id"          => $row->parameter->id,
 				"configFile"  => $row->parameter->config_file,
 				"value"       => $value,
-				"secure"      => $row->parameter->secure,
-				"lastUpdated" => $row->parameter->last_updated,
+				"secure"      => \$row->parameter->secure,
+				"lastUpdated" => $row->parameter->last_updated
 			}
 		);
 	}
