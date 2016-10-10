@@ -52,21 +52,21 @@ Parameter
      "response": [
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": false,
            "value": "foo.bar.net",
            "name": "domain_name",
            "config_file": "FooConfig.xml"
         },
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": false,
            "value": "0,1,2,3,4,5,6",
            "name": "Drive_Letters",
            "config_file": "storage.config"
         },
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": true,
            "value": "STRING __HOSTNAME__",
            "name": "CONFIG proxy.config.proxy_name",
            "config_file": "records.config"
@@ -113,21 +113,21 @@ Parameter
      "response": [
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": false,
            "value": "foo.bar.net",
            "name": "domain_name",
            "config_file": "FooConfig.xml"
         },
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": false,
            "value": "0,1,2,3,4,5,6",
            "name": "Drive_Letters",
            "config_file": "storage.config"
         },
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": true,
            "value": "STRING __HOSTNAME__",
            "name": "CONFIG proxy.config.proxy_name",
            "config_file": "records.config"
@@ -173,21 +173,21 @@ Parameter
      "response": [
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": false,
            "value": "foo.bar.net",
            "name": "domain_name",
            "config_file": "FooConfig.xml"
         },
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": false,
            "value": "0,1,2,3,4,5,6",
            "name": "Drive_Letters",
            "config_file": "storage.config"
         },
         {
            "last_updated": "2012-09-17 21:41:22",
-           "secure": 0,
+           "secure": true,
            "value": "STRING __HOSTNAME__",
            "name": "CONFIG proxy.config.proxy_name",
            "config_file": "records.config"
