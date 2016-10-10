@@ -40,9 +40,9 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.1/parameters.json")->status_is(200)->or( sub               { diag $t->tx->res->content->asset->{content}; } );
-$t->get_ok("/api/1.1/parameters/profile/EDGE1.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-$t->get_ok("/api/1.1/parameters/profile/MID1.json")->status_is(200)->or( sub  { diag $t->tx->res->content->asset->{content}; } );
+$t->get_ok("/api/1.1/parameters")->status_is(200)->or( sub               { diag $t->tx->res->content->asset->{content}; } );
+$t->get_ok("/api/1.1/profiles/name/EDGE1/parameters")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+$t->get_ok("/api/1.1/profiles/name/MID1/parameters")->status_is(200)->or( sub  { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
