@@ -126,8 +126,24 @@ sub update {
 		return $self->alert("Name is required.");
 	}
 
+	my $name = $params->{name};
+	if ( $phys_location->name ne $name ) {
+		my $existing = $self->db->resultset('PhysLocation')->find( { name => $name } );
+		if ($existing) {
+			return $self->alert( "A physical location with name " . $name . " already exists." );
+		}
+	}
+
 	if ( !defined( $params->{shortName} ) ) {
 		return $self->alert("Short name is required.");
+	}
+
+	my $short_name = $params->{shortName};
+	if ( $phys_location->short_name ne $short_name ) {
+		my $existing = $self->db->resultset('PhysLocation')->find( { short_name => $short_name } );
+		if ($existing) {
+			return $self->alert( "A physical location with short_name " . $short_name . " already exists." );
+		}
 	}
 
 	if ( !defined( $params->{city} ) ) {
@@ -151,11 +167,11 @@ sub update {
 		city       => $params->{city},
 		comments   => $params->{cachegroupId},
 		email      => $params->{email},
-		name       => $params->{name},
+		name       => $name,
 		phone      => $params->{phone},
 		poc        => $params->{poc},
 		region     => $params->{regionId},
-		short_name => $params->{shortName},
+		short_name => $short_name,
 		state      => $params->{state},
 		zip        => $params->{zip}
 	};
