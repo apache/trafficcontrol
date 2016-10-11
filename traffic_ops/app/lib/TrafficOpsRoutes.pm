@@ -696,8 +696,10 @@ sub api_routes {
 		->to( 'Region#show',  namespace => $namespace );
 	$r->put("/api/$version/regions/:id")->over( authenticated => 1 )
 		->to( 'Region#update', namespace => $namespace );
-	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
+	$r->post("/api/$version/regions")->over( authenticated => 1 )
 		->to( 'Region#create', namespace => $namespace );
+	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
+		->to( 'Region#create_for_div', namespace => $namespace );
 
 	# -- ROLES
 	# Supports ?orderby=key
