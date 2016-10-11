@@ -400,7 +400,7 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 }
 
 // DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
-func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastKbpsStats StatsLastKbpsThreadsafe) (body []byte, responseCode int) {
+func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastStats LastStatsThreadsafe) (body []byte, responseCode int) {
 
 	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
 	handleErr := func(err error, requestType http_server.Type) {
@@ -498,17 +498,17 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 		return []byte(opsConfig.Get().Url), http.StatusOK
 	case http_server.APICacheStates:
 		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
-			lastHealthDurations.Get(), localStates.Get().Caches, lastKbpsStats.Get(), localCacheStatus))
+			lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 		return commonReturn(body, err, req.Type)
 	case http_server.APIBandwidthKbps:
 		serverTypes := toData.Get().ServerTypes
-		kbpsStats := lastKbpsStats.Get()
+		kbpsStats := lastStats.Get()
 		sum := float64(0.0)
 		for cache, data := range kbpsStats.Caches {
 			if serverTypes[cache] != enum.CacheTypeEdge {
 				continue
 			}
-			sum += data.Kbps
+			sum += data.Bytes.PerSec / ds.BytesPerKilobit
 		}
 		return []byte(fmt.Sprintf("%f", sum)), http.StatusOK
 	case http_server.APIBandwidthCapacityKbps:
@@ -526,7 +526,7 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 	}
 }
 
-func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result, lastHealthDurations map[enum.CacheName]time.Duration, cacheStates map[enum.CacheName]peer.IsAvailable, lastKbpsStats ds.StatsLastKbps, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
+func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result, lastHealthDurations map[enum.CacheName]time.Duration, cacheStates map[enum.CacheName]peer.IsAvailable, lastStats ds.LastStats, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get()
@@ -571,11 +571,12 @@ func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHisto
 		}
 
 		var kbps *float64
-		kbpsVal, ok := lastKbpsStats.Caches[enum.CacheName(cacheName)]
+		lastStat, ok := lastStats.Caches[enum.CacheName(cacheName)]
 		if !ok {
 			log.Warnf("cache not in last kbps cache %s\n", cacheName)
 		} else {
-			kbps = &kbpsVal.Kbps
+			kbpsVal := lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
+			kbps = &kbpsVal
 		}
 
 		var connections *int64
