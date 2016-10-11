@@ -412,8 +412,16 @@ sub api_routes {
 		->to( 'Cachegroup#create', namespace => $namespace );
 	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )
 		->to( 'Cachegroup#update', namespace => $namespace );
-	$r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )
-		->to( 'Cachegroup#delete', namespace => $namespace );
+
+	# alternate cachegroup routes
+	$r->get( "/api/$version/cachegroups/list")->over( authenticated => 1 )
+		->to( 'Cachegroup2#index', namespace => $namespace );
+	$r->post("/api/$version/cachegroups/create")->over( authenticated => 1 )
+		->to( 'Cachegroup2#create', namespace => $namespace );
+	$r->put("/api/$version/cachegroups/:id/update")->over( authenticated => 1 )
+		->to( 'Cachegroup2#update', namespace => $namespace );
+	$r->delete("/api/$version/cachegroups/:id/delete")->over( authenticated => 1 )
+		->to( 'Cachegroup2#delete', namespace => $namespace );
 
 	# -- CACHEGROUPS: ASSIGN DELIVERYSERVICES
 	$r->post("/api/$version/cachegroups/:id/deliveryservices")->over( authenticated => 1 )
