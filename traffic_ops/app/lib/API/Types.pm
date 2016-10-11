@@ -86,4 +86,48 @@ sub show {
 	$self->success( \@data );
 }
 
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $type = $self->db->resultset('Type')->find( { id => $id } );
+	if ( !defined($type) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined( $params->{name} ) ) {
+		return $self->alert("Type name is required.");
+	}
+
+	my $values = {
+		name 			=> $params->{name},
+		description 	=> $params->{description},
+		use_in_table 	=> $params->{useInTable}
+	};
+
+	my $rs = $type->update($values);
+	if ($rs) {
+		my $response;
+		$response->{id}          = $rs->id;
+		$response->{name}        = $rs->name;
+		$response->{description} = $rs->description;
+		$response->{useInTable} = $rs->description;
+		$response->{lastUpdated} = $rs->use_in_table;
+
+		&log( $self, "Updated Type name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Type update was successful." );
+	}
+	else {
+		return $self->alert("Type update failed.");
+	}
+
+}
+
+
 1;
