@@ -261,6 +261,10 @@ sub delete {
 		return $self->not_found();
 	}
 
+	if ($profile->name eq 'GLOBAL') {
+		return $self->alert("Cannot delete the GLOBAL profile.");
+	}
+
 	my $server = $self->db->resultset('Server')->find( { profile => $profile->id } );
 	if ( defined($server) ) {
 		return $self->alert("the profile is used by some server(s).");
