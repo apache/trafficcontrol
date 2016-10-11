@@ -1,0 +1,27 @@
+.grid-table-header {
+    font-weight: bold;
+}
+
+h4 .btn {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.bar rect {
+    fill: seaGreen;
+}
+
+.bar text {
+    fill: darkSlateGrey;
+    font-family: sans-serif;
+    font-size: 0.75em;
+}
+
+.form-inline div > * {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.form-inline button {
+    margin-left: 5px;
+}

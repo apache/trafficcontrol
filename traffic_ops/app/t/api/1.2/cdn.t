@@ -56,7 +56,6 @@ ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => j
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test2" )
     ->json_is( "/alerts/0/level" => "success" )
-    ->json_is( "/alerts/0/text" => "cdn was updated." )
             , 'Does the cdn details return?';
 
 ok $t->delete_ok('/api/1.2/cdns/' . $cdn_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );

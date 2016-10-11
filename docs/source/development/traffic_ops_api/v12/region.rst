@@ -24,7 +24,7 @@ Regions
 /api/1.2/regions
 ++++++++++++++++
 
-**GET /api/1.2/regions**
+**GET /api/1.1/regions**
 
   Authentication Required: Yes
 
@@ -64,7 +64,7 @@ Regions
     }
 
 
-**GET /api/1.2/regions/:id**
+**GET /api/1.1/regions/:id**
 
   Authentication Required: Yes
 
@@ -106,6 +106,74 @@ Regions
     }
 
 
+**PUT /api/1.2/regions/:id**
+  Update a region
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +-------------------+----------+------------------------------------------------+
+  | Name              |   Type   |                 Description                    |
+  +===================+==========+================================================+
+  | ``id``            | int      | Region id.                                     |
+  +-------------------+----------+------------------------------------------------+
+
+  **Request Properties**
+
+  +----------------+----------+--------------------------+
+  | Parameter      | Required | Description              |
+  +================+==========+==========================+
+  | ``name``       | yes      | The name of the region   |
+  +----------------+----------+--------------------------+
+  | ``division``   | yes      | The division Id          |
+  +----------------+----------+--------------------------+
+
+  **Request Example** ::
+
+    {
+        "name": "myregion1",
+        "division": "4"
+    }
+
+|
+
+  **Response Properties**
+
+  +----------------------+--------+------------------------------------------------+
+  | Parameter            | Type   | Description                                    |
+  +======================+========+================================================+
+  |``division``          | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``divisionName``      | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``name``              | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``id``                | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``lastUpdated``       | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+
+  **Response Example** ::
+
+	{
+		"alerts": [
+			{
+				"level": "success",
+				"text": "Region update was successful."
+			}
+		],
+		"response": {
+			"id": "1",
+			"lastUpdated": "2014-03-18 08:57:39",
+			"name": "myregion1",
+			"division": "4",
+			"divisionName": "mydivision1"
+		}
+	}
+|
 
 **POST /api/1.2/divisions/:division_name/regions**
   Create Region

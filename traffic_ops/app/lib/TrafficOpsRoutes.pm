@@ -394,6 +394,9 @@ sub api_routes {
 		->to( 'Asn#index',     namespace => $namespace );
 	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Asn#show',     namespace => $namespace );
+	$r->put("/api/$version/asns/:id")->over( authenticated => 1 )
+		->to( 'Asn#update', namespace => $namespace );
+
 
 	# -- CACHEGROUPS
 	# -- CACHEGROUPS: CRUD
@@ -591,6 +594,9 @@ sub api_routes {
 		->to( 'Division#index', namespace => $namespace );
 	$r->get("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Division#show', namespace => $namespace );
+	$r->put("/api/$version/divisions/:id")->over( authenticated => 1 )
+		->to( 'Division#update', namespace => $namespace );
+
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
 
@@ -642,10 +648,13 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#index', namespace => $namespace );
-	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'PhysLocation#show', namespace => $namespace );
 	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )
 		->to( 'PhysLocation#index_trimmed', namespace => $namespace );
+	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'PhysLocation#show', namespace => $namespace );
+	$r->put("/api/$version/phys_locations/:id")->over( authenticated => 1 )
+		->to( 'PhysLocation#update', namespace => $namespace );
+
 	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#create', namespace => $namespace );
 
@@ -677,6 +686,8 @@ sub api_routes {
 		->to( 'Region#index', namespace => $namespace );
 	$r->get( "/api/$version/regions/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Region#show',  namespace => $namespace );
+	$r->put("/api/$version/regions/:id")->over( authenticated => 1 )
+		->to( 'Region#update', namespace => $namespace );
 	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
 		->to( 'Region#create', namespace => $namespace );
 
