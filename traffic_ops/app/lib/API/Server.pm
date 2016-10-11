@@ -35,7 +35,7 @@ sub index {
 	my $ds_id        = $self->param('dsId');
 	my $type         = $self->param('type');
 	my $status       = $self->param('status');
-	my $profile      = $self->param('profile');
+	my $profile_id   = $self->param('profileId');
 
 	my $servers;
 	my $forbidden;
@@ -45,15 +45,15 @@ sub index {
 	elsif ( defined $type ) {
 		$servers = $self->get_servers_by_type( $current_user, $type, $status );
 	}
-	elsif ( defined $profile ) {
-		my $profile_forbidden;
-		( $profile_forbidden, $servers ) = $self->get_servers_by_profile( $current_user, $profile, $status );
-		if ( defined($profile_forbidden) ) {
-			return $self->forbidden("Forbidden. Insufficent permissions.");
-		}
+	elsif ( defined $profile_id ) {
+		( $forbidden, $servers ) = $self->get_servers_by_profile_id( $profile_id );
 	}
 	else {
-		$servers = $self->get_servers( $current_user, $status );
+		$servers = $self->get_servers_by_status( $current_user, $status );
+	}
+
+	if ( defined($forbidden) ) {
+		return $self->forbidden($forbidden);
 	}
 
 	my @data;
@@ -107,7 +107,7 @@ sub index {
 		}
 	}
 
-	return defined($forbidden) ? $self->forbidden("Forbidden. Delivery service not assigned to user.") : $self->success( \@data );
+	return $self->success( \@data );
 }
 
 sub show {
@@ -166,7 +166,7 @@ sub show {
 	$self->success( \@data );
 }
 
-sub get_servers {
+sub get_servers_by_status {
 	my $self              = shift;
 	my $current_user      = shift;
 	my $status            = shift;
@@ -224,7 +224,7 @@ sub get_servers_by_dsid {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
 	else {
-		$forbidden = "true";
+		$forbidden = "Forbidden. Delivery service not assigned to user.";
 	}
 
 	my $servers;
@@ -784,7 +784,7 @@ sub create {
 
 	my $json = $self->req->json;
 	if ( !&is_oper($self) ) {
-		return $self->forbidden("Forbidden. Insufficent permissions.");
+		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
 	}
 
 	( $params, $err ) = $self->check_server_params( $json, undef );
@@ -907,7 +907,7 @@ sub update {
 	my $self = shift;
 	my $json = $self->req->json;
 	if ( !&is_oper($self) ) {
-		return $self->forbidden("Forbidden. Insufficent permissions.");
+		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
 	}
 
 	my $id = $self->param('id');
@@ -1049,7 +1049,7 @@ sub delete {
 	my $self = shift;
 
 	if ( !&is_oper($self) ) {
-		return $self->forbidden("Forbidden. Insufficent permissions.");
+		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
 	}
 
 	my $id = $self->param('id');
@@ -1071,7 +1071,7 @@ sub postupdatequeue {
 	my $params = $self->req->json;
 	my $id     = $self->param('id');
 	if ( !&is_oper($self) ) {
-		return $self->forbidden("Forbidden. Insufficent permissions.");
+		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
 	}
 
 	my $update = $self->db->resultset('Server')->find( { id => $id } );
@@ -1100,16 +1100,14 @@ sub postupdatequeue {
 	return $self->success($response);
 }
 
-sub get_servers_by_profile {
+sub get_servers_by_profile_id {
 	my $self              = shift;
-	my $current_user      = shift;
 	my $profile_id        = shift;
-	my $status            = shift;
 
 	my $forbidden;
 	my $servers;
 	if ( !&is_oper($self) ) {
-		$forbidden = "true";
+		$forbidden = "Forbidden. You must have the operations role to perform this operation.";
 		return ( $forbidden, $servers );
 	}
 

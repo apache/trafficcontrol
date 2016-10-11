@@ -43,7 +43,7 @@ Server
   +--------------------+----------+---------------------------------------------+
   | ``type``           | no       | Used to filter servers by type.             |
   +--------------------+----------+---------------------------------------------+
-  | ``profile``        | no       | Used to filter servers by profile.          |
+  | ``profileId``      | no       | Used to filter servers by profile.          |
   +--------------------+----------+---------------------------------------------+
 
   **Response Properties**
