@@ -176,7 +176,7 @@ Profile parameters
 
 |
 
-**POST /api/1.2/profiles/parameters**
+**POST /api/1.2/profiles/name/{:name}/parameters**
 
     Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter already associate the profile, keep the association.
     If the profile does not exist, the API returns fail.
@@ -185,15 +185,37 @@ Profile parameters
 
     Role(s) Required:  admin or oper. If there is parameter's secure equals 1 in the request properties, need admin role. 
 
+	**Request Route Parameters**
+
+	+------------+----------+----------------------------------------------------+
+	| Name       | Required | Description                                        |
+	+============+==========+====================================================+
+	| ``name``   | yes      | profile name.                                      |
+	+------------+----------+----------------------------------------------------+
 
     **Request Properties**
+    The request properties accept 2 formats, both single paramter and parameters array formats are acceptable.
+
+    single parameter format:
 
     +-----------------+----------+---------+--------------------------------------------------------------------------------------+
     | Name            | Required | Type    | Description                                                                          |
     +=================+==========+=========+======================================================================================+
-    | ``profileName`` | yes      | string  | profile name                                                                         |
+    | ``name``        | yes      | string  | parameter name                                                                       |
     +-----------------+----------+---------+--------------------------------------------------------------------------------------+
-    | ``parameters``  | yes      | array   | parameters array                                                                     |
+    | ``configFile``  | yes      | string  | parameter config_file                                                                |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``value``       | yes      | string  | parameter value                                                                      |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``secure``      | yes      | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+
+    array parameters format:
+
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | Name            | Required | Type    | Description                                                                          |
+    +=================+==========+=========+======================================================================================+
+    |                 | yes      | array   | parameters array                                                                     |
     +-----------------+----------+---------+--------------------------------------------------------------------------------------+
     | ``>name``       | yes      | string  | parameter name                                                                       |
     +-----------------+----------+---------+--------------------------------------------------------------------------------------+
@@ -206,25 +228,172 @@ Profile parameters
 
   **Request Example** ::
 
+    1. single parameter format exampe:  
     {
+        "name":"param1", 
+        "configFile":"configFile1",  
+        "value":"value1",   
+        "secure":0,  
+    }
+
+    2. array format example:  
+    [
+      {
+          "name":"param1",
+          "configFile":"configFile1",
+          "value":"value1",
+          "secure":0,
+      },
+      {
+          "name":"param2",
+          "configFile":"configFile2",
+          "value":"value2",
+          "secure":1,
+      }
+    ]
+
+
+  **Response Properties** ::
+
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | Name             | Type    | Description                                                                          |
+    +==================+=========+======================================================================================+
+    | ``response``     |         | Parameters associated with the profile.                                              |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>profileName`` | string  | profile name                                                                         |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>profileId``   | integer | profile index                                                                        |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>parameters``  | array   | parameters array                                                                     |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>id``         | integer | parameter index                                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>name``       | string  | parameter name                                                                       |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>configFile`` | string  | parameter config_file                                                                |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>value``      | string  | parameter value                                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>>secure``     | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``alerts``       | array   | A collection of alert messages.                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>level``       | string  | success, info, warning or error.                                                     |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``>text``        | string  | Alert message.                                                                       |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+    | ``version``      | string  |                                                                                      |
+    +------------------+---------+--------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response":{
         "profileName": "CCR1",
+        "profileId" : "12",
         "parameters":[
             {
                 "name":"param1",
                 "configFile":"configFile1"
                 "value":"value1",
-                "secure":0,
+                "secure":"0",
             },
             {
                 "name":"param2",
                 "configFile":"configFile2"
                 "value":"value2",
-                "secure":1,
+                "secure":"1",
             }
         ]
+      }
+      "alerts":[
+        {
+          "level": "success",
+          "text": ""Assign parameters successfully to profile CCR1"
+        }
+      ]
     }
 
-  **Response Properties**
+|
+
+**POST /api/1.2/profiles/id/{:id}/parameters**
+
+    Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter already associate the profile, keep the association.
+    If the profile does not exist, the API returns fail.
+
+    Authentication Required: Yes
+
+    Role(s) Required:  admin or oper. If there is parameter's secure equals 1 in the request properties, need admin role. 
+
+	**Request Route Parameters**
+
+	+------------+----------+----------------------------------------------------+
+	| Name       | Required | Description                                        |
+	+============+==========+====================================================+
+	| ``id``     | yes      | profile name.                                      |
+	+------------+----------+----------------------------------------------------+
+
+    **Request Properties**
+    The request properties accept 2 formats, both single paramter and parameters array formats are acceptable.
+
+    single parameter format:
+
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | Name            | Required | Type    | Description                                                                          |
+    +=================+==========+=========+======================================================================================+
+    | ``name``        | yes      | string  | parameter name                                                                       |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``configFile``  | yes      | string  | parameter config_file                                                                |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``value``       | yes      | string  | parameter value                                                                      |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``secure``      | yes      | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+
+    array parameters format:
+
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | Name            | Required | Type    | Description                                                                          |
+    +=================+==========+=========+======================================================================================+
+    |                 | yes      | array   | parameters array                                                                     |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>name``       | yes      | string  | parameter name                                                                       |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>configFile`` | yes      | string  | parameter config_file                                                                |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>value``      | yes      | string  | parameter value                                                                      |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+    | ``>secure``     | yes      | integer | secure flag, when 1, the parameter is accessible only by admin users. Defaults to 0. |
+    +-----------------+----------+---------+--------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    1. single parameter format exampe:  
+    {
+        "name":"param1", 
+        "configFile":"configFile1",  
+        "value":"value1",   
+        "secure":0,  
+    }
+
+    2. array format example:  
+    [
+      {
+          "name":"param1",
+          "configFile":"configFile1",
+          "value":"value1",
+          "secure":0,
+      },
+      {
+          "name":"param2",
+          "configFile":"configFile2",
+          "value":"value2",
+          "secure":1,
+      }
+    ]
+
+
+  **Response Properties** ::
 
     +------------------+---------+--------------------------------------------------------------------------------------+
     | Name             | Type    | Description                                                                          |
