@@ -781,6 +781,11 @@ sub api_routes {
 		->to( 'Types#show',  namespace => $namespace );
 	$r->put("/api/$version/types/:id")->over( authenticated => 1 )
 		->to( 'Types#update', namespace => $namespace );
+	$r->post("/api/$version/types")->over( authenticated => 1 )
+		->to( 'Types#create', namespace => $namespace );
+	$r->delete("/api/$version/types/:id")->over( authenticated => 1 )
+		->to( 'Types#delete', namespace => $namespace );
+
 
 	# -- USERS
 	$r->get( "/api/$version/users")->over( authenticated => 1 )
