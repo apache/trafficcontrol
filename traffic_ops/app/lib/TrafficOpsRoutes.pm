@@ -769,7 +769,8 @@ sub api_routes {
 		->to( 'User#index', namespace => $namespace );
 	$r->get( "/api/$version/users/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'User#show',  namespace => $namespace );
-
+	$r->put("/api/$version/users/:id")->over( authenticated => 1 )
+		->to( 'User#update', namespace => $namespace );
 
 	# -- USERS: CURRENT USER
 	$r->get( "/api/$version/user/current")->over( authenticated => 1 )
