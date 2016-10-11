@@ -758,6 +758,10 @@ sub api_routes {
 		->to( 'Status#show',  namespace => $namespace );
 	$r->put("/api/$version/statuses/:id")->over( authenticated => 1 )
 		->to( 'Status#update', namespace => $namespace );
+	$r->post("/api/$version/statuses")->over( authenticated => 1 )
+		->to( 'Status#create', namespace => $namespace );
+	$r->delete("/api/$version/statuses/:id")->over( authenticated => 1 )
+		->to( 'Status#delete', namespace => $namespace );
 
 	# -- STATIC DNS ENTRIES
 	$r->get("/api/$version/staticdnsentries")->over( authenticated => 1 )

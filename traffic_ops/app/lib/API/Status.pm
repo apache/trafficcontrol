@@ -99,6 +99,71 @@ sub update {
 
 }
 
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $name = $params->{name};
+	if ( !defined($name) ) {
+		return $self->alert("Status name is required.");
+	}
+
+	my $values = {
+		name 			=> $params->{name} ,
+		description 	=> $params->{description}
+	};
+
+	my $insert = $self->db->resultset('Status')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my $response;
+		$response->{id}          	= $rs->id;
+		$response->{name}        	= $rs->name;
+		$response->{description}    = $rs->description;
+		$response->{lastUpdated} 	= $rs->last_updated;
+
+		&log( $self, "Created Status name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Status create was successful." );
+	}
+	else {
+		return $self->alert("Status create failed.");
+	}
+
+}
+
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $status = $self->db->resultset('Status')->find( { id => $id } );
+	if ( !defined($status) ) {
+		return $self->not_found();
+	}
+
+	my $servers = $self->db->resultset('Server')->find( { status => $status->id } );
+	if ( defined($servers) ) {
+		return $self->alert("This status is currently used by servers.");
+	}
+
+	my $rs = $status->delete();
+	if ($rs) {
+		return $self->success_message("Status deleted.");
+	} else {
+		return $self->alert( "Status delete failed." );
+	}
+}
+
+
+
 
 
 1;
