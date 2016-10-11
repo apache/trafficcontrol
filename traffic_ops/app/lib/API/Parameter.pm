@@ -28,25 +28,27 @@ use MojoPlugins::Job;
 use Utils::Helper::ResponseHelper;
 
 sub index {
-    my $self    = shift;
-    my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { prefetch => [ 'parameter', 'profile' ] } );
-    my @data    = ();
+    my $self = shift;
+    my @data;
+    my $orderby = $self->param('orderby') || "name";
+    my $rs_data = $self->db->resultset("Parameter")->search( undef, { order_by => 'me.' . $orderby } );
     while ( my $row = $rs_data->next ) {
-        my $value = $row->parameter->value;
-        &UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+        my $value = $row->value;
+        &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
         push(
             @data, {
-                "name"        => $row->parameter->name,
-                "id"          => $row->parameter->id,
-                "configFile"  => $row->parameter->config_file,
-                "value"       => $value,
-                "secure"      => $row->parameter->secure,
-                "lastUpdated" => $row->parameter->last_updated,
+                "id"            => $row->id,
+                "name"          => $row->name,
+                "value"         => $value,
+                "configFile"    => $row->config_file,
+                "secure"        => \$row->secure,
+                "lastUpdated"   => $row->last_updated
             }
         );
     }
     $self->success( \@data );
 }
+
 
 sub profile {
     my $self         = shift;
