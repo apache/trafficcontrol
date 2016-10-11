@@ -27,15 +27,14 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 use MojoPlugins::Response;
+use Validate::Tiny ':all';
 
-# Read
 sub index {
 	my $self = shift;
 	my @data;
 	my %idnames;
 	my $orderby = $self->param('orderby') || "name";
 
-	# Can't figure out how to do the join on the same table
 	my $rs_idnames = $self->db->resultset("Cachegroup")->search( undef, { columns => [qw/id name/] } );
 	while ( my $row = $rs_idnames->next ) {
 		$idnames{ $row->id } = $row->name;
@@ -58,14 +57,13 @@ sub index {
 				? $idnames{ $row->secondary_parent_cachegroup_id }
 				: undef,
 				"typeId"   => $row->type->id,
-				"typeName"     => $row->type->name
+				"typeName" => $row->type->name
 			}
 		);
 	}
 	$self->success( \@data );
 }
 
-# Read
 sub index_trimmed {
 	my $self = shift;
 	my @data;
@@ -91,7 +89,6 @@ sub show {
 	my @data = ();
 	my %idnames;
 
-	# Can't figure out how to do the join on the same table
 	my $rs_idnames = $self->db->resultset("Cachegroup")->search( undef, { columns => [qw/id name/] } );
 	while ( my $row = $rs_idnames->next ) {
 		$idnames{ $row->id } = $row->name;
@@ -113,11 +110,96 @@ sub show {
 				? $idnames{ $row->secondary_parent_cachegroup_id }
 				: undef,
 				"typeId"   => $row->type->id,
-				"typeName"     => $row->type->name
+				"typeName" => $row->type->name
 			}
 		);
 	}
 	$self->success( \@data );
+}
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_cachegroup_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $cachegroup = $self->db->resultset('Cachegroup')->find( { id => $id } );
+	if ( !defined($cachegroup) ) {
+		return $self->not_found();
+	}
+
+	my $name = $params->{name};
+	if ( $cachegroup->name ne $name ) {
+		my $existing = $self->db->resultset('Cachegroup')->find( { name => $name } );
+		if ($existing) {
+			return $self->alert( "A cachegroup with name " . $name . " already exists." );
+		}
+	}
+
+	my $short_name = $params->{shortName};
+	if ( $cachegroup->short_name ne $short_name ) {
+		my $existing = $self->db->resultset('Cachegroup')->find( { short_name => $short_name } );
+		if ($existing) {
+			return $self->alert( "A cachegroup with short_name " . $short_name . " already exists." );
+		}
+	}
+
+	my $values = {
+		name                           => $params->{name},
+		short_name                     => $params->{shortName},
+		latitude                       => $params->{latitude},
+		longitude                      => $params->{longitude},
+		parent_cachegroup_id           => $params->{parentCachegroupId},
+		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
+		type                           => $params->{typeId}
+	};
+
+	my $rs = $cachegroup->update($values);
+	if ($rs) {
+		my %idnames;
+		my $response;
+
+		my $rs_idnames = $self->db->resultset("Cachegroup")->search( undef, { columns => [qw/id name/] } );
+		while ( my $row = $rs_idnames->next ) {
+			$idnames{ $row->id } = $row->name;
+		}
+
+		$response->{id}                 = $rs->id;
+		$response->{name}               = $rs->name;
+		$response->{shortName}          = $rs->short_name;
+		$response->{latitude}           = $rs->latitude;
+		$response->{longitude}          = $rs->longitude;
+		$response->{lastUpdated}        = $rs->last_updated;
+		$response->{parentCachegroupId} = $rs->parent_cachegroup_id;
+		$response->{parentCachegroupName} =
+			( defined $rs->parent_cachegroup_id )
+			? $idnames{ $rs->parent_cachegroup_id }
+			: undef;
+		$response->{secondaryParentCachegroupId} = $rs->secondary_parent_cachegroup_id;
+		$response->{secondaryParentCachegroupName} =
+			( defined $rs->secondary_parent_cachegroup_id )
+			? $idnames{ $rs->secondary_parent_cachegroup_id }
+			: undef;
+		$response->{typeId}   = $rs->type->id;
+		$response->{typeName} = $rs->type->name;
+
+		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Cachegroup update was successful." );
+	}
+	else {
+		return $self->alert("Cachegroup update failed.");
+	}
+
 }
 
 sub by_parameter_id {
@@ -335,84 +417,6 @@ sub create {
 	return $self->success( $response, "Cachegroup successfully created: " . $name );
 }
 
-sub update {
-	my $self   = shift;
-	my $params = $self->req->json;
-	if ( !&is_oper($self) ) {
-		return $self->forbidden();
-	}
-
-	my $err = $self->isValidCachegroup($params);
-	if ( defined($err) ) {
-		return $self->alert($err);
-	}
-
-	my $id = $self->param('id');
-	my $update = $self->db->resultset('Cachegroup')->find( { id => $id } );
-	if ( !defined($update) ) {
-		return $self->not_found();
-	}
-
-	my $type_id = undef;
-	if ( defined( $params->{typeName} ) ) {
-		my $typeName = $params->{typeName};
-		$type_id = $self->get_typeId($typeName);
-	}
-
-	my $cachegroups        = $self->get_cachegroups();
-	my $parentCachegroupId = undef;
-	if ( defined( $params->{parentCachegroup} ) ) {
-		my $parentCachegroup = $params->{parentCachegroup};
-		$parentCachegroupId = $cachegroups->{'cachegroups'}->{$parentCachegroup};
-		if ( $parentCachegroup ne "" && !defined($parentCachegroupId) ) {
-			return $self->alert( "parentCachegroup " . $parentCachegroup . " does not exist." );
-		}
-		if ( defined($parentCachegroupId) && $parentCachegroupId == $id ) {
-			return $self->alert("Could not set the Cache Group itself as parent.");
-		}
-	}
-	my $secondaryParentCachegroupId = undef;
-	if ( defined( $params->{secondaryParentCachegroup} ) ) {
-		my $secondaryParentCachegroup = $params->{secondaryParentCachegroup};
-		$secondaryParentCachegroupId = $cachegroups->{'cachegroups'}->{$secondaryParentCachegroup};
-		if ( $secondaryParentCachegroup ne "" && !defined($secondaryParentCachegroupId) ) {
-			return $self->alert( "secondaryParentCachegroup " . $secondaryParentCachegroup . " does not exist." );
-		}
-		if ( defined($secondaryParentCachegroupId) && $secondaryParentCachegroupId == $id ) {
-			return $self->alert("Could not set the Cache Group itself as secondary parent.");
-		}
-	}
-
-	eval {
-		$update->update(
-			{
-				name                 => defined( $params->{'name'} )           ? $params->{'name'}      : $update->name,
-				short_name           => defined( $params->{'shortName'} )      ? $params->{'shortName'} : $update->short_name,
-				latitude             => defined( $params->{'latitude'} )       ? $params->{'latitude'}  : $update->latitude,
-				longitude            => defined( $params->{'longitude'} )      ? $params->{'longitude'} : $update->longitude,
-				parent_cachegroup_id => defined( $params->{parentCachegroup} ) ? $parentCachegroupId    : $update->parent_cachegroup_id,
-				secondary_parent_cachegroup_id => defined( $params->{secondaryParentCachegroup} )
-				? $secondaryParentCachegroupId
-				: $update->secondary_parent_cachegroup_id,
-				type => defined($type_id) ? $type_id : $update->type,
-			}
-		);
-	};
-	if ($@) {
-		$self->app->log->error("Failed to update cachegroup id = $id: $@");
-		return $self->alert( { Error => "Failed to update server: $@" } );
-	}
-	$update->update();
-
-	&log( $self, "Update cachegroup with name:" . $update->name, "APICHANGE" );
-
-	my ( $response, $err1 ) = $self->get_cachegroup_by_id($id);
-	if ( defined($err1) ) {
-		return $self->alert( { Error => $err1 } );
-	}
-	return $self->success( $response, "Cachegroup was updated: " . $update->name );
-}
-
 sub delete {
 	my $self = shift;
 	my $rs;
@@ -531,5 +535,99 @@ sub postupdatequeue {
 	$response->{cachegroupId}   = $id;
 	return $self->success($response);
 }
+
+sub is_cachegroup_valid {
+	my $self   = shift;
+	my $params = shift;
+
+	if (!$self->is_valid_cachegroup_type($params->{typeId})) {
+		return ( 0, "Invalid cachegroup type" );
+	}
+
+	my $rules = {
+		fields => [ qw/name shortName latitude longitude parentCachegroupId secondaryParentCachegroupId typeId/ ],
+
+		# Validation checks to perform
+		checks => [
+			name => [ is_required("is required"), \&is_alphanumeric ],
+			shortName => [ is_required("is required"), \&is_alphanumeric ],
+			typeId => [ is_required("is required") ],
+			latitude => [ \&is_valid_lat ],
+			longitude => [ \&is_valid_long ]
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
+sub is_alphanumeric {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value or $value eq '' ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^[0-9a-zA-Z_\.\-]+$/ ) ) {
+		return "invalid. Use alphanumeric . or _ .";
+	}
+
+	return undef;
+}
+
+sub is_valid_lat {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value or $value eq '' ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^[-]*[0-9]+[.]*[0-9]*/ ) ) {
+		return "invalid. Must be a float number.";
+	}
+
+	if ( abs $value > 90 ) {
+		return "invalid. May not exceed +- 90.0.";
+	}
+
+	return undef;
+}
+
+sub is_valid_long {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value or $value eq '' ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^[-]*[0-9]+[.]*[0-9]*/ ) ) {
+		return "invalid. Must be a float number.";
+	}
+
+	if ( abs $value > 180 ) {
+		return "invalid. May not exceed +- 180.0.";
+	}
+
+	return undef;
+}
+
+sub is_valid_cachegroup_type {
+	my $self     = shift;
+	my $type_id = shift;
+
+	my $rs = $self->db->resultset("Type")->find( { id => $type_id } );
+	if ( defined($rs) && ( $rs->use_in_table eq "cachegroup" ) ) {
+		return 1;
+	}
+	return 0;
+}
+
 
 1;
