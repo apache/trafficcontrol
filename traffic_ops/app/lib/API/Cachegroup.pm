@@ -202,6 +202,82 @@ sub update {
 
 }
 
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_cachegroup_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $name = $params->{name};
+	my $existing = $self->db->resultset('Cachegroup')->find( { name => $name } );
+	if ($existing) {
+		return $self->alert( "A cachegroup with name " . $name . " already exists." );
+	}
+
+	my $short_name = $params->{shortName};
+	$existing = $self->db->resultset('Cachegroup')->find( { short_name => $short_name } );
+	if ($existing) {
+		return $self->alert( "A cachegroup with short_name " . $short_name . " already exists." );
+	}
+
+	my $values = {
+		name                           => $params->{name},
+		short_name                     => $params->{shortName},
+		latitude                       => $params->{latitude},
+		longitude                      => $params->{longitude},
+		parent_cachegroup_id           => $params->{parentCachegroupId},
+		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
+		type                           => $params->{typeId}
+	};
+
+	my $insert = $self->db->resultset('Cachegroup')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my %idnames;
+		my $response;
+
+		my $rs_idnames = $self->db->resultset("Cachegroup")->search( undef, { columns => [qw/id name/] } );
+		while ( my $row = $rs_idnames->next ) {
+			$idnames{ $row->id } = $row->name;
+		}
+
+		$response->{id}                 = $rs->id;
+		$response->{name}               = $rs->name;
+		$response->{shortName}          = $rs->short_name;
+		$response->{latitude}           = $rs->latitude;
+		$response->{longitude}          = $rs->longitude;
+		$response->{lastUpdated}        = $rs->last_updated;
+		$response->{parentCachegroupId} = $rs->parent_cachegroup_id;
+		$response->{parentCachegroupName} =
+			( defined $rs->parent_cachegroup_id )
+			? $idnames{ $rs->parent_cachegroup_id }
+			: undef;
+		$response->{secondaryParentCachegroupId} = $rs->secondary_parent_cachegroup_id;
+		$response->{secondaryParentCachegroupName} =
+			( defined $rs->secondary_parent_cachegroup_id )
+			? $idnames{ $rs->secondary_parent_cachegroup_id }
+			: undef;
+		$response->{typeId}   = $rs->type->id;
+		$response->{typeName} = $rs->type->name;
+
+		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Cachegroup creation was successful." );
+	}
+	else {
+		return $self->alert("Cachegroup creation failed.");
+	}
+
+}
+
 sub by_parameter_id {
 	my $self    = shift;
 	my $paramid = $self->param('paramid');
@@ -628,6 +704,5 @@ sub is_valid_cachegroup_type {
 	}
 	return 0;
 }
-
 
 1;
