@@ -604,7 +604,6 @@ sub api_routes {
 		->to( 'Division#show', namespace => $namespace );
 	$r->put("/api/$version/divisions/:id")->over( authenticated => 1 )
 		->to( 'Division#update', namespace => $namespace );
-
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
 
@@ -656,7 +655,6 @@ sub api_routes {
 		->to( 'PhysLocation#show', namespace => $namespace );
 	$r->put("/api/$version/phys_locations/:id")->over( authenticated => 1 )
 		->to( 'PhysLocation#update', namespace => $namespace );
-
 	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#create', namespace => $namespace );
 
@@ -744,6 +742,8 @@ sub api_routes {
 		->to( 'Status#index', namespace => $namespace );
 	$r->get( "/api/$version/statuses/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Status#show',  namespace => $namespace );
+	$r->put("/api/$version/statuses/:id")->over( authenticated => 1 )
+		->to( 'Status#update', namespace => $namespace );
 
 	# -- STATIC DNS ENTRIES
 	$r->get("/api/$version/staticdnsentries")->over( authenticated => 1 )

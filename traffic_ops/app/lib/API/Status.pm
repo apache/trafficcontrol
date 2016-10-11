@@ -60,5 +60,45 @@ sub show {
 	$self->success( \@data );
 }
 
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $status = $self->db->resultset('Status')->find( { id => $id } );
+	if ( !defined($status) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined( $params->{name} ) ) {
+		return $self->alert("Status name is required.");
+	}
+
+	my $values = {
+		name 		=> $params->{name},
+		description => $params->{description}
+	};
+
+	my $rs = $status->update($values);
+	if ($rs) {
+		my $response;
+		$response->{id}          = $rs->id;
+		$response->{name}        = $rs->name;
+		$response->{description} = $rs->description;
+		$response->{lastUpdated} = $rs->last_updated;
+		&log( $self, "Updated Status name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		return $self->success( $response, "Status update was successful." );
+	}
+	else {
+		return $self->alert("Status update failed.");
+	}
+
+}
+
+
 
 1;
