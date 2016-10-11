@@ -189,6 +189,8 @@ sub ui_routes {
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
 	$r->get("/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
 	$r->get("/federation/users")->to( 'Federation#users', namespace => $namespace );
+	$r->get( "/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	$r->get( "/federation/users")->to( 'Federation#users',     namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
