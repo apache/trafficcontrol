@@ -700,6 +700,8 @@ sub api_routes {
 		->to( 'Region#create', namespace => $namespace );
 	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
 		->to( 'Region#create_for_div', namespace => $namespace );
+	$r->delete("/api/$version/regions/:id")->over( authenticated => 1 )
+		->to( 'Region#delete', namespace => $namespace );
 
 	# -- ROLES
 	# Supports ?orderby=key

@@ -200,4 +200,26 @@ sub create_for_div {
 	return $self->alert( "create region " . $params->{name} . " failed." );
 }
 
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $region = $self->db->resultset('Region')->find( { id => $id } );
+	if ( !defined($region) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $region->delete();
+	if ($rs) {
+		return $self->success_message("Region deleted.");
+	} else {
+		return $self->alert( "Region delete failed." );
+	}
+}
+
+
 1;
