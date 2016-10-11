@@ -188,8 +188,8 @@ sub ui_routes {
 	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
 	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
-	$r->get( "/federation/resolvers" => [ format => [qw(json)] ] )->to( 'Federation#resolvers', namespace => $namespace );
-	$r->get( "/federation/users"     => [ format => [qw(json)] ] )->to( 'Federation#users',     namespace => $namespace );
+	$r->get( "/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	$r->get( "/federation/users")->to( 'Federation#users',     namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
@@ -929,12 +929,12 @@ sub traffic_stats_routes {
 	my $version   = shift;
 	my $namespace = "Extensions::TrafficStats::API";
 
-	$r->get( "/api/$version/cdns/usage/overview" => [ format => [qw(json)] ] )->to( 'CdnStats#get_usage_overview', namespace => $namespace );
-	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
+	$r->get( "/api/$version/cdns/usage/overview")->to( 'CdnStats#get_usage_overview', namespace => $namespace );
+	$r->get( "/api/$version/deliveryservice_stats")->over( authenticated => 1 )
 		->to( 'DeliveryServiceStats#index', namespace => $namespace );
-	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
-	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
-	$r->get( "internal/api/$version/current_stats" => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats', namespace => $namespace );
+	$r->get( "/api/$version/cache_stats")->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
+	$r->get( "internal/api/$version/daily_summary")->to( 'CacheStats#daily_summary', namespace => $namespace );
+	$r->get( "internal/api/$version/current_stats")->to( 'CacheStats#current_stats', namespace => $namespace );
 }
 
 sub catch_all {
