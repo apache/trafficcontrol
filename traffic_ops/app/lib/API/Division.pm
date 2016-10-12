@@ -116,4 +116,31 @@ sub create {
 	return $self->alert("create division failed.");
 }
 
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $division = $self->db->resultset('Division')->find( { id => $id } );
+	if ( !defined($division) ) {
+		return $self->not_found();
+	}
+
+	my $regions = $self->db->resultset('Region')->find( { division => $division->id } );
+	if ( defined($regions) ) {
+		return $self->alert("This division is currently used by regions.");
+	}
+
+	my $rs = $division->delete();
+	if ($rs) {
+		return $self->success_message("Division deleted.");
+	} else {
+		return $self->alert( "Division delete failed." );
+	}
+}
+
+
 1;

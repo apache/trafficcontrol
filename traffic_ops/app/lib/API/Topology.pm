@@ -30,14 +30,30 @@ use Data::Dumper;
 
 sub SnapshotCRConfig {
     my $self = shift;
-    if ( !&is_oper($self) ) {
-        return $self->alert("You must be an ADMIN or OPER to perform this operation!");
-    }
+    my $cdn_id = $self->param('id');
     my $cdn_name = $self->param('cdn_name');
+    my $cdn;
+
+    if ( !&is_oper($self) ) {
+        return $self->forbidden("You must be an ADMIN or OPER to perform this operation!");
+    }
+
+    if ( defined $cdn_id ) {
+        $cdn = $self->db->resultset("Cdn")->find( { id => $cdn_id } );
+        $cdn_name = $cdn->name if defined $cdn;
+    }
+
+    if ( !defined $cdn ) {
+        $cdn = $self->db->resultset('Cdn')->find( { name => $cdn_name } );
+        if ( !defined($cdn) ) {
+            return $self->not_found();
+        }
+    }
+
     my @cdn_names = $self->db->resultset('Server')->search({ 'type.name' => 'EDGE' }, { prefetch => [ 'cdn', 'type' ], group_by => 'cdn.name' } )->get_column('cdn.name')->all();
-    my $num = grep /^$cdn_name$/, @cdn_names; 
+    my $num = grep /^$cdn_name$/, @cdn_names;
     if ($num <= 0) {
-        return $self->alert("CDN_name[" . $cdn_name. "] is not found in edge server cdn");
+        return $self->alert("CDN_name [" . $cdn_name. "] is not found in edge server cdn");
     }
 
     my $json = &UI::Topology::gen_crconfig_json($self, $cdn_name);

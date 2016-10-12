@@ -112,6 +112,54 @@ sub update {
 }
 
 sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $name = $params->{name};
+	if ( !defined($name) ) {
+		return $self->alert("Region name is required.");
+	}
+
+	my $division_id = $params->{division};
+	if ( !defined($division_id) ) {
+		return $self->alert("Division Id is required.");
+	}
+
+	my $existing = $self->db->resultset('Region')->search( { name => $name } )->get_column('name')->single();
+	if ($existing) {
+		return $self->alert("A region with name \"$name\" already exists.");
+	}
+
+	my $values = {
+		name 		=> $params->{name} ,
+		division 	=> $params->{division}
+	};
+
+	my $insert = $self->db->resultset('Region')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my $response;
+		$response->{id}          	= $rs->id;
+		$response->{name}        	= $rs->name;
+		$response->{division}       = $rs->division->id;
+		$response->{divisionName}   = $rs->division->name;
+		$response->{lastUpdated} 	= $rs->last_updated;
+
+		&log( $self, "Created Region name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Region create was successful." );
+	}
+	else {
+		return $self->alert("Region create failed.");
+	}
+
+}
+
+sub create_for_div {
 	my $self          = shift;
 	my $division_name = $self->param('division_name');
 	my $params        = $self->req->json;
@@ -151,5 +199,27 @@ sub create {
 	}
 	return $self->alert( "create region " . $params->{name} . " failed." );
 }
+
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $region = $self->db->resultset('Region')->find( { id => $id } );
+	if ( !defined($region) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $region->delete();
+	if ($rs) {
+		return $self->success_message("Region deleted.");
+	} else {
+		return $self->alert( "Region delete failed." );
+	}
+}
+
 
 1;

@@ -112,6 +112,70 @@ sub update {
 
 }
 
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( !defined($params->{asn}) ) {
+		return $self->alert("ASN is required.");
+	}
+
+	if ( !defined($params->{cachegroupId}) ) {
+		return $self->alert("Cachegroup Id is required.");
+	}
+
+	my $values = {
+		asn 		=> $params->{asn} ,
+		cachegroup 	=> $params->{cachegroupId}
+	};
+
+	my $insert = $self->db->resultset('Asn')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my $response;
+		$response->{id}          	= $rs->id;
+		$response->{asn}        	= $rs->asn;
+		$response->{cachegroupId}   = $rs->cachegroup->id;
+		$response->{cachegroup}   	= $rs->cachegroup->name;
+		$response->{lastUpdated} 	= $rs->last_updated;
+
+		&log( $self, "Created ASN name '" . $rs->asn . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "ASN create was successful." );
+	}
+	else {
+		return $self->alert("ASN create failed.");
+	}
+
+}
+
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $asn = $self->db->resultset('Asn')->find( { id => $id } );
+	if ( !defined($asn) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $asn->delete();
+	if ($rs) {
+		return $self->success_message("ASN deleted.");
+	} else {
+		return $self->alert( "ASN delete failed." );
+	}
+}
+
+
+
 # Index
 sub v11_index {
 	my $self = shift;

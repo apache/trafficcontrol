@@ -39,7 +39,7 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_mid",
         "shortName" => "cg_mid",
         "latitude" => "12",
@@ -55,7 +55,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge",
         "shortName" => "cg_edge",
         "latitude" => "12",
@@ -71,7 +71,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/secondaryParentCachegroup" => "mid-northeast-group")
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge1",
         "shortName" => "cg_edge1",
         "latitude" => "23",
@@ -87,7 +87,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge2",
         "shortName" => "cg_edge2",
         "latitude" => "23",
@@ -97,7 +97,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
         "typeName" => "EDGE_LOC" })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge3",
         "shortName" => "cg_edge3",
         "latitude" => "23",
@@ -106,7 +106,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
         "typeName" => "EDGE_LOC" })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats2",
         "domainName" => "my.cisco.com",
         "cachegroup" => "mid-northeast-group",
@@ -154,7 +154,7 @@ ok $t->post_ok('/api/1.2/cachegroups/9999/queue_update' =>  {Accept => 'applicat
 
 my $cg_id = &get_cg_id('cache_group_edge');
 
-ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id . '/update' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_1",
         "shortName" => "cg_edge_1",
         "latitude" => "23",
@@ -168,7 +168,7 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
     ->json_is( "/response/secondaryParentCachegroup" => "mid-northeast-group")
             , 'Does the cache group details return?';
 
-ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id . '/update' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_2",
         "shortName" => "cg_edge_2",
         "parentCachegroup" => "",
@@ -182,7 +182,7 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
 
-ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id . '/update' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_2",
         "shortName" => "cg_edge_2",
         "parentCachegroup" => "cache_group_mid",
@@ -190,7 +190,7 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
     ->json_is( "/response/parentCachegroup" => "cache_group_mid")
             , 'Does the cache group details return?';
 
-ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id . '/update' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_1",
         "typeName" => "EDGE_LOC"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -200,7 +200,7 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
         "parentCachegroup" => "cache_group_edge_2",
         "typeName" => "EDGE_LOC"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
         "hostName" => "edge_streamer_1",
         "domainName" => "test.example.com",
         "cachegroup" => "cache_group_edge_2",
@@ -217,25 +217,25 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
     ->json_is( "/response/hostName" => "edge_streamer_1")
             , 'Does the server details return?';
 
-ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id . '/delete')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/alerts/0/level", "error" )
     ->json_is( "/alerts/0/text", "Failed to delete cachegroup id = " . $cg_id . " has servers")
             , "Is the Cachegroup id valid?";
 
 my $midcg_id = &get_cg_id('cache_group_mid');
-ok $t->delete_ok('/api/1.2/cachegroups/' . $midcg_id)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->delete_ok('/api/1.2/cachegroups/' . $midcg_id . '/delete')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/alerts/0/level", "error" )
     ->json_is( "/alerts/0/text", "Failed to delete cachegroup id = " . $midcg_id . ", which has children" )
             , "Is the Cachegroup id valid?";
 
 my $svr_id =&get_svr_id('edge_streamer_1');
 ok $t->delete_ok('/api/1.2/servers/' . $svr_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id . '/delete')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/alerts/0/level", "success" )
     ->json_is( "/alerts/0/text", "Cachegroup was deleted: cache_group_edge_2" )
             , "Is the Cachegroup id valid?";
-ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
+ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id . '/delete')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id . '/update' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_1",
         "shortName" => "cg_edge_1",
         "typeName" => "EDGE_LOC"})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
