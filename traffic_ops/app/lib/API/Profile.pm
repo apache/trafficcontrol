@@ -28,16 +28,32 @@ sub index {
 	my $self = shift;
 	my @data;
 	my $orderby = $self->param('orderby') || "me.name";
-	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
-	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"id"          => $row->id,
-				"name"        => $row->name,
-				"description" => $row->description,
-				"lastUpdated" => $row->last_updated
-			}
-		);
+	my $parameter_id = $self->param('param');
+
+	if ( defined $parameter_id ) {
+		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id } );
+		while ( my $row = $rs->next ) {
+			push(
+				@data, {
+					"id" => $row->profile->id,
+					"name" => $row->profile->name,
+					"description" => $row->profile->description,
+					"lastUpdated" => $row->profile->last_updated
+				}
+			);
+		}
+	} else {
+		my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+		while ( my $row = $rs_data->next ) {
+			push(
+				@data, {
+					"id"          => $row->id,
+					"name"        => $row->name,
+					"description" => $row->description,
+					"lastUpdated" => $row->last_updated
+				}
+			);
+		}
 	}
 	$self->success( \@data );
 }
