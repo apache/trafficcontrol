@@ -213,7 +213,14 @@
 					 row.classList.add("stripes");
 					 row.insertCell(0).textContent = event.name;
 					 row.insertCell(1).textContent = event.type;
-					 row.insertCell(2).textContent = event.isAvailable;
+					 row.insertCell(2).textContent = event.isAvailable ? "available" : "offline";
+					 if(event.isAvailable) {
+						 row.classList.add("stripes");
+						 row.classList.remove("error");
+					 } else {
+						 row.classList.add("error");
+						 row.classList.remove("stripes");
+					 }
 					 row.insertCell(3).textContent = event.description;
 					 row.insertCell(4).textContent = new Date(event.time * 1000).toISOString();
 				 }

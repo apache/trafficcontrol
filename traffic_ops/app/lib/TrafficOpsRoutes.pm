@@ -625,6 +625,8 @@ sub api_routes {
 		->to( 'Parameter#index', namespace => $namespace );
 
 	# -- PARAMETERS: PROFILE PARAMETERS
+	$r->get( "/api/$version/parameters/:id")->over( authenticated => 1 )
+        ->to( 'Parameter#get', namespace => $namespace );
 	$r->get( "/api/$version/profileparameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#index', namespace => $namespace );
 	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
@@ -635,6 +637,14 @@ sub api_routes {
 		->to( 'ProfileParameter#create', namespace => $namespace );
 	$r->delete( "/api/$version/profileparameters/:profile_id/:parameter_id" )->over( authenticated => 1 )
 		->to( 'ProfileParameter#delete', namespace => $namespace );
+	$r->post( "/api/$version/parameters")->over( authenticated => 1 )
+        ->to( 'Parameter#create', namespace => $namespace );
+	$r->post( "/api/$version/parameters/validate")->over( authenticated => 1 )
+        ->to( 'Parameter#validate', namespace => $namespace );
+	$r->put( "/api/$version/parameters/:id")->over( authenticated => 1 )
+        ->to( 'Parameter#edit', namespace => $namespace );
+	$r->delete( "/api/$version/parameters/:id")->over( authenticated => 1 )
+    ->to( 'Parameter#delete', namespace => $namespace );
 
 	# -- PARAMETERS: CACHEGROUP PARAMETERS
 	$r->get( "/api/$version/cachegroup/:parameter_id/parameter")->over( authenticated => 1 )

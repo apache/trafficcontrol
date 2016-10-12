@@ -164,6 +164,13 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
         "physLocation" => "HotAtlanta" })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+ok $t->get_ok('/api/1.2/servers?profileId=5' => {Accept => 'application/json'})->status_is(200)
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/0/id", 5 )
+    ->json_is( "/response/1/id", 9 )
+    ->json_is( "/response/2/id", 10 )
+    ->json_is( "/response/3/id", 11 )
+            , "Does the server ids return?";
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
