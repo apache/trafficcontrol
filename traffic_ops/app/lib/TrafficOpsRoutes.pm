@@ -391,11 +391,16 @@ sub api_routes {
 	$r->get( "/api/1.1/asns")->over( authenticated => 1 )
 		->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get( "/api/1.2/asns")->over( authenticated => 1 )
-		->to( 'Asn#index',     namespace => $namespace );
+		->to( 'Asn#index', namespace => $namespace );
 	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Asn#show',     namespace => $namespace );
+		->to( 'Asn#show', namespace => $namespace );
+	$r->post( "/api/$version/asns" )->over( authenticated => 1 )
+		->to( 'Asn#create', namespace => $namespace );
 	$r->put("/api/$version/asns/:id")->over( authenticated => 1 )
 		->to( 'Asn#update', namespace => $namespace );
+	$r->delete( "/api/$version/asns/:id" )->over( authenticated => 1 )
+		->to( 'Asn#delete', namespace => $namespace );
+
 
 
 	# -- CACHEGROUPS

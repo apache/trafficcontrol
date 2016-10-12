@@ -149,7 +149,7 @@ sub create {
 		$response->{divisionName}   = $rs->division->name;
 		$response->{lastUpdated} 	= $rs->last_updated;
 
-		&log( $self, "Created rivision name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		&log( $self, "Created Region name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 
 		return $self->success( $response, "Region create was successful." );
 	}
