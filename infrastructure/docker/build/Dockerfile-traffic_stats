@@ -15,7 +15,8 @@ WORKDIR /repo
 
 # traffic_stats specific
 RUN	yum -y install \
-		golang
+		golang && \
+	yum -y clean all
 ###
 
 VOLUME ./artifacts:/artifacts

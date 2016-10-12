@@ -8,10 +8,10 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-ENV GITREPO https://github.com/Comcast/traffic_control
-ENV BRANCH master
+ENV GITREPO=https://github.com/Comcast/traffic_control
+ENV BRANCH=master
 
-WORKDIR /repo
+# Above are common for all sub-projects.
 
 ### traffic_monitor specific
 RUN	yum -y install \
@@ -29,6 +29,7 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --set jar /opt/java/bin/jar && \
     alternatives --set javac /opt/java/bin/javac && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
+WORKDIR /
 ###
 
 VOLUME ./artifacts:/artifacts

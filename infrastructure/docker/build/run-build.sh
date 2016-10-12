@@ -14,3 +14,7 @@ cd traffic_control/$target
 ./build/build_rpm.sh
 mkdir -p /artifacts
 cp ../dist/* /artifacts/.
+
+# Clean up for next build
+cd -
+rm -r traffic_control

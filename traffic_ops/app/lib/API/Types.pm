@@ -86,4 +86,150 @@ sub show {
 	$self->success( \@data );
 }
 
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $type = $self->db->resultset('Type')->find( { id => $id } );
+	if ( !defined($type) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined( $params->{name} ) ) {
+		return $self->alert("Type name is required.");
+	}
+
+	my $values = {
+		name 			=> $params->{name},
+		description 	=> $params->{description},
+		use_in_table 	=> $params->{useInTable}
+	};
+
+	my $rs = $type->update($values);
+	if ($rs) {
+		my $response;
+		$response->{id}          = $rs->id;
+		$response->{name}        = $rs->name;
+		$response->{description} = $rs->description;
+		$response->{useInTable} = $rs->description;
+		$response->{lastUpdated} = $rs->use_in_table;
+
+		&log( $self, "Updated Type name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Type update was successful." );
+	}
+	else {
+		return $self->alert("Type update failed.");
+	}
+
+}
+
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $name = $params->{name};
+	if ( !defined($name) ) {
+		return $self->alert("Type name is required.");
+	}
+
+	my $existing = $self->db->resultset('Type')->search( { name => $name } )->get_column('name')->single();
+	if ( defined($existing) ) {
+		return $self->alert( "Type with that name already exists." );
+	}
+
+	my $values = {
+		name 			=> $params->{name} ,
+		description 	=> $params->{description},
+		use_in_table 	=> $params->{useInTable}
+	};
+
+	my $insert = $self->db->resultset('Type')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my $response;
+		$response->{id}          	= $rs->id;
+		$response->{name}        	= $rs->name;
+		$response->{description}    = $rs->description;
+		$response->{useInTable}     = $rs->use_in_table;
+		$response->{lastUpdated} 	= $rs->last_updated;
+
+		&log( $self, "Created Type name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "Type create was successful." );
+	}
+	else {
+		return $self->alert("Type create failed.");
+	}
+
+}
+
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $type = $self->db->resultset('Type')->find( { id => $id } );
+	if ( !defined($type) ) {
+		return $self->not_found();
+	}
+
+	my $servers = $self->db->resultset('Server')->find( { type => $type->id } );
+	if ( defined($servers) ) {
+		return $self->alert("This type is currently used by servers.");
+	}
+
+	my $cachegroups = $self->db->resultset('Cachegroup')->find( { type => $type->id } );
+	if ( defined($cachegroups) ) {
+		return $self->alert("This type is currently used by cachegroups.");
+	}
+
+	my $deliveryservices = $self->db->resultset('Deliveryservice')->find( { type => $type->id } );
+	if ( defined($deliveryservices) ) {
+		return $self->alert("This type is currently used by deliveryservices.");
+	}
+
+	my $regexes = $self->db->resultset('Regex')->find( { type => $type->id } );
+	if ( defined($regexes) ) {
+		return $self->alert("This type is currently used by regexes.");
+	}
+
+	my $staticdnsentries = $self->db->resultset('Staticdnsentry')->find( { type => $type->id } );
+	if ( defined($staticdnsentries) ) {
+		return $self->alert("This type is currently used by staticdnsentries.");
+	}
+
+	my $federations = $self->db->resultset('FederationResolver')->find( { type => $type->id } );
+	if ( defined($federations) ) {
+		return $self->alert("This type is currently used by federations.");
+	}
+
+	my $to_extensions = $self->db->resultset('ToExtension')->find( { type => $type->id } );
+	if ( defined($to_extensions) ) {
+		return $self->alert("This type is currently used by to extensions.");
+	}
+
+	my $rs = $type->delete();
+	if ($rs) {
+		return $self->success_message("Status deleted.");
+	} else {
+		return $self->alert( "Status delete failed." );
+	}
+}
+
+
+
+
 1;

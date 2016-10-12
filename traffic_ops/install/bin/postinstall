@@ -192,19 +192,19 @@ EOF
 		my $coverageZoneUrl = "$tmurl/routing/coverage-zone.json";
 		$parameters->{"coveragezone.polling.url"} = $coverageZoneUrl;
 
-		my $centos65TarballFqn = '';
+		my $centosTarballFqn = '';
 		my $skip;
 		while (1) {
-			$centos65TarballFqn = promptUser( "Fully qualified name of your CentOS 6.5 ISO kickstart tar file, or 'na' to skip and add files later",
-				"/var/cache/centos65.tgz" );
-			if ( $centos65TarballFqn eq 'na' ) {
+			$centosTarballFqn = promptUser( "Fully qualified name of your CentOS ISO kickstart tarball, or 'na' to skip and add files later",
+				"/var/cache/centos72.tgz" );
+			if ( $centosTarballFqn eq 'na' ) {
 				$skip = 1;
 				last;
 			}
-			if ( -f $centos65TarballFqn ) {
+			if ( -f $centosTarballFqn ) {
 				last;
 			}
-			print "\nNo file named $centos65TarballFqn found.\n\n";
+			print "\nNo file named $centosTarballFqn found.\n\n";
 		}
 
 		my $kickstartFilesFqn = promptUser( "Fully qualified location to store your ISO kickstart files", "/var/www/files" );
@@ -229,11 +229,11 @@ EOF
 		execCommand( "/bin/cp", "/opt/traffic_ops/install/data/perl/osversions.cfg", $kickstartFilesFqn );
 
 		if ( !$skip ) {
-			print "\nUntarring CentOS 6.5 ISO kickstart tar file.\n";
+			print "\nUncompressing CentOS ISO kickstart tarball.\n";
 			print "\nFirst creating $kickstartFilesFqn.\n";
 			execCommand( "/bin/mkdir", "-p", $kickstartFilesFqn );
-			print "\nAnd then the untar.\n";
-			execCommand( "/bin/tar", "-xzf", $centos65TarballFqn, "-C", $kickstartFilesFqn );
+			print "\nUncompressing $centosTarballFqn.\n";
+			execCommand( "/bin/tar", "-xzf", $centosTarballFqn, "-C", $kickstartFilesFqn );
 		}
 
 		print "\nTraffic Ops URL: $parameters->{'tm.url'}\n";

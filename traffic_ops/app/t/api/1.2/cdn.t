@@ -43,7 +43,24 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 $t->get_ok("/api/1.2/cdns/capacity.json")->status_is(200)->json_is( "/response/unavailablePercent", "0" )->json_is( "/response/availablePercent", "0" )
 	->json_is( "/response/utilizedPercent", "0" )->json_is( "/response/maintenancePercent", "0" )
 
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	my $cdn_id = &get_cdn_id('cdn_test');
+
+ok $t->put_ok(
+	'/api/1.2/cdns/'
+		. $cdn_id => { Accept => 'application/json' } => json => {
+		"name" => "cdn_test2"
+		}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/name" => "cdn_test2" )
+	->json_is( "/alerts/0/level" => "success" ), 'Does the cdn details return?';
+
+ok $t->delete_ok( '/api/1.2/cdns/' . $cdn_id )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->put_ok(
+	'/api/1.2/cdns/'
+		. $cdn_id => { Accept => 'application/json' } => json => {
+		"name" => "cdn_test3"
+		}
+)->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

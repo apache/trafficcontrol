@@ -62,8 +62,6 @@ Divisions
 
 |
 
-/api/1.2/divisions/:id
-++++++++++++++++
 
 **GET /api/1.2/divisions/:id**
   Get division by Id.
@@ -99,8 +97,66 @@ Divisions
 |
 
 
-/api/1.2/divisions
-++++++++++++++++++
+**PUT /api/1.2/divisions/:id**
+  Update a division
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +-------------------+----------+------------------------------------------------+
+  | Name              |   Type   |                 Description                    |
+  +===================+==========+================================================+
+  | ``id``            | int      | Division id.                                   |
+  +-------------------+----------+------------------------------------------------+
+
+  **Request Properties**
+
+  +-----------+----------+--------------------------+
+  | Parameter | Required | Description              |
+  +===========+==========+==========================+
+  | ``name``  | yes      | The name of the division |
+  +-----------+----------+--------------------------+
+ 
+  **Request Example** ::
+
+    {
+        "name": "mydivision1"
+    }
+
+|
+
+  **Response Properties**
+
+  +----------------------+--------+------------------------------------------------+
+  | Parameter            | Type   | Description                                    |
+  +======================+========+================================================+
+  |``name``              | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``id``                | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``lastUpdated``       | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+
+  **Response Example** ::
+
+	{
+		"alerts": [
+			{
+				"level": "success",
+				"text": "Division update was successful."
+			}
+		],
+		"response": {
+			"id": "1",
+			"lastUpdated": "2014-03-18 08:57:39",
+			"name": "mydivision1"
+		}
+	}
+|
+
 
 **POST /api/1.2/divisions**
   Create division
@@ -116,7 +172,7 @@ Divisions
   +===========+==========+==========================+
   | ``name``  | yes      | The name of the division |
   +-----------+----------+--------------------------+
- 
+
   **Request Example** ::
 
     {

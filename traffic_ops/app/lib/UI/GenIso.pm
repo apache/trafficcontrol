@@ -96,12 +96,6 @@ sub iso_download {
 	my $dev = $self->param('dev');
 	my $mtu = $self->param('mtu');
 	my $ondisk = $self->param('ondisk');
-	my $lacp;
-	$lacp = 1 if ($dev =~ m/^bond0$/);
-	#$self->res->headers->content_type("application/download");
-
-
-	#$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
 
 	# This sets up the "strength" of the hash. So far $1 works (md5). It will produce a sha256 ($5), but it's untested.
 	# PROTIP: Do not put the $ in.
@@ -109,35 +103,29 @@ sub iso_download {
 
 	# Read /etc/resolv.conf and get the nameservers. This is (supposedly) a hack
 	# until we get a reasonable UI set up. 
-
-	my ($nameservers, $line, $nsip);
-	open(RESOLV,'/etc/resolv.conf') || die ("What? No resolv.conf? Is this not Unix?");
+	my ($nameservers, $line, $nsip) = "";
+	open(RESOLV, '< /etc/resolv.conf') || die ("/etc/resolv.conf: $!");
 	while ($line = <RESOLV>) {
 		if ($line =~ /^nameserver /) {
 			$nsip = (split(" ", $line))[1];
-		$nameservers="$nsip $nameservers";
+			$nameservers = "$nsip $nameservers";
 		}
 	}
+
 	$nameservers =~ s/ /,/g;
 	$nameservers =~ s/,$//;
 
 	my $dir;
 	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
+
 	if (defined $ksdir && $ksdir ne "") {
 		$dir = $ksdir . "/" . $osversion;
 	} else {
 		$dir = $filebasedir . "/" . $osversion;
 	}
-	my $cfg_dir = "$dir/$install_cfg";
-        $self->app->log->info("cfg_dir: " . $cfg_dir);
 
-	# This just writes the string we're going to use to generate the ISO. You 
-	# won't need it unless you're debugging stuff, but it doesn't really hurt. 
-	open (STUF,">$cfg_dir/state.out") or die "can't open state"; 
-	print STUF "Dir== $dir\n";
-	my $cmd = "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
-	print STUF "$cmd\n";
-	close STUF;
+	my $cfg_dir = "$dir/$install_cfg";
+	$self->app->log->info("cfg_dir: " . $cfg_dir);
 
 	# This constructs the network.cfg file that gets written in the $install_cfg directory
 	# in network.cfg
@@ -153,39 +141,35 @@ sub iso_download {
 	# BONDOPTS='mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4'
 	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$dev\"\nMTU=\"$mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$hostname\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
 	# Write out the networking config: 
-	open(NF,">$cfg_dir/network.cfg") or die "Could not open network.cfg";
+	open(NF, "> $cfg_dir/network.cfg") or die "$cfg_dir/network.cfg: $!";
 	print NF $network_string;
 	close NF;
 
 	my $root_pass_string;
+
 	if ($rootpass eq "") {
 		# The following password SHOULD be "Fred". YMMV, you should change this. 
 		$root_pass_string = "#No password was passed in." . "\n" . ' rootpw --iscrypted $1$52LoLYxu$AcrXyEZGxiOOv4xp4E0mn/' . "\n";
-		} else {
+	} else {
 		my @chars = ("A".."Z", "a".."z",0..9) or die 'the @chars thing didn\'t work';
 		my $salt;
 		$salt .= $chars[rand @chars] for 1..8;
 		my $kripted_pw = crypt("$rootpass","\$$digest\$$salt\$") . "\n";
 		$root_pass_string = "rootpw --iscrypted $kripted_pw";
-		}
-	open(PWF, ">$cfg_dir/password.cfg") or die "Could not open password.cfg";
+	}
+
+	open(PWF, "> $cfg_dir/password.cfg") or die "$cfg_dir/password.cfg: $!";
 	print PWF "$root_pass_string";
 	close PWF;
 
-	# This wasn't necessary.
-	#if ($ondisk != m/^\s*/) {
-	#	$ondisk = '';
-	#}
-
-	open (DSK, ">$cfg_dir/disk.cfg") or die "Could not open disk.cfg";
+	open (DSK, "> $cfg_dir/disk.cfg") or die "$cfg_dir/disk.cfg: $!";
 	print DSK "boot_drives=\"$ondisk\"";
 	close DSK;
 
 	my $config_file = $ENV{'MOJO_CONFIG'};
 	my $fh;
-	open( $fh, "<", $config_file ) or die "$config_file: $!";
+	open($fh, "<", $config_file) or die "$config_file: $!";
 
-	my $data = `$cmd`;
 	my $iso_dir = "iso";
 	my $config = $self->app->config;
 	my $iso_root_path = $config->{'geniso'}{'iso_root_path'}; 
@@ -195,31 +179,34 @@ sub iso_download {
 
 	my $iso_file_name = "$hostname-$osversion.iso";
 	my $iso_file_path = join("/", $iso_dir_path, $iso_file_name);
-        my $rc = $self->write_iso($iso_file_path, $data);
+
+	my $cmd = "mkisofs -o $iso_file_path -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
+	my $type = "default";
+	my $custom_cmd = sprintf("%s/%s", $dir, "generate");
+
+	if (-f $custom_cmd && -x $custom_cmd) {
+		$cmd = sprintf("%s %s", $custom_cmd, $iso_file_path);
+		$type = "custom";
+	} elsif (-f $custom_cmd && ! -x $custom_cmd) {
+		$self->app->log->warn("$custom_cmd exists but is not executable; using $type ISO generation command");
+	}
+
+	$self->app->log->info("Using $type ISO generation command: " . $cmd);
+
+	# This just writes the string we're going to use to generate the ISO. You
+	# won't need it unless you're debugging stuff, but it doesn't really hurt.
+	open(STUF,"> $cfg_dir/state.out") or die "$cfg_dir/state.out: $!";
+	print STUF "Dir== $dir\n";
+	print STUF "$cmd\n";
+	close STUF;
+
+	$self->app->log->info("Writing ISO: " . $iso_file_path);
+	my $output = `$cmd 2>&1` || die("Error executing $cmd:");
+	$self->app->log->info($output);
 
 	# serverselect
-	$self->flash( message => "Download Iso here" );
-	#return $self->render('gen_iso/geniso');
+	$self->flash( message => "Download ISO here" );
 	return $iso_file_name;
-}
-
-sub write_iso{
-    my $self = shift;
-    my $iso_file_path = shift;
-    my $data = shift;
-
-    $self->app->log->info("Writing ISO: " . $iso_file_path);
-    open DATAOUT,">$iso_file_path"
-	or die return (ERROR, "Error opening file $iso_file_path: $!");
-
-    # set the stream to binary mode
-    #binmode DATAOUT;
-    #print DATAOUT pack('C*',$data);
-    print DATAOUT $data;
-    close DATAOUT or die "Error closing file $iso_file_path: $!\n";
-
-    return SUCCESS;
-
 }
 
 sub find_conf_path {
