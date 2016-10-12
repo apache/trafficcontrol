@@ -1,0 +1,28 @@
+FROM centos:7
+
+MAINTAINER Dan Kirkwood
+
+RUN	yum -y install \
+		epel-release \
+		git \
+		rpm-build && \
+	yum -y clean all
+
+ENV GITREPO https://github.com/Comcast/traffic_control
+ENV BRANCH master
+
+WORKDIR /repo
+
+# traffic_stats specific
+RUN	yum -y install \
+		golang && \
+	yum -y clean all
+###
+
+VOLUME ./artifacts:/artifacts
+
+ADD run-build.sh .
+
+CMD ./run-build.sh traffic_stats 2>&1 | tee /artifacts/build-traffic_stats.log
+
+# vi:syntax=Dockerfile

@@ -1,0 +1,73 @@
+---
+
+# Build configuration for traffic_control
+# Usage:
+#    GITREPO=...  BRANCH=...  docker-compose up [<service>...]
+#
+# where GITREPO is https path to traffic_control clone
+#   (default: https://github.com/Comcast/traffic_control)
+# and <branch> is name of branch to test
+#   (default: master).
+#
+# [<service>...] (optional) is one or more of the services listed below, e.g.
+# traffic_ops_build.  Default is to build all.
+#
+# All rpms are delivered to ./artifacts.
+#
+version: '2'
+
+services:
+  traffic_monitor_build:
+    image: traffic_monitor_builder
+    build:
+      dockerfile: Dockerfile-traffic_monitor
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - ./artifacts:/artifacts
+
+  traffic_ops_build:
+    image: traffic_ops_builder
+    build:
+      dockerfile: Dockerfile-traffic_ops
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - ./artifacts:/artifacts
+
+  traffic_portal_build:
+    image: traffic_portal_builder
+    build:
+      dockerfile: Dockerfile-traffic_portal
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - ./artifacts:/artifacts
+
+  traffic_router_build:
+    image: traffic_router_builder
+    build:
+      dockerfile: Dockerfile-traffic_router
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - ./artifacts:/artifacts
+
+  traffic_stats_build:
+    image: traffic_stats_builder
+    build:
+      dockerfile: Dockerfile-traffic_stats
+      context: .
+    environment:
+      - GITREPO
+      - BRANCH
+    volumes:
+      - ./artifacts:/artifacts
