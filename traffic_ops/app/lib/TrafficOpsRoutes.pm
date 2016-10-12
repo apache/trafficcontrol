@@ -606,6 +606,8 @@ sub api_routes {
 		->to( 'Division#update', namespace => $namespace );
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )
 		->to( 'Division#create', namespace => $namespace );
+	$r->delete( "/api/$version/divisions/:id")->over( authenticated => 1 )
+		->to( 'Division#delete', namespace => $namespace );
 
 	# -- FEDERATIONS
 	$r->get( "/internal/api/$version/federations")->over( authenticated => 1 )
