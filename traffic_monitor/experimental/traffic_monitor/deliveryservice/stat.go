@@ -258,8 +258,101 @@ func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l LastStatsData) dsda
 	return s
 }
 
-// cacheStats.Kbps.Value = lastData.Bytes.PerSec
-// stat.CacheGroups[cgName] = cacheStats
+// addLastDSStatTotals takes a LastDSStat with only raw `Caches` data, and calculates and sets the `CacheGroups`, `Type`, and `Total` data, and returns the augmented structure.
+func addLastDSStatTotals(lastStat LastDSStat, cachesReporting map[enum.CacheName]bool, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) LastDSStat {
+	cacheGroups := map[enum.CacheGroupName]LastStatsData{}
+	cacheTypes := map[enum.CacheType]LastStatsData{}
+	total := LastStatsData{}
+	for cacheName, cacheStats := range lastStat.Caches {
+		if !cachesReporting[cacheName] {
+			continue
+		}
+
+		if cacheGroup, ok := serverCachegroups[cacheName]; ok {
+			cacheGroups[cacheGroup] = cacheGroups[cacheGroup].Sum(cacheStats)
+		} else {
+			log.Errorf("while computing delivery service data, cache %v not in cachegroups\n", cacheName)
+		}
+
+		if cacheType, ok := serverTypes[cacheName]; ok {
+			cacheTypes[cacheType] = cacheTypes[cacheType].Sum(cacheStats)
+		} else {
+			log.Errorf("while computing delivery service data, cache %v not in types\n", cacheName)
+		}
+		total = total.Sum(cacheStats)
+	}
+	lastStat.CacheGroups = cacheGroups
+	lastStat.Type = cacheTypes
+	lastStat.Total = total
+	return lastStat
+}
+
+// addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures, and returns the augmented structures.
+func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats LastStats, dsStats Stats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats) {
+	err := error(nil)
+	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
+	if !lastStatExists {
+		lastStat = newLastDSStat()
+	}
+
+	for cacheName, cacheStats := range stat.Caches {
+		lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
+		if err != nil {
+			log.Errorf("debugq %v Error adding kbps for cache %v: %v", cacheName, err)
+			continue
+		}
+		cacheStats.Kbps.Value = lastStat.Caches[cacheName].Bytes.PerSec / BytesPerKilobit
+		stat.Caches[cacheName] = cacheStats
+	}
+
+	lastStat = addLastDSStatTotals(lastStat, stat.CommonStats.CachesReporting, serverCachegroups, serverTypes)
+
+	for cacheGroup, cacheGroupStat := range lastStat.CacheGroups {
+		stat.CacheGroups[cacheGroup] = addLastStatsToStatCacheStats(stat.CacheGroups[cacheGroup], cacheGroupStat)
+	}
+	for cacheType, cacheTypeStat := range lastStat.Type {
+		stat.Types[cacheType] = addLastStatsToStatCacheStats(stat.Types[cacheType], cacheTypeStat)
+	}
+	stat.TotalStats = addLastStatsToStatCacheStats(stat.TotalStats, lastStat.Total)
+	lastStats.DeliveryServices[dsName] = lastStat
+	dsStats.DeliveryService[dsName] = stat
+	return dsStats, lastStats
+}
+
+// latestBytes returns the most recent OutBytes from the given cache results, and the time of that result. It assumes zero results are not valid, but nonzero results with errors are valid.
+func latestBytes(results []cache.Result) (int64, time.Time, error) {
+	var result *cache.Result
+	for _, r := range results {
+		// result.Errors can include stat errors where OutBytes was set correctly, so we look for the first non-zero OutBytes rather than the first errorless result
+		// TODO add error classes to PrecomputedData, to distinguish stat errors from HTTP errors?
+		if r.PrecomputedData.OutBytes == 0 {
+			continue
+		}
+		result = &r
+		break
+	}
+	if result == nil {
+		return 0, time.Time{}, fmt.Errorf("no valid results")
+	}
+	return result.PrecomputedData.OutBytes, result.Time, nil
+}
+
+// addCachePerSecStats calculates the cache per-second stats, adds them to LastStats, and returns the augmented object.
+func addCachePerSecStats(cacheName enum.CacheName, results []cache.Result, lastStats LastStats) LastStats {
+	outBytes, outBytesTime, err := latestBytes(results) // it's ok if `latestBytes` returns 0s with an error, `addLastStat` will refrain from setting it (unless the previous calculation was nonzero, in which case it will error appropriately).
+	if err != nil {
+		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
+	}
+	lastStat := lastStats.Caches[cacheName] // if lastStats.Caches[cacheName] doesn't exist, it will be zero-constructed, and `addLastStat` will refrain from setting the PerSec for zero LastStats
+	lastStat.Bytes, err = addLastStat(lastStat.Bytes, outBytes, outBytesTime)
+	if err != nil {
+		log.Errorf("while computing delivery service data for cache %v: %v\n", cacheName, err)
+		return lastStats
+	}
+	lastStats.Caches[cacheName] = lastStat
+
+	return lastStats
+}
 
 // addPerSecStats adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
 //
@@ -267,93 +360,15 @@ func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l LastStatsData) dsda
 // So, we must record the last changed value, and the time it changed. Then, if the new OutBytes is different from the previous,
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
-// This specifically returns the given dsStats and lastStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addPerSecStats(...)
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-// TODO break this function up, it's too big.
-func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats, error) {
-	err := error(nil)
-
+func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats) {
 	for dsName, stat := range dsStats.DeliveryService {
-		lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
-		if !lastStatExists {
-			lastStat = newLastDSStat()
-		}
-
-		for cacheName, cacheStats := range stat.Caches {
-			lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
-			if err != nil {
-				log.Errorf("debugq %v Error adding kbps for cache %v: %v", cacheName, err)
-				continue
-			}
-			cacheStats.Kbps.Value = lastStat.Caches[cacheName].Bytes.PerSec / BytesPerKilobit
-			stat.Caches[cacheName] = cacheStats
-		}
-
-		cacheGroups := map[enum.CacheGroupName]LastStatsData{}
-		cacheTypes := map[enum.CacheType]LastStatsData{}
-		total := LastStatsData{}
-		for cacheName, cacheStats := range lastStat.Caches {
-			if !stat.CommonStats.CachesReporting[cacheName] {
-				continue
-			}
-
-			cacheGroup, ok := serverCachegroups[cacheName]
-			if !ok {
-				log.Errorf("addkbps cache %v not in cachegroups\n", cacheName)
-			} else {
-				cacheGroups[cacheGroup] = cacheGroups[cacheGroup].Sum(cacheStats)
-			}
-
-			cacheType, ok := serverTypes[cacheName]
-			if !ok {
-				log.Errorf("addkbps cache %v not in types\n", cacheName)
-			} else {
-				cacheTypes[cacheType] = cacheTypes[cacheType].Sum(cacheStats)
-			}
-			total = total.Sum(cacheStats)
-		}
-		lastStat.CacheGroups = cacheGroups
-		lastStat.Type = cacheTypes
-		lastStat.Total = total
-
-		for cacheGroup, cacheGroupStat := range lastStat.CacheGroups {
-			stat.CacheGroups[cacheGroup] = addLastStatsToStatCacheStats(stat.CacheGroups[cacheGroup], cacheGroupStat)
-		}
-		for cacheType, cacheTypeStat := range lastStat.Type {
-			stat.Types[cacheType] = addLastStatsToStatCacheStats(stat.Types[cacheType], cacheTypeStat)
-		}
-		stat.TotalStats = addLastStatsToStatCacheStats(stat.TotalStats, lastStat.Total)
-		lastStats.DeliveryServices[dsName] = lastStat
-		dsStats.DeliveryService[dsName] = stat
+		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes)
 	}
-
 	for cacheName, results := range statHistory {
-		var result *cache.Result
-		for _, r := range results {
-			// result.Errors can include stat errors where OutBytes was set correctly, so we look for the first non-zero OutBytes rather than the first errorless result
-			// TODO add error classes to PrecomputedData, to distinguish stat errors from HTTP errors?
-			if r.PrecomputedData.OutBytes == 0 {
-				continue
-			}
-			result = &r
-			break
-		}
-
-		if result == nil {
-			log.Warnf("addkbps cache %v has no results\n", cacheName)
-			continue
-		}
-
-		lastStat := lastStats.Caches[cacheName] // if lastStats.Caches[cacheName] doesn't exist, it will be zero-constructed, and `addLastStat` will refrain from setting the PerSec for zero LastStats
-		lastStat.Bytes, err = addLastStat(lastStat.Bytes, result.PrecomputedData.OutBytes, result.Time)
-		if err != nil {
-			log.Errorf("addkbps cache %v error: %v\n", cacheName, err)
-			continue
-		}
-		lastStats.Caches[cacheName] = lastStat
+		lastStats = addCachePerSecStats(cacheName, results, lastStats)
 	}
-
-	return dsStats, lastStats, nil
+	return dsStats, lastStats
 }
 
 func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
@@ -411,9 +426,9 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		}
 	}
 
-	kbpsStats, lastStats, kbpsErr := addPerSecStats(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
+	perSecStats, lastStats := addPerSecStats(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
-	return kbpsStats, lastStats, kbpsErr
+	return perSecStats, lastStats, nil
 }
 
 func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64, filter dsdata.Filter) *dsdata.StatsOld {
