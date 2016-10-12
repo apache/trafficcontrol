@@ -40,7 +40,7 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/cdns/capacity.json")->status_is(200)->json_is( "/response/unavailablePercent", "0" )->json_is( "/response/availablePercent", "0" )
+$t->get_ok("/api/1.1/cdns/capacity.json")->status_is(200)->json_is( "/response/unavailablePercent", "0" )->json_is( "/response/availablePercent", "0" )
 	->json_is( "/response/utilizedPercent", "0" )->json_is( "/response/maintenancePercent", "0" )
 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
