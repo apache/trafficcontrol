@@ -669,6 +669,8 @@ sub api_routes {
 		->to( 'PhysLocation#update', namespace => $namespace );
 	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )
 		->to( 'PhysLocation#create_for_reg', namespace => $namespace );
+	$r->delete( "/api/$version/phys_locations/:id")->over( authenticated => 1 )
+		->to( 'PhysLocation#delete', namespace => $namespace );
 
 	# -- PROFILES
 	# -- PROFILES: CRUD

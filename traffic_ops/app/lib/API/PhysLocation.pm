@@ -311,6 +311,28 @@ sub create_for_reg {
 	return $self->alert( "create region " . $params->{name} . " failed." );
 }
 
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $phys_location = $self->db->resultset('PhysLocation')->find( { id => $id } );
+	if ( !defined($phys_location) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $phys_location->delete();
+	if ($rs) {
+		return $self->success_message("Physical location deleted.");
+	} else {
+		return $self->alert( "Physical delete failed." );
+	}
+}
+
+
 sub is_phys_location_valid {
 	my $self   = shift;
 	my $params = shift;
