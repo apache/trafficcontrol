@@ -261,16 +261,16 @@ func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l LastStatsData) dsda
 // cacheStats.Kbps.Value = lastData.Bytes.PerSec
 // stat.CacheGroups[cgName] = cacheStats
 
-// addKbps adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
+// addPerSecStats adds Kbps fields to the NewStats, based on the previous out_bytes in the oldStats, and the time difference.
 //
 // Traffic Server only updates its data every N seconds. So, often we get a new Stats with the same OutBytes as the previous one,
 // So, we must record the last changed value, and the time it changed. Then, if the new OutBytes is different from the previous,
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
-// This specifically returns the given dsStats and lastStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addKbps(...)
+// This specifically returns the given dsStats and lastStats on error, so it's safe to do persistentStats, persistentLastKbpsStats, err = addPerSecStats(...)
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
 // TODO break this function up, it's too big.
-func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats, error) {
+func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats, error) {
 	err := error(nil)
 
 	for dsName, stat := range dsStats.DeliveryService {
@@ -411,7 +411,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		}
 	}
 
-	kbpsStats, lastStats, kbpsErr := addKbps(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
+	kbpsStats, lastStats, kbpsErr := addPerSecStats(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	return kbpsStats, lastStats, kbpsErr
 }
