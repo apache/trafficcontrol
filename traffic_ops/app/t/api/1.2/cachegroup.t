@@ -106,7 +106,7 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
         "typeName" => "EDGE_LOC" })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats2",
         "domainName" => "my.cisco.com",
         "cachegroup" => "mid-northeast-group",
@@ -200,7 +200,7 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
         "parentCachegroup" => "cache_group_edge_2",
         "typeName" => "EDGE_LOC"})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
         "hostName" => "edge_streamer_1",
         "domainName" => "test.example.com",
         "cachegroup" => "cache_group_edge_2",
