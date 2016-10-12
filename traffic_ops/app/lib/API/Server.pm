@@ -28,6 +28,7 @@ use MojoPlugins::Response;
 use MojoPlugins::Job;
 use Utils::Helper::ResponseHelper;
 use String::CamelCase qw(decamelize);
+use Validate::Tiny ':all';
 
 sub index {
 	my $self         = shift;
@@ -75,7 +76,7 @@ sub index {
 					"iloIpNetmask"   => $row->ilo_ip_netmask,
 					"iloIpGateway"   => $row->ilo_ip_gateway,
 					"iloUsername"    => $row->ilo_username,
-					"iloPassword"    => $is_admin ? $row->ilo_password : "********",
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
 					"interfaceMtu"   => $row->interface_mtu,
 					"interfaceName"  => $row->interface_name,
 					"ip6Address"     => $row->ip6_address,
@@ -87,7 +88,7 @@ sub index {
 					"mgmtIpAddress"  => $row->mgmt_ip_address,
 					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
-					"offline_reason" => $row->offline_reason,
+					"offlineReason" => $row->offline_reason,
 					"physLocation"   => $row->phys_location->name,
 					"physLocationId" => $row->phys_location->id,
 					"profile"        => $row->profile->name,
@@ -165,6 +166,223 @@ sub show {
 	}
 	$self->success( \@data );
 }
+
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_server_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $server = $self->db->resultset('Server')->find( { id => $id } );
+	if ( !defined($server) ) {
+		return $self->not_found();
+	}
+
+	my $values = {
+		cachegroup               	=> $params->{cachegroupId},
+		cdn_id                     	=> $params->{cdnId},
+		domain_name               	=> $params->{domainName},
+		host_name                   => $params->{hostName},
+		https_port           		=> $params->{httpsPort},
+		ilo_ip_address 				=> $params->{iloIpAddress},
+		ilo_ip_netmask         		=> $params->{iloIpNetmask},
+		ilo_ip_gateway            	=> $params->{iloIpGateway},
+		ilo_username            	=> $params->{iloUsername},
+		ilo_password          		=> $params->{iloPassword},
+		interface_mtu           	=> $params->{interfaceMtu},
+		interface_name            	=> $params->{interfaceName},
+		ip6_address              	=> $params->{ip6Address},
+		ip6_gateway              	=> $params->{ip6Gateway},
+		ip_address             		=> $params->{ipAddress},
+		ip_netmask             		=> $params->{ipNetmask},
+		ip_gateway                	=> $params->{ipGateway},
+		mgmt_ip_address           	=> $params->{mgmtIpAddress},
+		mgmt_ip_netmask          	=> $params->{mgmtIpNetmask},
+		mgmt_ip_gateway           	=> $params->{mgmtIpGateway},
+		offline_reason            	=> $params->{offlineReason},
+		phys_location            	=> $params->{physLocationId},
+		profile             		=> $params->{profileId},
+		rack                     	=> $params->{rack},
+		router_host_name       		=> $params->{routerHostName},
+		router_port_name          	=> $params->{routerPortName},
+		status                   	=> $params->{statusId},
+		tcp_port                 	=> $params->{tcpPort},
+		type                     	=> $params->{typeId},
+		upd_pending               	=> $params->{updPending}
+	};
+
+	my $rs = $server->update($values);
+	if ($rs) {
+		my @response;
+		push(
+			@response, {
+				"cachegroup"     => $rs->cachegroup->name,
+				"cachegroupId"   => $rs->cachegroup->id,
+				"cdnId"          => $rs->cdn->id,
+				"cdnName"        => $rs->cdn->name,
+				"domainName"     => $rs->domain_name,
+				"guid"           => $rs->guid,
+				"hostName"       => $rs->host_name,
+				"httpsPort"      => $rs->https_port,
+				"id"             => $rs->id,
+				"iloIpAddress"   => $rs->ilo_ip_address,
+				"iloIpNetmask"   => $rs->ilo_ip_netmask,
+				"iloIpGateway"   => $rs->ilo_ip_gateway,
+				"iloUsername"    => $rs->ilo_username,
+				"iloPassword"    => $rs->ilo_password,
+				"interfaceMtu"   => $rs->interface_mtu,
+				"interfaceName"  => $rs->interface_name,
+				"ip6Address"     => $rs->ip6_address,
+				"ip6Gateway"     => $rs->ip6_gateway,
+				"ipAddress"      => $rs->ip_address,
+				"ipNetmask"      => $rs->ip_netmask,
+				"ipGateway"      => $rs->ip_gateway,
+				"lastUpdated"    => $rs->last_updated,
+				"mgmtIpAddress"  => $rs->mgmt_ip_address,
+				"mgmtIpNetmask"  => $rs->mgmt_ip_netmask,
+				"mgmtIpGateway"  => $rs->mgmt_ip_gateway,
+				"offlineReason"  => $rs->offline_reason,
+				"physLocation"   => $rs->phys_location->name,
+				"physLocationId" => $rs->phys_location->id,
+				"profile"        => $rs->profile->name,
+				"profileId"      => $rs->profile->id,
+				"profileDesc"    => $rs->profile->description,
+				"rack"           => $rs->rack,
+				"routerHostName" => $rs->router_host_name,
+				"routerPortName" => $rs->router_port_name,
+				"status"         => $rs->status->name,
+				"statusId"       => $rs->status->id,
+				"tcpPort"        => $rs->tcp_port,
+				"type"           => $rs->type->name,
+				"typeId"         => $rs->type->id,
+				"updPending"     => \$rs->upd_pending
+			}
+		);
+
+		&log( $self, "Updated server [ '" . $rs->host_name . "' ] with id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( \@response, "Cachegroup update was successful." );
+	}
+	else {
+		return $self->alert("Cachegroup update failed.");
+	}
+}
+
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_server_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $values = {
+		cachegroup               	=> $params->{cachegroupId},
+		cdn_id                     	=> $params->{cdnId},
+		domain_name               	=> $params->{domainName},
+		host_name                   => $params->{hostName},
+		https_port           		=> $params->{httpsPort},
+		ilo_ip_address 				=> $params->{iloIpAddress},
+		ilo_ip_netmask         		=> $params->{iloIpNetmask},
+		ilo_ip_gateway            	=> $params->{iloIpGateway},
+		ilo_username            	=> $params->{iloUsername},
+		ilo_password          		=> $params->{iloPassword},
+		interface_mtu           	=> $params->{interfaceMtu},
+		interface_name            	=> $params->{interfaceName},
+		ip6_address              	=> $params->{ip6Address},
+		ip6_gateway              	=> $params->{ip6Gateway},
+		ip_address             		=> $params->{ipAddress},
+		ip_netmask             		=> $params->{ipNetmask},
+		ip_gateway                	=> $params->{ipGateway},
+		mgmt_ip_address           	=> $params->{mgmtIpAddress},
+		mgmt_ip_netmask          	=> $params->{mgmtIpNetmask},
+		mgmt_ip_gateway           	=> $params->{mgmtIpGateway},
+		offline_reason            	=> $params->{offlineReason},
+		phys_location            	=> $params->{physLocationId},
+		profile             		=> $params->{profileId},
+		rack                     	=> $params->{rack},
+		router_host_name       		=> $params->{routerHostName},
+		router_port_name          	=> $params->{routerPortName},
+		status                   	=> $params->{statusId},
+		tcp_port                 	=> $params->{tcpPort},
+		type                     	=> $params->{typeId},
+		upd_pending               	=> $params->{updPending}
+	};
+
+	my $insert = $self->db->resultset('Server')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my @response;
+		push(
+			@response, {
+				"cachegroup"     => $rs->cachegroup->name,
+				"cachegroupId"   => $rs->cachegroup->id,
+				"cdnId"          => $rs->cdn->id,
+				"cdnName"        => $rs->cdn->name,
+				"domainName"     => $rs->domain_name,
+				"guid"           => $rs->guid,
+				"hostName"       => $rs->host_name,
+				"httpsPort"      => $rs->https_port,
+				"id"             => $rs->id,
+				"iloIpAddress"   => $rs->ilo_ip_address,
+				"iloIpNetmask"   => $rs->ilo_ip_netmask,
+				"iloIpGateway"   => $rs->ilo_ip_gateway,
+				"iloUsername"    => $rs->ilo_username,
+				"iloPassword"    => $rs->ilo_password,
+				"interfaceMtu"   => $rs->interface_mtu,
+				"interfaceName"  => $rs->interface_name,
+				"ip6Address"     => $rs->ip6_address,
+				"ip6Gateway"     => $rs->ip6_gateway,
+				"ipAddress"      => $rs->ip_address,
+				"ipNetmask"      => $rs->ip_netmask,
+				"ipGateway"      => $rs->ip_gateway,
+				"lastUpdated"    => $rs->last_updated,
+				"mgmtIpAddress"  => $rs->mgmt_ip_address,
+				"mgmtIpNetmask"  => $rs->mgmt_ip_netmask,
+				"mgmtIpGateway"  => $rs->mgmt_ip_gateway,
+				"offlineReason"  => $rs->offline_reason,
+				"physLocation"   => $rs->phys_location->name,
+				"physLocationId" => $rs->phys_location->id,
+				"profile"        => $rs->profile->name,
+				"profileId"      => $rs->profile->id,
+				"profileDesc"    => $rs->profile->description,
+				"rack"           => $rs->rack,
+				"routerHostName" => $rs->router_host_name,
+				"routerPortName" => $rs->router_port_name,
+				"status"         => $rs->status->name,
+				"statusId"       => $rs->status->id,
+				"tcpPort"        => $rs->tcp_port,
+				"type"           => $rs->type->name,
+				"typeId"         => $rs->type->id,
+				"updPending"     => \$rs->upd_pending
+			}
+		);
+
+		&log( $self, "Created server [ '" . $rs->host_name . "' ] with id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( \@response, "Server creation was successful." );
+	}
+	else {
+		return $self->alert("Server creation failed.");
+	}
+}
+
+
 
 sub get_servers_by_status {
 	my $self              = shift;
@@ -536,6 +754,58 @@ sub get_servers_by_profile_id {
 
 	my $servers = $self->db->resultset('Server')->search( { profile => $profile_id } );
 	return ( $forbidden, $servers );
+}
+
+sub is_server_valid {
+	my $self   = shift;
+	my $params = shift;
+
+	if (!$self->is_valid_server_type($params->{typeId})) {
+		return ( 0, "Invalid server type" );
+	}
+
+	my $rules = {
+		fields => [ qw/cachegroupId cdnId domainName hostName httpsPort iloIpAddress iloIpNetmask iloIpGateway iloUsername iloPassword interfaceMtu interfaceName ip6Address ip6Gateway ipAddress ipNetmask ipGateway mgmtIpAddress mgmtIpNetmask mgmtIpGateway offlineReason physLocationId profileId rack routerHostName routerPortName statusId tcpPort typeId updPending/ ],
+
+		# Validation checks to perform
+		checks => [
+			cachegroupId => [ is_required("is required") ],
+			cdnId => [ is_required("is required") ],
+			domainName => [ is_required("is required") ],
+			hostName => [ is_required("is required") ],
+			interfaceMtu => [ is_required("is required") ],
+			interfaceName => [ is_required("is required") ],
+			ipAddress => [ is_required("is required") ],
+			ipNetmask => [ is_required("is required") ],
+			ipGateway => [ is_required("is required") ],
+			physLocationId => [ is_required("is required") ],
+			profileId => [ is_required("is required") ],
+			statusId => [ is_required("is required") ],
+			typeId => [ is_required("is required") ],
+			updPending => [ is_required("is required") ]
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
+sub is_valid_server_type {
+	my $self     = shift;
+	my $type_id = shift;
+
+	my $rs = $self->db->resultset("Type")->find( { id => $type_id } );
+	if ( defined($rs) && ( $rs->use_in_table eq "server" ) ) {
+		return 1;
+	}
+	return 0;
 }
 
 1;
