@@ -121,7 +121,7 @@ ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'applicati
 
 my $prof_id = &get_profile_id("CCR1");
 
-ok $t->post_ok('/api/1.2/profiles/id/'. $prof_id .'/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/'. $prof_id .'/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "name"          => "param11",
@@ -146,7 +146,7 @@ ok $t->post_ok('/api/1.2/profiles/id/'. $prof_id .'/parameters' => {Accept => 'a
 	->json_is( "/response/parameters/1/secure" => "0" )
 		, 'Does the profile_parameters create details return?';
 
-ok $t->post_ok('/api/1.2/profiles/id/'. $prof_id . '/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/'. $prof_id . '/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "name"          => "param11",
@@ -185,7 +185,7 @@ ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'applicati
     ->json_like( "/alerts/0/text" => qr/^there is parameter configFile does not provide/ )
 		, 'Does the profile_parameters create details return?';
 
-ok $t->post_ok('/api/1.2/profiles/id/'. $prof_id . '/parameters' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/profiles/'. $prof_id . '/parameters' => {Accept => 'application/json'} => json => {
                 "name"          => "param1",
                 "value"         => "value1",
                 "secure"        => "0"
