@@ -286,6 +286,15 @@
 
 		 var millisecondsInSecond = 1000;
 
+		 // dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places. For zero values, it returns an empty string, to make nonzero values more visible.
+		 function dsDisplayFloat(f) {
+			 var s = "";
+			 if (f != 0.0) {
+				 s = f.toFixed(2);
+			 }
+			 return s
+		 }
+
 		 function getDsStats() {
 			 var now = Date.now();
 
@@ -323,16 +332,16 @@
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = jds[deliveryService]['total.kbps'][0].value;
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.tps_2xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = parseFloat(jds[deliveryService]['total.tps_2xx'][0].value).toFixed(2);
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_2xx'][0].value));
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.tps_3xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = parseFloat(jds[deliveryService]['total.tps_3xx'][0].value).toFixed(2);
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_3xx'][0].value));
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.tps_4xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = parseFloat(jds[deliveryService]['total.tps_4xx'][0].value).toFixed(2);
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_4xx'][0].value));
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.tps_5xx")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = parseFloat(jds[deliveryService]['total.tps_5xx'][0].value).toFixed(2);
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_5xx'][0].value));
 					 }
 
 					 // \todo implement disabled locations
