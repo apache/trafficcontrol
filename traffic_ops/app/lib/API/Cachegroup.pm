@@ -278,6 +278,48 @@ sub create {
 
 }
 
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cg = $self->db->resultset('Cachegroup')->find( { id => $id } );
+	if ( !defined($cg) ) {
+		return $self->not_found();
+	}
+
+	my $servers = $self->db->resultset('Server')->find( { cachegroup => $cg->id } );
+	if ( defined($servers) ) {
+		return $self->alert("This cachegroup is currently used by servers.");
+	}
+
+	my $parent_cgs = $self->db->resultset('Cachegroup')->find( { parent_cachegroup_id => $cg->id } );
+	if ( defined($parent_cgs) ) {
+		return $self->alert("This cachegroup is currently used as a parent cachegroup.");
+	}
+	
+	my $secondary_parent_cgs = $self->db->resultset('Cachegroup')->find( { secondary_parent_cachegroup_id => $cg->id } );
+	if ( defined($secondary_parent_cgs) ) {
+		return $self->alert("This cachegroup is currently used as a secondary parent cachegroup.");
+	}
+
+	my $asns = $self->db->resultset('Asn')->find( { cachegroup => $cg->id } );
+	if ( defined($asns) ) {
+		return $self->alert("This cachegroup is currently used by one or more ASNs.");
+	}
+	
+	my $rs = $cg->delete();
+	if ($rs) {
+		return $self->success_message("Cachegroup deleted.");
+	} else {
+		return $self->alert( "Cachegroup delete failed." );
+	}
+}
+
+
 sub by_parameter_id {
 	my $self    = shift;
 	my $paramid = $self->param('paramid');

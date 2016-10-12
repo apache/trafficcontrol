@@ -417,6 +417,9 @@ sub api_routes {
 		->to( 'Cachegroup#create', namespace => $namespace );
 	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )
 		->to( 'Cachegroup#update', namespace => $namespace );
+	$r->delete( "/api/$version/cachegroups/:id" )->over( authenticated => 1 )
+		->to( 'Cachegroup#delete', namespace => $namespace );
+
 
 	# alternate cachegroup routes
 	$r->get( "/api/$version/cachegroups/list")->over( authenticated => 1 )
