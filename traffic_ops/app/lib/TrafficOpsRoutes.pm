@@ -728,13 +728,19 @@ sub api_routes {
 		->to( 'Server#index',  namespace => $namespace );
 	$r->get( "/api/$version/servers/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Server#show',  namespace => $namespace );
-
 	$r->post("/api/$version/servers")->over( authenticated => 1 )
 		->to( 'Server#create',   namespace => $namespace );
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )
 		->to( 'Server#update',   namespace => $namespace );
 	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )
 		->to( 'Server#delete',   namespace => $namespace );
+
+	# alernate server routes
+	$r->post("/api/$version/servers/create")->over( authenticated => 1 )
+		->to( 'Server2#create',   namespace => $namespace );
+	$r->put("/api/$version/servers/:id/update")->over( authenticated => 1 )
+	    ->to( 'Server2#update',   namespace => $namespace );
+
 
 	# -- SERVERS: DETAILS
 	$r->get( "/api/$version/servers/details")->over( authenticated => 1 )
