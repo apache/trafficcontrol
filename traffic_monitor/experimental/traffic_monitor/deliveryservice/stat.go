@@ -181,9 +181,9 @@ func (a LastStatsData) Sum(b LastStatsData) LastStatsData {
 	return LastStatsData{
 		Bytes:     a.Bytes.Sum(b.Bytes),
 		Status2xx: a.Status2xx.Sum(b.Status2xx),
-		Status3xx: a.Status2xx.Sum(b.Status3xx),
-		Status4xx: a.Status2xx.Sum(b.Status4xx),
-		Status5xx: a.Status2xx.Sum(b.Status5xx),
+		Status3xx: a.Status3xx.Sum(b.Status3xx),
+		Status4xx: a.Status4xx.Sum(b.Status4xx),
+		Status5xx: a.Status5xx.Sum(b.Status5xx),
 	}
 }
 
@@ -225,6 +225,39 @@ func addLastStat(lastData LastStatData, newStat int64, newStatTime time.Time) (L
 	return lastData, nil
 }
 
+func combineErrs(errs []error) error {
+	combinedErr := ""
+	for _, err := range errs {
+		if err != nil {
+			combinedErr += err.Error() + ", "
+		}
+	}
+	if len(combinedErr) == 0 {
+		return nil
+	}
+	combinedErr = combinedErr[:len(combinedErr)-2] // strip trailing ', '
+	return fmt.Errorf("%s", combinedErr)
+}
+
+func addLastStats(lastData LastStatsData, newStats dsdata.StatCacheStats, newStatsTime time.Time) (LastStatsData, error) {
+	errs := []error{nil, nil, nil, nil, nil}
+	lastData.Bytes, errs[0] = addLastStat(lastData.Bytes, newStats.OutBytes.Value, newStatsTime)
+	lastData.Status2xx, errs[1] = addLastStat(lastData.Status2xx, newStats.Status2xx.Value, newStatsTime)
+	lastData.Status3xx, errs[2] = addLastStat(lastData.Status3xx, newStats.Status3xx.Value, newStatsTime)
+	lastData.Status4xx, errs[3] = addLastStat(lastData.Status4xx, newStats.Status4xx.Value, newStatsTime)
+	lastData.Status5xx, errs[4] = addLastStat(lastData.Status5xx, newStats.Status5xx.Value, newStatsTime)
+	return lastData, combineErrs(errs)
+}
+
+func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l LastStatsData) dsdata.StatCacheStats {
+	s.Kbps.Value = l.Bytes.PerSec / BytesPerKilobit
+	s.Tps2xx.Value = l.Status2xx.PerSec
+	s.Tps3xx.Value = l.Status3xx.PerSec
+	s.Tps4xx.Value = l.Status4xx.PerSec
+	s.Tps5xx.Value = l.Status5xx.PerSec
+	return s
+}
+
 // cacheStats.Kbps.Value = lastData.Bytes.PerSec
 // stat.CacheGroups[cgName] = cacheStats
 
@@ -247,9 +280,7 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastS
 		}
 
 		for cacheName, cacheStats := range stat.Caches {
-			lastStatCache := lastStat.Caches[cacheName]
-			lastStatCache.Bytes, err = addLastStat(lastStatCache.Bytes, cacheStats.OutBytes.Value, dsStatsTime)
-			lastStat.Caches[cacheName] = lastStatCache
+			lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
 			if err != nil {
 				log.Errorf("debugq %v Error adding kbps for cache %v: %v", cacheName, err)
 				continue
@@ -286,17 +317,12 @@ func addKbps(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastS
 		lastStat.Total = total
 
 		for cacheGroup, cacheGroupStat := range lastStat.CacheGroups {
-			g := stat.CacheGroups[cacheGroup]
-			g.Kbps.Value = cacheGroupStat.Bytes.PerSec / BytesPerKilobit
-			stat.CacheGroups[cacheGroup] = g
+			stat.CacheGroups[cacheGroup] = addLastStatsToStatCacheStats(stat.CacheGroups[cacheGroup], cacheGroupStat)
 		}
 		for cacheType, cacheTypeStat := range lastStat.Type {
-			t := stat.Types[cacheType]
-			t.Kbps.Value = cacheTypeStat.Bytes.PerSec / BytesPerKilobit
-			stat.Types[cacheType] = t
+			stat.Types[cacheType] = addLastStatsToStatCacheStats(stat.Types[cacheType], cacheTypeStat)
 		}
-		stat.TotalStats.Kbps.Value = lastStat.Total.Bytes.PerSec / BytesPerKilobit
-
+		stat.TotalStats = addLastStatsToStatCacheStats(stat.TotalStats, lastStat.Total)
 		lastStats.DeliveryServices[dsName] = lastStat
 		dsStats.DeliveryService[dsName] = stat
 	}
@@ -404,10 +430,10 @@ func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryServ
 	add("status_2xx", strconv.Itoa(int(c.Status2xx.Value)))
 	add("in_bytes", strconv.Itoa(int(c.InBytes.Value)))
 	add("kbps", strconv.Itoa(int(c.Kbps.Value)))
-	add("tps_5xx", strconv.Itoa(int(c.Tps5xx.Value)))
-	add("tps_4xx", strconv.Itoa(int(c.Tps4xx.Value)))
-	add("tps_3xx", strconv.Itoa(int(c.Tps3xx.Value)))
-	add("tps_2xx", strconv.Itoa(int(c.Tps2xx.Value)))
+	add("tps_5xx", fmt.Sprintf("%f", c.Tps5xx.Value))
+	add("tps_4xx", fmt.Sprintf("%f", c.Tps4xx.Value))
+	add("tps_3xx", fmt.Sprintf("%f", c.Tps3xx.Value))
+	add("tps_2xx", fmt.Sprintf("%f", c.Tps2xx.Value))
 	add("error", c.ErrorString.Value)
 	add("tps_total", strconv.Itoa(int(c.TpsTotal.Value)))
 	return s

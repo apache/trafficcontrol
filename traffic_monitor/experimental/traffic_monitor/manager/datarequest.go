@@ -443,12 +443,10 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 			handleErr(err, req.Type)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
-
 		body, err = cache.StatsMarshall(statHistory.Get(), filter, req.Parameters)
 		return commonReturn(body, err, req.Type)
 	case http_server.DSStats:
 		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
-
 		if err != nil {
 			handleErr(err, req.Type)
 			return []byte(err.Error()), http.StatusBadRequest
