@@ -119,7 +119,7 @@ sub delete {
 	return $self->success_message("Profile parameter association was deleted.");
 }
 
-sub addbyName {
+sub create_param_for_profile_name {
 	my $self = shift;
 	my $json = $self->req->json;
 	my $profileName = $self->param('name');
@@ -136,7 +136,7 @@ sub addbyName {
     return $self->addex($profileName, $json, $profile_find); 
 }
 
-sub addbyId {
+sub create_param_for_profile_id {
 	my $self = shift;
 	my $json = $self->req->json;
 	my $profileId = $self->param('id');
