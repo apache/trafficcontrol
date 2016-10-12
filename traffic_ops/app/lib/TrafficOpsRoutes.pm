@@ -679,8 +679,10 @@ sub api_routes {
 		->to( 'Profile#index_trimmed', namespace => $namespace );
 	$r->post( "/api/$version/profiles" )->over( authenticated => 1 )
 		->to( 'Profile#create', namespace => $namespace );
-	$r->post( "/api/$version/profiles/parameters" )->over( authenticated => 1 )
-		->to( 'ProfileParameter#addex', namespace => $namespace );
+	$r->post( "/api/$version/profiles/name/:name/parameters" )->over( authenticated => 1 )
+		->to( 'ProfileParameter#addbyName', namespace => $namespace );
+	$r->post( "/api/$version/profiles/id/:id/parameters" )->over( authenticated => 1 )
+		->to( 'ProfileParameter#addbyId', namespace => $namespace );
 	$r->put("/api/$version/profiles/:id")->over( authenticated => 1 )
 		->to( 'Profile#update', namespace => $namespace );
 	$r->delete("/api/$version/profiles/:id")->over( authenticated => 1 )
