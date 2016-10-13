@@ -378,25 +378,25 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Tps2xx.Value += v
+		stat.Tps2xx.Value += float64(v)
 	case "tps_3xx":
 		v, ok := val.(int64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Tps3xx.Value += v
+		stat.Tps3xx.Value += float64(v)
 	case "tps_4xx":
 		v, ok := val.(int64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Tps4xx.Value += v
+		stat.Tps4xx.Value += float64(v)
 	case "tps_5xx":
 		v, ok := val.(int64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
-		stat.Tps5xx.Value += v
+		stat.Tps5xx.Value += float64(v)
 	case "error_string":
 		v, ok := val.(string)
 		if !ok {

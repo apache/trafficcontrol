@@ -134,10 +134,10 @@ type StatCacheStats struct {
 	Status2xx   StatInt    `json:"status_2xx"`
 	InBytes     StatFloat  `json:"in_bytes"`
 	Kbps        StatFloat  `json:"kbps"`
-	Tps5xx      StatInt    `json:"tps_5xx"`
-	Tps4xx      StatInt    `json:"tps_4xx"`
-	Tps3xx      StatInt    `json:"tps_3xx"`
-	Tps2xx      StatInt    `json:"tps_2xx"`
+	Tps5xx      StatFloat  `json:"tps_5xx"`
+	Tps4xx      StatFloat  `json:"tps_4xx"`
+	Tps3xx      StatFloat  `json:"tps_3xx"`
+	Tps2xx      StatFloat  `json:"tps_2xx"`
 	ErrorString StatString `json:"error_string"`
 	TpsTotal    StatInt    `json:"tps_total"`
 }
@@ -152,10 +152,10 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 		Status2xx:   StatInt{Value: a.Status2xx.Value + b.Status2xx.Value},
 		InBytes:     StatFloat{Value: a.InBytes.Value + b.InBytes.Value},
 		Kbps:        StatFloat{Value: a.Kbps.Value + b.Kbps.Value},
-		Tps5xx:      StatInt{Value: a.Tps5xx.Value + b.Tps5xx.Value},
-		Tps4xx:      StatInt{Value: a.Tps4xx.Value + b.Tps4xx.Value},
-		Tps3xx:      StatInt{Value: a.Tps3xx.Value + b.Tps3xx.Value},
-		Tps2xx:      StatInt{Value: a.Tps2xx.Value + b.Tps2xx.Value},
+		Tps5xx:      StatFloat{Value: a.Tps5xx.Value + b.Tps5xx.Value},
+		Tps4xx:      StatFloat{Value: a.Tps4xx.Value + b.Tps4xx.Value},
+		Tps3xx:      StatFloat{Value: a.Tps3xx.Value + b.Tps3xx.Value},
+		Tps2xx:      StatFloat{Value: a.Tps2xx.Value + b.Tps2xx.Value},
 		ErrorString: StatString{Value: a.ErrorString.Value + b.ErrorString.Value},
 		TpsTotal:    StatInt{Value: a.TpsTotal.Value + b.TpsTotal.Value},
 	}
