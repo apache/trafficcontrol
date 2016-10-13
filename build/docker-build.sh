@@ -13,8 +13,6 @@
 
 export GITREPO="${GITREPO:-https://github.com/Comcast/traffic_control}"
 export BRANCH="${BRANCH:-master}"
-dist="./dist"
-cleanup=
 
 Usage() {
 	echo "Usage:"
@@ -25,8 +23,6 @@ Usage() {
 	echo "		-h			show usage"
 	echo "		-r <repository path>:	repository (local directory or https) to clone from"
 	echo "		-b <branch name>:	branch within repository"
-	echo "		-c			start clean: remove all traffic_control docker images prior to building"
-	echo "		-d <dist dir>:		local directory to copy built rpms"
 	echo ""
 }
 
@@ -38,17 +34,11 @@ do
 			;;
 		a)	buildall=1
 			;;
-		c)
-			cleanup=1
-			;;
 		r)
 			GITREPO="$OPTARG"
 			;;
 		b)
 			BRANCH="$OPTARG"
-			;;
-		d)
-			dist="$OPTARG"
 			;;
 		*) 
 			echo "Invalid option: $opt"
@@ -81,11 +71,11 @@ then
 	GITREPO=$(cd $GITREPO && pwd)
 fi
 
-# Get absolute path to dist dir
-mkdir -p $dist || exit 1
-dist=$(cd $dist && pwd)
+DIR="$( cd "$(dirname $( dirname "${BASH_SOURCE[0]}" ))" && pwd )"
 
-cleanmsg=$([[ $cleanup ]] && echo "be cleaned up" || echo "not be cleaned up")
+cd $DIR/infrastructure/docker/build
+dist=$(pwd)/artifacts
+
 cat <<-ENDMSG
 	********************************************************
 	
@@ -97,39 +87,8 @@ cat <<-ENDMSG
 
 ENDMSG
 
-# collect image names for later cleanup
-createBuilders() {
-	# topdir=.../traffic_control
-	local topdir=$(cd "$( echo "${BASH_SOURCE[0]%/*}" )/.."; pwd)
+# GITREPO and BRANCH are exported, so this will pick them up..
+docker-compose up
 
-	echo -n "** Create Builders: "; date
-	for p in $projects
-	do 
-		local image=$p/build
-		echo -n "**   $image: "; date
-		docker build --tag $image "$topdir/$p/build"
-	done
-}
-
-runBuild() {
-	echo -n "** Run Build: "; date
-
-	# Check if gitrepo is a local directory to be provided as a volume
-	if [[ -d $GITREPO ]]
-	then
-		vol="-v $GITREPO:$GITREPO"
-	fi
-	mkdir -p dist
-	for p in $projects
-	do
-		echo -n "**   building $p: "; date
-		docker run --rm --env "GITREPO=$GITREPO" --env "BRANCH=$BRANCH" $vol -v $dist:/dist $p/build
-	done
-	echo -n "** End Build: "; date
-}
-
-createBuilders
-runBuild
-
-echo "rpms created: "
+echo "rpms created in $dist: "
 ls -l "$dist/."
