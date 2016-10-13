@@ -1,4 +1,4 @@
-var LocationService = function(Restangular, messageModel) {
+var LocationService = function(Restangular, locationUtils, messageModel) {
 
     this.getLocations = function() {
         return Restangular.all('phys_locations').getList();
@@ -13,6 +13,8 @@ var LocationService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location created' } ], true);
+                    locationUtils.navigateToPath('/admin/locations');
+
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'Location create failed' } ], false);
@@ -46,5 +48,5 @@ var LocationService = function(Restangular, messageModel) {
 
 };
 
-LocationService.$inject = ['Restangular', 'messageModel'];
+LocationService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = LocationService;

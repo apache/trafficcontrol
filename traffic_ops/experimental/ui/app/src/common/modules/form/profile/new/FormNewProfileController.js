@@ -1,4 +1,4 @@
-var FormNewProfileController = function(profile, $scope, $controller, locationUtils, profileService) {
+var FormNewProfileController = function(profile, $scope, $controller, profileService) {
 
     // extends the FormProfileController to inherit common methods
     angular.extend(this, $controller('FormProfileController', { profile: profile, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewProfileController = function(profile, $scope, $controller, locationUt
     };
 
     $scope.save = function(profile) {
-        profileService.createProfile(profile).
-            then(function() {
-                locationUtils.navigateToPath('/admin/profiles');
-            });
+        profileService.createProfile(profile);
     };
 
 };
 
-FormNewProfileController.$inject = ['profile', '$scope', '$controller', 'locationUtils', 'profileService'];
+FormNewProfileController.$inject = ['profile', '$scope', '$controller', 'profileService'];
 module.exports = FormNewProfileController;

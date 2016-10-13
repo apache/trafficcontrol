@@ -1,4 +1,4 @@
-var ASNService = function(Restangular, messageModel) {
+var ASNService = function(Restangular, locationUtils, messageModel) {
 
     this.getASNs = function() {
         return Restangular.all('asns').getList();
@@ -11,13 +11,14 @@ var ASNService = function(Restangular, messageModel) {
     this.createASN = function(asn) {
         return Restangular.service('asns').post(asn)
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'ASN create failed' } ], false);
-            }
-        );
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
+                    locationUtils.navigateToPath('/admin/asns');
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'ASN create failed' } ], false);
+                }
+            );
     };
 
     this.updateASN = function(asn) {
@@ -46,5 +47,5 @@ var ASNService = function(Restangular, messageModel) {
 
 };
 
-ASNService.$inject = ['Restangular', 'messageModel'];
+ASNService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = ASNService;

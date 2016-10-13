@@ -1,4 +1,4 @@
-var TypeService = function(Restangular, messageModel) {
+var TypeService = function(Restangular, locationUtils, messageModel) {
 
     this.getTypes = function() {
         return Restangular.all('types').getList();
@@ -13,6 +13,7 @@ var TypeService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
+                    locationUtils.navigateToPath('/admin/types');
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'Type create failed' } ], false);
@@ -46,5 +47,5 @@ var TypeService = function(Restangular, messageModel) {
 
 };
 
-TypeService.$inject = ['Restangular', 'messageModel'];
+TypeService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = TypeService;

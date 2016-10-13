@@ -236,7 +236,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.multiSiteOriginAlgorithm), 'has-feedback': hasError(deliveryServiceForm.multiSiteOriginAlgorithm)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Multi Site Origin Algorithm</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="multiSiteOriginAlgorithm" name="multiSiteOriginAlgorithm" class="form-control" ng-model="deliveryService.multiSiteOriginAlgorithm" ng-options="msoAlgo.value as msoAlgo.label for msoAlgo in msoAlgos" required>
+                    <select id="multiSiteOriginAlgorithm" name="multiSiteOriginAlgorithm" class="form-control" ng-model="deliveryService.multiSiteOriginAlgorithm" ng-options="msoAlgo.value as msoAlgo.label for msoAlgo in msoAlgos">
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.multiSiteOriginAlgorithm, 'required')">Required</small>

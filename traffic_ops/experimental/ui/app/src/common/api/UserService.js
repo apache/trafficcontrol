@@ -1,4 +1,4 @@
-var UserService = function(Restangular, $http, $location, $q, authService, userModel, messageModel, ENV) {
+var UserService = function(Restangular, $http, $location, $q, authService, locationUtils, userModel, messageModel, ENV) {
 
     var service = this;
 
@@ -55,6 +55,7 @@ var UserService = function(Restangular, $http, $location, $q, authService, userM
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
+                    locationUtils.navigateToPath('/admin/users');
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'User create failed' } ], false);
@@ -88,5 +89,5 @@ var UserService = function(Restangular, $http, $location, $q, authService, userM
 
 };
 
-UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'userModel', 'messageModel', 'ENV'];
+UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];
 module.exports = UserService;

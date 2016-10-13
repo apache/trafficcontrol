@@ -1,4 +1,4 @@
-var ParameterService = function(Restangular, messageModel) {
+var ParameterService = function(Restangular, locationUtils, messageModel) {
 
     this.getParameters = function() {
         return Restangular.all('parameters').getList();
@@ -13,6 +13,7 @@ var ParameterService = function(Restangular, messageModel) {
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
+                locationUtils.navigateToPath('/admin/parameters');
             },
             function() {
                 messageModel.setMessages([ { level: 'error', text: 'Parameter create failed' } ], false);
@@ -46,5 +47,5 @@ var ParameterService = function(Restangular, messageModel) {
 
 };
 
-ParameterService.$inject = ['Restangular', 'messageModel'];
+ParameterService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = ParameterService;

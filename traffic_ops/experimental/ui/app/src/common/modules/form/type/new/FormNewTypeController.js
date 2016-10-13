@@ -1,4 +1,4 @@
-var FormNewTypeController = function(type, $scope, $controller, locationUtils, typeService) {
+var FormNewTypeController = function(type, $scope, $controller, typeService) {
 
     // extends the FormTypeController to inherit common methods
     angular.extend(this, $controller('FormTypeController', { type: type, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewTypeController = function(type, $scope, $controller, locationUtils, t
     };
 
     $scope.save = function(type) {
-        typeService.createType(type).
-            then(function() {
-                locationUtils.navigateToPath('/admin/types');
-            });
+        typeService.createType(type);
     };
 
 };
 
-FormNewTypeController.$inject = ['type', '$scope', '$controller', 'locationUtils', 'typeService'];
+FormNewTypeController.$inject = ['type', '$scope', '$controller', 'typeService'];
 module.exports = FormNewTypeController;

@@ -1,4 +1,4 @@
-var StatusService = function(Restangular, messageModel) {
+var StatusService = function(Restangular, locationUtils, messageModel) {
 
     this.getStatuses = function() {
         return Restangular.all('statuses').getList();
@@ -13,6 +13,7 @@ var StatusService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
+                    locationUtils.navigateToPath('/admin/statuses');
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'Status create failed' } ], false);
@@ -46,5 +47,5 @@ var StatusService = function(Restangular, messageModel) {
 
 };
 
-StatusService.$inject = ['Restangular', 'messageModel'];
+StatusService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = StatusService;
