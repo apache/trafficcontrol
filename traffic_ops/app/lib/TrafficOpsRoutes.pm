@@ -46,7 +46,7 @@ sub define {
 	# Traffic Stats Extension
 	$self->traffic_stats_routes( $r, $version );
 
-    $self->catch_all( $r, $namespace );
+	$self->catch_all( $r, $namespace );
 }
 
 sub ui_routes {
@@ -188,8 +188,8 @@ sub ui_routes {
 	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
 	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
-	$r->get( "/federation/resolvers" => [ format => [qw(json)] ] )->to( 'Federation#resolvers', namespace => $namespace );
-	$r->get( "/federation/users"     => [ format => [qw(json)] ] )->to( 'Federation#users',     namespace => $namespace );
+	$r->get("/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	$r->get("/federation/users")->to( 'Federation#users', namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
@@ -335,8 +335,7 @@ sub ui_routes {
 	$r->get('/tools/invalidate_content/')->over( authenticated => 1 )->to( 'Tools#invalidate_content', namespace => $namespace );
 
 	# -- Topology - CCR Config, rewrote in json
-	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig.json')->via('GET')->over( authenticated => 1 )
-		->to( 'Topology#ccr_config', namespace => $namespace );
+	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig')->via('GET')->over( authenticated => 1 )->to( 'Topology#ccr_config', namespace => $namespace );
 
 	$r->get('/types')->over( authenticated => 1 )->to( 'Types#index', namespace => $namespace );
 	$r->route('/types/add')->via('GET')->over( authenticated => 1 )->to( 'Types#add', namespace => $namespace );
@@ -368,7 +367,7 @@ sub ui_routes {
 	$r->get('/visualstatus/:matchstring')->over( authenticated => 1 )->to( 'VisualStatus#graphs', namespace => $namespace );
 	$r->get('/dailysummary')->over( authenticated => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
 
-	# deprecated - see: /api/$version/servers.json and /api/1.1/servers/hostname/:host_name/details.json
+	# deprecated - see: /api/$version/servers and /api/1.1/servers/hostname/:host_name/details
 	# duplicate route
 	$r->get('/healthdataserver')->to( 'Server#index_response', namespace => $namespace );
 
@@ -384,523 +383,357 @@ sub api_routes {
 	my $namespace = shift;
 
 	# -- API DOCS
-	$r->get( "/api/$version/docs")
-		->to( 'ApiDocs#index', namespace => $namespace );
-
+	$r->get("/api/$version/docs")->to( 'ApiDocs#index', namespace => $namespace );
 
 	# -- ASNS (CRANS)
-	$r->get( "/api/1.1/asns")->over( authenticated => 1 )
-		->to( 'Asn#v11_index', namespace => $namespace );
-	$r->get( "/api/1.2/asns")->over( authenticated => 1 )
-		->to( 'Asn#index', namespace => $namespace );
-	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Asn#show', namespace => $namespace );
-	$r->post( "/api/$version/asns" )->over( authenticated => 1 )
-		->to( 'Asn#create', namespace => $namespace );
-	$r->put("/api/$version/asns/:id")->over( authenticated => 1 )
-		->to( 'Asn#update', namespace => $namespace );
-	$r->delete( "/api/$version/asns/:id" )->over( authenticated => 1 )
-		->to( 'Asn#delete', namespace => $namespace );
-
+	$r->get("/api/1.1/asns")->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
+	$r->get("/api/1.2/asns")->over( authenticated => 1 )->to( 'Asn#index',     namespace => $namespace );
+	$r->get( "/api/1.2/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Asn#show', namespace => $namespace );
+	$r->post("/api/$version/asns")->over( authenticated => 1 )->to( 'Asn#create', namespace => $namespace );
+	$r->put("/api/$version/asns/:id")->over( authenticated => 1 )->to( 'Asn#update', namespace => $namespace );
+	$r->delete("/api/$version/asns/:id")->over( authenticated => 1 )->to( 'Asn#delete', namespace => $namespace );
 
 	# -- CACHEGROUPS
 	# -- CACHEGROUPS: CRUD
 	# NOTE: any 'trimmed' urls will potentially go away with keys= support
 	# -- query parameter options ?orderby=key&keys=name (where key is the database column)
-	$r->get( "/api/$version/cachegroups")->over( authenticated => 1 )
-		->to( 'Cachegroup#index', namespace => $namespace );
-	$r->get( "/api/$version/cachegroups/trimmed")->over( authenticated => 1 )
-		->to( 'Cachegroup#index_trimmed', namespace => $namespace );
-	$r->get("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Cachegroup#show', namespace => $namespace );
-	$r->post("/api/$version/cachegroups")->over( authenticated => 1 )
-		->to( 'Cachegroup#create', namespace => $namespace );
-	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )
-		->to( 'Cachegroup#update', namespace => $namespace );
-	$r->delete( "/api/$version/cachegroups/:id" )->over( authenticated => 1 )
-		->to( 'Cachegroup#delete', namespace => $namespace );
+	$r->get("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#index', namespace => $namespace );
+	$r->get("/api/$version/cachegroups/trimmed")->over( authenticated => 1 )->to( 'Cachegroup#index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Cachegroup#show', namespace => $namespace );
+	$r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#update', namespace => $namespace );
+	$r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 
 	# alternate cachegroup routes
-	$r->get( "/api/$version/cachegroups/list")->over( authenticated => 1 )
-		->to( 'Cachegroup2#index', namespace => $namespace );
-	$r->post("/api/$version/cachegroups/create")->over( authenticated => 1 )
-		->to( 'Cachegroup2#create', namespace => $namespace );
-	$r->put("/api/$version/cachegroups/:id/update")->over( authenticated => 1 )
-		->to( 'Cachegroup2#update', namespace => $namespace );
-	$r->delete("/api/$version/cachegroups/:id/delete")->over( authenticated => 1 )
-		->to( 'Cachegroup2#delete', namespace => $namespace );
+	$r->get("/api/$version/cachegroups/list")->over( authenticated => 1 )->to( 'Cachegroup2#index', namespace => $namespace );
+	$r->post("/api/$version/cachegroups/create")->over( authenticated => 1 )->to( 'Cachegroup2#create', namespace => $namespace );
+	$r->put("/api/$version/cachegroups/:id/update")->over( authenticated => 1 )->to( 'Cachegroup2#update', namespace => $namespace );
+	$r->delete("/api/$version/cachegroups/:id/delete")->over( authenticated => 1 )->to( 'Cachegroup2#delete', namespace => $namespace );
 
 	# -- CACHEGROUPS: ASSIGN DELIVERYSERVICES
 	$r->post("/api/$version/cachegroups/:id/deliveryservices")->over( authenticated => 1 )
-		->to( 'DeliveryServiceServer#assign_ds_to_cachegroup',   namespace => $namespace );
+		->to( 'DeliveryServiceServer#assign_ds_to_cachegroup', namespace => $namespace );
 
 	# -- CACHEGROUPS: QUEUE UPDATES
-	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )
-		->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
-
+	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue', namespace => $namespace );
 
 	# -- CDNS
 	# -- CDNS: CRUD
-	$r->get( "/api/$version/cdns")->over( authenticated => 1 )
-		->to( 'Cdn#index', namespace => $namespace );
-	$r->get( "/api/$version/cdns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Cdn#show', namespace => $namespace );
-	$r->get( "/api/$version/cdns/name/:name")->over( authenticated => 1 )
-		->to( 'Cdn#name', namespace => $namespace );
-	$r->post( "/api/$version/cdns" )->over( authenticated => 1 )
-		->to( 'Cdn#create', namespace => $namespace );
-	$r->put( "/api/$version/cdns/:id" )->over( authenticated => 1 )
-		->to( 'Cdn#update', namespace => $namespace );
-	$r->delete( "/api/$version/cdns/:id" )->over( authenticated => 1 )
-		->to( 'Cdn#delete', namespace => $namespace );
+	$r->get("/api/$version/cdns")->over( authenticated => 1 )->to( 'Cdn#index', namespace => $namespace );
+	$r->get( "/api/$version/cdns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Cdn#show', namespace => $namespace );
+	$r->get("/api/$version/cdns/name/:name")->over( authenticated => 1 )->to( 'Cdn#name', namespace => $namespace );
+	$r->post("/api/$version/cdns")->over( authenticated => 1 )->to( 'Cdn#create', namespace => $namespace );
+	$r->put("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#update', namespace => $namespace );
+	$r->delete("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#delete', namespace => $namespace );
 
 	# -- CDNS: HEALTH
-	$r->get( "/api/$version/cdns/health")->over( authenticated => 1 )
-		->to( 'Cdn#health', namespace => $namespace );
-	$r->get( "/api/$version/cdns/:name/health")->over( authenticated => 1 )
-		->to( 'Cdn#health', namespace => $namespace );
+	$r->get("/api/$version/cdns/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
+	$r->get("/api/$version/cdns/:name/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
 
 	# -- CDNS: CAPACITY
-	$r->get( "/api/$version/cdns/capacity")->over( authenticated => 1 )
-		->to( 'Cdn#capacity', namespace => $namespace );
+	$r->get("/api/$version/cdns/capacity")->over( authenticated => 1 )->to( 'Cdn#capacity', namespace => $namespace );
 
 	# -- CDNS: ROUTING
-	$r->get( "/api/$version/cdns/routing")->over( authenticated => 1 )
-		->to( 'Cdn#routing', namespace => $namespace );
+	$r->get("/api/$version/cdns/routing")->over( authenticated => 1 )->to( 'Cdn#routing', namespace => $namespace );
 
 	# -- CDNS: SNAPSHOT
-	$r->put("/api/$version/cdns/:id/snapshot" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+	$r->put( "/api/$version/cdns/:id/snapshot" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
-	$r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )
-		->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
+	$r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 
 	# -- CDNS: METRICS
 	#WARNING: this is an intentionally "unauthenticated" route.
-	$r->get( "/api/$version/cdns/metric_types/:metric_type/start_date/:start_date/end_date/:end_date")
-		->to( 'Cdn#metrics', namespace => $namespace );
+	$r->get("/api/$version/cdns/metric_types/:metric_type/start_date/:start_date/end_date/:end_date")->to( 'Cdn#metrics', namespace => $namespace );
 
 	# -- CDNS: DNSSEC KEYS
 	# Support for DNSSEC zone signing, key signing, and private keys
 	# gets the latest key by default unless a version query param is provided with ?version=x
-	$r->get( "/api/$version/cdns/name/:name/dnsseckeys")->over( authenticated => 1 )
-		->to( 'Cdn#dnssec_keys', namespace => $namespace );
+	$r->get("/api/$version/cdns/name/:name/dnsseckeys")->over( authenticated => 1 )->to( 'Cdn#dnssec_keys', namespace => $namespace );
 
 	# generate new dnssec keys
-	$r->post("/api/$version/cdns/dnsseckeys/generate")->over( authenticated => 1 )
-		->to( 'Cdn#dnssec_keys_generate', namespace => $namespace );
+	$r->post("/api/$version/cdns/dnsseckeys/generate")->over( authenticated => 1 )->to( 'Cdn#dnssec_keys_generate', namespace => $namespace );
 
 	# delete dnssec keys
-	$r->get( "/api/$version/cdns/name/:name/dnsseckeys/delete")->over( authenticated => 1 )
-		->to( 'Cdn#delete_dnssec_keys', namespace => $namespace );
+	$r->get("/api/$version/cdns/name/:name/dnsseckeys/delete")->over( authenticated => 1 )->to( 'Cdn#delete_dnssec_keys', namespace => $namespace );
 
 	# checks expiration of keys and re-generates if necessary.  Used by Cron.
-	$r->get( "/internal/api/$version/cdns/dnsseckeys/refresh")
-		->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
+	$r->get("/internal/api/$version/cdns/dnsseckeys/refresh")->to( 'Cdn#dnssec_keys_refresh', namespace => $namespace );
 
 	# -- CDNS: SSL KEYS
-	$r->get( "/api/$version/cdns/name/:name/sslkeys")->over( authenticated => 1 )
-		->to( 'Cdn#ssl_keys', namespace => $namespace );
+	$r->get("/api/$version/cdns/name/:name/sslkeys")->over( authenticated => 1 )->to( 'Cdn#ssl_keys', namespace => $namespace );
 
 	# -- CDN: TOPOLOGY
-	$r->get( "/api/$version/cdns/configs")->via('GET')->over( authenticated => 1 )
-		->to( 'Cdn#get_cdns', namespace => $namespace );
-	$r->get( "/api/$version/cdns/:name/configs/routing")->via('GET')->over( authenticated => 1 )
-		->to( 'Cdn#configs_routing', namespace => $namespace );
-	$r->get( "/api/$version/cdns/:name/configs/monitoring")->via('GET')->over( authenticated => 1 )
-		->to( 'Cdn#configs_monitoring', namespace => $namespace );
+	$r->get("/api/$version/cdns/configs")->via('GET')->over( authenticated => 1 )->to( 'Cdn#get_cdns', namespace => $namespace );
+	$r->get("/api/$version/cdns/:name/configs/routing")->via('GET')->over( authenticated => 1 )->to( 'Cdn#configs_routing', namespace => $namespace );
+	$r->get("/api/$version/cdns/:name/configs/monitoring")->via('GET')->over( authenticated => 1 )->to( 'Cdn#configs_monitoring', namespace => $namespace );
 
 	# -- CDN: DOMAINS
-	$r->get( "/api/$version/cdns/domains")->over( authenticated => 1 )
-		->to( 'Cdn#domains', namespace => $namespace );
+	$r->get("/api/$version/cdns/domains")->over( authenticated => 1 )->to( 'Cdn#domains', namespace => $namespace );
 
 	# -- CHANGE LOGS
-	$r->get( "/api/$version/logs")->over( authenticated => 1 )
-		->to( 'ChangeLog#index', namespace => $namespace );
-	$r->get( "/api/$version/logs/:days/days")->over( authenticated => 1 )
-		->to( 'ChangeLog#index', namespace => $namespace );
-	$r->get( "/api/$version/logs/newcount")->over( authenticated => 1 )
-		->to( 'ChangeLog#newlogcount', namespace => $namespace );
-
+	$r->get("/api/$version/logs" => qw(json))->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
+	$r->get("/api/$version/logs/:days/days")->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
+	$r->get("/api/$version/logs/newcount")->over( authenticated => 1 )->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
 	# -- DELIVERYSERVICES
 	# -- DELIVERYSERVICES: CRUD
-	$r->get( "/api/$version/deliveryservices")->over( authenticated => 1 )
-		->to( 'Deliveryservice#index', namespace => $namespace );
-	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Deliveryservice#show', namespace => $namespace );
-	$r->post( "/api/$version/deliveryservices" )->over( authenticated => 1 )
-		->to( 'Deliveryservice#create', namespace => $namespace );
-	$r->put( "/api/$version/deliveryservices/:id" )->over( authenticated => 1 )
-		->to( 'Deliveryservice#update', namespace => $namespace );
-	$r->delete( "/api/$version/deliveryservices/:id" )->over( authenticated => 1 )
-		->to( 'Deliveryservice#delete', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#index', namespace => $namespace );
+	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Deliveryservice#show', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#create', namespace => $namespace );
+	$r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'Deliveryservice#update', namespace => $namespace );
+	$r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'Deliveryservice#delete', namespace => $namespace );
 
 	# alternate deliveryservice routes
-	$r->get( "/api/$version/deliveryservices/list")->over( authenticated => 1 )
-		->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/list")->over( authenticated => 1 )->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id/get" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
-	$r->post("/api/$version/deliveryservices/create")->over( authenticated => 1 )
-		->to( 'Deliveryservice2#create', namespace => $namespace );
-	$r->put("/api/$version/deliveryservices/:id/update")->over( authenticated => 1 )
-		->to( 'Deliveryservice2#update', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/create")->over( authenticated => 1 )->to( 'Deliveryservice2#create', namespace => $namespace );
+	$r->put("/api/$version/deliveryservices/:id/update")->over( authenticated => 1 )->to( 'Deliveryservice2#update', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )
 		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: HEALTH
-	$r->get( "/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )
-		->to( 'DeliveryService#health', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )->to( 'DeliveryService#health', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: CAPACITY
-	$r->get( "/api/$version/deliveryservices/:id/capacity")->over( authenticated => 1 )
-		->to( 'DeliveryService#capacity', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/capacity")->over( authenticated => 1 )->to( 'DeliveryService#capacity', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: ROUTING
-	$r->get( "/api/$version/deliveryservices/:id/routing")->over( authenticated => 1 )
-		->to( 'DeliveryService#routing', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/routing")->over( authenticated => 1 )->to( 'DeliveryService#routing', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: STATE
-	$r->get( "/api/$version/deliveryservices/:id/state")->over( authenticated => 1 )
-		->to( 'DeliveryService#state', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/state")->over( authenticated => 1 )->to( 'DeliveryService#state', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: REQUEST NEW DELIVERY SERVICE
-	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )
-		->to( 'DeliveryService#request', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: STEERING DELIVERYSERVICES
-	$r->get("/internal/api/$version/steering")->over( authenticated => 1)
-		->to('Steering#index', namespace => 'API::DeliveryService' );
-	$r->get("/internal/api/$version/steering/:xml_id")->over( authenticated => 1)
-		->to('Steering#index', namespace => 'API::DeliveryService' );
-	$r->post("/internal/api/$version/steering")->over( authenticated => 1 )
-		->to( 'Steering#add', namespace => 'API::DeliveryService' );
-	$r->put("/internal/api/$version/steering/:xml_id")->over( authenticated => 1 )
-		->to( 'Steering#update', namespace => 'API::DeliveryService' );
+	$r->get("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#index', namespace => 'API::DeliveryService' );
+	$r->get("/internal/api/$version/steering/:xml_id")->over( authenticated => 1 )->to( 'Steering#index', namespace => 'API::DeliveryService' );
+	$r->post("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#add', namespace => 'API::DeliveryService' );
+	$r->put("/internal/api/$version/steering/:xml_id")->over( authenticated => 1 )->to( 'Steering#update', namespace => 'API::DeliveryService' );
 
 	# -- DELIVERYSERVICE: SSL KEYS
 	# Support for SSL private keys, certs, and csrs
 	# gets the latest key by default unless a version query param is provided with ?version=x
-	$r->get( "/api/$version/deliveryservices/xmlId/:xmlid/sslkeys")->over( authenticated => 1 )
+	$r->get("/api/$version/deliveryservices/xmlId/:xmlid/sslkeys")->over( authenticated => 1 )
 		->to( 'SslKeys#view_by_xml_id', namespace => 'API::DeliveryService' );
-	$r->get( "/api/$version/deliveryservices/hostname/#hostname/sslkeys")->over( authenticated => 1 )
+	$r->get("/api/$version/deliveryservices/hostname/#hostname/sslkeys")->over( authenticated => 1 )
 		->to( 'SslKeys#view_by_hostname', namespace => 'API::DeliveryService' );
 
 	# generate new ssl keys for a delivery service
-	$r->post("/api/$version/deliveryservices/sslkeys/generate")->over( authenticated => 1 )
-		->to( 'SslKeys#generate', namespace => 'API::DeliveryService' );
+	$r->post("/api/$version/deliveryservices/sslkeys/generate")->over( authenticated => 1 )->to( 'SslKeys#generate', namespace => 'API::DeliveryService' );
 
 	# add existing ssl keys to a delivery service
-	$r->post("/api/$version/deliveryservices/sslkeys/add")->over( authenticated => 1 )
-		->to( 'SslKeys#add', namespace => 'API::DeliveryService' );
+	$r->post("/api/$version/deliveryservices/sslkeys/add")->over( authenticated => 1 )->to( 'SslKeys#add', namespace => 'API::DeliveryService' );
 
 	# deletes the latest key by default unless a version query param is provided with ?version=x
-	$r->get( "/api/$version/deliveryservices/xmlId/:xmlid/sslkeys/delete")->over( authenticated => 1 )
+	$r->get("/api/$version/deliveryservices/xmlId/:xmlid/sslkeys/delete")->over( authenticated => 1 )
 		->to( 'SslKeys#delete', namespace => 'API::DeliveryService' );
 
 	# -- DELIVERY SERVICE: URL SIG KEYS
 	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys/generate")->over( authenticated => 1 )
 		->to( 'KeysUrlSig#generate', namespace => 'API::DeliveryService' );
-	$r->get( "/api/$version/deliveryservices/xmlId/:xmlId/urlkeys")->over( authenticated => 1 )
+	$r->get("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys")->over( authenticated => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
 	# -- DELIVERY SERVICE: REGEXES
-	$r->get( "/api/$version/deliveryservices_regexes")->over( authenticated => 1 )
-		->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: MATCHES
-	$r->get( "/api/$version/deliveryservice_matches")->over( authenticated => 1 )
-		->to( 'DeliveryServiceMatches#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryservice_matches")->over( authenticated => 1 )->to( 'DeliveryServiceMatches#index', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: SERVERS
 	# Supports ?orderby=key
-	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )
-		->to( 'DeliveryServiceServer#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
 
 	# -- DIVISIONS
-	$r->get("/api/$version/divisions")->over( authenticated => 1 )
-		->to( 'Division#index', namespace => $namespace );
-	$r->get("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Division#show', namespace => $namespace );
-	$r->put("/api/$version/divisions/:id")->over( authenticated => 1 )
-		->to( 'Division#update', namespace => $namespace );
-	$r->post("/api/$version/divisions")->over( authenticated => 1 )
-		->to( 'Division#create', namespace => $namespace );
-	$r->delete( "/api/$version/divisions/:id")->over( authenticated => 1 )
-		->to( 'Division#delete', namespace => $namespace );
+	$r->get("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#index', namespace => $namespace );
+	$r->get( "/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Division#show', namespace => $namespace );
+	$r->put("/api/$version/divisions/:id")->over( authenticated => 1 )->to( 'Division#update', namespace => $namespace );
+	$r->post("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#create', namespace => $namespace );
+	$r->delete("/api/$version/divisions/:id")->over( authenticated => 1 )->to( 'Division#delete', namespace => $namespace );
 
 	# -- FEDERATIONS
-	$r->get( "/internal/api/$version/federations")->over( authenticated => 1 )
-		->to( 'Federation#index', namespace => $namespace );
-	$r->get( "/api/$version/federations")->over( authenticated => 1 )
-		->to( 'Federation#external_index', namespace => $namespace );
-	$r->post("/api/$version/federations")->over( authenticated => 1 )
-		->to( 'Federation#add', namespace => $namespace );
-	$r->delete("/api/$version/federations")->over( authenticated => 1 )
-		->to( 'Federation#delete', namespace => $namespace );
-	$r->put("/api/$version/federations")->over( authenticated => 1 )
-		->to( 'Federation#update', namespace => $namespace );
+	$r->get("/internal/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
+	$r->get("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#external_index', namespace => $namespace );
+	$r->post("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#add', namespace => $namespace );
+	$r->delete("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#delete', namespace => $namespace );
+	$r->put("/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#update', namespace => $namespace );
 
 	# -- HARDWARE INFO
 	# Supports: ?orderby=key
-	$r->get( "/api/$version/hwinfo/dtdata")->over( authenticated => 1 )
-		->to( 'HwInfo#data', namespace => $namespace );
-	$r->get("/api/$version/hwinfo")->over( authenticated => 1 )
-		->to( 'HwInfo#index', namespace => $namespace );
+	$r->get("/api/$version/hwinfo/dtdata")->over( authenticated => 1 )->to( 'HwInfo#data', namespace => $namespace );
+	$r->get("/api/$version/hwinfo")->over( authenticated => 1 )->to( 'HwInfo#index', namespace => $namespace );
 
 	# -- PARAMETERS
 	# Supports ?orderby=key
-	$r->get( "/api/$version/parameters")->over( authenticated => 1 )
-		->to( 'Parameter#index', namespace => $namespace );
-	$r->get( "/api/$version/parameters/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Parameter#get', namespace => $namespace );
-	$r->post( "/api/$version/parameters")->over( authenticated => 1 )
-		->to( 'Parameter#create', namespace => $namespace );
-	$r->put( "/api/$version/parameters/:id")->over( authenticated => 1 )
-		->to( 'Parameter#edit', namespace => $namespace );
-	$r->delete( "/api/$version/parameters/:id")->over( authenticated => 1 )
-		->to( 'Parameter#delete', namespace => $namespace );
-	$r->post( "/api/$version/parameters/validate")->over( authenticated => 1 )
-		->to( 'Parameter#validate', namespace => $namespace );
+	$r->get("/api/$version/parameters")->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
+	$r->get( "/api/$version/parameters/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get', namespace => $namespace );
+	$r->post("/api/$version/parameters")->over( authenticated => 1 )->to( 'Parameter#create', namespace => $namespace );
+	$r->put("/api/$version/parameters/:id")->over( authenticated => 1 )->to( 'Parameter#edit', namespace => $namespace );
+	$r->delete("/api/$version/parameters/:id")->over( authenticated => 1 )->to( 'Parameter#delete', namespace => $namespace );
+	$r->post("/api/$version/parameters/validate")->over( authenticated => 1 )->to( 'Parameter#validate', namespace => $namespace );
 
 	# parameters for a profile
-	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Parameter#index', namespace => $namespace );
-	$r->get( "/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )
-		->to( 'Parameter#index', namespace => $namespace );
-	$r->post( "/api/$version/profiles/name/:name/parameters" )->over( authenticated => 1 )
+	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'ProfileParameter#index', namespace => $namespace );
+	$r->get("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )->to( 'ProfileParameter#index', namespace => $namespace );
+	$r->post("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#create_param_for_profile_name', namespace => $namespace );
-	$r->post( "/api/$version/profiles/:id/parameters" )->over( authenticated => 1 )
+	$r->post("/api/$version/profiles/:id/parameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#create_param_for_profile_id', namespace => $namespace );
 
-
 	# -- PARAMETERS: PROFILE PARAMETERS
-	$r->get( "/api/$version/profileparameters")->over( authenticated => 1 )
-		->to( 'ProfileParameter#index', namespace => $namespace );
-	$r->post( "/api/$version/profileparameters" )->over( authenticated => 1 )
-		->to( 'ProfileParameter#create', namespace => $namespace );
-	$r->delete( "/api/$version/profileparameters/:profile_id/:parameter_id" )->over( authenticated => 1 )
+	$r->get("/api/$version/profileparameters")->over( authenticated => 1 )->to( 'ProfileParameter#index', namespace => $namespace );
+	$r->post("/api/$version/profileparameters")->over( authenticated => 1 )->to( 'ProfileParameter#create', namespace => $namespace );
+	$r->delete("/api/$version/profileparameters/:profile_id/:parameter_id")->over( authenticated => 1 )
 		->to( 'ProfileParameter#delete', namespace => $namespace );
 
 	# -- PARAMETERS: CACHEGROUP PARAMETERS
-	$r->get( "/api/$version/cachegroup/:parameter_id/parameter")->over( authenticated => 1 )
-		->to( 'Cachegroup#by_parameter_id', namespace => $namespace );
-	$r->get( "/api/$version/cachegroupparameters")->over( authenticated => 1 )
-		->to( 'CachegroupParameter#index', namespace => $namespace );
-	$r->get( "/api/$version/cachegroups/:parameter_id/parameter/available")->over( authenticated => 1 )
+	$r->get("/api/$version/cachegroup/:parameter_id/parameter")->over( authenticated => 1 )->to( 'Cachegroup#by_parameter_id', namespace => $namespace );
+	$r->get("/api/$version/cachegroupparameters")->over( authenticated => 1 )->to( 'CachegroupParameter#index', namespace => $namespace );
+	$r->get("/api/$version/cachegroups/:parameter_id/parameter/available")->over( authenticated => 1 )
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
 
 	# -- PHYS_LOCATION
 	# Supports ?orderby=key
-	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )
-		->to( 'PhysLocation#index', namespace => $namespace );
-	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )
-		->to( 'PhysLocation#index_trimmed', namespace => $namespace );
-	$r->get("/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'PhysLocation#show', namespace => $namespace );
-	$r->post( "/api/$version/phys_locations" )->over( authenticated => 1 )
-		->to( 'PhysLocation#create', namespace => $namespace );
-	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )
-		->to( 'PhysLocation#create_for_reg', namespace => $namespace );
-	$r->put("/api/$version/phys_locations/:id")->over( authenticated => 1 )
-		->to( 'PhysLocation#update', namespace => $namespace );
-	$r->delete( "/api/$version/phys_locations/:id")->over( authenticated => 1 )
-		->to( 'PhysLocation#delete', namespace => $namespace );
-
+	$r->get("/api/$version/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#index', namespace => $namespace );
+	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )->to( 'PhysLocation#index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'PhysLocation#show', namespace => $namespace );
+	$r->post("/api/$version/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
+	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create_for_reg', namespace => $namespace );
+	$r->put("/api/$version/phys_locations/:id")->over( authenticated => 1 )->to( 'PhysLocation#update', namespace => $namespace );
+	$r->delete("/api/$version/phys_locations/:id")->over( authenticated => 1 )->to( 'PhysLocation#delete', namespace => $namespace );
 
 	# -- PROFILES
 	# -- PROFILES: CRUD
 	# Supports ?orderby=key
-	$r->get( "/api/$version/profiles")->over( authenticated => 1 )
-		->to( 'Profile#index', namespace => $namespace );
-	$r->get( "/api/$version/profiles/trimmed")->over( authenticated => 1 )
-		->to( 'Profile#index_trimmed', namespace => $namespace );
-	$r->get( "/api/$version/profiles/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Profile#show', namespace => $namespace );
-	$r->post( "/api/$version/profiles" )->over( authenticated => 1 )
-		->to( 'Profile#create', namespace => $namespace );
-	$r->put("/api/$version/profiles/:id")->over( authenticated => 1 )
-		->to( 'Profile#update', namespace => $namespace );
-	$r->delete("/api/$version/profiles/:id")->over( authenticated => 1 )
-		->to( 'Profile#delete', namespace => $namespace );
+	$r->get("/api/$version/profiles")->over( authenticated => 1 )->to( 'Profile#index', namespace => $namespace );
+	$r->get("/api/$version/profiles/trimmed")->over( authenticated => 1 )->to( 'Profile#index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/profiles/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Profile#show', namespace => $namespace );
+	$r->post("/api/$version/profiles")->over( authenticated => 1 )->to( 'Profile#create', namespace => $namespace );
+	$r->put("/api/$version/profiles/:id")->over( authenticated => 1 )->to( 'Profile#update', namespace => $namespace );
+	$r->delete("/api/$version/profiles/:id")->over( authenticated => 1 )->to( 'Profile#delete', namespace => $namespace );
 
 	# -- PROFILES: COPY
-	$r->post( "/api/$version/profiles/name/:profile_name/copy/:profile_copy_from" )->over( authenticated => 1 )
+	$r->post("/api/$version/profiles/name/:profile_name/copy/:profile_copy_from")->over( authenticated => 1 )
 		->to( 'Profile#copy', namespace => $namespace );
-
 
 	# -- REGIONS
 	# Supports ?orderby=key
-	$r->get("/api/$version/regions")->over( authenticated => 1 )
-		->to( 'Region#index', namespace => $namespace );
-	$r->get( "/api/$version/regions/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Region#show',  namespace => $namespace );
-	$r->put("/api/$version/regions/:id")->over( authenticated => 1 )
-		->to( 'Region#update', namespace => $namespace );
-	$r->post("/api/$version/regions")->over( authenticated => 1 )
-		->to( 'Region#create', namespace => $namespace );
-	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )
-		->to( 'Region#create_for_div', namespace => $namespace );
-	$r->delete("/api/$version/regions/:id")->over( authenticated => 1 )
-		->to( 'Region#delete', namespace => $namespace );
-
+	$r->get("/api/$version/regions")->over( authenticated => 1 )->to( 'Region#index', namespace => $namespace );
+	$r->get( "/api/$version/regions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Region#show', namespace => $namespace );
+	$r->put("/api/$version/regions/:id")->over( authenticated => 1 )->to( 'Region#update', namespace => $namespace );
+	$r->post("/api/$version/regions")->over( authenticated => 1 )->to( 'Region#create', namespace => $namespace );
+	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create_for_div', namespace => $namespace );
+	$r->delete("/api/$version/regions/:id")->over( authenticated => 1 )->to( 'Region#delete', namespace => $namespace );
 
 	# -- ROLES
 	# Supports ?orderby=key
-	$r->get("/api/$version/roles")->over( authenticated => 1 )
-		->to( 'Role#index', namespace => $namespace );
-
+	$r->get("/api/$version/roles")->over( authenticated => 1 )->to( 'Role#index', namespace => $namespace );
 
 	# -- SERVERS
 	# -- SERVERS: CRUD
-	$r->get( "/api/$version/servers")->over( authenticated => 1 )
-		->to( 'Server#index', namespace => $namespace );
-	$r->get( "/api/$version/servers/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Server#show', namespace => $namespace );
-	$r->post("/api/$version/servers")->over( authenticated => 1 )
-		->to( 'Server#create', namespace => $namespace );
-	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )
-		->to( 'Server#update', namespace => $namespace );
-	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )
-		->to( 'Server#delete', namespace => $namespace );
+	$r->get("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#index', namespace => $namespace );
+	$r->get( "/api/$version/servers/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Server#show', namespace => $namespace );
+	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create', namespace => $namespace );
+	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update', namespace => $namespace );
+	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete', namespace => $namespace );
 
 	# alernate server routes
-	$r->post("/api/$version/servers/create")->over( authenticated => 1 )
-		->to( 'Server2#create', namespace => $namespace );
-	$r->put("/api/$version/servers/:id/update")->over( authenticated => 1 )
-	    ->to( 'Server2#update', namespace => $namespace );
+	$r->post("/api/$version/servers/create")->over( authenticated => 1 )->to( 'Server2#create', namespace => $namespace );
+	$r->put("/api/$version/servers/:id/update")->over( authenticated => 1 )->to( 'Server2#update', namespace => $namespace );
 
 	# -- SERVERS: DETAILS
-	$r->get( "/api/$version/servers/details")->over( authenticated => 1 )
-		->to( 'Server#details', namespace => $namespace );
-	$r->get( "/api/$version/servers/hostname/:name/details")->over( authenticated => 1 )
-		->to( 'Server#details_v11', namespace => $namespace );
+	$r->get("/api/$version/servers/details")->over( authenticated => 1 )->to( 'Server#details', namespace => $namespace );
+	$r->get("/api/$version/servers/hostname/:name/details")->over( authenticated => 1 )->to( 'Server#details_v11', namespace => $namespace );
 
 	# -- SERVERS: TOTALS
-	$r->get( "/api/$version/servers/totals")->over( authenticated => 1 )
-		->to( 'Server#totals', namespace => $namespace );
+	$r->get("/api/$version/servers/totals")->over( authenticated => 1 )->to( 'Server#totals', namespace => $namespace );
 
 	# -- SERVERS: QUEUE UPDATES
-	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )
-		->to( 'Server#postupdatequeue',   namespace => $namespace );
+	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
 
 	# -- SERVERS: SERVER CHECKS
-	$r->get( "/api/$version/servers/checks")->over( authenticated => 1 )
-		->to( 'ServerCheck#read', namespace => $namespace );
-	$r->get( "/api/$version/servercheck/aadata")->over( authenticated => 1 )
-		->to( 'ServerCheck#aadata', namespace => $namespace );
-	$r->post("/api/$version/servercheck")->over( authenticated => 1 )
-		->to( 'ServerCheck#update', namespace => $namespace );
+	$r->get("/api/$version/servers/checks")->over( authenticated => 1 )->to( 'ServerCheck#read', namespace => $namespace );
+	$r->get("/api/$version/servercheck/aadata")->over( authenticated => 1 )->to( 'ServerCheck#aadata', namespace => $namespace );
+	$r->post("/api/$version/servercheck")->over( authenticated => 1 )->to( 'ServerCheck#update', namespace => $namespace );
 
 	# -- STATS
-	$r->get( "/api/$version/stats_summary")->over( authenticated => 1 )
-		->to( 'StatsSummary#index', namespace => $namespace );
-	$r->post("/api/$version/stats_summary/create")->over( authenticated => 1 )
-		->to( 'StatsSummary#create', namespace => $namespace );
+	$r->get("/api/$version/stats_summary")->over( authenticated => 1 )->to( 'StatsSummary#index', namespace => $namespace );
+	$r->post("/api/$version/stats_summary/create")->over( authenticated => 1 )->to( 'StatsSummary#create', namespace => $namespace );
 
 	# -- STATUSES
 	# Supports ?orderby=key
-	$r->get("/api/$version/statuses")->over( authenticated => 1 )
-		->to( 'Status#index', namespace => $namespace );
-	$r->get( "/api/$version/statuses/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Status#show', namespace => $namespace );
-	$r->put("/api/$version/statuses/:id")->over( authenticated => 1 )
-		->to( 'Status#update', namespace => $namespace );
-	$r->post("/api/$version/statuses")->over( authenticated => 1 )
-		->to( 'Status#create', namespace => $namespace );
-	$r->delete("/api/$version/statuses/:id")->over( authenticated => 1 )
-		->to( 'Status#delete', namespace => $namespace );
+	$r->get("/api/$version/statuses")->over( authenticated => 1 )->to( 'Status#index', namespace => $namespace );
+	$r->get( "/api/$version/statuses/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Status#show', namespace => $namespace );
+	$r->put("/api/$version/statuses/:id")->over( authenticated => 1 )->to( 'Status#update', namespace => $namespace );
+	$r->post("/api/$version/statuses")->over( authenticated => 1 )->to( 'Status#create', namespace => $namespace );
+	$r->delete("/api/$version/statuses/:id")->over( authenticated => 1 )->to( 'Status#delete', namespace => $namespace );
 
 	# -- STATIC DNS ENTRIES
-	$r->get("/api/$version/staticdnsentries")->over( authenticated => 1 )
-		->to( 'StaticDnsEntry#index', namespace => $namespace );
+	$r->get("/api/$version/staticdnsentries")->over( authenticated => 1 )->to( 'StaticDnsEntry#index', namespace => $namespace );
 
 	# -- SYSTEM INFO
-	$r->get( "/api/$version/system/info")->over( authenticated => 1 )
-		->to( 'System#get_info', namespace => $namespace );
+	$r->get("/api/$version/system/info")->over( authenticated => 1 )->to( 'System#get_info', namespace => $namespace );
 
 	# -- TYPES
 	# Supports ?orderby=key
-	$r->get("/api/$version/types")->over( authenticated => 1 )
-		->to( 'Types#index', namespace => $namespace );
-	$r->get("/api/$version/types/trimmed")->over( authenticated => 1 )
-		->to( 'Types#index_trimmed', namespace => $namespace );
-	$r->get( "/api/$version/types/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Types#show',  namespace => $namespace );
-	$r->post("/api/$version/types")->over( authenticated => 1 )
-		->to( 'Types#create', namespace => $namespace );
-	$r->put("/api/$version/types/:id")->over( authenticated => 1 )
-		->to( 'Types#update', namespace => $namespace );
-	$r->delete("/api/$version/types/:id")->over( authenticated => 1 )
-		->to( 'Types#delete', namespace => $namespace );
-
+	$r->get("/api/$version/types")->over( authenticated => 1 )->to( 'Types#index', namespace => $namespace );
+	$r->get("/api/$version/types/trimmed")->over( authenticated => 1 )->to( 'Types#index_trimmed', namespace => $namespace );
+	$r->get( "/api/$version/types/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Types#show', namespace => $namespace );
+	$r->post("/api/$version/types")->over( authenticated => 1 )->to( 'Types#create', namespace => $namespace );
+	$r->put("/api/$version/types/:id")->over( authenticated => 1 )->to( 'Types#update', namespace => $namespace );
+	$r->delete("/api/$version/types/:id")->over( authenticated => 1 )->to( 'Types#delete', namespace => $namespace );
 
 	# -- USERS
-	$r->get( "/api/$version/users")->over( authenticated => 1 )
-		->to( 'User#index', namespace => $namespace );
-	$r->get( "/api/$version/users/:id"  => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'User#show',  namespace => $namespace );
-	$r->put("/api/$version/users/:id")->over( authenticated => 1 )
-		->to( 'User#update', namespace => $namespace );
+	$r->get("/api/$version/users")->over( authenticated => 1 )->to( 'User#index', namespace => $namespace );
+	$r->get( "/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'User#show', namespace => $namespace );
+	$r->put("/api/$version/users/:id")->over( authenticated => 1 )->to( 'User#update', namespace => $namespace );
 
 	# -- USERS: CURRENT USER
-	$r->get( "/api/$version/user/current")->over( authenticated => 1 )
-		->to( 'User#current', namespace => $namespace );
-	$r->post("/api/$version/user/current/update")->over( authenticated => 1 )
-		->to( 'User#update_current', namespace => $namespace );
+	$r->get("/api/$version/user/current")->over( authenticated => 1 )->to( 'User#current', namespace => $namespace );
+	$r->post("/api/$version/user/current/update")->over( authenticated => 1 )->to( 'User#update_current', namespace => $namespace );
 
 	# -- USERS: LOGIN
 	# login w/ username and password
-	$r->post("/api/$version/user/login")
-		->to( 'User#login', namespace => $namespace );
+	$r->post("/api/$version/user/login")->to( 'User#login', namespace => $namespace );
 
 	# login w/ token
-	$r->post("/api/$version/user/login/token")
-		->to( 'User#token_login', namespace => $namespace );
+	$r->post("/api/$version/user/login/token")->to( 'User#token_login', namespace => $namespace );
 
 	# -- USERS: LOGOUT
-	$r->post("/api/$version/user/logout")->over( authenticated => 1 )
-		->to( 'Cdn#tool_logout', namespace => $namespace );
+	$r->post("/api/$version/user/logout")->over( authenticated => 1 )->to( 'Cdn#tool_logout', namespace => $namespace );
 
 	# -- USERS: RESET PASSWORD
-	$r->post("/api/$version/user/reset_password")
-		->to( 'User#reset_password', namespace => $namespace );
+	$r->post("/api/$version/user/reset_password")->to( 'User#reset_password', namespace => $namespace );
 
 	# -- USERS: ASSIGNED DELIVERYSERVICES
 	$r->get("/api/$version/user/:id/deliveryservices/available")->over( authenticated => 1 )
 		->to( 'User#get_available_deliveryservices', namespace => $namespace );
 
 	# -- USERS: JOBS
-	$r->get( "/api/$version/user/current/jobs")->over( authenticated => 1 )
-		->to( 'Job#index', namespace => $namespace );
-	$r->post("/api/$version/user/current/jobs")->over( authenticated => 1 )
-		->to( 'Job#create', namespace => $namespace );
+	$r->get("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#index', namespace => $namespace );
+	$r->post("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#create', namespace => $namespace );
 
 	# -- RIAK
 	# -- RIAK: KEYS
 	#ping riak server
-	$r->get("/api/$version/keys/ping")->over( authenticated => 1 )
-		->to( 'Keys#ping_riak', namespace => $namespace );
-	$r->get("/api/$version/riak/ping")->over( authenticated => 1 )
-		->to( 'Riak#ping', namespace => $namespace );
-	$r->get( "/api/$version/riak/bucket/#bucket/key/#key/values")->over( authenticated => 1 )
-		->to( 'Riak#get', namespace => $namespace );
+	$r->get("/api/$version/keys/ping")->over( authenticated => 1 )->to( 'Keys#ping_riak', namespace => $namespace );
+	$r->get("/api/$version/riak/ping")->over( authenticated => 1 )->to( 'Riak#ping',      namespace => $namespace );
+	$r->get("/api/$version/riak/bucket/#bucket/key/#key/values")->over( authenticated => 1 )->to( 'Riak#get', namespace => $namespace );
 
 	# -- RIAK: STATS
-	$r->get("/api/$version/riak/stats")->over( authenticated => 1 )
-		->to( 'Riak#stats', namespace => $namespace );
+	$r->get("/api/$version/riak/stats")->over( authenticated => 1 )->to( 'Riak#stats', namespace => $namespace );
 
 	# -- EXTENSIONS
-	$r->get( "/api/$version/to_extensions")->over( authenticated => 1 )
-		->to( 'ToExtension#index', namespace => $namespace );
-	$r->post("/api/$version/to_extensions")->over( authenticated => 1 )
-		->to( 'ToExtension#update', namespace => $namespace );
-	$r->post("/api/$version/to_extensions/:id/delete")->over( authenticated => 1 )
-		->to( 'ToExtension#delete', namespace => $namespace );
+	$r->get("/api/$version/to_extensions")->over( authenticated => 1 )->to( 'ToExtension#index', namespace => $namespace );
+	$r->post("/api/$version/to_extensions")->over( authenticated => 1 )->to( 'ToExtension#update', namespace => $namespace );
+	$r->post("/api/$version/to_extensions/:id/delete")->over( authenticated => 1 )->to( 'ToExtension#delete', namespace => $namespace );
 
 	# -- MISC
 	# TM Status in use JvD
-	$r->get( "/api/$version/traffic_monitor/stats")->over( authenticated => 1 )
-		->to( 'TrafficMonitor#get_host_stats', namespace => $namespace );
+	$r->get("/api/$version/traffic_monitor/stats")->over( authenticated => 1 )->to( 'TrafficMonitor#get_host_stats', namespace => $namespace );
 
 	# API HEALTH CHECK
 	$r->get(
@@ -970,34 +803,34 @@ sub api_1_0_routes {
 	# deprecated - see: /api/$version/cdn/domains
 	$r->get('/datadomains')->over( authenticated => 1 )->to( 'DataAll#data_domains', namespace => $namespace );
 
-	# deprecated - see: /api/$version/user/:id/deliveryservices/available.json
+	# deprecated - see: /api/$version/user/:id/deliveryservices/available
 	$r->get('/availableds/:id')->over( authenticated => 1 )->to( 'DataAll#availableds', namespace => $namespace );
 
-	# deprecated - see: /api/$version/deliveryservices.json
+	# deprecated - see: /api/$version/deliveryservices
 	#$r->get('/datadeliveryservice')->over( authenticated => 1 )->to('DeliveryService#read', namespace => $namespace );
 	$r->get('/datadeliveryservice')->to( 'DeliveryService#read', namespace => $namespace );
 	$r->get('/datadeliveryservice/orderby/:orderby')->over( authenticated => 1 )->to( 'DeliveryService#read', namespace => $namespace );
 
-	# deprecated - see: /api/$version/deliveryservices.json
+	# deprecated - see: /api/$version/deliveryservices
 	$r->get('/datastatus')->over( authenticated => 1 )->to( 'Status#index', namespace => $namespace );
 	$r->get('/datastatus/orderby/:orderby')->over( authenticated => 1 )->to( 'Status#index', namespace => $namespace );
 
-	# deprecated - see: /api/$version/users.json
+	# deprecated - see: /api/$version/users
 	$r->get('/datauser')->over( authenticated => 1 )->to( 'User#read', namespace => $namespace );
 	$r->get('/datauser/orderby/:orderby')->over( authenticated => 1 )->to( 'User#read', namespace => $namespace );
 
-	# deprecated - see: /api/$version/phys_locations.json
+	# deprecated - see: /api/$version/phys_locations
 	$r->get('/dataphys_location')->over( authenticated => 1 )->to( 'PhysLocation#readphys_location', namespace => $namespace );
 	$r->get('/dataphys_locationtrimmed')->over( authenticated => 1 )->to( 'PhysLocation#readphys_locationtrimmed', namespace => $namespace );
 
-	# deprecated - see: /api/$version/regions.json
+	# deprecated - see: /api/$version/regions
 	$r->get('/dataregion')->over( authenticated => 1 )->to( 'PhysLocation#readregion', namespace => $namespace );
 
-	# deprecated - see: /api/$version/roles.json
+	# deprecated - see: /api/$version/roles
 	$r->get('/datarole')->over( authenticated => 1 )->to( 'Role#read', namespace => $namespace );
 	$r->get('/datarole/orderby/:orderby')->over( authenticated => 1 )->to( 'Role#read', namespace => $namespace );
 
-	# deprecated - see: /api/$version/servers.json and /api/1.1/servers/hostname/:host_name/details.json
+	# deprecated - see: /api/$version/servers and /api/1.1/servers/hostname/:host_name/details
 	# WARNING: unauthenticated
 	#TODO JvD over auth after we have rascal pointed over!!
 	$r->get('/dataserver')->to( 'Server#index_response', namespace => $namespace );
@@ -1005,11 +838,11 @@ sub api_1_0_routes {
 	$r->get('/dataserverdetail/select/:select')->over( authenticated => 1 )->to( 'Server#serverdetail', namespace => $namespace )
 		;    # legacy route - rm me later
 
-	# deprecated - see: /api/$version//api/1.1/staticdnsentries.json
+	# deprecated - see: /api/$version//api/1.1/staticdnsentries
 	$r->get('/datastaticdnsentry')->over( authenticated => 1 )->to( 'StaticDnsEntry#read', namespace => $namespace );
 
 	# -- Type
-	# deprecated - see: /api/$version/types.json
+	# deprecated - see: /api/$version/types
 	$r->get('/datatype')->over( authenticated => 1 )->to( 'Types#readtype', namespace => $namespace );
 	$r->get('/datatypetrimmed')->over( authenticated => 1 )->to( 'Types#readtypetrimmed', namespace => $namespace );
 	$r->get('/datatype/orderby/:orderby')->over( authenticated => 1 )->to( 'Types#readtype', namespace => $namespace );
@@ -1021,12 +854,11 @@ sub traffic_stats_routes {
 	my $version   = shift;
 	my $namespace = "Extensions::TrafficStats::API";
 
-	$r->get( "/api/$version/cdns/usage/overview" => [ format => [qw(json)] ] )->to( 'CdnStats#get_usage_overview', namespace => $namespace );
-	$r->get( "/api/$version/deliveryservice_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )
-		->to( 'DeliveryServiceStats#index', namespace => $namespace );
-	$r->get( "/api/$version/cache_stats" => [ format => [qw(json)] ] )->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
-	$r->get( "internal/api/$version/daily_summary" => [ format => [qw(json)] ] )->to( 'CacheStats#daily_summary', namespace => $namespace );
-	$r->get( "internal/api/$version/current_stats" => [ format => [qw(json)] ] )->to( 'CacheStats#current_stats', namespace => $namespace );
+	$r->get("/api/$version/cdns/usage/overview")->to( 'CdnStats#get_usage_overview', namespace => $namespace );
+	$r->get("/api/$version/deliveryservice_stats")->over( authenticated => 1 )->to( 'DeliveryServiceStats#index', namespace => $namespace );
+	$r->get("/api/$version/cache_stats")->over( authenticated => 1 )->to( 'CacheStats#index', namespace => $namespace );
+	$r->get("internal/api/$version/daily_summary")->to( 'CacheStats#daily_summary', namespace => $namespace );
+	$r->get("internal/api/$version/current_stats")->to( 'CacheStats#current_stats', namespace => $namespace );
 }
 
 sub catch_all {

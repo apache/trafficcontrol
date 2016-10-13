@@ -24,17 +24,30 @@ use Data::Dumper;
 
 # Read
 sub index {
-	my $self = shift;
-	my @data;
-	my $orderby = "profile";
-	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { order_by => $orderby } );
+	my $self         = shift;
+	my $profile_id   = $self->param('id');
+	my $profile_name = $self->param('name');
+
+	my %criteria;
+	if ( defined $profile_id ) {
+		$criteria{'profile.id'} = $profile_id;
+	} elsif ( defined $profile_name ) {
+		$criteria{'profile.name'} = $profile_name;
+	}
+
+	my $rs_data = $self->db->resultset("ProfileParameter")->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } );
+	my @data = ();
 	while ( my $row = $rs_data->next ) {
+		my $value = $row->parameter->value;
+		&UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
 		push(
 			@data, {
-				"profile"     => $row->profile->name,
-				"parameter"   => $row->parameter->id,
-				"lastUpdated" => $row->last_updated,
+				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
+				"configFile"  => $row->parameter->config_file,
+				"value"       => $value,
+				"secure"      => \$row->parameter->secure,
+				"lastUpdated" => $row->parameter->last_updated
 			}
 		);
 	}
