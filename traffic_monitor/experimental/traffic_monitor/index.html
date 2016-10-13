@@ -165,13 +165,13 @@
 
 		 function getBandwidth() {
 			 ajax("/api/bandwidth-kbps", function(r) {
-				 document.getElementById("bandwidth").innerHTML = numberStrWithCommas(parseFloat(r).toFixed(2));
+				 document.getElementById("bandwidth").innerHTML = numberStrWithCommas((parseFloat(r) / kilobitsInGigabit).toFixed(2));
 			 });
 		 }
 
 		 function getBandwidthCapacity() {
 			 ajax("/api/bandwidth-capacity-kbps", function(r) {
-				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(r);
+				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas((r / kilobitsInGigabit).toString());
 			 });
 		 }
 
@@ -242,7 +242,7 @@
 						 row.insertCell(2).id = row.id + "-status";
 						 row.insertCell(3).id = row.id + "-load-average";
 						 row.insertCell(4).id = row.id + "-query-time";
-						 row.insertCell(5).id = row.id + "-bandwidth-kbps";
+						 row.insertCell(5).id = row.id + "-bandwidth";
 						 row.insertCell(6).id = row.id + "-connection-count";
 						 document.getElementById(row.id + "-server").textContent = server;
 					 }
@@ -275,7 +275,7 @@
 						 document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
 					 }
 					 if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
-						 document.getElementById("cache-states-" + server + "-bandwidth-kbps").textContent = jdata[server].bandwidth_kbps.toFixed(2);
+						 document.getElementById("cache-states-" + server + "-bandwidth").textContent = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
 					 }
 					 if (jdata[server].hasOwnProperty("connection_count")) {
 						 document.getElementById("cache-states-" + server + "-connection-count").textContent = jdata[server].connection_count;
@@ -285,6 +285,8 @@
 		 }
 
 		 var millisecondsInSecond = 1000;
+		 var kilobitsInGigabit = 1000000;
+		 var kilobitsInMegabit = 1000;
 
 		 // dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places. For zero values, it returns an empty string, to make nonzero values more visible.
 		 function dsDisplayFloat(f) {
@@ -329,7 +331,7 @@
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-caches-reporting").textContent = jds[deliveryService]['caches-reporting'][0].value + " / " + jds[deliveryService]['caches-available'][0].value + " / " + jds[deliveryService]['caches-configured'][0].value;
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.kbps")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = jds[deliveryService]['total.kbps'][0].value;
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = (jds[deliveryService]['total.kbps'][0].value / kilobitsInMegabit).toFixed(2);
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.tps_2xx")) {
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_2xx'][0].value));
@@ -388,7 +390,7 @@
 		<table id="top-bar" width="100%">
 			<tr>
 				<td> Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </td>
-				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> </td>
+				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> gbps</td>
 				<td>Source: <span id="source-uri"></span></td>
 				<td><span id="version">traffic_monitor</span></td>
 			</tr>
@@ -433,7 +435,7 @@
 					<th>Status</th>
 					<th>Load Average</th>
 					<th>Query Time (ms)</th>
-					<th>Bandwidth (kbps)</th>
+					<th>Bandwidth (mbps)</th>
 					<th>Connection Count</th>
 				</tr>
 			</table>
@@ -444,7 +446,7 @@
 					<th>Delivery Service</th>
 					<th>Status</th>
 					<th>Caches Reporting/Available/Configured</th>
-					<th>Bandwidth (kbps)</th>
+					<th>Bandwidth (mbps)</th>
 					<th>2xx/sec</th>
 					<th>3xx/sec</th>
 					<th>4xx/sec</th>
