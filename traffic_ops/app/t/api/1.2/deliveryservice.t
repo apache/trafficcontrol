@@ -42,20 +42,20 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 # It gets existing delivery services
-ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+ok $t->get_ok("/api/1.2/deliveryservices/list")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "test-ds1" )
 		->json_is( "/response/0/logsEnabled", 1 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "test-ds2" );
 
-ok $t->get_ok("/api/1.2/deliveryservices.json?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+ok $t->get_ok("/api/1.2/deliveryservices/list?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "test-ds1" )
 		->json_is( "/response/0/logsEnabled", 1 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "test-ds4" );
 
 # It creates new delivery services
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
         "xmlId" => "ds_1",
         "displayName" => "ds_displayname_1",
         "protocol" => "1",
@@ -97,7 +97,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
     ->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod1\\..*")
             , 'Does the deliveryservice details return?';
 
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
         "xmlId" => "ds_2",
         "displayName" => "ds_displayname_2",
         "protocol" => "1",
@@ -140,7 +140,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
             , 'Does the deliveryservice details return?';
 
 # It allows adding a delivery service to a different CDN with a matching regex in another CDN's delivery service
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
         "xmlId" => "ds_3",
         "displayName" => "ds_displayname_1",
         "protocol" => "1",
@@ -184,7 +184,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 
 my $ds_id = &get_ds_id('ds_1');
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . '/update'  => {Accept => 'application/json'} => json => {
         "xmlId" => "ds_1",
         "displayName" => "ds_displayname_11",
         "protocol" => "2",
@@ -223,7 +223,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/
 
 $ds_id = &get_ds_id('ds_3');
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . '/update' => {Accept => 'application/json'} => json => {
 		"xmlId" => "ds_3",
 		"displayName" => "ds_displayname_1",
 		"protocol" => "1",
@@ -268,7 +268,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/
 
 # It does not allow changing a regex to be the same as an existing one in another DS in the same CDN
 $ds_id = &get_ds_id('ds_1');
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . '/update'  => {Accept => 'application/json'} => json => {
 			"xmlId" => "ds_1",
 			"displayName" => "ds_displayname_2",
 			"protocol" => "1",
@@ -296,7 +296,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/
 
 ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . '/update'  => {Accept => 'application/json'} => json => {
         "xmlId" => "ds_1234"
 })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -319,7 +319,7 @@ my $count_response = sub {
 	return $t->success( is( scalar(@$r), $count ) );
 };
 
-$t->get_ok('/api/1.2/deliveryservices.json?logsEnabled=true')->status_is(200)->$count_response(2)
+$t->get_ok('/api/1.2/deliveryservices/list?logsEnabled=true')->status_is(200)->$count_response(2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
