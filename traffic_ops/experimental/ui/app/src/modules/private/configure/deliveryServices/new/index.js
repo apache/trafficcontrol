@@ -9,7 +9,20 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices.n
                         controller: 'FormNewDeliveryServiceController',
                         resolve: {
                             deliveryService: function() {
-                                return {};
+                                return {
+                                    active: false,
+                                    signed: false,
+                                    qstringIgnore: "0",
+                                    dscp: "0",
+                                    geoLimit: "0",
+                                    geoProvider: "0",
+                                    initialDispersion: "1",
+                                    ipv6RoutingEnabled: false,
+                                    rangeRequestHandling: "0",
+                                    multiSiteOrigin: false,
+                                    regionalGeoBlocking: false,
+                                    logsEnabled: false
+                                };
                             }
                         }
                     }

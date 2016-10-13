@@ -9,7 +9,9 @@ module.exports = angular.module('trafficOps.private.configure.servers.new', [])
                         controller: 'FormNewServerController',
                         resolve: {
                             server: function() {
-                                return {};
+                                return {
+                                    updPending: false
+                                };
                             }
                         }
                     }
