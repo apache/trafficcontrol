@@ -400,8 +400,26 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 }
 
 // DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
-func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe, combinedStates peer.CRStatesThreadsafe, statHistory StatHistoryThreadsafe, dsStats DSStatsThreadsafe, events EventsThreadsafe, staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe, toData todata.TODataThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe, lastStats LastStatsThreadsafe) (body []byte, responseCode int) {
-
+func DataRequest(
+	req http_server.DataRequest,
+	opsConfig OpsConfigThreadsafe,
+	toSession towrap.ITrafficOpsSession,
+	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
+	combinedStates peer.CRStatesThreadsafe,
+	statHistory StatHistoryThreadsafe,
+	dsStats DSStatsThreadsafe,
+	events EventsThreadsafe,
+	staticAppData StaticAppData,
+	healthPollInterval time.Duration,
+	lastHealthDurations DurationMapThreadsafe,
+	fetchCount UintThreadsafe,
+	healthIteration UintThreadsafe,
+	errorCount UintThreadsafe,
+	toData todata.TODataThreadsafe,
+	localCacheStatus CacheAvailableStatusThreadsafe,
+	lastStats LastStatsThreadsafe,
+) (body []byte, responseCode int) {
 	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
 	handleErr := func(err error, requestType http_server.Type) {
 		if err == nil {
@@ -524,7 +542,14 @@ func DataRequest(req http_server.DataRequest, opsConfig OpsConfigThreadsafe, toS
 	}
 }
 
-func createCacheStatuses(cacheTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result, lastHealthDurations map[enum.CacheName]time.Duration, cacheStates map[enum.CacheName]peer.IsAvailable, lastStats ds.LastStats, localCacheStatusThreadsafe CacheAvailableStatusThreadsafe) map[enum.CacheName]CacheStatus {
+func createCacheStatuses(
+	cacheTypes map[enum.CacheName]enum.CacheType,
+	statHistory map[enum.CacheName][]cache.Result,
+	lastHealthDurations map[enum.CacheName]time.Duration,
+	cacheStates map[enum.CacheName]peer.IsAvailable,
+	lastStats ds.LastStats,
+	localCacheStatusThreadsafe CacheAvailableStatusThreadsafe,
+) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get()

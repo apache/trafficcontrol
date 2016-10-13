@@ -9,7 +9,11 @@ import (
 )
 
 // StartPeerManager listens for peer results, and when it gets one, it adds it to the peerStates list, and optimistically combines the good results into combinedStates
-func StartPeerManager(peerChan <-chan peer.Result, localStates peer.CRStatesThreadsafe, peerStates peer.CRStatesPeersThreadsafe) peer.CRStatesThreadsafe {
+func StartPeerManager(
+	peerChan <-chan peer.Result,
+	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
+) peer.CRStatesThreadsafe {
 	combinedStates := peer.NewCRStatesThreadsafe()
 	go func() {
 		for {

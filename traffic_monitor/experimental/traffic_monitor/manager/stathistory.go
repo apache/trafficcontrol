@@ -72,7 +72,13 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 // StartStatHistoryManager fetches the full statistics data from ATS Astats. This includes everything needed for all calculations, such as Delivery Services. This is expensive, though, and may be hard on ATS, so it should poll less often.
 // For a fast 'is it alive' poll, use the Health Result Manager poll.
 // Returns the stat history, the duration between the stat poll for each cache, the last Kbps data, and the calculated Delivery Service stats.
-func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates peer.CRStatesThreadsafe, toData todata.TODataThreadsafe, errorCount UintThreadsafe, cfg config.Config) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsThreadsafe) {
+func StartStatHistoryManager(
+	cacheStatChan <-chan cache.Result,
+	combinedStates peer.CRStatesThreadsafe,
+	toData todata.TODataThreadsafe,
+	errorCount UintThreadsafe,
+	cfg config.Config,
+) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsThreadsafe) {
 	statHistory := NewStatHistoryThreadsafe(cfg.MaxStatHistory)
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
@@ -107,7 +113,17 @@ func StartStatHistoryManager(cacheStatChan <-chan cache.Result, combinedStates p
 }
 
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
-func processStatResults(results []cache.Result, statHistoryThreadsafe StatHistoryThreadsafe, combinedStates peer.Crstates, lastStats LastStatsThreadsafe, toData todata.TOData, errorCount UintThreadsafe, dsStats DSStatsThreadsafe, lastStatEndTimes map[enum.CacheName]time.Time, lastStatDurationsThreadsafe DurationMapThreadsafe) {
+func processStatResults(
+	results []cache.Result,
+	statHistoryThreadsafe StatHistoryThreadsafe,
+	combinedStates peer.Crstates,
+	lastStats LastStatsThreadsafe,
+	toData todata.TOData,
+	errorCount UintThreadsafe,
+	dsStats DSStatsThreadsafe,
+	lastStatEndTimes map[enum.CacheName]time.Time,
+	lastStatDurationsThreadsafe DurationMapThreadsafe,
+) {
 	statHistory := statHistoryThreadsafe.Get().Copy()
 	maxStats := statHistoryThreadsafe.Max()
 	for _, result := range results {
