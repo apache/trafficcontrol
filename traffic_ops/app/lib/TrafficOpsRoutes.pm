@@ -471,7 +471,7 @@ sub api_routes {
 	$r->get("/api/$version/cdns/domains")->over( authenticated => 1 )->to( 'Cdn#domains', namespace => $namespace );
 
 	# -- CHANGE LOGS
-	$r->get("/api/$version/logs" => qw(json))->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
+	$r->get("/api/$version/logs")->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
 	$r->get("/api/$version/logs/:days/days")->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
 	$r->get("/api/$version/logs/newcount")->over( authenticated => 1 )->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
