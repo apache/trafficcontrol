@@ -12,18 +12,20 @@
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.name), 'has-feedback': hasError(cacheGroupForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-model="cacheGroup.name" ng-required="true" ng-maxlength="45" autofocus>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="cacheGroup.name" ng-required="true" ng-maxlength="45" ng-pattern="/^\S*$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.name, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.name, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.name, 'pattern')">No spaces</small>
                     <span ng-show="hasError(cacheGroupForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.shortName), 'has-feedback': hasError(cacheGroupForm.shortName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Short Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="shortName" name="shortName" type="text" class="form-control" ng-model="cacheGroup.shortName" ng-required="true" ng-maxlength="255" autofocus>
+                    <input id="shortName" name="shortName" type="text" class="form-control" ng-model="cacheGroup.shortName" ng-required="true" ng-maxlength="255" ng-pattern="/^\S*$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.shortName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.shortName, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.shortName, 'pattern')">No spaces</small>
                     <span ng-show="hasError(cacheGroupForm.shortName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

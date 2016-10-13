@@ -13,7 +13,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">XML ID *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="xmlId" name="xmlId" type="text" class="form-control" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^[a-zA-Z0-9]*$/" autofocus>
+                    <input id="xmlId" name="xmlId" type="text" class="form-control" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
@@ -72,9 +72,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dscp), 'has-feedback': hasError(deliveryServiceForm.dscp)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">DSCP Tag *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="dscp" name="dscp" class="form-control" ng-model="deliveryService.dscp" ng-options="dcsp.value as dcsp.label for dcsp in dscps" required>
-                        <option value="">Select...</option>
-                    </select>
+                    <select id="dscp" name="dscp" class="form-control" ng-model="deliveryService.dscp" ng-options="dcsp.value as dcsp.label for dcsp in dscps" required></select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dscp, 'required')">Required</small>
                 </div>
             </div>
@@ -98,9 +96,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" ng-options="gl.value as gl.label for gl in geoLimits" required>
-                        <option value="">Select...</option>
-                    </select>
+                    <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" ng-options="gl.value as gl.label for gl in geoLimits" required></select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
                 </div>
             </div>
@@ -117,9 +113,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoProvider), 'has-feedback': hasError(deliveryServiceForm.geoProvider)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Provider *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" ng-options="gp.value as gp.label for gp in geoProviders" required>
-                        <option value="">Select...</option>
-                    </select>
+                    <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" ng-options="gp.value as gp.label for gp in geoProviders" required></select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
                 </div>
             </div>
@@ -127,8 +121,9 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geolimitRedirectUrl), 'has-feedback': hasError(deliveryServiceForm.geolimitRedirectUrl)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit Redirect URL</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="geolimitRedirectUrl" name="geolimitRedirectUrl" type="text" class="form-control" ng-model="deliveryService.geolimitRedirectUrl" ng-maxlength="255" autofocus>
+                    <input id="geolimitRedirectUrl" name="geolimitRedirectUrl" type="text" class="form-control" ng-model="deliveryService.geolimitRedirectUrl" ng-maxlength="255" ng-pattern="/^(https?:\/\/)/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geolimitRedirectUrl, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geolimitRedirectUrl, 'pattern')">Must start with http:// or https://</small>
                     <span ng-show="hasError(deliveryServiceForm.geolimitRedirectUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -145,9 +140,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.initialDispersion), 'has-feedback': hasError(deliveryServiceForm.initialDispersion)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Initial Dispersion *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="initialDispersion" name="initialDispersion" class="form-control" ng-model="deliveryService.initialDispersion" ng-options="disp.value as disp.label for disp in dispersions" required>
-                        <option value="">Select...</option>
-                    </select>
+                    <select id="initialDispersion" name="initialDispersion" class="form-control" ng-model="deliveryService.initialDispersion" ng-options="disp.value as disp.label for disp in dispersions" required></select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.initialDispersion, 'required')">Required</small>
                 </div>
             </div>
@@ -163,9 +156,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.rangeRequestHandling), 'has-feedback': hasError(deliveryServiceForm.rangeRequestHandling)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Range Request Handling *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" ng-options="rrh.value as rrh.label for rrh in rrhs" required>
-                        <option value="">Select...</option>
-                    </select>
+                    <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" ng-options="rrh.value as rrh.label for rrh in rrhs" required></select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.rangeRequestHandling, 'required')">Required</small>
                 </div>
             </div>
@@ -227,8 +218,9 @@
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.orgServerFqdn), 'has-feedback': hasError(deliveryServiceForm.orgServerFqdn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Origin Server Base URL *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="orgServerFqdn" name="orgServerFqdn" type="text" class="form-control" ng-model="deliveryService.orgServerFqdn" ng-maxlength="255" required autofocus>
+                    <input id="orgServerFqdn" name="orgServerFqdn" type="text" class="form-control" ng-model="deliveryService.orgServerFqdn" ng-maxlength="255" ng-pattern="/^(https?:\/\/)/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'pattern')">Must start with http:// or https://</small>
                     <span ng-show="hasError(deliveryServiceForm.orgServerFqdn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
