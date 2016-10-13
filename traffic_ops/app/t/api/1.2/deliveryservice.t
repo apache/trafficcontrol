@@ -42,264 +42,226 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 # It gets existing delivery services
-ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
-		->json_is( "/response/0/xmlId", "steering-ds1" )
-		->json_is( "/response/0/logsEnabled", 0 )
-		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-		->json_is( "/response/1/xmlId", "steering-ds2" );
+ok $t->get_ok("/api/1.2/deliveryservices/list")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+	->json_is( "/response/0/xmlId", "test-ds1" )->json_is( "/response/0/logsEnabled", 1 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
+	->json_is( "/response/1/xmlId", "steering-ds2" );
 
-ok $t->get_ok("/api/1.2/deliveryservices.json?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
-		->json_is( "/response/0/xmlId", "test-ds1" )
-		->json_is( "/response/0/logsEnabled", 1 )
-		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-		->json_is( "/response/1/xmlId", "test-ds4" );
+ok $t->get_ok("/api/1.2/deliveryservices/list?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+	->json_is( "/response/0/xmlId", "test-ds1" )->json_is( "/response/0/logsEnabled", 1 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
+	->json_is( "/response/1/xmlId", "test-ds4" );
 
 # It creates new delivery services
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
-        "xmlId" => "ds_1",
-        "displayName" => "ds_displayname_1",
-        "protocol" => "1",
-        "orgServerFqdn" => "http://10.75.168.91",
-        "cdnName" => "cdn1",
-        "profileName" => "CCR1",
-        "type" => "HTTP",
-        "multiSiteOrigin" => "0",
-        "regionalGeoBlocking" => "1",
-        "active" => "false",
-        "matchList" => [
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "0",
-                "pattern" => ".*\\.ds_1\\..*"
-            },
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "1",
-                "pattern" => ".*\\.my_vod1\\..*"
-            }
-        ]})
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/xmlId" => "ds_1")
-    ->json_is( "/response/displayName" => "ds_displayname_1")
-    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
-    ->json_is( "/response/cdnName" => "cdn1")
-    ->json_is( "/response/profileName" => "CCR1")
-    ->json_is( "/response/protocol" => "1")
-    ->json_is( "/response/type" => "HTTP")
-    ->json_is( "/response/multiSiteOrigin" => "0")
-    ->json_is( "/response/regionalGeoBlocking" => "1")
-    ->json_is( "/response/active" => "false")
-    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/0/setNumber" => "0")
-    ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*")
-    ->json_is( "/response/matchList/1/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/1/setNumber" => "1")
-    ->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod1\\..*")
-            , 'Does the deliveryservice details return?';
+ok $t->post_ok(
+	'/api/1.2/deliveryservices/create' => { Accept => 'application/json' } => json => {
+		"xmlId"               => "ds_1",
+		"displayName"         => "ds_displayname_1",
+		"protocol"            => "1",
+		"orgServerFqdn"       => "http://10.75.168.91",
+		"cdnName"             => "cdn1",
+		"profileName"         => "CCR1",
+		"type"                => "HTTP",
+		"multiSiteOrigin"     => "0",
+		"regionalGeoBlocking" => "1",
+		"active"              => "false",
+		"matchList"           => [
+			{
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "0",
+				"pattern"   => ".*\\.ds_1\\..*"
+			}, {
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "1",
+				"pattern"   => ".*\\.my_vod1\\..*"
+			}
+		]
+	}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "ds_1" )
+	->json_is( "/response/displayName" => "ds_displayname_1" )->json_is( "/response/orgServerFqdn" => "http://10.75.168.91" )
+	->json_is( "/response/cdnName" => "cdn1" )->json_is( "/response/profileName" => "CCR1" )->json_is( "/response/protocol" => "1" )
+	->json_is( "/response/type" => "HTTP" )->json_is( "/response/multiSiteOrigin" => "0" )->json_is( "/response/regionalGeoBlocking" => "1" )
+	->json_is( "/response/active" => "false" )->json_is( "/response/matchList/0/type" => "HOST_REGEXP" )
+	->json_is( "/response/matchList/0/setNumber" => "0" )->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*" )
+	->json_is( "/response/matchList/1/type" => "HOST_REGEXP" )->json_is( "/response/matchList/1/setNumber" => "1" )
+	->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod1\\..*" ), 'Does the deliveryservice details return?';
 
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
-        "xmlId" => "ds_2",
-        "displayName" => "ds_displayname_2",
-        "protocol" => "1",
-        "orgServerFqdn" => "http://10.75.168.91",
-        "cdnName" => "cdn1",
-        "profileName" => "CCR1",
-        "type" => "HTTP",
-        "multiSiteOrigin" => "0",
-        "regionalGeoBlocking" => "1",
-        "active" => "false",
-        "matchList" => [
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "0",
-                "pattern" => ".*\\.ds_2\\..*"
-            },
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "1",
-                "pattern" => ".*\\.my_vod2\\..*"
-            }
-        ]})
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/xmlId" => "ds_2")
-    ->json_is( "/response/displayName" => "ds_displayname_2")
-    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
-    ->json_is( "/response/cdnName" => "cdn1")
-    ->json_is( "/response/profileName" => "CCR1")
-    ->json_is( "/response/protocol" => "1")
-    ->json_is( "/response/type" => "HTTP")
-    ->json_is( "/response/multiSiteOrigin" => "0")
-    ->json_is( "/response/regionalGeoBlocking" => "1")
-    ->json_is( "/response/active" => "false")
-    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/0/setNumber" => "0")
-    ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_2\\..*")
-    ->json_is( "/response/matchList/1/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/1/setNumber" => "1")
-    ->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod2\\..*")
-            , 'Does the deliveryservice details return?';
+ok $t->post_ok(
+	'/api/1.2/deliveryservices/create' => { Accept => 'application/json' } => json => {
+		"xmlId"               => "ds_2",
+		"displayName"         => "ds_displayname_2",
+		"protocol"            => "1",
+		"orgServerFqdn"       => "http://10.75.168.91",
+		"cdnName"             => "cdn1",
+		"profileName"         => "CCR1",
+		"type"                => "HTTP",
+		"multiSiteOrigin"     => "0",
+		"regionalGeoBlocking" => "1",
+		"active"              => "false",
+		"matchList"           => [
+			{
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "0",
+				"pattern"   => ".*\\.ds_2\\..*"
+			}, {
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "1",
+				"pattern"   => ".*\\.my_vod2\\..*"
+			}
+		]
+	}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "ds_2" )
+	->json_is( "/response/displayName" => "ds_displayname_2" )->json_is( "/response/orgServerFqdn" => "http://10.75.168.91" )
+	->json_is( "/response/cdnName" => "cdn1" )->json_is( "/response/profileName" => "CCR1" )->json_is( "/response/protocol" => "1" )
+	->json_is( "/response/type" => "HTTP" )->json_is( "/response/multiSiteOrigin" => "0" )->json_is( "/response/regionalGeoBlocking" => "1" )
+	->json_is( "/response/active" => "false" )->json_is( "/response/matchList/0/type" => "HOST_REGEXP" )
+	->json_is( "/response/matchList/0/setNumber" => "0" )->json_is( "/response/matchList/0/pattern" => ".*\\.ds_2\\..*" )
+	->json_is( "/response/matchList/1/type" => "HOST_REGEXP" )->json_is( "/response/matchList/1/setNumber" => "1" )
+	->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod2\\..*" ), 'Does the deliveryservice details return?';
 
 # It allows adding a delivery service to a different CDN with a matching regex in another CDN's delivery service
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
-        "xmlId" => "ds_3",
-        "displayName" => "ds_displayname_1",
-        "protocol" => "1",
-        "orgServerFqdn" => "http://10.75.168.91",
-        "cdnName" => "cdn2",
-        "profileName" => "CCR1",
-        "type" => "HTTP",
-        "multiSiteOrigin" => "0",
-        "regionalGeoBlocking" => "1",
-        "active" => "false",
-        "matchList" => [
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "0",
-                "pattern" => ".*\\.ds_1\\..*"
-            },
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "1",
-                "pattern" => ".*\\.my_vod2\\..*"
-            }
-        ]})
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/xmlId" => "ds_3")
-    ->json_is( "/response/displayName" => "ds_displayname_1")
-    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
-    ->json_is( "/response/cdnName" => "cdn2")
-    ->json_is( "/response/profileName" => "CCR1")
-    ->json_is( "/response/protocol" => "1")
-    ->json_is( "/response/type" => "HTTP")
-    ->json_is( "/response/multiSiteOrigin" => "0")
-    ->json_is( "/response/regionalGeoBlocking" => "1")
-    ->json_is( "/response/active" => "false")
-    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/0/setNumber" => "0")
-    ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*")
-    ->json_is( "/response/matchList/1/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/1/setNumber" => "1")
-    ->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod2\\..*")
-            , 'Does the deliveryservice details return?';
+ok $t->post_ok(
+	'/api/1.2/deliveryservices/create' => { Accept => 'application/json' } => json => {
+		"xmlId"               => "ds_3",
+		"displayName"         => "ds_displayname_1",
+		"protocol"            => "1",
+		"orgServerFqdn"       => "http://10.75.168.91",
+		"cdnName"             => "cdn2",
+		"profileName"         => "CCR1",
+		"type"                => "HTTP",
+		"multiSiteOrigin"     => "0",
+		"regionalGeoBlocking" => "1",
+		"active"              => "false",
+		"matchList"           => [
+			{
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "0",
+				"pattern"   => ".*\\.ds_1\\..*"
+			}, {
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "1",
+				"pattern"   => ".*\\.my_vod2\\..*"
+			}
+		]
+	}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "ds_3" )
+	->json_is( "/response/displayName" => "ds_displayname_1" )->json_is( "/response/orgServerFqdn" => "http://10.75.168.91" )
+	->json_is( "/response/cdnName" => "cdn2" )->json_is( "/response/profileName" => "CCR1" )->json_is( "/response/protocol" => "1" )
+	->json_is( "/response/type" => "HTTP" )->json_is( "/response/multiSiteOrigin" => "0" )->json_is( "/response/regionalGeoBlocking" => "1" )
+	->json_is( "/response/active" => "false" )->json_is( "/response/matchList/0/type" => "HOST_REGEXP" )
+	->json_is( "/response/matchList/0/setNumber" => "0" )->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*" )
+	->json_is( "/response/matchList/1/type" => "HOST_REGEXP" )->json_is( "/response/matchList/1/setNumber" => "1" )
+	->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod2\\..*" ), 'Does the deliveryservice details return?';
 
 my $ds_id = &get_ds_id('ds_1');
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
-        "xmlId" => "ds_1",
-        "displayName" => "ds_displayname_11",
-        "protocol" => "2",
-        "orgServerFqdn" => "http://10.75.168.91",
-        "cdnName" => "cdn1",
-        "profileName" => "CCR1",
-        "type" => "HTTP",
-        "multiSiteOrigin" => "0",
-        "regionalGeoBlocking" => "0",
-        "active" => "true",
-        "matchList" => [
-            {
-                "type" =>  "HOST_REGEXP",
-                "setNumber" =>  "0",
-                "pattern" => ".*\\.my_vod1\\..*"
-            }
-        ]})
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/xmlId" => "ds_1")
-    ->json_is( "/response/displayName" => "ds_displayname_11")
-    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
-    ->json_is( "/response/cdnName" => "cdn1")
-    ->json_is( "/response/profileName" => "CCR1")
-    ->json_is( "/response/protocol" => "2")
-    ->json_is( "/response/type" => "HTTP")
-    ->json_is( "/response/multiSiteOrigin" => "0")
-    ->json_is( "/response/regionalGeoBlocking" => "0")
-    ->json_is( "/response/active" => "true")
-    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
-    ->json_is( "/response/matchList/0/setNumber" => "0")
-    ->json_is( "/response/matchList/0/pattern" => ".*\\.my_vod1\\..*")
-            , 'Does the deliveryservice details return?';
-
+ok $t->put_ok(
+	      '/api/1.2/deliveryservices/'
+		. $ds_id
+		. '/update' => { Accept => 'application/json' } => json => {
+		"xmlId"               => "ds_1",
+		"displayName"         => "ds_displayname_11",
+		"protocol"            => "2",
+		"orgServerFqdn"       => "http://10.75.168.91",
+		"cdnName"             => "cdn1",
+		"profileName"         => "CCR1",
+		"type"                => "HTTP",
+		"multiSiteOrigin"     => "0",
+		"regionalGeoBlocking" => "0",
+		"active"              => "true",
+		"matchList"           => [
+			{
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "0",
+				"pattern"   => ".*\\.my_vod1\\..*"
+			}
+		]
+		}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "ds_1" )
+	->json_is( "/response/displayName" => "ds_displayname_11" )->json_is( "/response/orgServerFqdn" => "http://10.75.168.91" )
+	->json_is( "/response/cdnName" => "cdn1" )->json_is( "/response/profileName" => "CCR1" )->json_is( "/response/protocol" => "2" )
+	->json_is( "/response/type" => "HTTP" )->json_is( "/response/multiSiteOrigin" => "0" )->json_is( "/response/regionalGeoBlocking" => "0" )
+	->json_is( "/response/active" => "true" )->json_is( "/response/matchList/0/type" => "HOST_REGEXP" )
+	->json_is( "/response/matchList/0/setNumber" => "0" )->json_is( "/response/matchList/0/pattern" => ".*\\.my_vod1\\..*" ),
+	'Does the deliveryservice details return?';
 
 # It allows updating a delivery service in a CDN with a matching regex in another CDN's delivery service
 
 $ds_id = &get_ds_id('ds_3');
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
-		"xmlId" => "ds_3",
-		"displayName" => "ds_displayname_1",
-		"protocol" => "1",
-		"orgServerFqdn" => "http://10.75.168.91",
-		"cdnName" => "cdn2",
-		"profileName" => "CCR1",
-		"type" => "HTTP",
-		"multiSiteOrigin" => "0",
+ok $t->put_ok(
+	      '/api/1.2/deliveryservices/'
+		. $ds_id
+		. '/update' => { Accept => 'application/json' } => json => {
+		"xmlId"               => "ds_3",
+		"displayName"         => "ds_displayname_1",
+		"protocol"            => "1",
+		"orgServerFqdn"       => "http://10.75.168.91",
+		"cdnName"             => "cdn2",
+		"profileName"         => "CCR1",
+		"type"                => "HTTP",
+		"multiSiteOrigin"     => "0",
 		"regionalGeoBlocking" => "1",
-		"active" => "false",
-		"matchList" => [
+		"active"              => "false",
+		"matchList"           => [
 			{
-				"type" =>  "HOST_REGEXP",
-				"setNumber" =>  "0",
-				"pattern" => ".*\\.ds_1\\..*"
-			},
-			{
-				"type" =>  "HOST_REGEXP",
-				"setNumber" =>  "1",
-				"pattern" => ".*\\.my_vod1\\..*"
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "0",
+				"pattern"   => ".*\\.ds_1\\..*"
+			}, {
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "1",
+				"pattern"   => ".*\\.my_vod1\\..*"
 			}
-		]})
-	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/response/xmlId" => "ds_3")
-		->json_is( "/response/displayName" => "ds_displayname_1")
-		->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
-		->json_is( "/response/cdnName" => "cdn2")
-		->json_is( "/response/profileName" => "CCR1")
-		->json_is( "/response/protocol" => "1")
-		->json_is( "/response/type" => "HTTP")
-		->json_is( "/response/multiSiteOrigin" => "0")
-		->json_is( "/response/regionalGeoBlocking" => "1")
-		->json_is( "/response/active" => "false")
-		->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
-		->json_is( "/response/matchList/0/setNumber" => "0")
-		->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*")
-		->json_is( "/response/matchList/1/type" => "HOST_REGEXP")
-		->json_is( "/response/matchList/1/setNumber" => "1")
-		->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod1\\..*")
-	, 'Does the deliveryservice details return?';
+		]
+		}
+	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "ds_3" )
+	->json_is( "/response/displayName" => "ds_displayname_1" )->json_is( "/response/orgServerFqdn" => "http://10.75.168.91" )
+	->json_is( "/response/cdnName" => "cdn2" )->json_is( "/response/profileName" => "CCR1" )->json_is( "/response/protocol" => "1" )
+	->json_is( "/response/type" => "HTTP" )->json_is( "/response/multiSiteOrigin" => "0" )->json_is( "/response/regionalGeoBlocking" => "1" )
+	->json_is( "/response/active" => "false" )->json_is( "/response/matchList/0/type" => "HOST_REGEXP" )
+	->json_is( "/response/matchList/0/setNumber" => "0" )->json_is( "/response/matchList/0/pattern" => ".*\\.ds_1\\..*" )
+	->json_is( "/response/matchList/1/type" => "HOST_REGEXP" )->json_is( "/response/matchList/1/setNumber" => "1" )
+	->json_is( "/response/matchList/1/pattern" => ".*\\.my_vod1\\..*" ), 'Does the deliveryservice details return?';
 
 # It does not allow changing a regex to be the same as an existing one in another DS in the same CDN
 $ds_id = &get_ds_id('ds_1');
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
-			"xmlId" => "ds_1",
-			"displayName" => "ds_displayname_2",
-			"protocol" => "1",
-			"orgServerFqdn" => "http://10.75.168.91",
-			"cdnName" => "cdn1",
-			"profileName" => "CCR1",
-			"type" => "HTTP",
-			"multiSiteOrigin" => "0",
-			"regionalGeoBlocking" => "0",
-			"active" => "true",
-			"matchList" => [
-				{
-					"type" =>  "HOST_REGEXP",
-					"setNumber" =>  "0",
-					"pattern" => ".*\\.ds_2\\..*"
-				},
-				{
-					"type" =>  "HOST_REGEXP",
-					"setNumber" =>  "1",
-					"pattern" => ".*\\.my_vod2\\..*"
-				}
-			]})
-		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	, 'Does the deliveryservice details return?';
+ok $t->put_ok(
+	      '/api/1.2/deliveryservices/'
+		. $ds_id
+		. '/update' => { Accept => 'application/json' } => json => {
+		"xmlId"               => "ds_1",
+		"displayName"         => "ds_displayname_2",
+		"protocol"            => "1",
+		"orgServerFqdn"       => "http://10.75.168.91",
+		"cdnName"             => "cdn1",
+		"profileName"         => "CCR1",
+		"type"                => "HTTP",
+		"multiSiteOrigin"     => "0",
+		"regionalGeoBlocking" => "0",
+		"active"              => "true",
+		"matchList"           => [
+			{
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "0",
+				"pattern"   => ".*\\.ds_2\\..*"
+			}, {
+				"type"      => "HOST_REGEXP",
+				"setNumber" => "1",
+				"pattern"   => ".*\\.my_vod2\\..*"
+			}
+		]
+		}
+)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does the deliveryservice details return?';
 
-ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->delete_ok( '/api/1.2/deliveryservices/' . $ds_id )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id  => {Accept => 'application/json'} => json => {
-        "xmlId" => "ds_1234"
-})
-    ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->put_ok(
+	      '/api/1.2/deliveryservices/'
+		. $ds_id
+		. '/update' => { Accept => 'application/json' } => json => {
+		"xmlId" => "ds_1234"
+		}
+)->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok(
 	'/api/1.2/deliveryservices/test-ds1/servers' => { Accept => 'application/json' } => json => {
@@ -313,7 +275,6 @@ ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag 
 	->json_is( "/response/0/xmlId", "ds_2" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 0 )
 	->json_is( "/response/1/xmlId", "ds_3" );
 
-
 # Count the 'response number'
 my $count_response = sub {
 	my ( $t, $count ) = @_;
@@ -322,7 +283,7 @@ my $count_response = sub {
 	return $t->success( is( scalar(@$r), $count ) );
 };
 
-$t->get_ok('/api/1.2/deliveryservices.json?logsEnabled=true')->status_is(200)->$count_response(2)
+$t->get_ok('/api/1.2/deliveryservices/list?logsEnabled=true')->status_is(200)->$count_response(2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -332,12 +293,12 @@ $dbh->disconnect();
 done_testing();
 
 sub get_ds_id {
-    my $xml_id = shift;
-    my $q      = "select id from deliveryservice where xml_id = \'$xml_id\'";
-    my $get_svr = $dbh->prepare($q);
-    $get_svr->execute();
-    my $p = $get_svr->fetchall_arrayref( {} );
-    $get_svr->finish();
-    my $id = $p->[0]->{id};
-    return $id;
+	my $xml_id  = shift;
+	my $q       = "select id from deliveryservice where xml_id = \'$xml_id\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
 }

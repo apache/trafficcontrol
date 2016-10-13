@@ -140,6 +140,85 @@ sub show {
 	$self->success( \@data );
 }
 
+sub update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $user = $self->db->resultset('TmUser')->find( { id => $id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+
+	my $values = {
+		address_line1 			=> $params->{addressLine1},
+		address_line2 			=> $params->{addressLine2},
+		city 					=> $params->{city},
+		company 				=> $params->{company},
+		country 				=> $params->{country},
+		email 					=> $params->{email},
+		full_name 				=> $params->{fullName},
+		new_user 				=> ( $params->{newUser} ) ? 1 : 0,
+		phone_number 			=> $params->{phoneNumber},
+		postal_code 			=> $params->{postalCode},
+		public_ssh_key 			=> $params->{publicSshKey},
+		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
+		role 					=> $params->{role},
+		state_or_province 		=> $params->{stateOrProvince},
+		username 				=> $params->{username}
+	};
+
+	if ( defined($params->{localPasswd}) && $params->{localPasswd} ne '' ) {
+		$values->{"local_passwd"} = sha1_hex($params->{localPasswd});
+	}
+	if ( defined($params->{confirmLocalPasswd}) && $params->{confirmLocalPasswd} ne '' ) {
+		$values->{"confirm_local_passwd"} = sha1_hex($params->{confirmLocalPasswd});
+	}
+
+	my $rs = $user->update($values);
+	if ($rs) {
+		my $response;
+		$response->{addressLine1}        	= $rs->address_line1;
+		$response->{addressLine2} 			= $rs->address_line2;
+		$response->{city} 					= $rs->city;
+		$response->{company} 				= $rs->company;
+		$response->{country} 				= $rs->country;
+		$response->{email} 					= $rs->email;
+		$response->{fullName} 				= $rs->full_name;
+		$response->{gid}          			= $rs->gid;
+		$response->{id}          			= $rs->id;
+		$response->{lastUpdated} 			= $rs->last_updated;
+		$response->{newUser} 				= \$rs->new_user;
+		$response->{phoneNumber} 			= $rs->phone_number;
+		$response->{postalCode} 			= $rs->postal_code;
+		$response->{publicSshKey} 			= $rs->public_ssh_key;
+		$response->{registrationSent} 		= \$rs->registration_sent;
+		$response->{role} 					= $rs->role->id;
+		$response->{roleName} 				= $rs->role->name;
+		$response->{stateOrProvince} 		= $rs->state_or_province;
+		$response->{uid} 					= $rs->uid;
+		$response->{username} 				= $rs->username;
+
+		&log( $self, "Updated User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "User update was successful." );
+	}
+	else {
+		return $self->alert("User update failed.");
+	}
+
+}
+
 # Reset the User Profile password
 sub reset_password {
 	my $self     = shift;
@@ -372,7 +451,7 @@ sub is_valid {
 				}
 			},
 
-			# pass2 must be equal to pass
+			# email must be unique
 			email => sub {
 				my $value  = shift;
 				my $params = shift;
@@ -387,7 +466,7 @@ sub is_valid {
 				Email::Valid->address($value) ? undef : 'email is not a valid format';
 			},
 
-			# pass2 must be equal to pass
+			# username must be unique
 			username => sub {
 				my $value  = shift;
 				my $params = shift;
