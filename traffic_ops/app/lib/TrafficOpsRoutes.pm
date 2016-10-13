@@ -521,22 +521,31 @@ sub api_routes {
 	$r->get( "/api/$version/logs/newcount")->over( authenticated => 1 )
 		->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
+
 	# -- DELIVERYSERVICES
 	# -- DELIVERYSERVICES: CRUD
 	$r->get( "/api/$version/deliveryservices")->over( authenticated => 1 )
-		->to( 'DeliveryService#delivery_services', namespace => $namespace );
+		->to( 'Deliveryservice#index', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'DeliveryService#delivery_services', namespace => $namespace );
-	$r->post("/api/$version/deliveryservices")->over( authenticated => 1 )
-		->to( 'DeliveryService#create', namespace => $namespace );
-	$r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )
-		->to( 'DeliveryService#update', namespace => $namespace );
-	$r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )
-		->to( 'DeliveryService#delete', namespace => $namespace );
+		->to( 'Deliveryservice#show', namespace => $namespace );
+	$r->post( "/api/$version/deliveryservices" )->over( authenticated => 1 )
+		->to( 'Deliveryservice#create', namespace => $namespace );
+	$r->put( "/api/$version/deliveryservices/:id" )->over( authenticated => 1 )
+		->to( 'Deliveryservice#update', namespace => $namespace );
+	$r->delete( "/api/$version/deliveryservices/:id" )->over( authenticated => 1 )
+		->to( 'Deliveryservice#delete', namespace => $namespace );
 
-	# -- DELIVERYSERVICES: ASSIGN SERVERS
+	# alternate deliveryservice routes
+	$r->get( "/api/$version/deliveryservices/list")->over( authenticated => 1 )
+		->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
+	$r->get( "/api/$version/deliveryservices/:id/get" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
+		->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/create")->over( authenticated => 1 )
+		->to( 'Deliveryservice2#create', namespace => $namespace );
+	$r->put("/api/$version/deliveryservices/:id/update")->over( authenticated => 1 )
+		->to( 'Deliveryservice2#update', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )
-		->to( 'DeliveryService#assign_servers', namespace => $namespace );
+		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: HEALTH
 	$r->get( "/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )

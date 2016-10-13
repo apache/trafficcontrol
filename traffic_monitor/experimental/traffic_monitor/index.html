@@ -165,13 +165,13 @@
 
 		 function getBandwidth() {
 			 ajax("/api/bandwidth-kbps", function(r) {
-				 document.getElementById("bandwidth").innerHTML = numberStrWithCommas(parseFloat(r).toFixed(2));
+				 document.getElementById("bandwidth").innerHTML = numberStrWithCommas((parseFloat(r) / kilobitsInGigabit).toFixed(2));
 			 });
 		 }
 
 		 function getBandwidthCapacity() {
 			 ajax("/api/bandwidth-capacity-kbps", function(r) {
-				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas(r);
+				 document.getElementById("bandwidth-capacity").innerHTML = numberStrWithCommas((r / kilobitsInGigabit).toString());
 			 });
 		 }
 
@@ -242,7 +242,7 @@
 						 row.insertCell(2).id = row.id + "-status";
 						 row.insertCell(3).id = row.id + "-load-average";
 						 row.insertCell(4).id = row.id + "-query-time";
-						 row.insertCell(5).id = row.id + "-bandwidth-kbps";
+						 row.insertCell(5).id = row.id + "-bandwidth";
 						 row.insertCell(6).id = row.id + "-connection-count";
 						 document.getElementById(row.id + "-server").textContent = server;
 					 }
@@ -275,7 +275,7 @@
 						 document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
 					 }
 					 if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
-						 document.getElementById("cache-states-" + server + "-bandwidth-kbps").textContent = jdata[server].bandwidth_kbps.toFixed(2);
+						 document.getElementById("cache-states-" + server + "-bandwidth").textContent = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
 					 }
 					 if (jdata[server].hasOwnProperty("connection_count")) {
 						 document.getElementById("cache-states-" + server + "-connection-count").textContent = jdata[server].connection_count;
@@ -285,15 +285,17 @@
 		 }
 
 		 var millisecondsInSecond = 1000;
+		 var kilobitsInGigabit = 1000000;
+		 var kilobitsInMegabit = 1000;
 
-		 var previousDeliveryserviceStats2xx = new Object();
-		 var previousDeliveryserviceStats3xx = new Object();
-		 var previousDeliveryserviceStats4xx = new Object();
-		 var previousDeliveryserviceStats5xx = new Object();
-		 var previousDeliveryserviceStatsTime2xx = new Object();
-		 var previousDeliveryserviceStatsTime3xx = new Object();
-		 var previousDeliveryserviceStatsTime4xx = new Object();
-		 var previousDeliveryserviceStatsTime5xx = new Object();
+		 // dsDisplayFloat takes a float, and returns the string to display. For nonzero values, it returns two decimal places. For zero values, it returns an empty string, to make nonzero values more visible.
+		 function dsDisplayFloat(f) {
+			 var s = "";
+			 if (f != 0.0) {
+				 s = f.toFixed(2);
+			 }
+			 return s
+		 }
 
 		 function getDsStats() {
 			 var now = Date.now();
@@ -329,53 +331,19 @@
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-caches-reporting").textContent = jds[deliveryService]['caches-reporting'][0].value + " / " + jds[deliveryService]['caches-available'][0].value + " / " + jds[deliveryService]['caches-configured'][0].value;
 					 }
 					 if (jds[deliveryService].hasOwnProperty("total.kbps")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = jds[deliveryService]['total.kbps'][0].value;
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-bandwidth").textContent = (jds[deliveryService]['total.kbps'][0].value / kilobitsInMegabit).toFixed(2);
 					 }
-
-					 if (jds[deliveryService].hasOwnProperty("total.status_2xx")) {
-						 var new2xx = jds[deliveryService]['total.status_2xx'][0].value;
-						 if (previousDeliveryserviceStats2xx.hasOwnProperty(deliveryService) && previousDeliveryserviceStats2xx[deliveryService] != new2xx) {
-							 //							 alert("new2xx " + new2xx + " previousDeliveryserviceStats2xx " + previousDeliveryserviceStats2xx[deliveryService] + " now " + now + " previousDeliveryserviceStatsTime " +  previousDeliveryserviceStatsTime2xx[deliveryService] + " statdiff " + (new2xx - previousDeliveryserviceStats2xx[deliveryService]) + " timediff " + ((now - previousDeliveryserviceStatsTime2xx[deliveryService]) / millisecondsInSecond) );
-							 var perSec = (new2xx - previousDeliveryserviceStats2xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime2xx[deliveryService]) / millisecondsInSecond);
-							 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = perSec.toFixed(2);
-						 }
-						 if (previousDeliveryserviceStats2xx[deliveryService] != new2xx && previousDeliveryserviceStats2xx.hasOwnProperty(deliveryService)) {
-						 	previousDeliveryserviceStatsTime2xx[deliveryService] = now;
-						 }
-						 previousDeliveryserviceStats2xx[deliveryService] = new2xx;
+					 if (jds[deliveryService].hasOwnProperty("total.tps_2xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-2xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_2xx'][0].value));
 					 }
-					 if (jds[deliveryService].hasOwnProperty("total.status_3xx")) {
-						 var new3xx = jds[deliveryService]['total.status_3xx'][0].value;
-						 if (previousDeliveryserviceStats3xx.hasOwnProperty(deliveryService) && previousDeliveryserviceStats3xx[deliveryService] != new3xx) {
-							 var perSec = (new3xx - previousDeliveryserviceStats3xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime3xx[deliveryService]) / millisecondsInSecond);
-							 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = perSec.toFixed(2);
-						 }
-						 if (previousDeliveryserviceStats3xx[deliveryService] != new3xx && previousDeliveryserviceStats3xx.hasOwnProperty(deliveryService)) {
-						 	previousDeliveryserviceStatsTime3xx[deliveryService] = now;
-						 }
-						 previousDeliveryserviceStats3xx[deliveryService] = new3xx;
+					 if (jds[deliveryService].hasOwnProperty("total.tps_3xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-3xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_3xx'][0].value));
 					 }
-					 if (jds[deliveryService].hasOwnProperty("total.status_4xx") && previousDeliveryserviceStats4xx[deliveryService] != new4xx) {
-						 var new4xx = jds[deliveryService]['total.status_4xx'][0].value;
-						 if (previousDeliveryserviceStats4xx.hasOwnProperty(deliveryService)) {
-							 var perSec = (new4xx - previousDeliveryserviceStats4xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime4xx[deliveryService]) / millisecondsInSecond);
-							 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = perSec.toFixed(2);
-						 }
-						 if (previousDeliveryserviceStats4xx[deliveryService] != new4xx && previousDeliveryserviceStats4xx.hasOwnProperty(deliveryService)) {
-						 	previousDeliveryserviceStatsTime4xx[deliveryService] = now;
-						 }
-						 previousDeliveryserviceStats4xx[deliveryService] = new4xx;
+					 if (jds[deliveryService].hasOwnProperty("total.tps_4xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-4xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_4xx'][0].value));
 					 }
-					 if (jds[deliveryService].hasOwnProperty("total.status_5xx") && previousDeliveryserviceStats5xx[deliveryService] != new5xx) {
-						 var new5xx = jds[deliveryService]['total.status_5xx'][0].value;
-						 if (previousDeliveryserviceStats5xx.hasOwnProperty(deliveryService)) {
-							 var perSec = (new5xx - previousDeliveryserviceStats5xx[deliveryService]) / ((now - previousDeliveryserviceStatsTime5xx[deliveryService]) / millisecondsInSecond);
-							 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = perSec.toFixed(2);
-						 }
-						 if (previousDeliveryserviceStats5xx[deliveryService] != new5xx && previousDeliveryserviceStats5xx.hasOwnProperty(deliveryService)) {
-						 	previousDeliveryserviceStatsTime5xx[deliveryService] = now;
-						 }
-						 previousDeliveryserviceStats5xx[deliveryService] = new5xx;
+					 if (jds[deliveryService].hasOwnProperty("total.tps_5xx")) {
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-5xx").textContent = dsDisplayFloat(parseFloat(jds[deliveryService]['total.tps_5xx'][0].value));
 					 }
 
 					 // \todo implement disabled locations
@@ -422,7 +390,7 @@
 		<table id="top-bar" width="100%">
 			<tr>
 				<td> Caches: count=<span id="cache-count">0</span> available=<span id="cache-available">0</span> down=<span id="cache-down">0</span> </td>
-				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> </td>
+				<td> Bandwidth: <span id="bandwidth">0</span> / <span id="bandwidth-capacity">∞</span> gbps</td>
 				<td>Source: <span id="source-uri"></span></td>
 				<td><span id="version">traffic_monitor</span></td>
 			</tr>
@@ -467,7 +435,7 @@
 					<th>Status</th>
 					<th>Load Average</th>
 					<th>Query Time (ms)</th>
-					<th>Bandwidth (kbps)</th>
+					<th>Bandwidth (mbps)</th>
 					<th>Connection Count</th>
 				</tr>
 			</table>
@@ -478,7 +446,7 @@
 					<th>Delivery Service</th>
 					<th>Status</th>
 					<th>Caches Reporting/Available/Configured</th>
-					<th>Bandwidth (kbps)</th>
+					<th>Bandwidth (mbps)</th>
 					<th>2xx/sec</th>
 					<th>3xx/sec</th>
 					<th>4xx/sec</th>

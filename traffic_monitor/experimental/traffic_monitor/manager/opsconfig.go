@@ -48,7 +48,7 @@ func StartOpsConfigManager(
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statHistory StatHistoryThreadsafe,
-	lastKbpsStats StatsLastKbpsThreadsafe,
+	lastStats LastStatsThreadsafe,
 	dsStats DSStatsThreadsafe,
 	events EventsThreadsafe,
 	staticAppData StaticAppData,
@@ -99,7 +99,7 @@ func StartOpsConfigManager(
 				}
 
 				err = httpServer.Run(func(req http_server.DataRequest) ([]byte, int) {
-					return DataRequest(req, opsConfig, toSession, localStates, peerStates, combinedStates, statHistory, dsStats, events, staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, toData, localCacheStatus, lastKbpsStats)
+					return DataRequest(req, opsConfig, toSession, localStates, peerStates, combinedStates, statHistory, dsStats, events, staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, toData, localCacheStatus, lastStats)
 				}, listenAddress)
 				if err != nil {
 					handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
