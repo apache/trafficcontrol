@@ -36,12 +36,12 @@ var TypeService = function(Restangular, locationUtils, messageModel) {
     this.deleteType = function(id) {
         return Restangular.one("types", id).remove()
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Type deleted' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Type delete failed' } ], false);
-            }
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Type deleted' } ], true);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
         );
     };
 
