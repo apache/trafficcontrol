@@ -120,6 +120,7 @@
 		<constructor-arg name="certificatesQueue" ref="certificatesQueue"/>
 		<constructor-arg name="publishStatusQueue" ref="publishStatusQueue"/>
 		<constructor-arg name="certificateChecker" ref="certificateChecker"/>
+		<constructor-arg name="trafficRouterManager" ref="trafficRouterManager"/>
 	</bean>
 
 	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
@@ -296,11 +297,13 @@
 
 	<bean name="certificatesClient" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesClient">
 		<property name="trafficOpsUtils" ref="trafficOpsUtils"/>
+		<property name="trafficRouterManager" ref="trafficRouterManager"/>
 	</bean>
 
 	<bean name="certificatesPoller" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller" init-method="start">
 		<property name="certificatesClient" ref="certificatesClient"/>
 		<property name="certificatesQueue" ref="certificatesQueue"/>
+		<property name="trafficRouterManager" ref="trafficRouterManager"/>
   	</bean>
 
 </beans>

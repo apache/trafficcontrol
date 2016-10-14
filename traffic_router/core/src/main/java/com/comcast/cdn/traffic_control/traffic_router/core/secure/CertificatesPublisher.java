@@ -2,6 +2,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,9 +24,10 @@ public class CertificatesPublisher {
 	private boolean running = true;
 	final Thread worker;
 
-	@SuppressWarnings("PMD.AvoidCatchingThrowable")
-	public CertificatesPublisher(final BlockingQueue<List<CertificateData>> certificatesQueue, final BlockingQueue<Boolean> publishStatusQueue, final CertificateChecker certificateChecker) {
 
+	@SuppressWarnings("PMD.AvoidCatchingThrowable")
+	public CertificatesPublisher(final BlockingQueue<List<CertificateData>> certificatesQueue, final BlockingQueue<Boolean> publishStatusQueue,
+	                             final CertificateChecker certificateChecker, final TrafficRouterManager trafficRouterManager) {
 		worker = new Thread(() -> {
 			while (running) {
 				try {
@@ -41,6 +43,9 @@ public class CertificatesPublisher {
 						});
 						publishCertificateList(certificateDataList);
 						publishStatusQueue.poll(2, TimeUnit.SECONDS);
+						trafficRouterManager.trackEvent("lastHttpsCertificatesUpdate");
+					} else {
+						trafficRouterManager.trackEvent("lastInvalidHttpsCertificates");
 					}
 				} catch (Throwable e) {
 					if (!running) {

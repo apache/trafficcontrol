@@ -17,6 +17,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ public class CertificatesPoller implements ConfigurationListener {
 	private long pollingInterval = defaultFixedRate;
 	private BlockingQueue<List<CertificateData>> certificatesQueue;
 	private List<CertificateData> lastFetchedData = new ArrayList<>();
+	private TrafficRouterManager trafficRouterManager;
 
 	@Autowired
 	private Environment environment;
@@ -71,6 +73,7 @@ public class CertificatesPoller implements ConfigurationListener {
 	public void start() {
 		final Runnable runnable = () -> {
 			try {
+				trafficRouterManager.trackEvent("lastHttpsCertificatesCheck");
 				List<CertificateData> certificateDataList = certificatesClient.refreshData();
 				if (certificateDataList == null) {
 					return;
@@ -147,5 +150,13 @@ public class CertificatesPoller implements ConfigurationListener {
 
 	public void setCertificatesQueue(final BlockingQueue<List<CertificateData>> certificatesQueue) {
 		this.certificatesQueue = certificatesQueue;
+	}
+
+	public TrafficRouterManager getTrafficRouterManager() {
+		return trafficRouterManager;
+	}
+
+	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
+		this.trafficRouterManager = trafficRouterManager;
 	}
 }
