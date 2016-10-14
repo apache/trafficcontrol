@@ -15,8 +15,8 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
                     locationUtils.navigateToPath('/admin/cdns');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CDN create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CDN update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

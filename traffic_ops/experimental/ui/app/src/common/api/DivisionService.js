@@ -15,8 +15,8 @@ var DivisionService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Division created' } ], true);
                     locationUtils.navigateToPath('/admin/divisions');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Division create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var DivisionService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Division update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

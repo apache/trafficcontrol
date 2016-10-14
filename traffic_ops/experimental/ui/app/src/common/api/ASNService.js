@@ -15,8 +15,8 @@ var ASNService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
                     locationUtils.navigateToPath('/admin/asns');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'ASN create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var ASNService = function(Restangular, locationUtils, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'ASN updated' } ], false);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'ASN update failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };

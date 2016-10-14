@@ -16,8 +16,8 @@ var LocationService = function(Restangular, locationUtils, messageModel) {
                     locationUtils.navigateToPath('/admin/locations');
 
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Location create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -28,8 +28,8 @@ var LocationService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Location update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

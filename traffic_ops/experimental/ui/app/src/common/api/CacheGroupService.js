@@ -15,8 +15,8 @@ var CacheGroupService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'CacheGroup created' } ], true);
                     locationUtils.navigateToPath('/configure/cache-groups');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CacheGroup create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var CacheGroupService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Cache group updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Cache group update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

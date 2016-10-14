@@ -15,8 +15,8 @@ var ProfileService = function(Restangular, locationUtils, messageModel) {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
                 locationUtils.navigateToPath('/admin/profiles');
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Profile create failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };
@@ -27,8 +27,8 @@ var ProfileService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Profile updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Profile update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
         );
     };

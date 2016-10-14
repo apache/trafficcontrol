@@ -15,8 +15,8 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
                 locationUtils.navigateToPath('/admin/parameters');
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Parameter create failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };
@@ -27,8 +27,8 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter updated' } ], false);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Parameter update failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };

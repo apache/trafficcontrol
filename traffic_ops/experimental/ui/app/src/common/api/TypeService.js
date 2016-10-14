@@ -15,8 +15,8 @@ var TypeService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
                     locationUtils.navigateToPath('/admin/types');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Type create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var TypeService = function(Restangular, locationUtils, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Type updated' } ], false);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Type update failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };

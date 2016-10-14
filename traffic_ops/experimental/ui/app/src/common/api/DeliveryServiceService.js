@@ -15,8 +15,8 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
                     messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
                     locationUtils.navigateToPath('/configure/delivery-services');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'DeliveryService create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Delivery service update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

@@ -15,8 +15,8 @@ var StatusService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
                     locationUtils.navigateToPath('/admin/statuses');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Status create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -27,8 +27,8 @@ var StatusService = function(Restangular, locationUtils, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Status updated' } ], false);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Status update failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };

@@ -57,8 +57,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
                     messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
                     locationUtils.navigateToPath('/admin/users');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -69,8 +69,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
