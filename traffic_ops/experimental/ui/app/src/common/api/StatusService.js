@@ -36,12 +36,12 @@ var StatusService = function(Restangular, locationUtils, messageModel) {
     this.deleteStatus = function(id) {
         return Restangular.one("statuses", id).remove()
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Status delete failed' } ], false);
-            }
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
         );
     };
 

@@ -39,8 +39,8 @@ var ProfileService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Profile deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Profile delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
         );
     };

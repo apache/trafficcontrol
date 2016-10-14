@@ -81,8 +81,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

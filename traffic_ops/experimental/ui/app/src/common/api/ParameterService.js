@@ -39,8 +39,8 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter deleted' } ], true);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Parameter delete failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };

@@ -39,8 +39,8 @@ var DivisionService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Division delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

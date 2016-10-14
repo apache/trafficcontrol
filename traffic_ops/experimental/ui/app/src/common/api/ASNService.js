@@ -39,8 +39,8 @@ var ASNService = function(Restangular, locationUtils, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'ASN deleted' } ], true);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'ASN delete failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };

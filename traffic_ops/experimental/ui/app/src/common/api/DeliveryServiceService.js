@@ -39,8 +39,8 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Delivery service deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Delivery service delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

@@ -39,8 +39,8 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CDN delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
