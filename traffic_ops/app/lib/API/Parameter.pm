@@ -49,6 +49,39 @@ sub index {
 	$self->success( \@data );
 }
 
+sub get_profile_params {
+	my $self         = shift;
+	my $profile_id   = $self->param('id');
+	my $profile_name = $self->param('name');
+
+	my %criteria;
+	if ( defined $profile_id ) {
+		$criteria{'profile.id'} = $profile_id;
+	} elsif ( defined $profile_name ) {
+		$criteria{'profile.name'} = $profile_name;
+	} else {
+        return $self->alert("Profile ID or Name is required");
+    }
+
+	my $rs_data = $self->db->resultset("ProfileParameter")->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		my $value = $row->parameter->value;
+		&UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+		push(
+			@data, {
+				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
+				"configFile"  => $row->parameter->config_file,
+				"value"       => $value,
+				"secure"      => \$row->parameter->secure,
+				"lastUpdated" => $row->parameter->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub create {
     my $self = shift;
     my $params = $self->req->json;
