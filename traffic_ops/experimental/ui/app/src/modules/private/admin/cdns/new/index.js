@@ -9,7 +9,10 @@ module.exports = angular.module('trafficOps.private.admin.cdns.new', [])
                         controller: 'FormNewCDNController',
                         resolve: {
                             cdn: function() {
-                                return {};
+                                return {
+                                    dnssecEnabled: false
+                                };
+
                             }
                         }
                     }

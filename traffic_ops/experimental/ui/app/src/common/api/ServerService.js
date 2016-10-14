@@ -1,4 +1,4 @@
-var ServerService = function(Restangular, messageModel) {
+var ServerService = function(Restangular, locationUtils, messageModel) {
 
     this.getServers = function() {
         return Restangular.all('servers').getList();
@@ -11,13 +11,14 @@ var ServerService = function(Restangular, messageModel) {
     this.createServer = function(server) {
         return Restangular.service('servers').post(server)
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Server create failed' } ], false);
-            }
-        );
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
+                    locationUtils.navigateToPath('/configure/servers');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     this.updateServer = function(server) {
@@ -26,8 +27,8 @@ var ServerService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Server updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Server update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -46,5 +47,5 @@ var ServerService = function(Restangular, messageModel) {
 
 };
 
-ServerService.$inject = ['Restangular', 'messageModel'];
+ServerService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = ServerService;

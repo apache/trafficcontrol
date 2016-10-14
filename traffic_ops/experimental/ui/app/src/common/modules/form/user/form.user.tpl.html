@@ -32,7 +32,7 @@
             <div class="form-group" ng-class="{'has-error': hasError(userForm.email), 'has-feedback': hasError(userForm.email)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Email *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="email" name="email" type="text" class="form-control" ng-model="user.email" ng-required="true" ng-maxlength="128" autofocus>
+                    <input id="email" name="email" type="email" class="form-control" ng-model="user.email" ng-required="true" ng-maxlength="128" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.email, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(userForm.email, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(userForm.email)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -41,9 +41,10 @@
             <div class="form-group" ng-class="{'has-error': hasError(userForm.username), 'has-feedback': hasError(userForm.username)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Username *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="username" name="username" type="text" class="form-control" ng-model="user.username" ng-required="true" ng-maxlength="128" autofocus>
+                    <input id="username" name="username" type="text" class="form-control" ng-model="user.username" ng-required="true" ng-maxlength="128" ng-pattern="/^\S*$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(userForm.username, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(userForm.username, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.username, 'pattern')">No Spaces</small>
                     <span ng-show="hasError(userForm.username)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-var FormNewLocationController = function(location, $scope, $controller, locationUtils, locationService) {
+var FormNewLocationController = function(location, $scope, $controller, locationService) {
 
     // extends the FormLocationController to inherit common methods
     angular.extend(this, $controller('FormLocationController', { location: location, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewLocationController = function(location, $scope, $controller, location
     };
 
     $scope.save = function(location) {
-        locationService.createLocation(location).
-            then(function() {
-                locationUtils.navigateToPath('/admin/locations');
-            });
+        locationService.createLocation(location);
     };
 
 };
 
-FormNewLocationController.$inject = ['location', '$scope', '$controller', 'locationUtils', 'locationService'];
+FormNewLocationController.$inject = ['location', '$scope', '$controller', 'locationService'];
 module.exports = FormNewLocationController;

@@ -15,7 +15,7 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
     };
 
     var getTypes = function() {
-        typeService.getTypes()
+        typeService.getTypes('server')
             .then(function(result) {
                 $scope.types = result;
             });
@@ -42,32 +42,37 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
             });
     };
 
+    // supposedly matches IPv4 and IPv6 formats. but actually need one that matches each. todo.
+    var ipRegex = new RegExp(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/);
+
     $scope.server = server;
 
     $scope.props = [
-        { name: 'hostName', type: 'text', required: true, maxLength: 45 },
-        { name: 'domainName', type: 'text', required: true, maxLength: 45 },
-        { name: 'tcpPort', type: 'number', required: false, maxLength: 10 },
+        { name: 'hostName', type: 'text', required: true, maxLength: 45, pattern: new RegExp(/^\S*$/), invalidMsg: 'No Spaces' },
+        { name: 'domainName', type: 'text', required: true, maxLength: 45, pattern: new RegExp(/^\S*$/), invalidMsg: 'No Spaces' },
+        { name: 'tcpPort', type: 'text', required: false, maxLength: 10, pattern: new RegExp(/^\d+$/), invalidMsg: 'Number' },
         { name: 'xmppId', type: 'text', required: false, maxLength: 256 },
         { name: 'xmppPasswd', type: 'text', required: false, maxLength: 45 },
         { name: 'interfaceName', type: 'text', required: true, maxLength: 45 },
-        { name: 'ipAddress', type: 'text', required: true, maxLength: 45 },
-        { name: 'ipNetmask', type: 'text', required: true, maxLength: 45 },
-        { name: 'ipGateway', type: 'text', required: true, maxLength: 45 },
-        { name: 'ip6Address', type: 'text', required: false, maxLength: 50 },
-        { name: 'ip6Gateway', type: 'text', required: false, maxLength: 50 },
-        { name: 'interfaceMtu', type: 'number', required: true, maxLength: 11, pattern: new RegExp('(^1500$|^9000$)'), invalidMsg: '1500 or 9000' },
+        { name: 'ipAddress', type: 'text', required: true, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'ipNetmask', type: 'text', required: true, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'ipGateway', type: 'text', required: true, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'ip6Address', type: 'text', required: false, maxLength: 50, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'ip6Gateway', type: 'text', required: false, maxLength: 50, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'interfaceMtu', type: 'text', required: true, maxLength: 11, pattern: new RegExp(/(^1500$|^9000$)/), invalidMsg: '1500 or 9000' },
         { name: 'rack', type: 'text', required: false, maxLength: 64 },
-        { name: 'mgmtIpAddress', type: 'text', required: false, maxLength: 50 },
-        { name: 'mgmtIpNetmask', type: 'text', required: false, maxLength: 45 },
-        { name: 'mgmtIpGateway', type: 'text', required: false, maxLength: 45 },
-        { name: 'iloIpAddress', type: 'text', required: false, maxLength: 45 },
-        { name: 'iloIpNetmask', type: 'text', required: false, maxLength: 45 },
-        { name: 'iloIpGateway', type: 'text', required: false, maxLength: 45 },
-        { name: 'iloUsername', type: 'text', required: false, maxLength: 45 },
+        { name: 'offlineReason', type: 'text', required: false, maxLength: 256 },
+        { name: 'mgmtIpAddress', type: 'text', required: false, maxLength: 50, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'mgmtIpNetmask', type: 'text', required: false, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'mgmtIpGateway', type: 'text', required: false, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'iloIpAddress', type: 'text', required: false, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'iloIpNetmask', type: 'text', required: false, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'iloIpGateway', type: 'text', required: false, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'iloUsername', type: 'text', required: false, maxLength: 45, pattern: new RegExp(/^\S*$/), invalidMsg: 'No Spaces' },
         { name: 'iloPassword', type: 'text', required: false, maxLength: 45 },
-        { name: 'routerHostName', type: 'text', required: false, maxLength: 256 },
-        { name: 'routerPortName', type: 'text', required: false, maxLength: 256 }
+        { name: 'routerHostName', type: 'text', required: false, maxLength: 256, pattern: new RegExp(/^\S*$/), invalidMsg: 'No Spaces' },
+        { name: 'routerPortName', type: 'text', required: false, maxLength: 256 },
+        { name: 'httpsPort', type: 'text', required: false, maxLength: 10, pattern: new RegExp(/^\d+$/), invalidMsg: 'Number' },
     ];
 
     $scope.labelize = stringUtils.labelize;

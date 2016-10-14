@@ -1,4 +1,4 @@
-var FormNewServerController = function(server, $scope, $controller, locationUtils, serverService) {
+var FormNewServerController = function(server, $scope, $controller, serverService) {
 
     // extends the FormServerController to inherit common methods
     angular.extend(this, $controller('FormServerController', { server: server, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewServerController = function(server, $scope, $controller, locationUtil
     };
 
     $scope.save = function(server) {
-        serverService.createServer(server).
-            then(function() {
-                locationUtils.navigateToPath('/configure/servers');
-            });
+        serverService.createServer(server);
     };
 
 };
 
-FormNewServerController.$inject = ['server', '$scope', '$controller', 'locationUtils', 'serverService'];
+FormNewServerController.$inject = ['server', '$scope', '$controller', 'serverService'];
 module.exports = FormNewServerController;

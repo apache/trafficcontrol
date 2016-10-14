@@ -1,4 +1,4 @@
-var DeliveryServiceService = function(Restangular, messageModel) {
+var DeliveryServiceService = function(Restangular, locationUtils, messageModel) {
 
     this.getDeliveryServices = function() {
         return Restangular.all('deliveryservices').getList();
@@ -11,13 +11,14 @@ var DeliveryServiceService = function(Restangular, messageModel) {
     this.createDeliveryService = function(deliveryService) {
         return Restangular.service('deliveryservices').post(deliveryService)
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'DeliveryService create failed' } ], false);
-            }
-        );
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
+                    locationUtils.navigateToPath('/configure/delivery-services');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     this.updateDeliveryService = function(deliveryService) {
@@ -26,8 +27,8 @@ var DeliveryServiceService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Delivery service update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -46,5 +47,5 @@ var DeliveryServiceService = function(Restangular, messageModel) {
 
 };
 
-DeliveryServiceService.$inject = ['Restangular', 'messageModel'];
+DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = DeliveryServiceService;

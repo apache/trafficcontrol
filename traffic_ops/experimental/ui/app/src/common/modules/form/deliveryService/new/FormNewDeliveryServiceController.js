@@ -1,4 +1,4 @@
-var FormNewDeliveryServiceController = function(deliveryService, $scope, $controller, locationUtils, deliveryServiceService) {
+var FormNewDeliveryServiceController = function(deliveryService, $scope, $controller, deliveryServiceService) {
 
     // extends the FormDeliveryServiceController to inherit common methods
     angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewDeliveryServiceController = function(deliveryService, $scope, $contro
     };
 
     $scope.save = function(deliveryService) {
-        deliveryServiceService.createDeliveryService(deliveryService).
-            then(function() {
-                locationUtils.navigateToPath('/configure/delivery-services');
-            });
+        deliveryServiceService.createDeliveryService(deliveryService);
     };
 
 };
 
-FormNewDeliveryServiceController.$inject = ['deliveryService', '$scope', '$controller', 'locationUtils', 'deliveryServiceService'];
+FormNewDeliveryServiceController.$inject = ['deliveryService', '$scope', '$controller', 'deliveryServiceService'];
 module.exports = FormNewDeliveryServiceController;

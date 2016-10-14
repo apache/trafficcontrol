@@ -1,4 +1,4 @@
-var FormNewUserController = function(user, $scope, $controller, locationUtils, userService) {
+var FormNewUserController = function(user, $scope, $controller, userService) {
 
     // extends the FormUserController to inherit common methods
     angular.extend(this, $controller('FormUserController', { user: user, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewUserController = function(user, $scope, $controller, locationUtils, u
     };
 
     $scope.confirmSave = function(user, usernameField) {
-        userService.createUser(user).
-            then(function() {
-                locationUtils.navigateToPath('/admin/users');
-            });
+        userService.createUser(user);
     };
 
 };
 
-FormNewUserController.$inject = ['user', '$scope', '$controller', 'locationUtils', 'userService'];
+FormNewUserController.$inject = ['user', '$scope', '$controller', 'userService'];
 module.exports = FormNewUserController;

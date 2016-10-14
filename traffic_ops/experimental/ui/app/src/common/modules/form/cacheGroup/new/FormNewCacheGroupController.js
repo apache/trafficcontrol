@@ -1,4 +1,4 @@
-var FormNewCacheGroupController = function(cacheGroup, $scope, $controller, locationUtils, cacheGroupService) {
+var FormNewCacheGroupController = function(cacheGroup, $scope, $controller, cacheGroupService) {
 
     // extends the FormCacheGroupController to inherit common methods
     angular.extend(this, $controller('FormCacheGroupController', { cacheGroup: cacheGroup, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewCacheGroupController = function(cacheGroup, $scope, $controller, loca
     };
 
     $scope.save = function(cacheGroup) {
-        cacheGroupService.createCacheGroup(cacheGroup).
-            then(function() {
-                locationUtils.navigateToPath('/configure/cache-groups');
-            });
+        cacheGroupService.createCacheGroup(cacheGroup);
     };
 
 };
 
-FormNewCacheGroupController.$inject = ['cacheGroup', '$scope', '$controller', 'locationUtils', 'cacheGroupService'];
+FormNewCacheGroupController.$inject = ['cacheGroup', '$scope', '$controller', 'cacheGroupService'];
 module.exports = FormNewCacheGroupController;

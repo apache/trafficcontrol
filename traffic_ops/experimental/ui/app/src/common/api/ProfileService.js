@@ -1,4 +1,4 @@
-var ProfileService = function(Restangular, messageModel) {
+var ProfileService = function(Restangular, locationUtils, messageModel) {
 
     this.getProfiles = function() {
         return Restangular.all('profiles').getList();
@@ -13,9 +13,10 @@ var ProfileService = function(Restangular, messageModel) {
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
+                locationUtils.navigateToPath('/admin/profiles');
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Profile create failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };
@@ -26,8 +27,8 @@ var ProfileService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Profile updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Profile update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
         );
     };
@@ -46,5 +47,5 @@ var ProfileService = function(Restangular, messageModel) {
 
 };
 
-ProfileService.$inject = ['Restangular', 'messageModel'];
+ProfileService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = ProfileService;
