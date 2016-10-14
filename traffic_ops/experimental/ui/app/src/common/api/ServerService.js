@@ -40,7 +40,7 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Server deleted' } ], true);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };

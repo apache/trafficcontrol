@@ -27,7 +27,7 @@ var RoleService = function(Restangular, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Role deleted' } ], true);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
         );
     };
