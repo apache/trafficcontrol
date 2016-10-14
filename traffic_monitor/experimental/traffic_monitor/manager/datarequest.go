@@ -419,23 +419,30 @@ func DataRequest(
 	toData todata.TODataThreadsafe,
 	localCacheStatus CacheAvailableStatusThreadsafe,
 	lastStats LastStatsThreadsafe,
+	unpolledCaches UnpolledCachesThreadsafe,
 ) (body []byte, responseCode int) {
+
 	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
-	handleErr := func(err error, requestType http_server.Type) {
+	handleErr := func(err error) {
 		if err == nil {
 			return
 		}
 		errorCount.Inc()
-		log.Errorf("Request Error: %v\n", fmt.Errorf(requestType.String()+": %v", err))
+		log.Errorf("Request Error: %v\n", fmt.Errorf(req.Type.String()+": %v", err))
 	}
 
 	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `http_server`.
-	commonReturn := func(body []byte, err error, requestType http_server.Type) ([]byte, int) {
+	commonReturn := func(body []byte, err error) ([]byte, int) {
 		if err == nil {
 			return body, http.StatusOK
 		}
-		handleErr(err, requestType)
+		handleErr(err)
 		return nil, http.StatusInternalServerError
+	}
+
+	if unpolledCaches.Any() {
+		handleErr(fmt.Errorf("service still starting, some caches unpolled"))
+		return []byte("Service Unavailable"), http.StatusServiceUnavailable
 	}
 
 	var err error
@@ -443,51 +450,51 @@ func DataRequest(
 	case http_server.TRConfig:
 		cdnName := opsConfig.Get().CdnName
 		if toSession == nil {
-			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"), req.Type)
+			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"))
 		}
 		if cdnName == "" {
-			return commonReturn(nil, fmt.Errorf("No CDN Configured"), req.Type)
+			return commonReturn(nil, fmt.Errorf("No CDN Configured"))
 		}
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.TRStateDerived:
 		body, err = peer.CrstatesMarshall(combinedStates.Get())
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.TRStateSelf:
 		body, err = peer.CrstatesMarshall(localStates.Get())
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.CacheStats:
 		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
-			handleErr(err, req.Type)
+			handleErr(err)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 		body, err = cache.StatsMarshall(statHistory.Get(), filter, req.Parameters)
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.DSStats:
 		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
 		if err != nil {
-			handleErr(err, req.Type)
+			handleErr(err)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 		body, err = json.Marshal(dsStats.Get().JSON(filter, req.Parameters)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.EventLog:
 		body, err = json.Marshal(JSONEvents{Events: events.Get()})
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.PeerStates:
 		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
-			handleErr(err, req.Type)
+			handleErr(err)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 
 		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter, req.Parameters))
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.StatSummary:
 		return nil, http.StatusNotImplemented
 	case http_server.Stats:
 		body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.ConfigDoc:
 		opsConfigCopy := opsConfig.Get()
 		// if the password is blank, leave it blank, so callers can see it's missing.
@@ -495,7 +502,7 @@ func DataRequest(
 			opsConfigCopy.Password = "*****"
 		}
 		body, err = json.Marshal(opsConfigCopy)
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.APICacheCount: // TODO determine if this should use peerStates
 		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
 	case http_server.APICacheAvailableCount:
@@ -515,7 +522,7 @@ func DataRequest(
 	case http_server.APICacheStates:
 		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
 			lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
-		return commonReturn(body, err, req.Type)
+		return commonReturn(body, err)
 	case http_server.APIBandwidthKbps:
 		serverTypes := toData.Get().ServerTypes
 		kbpsStats := lastStats.Get()
@@ -538,7 +545,7 @@ func DataRequest(
 		}
 		return []byte(fmt.Sprintf("%d", cap)), http.StatusOK
 	default:
-		return commonReturn(nil, fmt.Errorf("Unknown Request Type"), req.Type)
+		return commonReturn(nil, fmt.Errorf("Unknown Request Type"))
 	}
 }
 
