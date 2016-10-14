@@ -13,6 +13,7 @@ var trafficOps = angular.module('trafficOps', [
         'ngResource',
         'ngSanitize',
         'ngRoute',
+        'ngMap',
         'ui.router',
         'ui.bootstrap',
         'restangular',
