@@ -39,7 +39,7 @@ var RegionService = function(Restangular, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };

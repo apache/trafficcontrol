@@ -39,7 +39,7 @@ var TenantService = function(Restangular, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
