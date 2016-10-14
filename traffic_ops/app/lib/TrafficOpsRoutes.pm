@@ -578,6 +578,7 @@ sub api_routes {
 	# parameters for a profile
 	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
 	$r->get("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
+	$r->get( "/api/$version/parameters/profile/:name")->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
 	$r->post("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )
 		->to( 'ProfileParameter#create_param_for_profile_name', namespace => $namespace );
 	$r->post("/api/$version/profiles/:id/parameters")->over( authenticated => 1 )
