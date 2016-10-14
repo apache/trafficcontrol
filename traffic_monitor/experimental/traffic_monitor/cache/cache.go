@@ -50,7 +50,7 @@ type PrecomputedData struct {
 type Result struct {
 	Id        enum.CacheName
 	Available bool
-	Errors    []error
+	Error     error
 	Astats    Astats
 	Time      time.Time
 	Vitals    Vitals
@@ -138,8 +138,6 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	log.Debugf("poll %v %v handle start\n", pollId, time.Now())
 	result := Result{
 		Id:           enum.CacheName(id),
-		Available:    false,
-		Errors:       []error{},
 		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
 		PollID:       pollId,
 		PollFinished: pollFinished,
@@ -147,14 +145,14 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 
 	if err != nil {
 		log.Errorf("%v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
-		result.Errors = append(result.Errors, err)
+		result.Error = err
 		handler.ResultChannel <- result
 		return
 	}
 
 	if r == nil {
 		log.Errorf("%v handle reader nil\n", id)
-		result.Errors = append(result.Errors, fmt.Errorf("handler got nil reader"))
+		result.Error = fmt.Errorf("handler got nil reader")
 		handler.ResultChannel <- result
 		return
 	}
@@ -163,7 +161,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 
 	if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
 		log.Errorf("%s procnetdev decode error '%v'\n", id, err)
-		result.Errors = append(result.Errors, err)
+		result.Error = err
 		handler.ResultChannel <- result
 		return
 	}
@@ -179,7 +177,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
 
 	if err != nil {
-		result.Errors = append(result.Errors, err)
+		result.Error = err
 		log.Errorf("addkbps handle %s error '%v'\n", id, err)
 	} else {
 		result.Available = true

@@ -1,6 +1,7 @@
 package health
 
 import (
+	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
 	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
 	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
 
@@ -32,25 +33,28 @@ func getNumber(key string, intface map[string]interface{}) (float64, error) {
 }
 
 func setError(newResult *cache.Result, err error) {
-	newResult.Errors = append(newResult.Errors, err)
+	newResult.Error = err
 	newResult.Available = false
 }
 
 // Get the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) {
-
+	if newResult.Error != nil {
+		log.Errorf("cache_health.GetVitals() called with an errored Result!")
+		return
+	}
 	// proc.loadavg -- we're using the 1 minute average (!?)
 	// value looks like: "0.20 0.07 0.07 1/967 29536" (without the quotes)
 	loadAverages := strings.Fields(newResult.Astats.System.ProcLoadavg)
 	if len(loadAverages) > 0 {
 		oneMinAvg, err := strconv.ParseFloat(loadAverages[0], 64)
 		if err != nil {
-			setError(newResult, fmt.Errorf("Error converting load average string: %v", err))
+			setError(newResult, fmt.Errorf("Error converting load average string '%s': %v", newResult.Astats.System.ProcLoadavg, err))
 			return
 		}
 		newResult.Vitals.LoadAvg = oneMinAvg
 	} else {
-		setError(newResult, fmt.Errorf("Can't make sense of'", newResult.Astats.System.ProcLoadavg, "'as a load average for", newResult.Id))
+		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.Id))
 		return
 	}
 
@@ -64,13 +68,11 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 		var err error
 		newResult.Vitals.BytesOut, err = strconv.ParseInt(numbers[8], 10, 64)
 		if err != nil {
-			setError(newResult, err)
 			setError(newResult, fmt.Errorf("Error converting BytesOut from procnetdev: %v", err))
 			return
 		}
 		newResult.Vitals.BytesIn, err = strconv.ParseInt(numbers[0], 10, 64)
 		if err != nil {
-			setError(newResult, err)
 			setError(newResult, fmt.Errorf("Error converting BytesIn from procnetdev: %v", err))
 			return
 		}
@@ -103,6 +105,8 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 		return false, "set to OFFLINE"
 	case status == "ONLINE":
 		return true, "set to ONLINE"
+	case result.Error != nil:
+		return false, fmt.Sprintf("error: %v", result.Error)
 	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg:
 		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg)
 	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
