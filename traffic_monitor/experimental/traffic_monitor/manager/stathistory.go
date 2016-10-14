@@ -69,23 +69,45 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS TrafficMonitorConfigMapThreadsafe) map[enum.CacheName]struct{} {
+	monitorConfig := monitorConfigTS.Get()
+	caches := map[enum.CacheName]struct{}{}
+	for cacheName := range localStates.GetCaches() {
+		// ONLINE and OFFLINE caches are not polled.
+		// TODO add a function IsPolled() which can be called by this and the monitorConfig func which sets the polling, to prevent updating in one place breaking the other.
+		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.Status == "ONLINE" || ts.Status == "OFFLINE" {
+			continue
+		}
+		caches[cacheName] = struct{}{}
+	}
+	return caches
+}
+
 // StartStatHistoryManager fetches the full statistics data from ATS Astats. This includes everything needed for all calculations, such as Delivery Services. This is expensive, though, and may be hard on ATS, so it should poll less often.
 // For a fast 'is it alive' poll, use the Health Result Manager poll.
-// Returns the stat history, the duration between the stat poll for each cache, the last Kbps data, and the calculated Delivery Service stats.
+// Returns the stat history, the duration between the stat poll for each cache, the last Kbps data, the calculated Delivery Service stats, and the unpolled caches list.
 func StartStatHistoryManager(
 	cacheStatChan <-chan cache.Result,
+	localStates peer.CRStatesThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	toData todata.TODataThreadsafe,
+	cachesChanged <-chan struct{},
 	errorCount UintThreadsafe,
 	cfg config.Config,
-) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsThreadsafe) {
+	monitorConfig TrafficMonitorConfigMapThreadsafe,
+) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsThreadsafe, UnpolledCachesThreadsafe) {
 	statHistory := NewStatHistoryThreadsafe(cfg.MaxStatHistory)
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastStats := NewLastStatsThreadsafe()
 	dsStats := NewDSStatsThreadsafe()
+	unpolledCaches := NewUnpolledCachesThreadsafe()
 	tickInterval := cfg.StatFlushInterval
 	go func() {
+
+		<-cachesChanged // wait for the signal that localStates have been set
+		unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
+
 		for {
 			var results []cache.Result
 			results = append(results, <-cacheStatChan)
@@ -93,23 +115,25 @@ func StartStatHistoryManager(
 		innerLoop:
 			for {
 				select {
+				case <-cachesChanged:
+					unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 				case <-tick:
 					log.Warnf("StatHistoryManager flushing queued results\n")
-					processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations)
+					processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches)
 					break innerLoop
 				default:
 					select {
 					case r := <-cacheStatChan:
 						results = append(results, r)
 					default:
-						processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations)
+						processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches)
 						break innerLoop
 					}
 				}
 			}
 		}
 	}()
-	return statHistory, lastStatDurations, lastStats, dsStats
+	return statHistory, lastStatDurations, lastStats, dsStats, unpolledCaches
 }
 
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
@@ -123,6 +147,7 @@ func processStatResults(
 	dsStats DSStatsThreadsafe,
 	lastStatEndTimes map[enum.CacheName]time.Time,
 	lastStatDurationsThreadsafe DurationMapThreadsafe,
+	unpolledCaches UnpolledCachesThreadsafe,
 ) {
 	statHistory := statHistoryThreadsafe.Get().Copy()
 	maxStats := statHistoryThreadsafe.Max()
@@ -163,4 +188,5 @@ func processStatResults(
 		result.PollFinished <- result.PollID
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
+	unpolledCaches.SetPolled(results, lastStats)
 }

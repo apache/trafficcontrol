@@ -70,6 +70,7 @@ func StartMonitorConfigManager(
 	statUrlSubscriber chan<- poller.HttpPollerConfig,
 	healthUrlSubscriber chan<- poller.HttpPollerConfig,
 	peerUrlSubscriber chan<- poller.HttpPollerConfig,
+	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData StaticAppData,
 ) TrafficMonitorConfigMapThreadsafe {
@@ -80,6 +81,7 @@ func StartMonitorConfigManager(
 		statUrlSubscriber,
 		healthUrlSubscriber,
 		peerUrlSubscriber,
+		cachesChangeSubscriber,
 		cfg,
 		staticAppData,
 	)
@@ -95,6 +97,7 @@ func monitorConfigListen(
 	statUrlSubscriber chan<- poller.HttpPollerConfig,
 	healthUrlSubscriber chan<- poller.HttpPollerConfig,
 	peerUrlSubscriber chan<- poller.HttpPollerConfig,
+	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData StaticAppData,
 ) {
@@ -161,6 +164,8 @@ func monitorConfigListen(
 					localStates.DeleteCache(cacheName)
 				}
 			}
+
+			cachesChangeSubscriber <- struct{}{}
 
 			// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
 			for _, ds := range monitorConfig.DeliveryService {

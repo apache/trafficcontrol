@@ -66,26 +66,35 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
 
+	cachesChanged := make(chan struct{})
+
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,
 		localStates,
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel,
+		cachesChanged,
 		cfg,
-		staticAppData)
+		staticAppData,
+	)
 
 	combinedStates := StartPeerManager(
 		peerHandler.ResultChannel,
 		localStates,
-		peerStates)
+		peerStates,
+	)
 
-	statHistory, _, lastKbpsStats, dsStats := StartStatHistoryManager(
+	statHistory, _, lastKbpsStats, dsStats, unpolledCaches := StartStatHistoryManager(
 		cacheStatHandler.ResultChannel,
+		localStates,
 		combinedStates,
 		toData,
+		cachesChanged,
 		errorCount,
-		cfg)
+		cfg,
+		monitorConfig,
+	)
 
 	lastHealthDurations, events, localCacheStatus := StartHealthResultManager(
 		cacheHealthHandler.ResultChannel,
@@ -97,7 +106,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		combinedStates,
 		fetchCount,
 		errorCount,
-		cfg)
+		cfg,
+	)
 
 	StartOpsConfigManager(
 		opsConfigFile,
@@ -118,7 +128,9 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		fetchCount,
 		healthIteration,
 		errorCount,
-		localCacheStatus)
+		localCacheStatus,
+		unpolledCaches,
+	)
 
 	healthTickListener(cacheHealthPoller.TickChan, healthIteration)
 }
