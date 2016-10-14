@@ -1,7 +1,7 @@
 var TypeService = function(Restangular, locationUtils, messageModel) {
 
-    this.getTypes = function() {
-        return Restangular.all('types').getList();
+    this.getTypes = function(useInTable) {
+        return Restangular.all('types').getList({ useInTable: useInTable });
     };
 
     this.getType = function(id) {

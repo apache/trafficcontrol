@@ -15,7 +15,7 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
     };
 
     var getTypes = function() {
-        typeService.getTypes()
+        typeService.getTypes('server')
             .then(function(result) {
                 $scope.types = result;
             });

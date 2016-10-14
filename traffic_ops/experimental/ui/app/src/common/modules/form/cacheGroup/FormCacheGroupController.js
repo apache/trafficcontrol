@@ -8,7 +8,7 @@ var FormCacheGroupController = function(cacheGroup, $scope, formUtils, locationU
     };
 
     var getTypes = function() {
-        typeService.getTypes()
+        typeService.getTypes('cachegroup')
             .then(function(result) {
                 $scope.types = result;
             });
