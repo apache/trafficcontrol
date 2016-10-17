@@ -12,7 +12,7 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Frequently Asked Questions](http://traffic-control-cdn.net/docs/latest/faq/index.html)
 * [Found a bug or file a feature request](https://issues.apache.org/jira/browse/TC/?selectedTab=com.atlassian.jira.jira-projects-plugin:summary-panel)
 * [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
-* [Subscribe to our dev list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
+* [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.incubator.apache.org)
 * [Search the email archives](https://lists.apache.org/list.html?dev@trafficcontrol.apache.org)
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
