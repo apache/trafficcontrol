@@ -18,7 +18,7 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 
 ##### News
 * 17-October 2016 Traffic Control is now Apache Traffic Control (incubating)!
-    Code has been moved to Apache, use the new repo https://github.com/knutsel/incubator-trafficcontrol to create PRs. 
+    Code has been moved to Apache, use the new repo https://github.com/apache/incubator-trafficcontrol to create PRs. 
 	Mailing list have been updated, use the udpated links above. Website will be updated and moved soon.
 	Please bear with us as we move our project into the Apache incubator, and start aligning with the Apache 
 	processes.
