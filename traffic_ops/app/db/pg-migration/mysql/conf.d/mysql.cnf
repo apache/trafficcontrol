@@ -1,0 +1,8 @@
+# This is custom config file attached from docker host
+
+[mysql]
+default_character_set = utf8
+
+[mysqld]
+character_set_server = utf8          # If you prefer utf8
+collation_server = utf8_general_ci
