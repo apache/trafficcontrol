@@ -85,7 +85,7 @@ func (s Server) registerEndpoints(sm *http.ServeMux) error {
 // Run runs a new HTTP service at the given addr, making data requests to the given c.
 // Run may be called repeatedly, and each time, will shut down any existing service first.
 // Run is NOT threadsafe, and MUST NOT be called concurrently by multiple goroutines.
-func (s Server) Run(f GetDataFunc, addr string) error {
+func (s Server) Run(f GetDataFunc, addr string, readTimeout time.Duration, writeTimeout time.Duration) error {
 	// TODO make an object, which itself is not threadsafe, but which encapsulates all data so multiple
 	//      objects can be created and Run.
 
@@ -115,8 +115,8 @@ func (s Server) Run(f GetDataFunc, addr string) error {
 	server := &http.Server{
 		Addr:           addr,
 		Handler:        sm,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 
