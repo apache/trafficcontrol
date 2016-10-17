@@ -18,7 +18,7 @@ var FormLocationController = function(location, $scope, formUtils, stringUtils, 
         { name: 'zip', type: 'text', required: true, maxLength: 5 },
         { name: 'poc', type: 'text', required: false, maxLength: 128 },
         { name: 'phone', type: 'text', required: false, maxLength: 45 },
-        { name: 'email', type: 'text', required: false, maxLength: 128 }
+        { name: 'email', type: 'email', required: false, maxLength: 128 }
     ];
 
     $scope.labelize = stringUtils.labelize;

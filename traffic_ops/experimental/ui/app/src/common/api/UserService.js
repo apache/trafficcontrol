@@ -1,4 +1,4 @@
-var UserService = function(Restangular, $http, $location, $q, authService, userModel, messageModel, ENV) {
+var UserService = function(Restangular, $http, $location, $q, authService, locationUtils, userModel, messageModel, ENV) {
 
     var service = this;
 
@@ -55,9 +55,10 @@ var UserService = function(Restangular, $http, $location, $q, authService, userM
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
+                    locationUtils.navigateToPath('/admin/users');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -68,8 +69,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, userM
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -80,13 +81,13 @@ var UserService = function(Restangular, $http, $location, $q, authService, userM
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
 
 };
 
-UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'userModel', 'messageModel', 'ENV'];
+UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];
 module.exports = UserService;

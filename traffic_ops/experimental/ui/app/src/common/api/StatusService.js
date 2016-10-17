@@ -1,4 +1,4 @@
-var StatusService = function(Restangular, messageModel) {
+var StatusService = function(Restangular, locationUtils, messageModel) {
 
     this.getStatuses = function() {
         return Restangular.all('statuses').getList();
@@ -13,9 +13,10 @@ var StatusService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
+                    locationUtils.navigateToPath('/admin/statuses');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Status create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -26,8 +27,8 @@ var StatusService = function(Restangular, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Status updated' } ], false);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Status update failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };
@@ -35,16 +36,16 @@ var StatusService = function(Restangular, messageModel) {
     this.deleteStatus = function(id) {
         return Restangular.one("statuses", id).remove()
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Status delete failed' } ], false);
-            }
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
         );
     };
 
 };
 
-StatusService.$inject = ['Restangular', 'messageModel'];
+StatusService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = StatusService;

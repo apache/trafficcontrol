@@ -1,4 +1,4 @@
-var FormNewParameterController = function(parameter, $scope, $controller, locationUtils, parameterService) {
+var FormNewParameterController = function(parameter, $scope, $controller, parameterService) {
 
     // extends the FormParameterController to inherit common methods
     angular.extend(this, $controller('FormParameterController', { parameter: parameter, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewParameterController = function(parameter, $scope, $controller, locati
     };
 
     $scope.save = function(parameter) {
-        parameterService.createParameter(parameter).
-            then(function() {
-                locationUtils.navigateToPath('/admin/parameters');
-            });
+        parameterService.createParameter(parameter);
     };
 
 };
 
-FormNewParameterController.$inject = ['parameter', '$scope', '$controller', 'locationUtils', 'parameterService'];
+FormNewParameterController.$inject = ['parameter', '$scope', '$controller', 'parameterService'];
 module.exports = FormNewParameterController;

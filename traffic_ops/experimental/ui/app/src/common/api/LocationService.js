@@ -1,4 +1,4 @@
-var LocationService = function(Restangular, messageModel) {
+var LocationService = function(Restangular, locationUtils, messageModel) {
 
     this.getLocations = function() {
         return Restangular.all('phys_locations').getList();
@@ -13,9 +13,11 @@ var LocationService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location created' } ], true);
+                    locationUtils.navigateToPath('/admin/locations');
+
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Location create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -26,8 +28,8 @@ var LocationService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Location update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -38,13 +40,13 @@ var LocationService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Location deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Location delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
 
 };
 
-LocationService.$inject = ['Restangular', 'messageModel'];
+LocationService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = LocationService;

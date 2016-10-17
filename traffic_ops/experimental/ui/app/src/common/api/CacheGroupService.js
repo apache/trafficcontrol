@@ -1,4 +1,4 @@
-var CacheGroupService = function(Restangular, messageModel) {
+var CacheGroupService = function(Restangular, locationUtils, messageModel) {
 
     this.getCacheGroups = function() {
         return Restangular.all('cachegroups').getList();
@@ -13,9 +13,10 @@ var CacheGroupService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CacheGroup created' } ], true);
+                    locationUtils.navigateToPath('/configure/cache-groups');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CacheGroup create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -26,8 +27,8 @@ var CacheGroupService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Cache group updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Cache group update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -38,13 +39,13 @@ var CacheGroupService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Cache group deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Cache group delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
 
 };
 
-CacheGroupService.$inject = ['Restangular', 'messageModel'];
+CacheGroupService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = CacheGroupService;

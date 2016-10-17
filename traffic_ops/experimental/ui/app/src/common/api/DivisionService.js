@@ -1,4 +1,4 @@
-var DivisionService = function(Restangular, messageModel) {
+var DivisionService = function(Restangular, locationUtils, messageModel) {
 
     this.getDivisions = function() {
         return Restangular.all('divisions').getList();
@@ -13,9 +13,10 @@ var DivisionService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division created' } ], true);
+                    locationUtils.navigateToPath('/admin/divisions');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Division create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -26,8 +27,8 @@ var DivisionService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Division update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -38,13 +39,13 @@ var DivisionService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Division delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
 
 };
 
-DivisionService.$inject = ['Restangular', 'messageModel'];
+DivisionService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = DivisionService;

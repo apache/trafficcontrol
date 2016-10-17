@@ -1,4 +1,4 @@
-var FormNewASNController = function(asn, $scope, $controller, locationUtils, asnService) {
+var FormNewASNController = function(asn, $scope, $controller, asnService) {
 
     // extends the FormASNController to inherit common methods
     angular.extend(this, $controller('FormASNController', { asn: asn, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewASNController = function(asn, $scope, $controller, locationUtils, asn
     };
 
     $scope.save = function(asn) {
-        asnService.createASN(asn).
-            then(function() {
-                locationUtils.navigateToPath('/admin/asns');
-            });
+        asnService.createASN(asn);
     };
 
 };
 
-FormNewASNController.$inject = ['asn', '$scope', '$controller', 'locationUtils', 'asnService'];
+FormNewASNController.$inject = ['asn', '$scope', '$controller', 'asnService'];
 module.exports = FormNewASNController;

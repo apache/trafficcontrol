@@ -1,4 +1,4 @@
-var CDNService = function(Restangular, messageModel) {
+var CDNService = function(Restangular, locationUtils, messageModel) {
 
     this.getCDNs = function() {
         return Restangular.all('cdns').getList();
@@ -13,9 +13,10 @@ var CDNService = function(Restangular, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
+                    locationUtils.navigateToPath('/admin/cdns');
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CDN create failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -26,8 +27,8 @@ var CDNService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CDN update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -38,13 +39,13 @@ var CDNService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'CDN delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
 
 };
 
-CDNService.$inject = ['Restangular', 'messageModel'];
+CDNService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = CDNService;

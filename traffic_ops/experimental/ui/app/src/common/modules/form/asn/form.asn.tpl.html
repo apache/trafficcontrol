@@ -12,9 +12,10 @@
             <div class="form-group" ng-class="{'has-error': hasError(asnForm.asn), 'has-feedback': hasError(asnForm.asn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">ASN *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="asn" name="asn" type="text" class="form-control" ng-model="asn.asn" ng-required="true" ng-maxlength="11" autofocus>
+                    <input id="asn" name="asn" type="text" class="form-control" ng-model="asn.asn" ng-required="true" ng-maxlength="11" ng-pattern="/^\d+$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(asnForm.asn, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(asnForm.asn, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(asnForm.asn, 'pattern')">Number</small>
                     <span ng-show="hasError(asnForm.asn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

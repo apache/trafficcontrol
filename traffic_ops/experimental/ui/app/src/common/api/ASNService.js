@@ -1,4 +1,4 @@
-var ASNService = function(Restangular, messageModel) {
+var ASNService = function(Restangular, locationUtils, messageModel) {
 
     this.getASNs = function() {
         return Restangular.all('asns').getList();
@@ -11,13 +11,14 @@ var ASNService = function(Restangular, messageModel) {
     this.createASN = function(asn) {
         return Restangular.service('asns').post(asn)
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'ASN create failed' } ], false);
-            }
-        );
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
+                    locationUtils.navigateToPath('/admin/asns');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     this.updateASN = function(asn) {
@@ -26,8 +27,8 @@ var ASNService = function(Restangular, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'ASN updated' } ], false);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'ASN update failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, false);
             }
         );
     };
@@ -38,13 +39,13 @@ var ASNService = function(Restangular, messageModel) {
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'ASN deleted' } ], true);
             },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'ASN delete failed' } ], false);
+            function(fault) {
+                messageModel.setMessages(fault.data.alerts, true);
             }
         );
     };
 
 };
 
-ASNService.$inject = ['Restangular', 'messageModel'];
+ASNService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = ASNService;

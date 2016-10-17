@@ -1,4 +1,4 @@
-var FormNewCDNController = function(cdn, $scope, $controller, locationUtils, cdnService) {
+var FormNewCDNController = function(cdn, $scope, $controller, cdnService) {
 
     // extends the FormCDNController to inherit common methods
     angular.extend(this, $controller('FormCDNController', { cdn: cdn, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewCDNController = function(cdn, $scope, $controller, locationUtils, cdn
     };
 
     $scope.save = function(cdn) {
-        cdnService.createCDN(cdn).
-            then(function() {
-                locationUtils.navigateToPath('/admin/cdns');
-            });
+        cdnService.createCDN(cdn)
     };
 
 };
 
-FormNewCDNController.$inject = ['cdn', '$scope', '$controller', 'locationUtils', 'cdnService'];
+FormNewCDNController.$inject = ['cdn', '$scope', '$controller', 'cdnService'];
 module.exports = FormNewCDNController;

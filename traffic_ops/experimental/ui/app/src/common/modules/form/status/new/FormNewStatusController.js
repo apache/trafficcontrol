@@ -1,4 +1,4 @@
-var FormNewStatusController = function(status, $scope, $controller, locationUtils, statusService) {
+var FormNewStatusController = function(status, $scope, $controller, statusService) {
 
     // extends the FormStatusController to inherit common methods
     angular.extend(this, $controller('FormStatusController', { status: status, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewStatusController = function(status, $scope, $controller, locationUtil
     };
 
     $scope.save = function(status) {
-        statusService.createStatus(status).
-            then(function() {
-                locationUtils.navigateToPath('/admin/statuses');
-            });
+        statusService.createStatus(status);
     };
 
 };
 
-FormNewStatusController.$inject = ['status', '$scope', '$controller', 'locationUtils', 'statusService'];
+FormNewStatusController.$inject = ['status', '$scope', '$controller', 'statusService'];
 module.exports = FormNewStatusController;

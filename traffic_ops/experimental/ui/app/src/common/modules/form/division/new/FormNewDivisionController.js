@@ -1,4 +1,4 @@
-var FormNewDivisionController = function(division, $scope, $controller, locationUtils, divisionService) {
+var FormNewDivisionController = function(division, $scope, $controller, divisionService) {
 
     // extends the FormDivisionController to inherit common methods
     angular.extend(this, $controller('FormDivisionController', { division: division, $scope: $scope }));
@@ -11,13 +11,10 @@ var FormNewDivisionController = function(division, $scope, $controller, location
     };
 
     $scope.save = function(division) {
-        divisionService.createDivision(division).
-            then(function() {
-                locationUtils.navigateToPath('/admin/divisions');
-            });
+        divisionService.createDivision(division)
     };
 
 };
 
-FormNewDivisionController.$inject = ['division', '$scope', '$controller', 'locationUtils', 'divisionService'];
+FormNewDivisionController.$inject = ['division', '$scope', '$controller', 'divisionService'];
 module.exports = FormNewDivisionController;

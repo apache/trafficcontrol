@@ -16,6 +16,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.secure;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
@@ -34,12 +35,15 @@ public class CertificatesClient {
 	private static final String PEM_FOOTER_PREFIX = "-----END";
 	private long lastValidfetchTimestamp = 0L;
 	private boolean shutdown = false;
+	private TrafficRouterManager trafficRouterManager;
 
 	public List<CertificateData> refreshData() {
 		final StringBuilder stringBuilder = new StringBuilder();
+		trafficRouterManager.trackEvent("lastHttpsCertificatesFetchAttempt");
 		int status = fetchRawData(stringBuilder);
 
 		while (status != HttpURLConnection.HTTP_NOT_MODIFIED && status != HttpURLConnection.HTTP_OK) {
+			trafficRouterManager.trackEvent("lastHttpsCertificatesFetchFail");
 			try {
 				Thread.sleep(trafficOpsUtils.getConfigLongValue("certificates.retry.interval", 30 * 1000L));
 			} catch (InterruptedException e) {
@@ -49,6 +53,8 @@ public class CertificatesClient {
 					return null;
 				}
 			}
+
+			trafficRouterManager.trackEvent("lastHttpsCertificatesFetchAttempt");
 			status = fetchRawData(stringBuilder);
 		}
 
@@ -57,6 +63,7 @@ public class CertificatesClient {
 		}
 
 		lastValidfetchTimestamp = System.currentTimeMillis();
+		trafficRouterManager.trackEvent("lastHttpsCertificatesFetchSuccess");
 		return getCertificateData(stringBuilder.toString());
 	}
 
@@ -126,5 +133,13 @@ public class CertificatesClient {
 
 	public void setShutdown(final boolean shutdown) {
 		this.shutdown = true;
+	}
+
+	public TrafficRouterManager getTrafficRouterManager() {
+		return trafficRouterManager;
+	}
+
+	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
+		this.trafficRouterManager = trafficRouterManager;
 	}
 }

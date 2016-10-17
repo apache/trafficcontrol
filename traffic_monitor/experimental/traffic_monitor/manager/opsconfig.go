@@ -58,6 +58,7 @@ func StartOpsConfigManager(
 	healthIteration UintThreadsafe,
 	errorCount UintThreadsafe,
 	localCacheStatus CacheAvailableStatusThreadsafe,
+	unpolledCaches UnpolledCachesThreadsafe,
 ) OpsConfigThreadsafe {
 
 	opsConfigFileChannel := make(chan interface{})
@@ -99,7 +100,27 @@ func StartOpsConfigManager(
 				}
 
 				err = httpServer.Run(func(req http_server.DataRequest) ([]byte, int) {
-					return DataRequest(req, opsConfig, toSession, localStates, peerStates, combinedStates, statHistory, dsStats, events, staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, toData, localCacheStatus, lastStats)
+					return DataRequest(
+						req,
+						opsConfig,
+						toSession,
+						localStates,
+						peerStates,
+						combinedStates,
+						statHistory,
+						dsStats,
+						events,
+						staticAppData,
+						healthPollInterval,
+						lastHealthDurations,
+						fetchCount,
+						healthIteration,
+						errorCount,
+						toData,
+						localCacheStatus,
+						lastStats,
+						unpolledCaches,
+					)
 				}, listenAddress)
 				if err != nil {
 					handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))

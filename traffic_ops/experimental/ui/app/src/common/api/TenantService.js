@@ -11,12 +11,12 @@ var TenantService = function(Restangular, messageModel) {
     this.createTenant = function(tenant) {
         return Restangular.service('tenant').post(tenant)
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
-            },
-            function() {
-                messageModel.setMessages([ { level: 'error', text: 'Tenant create failed' } ], false);
-            }
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
         );
     };
 
@@ -26,8 +26,8 @@ var TenantService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Tenant updated' } ], false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Tenant update failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -38,8 +38,8 @@ var TenantService = function(Restangular, messageModel) {
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'Tenant delete failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
