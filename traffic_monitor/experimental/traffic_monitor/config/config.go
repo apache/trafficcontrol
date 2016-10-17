@@ -27,6 +27,8 @@ type Config struct {
 	LogLocationWarning           string        `json:"log_location_warning"`
 	LogLocationInfo              string        `json:"log_location_info"`
 	LogLocationDebug             string        `json:"log_location_debug"`
+	ServeReadTimeout             time.Duration `json:"-"`
+	ServeWriteTimeout            time.Duration `json:"-"`
 }
 
 var DefaultConfig = Config{
@@ -44,6 +46,8 @@ var DefaultConfig = Config{
 	LogLocationWarning:           LogLocationStdout,
 	LogLocationInfo:              LogLocationNull,
 	LogLocationDebug:             LogLocationNull,
+	ServeReadTimeout:             10 * time.Second,
+	ServeWriteTimeout:            10 * time.Second,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -57,6 +61,8 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
+		ServeReadTimeoutMs             uint64 `json:"serve_read_timeout_ms"`
+		ServeWriteTimeoutMs            uint64 `json:"serve_write_timeout_ms"`
 		*Alias
 	}{
 		CacheHealthPollingIntervalMs:   uint64(c.CacheHealthPollingInterval / time.Millisecond),
@@ -80,6 +86,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
+		ServeReadTimeoutMs             *uint64 `json:"serve_read_timeout_ms"`
+		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -108,6 +116,12 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.StatFlushIntervalMs != nil {
 		c.StatFlushInterval = time.Duration(*aux.StatFlushIntervalMs) * time.Millisecond
+	}
+	if aux.ServeReadTimeoutMs != nil {
+		c.ServeReadTimeout = time.Duration(*aux.ServeReadTimeoutMs) * time.Millisecond
+	}
+	if aux.ServeWriteTimeoutMs != nil {
+		c.ServeWriteTimeout = time.Duration(*aux.ServeWriteTimeoutMs) * time.Millisecond
 	}
 	return nil
 }
