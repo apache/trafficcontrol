@@ -1,0 +1,9 @@
+FROM postgres:9.6
+
+MAINTAINER Dan Kirkwood
+
+# Adjust PostgreSQL configuration so that remote connections to the
+# database are possible.
+RUN echo "host all  all    0.0.0.0/0  md5" >> $PGDATA/pg_hba.conf
+RUN echo "listen_addresses='*'" >> $PGDATA/postgresql.conf
+EXPOSE "5432:5432"

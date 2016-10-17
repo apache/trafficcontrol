@@ -1,0 +1,8 @@
+FROM dimitri/pgloader
+MAINTAINER Dan Kirkwood <dangogh@apache.org>
+
+# install nc to check that postgres and mysql are ready..
+RUN apt-get -y install netcat
+
+ADD runpgloader.sh .
+CMD ./runpgloader.sh

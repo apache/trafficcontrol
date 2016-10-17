@@ -1,0 +1,40 @@
+version: '2'
+services:
+  mysql_host:
+    image: mysql:5.6
+    restart: "no"
+    environment:
+      - MYSQL_DATABASE=traffic_ops_db
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_PASSWORD=twelve
+      - MYSQL_USER=to_user
+    volumes:
+      - ./mysql/conf.d:/etc/mysql/conf.d
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+
+  postgres_host:
+    build:
+      dockerfile: pg-migration/Dockerfile-postgres
+      context: ..
+    restart: "no"
+    environment:
+      - POSTGRES_DB=traffic_ops
+      - POSTGRES_PASSWORD=twelve
+      - POSTGRES_USER=traffic_ops
+    ports:
+      - "5432:5432"
+
+  pgloader:
+    build:
+      dockerfile: Dockerfile-pgloader
+      context: .
+    restart: "no"
+    environment:
+      - MYSQL_HOST=mysql_host
+      - MYSQL_DATABASE=traffic_ops_db
+      - MYSQL_PASSWORD=twelve
+      - MYSQL_USER=to_user
+      - POSTGRES_HOST=postgres_host
+      - POSTGRES_DB=traffic_ops
+      - POSTGRES_PASSWORD=twelve
+      - POSTGRES_USER=traffic_ops
