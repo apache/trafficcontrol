@@ -55,4 +55,4 @@ function initBuildArea() {
 importFunctions
 checkEnvironment npm node
 initBuildArea
-buildRpm traffic_portal
+buildRpm traffic_ops_v2
