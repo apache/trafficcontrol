@@ -9,11 +9,12 @@ echo "BRANCH=${BRANCH:=master}"
 
 set -x
 git clone $GITREPO -b $BRANCH traffic_control
+distdir=$(pwd)/traffic_control/dist
 
 cd traffic_control/traffic_ops/experimental/ui
 ./build/build_rpm.sh
 mkdir -p /artifacts
-cp ../dist/* /artifacts/.
+cp $distdir/* /artifacts/.
 
 # Clean up for next build
 cd -
