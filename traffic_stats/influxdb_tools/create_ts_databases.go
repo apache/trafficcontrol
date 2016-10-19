@@ -83,6 +83,8 @@ func createCacheStats(client influx.Client, replication *string) {
 	createContinuousQuery(client, "connections_cdn_type_1min", `CREATE CONTINUOUS QUERY connections_cdn_type_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS "value" INTO "cache_stats"."monthly"."connections.cdn.type.1min" FROM "cache_stats"."monthly"."connections.1min" GROUP BY time(1m), cdn, type END`)
 	createContinuousQuery(client, "maxKbps_1min", `CREATE CONTINUOUS QUERY maxKbps_1min ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS value INTO cache_stats.monthly."maxkbps.1min" FROM cache_stats.daily.maxKbps GROUP BY time(1m), * END`)
 	createContinuousQuery(client, "maxkbps_cdn_1min", `CREATE CONTINUOUS QUERY maxkbps_cdn_1min ON cache_stats RESAMPLE FOR 5m BEGIN SELECT sum(value) AS value INTO cache_stats.monthly."maxkbps.cdn.1min" FROM cache_stats.monthly."maxkbps.1min" GROUP BY time(1m), cdn END`)
+	createContinuousQuery(client, "wrap_count_vol1_1m", `CREATE CONTINUOUS QUERY wrap_count_vol1_1m ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS vol1_wrap_count INTO cache_stats.monthly."wrap_count.1min" FROM cache_stats.daily."ats.proxy.process.cache.volume_1.wrap_count" GROUP BY time(1m), * END`)
+	createContinuousQuery(client, "wrap_count_vol2_1m", `CREATE CONTINUOUS QUERY wrap_count_vol2_1m ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS vol2_wrap_count INTO cache_stats.monthly."wrap_count.1min" FROM cache_stats.daily."ats.proxy.process.cache.volume_2.wrap_count" GROUP BY time(1m), * END`)
 }
 
 func createDeliveryServiceStats(client influx.Client, replication *string) {
