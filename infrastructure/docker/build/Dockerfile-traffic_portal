@@ -8,7 +8,7 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-ENV GITREPO https://github.com/Comcast/traffic_control
+ENV GITREPO https://github.com/apache/incubator-trafficcontrol
 ENV BRANCH master
 
 WORKDIR /repo
