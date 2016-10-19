@@ -1,6 +1,30 @@
 
 # Rpm Build Instructions
 
+##  Using `docker-compose`
+
+We are moving toward using a docker-based build system.  This eliminates the need to maintain a local installation with all the
+build tools as well as ensuring that you are using the same versions as we use for testing.
+
+These are the versions of these tools we are using:
+* docker 1.12.2
+* docker-compose 1.8.1
+
+You can build from any repository/branch combination,  but that repository must be available to `git clone ...`.  Note that in the
+following `docker-compose` commands, you can limit building to one or more sub-projects by supplying arguments at the end.  If none
+are supplied,  then *all* will be run.
+
+Starting at the top-level of your trafficcontrol git clone (e.g. `~/src/incubator-trafficcontrol`):
+
+> cd infrastructure/docker/build
+> docker-compose build traffic_ops_build traffic_monitor_build ...
+> GITREPO=https://github.com/username/incubator-trafficcontrol BRANCH=mybranch docker-compose up traffic_ops_build traffic_monitor_build ...
+
+The resulting `.rpm` files will be created in the `artifacts` directory.
+
+
+## Building the old-fashioned way
+
 rpm files for all sub-projects can be built using the file `build/build.sh`.  If this script is given parameters, it will build only
 those projects specified on the command line, e.g.  `$ ./build/build.sh traffic_ops`.  The prerequisites for each sub-project are
 listed below.
