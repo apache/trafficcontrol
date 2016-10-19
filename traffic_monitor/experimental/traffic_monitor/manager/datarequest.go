@@ -31,9 +31,8 @@ type CacheState struct {
 }
 
 type ApiPeerStates struct {
-	Peers       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
-	QueryParams string                                                      `json:"pp"`
-	DateStr     string                                                      `json:"date"`
+	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	CommonAPIData
 }
 
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
@@ -674,9 +673,8 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 
 func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) ApiPeerStates {
 	apiPeerStates := ApiPeerStates{
-		Peers:       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
-		QueryParams: http_server.ParametersStr(params),
-		DateStr:     http_server.DateStr(time.Now()),
+		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
+		CommonAPIData: http_server.GetCommonAPIData(params, time.Now()),
 	}
 
 	for peer, state := range peerStates {

@@ -22,11 +22,10 @@ type StatOld struct {
 	Span  int    `json:"span,omitempty"`  // TODO set? remove?
 	Index int    `json:"index,omitempty"` // TODO set? remove?
 }
+
 type StatsOld struct {
-	// TODO move QueryParams, DateStr to a 'EndpointCommon' struct
 	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
-	QueryParams     string                                              `json:"pp"`
-	DateStr         string                                              `json:"date"`
+	CommonAPIData
 }
 
 type StatsReadonly interface {

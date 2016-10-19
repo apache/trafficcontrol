@@ -475,8 +475,7 @@ func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsO
 	now := time.Now().Unix()
 	jsonObj := &dsdata.StatsOld{
 		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
-		QueryParams:     http_server.ParametersStr(params),
-		DateStr:         http_server.DateStr(time.Now()),
+		CommonAPIData:   http_server.GetCommonAPIData(params, time.Now()),
 	}
 
 	for deliveryService, stat := range dsStats.DeliveryService {
