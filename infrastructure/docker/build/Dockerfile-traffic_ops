@@ -26,7 +26,7 @@ RUN yum install -y \
 
 
 # all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
-ENV GITREPO=https://github.com/Comcast/traffic_control
+ENV GITREPO=https://github.com/apache/incubator-trafficcontrol
 ENV BRANCH=master
 
 WORKDIR /repo
