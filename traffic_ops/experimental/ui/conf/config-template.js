@@ -39,11 +39,11 @@ module.exports = {
 	},
 	// default files location (this is where the traffic ops html, css and javascript was installed)
 	files: {
-		static: '/opt/traffic_ops/public'
+		static: '/opt/traffic_ops_v2/public'
 	},
 	// default log location (this is where traffic_ops logs are written)
 	log: {
-		stream: '/var/log/traffic_ops/access.log'
+		stream: '/var/log/traffic_ops_v2/access.log'
 	},
 	reject_unauthorized: 0 // 0 if using self-signed certs, 1 if trusted certs
 };
