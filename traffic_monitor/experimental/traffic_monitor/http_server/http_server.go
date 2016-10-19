@@ -12,6 +12,18 @@ import (
 	"time"
 )
 
+func GetCommonAPIData(params url.Values, time time.Time) CommonAPIData {
+	return CommonAPIData{
+		QueryParams: ParametersStr(params),
+		DateStr:     DateStr(time.Now()),
+	}
+}
+
+type CommonAPIData struct {
+	QueryParams string `json:"pp"`
+	DateStr     string `json:"date"`
+}
+
 // Server is a re-runnable HTTP server. Server.Run() may be called repeatedly, and
 // each time the previous running server will be stopped, and the server will be
 // restarted with the new port address and data request channel.
