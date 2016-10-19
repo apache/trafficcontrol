@@ -13,7 +13,7 @@ var config;
 
 try {
     // this should exist in prod environment. no need to create this file in dev as it will use the fallback (see catch)
-    config = require('/etc/trafficops/conf/config');
+    config = require('/etc/traffic_ops_v2/conf/config');
 }
 catch(e) {
     // this is used for dev environment
@@ -93,6 +93,6 @@ if (useSSL) {
     sslOptions.agent = new https.Agent(sslOptions);
 }
 
-console.log("Traffic Portal Port         : %s", config.port);
-console.log("Traffic Portal Proxy Port   : %s", config.proxyPort);
-console.log("Traffic Portal SSL Port     : %s", config.sslPort);
+console.log("Traffic Ops Port         : %s", config.port);
+console.log("Traffic Ops Proxy Port   : %s", config.proxyPort);
+console.log("Traffic Ops SSL Port     : %s", config.sslPort);
