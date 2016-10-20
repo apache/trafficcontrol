@@ -138,10 +138,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
 func healthTickListener(cacheHealthTick <-chan uint64, healthIteration UintThreadsafe) {
-	for {
-		select {
-		case i := <-cacheHealthTick:
-			healthIteration.Set(i)
-		}
+	for i := range cacheHealthTick {
+		healthIteration.Set(i)
 	}
 }

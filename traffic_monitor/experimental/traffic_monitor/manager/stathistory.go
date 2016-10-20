@@ -17,9 +17,7 @@ type StatHistory map[enum.CacheName][]cache.Result
 
 func copyStat(a []cache.Result) []cache.Result {
 	b := make([]cache.Result, len(a), len(a))
-	for i, v := range a {
-		b[i] = v
-	}
+	copy(b, a)
 	return b
 }
 
