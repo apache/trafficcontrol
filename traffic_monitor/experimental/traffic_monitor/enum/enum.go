@@ -1,4 +1,4 @@
-// enum contains enumerations and strongly typed names.
+// Package enum contains enumerations and strongly typed names.
 // The names are an experiment with strong typing of string types. The primary goal is to make code more self-documenting, especially map keys. If peole don't like it, we can get rid of it.
 package enum
 
