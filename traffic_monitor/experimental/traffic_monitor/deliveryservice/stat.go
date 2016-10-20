@@ -21,16 +21,16 @@ type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]dsdata.Stat `json:"deliveryService"`
 }
 
-func (a Stats) Copy() Stats {
+func (s Stats) Copy() Stats {
 	b := NewStats()
-	for k, v := range a.DeliveryService {
+	for k, v := range s.DeliveryService {
 		b.DeliveryService[k] = v.Copy()
 	}
 	return b
 }
 
-func (a Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
-	ds, ok := a.DeliveryService[name]
+func (s Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
+	ds, ok := s.DeliveryService[name]
 	return ds, ok
 }
 
@@ -471,14 +471,14 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 }
 
 // StatsJSON returns an object formatted as expected to be serialized to JSON and served.
-func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
+func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	now := time.Now().Unix()
 	jsonObj := &dsdata.StatsOld{
 		CommonAPIData:   srvhttp.GetCommonAPIData(params, time.Now()),
 		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
 	}
 
-	for deliveryService, stat := range dsStats.DeliveryService {
+	for deliveryService, stat := range s.DeliveryService {
 		if !filter.UseDeliveryService(deliveryService) {
 			continue
 		}
