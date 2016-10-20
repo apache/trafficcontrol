@@ -298,7 +298,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 	for cacheName, cacheStats := range stat.Caches {
 		lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
 		if err != nil {
-			log.Errorf("debugq %v Error adding kbps for cache %v: %v", cacheName, err)
+			log.Errorf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
 			continue
 		}
 		cacheStats.Kbps.Value = lastStat.Caches[cacheName].Bytes.PerSec / BytesPerKilobit
