@@ -110,40 +110,40 @@ func (t *CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) D
 	return t.crStates.Deliveryservice[name]
 }
 
-func (o *CRStatesThreadsafe) Set(newCRStates Crstates) {
-	o.m.Lock()
-	*o.crStates = newCRStates
-	o.m.Unlock()
+func (t *CRStatesThreadsafe) Set(newCRStates Crstates) {
+	t.m.Lock()
+	*t.crStates = newCRStates
+	t.m.Unlock()
 }
 
-func (o *CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
-	o.m.Lock()
-	o.crStates.Caches[cacheName] = available
-	o.m.Unlock()
+func (t *CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
+	t.m.Lock()
+	t.crStates.Caches[cacheName] = available
+	t.m.Unlock()
 }
 
-func (o *CRStatesThreadsafe) DeleteCache(name enum.CacheName) {
-	o.m.Lock()
-	delete(o.crStates.Caches, name)
-	o.m.Unlock()
+func (t *CRStatesThreadsafe) DeleteCache(name enum.CacheName) {
+	t.m.Lock()
+	delete(t.crStates.Caches, name)
+	t.m.Unlock()
 }
 
-func (o *CRStatesThreadsafe) SetDeliveryService(name enum.DeliveryServiceName, ds Deliveryservice) {
-	o.m.Lock()
-	o.crStates.Deliveryservice[name] = ds
-	o.m.Unlock()
+func (t *CRStatesThreadsafe) SetDeliveryService(name enum.DeliveryServiceName, ds Deliveryservice) {
+	t.m.Lock()
+	t.crStates.Deliveryservice[name] = ds
+	t.m.Unlock()
 }
 
-func (o *CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.DeliveryServiceName]Deliveryservice) {
-	o.m.Lock()
-	o.crStates.Deliveryservice = deliveryServices
-	o.m.Unlock()
+func (t *CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.DeliveryServiceName]Deliveryservice) {
+	t.m.Lock()
+	t.crStates.Deliveryservice = deliveryServices
+	t.m.Unlock()
 }
 
-func (o *CRStatesThreadsafe) DeleteDeliveryService(name enum.DeliveryServiceName) {
-	o.m.Lock()
-	delete(o.crStates.Deliveryservice, name)
-	o.m.Unlock()
+func (t *CRStatesThreadsafe) DeleteDeliveryService(name enum.DeliveryServiceName) {
+	t.m.Lock()
+	delete(t.crStates.Deliveryservice, name)
+	t.m.Unlock()
 }
 
 // This could be made lock-free, if the performance was necessary
@@ -166,8 +166,8 @@ func (t *CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
 	return m
 }
 
-func (o *CRStatesPeersThreadsafe) Set(peerName enum.TrafficMonitorName, peerState Crstates) {
-	o.m.Lock()
-	o.crStates[peerName] = peerState
-	o.m.Unlock()
+func (t *CRStatesPeersThreadsafe) Set(peerName enum.TrafficMonitorName, peerState Crstates) {
+	t.m.Lock()
+	t.crStates[peerName] = peerState
+	t.m.Unlock()
 }

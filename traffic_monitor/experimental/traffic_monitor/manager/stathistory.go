@@ -47,17 +47,17 @@ func NewStatHistoryThreadsafe(maxHistory uint64) StatHistoryThreadsafe {
 }
 
 // Get returns the StatHistory. Callers MUST NOT modify. If mutation is necessary, call StatHistory.Copy()
-func (t *StatHistoryThreadsafe) Get() StatHistory {
-	t.m.RLock()
-	defer t.m.RUnlock()
-	return *t.statHistory
+func (h *StatHistoryThreadsafe) Get() StatHistory {
+	h.m.RLock()
+	defer h.m.RUnlock()
+	return *h.statHistory
 }
 
 // Set sets the internal StatHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *StatHistoryThreadsafe) Set(v StatHistory) {
-	t.m.Lock()
-	*t.statHistory = v
-	t.m.Unlock()
+func (h *StatHistoryThreadsafe) Set(v StatHistory) {
+	h.m.Lock()
+	*h.statHistory = v
+	h.m.Unlock()
 }
 
 func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
@@ -151,7 +151,7 @@ func processStatResults(
 	maxStats := statHistoryThreadsafe.Max()
 	for _, result := range results {
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		statHistory[enum.CacheName(result.Id)] = pruneHistory(append(statHistory[enum.CacheName(result.Id)], result), maxStats)
+		statHistory[enum.CacheName(result.ID)] = pruneHistory(append(statHistory[enum.CacheName(result.ID)], result), maxStats)
 	}
 	statHistoryThreadsafe.Set(statHistory)
 
@@ -176,11 +176,11 @@ func processStatResults(
 	endTime := time.Now()
 	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
 	for _, result := range results {
-		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.Id)]; ok {
+		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.ID)]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations[enum.CacheName(result.Id)] = d
+			lastStatDurations[enum.CacheName(result.ID)] = d
 		}
-		lastStatEndTimes[enum.CacheName(result.Id)] = endTime
+		lastStatEndTimes[enum.CacheName(result.ID)] = endTime
 
 		// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
 		result.PollFinished <- result.PollID

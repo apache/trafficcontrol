@@ -6,8 +6,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
 	"net/url"
@@ -35,8 +35,8 @@ func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStat
 	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
-func (h Handler) Precompute() bool {
-	return h.ToData != nil && h.PeerStates != nil
+func (handler Handler) Precompute() bool {
+	return handler.ToData != nil && handler.PeerStates != nil
 }
 
 type PrecomputedData struct {
@@ -48,7 +48,7 @@ type PrecomputedData struct {
 }
 
 type Result struct {
-	Id        enum.CacheName
+	ID        enum.CacheName
 	Available bool
 	Error     error
 	Astats    Astats
@@ -126,12 +126,12 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 	return json.Marshal(stats)
 }
 
-func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
-	log.Debugf("poll %v %v handle start\n", pollId, time.Now())
+func (handler Handler) Handle(id string, r io.Reader, err error, pollID uint64, pollFinished chan<- uint64) {
+	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
-		Id:           enum.CacheName(id),
+		ID:           enum.CacheName(id),
 		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
-		PollID:       pollId,
+		PollID:       pollID,
 		PollFinished: pollFinished,
 	}
 
@@ -166,7 +166,7 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 		log.Warnf("addkbps %s inf.speed empty\n", id)
 	}
 
-	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle decode end\n", pollID, time.Now())
 
 	if err != nil {
 		result.Error = err
@@ -176,13 +176,13 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 	}
 
 	if handler.Precompute() {
-		log.Debugf("poll %v %v handle precompute start\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute start\n", pollID, time.Now())
 		result = handler.precompute(result)
-		log.Debugf("poll %v %v handle precompute end\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute end\n", pollID, time.Now())
 	}
-	log.Debugf("poll %v %v handle write start\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle write start\n", pollID, time.Now())
 	handler.ResultChannel <- result
-	log.Debugf("poll %v %v handle end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle end\n", pollID, time.Now())
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
@@ -218,7 +218,7 @@ func (handler Handler) precompute(result Result) Result {
 	var err error
 	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName, handler.MultipleSpaceRegex); err != nil {
 		result.PrecomputedData.OutBytes = 0
-		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
+		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.ID, err)
 	}
 
 	kbpsInMbps := int64(1000)
@@ -226,9 +226,9 @@ func (handler Handler) precompute(result Result) Result {
 
 	for stat, value := range result.Astats.Ats {
 		var err error
-		stats, err = processStat(result.Id, stats, todata, stat, value, result.Time)
+		stats, err = processStat(result.ID, stats, todata, stat, value, result.Time)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			log.Errorf("precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
+			log.Errorf("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}
