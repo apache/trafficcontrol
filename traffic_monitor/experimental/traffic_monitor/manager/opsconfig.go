@@ -144,14 +144,10 @@ func StartOpsConfigManager(
 				// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
 				// More generically, we're using goroutines as an infinite chan buffer, to avoid potential livelocks
 				for _, subscriber := range opsConfigChangeSubscribers {
-					go func() {
-						subscriber <- newOpsConfig // this is needed for cdnName
-					}()
+					go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
 				}
 				for _, subscriber := range toChangeSubscribers {
-					go func() {
-						subscriber <- toSession
-					}()
+					go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
 				}
 			}
 		}
