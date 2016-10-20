@@ -25,12 +25,6 @@ type Result struct {
 	PollFinished chan<- uint64
 }
 
-const (
-	NOTIFY_NEVER = iota
-	NOTIFY_CHANGE
-	NOTIFY_ALWAYS
-)
-
 func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
 	result := Result{
 		Id:           enum.TrafficMonitorName(id),
