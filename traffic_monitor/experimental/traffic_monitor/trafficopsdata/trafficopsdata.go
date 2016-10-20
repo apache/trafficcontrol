@@ -157,7 +157,7 @@ func getDeliveryServiceServers(crc CRConfig) (map[enum.DeliveryServiceName][]enu
 	serverDses := map[enum.CacheName][]enum.DeliveryServiceName{}
 
 	for serverName, serverData := range crc.ContentServers {
-		for deliveryServiceName, _ := range serverData.DeliveryServices {
+		for deliveryServiceName := range serverData.DeliveryServices {
 			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
 			serverDses[serverName] = append(serverDses[serverName], deliveryServiceName)
 		}

@@ -47,17 +47,17 @@ func (t *UnpolledCachesThreadsafe) setUnpolledCaches(v map[enum.CacheName]struct
 func (t *UnpolledCachesThreadsafe) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	allCaches := copyCaches(*t.allCaches) // not necessary to lock `allCaches`, as the single-writer is the only thing that accesses it.
-	for cache, _ := range unpolledCaches {
+	for cache := range unpolledCaches {
 		if _, ok := newCaches[cache]; !ok {
 			delete(unpolledCaches, cache)
 		}
 	}
-	for cache, _ := range allCaches {
+	for cache := range allCaches {
 		if _, ok := newCaches[cache]; !ok {
 			delete(allCaches, cache)
 		}
 	}
-	for cache, _ := range newCaches {
+	for cache := range newCaches {
 		if _, ok := allCaches[cache]; !ok {
 			unpolledCaches[cache] = struct{}{}
 			allCaches[cache] = struct{}{}
@@ -77,7 +77,7 @@ func (t *UnpolledCachesThreadsafe) Any() bool {
 // copyCaches performs a deep copy of the given map.
 func copyCaches(a map[enum.CacheName]struct{}) map[enum.CacheName]struct{} {
 	b := map[enum.CacheName]struct{}{}
-	for k, _ := range a {
+	for k := range a {
 		b[k] = struct{}{}
 	}
 	return b
@@ -93,7 +93,7 @@ func (t *UnpolledCachesThreadsafe) SetPolled(results []cache.Result, lastStatsTh
 		return
 	}
 	lastStats := lastStatsThreadsafe.Get()
-	for cache, _ := range unpolledCaches {
+	for cache := range unpolledCaches {
 	innerLoop:
 		for _, result := range results {
 			if result.ID != cache {
