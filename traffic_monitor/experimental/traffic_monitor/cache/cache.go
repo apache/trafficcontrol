@@ -73,8 +73,8 @@ type Stat struct {
 }
 
 type Stats struct {
+	http_server.CommonAPIData
 	Caches map[enum.CacheName]map[string][]Stat `json:"caches"`
-	CommonAPIData
 }
 
 type Filter interface {
@@ -86,8 +86,8 @@ type Filter interface {
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
 func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, params url.Values) ([]byte, error) {
 	stats := Stats{
-		Caches:        map[enum.CacheName]map[string][]Stat{},
-		CommonAPIData: http_server.GetCommonAPIData(params, time.Now()),
+		http_server.CommonAPIData: http_server.GetCommonAPIData(params, time.Now()),
+		Caches: map[enum.CacheName]map[string][]Stat{},
 	}
 
 	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.

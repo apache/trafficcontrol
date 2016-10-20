@@ -474,8 +474,8 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	now := time.Now().Unix()
 	jsonObj := &dsdata.StatsOld{
-		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
-		CommonAPIData:   http_server.GetCommonAPIData(params, time.Now()),
+		http_server.CommonAPIData: http_server.GetCommonAPIData(params, time.Now()),
+		DeliveryService:           map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
 	}
 
 	for deliveryService, stat := range dsStats.DeliveryService {
