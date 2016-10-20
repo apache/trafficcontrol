@@ -16,7 +16,7 @@ type Config struct {
 	CacheHealthPollingInterval   time.Duration `json:"-"`
 	CacheStatPollingInterval     time.Duration `json:"-"`
 	MonitorConfigPollingInterval time.Duration `json:"-"`
-	HttpTimeout                  time.Duration `json:"-"`
+	HTTPTimeout                  time.Duration `json:"-"`
 	PeerPollingInterval          time.Duration `json:"-"`
 	MaxEvents                    uint64        `json:"max_events"`
 	MaxStatHistory               uint64        `json:"max_stat_history"`
@@ -35,7 +35,7 @@ var DefaultConfig = Config{
 	CacheHealthPollingInterval:   6 * time.Second,
 	CacheStatPollingInterval:     6 * time.Second,
 	MonitorConfigPollingInterval: 5 * time.Second,
-	HttpTimeout:                  2 * time.Second,
+	HTTPTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
 	MaxEvents:                    200,
 	MaxStatHistory:               5,
@@ -57,7 +57,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		CacheHealthPollingIntervalMs   uint64 `json:"cache_health_polling_interval_ms"`
 		CacheStatPollingIntervalMs     uint64 `json:"cache_stat_polling_interval_ms"`
 		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
-		HttpTimeoutMs                  uint64 `json:"http_timeout_ms"`
+		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
@@ -68,7 +68,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		CacheHealthPollingIntervalMs:   uint64(c.CacheHealthPollingInterval / time.Millisecond),
 		CacheStatPollingIntervalMs:     uint64(c.CacheStatPollingInterval / time.Millisecond),
 		MonitorConfigPollingIntervalMs: uint64(c.MonitorConfigPollingInterval / time.Millisecond),
-		HttpTimeoutMs:                  uint64(c.HttpTimeout / time.Millisecond),
+		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
 		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
@@ -82,7 +82,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		CacheHealthPollingIntervalMs   *uint64 `json:"cache_health_polling_interval_ms"`
 		CacheStatPollingIntervalMs     *uint64 `json:"cache_stat_polling_interval_ms"`
 		MonitorConfigPollingIntervalMs *uint64 `json:"monitor_config_polling_interval_ms"`
-		HttpTimeoutMs                  *uint64 `json:"http_timeout_ms"`
+		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
@@ -105,8 +105,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.MonitorConfigPollingIntervalMs != nil {
 		c.MonitorConfigPollingInterval = time.Duration(*aux.MonitorConfigPollingIntervalMs) * time.Millisecond
 	}
-	if aux.HttpTimeoutMs != nil {
-		c.HttpTimeout = time.Duration(*aux.HttpTimeoutMs) * time.Millisecond
+	if aux.HTTPTimeoutMS != nil {
+		c.HTTPTimeout = time.Duration(*aux.HTTPTimeoutMS) * time.Millisecond
 	}
 	if aux.PeerPollingIntervalMs != nil {
 		c.PeerPollingInterval = time.Duration(*aux.PeerPollingIntervalMs) * time.Millisecond

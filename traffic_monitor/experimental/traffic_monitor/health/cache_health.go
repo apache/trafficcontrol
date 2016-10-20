@@ -32,7 +32,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 		}
 		newResult.Vitals.LoadAvg = oneMinAvg
 	} else {
-		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.Id))
+		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
 		return
 	}
 
@@ -68,14 +68,14 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	// inf.speed -- value looks like "10000" (without the quotes) so it is in Mbps.
 	// TODO JvD: Should we really be running this code every second for every cache polled????? I don't think so.
 	interfaceBandwidth := newResult.Astats.System.InfSpeed
-	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.Id)].Profile].Parameters.MinFreeKbps
+	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.ID)].Profile].Parameters.MinFreeKbps
 
 	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
 // EvalCache returns whether the given cache should be marked available, and a string describing why
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
-	status := mc.TrafficServer[string(result.Id)].Status
+	status := mc.TrafficServer[string(result.ID)].Status
 	switch {
 	case status == "ADMIN_DOWN":
 		return false, "set to ADMIN_DOWN"
@@ -85,8 +85,8 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 		return true, "set to ONLINE"
 	case result.Error != nil:
 		return false, fmt.Sprintf("error: %v", result.Error)
-	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg:
-		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg)
+	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HealthThresholdLoadAvg:
+		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HealthThresholdLoadAvg)
 	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
 		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, result.Vitals.MaxKbpsOut)
 	default:

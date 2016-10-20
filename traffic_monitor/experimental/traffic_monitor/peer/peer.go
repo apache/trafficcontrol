@@ -17,7 +17,7 @@ func NewHandler() Handler {
 }
 
 type Result struct {
-	Id           enum.TrafficMonitorName
+	ID           enum.TrafficMonitorName
 	Available    bool
 	Errors       []error
 	PeerStats    Crstates
@@ -25,12 +25,12 @@ type Result struct {
 	PollFinished chan<- uint64
 }
 
-func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, err error, pollID uint64, pollFinished chan<- uint64) {
 	result := Result{
-		Id:           enum.TrafficMonitorName(id),
+		ID:           enum.TrafficMonitorName(id),
 		Available:    false,
 		Errors:       []error{},
-		PollID:       pollId,
+		PollID:       pollID,
 		PollFinished: pollFinished,
 	}
 
