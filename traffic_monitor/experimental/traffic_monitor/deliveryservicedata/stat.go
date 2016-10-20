@@ -3,7 +3,7 @@ package deliveryservicedata // TODO rename?
 import (
 	"errors"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/http_server"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"net/url"
 	"time"
 )
@@ -26,7 +26,7 @@ type StatOld struct {
 
 type StatsOld struct {
 	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
-	http_server.CommonAPIData
+	srvhttp.CommonAPIData
 }
 
 type StatsReadonly interface {

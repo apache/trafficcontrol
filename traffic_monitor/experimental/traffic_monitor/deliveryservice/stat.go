@@ -6,7 +6,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/http_server"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"net/url"
@@ -474,7 +474,7 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	now := time.Now().Unix()
 	jsonObj := &dsdata.StatsOld{
-		CommonAPIData:   http_server.GetCommonAPIData(params, time.Now()),
+		CommonAPIData:   srvhttp.GetCommonAPIData(params, time.Now()),
 		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
 	}
 
