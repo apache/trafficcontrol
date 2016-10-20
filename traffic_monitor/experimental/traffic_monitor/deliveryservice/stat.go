@@ -6,8 +6,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"net/url"
 	"strconv"
@@ -374,7 +374,7 @@ func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats
 func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
 	start := time.Now()
 	dsStats := NewStats()
-	for deliveryService, _ := range toData.DeliveryServiceServers {
+	for deliveryService := range toData.DeliveryServiceServers {
 		if deliveryService == "" {
 			log.Errorf("EMPTY CreateStats deliveryService")
 			continue

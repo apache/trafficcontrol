@@ -73,7 +73,7 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 		_, ok := f.statsToUse[statName]
 		return ok
 	}
-	for statToUse, _ := range f.statsToUse {
+	for statToUse := range f.statsToUse {
 		if strings.Contains(statName, statToUse) {
 			return true
 		}
@@ -102,7 +102,7 @@ func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
-	for param, _ := range params {
+	for param := range params {
 		if _, ok := validParams[param]; !ok {
 			return nil, fmt.Errorf("invalid query parameter '%v'", param)
 		}
@@ -189,7 +189,7 @@ func (f *DSStatFilter) UseStat(statName string) bool {
 		_, ok := f.statsToUse[statName]
 		return ok
 	}
-	for statToUse, _ := range f.statsToUse {
+	for statToUse := range f.statsToUse {
 		if strings.Contains(statName, statToUse) {
 			return true
 		}
@@ -218,7 +218,7 @@ func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enu
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
-	for param, _ := range params {
+	for param := range params {
 		if _, ok := validParams[param]; !ok {
 			return nil, fmt.Errorf("invalid query parameter '%v'", param)
 		}
@@ -308,7 +308,7 @@ func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
 		_, ok := f.cachesToUse[name]
 		return ok
 	}
-	for cacheToUse, _ := range f.cachesToUse {
+	for cacheToUse := range f.cachesToUse {
 		if strings.Contains(string(name), string(cacheToUse)) {
 			return true
 		}
@@ -338,7 +338,7 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
-	for param, _ := range params {
+	for param := range params {
 		if _, ok := validParams[param]; !ok {
 			return nil, fmt.Errorf("invalid query parameter '%v'", param)
 		}

@@ -101,7 +101,7 @@ func (a StatCommon) CacheReporting(name enum.CacheName) (bool, bool) {
 }
 func (a StatCommon) CachesReportingNames() []enum.CacheName {
 	names := make([]enum.CacheName, 0, len(a.CachesReporting))
-	for name, _ := range a.CachesReporting {
+	for name := range a.CachesReporting {
 		names = append(names, name)
 	}
 	return names
