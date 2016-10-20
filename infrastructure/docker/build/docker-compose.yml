@@ -1,11 +1,11 @@
 ---
 
-# Build configuration for traffic_control
+# Build configuration for trafficcontrol
 # Usage:
 #    GITREPO=...  BRANCH=...  docker-compose up [<service>...]
 #
-# where GITREPO is https path to traffic_control clone
-#   (default: https://github.com/Comcast/traffic_control)
+# where GITREPO is https path to trafficcontrol clone
+#   (default: https://github.com/apache/incubator-trafficcontrol)
 # and <branch> is name of branch to test
 #   (default: master).
 #
