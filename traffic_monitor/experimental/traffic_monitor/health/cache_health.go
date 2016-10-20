@@ -10,28 +10,6 @@ import (
 	"strings"
 )
 
-// Get the String value of one of those pesky map[string]interface{} things that seem so easy
-func getString(key string, intface map[string]interface{}) (string, error) {
-	str, ok := intface[key].(string)
-
-	if ok {
-		return str, nil
-	} else {
-		return "", fmt.Errorf("Error in getString: No string found for key %s", key)
-	}
-}
-
-// Get the float64 value of one of those pesky map[string]interface{} things that seem so easy
-func getNumber(key string, intface map[string]interface{}) (float64, error) {
-	val, ok := intface[key].(float64)
-
-	if ok {
-		return val, nil
-	} else {
-		return -1, fmt.Errorf("Error in getNumber: No number found for %s", key)
-	}
-}
-
 func setError(newResult *cache.Result, err error) {
 	newResult.Error = err
 	newResult.Available = false
