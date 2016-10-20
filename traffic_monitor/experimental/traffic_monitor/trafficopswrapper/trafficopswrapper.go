@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	to "github.com/Comcast/traffic_control/traffic_ops/client"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 type ITrafficOpsSession interface {
