@@ -17,9 +17,12 @@
 
 function importFunctions() {
 	local script=$(readlink -f "$0")
+	local suff=${script##*control/}
+	local tcdirlen=$[${#script} - ${#suff}]
+	export TC_DIR=${script:0:$tcdirlen}
 	local scriptdir=$(dirname "$script")
 	export TS_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TS_DIR")
+
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
 		echo "error: can't find $functions_sh"
@@ -52,4 +55,4 @@ function initBuildArea() {
 importFunctions
 checkEnvironment npm node
 initBuildArea
-buildRpm traffic_portal
+buildRpm traffic_ops_v2
