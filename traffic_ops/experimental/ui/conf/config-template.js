@@ -34,7 +34,7 @@ module.exports = {
 	// set api 'base_url' to the traffic ops api (all api calls made from the traffic ops ui will be proxied to the api base_url)
 	// enter value for api 'key' if you want to append ?API_KEY=value to all api calls. It is suggested to leave blank.
 	api: {
-		base_url: 'http(s)://where-traffic-ops-api-is.com/api/',
+		base_url: 'http(s)://where-traffic-ops-api-is.com',
 		key: ''
 	},
 	// default files location (this is where the traffic ops html, css and javascript was installed)
