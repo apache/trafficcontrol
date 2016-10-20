@@ -84,71 +84,68 @@ func StartOpsConfigManager(
 	go func() {
 		httpServer := http_server.Server{}
 
-		for {
-			select {
-			case newOpsConfig := <-opsConfigChannel:
-				var err error
-				opsConfig.Set(newOpsConfig)
+		for newOpsConfig := range opsConfigChannel {
+			var err error
+			opsConfig.Set(newOpsConfig)
 
-				listenAddress := ":80" // default
+			listenAddress := ":80" // default
 
-				if newOpsConfig.HttpListener != "" {
-					listenAddress = newOpsConfig.HttpListener
-				}
+			if newOpsConfig.HttpListener != "" {
+				listenAddress = newOpsConfig.HttpListener
+			}
 
-				handleErr := func(err error) {
-					errorCount.Inc()
-					log.Errorf("OpsConfigManager: %v\n", err)
-				}
+			handleErr := func(err error) {
+				errorCount.Inc()
+				log.Errorf("OpsConfigManager: %v\n", err)
+			}
 
-				err = httpServer.Run(func(req http_server.DataRequest) ([]byte, int) {
-					return DataRequest(
-						req,
-						opsConfig,
-						toSession,
-						localStates,
-						peerStates,
-						combinedStates,
-						statHistory,
-						dsStats,
-						events,
-						staticAppData,
-						healthPollInterval,
-						lastHealthDurations,
-						fetchCount,
-						healthIteration,
-						errorCount,
-						toData,
-						localCacheStatus,
-						lastStats,
-						unpolledCaches,
-					)
-				}, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
-				if err != nil {
-					handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
-					continue
-				}
+			err = httpServer.Run(func(req http_server.DataRequest) ([]byte, int) {
+				return DataRequest(
+					req,
+					opsConfig,
+					toSession,
+					localStates,
+					peerStates,
+					combinedStates,
+					statHistory,
+					dsStats,
+					events,
+					staticAppData,
+					healthPollInterval,
+					lastHealthDurations,
+					fetchCount,
+					healthIteration,
+					errorCount,
+					toData,
+					localCacheStatus,
+					lastStats,
+					unpolledCaches,
+				)
+			}, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
+			if err != nil {
+				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
+				continue
+			}
 
-				realToSession, err := to.Login(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure)
-				if err != nil {
-					handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
-					continue
-				}
-				toSession.Set(realToSession)
+			realToSession, err := to.Login(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure)
+			if err != nil {
+				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
+				continue
+			}
+			toSession.Set(realToSession)
 
-				if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
-					handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
-					continue
-				}
+			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
+				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
+				continue
+			}
 
-				// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
-				// More generically, we're using goroutines as an infinite chan buffer, to avoid potential livelocks
-				for _, subscriber := range opsConfigChangeSubscribers {
-					go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
-				}
-				for _, subscriber := range toChangeSubscribers {
-					go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
-				}
+			// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
+			// More generically, we're using goroutines as an infinite chan buffer, to avoid potential livelocks
+			for _, subscriber := range opsConfigChangeSubscribers {
+				go func(s chan<- handler.OpsConfig) { s <- newOpsConfig }(subscriber)
+			}
+			for _, subscriber := range toChangeSubscribers {
+				go func(s chan<- towrap.ITrafficOpsSession) { s <- toSession }(subscriber)
 			}
 		}
 	}()

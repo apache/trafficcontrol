@@ -114,22 +114,19 @@ func (p HttpPoller) Poll() {
 	// iterationCount++ // on tick<:
 	// case p.TickChan <- iterationCount:
 	killChans := map[string]chan<- struct{}{}
-	for {
-		select {
-		case newConfig := <-p.ConfigChannel:
-			deletions, additions := diffConfigs(p.Config, newConfig)
-			for _, id := range deletions {
-				killChan := killChans[id]
-				go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
-				delete(killChans, id)
-			}
-			for _, info := range additions {
-				kill := make(chan struct{})
-				killChans[info.ID] = kill
-				go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
-			}
-			p.Config = newConfig
+	for newConfig := range p.ConfigChannel {
+		deletions, additions := diffConfigs(p.Config, newConfig)
+		for _, id := range deletions {
+			killChan := killChans[id]
+			go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
+			delete(killChans, id)
 		}
+		for _, info := range additions {
+			kill := make(chan struct{})
+			killChans[info.ID] = kill
+			go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
+		}
+		p.Config = newConfig
 	}
 }
 

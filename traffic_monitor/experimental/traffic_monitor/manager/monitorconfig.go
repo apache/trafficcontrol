@@ -101,83 +101,80 @@ func monitorConfigListen(
 	cfg config.Config,
 	staticAppData StaticAppData,
 ) {
-	for {
-		select {
-		case monitorConfig := <-monitorConfigPollChan:
-			monitorConfigTS.Set(monitorConfig)
-			healthUrls := map[string]string{}
-			statUrls := map[string]string{}
-			peerUrls := map[string]string{}
-			caches := map[string]string{}
+	for monitorConfig := range monitorConfigPollChan {
+		monitorConfigTS.Set(monitorConfig)
+		healthUrls := map[string]string{}
+		statUrls := map[string]string{}
+		peerUrls := map[string]string{}
+		caches := map[string]string{}
 
-			for _, srv := range monitorConfig.TrafficServer {
-				caches[srv.HostName] = srv.Status
+		for _, srv := range monitorConfig.TrafficServer {
+			caches[srv.HostName] = srv.Status
 
-				cacheName := enum.CacheName(srv.HostName)
+			cacheName := enum.CacheName(srv.HostName)
 
-				if srv.Status == "ONLINE" {
-					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: true})
-					continue
-				}
-				if srv.Status == "OFFLINE" {
-					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
-					continue
-				}
-				// seed states with available = false until our polling cycle picks up a result
-				if _, exists := localStates.Get().Caches[cacheName]; !exists {
-					localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
-				}
-
-				url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
-				r := strings.NewReplacer(
-					"${hostname}", srv.FQDN,
-					"${interface_name}", srv.InterfaceName,
-					"application=system", "application=plugin.remap",
-					"application=", "application=plugin.remap",
-				)
-				url = r.Replace(url)
-				healthUrls[srv.HostName] = url
-				r = strings.NewReplacer("application=plugin.remap", "application=")
-				url = r.Replace(url)
-				statUrls[srv.HostName] = url
+			if srv.Status == "ONLINE" {
+				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: true})
+				continue
+			}
+			if srv.Status == "OFFLINE" {
+				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
+				continue
+			}
+			// seed states with available = false until our polling cycle picks up a result
+			if _, exists := localStates.Get().Caches[cacheName]; !exists {
+				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 			}
 
-			for _, srv := range monitorConfig.TrafficMonitor {
-				if srv.HostName == staticAppData.Hostname {
-					continue
-				}
-				if srv.Status != "ONLINE" {
-					continue
-				}
-				// TODO: the URL should be config driven. -jse
-				url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-				peerUrls[srv.HostName] = url
+			url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
+			r := strings.NewReplacer(
+				"${hostname}", srv.FQDN,
+				"${interface_name}", srv.InterfaceName,
+				"application=system", "application=plugin.remap",
+				"application=", "application=plugin.remap",
+			)
+			url = r.Replace(url)
+			healthUrls[srv.HostName] = url
+			r = strings.NewReplacer("application=plugin.remap", "application=")
+			url = r.Replace(url)
+			statUrls[srv.HostName] = url
+		}
+
+		for _, srv := range monitorConfig.TrafficMonitor {
+			if srv.HostName == staticAppData.Hostname {
+				continue
 			}
-
-			statUrlSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: cfg.CacheStatPollingInterval}
-			healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: cfg.CacheHealthPollingInterval}
-			peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: cfg.PeerPollingInterval}
-
-			for cacheName := range localStates.GetCaches() {
-				if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {
-					log.Warnf("Removing %s from localStates", cacheName)
-					localStates.DeleteCache(cacheName)
-				}
+			if srv.Status != "ONLINE" {
+				continue
 			}
+			// TODO: the URL should be config driven. -jse
+			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
+			peerUrls[srv.HostName] = url
+		}
 
-			cachesChangeSubscriber <- struct{}{}
+		statUrlSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: cfg.CacheStatPollingInterval}
+		healthUrlSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: cfg.CacheHealthPollingInterval}
+		peerUrlSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: cfg.PeerPollingInterval}
 
-			// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
-			for _, ds := range monitorConfig.DeliveryService {
-				// since caches default to unavailable, also default DS false
-				if _, exists := localStates.Get().Deliveryservice[enum.DeliveryServiceName(ds.XMLID)]; !exists {
-					localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
-				}
+		for cacheName := range localStates.GetCaches() {
+			if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {
+				log.Warnf("Removing %s from localStates", cacheName)
+				localStates.DeleteCache(cacheName)
 			}
-			for ds, _ := range localStates.Get().Deliveryservice {
-				if _, exists := monitorConfig.DeliveryService[string(ds)]; !exists {
-					localStates.DeleteDeliveryService(ds)
-				}
+		}
+
+		cachesChangeSubscriber <- struct{}{}
+
+		// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
+		for _, ds := range monitorConfig.DeliveryService {
+			// since caches default to unavailable, also default DS false
+			if _, exists := localStates.Get().Deliveryservice[enum.DeliveryServiceName(ds.XMLID)]; !exists {
+				localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
+			}
+		}
+		for ds, _ := range localStates.Get().Deliveryservice {
+			if _, exists := monitorConfig.DeliveryService[string(ds)]; !exists {
+				localStates.DeleteDeliveryService(ds)
 			}
 		}
 	}
