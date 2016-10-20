@@ -17,7 +17,7 @@ func StartPeerManager(
 	combinedStates := peer.NewCRStatesThreadsafe()
 	go func() {
 		for crStatesResult := range peerChan {
-			peerStates.Set(crStatesResult.Id, crStatesResult.PeerStats)
+			peerStates.Set(crStatesResult.ID, crStatesResult.PeerStats)
 			combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
 			crStatesResult.PollFinished <- crStatesResult.PollID
 		}

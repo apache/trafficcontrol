@@ -16,8 +16,8 @@ import (
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 )
@@ -30,7 +30,7 @@ type CacheState struct {
 	Value bool `json:"value"`
 }
 
-type ApiPeerStates struct {
+type APIPeerStates struct {
 	srvhttp.CommonAPIData
 	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
 }
@@ -487,7 +487,7 @@ func DataRequest(
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 
-		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter, req.Parameters))
+		body, err = json.Marshal(createAPIPeerStates(peerStates.Get(), filter, req.Parameters))
 		return commonReturn(body, err)
 	case srvhttp.StatSummary:
 		return nil, http.StatusNotImplemented
@@ -671,8 +671,8 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return len(caches) - cacheDownCount(caches)
 }
 
-func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) ApiPeerStates {
-	apiPeerStates := ApiPeerStates{
+func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) APIPeerStates {
+	apiPeerStates := APIPeerStates{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
 	}

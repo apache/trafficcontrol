@@ -96,7 +96,7 @@ func (t *UnpolledCachesThreadsafe) SetPolled(results []cache.Result, lastStatsTh
 	for cache, _ := range unpolledCaches {
 	innerLoop:
 		for _, result := range results {
-			if result.Id != cache {
+			if result.ID != cache {
 				continue
 			}
 			if !result.Available || len(result.Errors) > 0 {

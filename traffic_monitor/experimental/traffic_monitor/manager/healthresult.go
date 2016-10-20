@@ -189,7 +189,7 @@ func processHealthResult(
 		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
-		healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
+		healthResultHistory := healthHistory[enum.CacheName(healthResult.ID)]
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -198,16 +198,16 @@ func processHealthResult(
 			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
 		}
 
-		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), cfg.MaxHealthHistory)
+		healthHistory[enum.CacheName(healthResult.ID)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.ID)], healthResult), cfg.MaxHealthHistory)
 
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable})
+		if localStates.Get().Caches[healthResult.ID].IsAvailable != isAvailable {
+			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
+			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
 
-		localCacheStatus[healthResult.Id] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.Id)].Status} // TODO move within localStates?
-		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
+		localCacheStatus[healthResult.ID] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
+		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
 		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
 		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 		log.Debugf("poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
@@ -217,11 +217,11 @@ func processHealthResult(
 
 	lastHealthDurations := lastHealthDurationsThreadsafe.Get().Copy()
 	for _, healthResult := range results {
-		if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
+		if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.ID)]; ok {
 			d := time.Since(lastHealthStart)
-			lastHealthDurations[enum.CacheName(healthResult.Id)] = d
+			lastHealthDurations[enum.CacheName(healthResult.ID)] = d
 		}
-		lastHealthEndTimes[enum.CacheName(healthResult.Id)] = time.Now()
+		lastHealthEndTimes[enum.CacheName(healthResult.ID)] = time.Now()
 
 		log.Debugf("poll %v %v finish\n", healthResult.PollID, time.Now())
 		healthResult.PollFinished <- healthResult.PollID
