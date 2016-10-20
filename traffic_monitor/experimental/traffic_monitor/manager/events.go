@@ -25,9 +25,7 @@ type EventsThreadsafe struct {
 
 func copyEvents(a []Event) []Event {
 	b := make([]Event, len(a), len(a))
-	for i, v := range a {
-		b[i] = v
-	}
+	copy(b, a)
 	return b
 }
 
