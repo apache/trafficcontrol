@@ -9,7 +9,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/http_server"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
@@ -82,7 +82,7 @@ func StartOpsConfigManager(
 
 	// TODO remove change subscribers, give Threadsafes directly to the things that need them. If they only set vars, and don't actually do work on change.
 	go func() {
-		httpServer := http_server.Server{}
+		httpServer := srvhttp.Server{}
 
 		for newOpsConfig := range opsConfigChannel {
 			var err error
@@ -99,7 +99,7 @@ func StartOpsConfigManager(
 				log.Errorf("OpsConfigManager: %v\n", err)
 			}
 
-			err = httpServer.Run(func(req http_server.DataRequest) ([]byte, int) {
+			err = httpServer.Run(func(req srvhttp.DataRequest) ([]byte, int) {
 				return DataRequest(
 					req,
 					opsConfig,

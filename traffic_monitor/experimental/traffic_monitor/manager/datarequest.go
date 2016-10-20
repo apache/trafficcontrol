@@ -16,7 +16,7 @@ import (
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/http_server"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
@@ -31,7 +31,7 @@ type CacheState struct {
 }
 
 type ApiPeerStates struct {
-	http_server.CommonAPIData
+	srvhttp.CommonAPIData
 	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
 }
 
@@ -398,9 +398,9 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	}, nil
 }
 
-// DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
+// DataRequest takes an `srvhttp.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
 func DataRequest(
-	req http_server.DataRequest,
+	req srvhttp.DataRequest,
 	opsConfig OpsConfigThreadsafe,
 	toSession towrap.ITrafficOpsSession,
 	localStates peer.CRStatesThreadsafe,
@@ -430,7 +430,7 @@ func DataRequest(
 		log.Errorf("Request Error: %v\n", fmt.Errorf(req.Type.String()+": %v", err))
 	}
 
-	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `http_server`.
+	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`.
 	commonReturn := func(body []byte, err error) ([]byte, int) {
 		if err == nil {
 			return body, http.StatusOK
@@ -446,7 +446,7 @@ func DataRequest(
 
 	var err error
 	switch req.Type {
-	case http_server.TRConfig:
+	case srvhttp.TRConfig:
 		cdnName := opsConfig.Get().CdnName
 		if toSession == nil {
 			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"))
@@ -455,13 +455,13 @@ func DataRequest(
 			return commonReturn(nil, fmt.Errorf("No CDN Configured"))
 		}
 		return commonReturn(body, err)
-	case http_server.TRStateDerived:
+	case srvhttp.TRStateDerived:
 		body, err = peer.CrstatesMarshall(combinedStates.Get())
 		return commonReturn(body, err)
-	case http_server.TRStateSelf:
+	case srvhttp.TRStateSelf:
 		body, err = peer.CrstatesMarshall(localStates.Get())
 		return commonReturn(body, err)
-	case http_server.CacheStats:
+	case srvhttp.CacheStats:
 		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err)
@@ -469,7 +469,7 @@ func DataRequest(
 		}
 		body, err = cache.StatsMarshall(statHistory.Get(), filter, req.Parameters)
 		return commonReturn(body, err)
-	case http_server.DSStats:
+	case srvhttp.DSStats:
 		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
 		if err != nil {
 			handleErr(err)
@@ -477,10 +477,10 @@ func DataRequest(
 		}
 		body, err = json.Marshal(dsStats.Get().JSON(filter, req.Parameters)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 		return commonReturn(body, err)
-	case http_server.EventLog:
+	case srvhttp.EventLog:
 		body, err = json.Marshal(JSONEvents{Events: events.Get()})
 		return commonReturn(body, err)
-	case http_server.PeerStates:
+	case srvhttp.PeerStates:
 		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err)
@@ -489,12 +489,12 @@ func DataRequest(
 
 		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter, req.Parameters))
 		return commonReturn(body, err)
-	case http_server.StatSummary:
+	case srvhttp.StatSummary:
 		return nil, http.StatusNotImplemented
-	case http_server.Stats:
+	case srvhttp.Stats:
 		body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
 		return commonReturn(body, err)
-	case http_server.ConfigDoc:
+	case srvhttp.ConfigDoc:
 		opsConfigCopy := opsConfig.Get()
 		// if the password is blank, leave it blank, so callers can see it's missing.
 		if opsConfigCopy.Password != "" {
@@ -502,13 +502,13 @@ func DataRequest(
 		}
 		body, err = json.Marshal(opsConfigCopy)
 		return commonReturn(body, err)
-	case http_server.APICacheCount: // TODO determine if this should use peerStates
+	case srvhttp.APICacheCount: // TODO determine if this should use peerStates
 		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
-	case http_server.APICacheAvailableCount:
+	case srvhttp.APICacheAvailableCount:
 		return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches))), http.StatusOK
-	case http_server.APICacheDownCount:
+	case srvhttp.APICacheDownCount:
 		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches))), http.StatusOK
-	case http_server.APIVersion:
+	case srvhttp.APIVersion:
 		s := "traffic_monitor-" + staticAppData.Version + "."
 		if len(staticAppData.GitRevision) > 6 {
 			s += staticAppData.GitRevision[:6]
@@ -516,13 +516,13 @@ func DataRequest(
 			s += staticAppData.GitRevision
 		}
 		return []byte(s), http.StatusOK
-	case http_server.APITrafficOpsURI:
+	case srvhttp.APITrafficOpsURI:
 		return []byte(opsConfig.Get().Url), http.StatusOK
-	case http_server.APICacheStates:
+	case srvhttp.APICacheStates:
 		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
 			lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 		return commonReturn(body, err)
-	case http_server.APIBandwidthKbps:
+	case srvhttp.APIBandwidthKbps:
 		serverTypes := toData.Get().ServerTypes
 		kbpsStats := lastStats.Get()
 		sum := float64(0.0)
@@ -533,7 +533,7 @@ func DataRequest(
 			sum += data.Bytes.PerSec / ds.BytesPerKilobit
 		}
 		return []byte(fmt.Sprintf("%f", sum)), http.StatusOK
-	case http_server.APIBandwidthCapacityKbps:
+	case srvhttp.APIBandwidthCapacityKbps:
 		statHistory := statHistory.Get()
 		cap := int64(0)
 		for _, results := range statHistory {
@@ -673,7 +673,7 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 
 func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) ApiPeerStates {
 	apiPeerStates := ApiPeerStates{
-		CommonAPIData: http_server.GetCommonAPIData(params, time.Now()),
+		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
 	}
 
