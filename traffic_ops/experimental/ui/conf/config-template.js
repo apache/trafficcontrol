@@ -16,7 +16,7 @@
 
  */
 
-// this is the config for /opt/traffic_ops/server/server.js and is consumed when 'sudo service traffic_ops start'
+// this is the config for /opt/traffic_ops/server/server.js and is consumed when 'sudo service traffic_ops_v2 start'
 module.exports = {
 	timeout: '120s',
 	useSSL: false, // set to true if you plan to use https (self-signed or trusted certs).
@@ -31,10 +31,10 @@ module.exports = {
 			'/path/to/ssl-bundle.crt'
 		]
 	},
-	// set api 'base_url' to the traffic ops api (all api calls made from the traffic ops ui will be proxied to the api base_url)
+	// set api 'base_url' to the traffic ops url (all api calls made from the traffic ops ui will be proxied to the api base_url)
 	// enter value for api 'key' if you want to append ?API_KEY=value to all api calls. It is suggested to leave blank.
 	api: {
-		base_url: 'http(s)://where-traffic-ops-api-is.com',
+		base_url: 'http(s)://where-traffic-ops-is.com',
 		key: ''
 	},
 	// default files location (this is where the traffic ops html, css and javascript was installed)
