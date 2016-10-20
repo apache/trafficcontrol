@@ -12,10 +12,10 @@ import (
 	"runtime"
 	"time"
 
-	_ "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/manager"
+	_ "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/instrumentation"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/manager"
 	_ "github.com/davecheney/gmx"
 )
 

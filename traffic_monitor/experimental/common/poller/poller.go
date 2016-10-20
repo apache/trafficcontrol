@@ -9,12 +9,12 @@ import (
 
 	"gopkg.in/fsnotify.v1"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
-	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
-	to "github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/fetcher"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/handler"
+	instr "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/instrumentation"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 type Poller interface {

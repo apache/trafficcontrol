@@ -2,7 +2,7 @@ package http_server
 
 import (
 	"fmt"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/hydrogen18/stoppableListener"
 	"io/ioutil"
 	"net"
@@ -12,10 +12,10 @@ import (
 	"time"
 )
 
-func GetCommonAPIData(params url.Values, time time.Time) CommonAPIData {
+func GetCommonAPIData(params url.Values, t time.Time) CommonAPIData {
 	return CommonAPIData{
 		QueryParams: ParametersStr(params),
-		DateStr:     DateStr(time.Now()),
+		DateStr:     DateStr(t),
 	}
 }
 
@@ -265,15 +265,15 @@ func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f 
 }
 
 func (s Server) handleRootFunc() (http.HandlerFunc, error) {
-	return handleFile("index.html")
+	return s.handleFile("index.html")
 }
 
 func (s Server) handleSortableFunc() (http.HandlerFunc, error) {
-	return handleFile("sorttable.js")
+	return s.handleFile("sorttable.js")
 }
 
 func (s Server) handleFile(name string) (http.HandlerFunc, error) {
-	index, err := ioutil.ReadFile(file)
+	index, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}

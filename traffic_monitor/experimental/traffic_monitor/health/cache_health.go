@@ -1,9 +1,9 @@
 package health
 
 import (
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
 	"fmt"
 	"strconv"
