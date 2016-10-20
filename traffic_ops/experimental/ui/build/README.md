@@ -11,9 +11,12 @@
 * Build the RPM
 
     ```
-    $ cd traffic_control/build
-    $ ./docker-build.sh -r https://github.com/apache/incubator-trafficcontrol.git -b master traffic_ops_v2
+    $ cd traffic_ops/experimental/ui/build
+    $ docker build -t tov2-build .
+    $ docker run -v $(pwd)/artifacts:/artifacts -e GITREPO=https://github.com/apache/incubator-trafficcontrol.git -e BRANCH=master tov2-build
     ```
+
+    The rpm will be created the `artifacts` directory.
 
 ### 2. Install
 
@@ -27,7 +30,7 @@
 * Install the Traffic Ops v2 RPM
 
     ```
-    $ sudo yum install -y traffic_ops_v2-[version]-[commits].[sha].x86_64.rpm
+    $ sudo yum install -y ./artifacts/traffic_ops_v2-[version]-[commits].[sha].x86_64.rpm
     ```
 
 ### 3. Configure
