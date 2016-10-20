@@ -265,17 +265,15 @@ func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f 
 }
 
 func (s Server) handleRootFunc() (http.HandlerFunc, error) {
-	index, err := ioutil.ReadFile("index.html")
-	if err != nil {
-		return nil, err
-	}
-	return func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "%s", index)
-	}, nil
+	return handleFile("index.html")
 }
 
 func (s Server) handleSortableFunc() (http.HandlerFunc, error) {
-	index, err := ioutil.ReadFile("sorttable.js")
+	return handleFile("sorttable.js")
+}
+
+func (s Server) handleFile(name string) (http.HandlerFunc, error) {
+	index, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
