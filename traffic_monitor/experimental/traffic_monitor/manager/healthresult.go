@@ -84,9 +84,6 @@ func StartHealthResultManager(
 	return lastHealthDurations, events, localCacheStatus
 }
 
-// cacheAggregateSeconds is how often to aggregate stats, if the health chan is never empty. (Otherwise, we read from the chan until it's empty, then aggregate, continuously)
-const cacheAggregateSeconds = 1
-
 func healthResultManagerListen(
 	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
