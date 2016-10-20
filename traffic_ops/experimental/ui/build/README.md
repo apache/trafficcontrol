@@ -12,8 +12,8 @@
 
     ```
     $ cd traffic_ops/experimental/ui/build
-    $ docker build -t tov2-build .
-    $ docker run -v $(pwd)/artifacts:/artifacts -e GITREPO=https://github.com/apache/incubator-trafficcontrol.git -e BRANCH=master tov2-build
+    $ docker build -t tov2-image .
+    $ docker run -v $(pwd)/artifacts:/artifacts -e GITREPO=https://github.com/apache/incubator-trafficcontrol.git -e BRANCH=master tov2-image
     ```
 
     The rpm will be created the `artifacts` directory.
