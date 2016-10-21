@@ -6,12 +6,19 @@ import (
 	"time"
 )
 
+// LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
 type LogLocation string
 
-const LogLocationStdout = "stdout"
-const LogLocationStderr = "stderr"
-const LogLocationNull = "null"
+const (
+	// LogLocationStdout indicates the stdout IO stream
+	LogLocationStdout = "stdout"
+	// LogLocationStderr indicates the stderr IO stream
+	LogLocationStderr = "stderr"
+	// LogLocationNull indicates the null IO stream (/dev/null)
+	LogLocationNull = "null"
+)
 
+// Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
 	CacheHealthPollingInterval   time.Duration `json:"-"`
 	CacheStatPollingInterval     time.Duration `json:"-"`
@@ -31,6 +38,7 @@ type Config struct {
 	ServeWriteTimeout            time.Duration `json:"-"`
 }
 
+// DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
 	CacheHealthPollingInterval:   6 * time.Second,
 	CacheStatPollingInterval:     6 * time.Second,
@@ -76,6 +84,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON populates this config object from given JSON bytes.
 func (c *Config) UnmarshalJSON(data []byte) error {
 	type Alias Config
 	aux := &struct {

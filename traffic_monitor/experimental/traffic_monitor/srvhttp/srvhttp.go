@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// GetCommonAPIData calculates and returns API data common to most endpoints
 func GetCommonAPIData(params url.Values, t time.Time) CommonAPIData {
 	return CommonAPIData{
 		QueryParams: ParametersStr(params),
@@ -19,6 +20,7 @@ func GetCommonAPIData(params url.Values, t time.Time) CommonAPIData {
 	}
 }
 
+// CommonAPIData contains generic data common to most endpoints.
 type CommonAPIData struct {
 	QueryParams string `json:"pp"`
 	DateStr     string `json:"date"`
@@ -33,7 +35,7 @@ type Server struct {
 	stoppableListenerWaitGroup sync.WaitGroup
 }
 
-// Endpoints returns a map of HTTP paths to functions.
+// endpoints returns a map of HTTP paths to functions.
 // This is a function because Go doesn't have constant map literals.
 func (s Server) endpoints() (map[string]http.HandlerFunc, error) {
 	handleRoot, err := s.handleRootFunc()
@@ -143,29 +145,49 @@ func (s Server) Run(f GetDataFunc, addr string, readTimeout time.Duration, write
 	return nil
 }
 
+// Type is the API request type which was received.
 type Type int
 
 const (
+	// TRConfig represents a data request for the Traffic Router config
 	TRConfig Type = (1 << iota)
+	// TRStateDerived represents a data request for the derived data, aggregated from all Traffic Monitor peers.
 	TRStateDerived
+	// TRStateSelf represents a data request for the cache health data only from this Traffic Monitor, not from its peers.
 	TRStateSelf
+	// CacheStats represents a data request for general cache stats
 	CacheStats
+	// DSStats represents a data request for delivery service stats
 	DSStats
+	// EventLog represents a data request for the event log
 	EventLog
+	// PeerStates represents a data request for the cache health data gathered from Traffic Monitor peers.
 	PeerStates
+	// StatSummary represents a data request for a summary of the gathered stats
 	StatSummary
+	// Stats represents a data request for stats
 	Stats
+	// ConfigDoc represents a data request for this app's configuration data.
 	ConfigDoc
+	// APICacheCount represents a data request for the total number of caches this Traffic Monitor polls, as received Traffic Ops.
 	APICacheCount
+	// APICacheAvailableCount represents a data request for the number of caches flagged as available by this Traffic Monitor
 	APICacheAvailableCount
+	// APICacheDownCount represents a data request for the number of caches flagged as unavailable by this Traffic Monitor
 	APICacheDownCount
+	// APIVersion represents a data request for this app's version
 	APIVersion
+	// APITrafficOpsURI represents a data request for the Traffic Ops URI this app is configured to query
 	APITrafficOpsURI
+	// APICacheStates represents a data request for a summary of the cache states
 	APICacheStates
+	// APIBandwidthKbps represents a data request for the total bandwidth of all caches polled
 	APIBandwidthKbps
+	// APIBandwidthCapacityKbps represents a data request for the total bandwidth capacity of all caches polled
 	APIBandwidthCapacityKbps
 )
 
+// String returns a string representation of the API request type.
 func (t Type) String() string {
 	switch t {
 	case TRConfig:
@@ -209,13 +231,17 @@ func (t Type) String() string {
 	}
 }
 
+// Format is the format protocol the API response will be.
 type Format int
 
 const (
+	// XML represents that data should be serialized to XML
 	XML Format = (1 << iota)
+	// JSON represents that data should be serialized to JSON
 	JSON
 )
 
+// DataRequest contains all the data about an API request necessary to form a response.
 type DataRequest struct {
 	Type
 	Format
@@ -223,6 +249,7 @@ type DataRequest struct {
 	Parameters map[string][]string
 }
 
+// GetDataFunc is a function which takes a DataRequest from a request made by a client, and returns the proper response to send to the client.
 type GetDataFunc func(DataRequest) ([]byte, int)
 
 // ParametersStr takes the URL query parameters, and returns a string as used by the Traffic Monitor 1.0 endpoints "pp" key.

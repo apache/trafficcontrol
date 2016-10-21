@@ -76,6 +76,7 @@ func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, local
 	return combinedStates
 }
 
+// CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
 type CacheNameSlice []enum.CacheName
 
 func (p CacheNameSlice) Len() int           { return len(p) }

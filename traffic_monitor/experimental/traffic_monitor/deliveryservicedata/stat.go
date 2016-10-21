@@ -16,7 +16,10 @@ type Filter interface {
 	WithinStatHistoryMax(int) bool
 }
 
+// StatName is the name of a stat.
 type StatName string
+
+// StatOld is the old JSON representation of a stat, from Traffic Monitor 1.0.
 type StatOld struct {
 	Time  int64  `json:"time"`
 	Value string `json:"value"`
@@ -24,16 +27,19 @@ type StatOld struct {
 	Index int    `json:"index,omitempty"` // TODO set? remove?
 }
 
+// StatsOld is the old JSON representation of stats, from Traffic Monitor 1.0. It is designed to be serialized and returns from an API, and includes stat history for each delivery service, as well as data common to most endpoints.
 type StatsOld struct {
 	DeliveryService map[enum.DeliveryServiceName]map[StatName][]StatOld `json:"deliveryService"`
 	srvhttp.CommonAPIData
 }
 
+// StatsReadonly is a read-only interface for delivery service Stats, designed to be passed to multiple goroutine readers.
 type StatsReadonly interface {
 	Get(enum.DeliveryServiceName) (StatReadonly, bool)
 	JSON(Filter, url.Values) StatsOld
 }
 
+// StatReadonly is a read-only interface for a delivery service Stat, designed to be passed to multiple goroutine readers.
 type StatReadonly interface {
 	Copy() Stat
 	Common() StatCommonReadonly
@@ -42,6 +48,7 @@ type StatReadonly interface {
 	Total() StatCacheStats
 }
 
+// StatCommonReadonly is a read-only interface for a delivery service's common Stat data, designed to be passed to multiple goroutine readers.
 type StatCommonReadonly interface {
 	Copy() StatCommon
 	CachesConfigured() StatInt
@@ -53,26 +60,36 @@ type StatCommonReadonly interface {
 	CachesAvailable() StatInt
 }
 
+// StatMeta includes metadata about a particular stat.
 type StatMeta struct {
 	Time int `json:"time"`
 }
+
+// StatFloat is a float stat, combined with its metadata
 type StatFloat struct {
 	StatMeta
 	Value float64 `json:"value"`
 }
+
+// StatBool is a boolean stat, combined with its metadata
 type StatBool struct {
 	StatMeta
 	Value bool `json:"value"`
 }
+
+// StatInt is an integer stat, combined with its metadata
 type StatInt struct {
 	StatMeta
 	Value int64 `json:"value"`
 }
+
+// StatString is a string stat, combined with its metadata
 type StatString struct {
 	StatMeta
 	Value string `json:"value"`
 }
 
+// StatCommon contains stat data common to most delivery service stats.
 type StatCommon struct {
 	CachesConfiguredNum StatInt                 `json:"caches_configured"`
 	CachesReporting     map[enum.CacheName]bool `json:"caches_reporting"`
@@ -83,6 +100,7 @@ type StatCommon struct {
 	CachesAvailableNum  StatInt                 `json:"caches_available"`
 }
 
+// Copy returns a deep copy of this StatCommon object.
 func (a StatCommon) Copy() StatCommon {
 	b := a
 	for k, v := range a.CachesReporting {
@@ -91,13 +109,18 @@ func (a StatCommon) Copy() StatCommon {
 	return b
 }
 
+// CachesConfigured returns the number of caches configured for this delivery service stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) CachesConfigured() StatInt {
 	return a.CachesConfiguredNum
 }
+
+// CacheReporting returns the number of caches reporting for this delivery service stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) CacheReporting(name enum.CacheName) (bool, bool) {
 	c, ok := a.CachesReporting[name]
 	return c, ok
 }
+
+// CachesReportingNames returns the list of caches reporting for this delivery service stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) CachesReportingNames() []enum.CacheName {
 	names := make([]enum.CacheName, 0, len(a.CachesReporting))
 	for name := range a.CachesReporting {
@@ -105,18 +128,28 @@ func (a StatCommon) CachesReportingNames() []enum.CacheName {
 	}
 	return names
 }
+
+// Error returns the error string of this delivery service stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) Error() StatString {
 	return a.ErrorStr
 }
+
+// Status returns the status string of this delivery service stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) Status() StatString {
 	return a.StatusStr
 }
+
+// Healthy returns whether this delivery service is considered healthy by this stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) Healthy() StatBool {
 	return a.IsHealthy
 }
+
+// Available returns whether this delivery service is considered available by this stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) Available() StatBool {
 	return a.IsAvailable
 }
+
+// CachesAvailable returns the number of caches available to the delivery service in this stat. It is part of the StatCommonReadonly interface.
 func (a StatCommon) CachesAvailable() StatInt {
 	return a.CachesAvailableNum
 }
@@ -141,6 +174,7 @@ type StatCacheStats struct {
 	TpsTotal    StatInt    `json:"tps_total"`
 }
 
+// Sum adds the given cache stats to this cache stats. Numeric values are summed; strings are appended.
 func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 	return StatCacheStats{
 		OutBytes:    StatInt{Value: a.OutBytes.Value + b.OutBytes.Value},
@@ -160,6 +194,7 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 	}
 }
 
+// Stat represents a complete delivery service stat, for a given poll, or at the time requested.
 type Stat struct {
 	CommonStats        StatCommon
 	CacheGroups        map[enum.CacheGroupName]StatCacheStats
@@ -169,8 +204,10 @@ type Stat struct {
 	TotalStats         StatCacheStats
 }
 
+// ErrNotProcessedStat indicates a stat received is not used by Traffic Monitor, nor returned by any API endpoint. Receiving this error indicates the stat has been discarded.
 var ErrNotProcessedStat = errors.New("This stat is not used.")
 
+// NewStat returns a new delivery service Stat, initializing pointer members.
 func NewStat() *Stat {
 	return &Stat{
 		CacheGroups:        map[enum.CacheGroupName]StatCacheStats{},
@@ -181,6 +218,7 @@ func NewStat() *Stat {
 	}
 }
 
+// Copy performs a deep copy of this Stat. It does not modify, and is thus safe for multiple goroutines.
 func (a Stat) Copy() Stat {
 	b := Stat{
 		CommonStats:        a.CommonStats.Copy(),
@@ -205,20 +243,24 @@ func (a Stat) Copy() Stat {
 	return b
 }
 
+// Common returns the common stat data for this stat. It is part of the StatCommonReadonly interface.
 func (a Stat) Common() StatCommonReadonly {
 	return a.CommonStats
 }
 
+// CacheGroup returns the data for the given cachegroup in this stat. It is part of the StatCommonReadonly interface.
 func (a Stat) CacheGroup(name enum.CacheGroupName) (StatCacheStats, bool) {
 	c, ok := a.CacheGroups[name]
 	return c, ok
 }
 
+// Type returns the aggregated data for the given cache type in this stat. It is part of the StatCommonReadonly interface.
 func (a Stat) Type(name enum.CacheType) (StatCacheStats, bool) {
 	t, ok := a.Types[name]
 	return t, ok
 }
 
+// Total returns the aggregated total data in this stat. It is part of the StatCommonReadonly interface.
 func (a Stat) Total() StatCacheStats {
 	return a.TotalStats
 }

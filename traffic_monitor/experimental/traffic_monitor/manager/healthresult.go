@@ -13,13 +13,16 @@ import (
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
+// DurationMap represents a map of cache names to durations
 type DurationMap map[enum.CacheName]time.Duration
 
+// DurationMapThreadsafe wraps a DurationMap in an object safe for a single writer and multiple readers
 type DurationMapThreadsafe struct {
 	durationMap *DurationMap
 	m           *sync.RWMutex
 }
 
+// Copy copies this duration map.
 func (a DurationMap) Copy() DurationMap {
 	b := DurationMap{}
 	for k, v := range a {
@@ -28,6 +31,7 @@ func (a DurationMap) Copy() DurationMap {
 	return b
 }
 
+// NewDurationMapThreadsafe returns a new DurationMapThreadsafe safe for multiple readers and a single writer goroutine.
 func NewDurationMapThreadsafe() DurationMapThreadsafe {
 	m := DurationMap{}
 	return DurationMapThreadsafe{m: &sync.RWMutex{}, durationMap: &m}
@@ -40,6 +44,7 @@ func (o *DurationMapThreadsafe) Get() DurationMap {
 	return *o.durationMap
 }
 
+// Set sets the internal duration map. This MUST NOT be called by multiple goroutines.
 func (o *DurationMapThreadsafe) Set(d DurationMap) {
 	o.m.Lock()
 	*o.durationMap = d

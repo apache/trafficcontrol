@@ -7,15 +7,18 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 )
 
+// Handler handles peer Traffic Monitor data, taking a raw reader, parsing the data, and passing a result object to the ResultChannel. This fulfills the common `Handler` interface.
 type Handler struct {
 	ResultChannel chan Result
 	Notify        int
 }
 
+// NewHandler returns a new peer Handler.
 func NewHandler() Handler {
 	return Handler{ResultChannel: make(chan Result)}
 }
 
+// Result contains the data parsed from polling a peer Traffic Monitor.
 type Result struct {
 	ID           enum.TrafficMonitorName
 	Available    bool
@@ -25,6 +28,7 @@ type Result struct {
 	PollFinished chan<- uint64
 }
 
+// Handle handles a response from a polled Traffic Monitor peer, parsing the data and forwarding it to the ResultChannel.
 func (handler Handler) Handle(id string, r io.Reader, err error, pollID uint64, pollFinished chan<- uint64) {
 	result := Result{
 		ID:           enum.TrafficMonitorName(id),

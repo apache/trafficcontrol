@@ -22,6 +22,7 @@ type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]dsdata.Stat `json:"deliveryService"`
 }
 
+// Copy performs a deep copy of this Stats object.
 func (s Stats) Copy() Stats {
 	b := NewStats()
 	for k, v := range s.DeliveryService {
@@ -30,6 +31,7 @@ func (s Stats) Copy() Stats {
 	return b
 }
 
+// Get returns the stats for the given delivery service, and whether it exists.
 func (s Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
 	ds, ok := s.DeliveryService[name]
 	return ds, ok
@@ -120,10 +122,12 @@ type LastStats struct {
 	Caches           map[enum.CacheName]LastStatsData
 }
 
+// NewLastStats returns a new LastStats object, initializing internal pointer values.
 func NewLastStats() LastStats {
 	return LastStats{DeliveryServices: map[enum.DeliveryServiceName]LastDSStat{}, Caches: map[enum.CacheName]LastStatsData{}}
 }
 
+// Copy performs a deep copy of this LastStats object.
 func (a LastStats) Copy() LastStats {
 	b := NewLastStats()
 	for k, v := range a.DeliveryServices {
@@ -144,6 +148,7 @@ type LastDSStat struct {
 	Total       LastStatsData
 }
 
+// Copy performs a deep copy of this LastDSStat object.
 func (a LastDSStat) Copy() LastDSStat {
 	b := LastDSStat{
 		CacheGroups: map[enum.CacheGroupName]LastStatsData{},
@@ -171,6 +176,7 @@ func newLastDSStat() LastDSStat {
 	}
 }
 
+// LastStatsData contains the last stats and per-second calculations for bytes and status codes received from a cache.
 type LastStatsData struct {
 	Bytes     LastStatData
 	Status2xx LastStatData
@@ -190,6 +196,7 @@ func (a LastStatsData) Sum(b LastStatsData) LastStatsData {
 	}
 }
 
+// LastStatData contains the value, time it was received, and per-second calculation since the previous stat, for a stat from a cache.
 type LastStatData struct {
 	PerSec float64
 	Stat   int64
@@ -204,6 +211,7 @@ func (a LastStatData) Sum(b LastStatData) LastStatData {
 	}
 }
 
+// BytesPerKilobit is the number of bytes in a kilobit.
 const BytesPerKilobit = 125
 
 func addLastStat(lastData LastStatData, newStat int64, newStatTime time.Time) (LastStatData, error) {
@@ -374,6 +382,7 @@ func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats
 	return dsStats, lastStats
 }
 
+// CreateStats aggregates and creates statistics from given stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
 func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
 	start := time.Now()
 	dsStats := NewStats()

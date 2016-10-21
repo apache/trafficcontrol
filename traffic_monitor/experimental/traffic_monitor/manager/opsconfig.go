@@ -23,16 +23,19 @@ type OpsConfigThreadsafe struct {
 	m         *sync.RWMutex
 }
 
+// NewOpsConfigThreadsafe returns a new single-writer-multiple-reader OpsConfig
 func NewOpsConfigThreadsafe() OpsConfigThreadsafe {
 	return OpsConfigThreadsafe{m: &sync.RWMutex{}, opsConfig: &handler.OpsConfig{}}
 }
 
+// Get gets the internal OpsConfig object. This MUST NOT be modified. If modification is necessary, copy the object.
 func (o *OpsConfigThreadsafe) Get() handler.OpsConfig {
 	o.m.RLock()
 	defer o.m.RUnlock()
 	return *o.opsConfig
 }
 
+// Set sets the internal OpsConfig object. This MUST NOT be called from multiple goroutines.
 func (o *OpsConfigThreadsafe) Set(newOpsConfig handler.OpsConfig) {
 	o.m.Lock()
 	*o.opsConfig = newOpsConfig

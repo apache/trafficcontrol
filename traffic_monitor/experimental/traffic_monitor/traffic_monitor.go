@@ -19,7 +19,10 @@ import (
 	_ "github.com/davecheney/gmx"
 )
 
+// GitRevision is the git revision of the app. The app SHOULD always be built with this set via the `-X` flag.
 var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevision=${git rev-parse HEAD}'"
+
+// BuildTimestamp is the time the app was built. The app SHOULD always be built with this set via the `-X` flag.
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
 
 // getHostNameWithoutDomain returns the machine hostname, without domain information.

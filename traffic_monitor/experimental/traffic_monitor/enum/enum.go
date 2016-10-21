@@ -6,22 +6,31 @@ import (
 	"strings"
 )
 
+// TrafficMonitorName is the hostname of a Traffic Monitor peer.
 type TrafficMonitorName string
 
+// CacheName is the hostname of a CDN cache.
 type CacheName string
 
+// CacheGroupName is the name of a CDN cachegroup.
 type CacheGroupName string
 
+// DeliveryServiceName is the name of a CDN delivery service.
 type DeliveryServiceName string
 
+// CacheType is the type (or tier) of a CDN cache.
 type CacheType string
 
 const (
-	CacheTypeEdge    = CacheType("EDGE")
-	CacheTypeMid     = CacheType("MID")
+	// CacheTypeEdge represents an edge cache.
+	CacheTypeEdge = CacheType("EDGE")
+	// CacheTypeMid represents a mid cache.
+	CacheTypeMid = CacheType("MID")
+	// CacheTypeInvalid represents an cache type enumeration. Note this is the default construction for a CacheType.
 	CacheTypeInvalid = CacheType("")
 )
 
+// String returns a string representation of this cache type.
 func (t CacheType) String() string {
 	switch t {
 	case CacheTypeEdge:
@@ -33,6 +42,7 @@ func (t CacheType) String() string {
 	}
 }
 
+// CacheTypeFromString returns a cache type object from its string representation, or CacheTypeInvalid if the string is not a valid type.
 func CacheTypeFromString(s string) CacheType {
 	s = strings.ToLower(s)
 	switch s {
@@ -49,11 +59,15 @@ func CacheTypeFromString(s string) CacheType {
 type DSType string
 
 const (
-	DSTypeHTTP    = DSType("http")
-	DSTypeDNS     = DSType("dns")
+	// DSTypeHTTP represents an HTTP delivery service
+	DSTypeHTTP = DSType("http")
+	// DSTypeDNS represents a DNS delivery service
+	DSTypeDNS = DSType("dns")
+	// DSTypeInvalid represents an invalid delivery service type enumeration. Note this is the default construction for a DSType.
 	DSTypeInvalid = DSType("")
 )
 
+// String returns a string representation of this delivery service type.
 func (t DSType) String() string {
 	switch t {
 	case DSTypeHTTP:
@@ -65,6 +79,7 @@ func (t DSType) String() string {
 	}
 }
 
+// DSTypeFromString returns a delivery service type object from its string representation, or DSTypeInvalid if the string is not a valid type.
 func DSTypeFromString(s string) DSType {
 	s = strings.ToLower(s)
 	switch s {

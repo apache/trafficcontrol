@@ -13,6 +13,7 @@ import (
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
+// StatHistory is a map of cache names, to an array of result history from each cache.
 type StatHistory map[enum.CacheName][]cache.Result
 
 func copyStat(a []cache.Result) []cache.Result {
@@ -21,6 +22,7 @@ func copyStat(a []cache.Result) []cache.Result {
 	return b
 }
 
+// Copy copies returns a deep copy of this StatHistory
 func (a StatHistory) Copy() StatHistory {
 	b := StatHistory{}
 	for k, v := range a {
@@ -38,10 +40,12 @@ type StatHistoryThreadsafe struct {
 	max         uint64
 }
 
+// Max returns the max history to be stored for any cache
 func (h StatHistoryThreadsafe) Max() uint64 {
 	return h.max
 }
 
+// NewStatHistoryThreadsafe returns a new StatHistory safe for multiple readers and a single writer.
 func NewStatHistoryThreadsafe(maxHistory uint64) StatHistoryThreadsafe {
 	h := StatHistory{}
 	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: &h, max: maxHistory}
