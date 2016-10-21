@@ -15,7 +15,7 @@ func setError(newResult *cache.Result, err error) {
 	newResult.Available = false
 }
 
-// Get the vitals to decide health on in the right format
+// GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")

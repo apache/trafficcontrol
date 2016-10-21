@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// CacheAvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
 // TODO put somewhere more generic
 const CacheAvailableStatusReported = "REPORTED"
 

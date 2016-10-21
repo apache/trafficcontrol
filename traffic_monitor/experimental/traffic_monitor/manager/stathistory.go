@@ -29,6 +29,7 @@ func (a StatHistory) Copy() StatHistory {
 	return b
 }
 
+// StatHistoryThreadsafe provides safe access for multiple goroutines readers and a single writer to a stored StatHistory object.
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and Deliveryservice maps?
 type StatHistoryThreadsafe struct {

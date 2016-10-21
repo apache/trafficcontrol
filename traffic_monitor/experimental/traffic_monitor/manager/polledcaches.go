@@ -28,14 +28,14 @@ func NewUnpolledCachesThreadsafe() UnpolledCachesThreadsafe {
 	}
 }
 
-// Get returns the caches. Callers MUST NOT modify. If mutation is necessary, copy the map
+// UnpolledCaches returns a map of caches not yet polled. Callers MUST NOT modify. If mutation is necessary, copy the map
 func (t *UnpolledCachesThreadsafe) UnpolledCaches() map[enum.CacheName]struct{} {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return *t.unpolledCaches
 }
 
-// Set sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
+// setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
 func (t *UnpolledCachesThreadsafe) setUnpolledCaches(v map[enum.CacheName]struct{}) {
 	t.m.Lock()
 	*t.initialized = true
@@ -67,7 +67,7 @@ func (t *UnpolledCachesThreadsafe) SetNewCaches(newCaches map[enum.CacheName]str
 	t.setUnpolledCaches(unpolledCaches)
 }
 
-// AnyCachesUnpolled returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
+// Any returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
 func (t *UnpolledCachesThreadsafe) Any() bool {
 	t.m.Lock()
 	defer t.m.Unlock()
