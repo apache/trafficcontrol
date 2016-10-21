@@ -98,7 +98,7 @@ func StartStatHistoryManager(
 	errorCount UintThreadsafe,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsThreadsafe, UnpolledCachesThreadsafe) {
+) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsReader, UnpolledCachesThreadsafe) {
 	statHistory := NewStatHistoryThreadsafe(cfg.MaxStatHistory)
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
@@ -136,7 +136,7 @@ func StartStatHistoryManager(
 			}
 		}
 	}()
-	return statHistory, lastStatDurations, lastStats, dsStats, unpolledCaches
+	return statHistory, lastStatDurations, lastStats, &dsStats, unpolledCaches
 }
 
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.

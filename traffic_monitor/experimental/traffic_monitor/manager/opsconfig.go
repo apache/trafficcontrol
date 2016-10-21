@@ -55,7 +55,7 @@ func StartOpsConfigManager(
 	combinedStates peer.CRStatesThreadsafe,
 	statHistory StatHistoryThreadsafe,
 	lastStats LastStatsThreadsafe,
-	dsStats DSStatsThreadsafe,
+	dsStats DSStatsReader,
 	events EventsThreadsafe,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
