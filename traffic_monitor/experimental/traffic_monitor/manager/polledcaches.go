@@ -14,7 +14,6 @@ type UnpolledCachesThreadsafe struct {
 	allCaches      *map[enum.CacheName]struct{}
 	initialized    *bool
 	m              *sync.RWMutex
-	max            uint64
 }
 
 // NewUnpolledCachesThreadsafe returns a new UnpolledCachesThreadsafe object.
