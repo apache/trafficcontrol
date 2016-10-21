@@ -13,7 +13,7 @@ func TestCrStates(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	crStates, err := CrStatesUnMarshall(text)
+	crStates, err := CrstatesUnMarshall(text)
 	if err != nil {
 		t.Log(err)
 	}
