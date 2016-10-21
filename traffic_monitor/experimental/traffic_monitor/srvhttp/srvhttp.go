@@ -138,7 +138,10 @@ func (s Server) Run(f GetDataFunc, addr string, readTimeout time.Duration, write
 	s.stoppableListenerWaitGroup.Add(1)
 	go func() {
 		defer s.stoppableListenerWaitGroup.Done()
-		server.Serve(s.stoppableListener)
+		err := server.Serve(s.stoppableListener)
+		if err != nil {
+			log.Warnf("HTTP server stopped with error: %v\n", err)
+		}
 	}()
 
 	log.Infof("Web server listening on %s", addr)
@@ -284,10 +287,15 @@ func (s Server) dataRequest(w http.ResponseWriter, req *http.Request, t Type, f 
 	})
 	if len(data) > 0 {
 		w.WriteHeader(responseCode)
-		w.Write(data)
+		if _, err := w.Write(data); err != nil {
+			log.Warnf("received error writing data request %v: %v\n", t, err)
+		}
+
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+		if _, err := w.Write([]byte("Internal Server Error")); err != nil {
+			log.Warnf("received error writing data request %v: %v\n", t, err)
+		}
 	}
 }
 
