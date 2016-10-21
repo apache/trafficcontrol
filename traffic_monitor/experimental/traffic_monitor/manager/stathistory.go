@@ -156,7 +156,7 @@ func processStatResults(
 	maxStats := statHistoryThreadsafe.Max()
 	for _, result := range results {
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		statHistory[enum.CacheName(result.ID)] = pruneHistory(append(statHistory[enum.CacheName(result.ID)], result), maxStats)
+		statHistory[result.ID] = pruneHistory(append(statHistory[result.ID], result), maxStats)
 	}
 	statHistoryThreadsafe.Set(statHistory)
 
@@ -181,11 +181,11 @@ func processStatResults(
 	endTime := time.Now()
 	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
 	for _, result := range results {
-		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.ID)]; ok {
+		if lastStatStart, ok := lastStatEndTimes[result.ID]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations[enum.CacheName(result.ID)] = d
+			lastStatDurations[result.ID] = d
 		}
-		lastStatEndTimes[enum.CacheName(result.ID)] = endTime
+		lastStatEndTimes[result.ID] = endTime
 
 		// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
 		result.PollFinished <- result.PollID

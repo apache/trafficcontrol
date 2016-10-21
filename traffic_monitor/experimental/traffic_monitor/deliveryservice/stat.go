@@ -63,7 +63,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			log.Warnf("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
 		}
-		cacheType, ok := serverTypes[enum.CacheName(cache)]
+		cacheType, ok := serverTypes[cache]
 		if !ok {
 			log.Warnf("CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
 			continue
@@ -75,7 +75,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 				continue
 			}
 
-			stat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
+			stat, ok := dsStats.DeliveryService[deliveryService]
 			if !ok {
 				log.Warnf("CreateStats not adding availability data for '%s': not found in Stats\n", cache)
 				continue // TODO log warning? Error?
@@ -85,9 +85,9 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 				// c.IsAvailable.Value
 				stat.CommonStats.IsAvailable.Value = true
 				stat.CommonStats.CachesAvailableNum.Value++
-				cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
+				cacheGroupStats := stat.CacheGroups[cacheGroup]
 				cacheGroupStats.IsAvailable.Value = true
-				stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
+				stat.CacheGroups[cacheGroup] = cacheGroupStats
 				stat.TotalStats.IsAvailable.Value = true
 				typeStats := stat.Types[cacheType]
 				typeStats.IsAvailable.Value = true
@@ -95,13 +95,13 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			}
 
 			// TODO fix nested ifs
-			if results, ok := statHistory[enum.CacheName(cache)]; ok {
+			if results, ok := statHistory[cache]; ok {
 				if len(results) < 1 {
 					log.Warnf("no results %v %v\n", cache, deliveryService)
 				} else {
 					result := results[0]
 					if result.PrecomputedData.Reporting {
-						stat.CommonStats.CachesReporting[enum.CacheName(cache)] = true
+						stat.CommonStats.CachesReporting[cache] = true
 					} else {
 						log.Debugf("no reporting %v %v\n", cache, deliveryService)
 					}
@@ -110,7 +110,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 				log.Debugf("no result for %v %v\n", cache, deliveryService)
 			}
 
-			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = stat // TODO Necessary? Remove?
+			dsStats.DeliveryService[deliveryService] = stat // TODO Necessary? Remove?
 		}
 	}
 	return dsStats, nil
@@ -391,7 +391,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			log.Errorf("EMPTY CreateStats deliveryService")
 			continue
 		}
-		dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = *dsdata.NewStat()
+		dsStats.DeliveryService[deliveryService] = *dsdata.NewStat()
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
@@ -409,7 +409,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			log.Warnf("server %s has no cachegroup, skipping\n", server)
 			continue
 		}
-		serverType, ok := toData.ServerTypes[enum.CacheName(server)]
+		serverType, ok := toData.ServerTypes[server]
 		if !ok {
 			log.Warnf("server %s not in CRConfig, skipping\n", server)
 			continue

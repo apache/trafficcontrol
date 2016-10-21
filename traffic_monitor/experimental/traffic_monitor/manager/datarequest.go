@@ -613,7 +613,7 @@ func createCacheStatuses(
 		}
 
 		var kbps *float64
-		lastStat, ok := lastStats.Caches[enum.CacheName(cacheName)]
+		lastStat, ok := lastStats.Caches[cacheName]
 		if !ok {
 			log.Warnf("cache not in last kbps cache %s\n", cacheName)
 		} else {
@@ -622,7 +622,7 @@ func createCacheStatuses(
 		}
 
 		var connections *int64
-		connectionsVal, ok := conns[enum.CacheName(cacheName)]
+		connectionsVal, ok := conns[cacheName]
 		if !ok {
 			log.Warnf("cache not in connections %s\n", cacheName)
 		} else {
@@ -630,12 +630,12 @@ func createCacheStatuses(
 		}
 
 		var status *string
-		statusVal, ok := localCacheStatus[enum.CacheName(cacheName)]
+		statusVal, ok := localCacheStatus[cacheName]
 		if !ok {
 			log.Warnf("cache not in statuses %s\n", cacheName)
 		} else {
 			statusString := statusVal.Status + " - "
-			if localCacheStatus[enum.CacheName(cacheName)].Available {
+			if localCacheStatus[cacheName].Available {
 				statusString += "available"
 			} else {
 				statusString += "unavailable"
@@ -644,7 +644,7 @@ func createCacheStatuses(
 		}
 
 		cacheTypeStr := string(cacheType)
-		statii[enum.CacheName(cacheName)] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
+		statii[cacheName] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
 	}
 	return statii
 }
