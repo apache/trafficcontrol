@@ -16,6 +16,7 @@ import (
 
 // TODO remove 'ds' and 'stat' from names
 
+// Stats is the JSON-serialisable representation of delivery service Stats. It maps delivery service names to individual stat objects.
 // TODO remove DeliveryService and set type to the map directly, or add other members
 type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]dsdata.Stat `json:"deliveryService"`
@@ -34,6 +35,7 @@ func (s Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
 	return ds, ok
 }
 
+// NewStats creates a new Stats object, initializing any pointer members.
 // TODO rename to just 'New'?
 func NewStats() Stats {
 	return Stats{DeliveryService: map[enum.DeliveryServiceName]dsdata.Stat{}}
@@ -133,6 +135,7 @@ func (a LastStats) Copy() LastStats {
 	return b
 }
 
+// LastDSStat maps and aggregates the last stats received for the given delivery service to caches, cache groups, types, and total.
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type LastDSStat struct {
 	Caches      map[enum.CacheName]LastStatsData
@@ -470,7 +473,7 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 	return s
 }
 
-// StatsJSON returns an object formatted as expected to be serialized to JSON and served.
+// JSON returns an object formatted as expected to be serialized to JSON and served.
 func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	now := time.Now().Unix()
 	jsonObj := &dsdata.StatsOld{

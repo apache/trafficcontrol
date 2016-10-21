@@ -35,6 +35,7 @@ type APIPeerStates struct {
 	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
 }
 
+// CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
 	Type                  *string  `json:"type,omitempty"`

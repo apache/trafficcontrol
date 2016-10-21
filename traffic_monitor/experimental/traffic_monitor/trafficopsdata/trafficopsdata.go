@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// DsRegexes maps Delivery Service Regular Expressions to delivery services.
+// Regexes maps Delivery Service Regular Expressions to delivery services.
 // For performance, we categorize Regular Expressions into 3 categories:
 // 1. Direct string matches, with no regular expression matching characters
 // 2. .*\.foo\..* expressions, where foo is a direct string match with no regular expression matching characters
@@ -65,6 +65,7 @@ func New() *TOData {
 	}
 }
 
+// TODataThreadsafe provides safe access for multiple goroutine writers and one goroutine reader, to the encapsulated TOData object.
 // This could be made lock-free, if the performance was necessary
 type TODataThreadsafe struct {
 	toData *TOData

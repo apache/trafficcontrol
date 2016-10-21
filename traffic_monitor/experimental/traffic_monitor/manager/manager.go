@@ -29,7 +29,7 @@ type StaticAppData struct {
 }
 
 //
-// Kicks off the pollers and handlers
+// Start starts the poller and handler goroutines
 //
 func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
