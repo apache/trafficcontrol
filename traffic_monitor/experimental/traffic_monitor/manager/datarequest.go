@@ -420,7 +420,7 @@ func DataRequest(
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statHistory StatHistoryThreadsafe,
-	dsStats DSStatsThreadsafe,
+	dsStats DSStatsReader,
 	events EventsThreadsafe,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
