@@ -12,6 +12,7 @@ import (
 	"sync"
 )
 
+// CopyTrafficMonitorConfigMap returns a deep copy of the given TrafficMonitorConfigMap
 func CopyTrafficMonitorConfigMap(a *to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
 	b := to.TrafficMonitorConfigMap{}
 	b.TrafficServer = map[string]to.TrafficServer{}
@@ -41,11 +42,13 @@ func CopyTrafficMonitorConfigMap(a *to.TrafficMonitorConfigMap) to.TrafficMonito
 	return b
 }
 
+// TrafficMonitorConfigMapThreadsafe encapsulates a TrafficMonitorConfigMap safe for multiple readers and a single writer.
 type TrafficMonitorConfigMapThreadsafe struct {
 	monitorConfig *to.TrafficMonitorConfigMap
 	m             *sync.RWMutex
 }
 
+// NewTrafficMonitorConfigMapThreadsafe returns an encapsulated TrafficMonitorConfigMap safe for multiple readers and a single writer.
 func NewTrafficMonitorConfigMapThreadsafe() TrafficMonitorConfigMapThreadsafe {
 	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
 }
@@ -64,6 +67,7 @@ func (t *TrafficMonitorConfigMapThreadsafe) Set(c to.TrafficMonitorConfigMap) {
 	t.m.Unlock()
 }
 
+// StartMonitorConfigManager runs the monitor config manager goroutine, and returns the threadsafe data which it sets.
 func StartMonitorConfigManager(
 	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
 	localStates peer.CRStatesThreadsafe,

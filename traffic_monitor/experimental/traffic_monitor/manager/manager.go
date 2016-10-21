@@ -17,6 +17,7 @@ import (
 	"github.com/davecheney/gmx"
 )
 
+// StaticAppData encapsulates data about the app available at startup
 type StaticAppData struct {
 	StartTime      time.Time
 	GitRevision    string

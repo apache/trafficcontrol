@@ -22,14 +22,17 @@ import (
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 )
 
+// JSONEvents represents the structure we wish to serialize to JSON, for Events.
 type JSONEvents struct {
 	Events []Event `json:"events"`
 }
 
+// CacheState represents the available state of a cache.
 type CacheState struct {
 	Value bool `json:"value"`
 }
 
+// APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.
 type APIPeerStates struct {
 	srvhttp.CommonAPIData
 	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
@@ -56,6 +59,7 @@ type CacheStatFilter struct {
 	cacheTypes   map[enum.CacheName]enum.CacheType
 }
 
+// UseCache returns whether the given cache is in the filter.
 func (f *CacheStatFilter) UseCache(name enum.CacheName) bool {
 	if _, inHosts := f.hosts[name]; len(f.hosts) != 0 && !inHosts {
 		return false
@@ -66,6 +70,7 @@ func (f *CacheStatFilter) UseCache(name enum.CacheName) bool {
 	return true
 }
 
+// UseStat returns whether the given stat is in the filter.
 func (f *CacheStatFilter) UseStat(statName string) bool {
 	if len(f.statsToUse) == 0 {
 		return true
@@ -82,6 +87,7 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 	return false
 }
 
+// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
 func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 	if f.historyCount == 0 {
 		return true
@@ -172,6 +178,7 @@ type DSStatFilter struct {
 	dsTypes          map[enum.DeliveryServiceName]enum.DSType
 }
 
+// UseDeliveryService returns whether the given delivery service is in this filter.
 func (f *DSStatFilter) UseDeliveryService(name enum.DeliveryServiceName) bool {
 	if _, inDSes := f.deliveryServices[name]; len(f.deliveryServices) != 0 && !inDSes {
 		return false
@@ -182,6 +189,7 @@ func (f *DSStatFilter) UseDeliveryService(name enum.DeliveryServiceName) bool {
 	return true
 }
 
+// UseStat returns whether the given stat is in this filter.
 func (f *DSStatFilter) UseStat(statName string) bool {
 	if len(f.statsToUse) == 0 {
 		return true
@@ -198,6 +206,7 @@ func (f *DSStatFilter) UseStat(statName string) bool {
 	return false
 }
 
+// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
 func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
 	if f.historyCount == 0 {
 		return true
@@ -289,6 +298,7 @@ type PeerStateFilter struct {
 	cacheTypes   map[enum.CacheName]enum.CacheType
 }
 
+// UsePeer returns whether the given Traffic Monitor peer is in this filter.
 func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
 	if _, inPeers := f.peersToUse[name]; len(f.peersToUse) != 0 && !inPeers {
 		return false
@@ -296,6 +306,7 @@ func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
 	return true
 }
 
+// UseCache returns whether the given cache is in this filter.
 func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
 	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
 		return false
@@ -317,6 +328,7 @@ func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
 	return false
 }
 
+// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
 func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
 	if f.historyCount == 0 {
 		return true
@@ -697,6 +709,7 @@ func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, f
 	return apiPeerStates
 }
 
+// Stats contains statistics data about this running app. Designed to be returned via an API endpoint.
 type Stats struct {
 	MaxMemoryMB         uint64 `json:"Max Memory (MB)"`
 	GitRevision         string `json:"git-revision"`

@@ -5,11 +5,13 @@ import (
 	"sync"
 )
 
+// LastStatsThreadsafe wraps a deliveryservice.LastStats object to be safe for multiple readers and one writer.
 type LastStatsThreadsafe struct {
 	stats *ds.LastStats
 	m     *sync.RWMutex
 }
 
+// NewLastStatsThreadsafe returns a wrapped a deliveryservice.LastStats object safe for multiple readers and one writer.
 func NewLastStatsThreadsafe() LastStatsThreadsafe {
 	s := ds.NewLastStats()
 	return LastStatsThreadsafe{m: &sync.RWMutex{}, stats: &s}
@@ -22,6 +24,7 @@ func (o *LastStatsThreadsafe) Get() ds.LastStats {
 	return *o.stats
 }
 
+// Set sets the internal LastStats object. This MUST NOT be called by multiple goroutines.
 func (o *LastStatsThreadsafe) Set(s ds.LastStats) {
 	o.m.Lock()
 	*o.stats = s
