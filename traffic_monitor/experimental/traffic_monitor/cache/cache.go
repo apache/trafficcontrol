@@ -17,6 +17,7 @@ import (
 	"time"
 )
 
+// Handler is a cache handler, which fulfills the common/handler `Handler` interface.
 type Handler struct {
 	ResultChannel      chan Result
 	Notify             int
@@ -25,20 +26,22 @@ type Handler struct {
 	MultipleSpaceRegex *regexp.Regexp
 }
 
-// NewHandler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
+// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
 func NewHandler() Handler {
 	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
 
-// NewPrecomputeHandler precomputes stat data and populates result.Precomputed before passing to ResultChannel.
+// NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChannel.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
 	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
+// Precompute returns whether this handler precomputes data before passing the result to the ResultChannel
 func (handler Handler) Precompute() bool {
 	return handler.ToData != nil && handler.PeerStates != nil
 }
 
+// PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
@@ -47,6 +50,7 @@ type PrecomputedData struct {
 	Reporting            bool
 }
 
+// Result is the data result returned by a cache.
 type Result struct {
 	ID        enum.CacheName
 	Available bool
@@ -59,6 +63,7 @@ type Result struct {
 	PollFinished chan<- uint64
 }
 
+// Vitals is the vitals data returned from a cache.
 type Vitals struct {
 	LoadAvg    float64
 	BytesOut   int64
@@ -67,16 +72,19 @@ type Vitals struct {
 	MaxKbpsOut int64
 }
 
+// Stat is a generic stat, including the untyped value and the time the stat was taken.
 type Stat struct {
 	Time  int64       `json:"time"`
 	Value interface{} `json:"value"`
 }
 
+// Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
 	Caches map[enum.CacheName]map[string][]Stat `json:"caches"`
 }
 
+// Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
 	UseStat(name string) bool
 	UseCache(name enum.CacheName) bool
@@ -126,6 +134,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 	return json.Marshal(stats)
 }
 
+// Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
 func (handler Handler) Handle(id string, r io.Reader, err error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{

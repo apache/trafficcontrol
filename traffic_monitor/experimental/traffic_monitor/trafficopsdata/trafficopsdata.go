@@ -41,10 +41,12 @@ func (d Regexes) DeliveryService(fqdn string) (enum.DeliveryServiceName, bool) {
 	return "", false
 }
 
+// NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func NewRegexes() Regexes {
 	return Regexes{DirectMatches: map[string]enum.DeliveryServiceName{}, DotStartSlashDotFooSlashDotDotStar: map[string]enum.DeliveryServiceName{}, RegexMatch: map[*regexp.Regexp]enum.DeliveryServiceName{}}
 }
 
+// TOData holds CDN data fetched from Traffic Ops.
 type TOData struct {
 	DeliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName
 	ServerDeliveryServices map[enum.CacheName][]enum.DeliveryServiceName
@@ -54,6 +56,7 @@ type TOData struct {
 	ServerCachegroups      map[enum.CacheName]enum.CacheGroupName
 }
 
+// New returns a new empty TOData object, initializing pointer members.
 func New() *TOData {
 	return &TOData{
 		DeliveryServiceServers: map[enum.DeliveryServiceName][]enum.CacheName{},
@@ -72,6 +75,7 @@ type TODataThreadsafe struct {
 	m      *sync.RWMutex
 }
 
+// NewThreadsafe returns a new TOData object, wrapped to be safe for multiple goroutine readers and a single writer.
 func NewThreadsafe() TODataThreadsafe {
 	return TODataThreadsafe{m: &sync.RWMutex{}, toData: New()}
 }
