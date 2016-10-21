@@ -257,7 +257,6 @@ type GetDataFunc func(DataRequest) ([]byte, int)
 
 // ParametersStr takes the URL query parameters, and returns a string as used by the Traffic Monitor 1.0 endpoints "pp" key.
 func ParametersStr(params url.Values) string {
-	fmt.Println("debug4 ParametersStr 0")
 	pp := ""
 	for param, vals := range params {
 		for _, val := range vals {
