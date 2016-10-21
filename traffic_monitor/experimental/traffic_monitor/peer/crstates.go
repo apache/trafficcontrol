@@ -66,6 +66,7 @@ func CrstatesMarshall(states Crstates) ([]byte, error) {
 	return json.Marshal(states)
 }
 
+// CRStatesThreadsafe provides safe access for multiple goroutines to read a single Crstates object, with a single goroutine writer.
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and Deliveryservice maps?
 type CRStatesThreadsafe struct {
@@ -78,6 +79,7 @@ func NewCRStatesThreadsafe() CRStatesThreadsafe {
 	return CRStatesThreadsafe{m: &sync.RWMutex{}, crStates: &crs}
 }
 
+// Get returns the internal Crstates object for reading.
 // TODO add GetCaches, GetDeliveryservices?
 func (t *CRStatesThreadsafe) Get() Crstates {
 	t.m.RLock()
@@ -85,6 +87,7 @@ func (t *CRStatesThreadsafe) Get() Crstates {
 	return t.crStates.Copy()
 }
 
+// GetDeliveryServices returns the internal Crstates delivery services map for reading.
 // TODO add GetCaches, GetDeliveryservices?
 func (t *CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]Deliveryservice {
 	t.m.RLock()
@@ -146,6 +149,7 @@ func (t *CRStatesThreadsafe) DeleteDeliveryService(name enum.DeliveryServiceName
 	t.m.Unlock()
 }
 
+// CRStatesPeersThreadsafe provides safe access for multiple goroutines to read a map of Traffic Monitor peers to their returned Crstates, with a single goroutine writer.
 // This could be made lock-free, if the performance was necessary
 type CRStatesPeersThreadsafe struct {
 	crStates map[enum.TrafficMonitorName]Crstates

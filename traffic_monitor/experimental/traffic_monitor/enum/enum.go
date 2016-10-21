@@ -12,10 +12,8 @@ type CacheName string
 
 type CacheGroupName string
 
-// Current JSON endpoint:
 type DeliveryServiceName string
 
-// TODO move and rename more generically
 type CacheType string
 
 const (

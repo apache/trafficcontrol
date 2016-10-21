@@ -53,7 +53,6 @@ type StatCommonReadonly interface {
 	CachesAvailable() StatInt
 }
 
-// New, more structured format:
 type StatMeta struct {
 	Time int `json:"time"`
 }
