@@ -11,9 +11,9 @@
 * Build the RPM
 
     ```
-    $ cd traffic_ops/experimental/ui/build
-    $ docker build -t tov2-image .
-    $ docker run -v $(pwd)/artifacts:/artifacts -e GITREPO=https://github.com/apache/incubator-trafficcontrol.git -e BRANCH=master tov2-image
+    $ cd incubator-trafficcontrol/traffic_ops/experimental/ui/build
+    $ sudo docker build -t tov2-image .
+    $ sudo docker run -v $(pwd)/artifacts:/artifacts -e GITREPO=https://github.com/apache/incubator-trafficcontrol.git -e BRANCH=master tov2-image
     ```
 
     The rpm will be created the `artifacts` directory.
@@ -54,7 +54,7 @@
 * Navigate to Traffic Ops v2
 
     ```
-    $ http://localhost:8080
+    $ http://localhost[:port]
     ```
 
 #### Notes
