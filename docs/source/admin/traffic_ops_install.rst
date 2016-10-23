@@ -98,7 +98,7 @@ To begin the install:
       Hit ENTER to continue:
 
 
-  The first thing the post install will do is install additional packages needed from the yum repo.
+  The first thing postinstall will do is install additional packages needed from the yum repo.
 
   Ater that, it will automatically proceed to installing the required Perl packages from CPAN.
 
@@ -378,5 +378,5 @@ To upgrade:
 
 1. Enter the following command:``service traffic_ops stop``
 2. Enter the following command:``yum upgrade traffic_ops``
-3. See :ref:`rl-ps` to run the post install.
+3. See :ref:`rl-ps` to run postinstall.
 4. Enter the following command:``service traffic_ops start``
