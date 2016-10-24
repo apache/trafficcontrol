@@ -52,6 +52,7 @@ public abstract class AbstractServiceUpdater {
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
 	protected Path databasesDirectory;
+	private String eTag = null;
 
 	public void destroy() {
 		executorService.shutdownNow();
@@ -343,9 +344,13 @@ public abstract class AbstractServiceUpdater {
 
 		if (useModifiedTimestamp(existingDb)) {
 			conn.setIfModifiedSince(existingDb.lastModified());
+			if (eTag != null) {
+				conn.setRequestProperty("If-None-Match", eTag);
+			}
 		}
 
 		InputStream in = conn.getInputStream();
+		eTag = conn.getHeaderField("ETag");
 
 		if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
 			LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
