@@ -122,7 +122,6 @@ func monitorConfigListen(
 				continue
 			}
 			if srv.Status == "OFFLINE" {
-				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 				continue
 			}
 			// seed states with available = false until our polling cycle picks up a result
