@@ -484,7 +484,8 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 
 // JSON returns an object formatted as expected to be serialized to JSON and served.
 func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
-	now := time.Now().Unix()
+	// TODO fix to be the time calculated, not the time requested
+	now := time.Now().UnixNano() / int64(time.Millisecond) // Traffic Monitor 1.0 API is 'ms since the epoch'
 	jsonObj := &dsdata.StatsOld{
 		CommonAPIData:   srvhttp.GetCommonAPIData(params, time.Now()),
 		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},

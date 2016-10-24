@@ -62,7 +62,7 @@ type StatCommonReadonly interface {
 
 // StatMeta includes metadata about a particular stat.
 type StatMeta struct {
-	Time int `json:"time"`
+	Time int64 `json:"time"`
 }
 
 // StatFloat is a float stat, combined with its metadata
