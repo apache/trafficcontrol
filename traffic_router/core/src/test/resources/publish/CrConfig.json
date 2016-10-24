@@ -15,7 +15,8 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-only-test": ["edge-cache-001.https-only-test.thecdn.example.com"],
-        "http-only-test": ["edge-cache-001.http-only-test.thecdn.example.com"]
+        "http-only-test": ["edge-cache-001.http-only-test.thecdn.example.com"],
+        "dns-test": ["edge-cache-001.dns-test.thecdn.example.com"]
       }
     },
     "edge-cache-001": {
@@ -33,7 +34,8 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-only-test": ["edge-cache-001.https-only-test.thecdn.example.com"],
-        "http-only-test": ["edge-cache-001.http-only-test.thecdn.example.com"]
+        "http-only-test": ["edge-cache-001.http-only-test.thecdn.example.com"],
+        "dns-test": ["edge-cache-001.dns-test.thecdn.example.com"]
       }
     },
     "edge-cache-002": {
@@ -51,7 +53,8 @@
       "interfaceName": "bond0",
       "deliveryServices": {
         "https-only-test": ["edge-cache-002.https-only-test.thecdn.example.com"],
-        "http-only-test": ["edge-cache-001.http-only-test.thecdn.example.com"]
+        "http-only-test": ["edge-cache-001.http-only-test.thecdn.example.com"],
+        "dns-test": ["edge-cache-001.dns-test.thecdn.example.com"]
       }
     },
     "edge-cache-010": {
@@ -1008,6 +1011,47 @@
         "refresh": "28800"
       },
       "geolocationProvider": "maxmindGeolocationService"
+    },
+    "dns-test": {
+      "sslEnabled": "false",
+      "bypassDestination": {
+        "DNS": {
+          "ttl": "30",
+          "cname": "www.example.com"
+        }
+      },
+      "domains": [
+        "dns-test.thecdn.example.com"
+      ],
+      "coverageZoneOnly": "false",
+      "matchsets": [{
+        "protocol": "DNS",
+        "matchlist": [{
+            "regex": ".*\\.dns-test\\..*",
+            "match-type": "HOST"
+          }]
+      }],
+      "ttls": {
+        "AAAA": "30",
+        "SOA": "7200",
+        "A": "30",
+        "NS": "3600"
+      },
+      "missLocation": {
+        "long": "-87.627778",
+        "lat": "41.881944"
+      },
+      "soa": {
+        "expire": "604800",
+        "minimum": "30",
+        "admin": "admin@thecdn.example.com",
+        "retry": "7200",
+        "refresh": "28800"
+      },
+      "geolocationProvider": "maxmindGeolocationService",
+      "ttl": "30",
+      "maxDnsIpsForLocation": "2",
+      "ip6RoutingEnabled": "false"
     }
   },
   "stats": {
