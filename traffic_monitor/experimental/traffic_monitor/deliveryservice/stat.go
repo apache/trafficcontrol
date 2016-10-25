@@ -449,7 +449,13 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64, filter dsdata.Filter) *dsdata.StatsOld {
 	add := func(name, val string) {
 		if filter.UseStat(name) {
-			s.DeliveryService[deliveryService][dsdata.StatName(prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+			// This is for compatibility with the Traffic Monitor 1.0 API.
+			// TODO abstract this? Or deprecate and remove it?
+			if name == "isAvailable" || name == "error-string" {
+				s.DeliveryService[deliveryService][dsdata.StatName("location."+prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+			} else {
+				s.DeliveryService[deliveryService][dsdata.StatName(prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+			}
 		}
 	}
 	add("out_bytes", strconv.Itoa(int(c.OutBytes.Value)))
@@ -464,7 +470,7 @@ func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryServ
 	add("tps_4xx", fmt.Sprintf("%f", c.Tps4xx.Value))
 	add("tps_3xx", fmt.Sprintf("%f", c.Tps3xx.Value))
 	add("tps_2xx", fmt.Sprintf("%f", c.Tps2xx.Value))
-	add("error", c.ErrorString.Value)
+	add("error-string", c.ErrorString.Value)
 	add("tps_total", strconv.Itoa(int(c.TpsTotal.Value)))
 	return s
 }
