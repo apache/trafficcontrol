@@ -165,7 +165,7 @@ public abstract class AbstractServiceUpdater {
 			}
 
 		} finally {
-			if (newDB != null && newDB.exists()) {
+			if (newDB != null && newDB != existingDB && newDB.exists()) {
 				LOGGER.info("[" + getClass().getSimpleName() + "] Try to delete downloaded temp file");
 				deleteDatabase(newDB);
 			}
