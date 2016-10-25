@@ -5,7 +5,7 @@
 
 # Example Build and Run:
 # docker network create cdnet
-# docker build --rm --tag traffic_ops:1.6.0 --build-arg=RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_ops-1.6.0-3503.4899d302.x86_64.rpm traffic_ops
+# docker build --rm --tag traffic_ops:1.7.0 --build-arg=RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm traffic_ops
 #
 # docker run --name my-traffic-ops-mysql --hostname my-traffic-ops-mysql --net cdnet --env MYSQL_ROOT_PASSWORD=secretrootpass --detach mysql:5.5
 #
@@ -14,15 +14,16 @@
 FROM centos:6.6
 MAINTAINER Dan Kirkwood
 
-RUN yum install -y tar gcc-c++ perl cpan openssl-devel mysql-devel expect
+RUN yum -y update 
+RUN yum install -y tar gcc-c++ perl perl-core openssl-devel mysql-devel expect curl
+RUN yum clean all
 
-# Configure cpan to follow prereqs
-RUN perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
-
-RUN cpan Carton
+RUN curl -L https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm | perl - App::cpanminus \
+    && cpanm Carton \
+    && rm -rf /root/.cpanm
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
-ARG RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_ops-1.6.0-3503.4899d302.x86_64.rpm
+ARG RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm
 ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 
