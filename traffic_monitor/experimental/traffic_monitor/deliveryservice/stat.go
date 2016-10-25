@@ -20,6 +20,7 @@ import (
 // TODO remove DeliveryService and set type to the map directly, or add other members
 type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]dsdata.Stat `json:"deliveryService"`
+	Time            time.Time                                `json:"-"`
 }
 
 // Copy performs a deep copy of this Stats object.
@@ -28,6 +29,7 @@ func (s Stats) Copy() Stats {
 	for k, v := range s.DeliveryService {
 		b.DeliveryService[k] = v.Copy()
 	}
+	b.Time = s.Time
 	return b
 }
 
@@ -440,6 +442,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 
 	perSecStats, lastStats := addPerSecStats(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
+	perSecStats.Time = time.Now()
 	return perSecStats, lastStats, nil
 }
 
@@ -485,7 +488,7 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 // JSON returns an object formatted as expected to be serialized to JSON and served.
 func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	// TODO fix to be the time calculated, not the time requested
-	now := time.Now().UnixNano() / int64(time.Millisecond) // Traffic Monitor 1.0 API is 'ms since the epoch'
+	now := s.Time.UnixNano() / int64(time.Millisecond) // Traffic Monitor 1.0 API is 'ms since the epoch'
 	jsonObj := &dsdata.StatsOld{
 		CommonAPIData:   srvhttp.GetCommonAPIData(params, time.Now()),
 		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
