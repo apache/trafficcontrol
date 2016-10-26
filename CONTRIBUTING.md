@@ -3,13 +3,13 @@ How To Contribute
 
 We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements for Traffic Control, we're more than happy to merge them in.
 
-We have a few [guidelines](https://github.com/Comcast/traffic_control/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
+We have a few [guidelines](https://github.com/apache/incubator-trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
 
 Remember, it doesn't have to be perfect. If you want to help, hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
 
-Contributor License Agreement
+CONTRIBUTORS.md
 -----------------------------
-First things first, we need you to sign the [Contributor License Agreement (CLA)](http://traffic-control-cdn.net/ComcastContributorLicenseAgreement_03-07-14.pdf) before we can accept your code. This protects us, you, and everyone else using and contributing to Traffic Control. Once you have signed the CLA and had your first pull request merged, your name will be added to the [list of contributors](https://github.com/Comcast/traffic_control/blob/master/CONTRIBUTORS.md).
+Please take the opportunity of submitting your first PR to additionally include your name in CONTRIBUTORS.md
 
 Making a pull request
 ---------------------
@@ -21,9 +21,9 @@ Following the project conventions will make the pull request process go faster a
 
 #### Create an issue
 
-If you want to add a new feature, make a [Github issue](https://github.com/Comcast/traffic_control/issues) and discuss it with us first at [Traffic Control Google Group](https://groups.google.com/forum/#!forum/traffic_control-discuss). We might already be working on it, or there might be an existing way to do it.
+If you want to add a new feature, make a [JIRA issue](https://issues.apache.org/jira/browse/TC) and discuss it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-If it's a bug fix, we need to know what the problem is and how to reproduce it so please create a [Github issue](https://github.com/Comcast/traffic_control/issues) for that as well.
+If it's a bug fix, we need to know what the problem is and how to reproduce it so please create a [JIRA issue](https://issues.apache.org/jira/browse/TC) for that as well.
 
 #### Documentation
 
