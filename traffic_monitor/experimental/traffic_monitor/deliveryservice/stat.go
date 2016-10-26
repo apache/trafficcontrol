@@ -84,8 +84,9 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			}
 
 			if available.IsAvailable {
-				// c.IsAvailable.Value
 				stat.CommonStats.IsAvailable.Value = true
+				// TODO fix to be whether the Delivery Service has exceeded max kbps defined in Traffic Ops in `/health/cdn-name`?
+				stat.CommonStats.IsHealthy.Value = true
 				stat.CommonStats.CachesAvailableNum.Value++
 				cacheGroupStats := stat.CacheGroups[cacheGroup]
 				cacheGroupStats.IsAvailable.Value = true
