@@ -131,7 +131,7 @@ func monitorConfigListen(
 
 			url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
 			r := strings.NewReplacer(
-				"${hostname}", srv.FQDN,
+				"${hostname}", srv.IP,
 				"${interface_name}", srv.InterfaceName,
 				"application=system", "application=plugin.remap",
 				"application=", "application=plugin.remap",
