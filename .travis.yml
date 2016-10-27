@@ -7,7 +7,7 @@ services:
   - docker
 
 before_install:
-  - docker-compose -f infrastructure/docker/build/Dockerfile-traffic_ops up traffic_ops_build
+  - docker-compose -f infrastructure/docker/build/docker-compose.yml up traffic_ops_build
 
 ---
 sudo: required
@@ -18,4 +18,4 @@ services:
   - docker
 
 before_install:
-  - docker-compose -f infrastructure/docker/build/Dockerfile-traffic_monitor up traffic_monitor_build
+  - docker-compose -f infrastructure/docker/build/docker-compose.yml up traffic_monitor_build
