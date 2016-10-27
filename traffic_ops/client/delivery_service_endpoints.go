@@ -16,14 +16,15 @@
 
 package client
 
-const dsPath = "/api/1.2/deliveryservices"
+const apiBase = "/api/1.2"
+const dsPath = "/deliveryservices"
 
 func deliveryServicesEp() string {
-	return dsPath + ".json"
+	return apiBase + dsPath + ".json"
 }
 
 func deliveryServiceBaseEp(id string) string {
-	return dsPath + "/" + id
+	return apiBase + dsPath + "/" + id
 }
 
 func deliveryServiceEp(id string) string {
@@ -44,4 +45,8 @@ func deliveryServiceCapacityEp(id string) string {
 
 func deliveryServiceRoutingEp(id string) string {
 	return deliveryServiceBaseEp(id) + "/routing.json"
+}
+
+func deliveryServiceServerEp(page, limit string) string {
+	return apiBase + "/deliveryserviceserver.json?page=" + page + "&limit=" + limit
 }

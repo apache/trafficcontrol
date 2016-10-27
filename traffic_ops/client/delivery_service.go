@@ -146,6 +146,21 @@ type DeliveryServiceRouting struct {
 	RegionalDenied    int     `json:"regionalDenied"`
 }
 
+// DeliveryServiceServerResponse ...
+type DeliveryServiceServerResponse struct {
+	Response []DeliveryServiceServer `json:"response"`
+	Page     int                     `json:"page"`
+	OrderBy  string                  `json:"orderby"`
+	Limit    int                     `json:"limit"`
+}
+
+// DeliveryServiceServer ...
+type DeliveryServiceServer struct {
+	LastUpdated     string `json:"lastUpdated"`
+	Server          string `json:"server"`
+	DeliveryService string `json:"deliveryService"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	var data DeliveryServiceResponse
@@ -205,6 +220,17 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
 	var data DeliveryServiceRoutingResponse
 	err := get(to, deliveryServiceRoutingEp(id), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceServer gets the DeliveryServiceServer
+func (to *Session) DeliveryServiceServer(page, limit string) (*[]DeliveryServiceServer, error) {
+	var data DeliveryServiceServerResponse
+	err := get(to, deliveryServiceServerEp(page, limit), &data)
 	if err != nil {
 		return nil, err
 	}

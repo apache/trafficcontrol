@@ -93,3 +93,15 @@ func TestDeliveryServiceRoutingEp(t *testing.T) {
 		testHelper.Success(t, "Should be able to get the correct delivery service routing endpoint")
 	}
 }
+
+func TestDeliveryServiceServerEp(t *testing.T) {
+	testHelper.Context(t, "Given the need to test that DeliveryServiceServer uses the correct URL")
+
+	ep := deliveryServiceServerEp("1", "2")
+	expected := "/api/1.2/deliveryserviceserver.json?page=1&limit=2"
+	if ep != expected {
+		testHelper.Error(t, "Should get back %s for \"deliveryServiceServerEp\", got: %s", expected, ep)
+	} else {
+		testHelper.Success(t, "Should be able to get the correct delivery service server endpoint")
+	}
+}
