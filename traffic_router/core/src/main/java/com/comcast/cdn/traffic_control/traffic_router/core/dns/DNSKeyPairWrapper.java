@@ -33,7 +33,7 @@ import org.xbill.DNS.Type;
 
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 
-public class DNSKeyPairWrapper extends DnsKeyPair {
+public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 	private long ttl;
 	private Date inception;
 	private Date effective;
@@ -64,68 +64,84 @@ public class DNSKeyPairWrapper extends DnsKeyPair {
 		}
 	}
 
+	@Override
 	public long getTTL() {
 		return ttl;
 	}
 
+	@Override
 	public void setTTL(final long ttl) {
 		this.ttl = ttl;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public void setName(final String name) {
 		this.name = name;
 	}
 
+	@Override
 	public Date getInception() {
 		return inception;
 	}
 
+	@Override
 	public void setInception(final Date inception) {
 		this.inception = inception;
 	}
 
+	@Override
 	public Date getEffective() {
 		return effective;
 	}
 
+	@Override
 	public void setEffective(final Date effective) {
 		this.effective = effective;
 	}
 
+	@Override
 	public Date getExpiration() {
 		return expiration;
 	}
 
+	@Override
 	public void setExpiration(final Date expiration) {
 		this.expiration = expiration;
 	}
 
+	@Override
 	public boolean isKeySigningKey() {
 		return ((getDNSKEYRecord().getFlags() & DNSKEYRecord.Flags.SEP_KEY) != 0);
 	}
 
+	@Override
 	public boolean isExpired() {
 		return getExpiration().before(Calendar.getInstance().getTime());
 	}
 
+	@Override
 	public boolean isUsable() {
 		final Date now = Calendar.getInstance().getTime();
 		return getEffective().before(now);
 	}
 
+	@Override
 	public boolean isKeyCached(final long maxTTL) {
 		return getExpiration().after(new Date(System.currentTimeMillis() - (maxTTL * 1000)));
 	}
 
-	public boolean isOlder(final DNSKeyPairWrapper other) {
+	@Override
+	public boolean isOlder(final DnsSecKeyPair other) {
 		return getEffective().before(other.getEffective());
 	}
 
-	public boolean isNewer(final DNSKeyPairWrapper other) {
+	@Override
+	public boolean isNewer(final DnsSecKeyPair other) {
 		return getEffective().after(other.getEffective());
 	}
 
