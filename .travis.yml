@@ -1,13 +1,15 @@
 ---
 sudo: required
 
-language: java
+language: c
 
 services:
   - docker
 
 before_install:
   - docker-compose -f infrastructure/docker/build/docker-compose.yml up traffic_ops_build
+
+script: /bin/true
 
 ---
 sudo: required
@@ -19,3 +21,7 @@ services:
 
 before_install:
   - docker-compose -f infrastructure/docker/build/docker-compose.yml up traffic_monitor_build
+
+script: /bin/true
+
+
