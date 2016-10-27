@@ -2,6 +2,8 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import org.xbill.DNS.DNSKEYRecord;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Date;
 
 public interface DnsSecKeyPair {
@@ -36,6 +38,10 @@ public interface DnsSecKeyPair {
 	boolean isOlder(DnsSecKeyPair other);
 
 	boolean isNewer(DnsSecKeyPair other);
+
+	PrivateKey getPrivate();
+
+	PublicKey getPublic();
 
 	DNSKEYRecord getDNSKEYRecord();
 

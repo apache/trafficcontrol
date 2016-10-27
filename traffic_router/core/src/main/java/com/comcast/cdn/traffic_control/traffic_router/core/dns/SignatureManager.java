@@ -54,6 +54,7 @@ public final class SignatureManager {
 	private Map<String, List<DnsSecKeyPair>> keyMap;
 	private static ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
+	private boolean useJDnsSec = true;
 
 	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils) {
 		this.setCacheRegister(cacheRegister);
@@ -74,6 +75,7 @@ public final class SignatureManager {
 
 			if (config.optBoolean("dnssec.enabled")) {
 				setDnssecEnabled(true);
+				this.useJDnsSec = config.optBoolean("usejdnssec", true);
 				setExpiredKeyAllowed(config.optBoolean("dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
 				setExpirationMultiplier(config.optInt("signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
@@ -124,7 +126,12 @@ public final class SignatureManager {
 								for (int i = 0; i < keyPairs.length(); i++) {
 									try {
 										final JSONObject keyPair = keyPairs.getJSONObject(i);
-										final DnsSecKeyPair dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
+										final DnsSecKeyPair dkpw;
+										if (useJDnsSec) {
+											dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
+										} else {
+											dkpw = new DnsSecKeyPairImpl(keyPair, defaultTTL);
+										}
 
 										if (!newKeyMap.containsKey(dkpw.getName())) {
 											newKeyMap.put(dkpw.getName(), new ArrayList<>());
@@ -432,7 +439,14 @@ public final class SignatureManager {
 
 				LOGGER.info("Signing zone " + name + " with start " + start.getTime() + " and expiration " + signatureExpiration.getTime());
 
-				final List<Record> signedRecords = new JDnsSecSigner().signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
+				final List<Record> signedRecords;
+
+				if (useJDnsSec) {
+					signedRecords = new JDnsSecSigner().signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
+				} else {
+					signedRecords = new ZoneSignerImpl().signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
+				}
+
 				zoneKey.setSignatureExpiration(signatureExpiration);
 				zoneKey.setKSKExpiration(kskExpiration);
 				zoneKey.setZSKExpiration(zskExpiration);
