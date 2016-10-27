@@ -137,12 +137,12 @@ insert ignore into profile (name, description) values ('RIAK_ALL', 'Riak profile
 insert ignore into type (name, description, use_in_table) values ('RIAK', 'Riak keystore', 'server');
 
 
-insert ignore into profile (name, description) values ('TRAFFIC_STATS', 'Traffic_Stats profile');
-insert ignore into profile (name, description) values ('TRAFFIC_PORTAL', 'Traffic_Portal profile');
-insert ignore into type (name, description, use_in_table) values ('TRAFFIC_STATS', 'traffic_stats server', 'server');
-insert ignore into type (name, description, use_in_table) values ('TRAFFIC_PORTAL', 'traffic_portal server', 'server');
-insert ignore into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb server', 'server');
-insert ignore into profile (name, description) values ('INFLUXDB', 'InfluxDb profile');
+insert into profile (name, description) values ('TRAFFIC_STATS', 'Traffic_Stats profile') ON CONFLICT DO NOTHING;
+insert into profile (name, description) values ('TRAFFIC_PORTAL', 'Traffic_Portal profile') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_STATS', 'traffic_stats server', 'server') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_PORTAL', 'traffic_portal server', 'server') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb server', 'server') ON CONFLICT DO NOTHING;
+insert into profile (name, description) values ('INFLUXDB', 'InfluxDb profile') ON CONFLICT DO NOTHING;
 
 
 insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'bandwidth') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'bandwidth') limit 1;
