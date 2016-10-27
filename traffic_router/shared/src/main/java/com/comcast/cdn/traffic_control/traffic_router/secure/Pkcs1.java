@@ -23,15 +23,24 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.spec.KeySpec;
 import java.security.spec.RSAMultiPrimePrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 
 public class Pkcs1 extends Pkcs {
+
+	// https://tools.ietf.org/html/rfc3447#appendix-A.1.1
+
 	static public final String HEADER = "-----BEGIN RSA PRIVATE KEY-----";
 	static public final String FOOTER = "-----END RSA PRIVATE KEY-----";
-	static final int SEQUENCE_LENGTH = 9;
+	static final int PRIVATE_SEQUENCE_LENGTH = 9;
+	static final int PUBLIC_SEQUENCE_LENGTH = 2;
 
 	public Pkcs1(final String data) throws IOException, GeneralSecurityException {
 		super(data);
+	}
+
+	public Pkcs1(final String privateData, final String publicData) throws IOException, GeneralSecurityException {
+		super(privateData,publicData);
 	}
 
 	@Override
@@ -51,13 +60,19 @@ public class Pkcs1 extends Pkcs {
 		final DerInputStream derInputStream = new DerInputStream(Base64.getDecoder().decode(pemData));
 		final DerValue[] derSequence = derInputStream.getSequence(0);
 
+		if (derSequence.length != PUBLIC_SEQUENCE_LENGTH && derSequence.length != PRIVATE_SEQUENCE_LENGTH) {
+			throw new GeneralSecurityException("Invalid PKCS1 key! Missing Key Data, incorrect number of DER values for either public or private key");
+		}
+
+		if (derSequence.length == PUBLIC_SEQUENCE_LENGTH) {
+			final BigInteger n = derSequence[0].getBigInteger();
+			final BigInteger e = derSequence[1].getBigInteger();
+			return new RSAPublicKeySpec(n,e);
+		}
+
 		// man 3 rsa
 		// -- or --
 		// http://linux.die.net/man/3/rsa
-
-		if (derSequence.length < SEQUENCE_LENGTH) {
-			throw new GeneralSecurityException("Invalid PKCS1 private key! Missing Private Key Data");
-		}
 
 		// We don't need the version data at derSequence[0]
 		final BigInteger n = derSequence[1].getBigInteger();

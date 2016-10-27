@@ -441,11 +441,13 @@ public final class SignatureManager {
 
 				final List<Record> signedRecords;
 
-				if (useJDnsSec) {
-					signedRecords = new JDnsSecSigner().signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
-				} else {
-					signedRecords = new ZoneSignerImpl().signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
+				ZoneSigner zoneSigner = new JDnsSecSigner();
+
+				if (!useJDnsSec) {
+					zoneSigner = new ZoneSignerImpl();
 				}
+
+				signedRecords = zoneSigner.signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
 
 				zoneKey.setSignatureExpiration(signatureExpiration);
 				zoneKey.setKSKExpiration(kskExpiration);
@@ -475,7 +477,13 @@ public final class SignatureManager {
 				final Long dsTtl = ZoneUtils.getLong(config.optJSONObject("ttls"), "DS", 60);
 
 				for (final DnsSecKeyPair kp : kskPairs) {
-					final DSRecord dsRecord = new JDnsSecSigner().calculateDSRecord(kp.getDNSKEYRecord(), DSRecord.SHA256_DIGEST_ID, dsTtl);
+					ZoneSigner zoneSigner = new JDnsSecSigner();
+
+					if (!useJDnsSec) {
+						zoneSigner = new ZoneSignerImpl();
+					}
+
+					final DSRecord dsRecord = zoneSigner.calculateDSRecord(kp.getDNSKEYRecord(), DSRecord.SHA256_DIGEST_ID, dsTtl);
 					LOGGER.debug(name + ": adding DS record " + dsRecord);
 					records.add(dsRecord);
 				}
