@@ -80,7 +80,6 @@
 	<rule ref="rulesets/java/codesize.xml/NcssTypeCount" />
 	<rule ref="rulesets/java/codesize.xml/NcssConstructorCount" />
 
-    <rule ref="rulesets/java/controversial.xml/DontImportSun" />
     <rule ref="rulesets/java/controversial.xml/SuspiciousOctalEscape" />
     <rule ref="rulesets/java/controversial.xml/AvoidUsingNativeCode" />
     <rule ref="rulesets/java/controversial.xml/AvoidAccessibilityAlteration" />

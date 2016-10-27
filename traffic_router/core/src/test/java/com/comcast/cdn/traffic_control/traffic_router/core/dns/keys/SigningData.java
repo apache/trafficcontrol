@@ -1,0 +1,617 @@
+package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
+
+import org.xbill.DNS.DSRecord;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Section;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
+
+public class SigningData {
+	// If you want to update this data, change the contents of SigningTestDataGenerator.java,
+	// run its only test and then replace everything between here and the declaration of signedList
+	// All data below is based on PKCS#1 format, see https://tools.ietf.org/html/rfc3447#appendix-A.1.1
+
+	static String ksk1Public =
+		"MIIBCgKCAQEAuhlsAmUsA9dDrRx08mkJv31Am4CUmajCzIlmR6nB/BQ09FOS9qiTP7FdFlBh7NvLz526Wx953A9ZubkeBEOFoBMm" +
+			"eFFpY5ZBkVcjgZ0ml26ecPcl2hLr8Nxy2VsIpefstvKuflcrNR+aDmd8RMB/tPF5ZWmHExbfmCRoinP9ZyEXrLHJsojyfqvKaITI" +
+			"Gi1ZdxX28ThJPG+Bf6FyrgWfAmCDkQKpayhQKIm0jkc03XFsnNoNbzflcscIKvQNXpXZ5hn5UB9X0VGXp6SE6EnNU2Jm2Jsv1XbL" +
+			"/E/G6oHyfioJe4Y4mHcRbn/8ilD/Kd9RZWboXBElFZm4jlmeY8SVQwIDAQAB"
+		;
+
+	static String ksk1Private =
+		"MIIEpAIBAAKCAQEAuhlsAmUsA9dDrRx08mkJv31Am4CUmajCzIlmR6nB/BQ09FOS9qiTP7FdFlBh7NvLz526Wx953A9ZubkeBEOF" +
+			"oBMmeFFpY5ZBkVcjgZ0ml26ecPcl2hLr8Nxy2VsIpefstvKuflcrNR+aDmd8RMB/tPF5ZWmHExbfmCRoinP9ZyEXrLHJsojyfqvK" +
+			"aITIGi1ZdxX28ThJPG+Bf6FyrgWfAmCDkQKpayhQKIm0jkc03XFsnNoNbzflcscIKvQNXpXZ5hn5UB9X0VGXp6SE6EnNU2Jm2Jsv" +
+			"1XbL/E/G6oHyfioJe4Y4mHcRbn/8ilD/Kd9RZWboXBElFZm4jlmeY8SVQwIDAQABAoIBAEbgZ8KBxcGwupWzwNaSKqRDj9epoO7k" +
+			"10wPCGVCwh6/k2t6aP6INYyMgGd/Ncx/6Z+o8tDBrCejsQiK+GOnU70jjgNE/l5vW4l/Joa203vZJX7gognsKvARBazCfwiwy/bh" +
+			"dpOnn00cPBBAWZPVvM2tKg71ofwjOgU32JjilCAyUqnOqjtMsBsfiEvlTQfo85bRGSxmgcPaOMvSK7C1ockd28H0TkVpVyik0qlu" +
+			"W8EFqbMg4UJp+wSaMpMuKlE9MuogpLf6ZwQzClVCKTd5vWIqT11ltZAVYsz+1Nok8DTLIEm4h1dVU4u8HKlGAF/djpxwxJ/La1iL" +
+			"wJYdV2mocAECgYEA+HV3PQDx3wScwbIX1HBtlMR54EHDnvenBbqSBY9RzPho1L8bq8vCSFz9e31jkgaRNQHSddeX7sxhIbnvuusI" +
+			"b9laQBm4SGKYf10ftc0apkt5oXQub+tlrsH5EGcspy/1jyg4Fw9PDdNQdOiqjfdylQYRFkvaWMrf07FCWbO85VECgYEAv79rkyfW" +
+			"TX0uLa68xzhK+TaABvUJ2miZQZ2QK3MJntoNn2VuC3jBooYCbMa0UkV3aOkIsiSjRZkNYBGAaMaC3nzLYvhhfblJWyjp6W2IidzV" +
+			"4jH+Rz1Rk699wBpfCL5/v7Dq1orU3doKW0S9pVJIKBXS2xVNAG+TkH7q0maDfFMCgYBy01bYCqe9uhP4MKZyt8LtDiCFU99kiG/Y" +
+			"ZfE2QJY9dFB+ghP3waN4bgF4IOrzgbV6Ge16KLk+05XQUG5KpHSxvHHJThms2mQ/+Hm/O5slX5xG0brkXpYPvfWtbwFkAvYpwxyp" +
+			"C5oteYulfCHWmpWJ6dPbyhKPFrN60mEns7mJAQKBgQCsTAwU8eH+RTKed/pHpUyxPQizt7G/4Od9b2Chuj/1zogZJ6JHip2sNXCu" +
+			"X6qelq8ixOs8b/GKU2oSXgednmrwEwELEJdByqGg2VW+m97pylciZrvPNck8xJ9hZBDrIYpXLFkIqT13kDpoIo+qoxIVeu66UByd" +
+			"/KSDXZgRsW4K4wKBgQDBIqcT36J1bCAKotYFtjVYjjgyYTAoG8qXBsOQTY48q/Bj1AsZQE97Cz67xzGGoPNi0qPNq1fgKgIZO8dk" +
+			"r1qE6xXBbiGeXzB5zZPzM7Mc88Z3OBXIiPZan4cMGJwNVxtBLPlX8TpQDy11/3YlENIfTnKM7UfQbA0mS5toRlwoog=="
+		;
+
+
+	static String ksk2Public =
+		"MIIBCgKCAQEAnfIvyDGTXKrFOF4ER58wPTlSkb+AEdQDSJvIyZ8xflzgCFAobqjPGleKg4CSN7CSgu9FeweQFG9q06m5U42O8df6" +
+			"P8JmOviInLhdbOhUoRNxrAU6zIOvgHoB1NKm3ienoX/nn2xvO+LeiWwgjyNUpihRnxerLKuaMFB/t05cgtyhzzc0RPOu+qJrSxgM" +
+			"yjbGwM+b06pEUQitVmE9rjOjcgGuljDenASAv4IuEO4M5ZVJ+XJs/+ZFjIIoYRNuOUvzeLC/VwOuHzlvGmcWy2MBCbryeIBIuYRn" +
+			"mSw7reuD6OFk7Jc9OydhTnmqri+fGFSJuA6k1Ieu4fLgpWGRgVFUiQIDAQAB"
+		;
+
+	static String ksk2Private =
+		"MIIEpAIBAAKCAQEAnfIvyDGTXKrFOF4ER58wPTlSkb+AEdQDSJvIyZ8xflzgCFAobqjPGleKg4CSN7CSgu9FeweQFG9q06m5U42O" +
+			"8df6P8JmOviInLhdbOhUoRNxrAU6zIOvgHoB1NKm3ienoX/nn2xvO+LeiWwgjyNUpihRnxerLKuaMFB/t05cgtyhzzc0RPOu+qJr" +
+			"SxgMyjbGwM+b06pEUQitVmE9rjOjcgGuljDenASAv4IuEO4M5ZVJ+XJs/+ZFjIIoYRNuOUvzeLC/VwOuHzlvGmcWy2MBCbryeIBI" +
+			"uYRnmSw7reuD6OFk7Jc9OydhTnmqri+fGFSJuA6k1Ieu4fLgpWGRgVFUiQIDAQABAoIBAQCQUTyLpZDKeVcfO/iZIMFJD9l8RwhU" +
+			"Qe6GJ6H9aDInDeG+ds+a3S/vF9H+ejogHHyimtJXqf9iTLPFly05RP05yWhlXdFfTLw2xtbGrjq1uziAP38MY762m8SUm63RC1bF" +
+			"4ELZjpDMnW1ND7loUJYGBI0f2taTSHDoeIVaDoXFIzLCEFXBHEJoA2nL4TijR6C6Dmgnukllyo2SGugO/yaHvdREoxw6U390HsoS" +
+			"+A25FzLSb8sPg84FO+ObqB1Zj71BQ3PJ+pIZP542UeSapRJMFmCvFUi9aUCOoJfPZB4/MPQNxAKYZLesYALvubdLlLDNEbEY2C8R" +
+			"NUv+C7iHXk0BAoGBAO9Oj6mxjo/huiAL7P3XoPg3MHvVDsFcO1LtSoQh9tvqcf3uYIH76qulx0wNTOGlhlJTMDrqq5hcXri3sTsA" +
+			"7nU1qFeMYyvQduJsstXYU5Hzu5OTPGEL/N6Ph9nrgfxfVSXExqCRsTsDLAVnJ+N+kFfNhZnkWMzjWmy+MLjowiaxAoGBAKj2uAJ6" +
+			"E/T8lN72TtsLyjXrNUgjDgtmMccC/UmTUgC+SgyPH62HgNh2XH0HhyOrfuXS7jN89LZvUwxhF+C8/77yrx7K80qNi39XL0lRWBst" +
+			"qVX2hQPfjm929Zs9/OJeVIuzse63THERr2k0isA84tzcPMQh1BBA3+1Gd2HhijFZAoGAdNJcLZHhL3oZO3W27sBp82I1x+3dcyVM" +
+			"TJJMUy6lbPwJQ9YvxKSvDbYzEXxYsLr2VJAJtmlC9XD6SKBb45rzzcIw+PQuoX/12VkJAH3HZjOeuU8iJZoNirR0tDxUy1faoEJs" +
+			"WIxnAZDt14FhJpxtaH+LHfIsK3E9fmJmNI5j4TECgYAA9i6D7Rfx/AII5tP6ES4ccnNCLtjknbdIz66LXahI0sxvF91xSmUkVkAe" +
+			"gg112YMGYdXzOxHVe/q4BlFxeQHnn0/51+Pcl8OkfOWLAEiFFxRwpc+J/xq7bazmLksjKrBGf0ZS+n4X4qbh7Wegwnf0E9jQsPSZ" +
+			"BxV/Lzh8uSDlOQKBgQDUQ4K3tmIyNRiRwoBsc703yRJau418wkGLmDJkHV9wqDdc558w6ywr6rPR34bhJJUKwzD3rOjzCYwbGf77" +
+			"1yUYqrv+R1pFJgqZE2OudiqAFYo749/oWtIC/+wn5cLUnXOGl3qndVoxQjOxoocjaalFZwJMFelX5z+9EQZXY+J9Zg=="
+		;
+
+
+	static String zsk1Public =
+		"MIIBCgKCAQEAr1PW+AQIHyKwwHK02NhB79iHm/I4wmwCcSlpcBAGMrT7JNawC+9gKE5PGT9s8XTtEOZeVXjo/IB1c8Ml3sxJ7P2d" +
+			"s5sGsJ/4M3W36W+njhJeXuL2ljIbQprAs0IRbg5SP673ymZR9no3fgXGoH8CiGnNVz2l05S2xtMY5WSaVbYm9rvbTr206EqB0dqI" +
+			"0CLU98O57fvfMpaBaWu3UY7xdQshVsQDZtpySDOnkfdTtxQfM7UVmxsDFty0CoZotChqe+FlunnUt+odk0L7pQrFDU+1TmwRT+HK" +
+			"pv6KYJ/5kmA3XIQr+KHY0U69k+GnDqxY0QwmyF1MmOwc9WYxhzEJRQIDAQAB"
+		;
+
+	static String zsk1Private =
+		"MIIEowIBAAKCAQEAr1PW+AQIHyKwwHK02NhB79iHm/I4wmwCcSlpcBAGMrT7JNawC+9gKE5PGT9s8XTtEOZeVXjo/IB1c8Ml3sxJ" +
+			"7P2ds5sGsJ/4M3W36W+njhJeXuL2ljIbQprAs0IRbg5SP673ymZR9no3fgXGoH8CiGnNVz2l05S2xtMY5WSaVbYm9rvbTr206EqB" +
+			"0dqI0CLU98O57fvfMpaBaWu3UY7xdQshVsQDZtpySDOnkfdTtxQfM7UVmxsDFty0CoZotChqe+FlunnUt+odk0L7pQrFDU+1TmwR" +
+			"T+HKpv6KYJ/5kmA3XIQr+KHY0U69k+GnDqxY0QwmyF1MmOwc9WYxhzEJRQIDAQABAoIBAD5r5hxVKyMSscVC0ZpmnEstV1KxUX3/" +
+			"AHuTl+N7AQnqn4PFH9aP+jc/ci/2Ae6Rh5m9uxZJPwIvJiH597C0IRnMTepVJnOZ8L85iSoGQ6x0Y776pXpiCoyTFkp8GkKJvMTJ" +
+			"oZUhCstrRfiLS+V2cstoh+AopbKHvu9Y1wNM5xnecNjUFH04YHIlsfi7J+sMdAOPE8DDX+13OCwzX0Xo6sE+amfkC9ZiAd8rJrDu" +
+			"2JNQEP0nZPzYkJDHnnYCLs5Io6Lpmp0i+eu1iXJpTsAuE0u3IswdkYjb9mFLQJ8LK5ir/hIKNBWw0s1rvedrxZ+YDLWz7Gl9H/EX" +
+			"oYVZFxArXGECgYEA9RawFyxVnCt7KzMPRNcujqjPUXYNSPjDbrgADHIEOTFR3FP17WCZTvh0gNZJErOiVT2/wzRxNm1jYxSTshr1" +
+			"9dzANQe4HabNs889BQvAZZDDe37PXc5OkLczLPJJXgL6Zm/YANAyag4ObqlJuDoCDQE2OZwPXg540O1AOxNUCIkCgYEAtyIS4hsA" +
+			"lVjYpBYChbN0wx78ZydVVADNtj3qrileGh5MOhGlBboXZjQN3O0lSkLBJKCmZtak6Z+K5qwO8fi1+QrmoQzWgXDxWRQYu9+ey0us" +
+			"8szVEOndk//nm1RWg0rwhY9xp9+E5g3XTn9nl3XA7Vw1y38quvBnLXnn7MMHk90CgYAWIqFuxltJCohKQ4dKgWC8E7T9t3rFr2n/" +
+			"MvEWLqoA/FpXWuHoOYQ/JKNpC3F4Fe9AYZ5TJAZhkwmZ5j7cpCC4vuJBJ9xSGUGUzs/FB+WthqCRI8fYwgxId7NQiOVlb0FsRQeu" +
+			"Mx+KgpB9IB7/W4XZ5NUf6N9ecFIrFHJro3hAeQKBgHFaSN/lIM5QSP//k54YPvyLUGW1Be7R9IKJ/pnAhzuZZ0tGIqPR1KvxKmeF" +
+			"7d/yQ8SdH4Jl93uXwg0XkMSbUl+NLMWgwaErPGgLtWeMeaiR9cHvoS4v43O5IS2W3Vm05/1zlUD4bDVNeehfmco5G6qPuch0tQky" +
+			"xlpyq2h0K1uNAoGBAKKrQQXchp9NS1YZb19NimrUPrPkOmc/Kw/EbS3IO+Z/rHTSPc2i4H28SdhmCP4ygE2szIv4bBARDmH4w7PC" +
+			"ClH0El81t36tHBakZHUNACMXsqXCeBYaSuz0tWs7LNjXsGoOeQ+GJkYuzGQaFsmn7KsCW3ahGpsF0bgLcbESbWz6"
+		;
+
+
+	static String zsk2Public =
+		"MIIBCgKCAQEAsHViAEpAzWD0OAyXkk3SzazxQGKYRvCEh7ZUmBn6TWjefT+KqAEdcpbzoMoHM1lnxOyRHfEWbXWFulb+ecKElvwa" +
+			"VdqSglbPbj7u7vb5a/y1S6rNKY9jbEBlrKykqlKBDbTGTK+LSnN8736o8Dg/kp0OhYyutKSTg7AlPCjr5A2EKUSkM5xbUbuXpCbk" +
+			"3piO6YTtcUNA0gTzrsVEh3JcyFGALW/oWmk++d0mIOkUvVCFvAD8PcmqnjfR4MYkArwf5CkaBIMep7IIi5QwiyPuBkNJ9wJiIWFS" +
+			"NOvrIDWpB6i+8r6dhVxyVb3HjSWkUViXNOM0ZXU1RK9/2VYkpqmc7wIDAQAB"
+		;
+
+	static String zsk2Private =
+		"MIIEpAIBAAKCAQEAsHViAEpAzWD0OAyXkk3SzazxQGKYRvCEh7ZUmBn6TWjefT+KqAEdcpbzoMoHM1lnxOyRHfEWbXWFulb+ecKE" +
+			"lvwaVdqSglbPbj7u7vb5a/y1S6rNKY9jbEBlrKykqlKBDbTGTK+LSnN8736o8Dg/kp0OhYyutKSTg7AlPCjr5A2EKUSkM5xbUbuX" +
+			"pCbk3piO6YTtcUNA0gTzrsVEh3JcyFGALW/oWmk++d0mIOkUvVCFvAD8PcmqnjfR4MYkArwf5CkaBIMep7IIi5QwiyPuBkNJ9wJi" +
+			"IWFSNOvrIDWpB6i+8r6dhVxyVb3HjSWkUViXNOM0ZXU1RK9/2VYkpqmc7wIDAQABAoIBADrvqcDRDB3MkSUbR5Cs/4iEh7tqctPW" +
+			"x10Qj+aRXqF2MkGA9I2yeaRpOIvujkMfTGJgZQOsH0KF6xlWrv358xD+uMkODLsNxZBb4q/bu2jO6bqRHJ8R7jIcvBjVPNZKYiIy" +
+			"y7yXMR23vvW6xzAciVctr8j5OOzKvx5PudADFu5+6aPaVdFLhnsXz7ZJsDfPwKbTs5T44viqoHVVa1JhZT9o4o3/Qy/zvvoQrzwn" +
+			"sjaGITxYM7ydwMwyIsiTg7iXK9lysJrmai3+DQpaolP4V2gJCibXGuWS936SqzQ3WXTUpVg9CuHWU61NsKbLk283ScL3bBmhdr0t" +
+			"S4P1WKZZAxkCgYEA9rPFWyYYg9VQIOIZD/dJXusUgRzDyn1uE7bA518Yhcxx7600/ZvyL6BxA8pGwtbwVZrkAOndnp+mjA2Afoys" +
+			"BpqFGlSGX5qwJIdLZtEVJh/j3hMTuTUz+KdFpuD2ZMKdVraHVwW170sd7QvmtWo3SBt8QYorGbQrJQrU0NOT8L0CgYEAtxvjNufp" +
+			"Dl17ay2ujiQFNXXnO06QF/00y8h3EH8uQWcAWNUSDRo9TB7kGgxbiQSCvSuEWDDyeXaz/x5RWZSTzpIEWDnpG9xLIHEmDnQTlVAg" +
+			"90n1rh57BJqAM2U3LWQ2JtYHZ6IOR2ZA3T9i88hB8HgP9SvyJHgJx3Ql+r6WLRsCgYEAxJOYlbm0XRATSjB/Ie68owqUixDdnjL2" +
+			"DHVaHsLyqmKvAvk0OUUS5QpmI0wBuG1Gkh/awDOZqTSzo/N6SNxUkup7VvC1Jeb/pgu8dE/0Fy3gB2uSEsknAWJgKMom60D72EWX" +
+			"cCsXvnZPgTwzeKkLJcTo7Nxo3ZFns5t+2mtM/c0CgYAXpIQr/Lm83xkmd5mIROJfSr/2imhUkJ8WiOXGvYUtcK08yxYvlum/QGXX" +
+			"by0KfgibgFjwQjGsuUT4deOvG14SWAwzkBanQER7BeESEK7Ooq/+/g+40bq0l3ZiLHl5ZO0RCqWeHfCWC3/okVyneX36HKaC04/K" +
+			"Ya1xkW+t9pnRbQKBgQCOJxUODmiQR8wmyXgNlSYFxVaajxhdecy5gVJnULroWVlt6+zAt0eTp3EKDoRcYq9JuvzZ9+Gd7SzczGZj" +
+			"VChUpjHVHRTxZ1YSUzisuVntGAn3xosZOM+ZZFa4n488bPrWxWU89U+2+LZP+3M6XFqGW/T1UGteII3EoXLOEwHZUg=="
+		;
+
+
+	// example.com.		315360000	IN	SOA	ns1.example.com. admin.example.com. 2016091400 86400 3600 1814400 259200
+	static String postZoneRecord0 =
+		"B2V4YW1wbGUDY29tAAAGAAESzAMAADgDbnMxB2V4YW1wbGUDY29tAAVhZG1pbgdleGFtcGxlA2NvbQB4Kx0IAAFRgAAADhAAG6+A" +
+			"AAP0gA=="
+		;
+
+	// example.com.		315360000	IN	NS	ns1.example.com.
+	static String postZoneRecord3 =
+		"B2V4YW1wbGUDY29tAAACAAESzAMAABEDbnMxB2V4YW1wbGUDY29tAA=="
+		;
+
+	// example.com.		315360000	IN	NS	ns2.example.com.
+	static String postZoneRecord4 =
+		"B2V4YW1wbGUDY29tAAACAAESzAMAABEDbnMyB2V4YW1wbGUDY29tAA=="
+		;
+
+	// example.com.		259200	IN	NSEC	ftp.example.com. NS SOA RRSIG NSEC
+	static String postZoneRecord7 =
+		"B2V4YW1wbGUDY29tAAAvAAEAA/SAABkDZnRwB2V4YW1wbGUDY29tAAAGIgAAAAAD"
+		;
+
+	// ftp.example.com.	1814400	IN	A	12.34.56.78
+	static String postZoneRecord10 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAAQABABuvgAAEDCI4Tg=="
+		;
+
+	// ftp.example.com.	1814400	IN	A	21.43.65.87
+	static String postZoneRecord11 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAAQABABuvgAAEFStBVw=="
+		;
+
+	// ftp.example.com.	259200	IN	AAAA	2001:db8:0:0:12:34:56:78
+	static String postZoneRecord14 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAAEgA0AFYAeA=="
+		;
+
+	// ftp.example.com.	259200	IN	AAAA	2001:db8:0:0:21:43:65:87
+	static String postZoneRecord15 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAAIQBDAGUAhw=="
+		;
+
+	// ftp.example.com.	259200	IN	NSEC	mirror.ftp.example.com. A AAAA RRSIG NSEC
+	static String postZoneRecord18 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALwABAAP0gAAgBm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAAZAAAAIAAM="
+		;
+
+	// mirror.ftp.example.com.	315360000	IN	CNAME	ftp.example.com.
+	static String postZoneRecord21 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAAUAARLMAwAAEQNmdHAHZXhhbXBsZQNjb20A"
+		;
+
+	// mirror.ftp.example.com.	259200	IN	NSEC	www.example.com. CNAME RRSIG NSEC
+	static String postZoneRecord24 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAC8AAQAD9IAAGQN3d3cHZXhhbXBsZQNjb20AAAYEAAAAAAM="
+		;
+
+	// www.example.com.	1814400	IN	A	11.22.33.44
+	static String postZoneRecord27 =
+		"A3d3dwdleGFtcGxlA2NvbQAAAQABABuvgAAECxYhLA=="
+		;
+
+	// www.example.com.	1814400	IN	A	55.66.77.88
+	static String postZoneRecord28 =
+		"A3d3dwdleGFtcGxlA2NvbQAAAQABABuvgAAEN0JNWA=="
+		;
+
+	// www.example.com.	259200	IN	AAAA	2001:db8:0:0:4:3:2:1
+	static String postZoneRecord31 =
+		"A3d3dwdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAABAADAAIAAQ=="
+		;
+
+	// www.example.com.	259200	IN	AAAA	2001:db8:0:0:5:6:7:8
+	static String postZoneRecord32 =
+		"A3d3dwdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAABQAGAAcACA=="
+		;
+
+	// www.example.com.	259200	IN	NSEC	mirror.www.example.com. A AAAA RRSIG NSEC
+	static String postZoneRecord35 =
+		"A3d3dwdleGFtcGxlA2NvbQAALwABAAP0gAAgBm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAAZAAAAIAAM="
+		;
+
+	// mirror.www.example.com.	315360000	IN	CNAME	www.example.com.
+	static String postZoneRecord38 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAAUAARLMAwAAEQN3d3cHZXhhbXBsZQNjb20A"
+		;
+
+	// mirror.www.example.com.	259200	IN	NSEC	example.com. CNAME RRSIG NSEC
+	static String postZoneRecord41 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAC8AAQAD9IAAFQdleGFtcGxlA2NvbQAABgQAAAAAAw=="
+		;
+
+	// example.com.		315360000	IN	SOA	ns1.example.com. admin.example.com. 2016091400 86400 3600 1814400 259200
+	static String signedRecord0 =
+		"B2V4YW1wbGUDY29tAAAGAAESzAMAADgDbnMxB2V4YW1wbGUDY29tAAVhZG1pbgdleGFtcGxlA2NvbQB4Kx0IAAFRgAAADhAAG6+A" +
+			"AAP0gA=="
+		;
+
+	// example.com.		315360000	IN	RRSIG	SOA 5 2 315360000 20260901000000 20160901000000 7086 example.com. BX1J0nMbxw3NpVgiwjkovZ36dAMAkUlpcxF23TzUNW8/tUdQ9wZhWiJ0TH1Z9xL9HoJRUtgIXMxwFtf/f0y865SQqtReelQXiZP6X0QqA/2QryeaMvoaVLGiAm9ZB1m+NuMqesZzzH0BVG8qJeTn1I6I9ZMGNJEnee70Uefo9Zv15fzm0MCE+JbiFnBQS2zXnuErOFtJ92ZkxVFG3LLiAG7w+M6c/h9yPBAM+zSHT9LPDzEGLInxCDK5g8hW8juxUxuK0+tvWFqApIzDGSyPFVlH4F43yxjwLX1poPlXcCSPionPrzkdJ//uPw5GOM3oQzC9dzr3VzSnHeLt57L7fg==
+	static String signedRecord1 =
+		"B2V4YW1wbGUDY29tAAAuAAESzAMAAR8ABgUCEswDAGqWFYBXx2+AG64HZXhhbXBsZQNjb20ABX1J0nMbxw3NpVgiwjkovZ36dAMA" +
+			"kUlpcxF23TzUNW8/tUdQ9wZhWiJ0TH1Z9xL9HoJRUtgIXMxwFtf/f0y865SQqtReelQXiZP6X0QqA/2QryeaMvoaVLGiAm9ZB1m+" +
+			"NuMqesZzzH0BVG8qJeTn1I6I9ZMGNJEnee70Uefo9Zv15fzm0MCE+JbiFnBQS2zXnuErOFtJ92ZkxVFG3LLiAG7w+M6c/h9yPBAM" +
+			"+zSHT9LPDzEGLInxCDK5g8hW8juxUxuK0+tvWFqApIzDGSyPFVlH4F43yxjwLX1poPlXcCSPionPrzkdJ//uPw5GOM3oQzC9dzr3" +
+			"VzSnHeLt57L7fg=="
+		;
+
+	// example.com.		315360000	IN	RRSIG	SOA 5 2 315360000 20260901000000 20160901000000 7086 example.com. N4kuOXr3rw3l+AeIrW478jP28B0GsW1UfJk4csI1L6uf2mMUiEQ6hAU6M1zZVBZke1I0IWmLdchTrwTK8YTtUKanMXS7ZJVjE9aAuhOUGR0KAovFibabVKblxG4a8EtAFkHVv0WIQlnqZpLwE8l4t6T04Ywb6YvvcJkZce9zqa5iaoRA35IgPa559JlNKevUUOoMFDfhBfBIHWGWMUVGGuNKUeKiVudWCY1KEHYqJRexbQ0tcAeG6j732r336SjyT6kmZeDmhE7bKIFmec8ZTLpTZ/biJJFNdW7Qcr8vB8Q4VE7aeKVNFONEZJvjIhDY0U/KB0pWrR73kdfK4XQu6g==
+	static String signedRecord2 =
+		"B2V4YW1wbGUDY29tAAAuAAESzAMAAR8ABgUCEswDAGqWFYBXx2+AG64HZXhhbXBsZQNjb20AN4kuOXr3rw3l+AeIrW478jP28B0G" +
+			"sW1UfJk4csI1L6uf2mMUiEQ6hAU6M1zZVBZke1I0IWmLdchTrwTK8YTtUKanMXS7ZJVjE9aAuhOUGR0KAovFibabVKblxG4a8EtA" +
+			"FkHVv0WIQlnqZpLwE8l4t6T04Ywb6YvvcJkZce9zqa5iaoRA35IgPa559JlNKevUUOoMFDfhBfBIHWGWMUVGGuNKUeKiVudWCY1K" +
+			"EHYqJRexbQ0tcAeG6j732r336SjyT6kmZeDmhE7bKIFmec8ZTLpTZ/biJJFNdW7Qcr8vB8Q4VE7aeKVNFONEZJvjIhDY0U/KB0pW" +
+			"rR73kdfK4XQu6g=="
+		;
+
+	// example.com.		315360000	IN	NS	ns1.example.com.
+	static String signedRecord3 =
+		"B2V4YW1wbGUDY29tAAACAAESzAMAABEDbnMxB2V4YW1wbGUDY29tAA=="
+		;
+
+	// example.com.		315360000	IN	NS	ns2.example.com.
+	static String signedRecord4 =
+		"B2V4YW1wbGUDY29tAAACAAESzAMAABEDbnMyB2V4YW1wbGUDY29tAA=="
+		;
+
+	// example.com.		315360000	IN	RRSIG	NS 5 2 315360000 20260901000000 20160901000000 7086 example.com. eAZV2uk3xvFFXPflnu5b91+5WcuaziXbBsG0kVdyHK/s8YSF6OxuIW9uOcKPYGNCZGgHcZ19Uhlv6Oyx3uRe7Gxd6gQFqjebzoCVT+c9xbsHYgt7UEpm2aLehWpcPN/ylaVCmLZo0QQ4l5eTySZDMhgSaGaQ0W4wYVLgGDsddnmS3kSXyJqBOMOQk+o7bgL8Qqfwm0mEr/pdBoNoZ7J2gy/2C9LKCygGON4u6nWOu9+k6FrBHKJrTLEmHBKvNzSWL4ndIo9Fsj2jfI3yMVnT0GrzAPv71n4B7YcLDDqTl7WbPYWNsmdHgFFULw5WC9/GJLdKJO08/+yCwrGdAXebcg==
+	static String signedRecord5 =
+		"B2V4YW1wbGUDY29tAAAuAAESzAMAAR8AAgUCEswDAGqWFYBXx2+AG64HZXhhbXBsZQNjb20AeAZV2uk3xvFFXPflnu5b91+5Wcua" +
+			"ziXbBsG0kVdyHK/s8YSF6OxuIW9uOcKPYGNCZGgHcZ19Uhlv6Oyx3uRe7Gxd6gQFqjebzoCVT+c9xbsHYgt7UEpm2aLehWpcPN/y" +
+			"laVCmLZo0QQ4l5eTySZDMhgSaGaQ0W4wYVLgGDsddnmS3kSXyJqBOMOQk+o7bgL8Qqfwm0mEr/pdBoNoZ7J2gy/2C9LKCygGON4u" +
+			"6nWOu9+k6FrBHKJrTLEmHBKvNzSWL4ndIo9Fsj2jfI3yMVnT0GrzAPv71n4B7YcLDDqTl7WbPYWNsmdHgFFULw5WC9/GJLdKJO08" +
+			"/+yCwrGdAXebcg=="
+		;
+
+	// example.com.		315360000	IN	RRSIG	NS 5 2 315360000 20260901000000 20160901000000 7086 example.com. eUG6LzU+nXarbQQaLaRFre3y3gJve3coKwEOPSIw6VqYKdaM47Gk2XscbkZwOxM/+lkeAlYWKg2Ih2dE6T08OP3qErCRLWWshkz7U3rNpZtTO71p6/lgUjKJ3LltoPc0Xdo4kNl4e/ehSeAiaG4TP7XOrDkTLv6Cits0Y79L0eNtkrJqchsMJIVHooQThl3L7mDlczJErw63ORikb1SxTTdlnOBrW3tm9cRw825nFmCr6KXogNUWSB6LYxChhZW+aJk0Vl3b7q0Ok/U31DTnzzWmB8z2dT7xa21t2hCcz9DIJRDvTt1VbP6Xo1OwxpqDIOE28hZEnIfNgR0EOV8BVA==
+	static String signedRecord6 =
+		"B2V4YW1wbGUDY29tAAAuAAESzAMAAR8AAgUCEswDAGqWFYBXx2+AG64HZXhhbXBsZQNjb20AeUG6LzU+nXarbQQaLaRFre3y3gJv" +
+			"e3coKwEOPSIw6VqYKdaM47Gk2XscbkZwOxM/+lkeAlYWKg2Ih2dE6T08OP3qErCRLWWshkz7U3rNpZtTO71p6/lgUjKJ3LltoPc0" +
+			"Xdo4kNl4e/ehSeAiaG4TP7XOrDkTLv6Cits0Y79L0eNtkrJqchsMJIVHooQThl3L7mDlczJErw63ORikb1SxTTdlnOBrW3tm9cRw" +
+			"825nFmCr6KXogNUWSB6LYxChhZW+aJk0Vl3b7q0Ok/U31DTnzzWmB8z2dT7xa21t2hCcz9DIJRDvTt1VbP6Xo1OwxpqDIOE28hZE" +
+			"nIfNgR0EOV8BVA=="
+		;
+
+	// example.com.		259200	IN	NSEC	ftp.example.com. NS SOA RRSIG NSEC
+	static String signedRecord7 =
+		"B2V4YW1wbGUDY29tAAAvAAEAA/SAABkDZnRwB2V4YW1wbGUDY29tAAAGIgAAAAAD"
+		;
+
+	// example.com.		259200	IN	RRSIG	NSEC 5 2 259200 20260901000000 20160901000000 7086 example.com. ZiLJHTbg5k3ciyVvQjhG7dWCce/vLxs+gKAZ1v1PKHk0Zm36qvkTyUNpVgL+kYnZcbQJO9wZ0TWnkG/X8GkH/aBcM3VncM6vnqgH0Wqa8LkH5I7O5cuVjtSxHD+NuMwTpb8T8hoCgBrd97QnlkMdhB8a2wKAESclrnueMbTmi7TLh2vzkD6fyEor96GxIvgulYJAi1VFgO8uDmW6Qa3YCclw6n6mOKjWu9HQH32vDw84apKDwb1En6QZikS9lHz3li764+lr2OsqBmw3MPTL7PNH0srgH2wjOFjYJrGKTYQNFcORP7ipMhELocGXoRrBnQ50u/JRCaA94u1AoDpPVA==
+	static String signedRecord8 =
+		"B2V4YW1wbGUDY29tAAAuAAEAA/SAAR8ALwUCAAP0gGqWFYBXx2+AG64HZXhhbXBsZQNjb20AZiLJHTbg5k3ciyVvQjhG7dWCce/v" +
+			"Lxs+gKAZ1v1PKHk0Zm36qvkTyUNpVgL+kYnZcbQJO9wZ0TWnkG/X8GkH/aBcM3VncM6vnqgH0Wqa8LkH5I7O5cuVjtSxHD+NuMwT" +
+			"pb8T8hoCgBrd97QnlkMdhB8a2wKAESclrnueMbTmi7TLh2vzkD6fyEor96GxIvgulYJAi1VFgO8uDmW6Qa3YCclw6n6mOKjWu9HQ" +
+			"H32vDw84apKDwb1En6QZikS9lHz3li764+lr2OsqBmw3MPTL7PNH0srgH2wjOFjYJrGKTYQNFcORP7ipMhELocGXoRrBnQ50u/JR" +
+			"CaA94u1AoDpPVA=="
+		;
+
+	// example.com.		259200	IN	RRSIG	NSEC 5 2 259200 20260901000000 20160901000000 7086 example.com. H/u7uFuVNHXgGfcaOEqB+EjD3UM4IH7jkz4Ye5IpXSKrBWLsqL/GXRWQjjrVWpbHZP3wVlVn+lfKbaLyoCgzmc4okn7D1u+iKzBDLbXrBC/58msccP5PYhIrnHQRN9vp9ymfn4aawiYn/kPPe7zDxOgyN6tAzewxsvozMvEQGdEP7qlK4oADBGxjKjeNX27zKfN9+HuuSgtCKDvYCvLFOfrTIIdCKBYE0GZRnv5OH0Xyu4VPiV+mEQwjPK+Q2daExOEKtS9v3Y1nEIL0XDdByEbe8hGJOD3j8x+jQBYAYzOdhwA4U50dtxciTrlRJ7oIsWjc/+I6H+YQDHZD4nc3DA==
+	static String signedRecord9 =
+		"B2V4YW1wbGUDY29tAAAuAAEAA/SAAR8ALwUCAAP0gGqWFYBXx2+AG64HZXhhbXBsZQNjb20AH/u7uFuVNHXgGfcaOEqB+EjD3UM4" +
+			"IH7jkz4Ye5IpXSKrBWLsqL/GXRWQjjrVWpbHZP3wVlVn+lfKbaLyoCgzmc4okn7D1u+iKzBDLbXrBC/58msccP5PYhIrnHQRN9vp" +
+			"9ymfn4aawiYn/kPPe7zDxOgyN6tAzewxsvozMvEQGdEP7qlK4oADBGxjKjeNX27zKfN9+HuuSgtCKDvYCvLFOfrTIIdCKBYE0GZR" +
+			"nv5OH0Xyu4VPiV+mEQwjPK+Q2daExOEKtS9v3Y1nEIL0XDdByEbe8hGJOD3j8x+jQBYAYzOdhwA4U50dtxciTrlRJ7oIsWjc/+I6" +
+			"H+YQDHZD4nc3DA=="
+		;
+
+	// ftp.example.com.	1814400	IN	A	12.34.56.78
+	static String signedRecord10 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAAQABABuvgAAEDCI4Tg=="
+		;
+
+	// ftp.example.com.	1814400	IN	A	21.43.65.87
+	static String signedRecord11 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAAQABABuvgAAEFStBVw=="
+		;
+
+	// ftp.example.com.	1814400	IN	RRSIG	A 5 3 1814400 20260901000000 20160901000000 7086 example.com. U4QtoC/Nvzafh7ZYJVaCVebNLTvBwqPnAVbwVh+zYVgx0TTjMv2Y7B7IZqFYLofZUhjDKnc97CgC1VueBLUaXAHn8eugq6Zedzdk0dgGoGBZlbvq4ZF1Hc95G2HmeR75Rg0++qMPxMkZzO4L0Y9aRNkPMN6gslnwU6CqF5f4+t8EPy+lqYf/0O978iGjbHndGI9Za6dE1T4eEVbn1Zc68QDm2Ac1tfbqXdlFknm4AzGRbUaEZoinn4ucwKJVw2w09OXpH5RqOOF/ooBzksRtbcg/oUSSkgNKbETl4Pdr1OuIuaDNRv1smyBJ/rwUVvfnrIsR57w3id447bYHkUjtLw==
+	static String signedRecord12 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALgABABuvgAEfAAEFAwAbr4BqlhWAV8dvgBuuB2V4YW1wbGUDY29tAFOELaAvzb82n4e2WCVWglXm" +
+			"zS07wcKj5wFW8FYfs2FYMdE04zL9mOweyGahWC6H2VIYwyp3PewoAtVbngS1GlwB5/HroKumXnc3ZNHYBqBgWZW76uGRdR3PeRth" +
+			"5nke+UYNPvqjD8TJGczuC9GPWkTZDzDeoLJZ8FOgqheX+PrfBD8vpamH/9Dve/Iho2x53RiPWWunRNU+HhFW59WXOvEA5tgHNbX2" +
+			"6l3ZRZJ5uAMxkW1GhGaIp5+LnMCiVcNsNPTl6R+Uajjhf6KAc5LEbW3IP6FEkpIDSmxE5eD3a9TriLmgzUb9bJsgSf68FFb356yL" +
+			"Eee8N4neOO22B5FI7S8="
+		;
+
+	// ftp.example.com.	1814400	IN	RRSIG	A 5 3 1814400 20260901000000 20160901000000 7086 example.com. L7l1XUvguu5lYO6J+/XBM3ebg0wskaYXWetQ+uiUwJvUYPHN5CMlV6XO3wyzqMiNvUo9XvuI/rvXfjrw9kRIGdZK6ljTYxtA3bLpA02qoiPFq8Qqz6YRkl9MsQ6zeparJ0PLtKg0cyPMK0gzy0MIoBbxyQe8fOoR6RpAO0AY7BN+vhMKD27UcWhQSKSr3oq/q7e++BbLYMqAVjOaRrzJEFfXGipirl5Q/774+/X3xgwF5WwXunn4xsdJPVTgd0K+QvWajU8sfegGk8ynjocx5Xobi7bfkgQ1wRw4j87vYYoGb8qCQlhb5+Qqg5vbLYvzT8YWpyrHsRk9LVXnACM2aA==
+	static String signedRecord13 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALgABABuvgAEfAAEFAwAbr4BqlhWAV8dvgBuuB2V4YW1wbGUDY29tAC+5dV1L4LruZWDuifv1wTN3" +
+			"m4NMLJGmF1nrUProlMCb1GDxzeQjJVelzt8Ms6jIjb1KPV77iP6713468PZESBnWSupY02MbQN2y6QNNqqIjxavEKs+mEZJfTLEO" +
+			"s3qWqydDy7SoNHMjzCtIM8tDCKAW8ckHvHzqEekaQDtAGOwTfr4TCg9u1HFoUEikq96Kv6u3vvgWy2DKgFYzmka8yRBX1xoqYq5e" +
+			"UP+++Pv198YMBeVsF7p5+MbHST1U4HdCvkL1mo1PLH3oBpPMp46HMeV6G4u235IENcEcOI/O72GKBm/KgkJYW+fkKoOb2y2L80/G" +
+			"Fqcqx7EZPS1V5wAjNmg="
+		;
+
+	// ftp.example.com.	259200	IN	AAAA	2001:db8:0:0:12:34:56:78
+	static String signedRecord14 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAAEgA0AFYAeA=="
+		;
+
+	// ftp.example.com.	259200	IN	AAAA	2001:db8:0:0:21:43:65:87
+	static String signedRecord15 =
+		"A2Z0cAdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAAIQBDAGUAhw=="
+		;
+
+	// ftp.example.com.	259200	IN	RRSIG	AAAA 5 3 259200 20260901000000 20160901000000 7086 example.com. Y8sB3n4mzinMFvPBnJFnl/IGlxrQZ+bHYIQoa7wSC+H1/j+en11LCDxujrI0VlTf6oI1OqieTj/ooo7jsYbHkyqbcdgkclfPzSh7NVOFzstuJFd53rn3BZZnoytma4e1uwaDGt7T9LyNplNnixq/TZMtK3B1Y54i2Ba1qvnsys5iOH4Scn5mRzqSAFEyDAc9kFvKBe8PTQ4r/S8nseBMYSx2NrRird5UIhTyN12QnEkK7LfllmAnx/Iph/CZw6WzxEo8HoOqOYKliD45I/awTT53Eo2sAm6d8EUgUX5qmPD2lxKMaMyk0vEBWTvFtpW3WS9lQ8OTMjxdC07pxjDDUw==
+	static String signedRecord16 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALgABAAP0gAEfABwFAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAGPLAd5+Js4pzBbzwZyRZ5fy" +
+			"Bpca0Gfmx2CEKGu8Egvh9f4/np9dSwg8bo6yNFZU3+qCNTqonk4/6KKO47GGx5Mqm3HYJHJXz80oezVThc7LbiRXed659wWWZ6Mr" +
+			"ZmuHtbsGgxre0/S8jaZTZ4sav02TLStwdWOeItgWtar57MrOYjh+EnJ+Zkc6kgBRMgwHPZBbygXvD00OK/0vJ7HgTGEsdja0Yq3e" +
+			"VCIU8jddkJxJCuy35ZZgJ8fyKYfwmcOls8RKPB6DqjmCpYg+OSP2sE0+dxKNrAJunfBFIFF+apjw9pcSjGjMpNLxAVk7xbaVt1kv" +
+			"ZUPDkzI8XQtO6cYww1M="
+		;
+
+	// ftp.example.com.	259200	IN	RRSIG	AAAA 5 3 259200 20260901000000 20160901000000 7086 example.com. fzTqBDO1oUj6xd8Qv2AeQxJxAcriAZTucCEiiJl3Rb2f6hwNwomgFiOlyhXycD11SUmIB4Dl1BINuHk/2T+8OJ1KshHan7Gj/MYOPDL9KPuqCBjyCbEcOSOX7Fp0UgHPpiG22sjfsyiU8lIxE9TgAd0lsWrM3PM7Q9OgcgGMXpY/0/40fRAumYlWMTBwFDA9tGmlLPKqMIbm/top0dmK99762MYbsM9meTdKMuoHUA+IXG/Yj/8+rKN58Vfji0BaHdclHs7/GaQuxIkpHByzV/dgBRQzBqhWNhqZlexxrAY04vc8e/loT4BbBJyI6inTNVORSmbYrCguW0iGkI6v5A==
+	static String signedRecord17 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALgABAAP0gAEfABwFAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAH806gQztaFI+sXfEL9gHkMS" +
+			"cQHK4gGU7nAhIoiZd0W9n+ocDcKJoBYjpcoV8nA9dUlJiAeA5dQSDbh5P9k/vDidSrIR2p+xo/zGDjwy/Sj7qggY8gmxHDkjl+xa" +
+			"dFIBz6YhttrI37MolPJSMRPU4AHdJbFqzNzzO0PToHIBjF6WP9P+NH0QLpmJVjEwcBQwPbRppSzyqjCG5v7aKdHZivfe+tjGG7DP" +
+			"Znk3SjLqB1APiFxv2I//PqyjefFX44tAWh3XJR7O/xmkLsSJKRwcs1f3YAUUMwaoVjYamZXscawGNOL3PHv5aE+AWwSciOop0zVT" +
+			"kUpm2KwoLltIhpCOr+Q="
+		;
+
+	// ftp.example.com.	259200	IN	NSEC	mirror.ftp.example.com. A AAAA RRSIG NSEC
+	static String signedRecord18 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALwABAAP0gAAgBm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAAZAAAAIAAM="
+		;
+
+	// ftp.example.com.	259200	IN	RRSIG	NSEC 5 3 259200 20260901000000 20160901000000 7086 example.com. ATaCemEBP14GfLjbzSdbHPdKVuDCW2mdQZ7xN+8HDTYoxlcKbCI4iDfoBoBHEBjvXoJwQFRsdvhj+ZKWMlf+KZ4IjqR8phU9he8LHAIZHezp1TNDT5GNxodabrr3SbyicYrsvm9WXL7pB7yUkfaOsKDjYGux/8Z3jOSal6cKIjSegDxbDYuMIetN0wUBGg+cCUGquDMryde4dtgZSVPbeuLZupOBhjaN8Bn5IyCKzlQl42T7sUzBvAK+pQOrA86Xocs2kX8ynfAgSXkvMhxXi9F4S8crr4oj2ZvQJ1MipGSJqoC3XmV4ZnIm95MneAbgf6EtrpjUmip9KeQg4Vgjag==
+	static String signedRecord19 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALgABAAP0gAEfAC8FAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAAE2gnphAT9eBny4280nWxz3" +
+			"SlbgwltpnUGe8TfvBw02KMZXCmwiOIg36AaARxAY716CcEBUbHb4Y/mSljJX/imeCI6kfKYVPYXvCxwCGR3s6dUzQ0+RjcaHWm66" +
+			"90m8onGK7L5vVly+6Qe8lJH2jrCg42Brsf/Gd4zkmpenCiI0noA8Ww2LjCHrTdMFARoPnAlBqrgzK8nXuHbYGUlT23ri2bqTgYY2" +
+			"jfAZ+SMgis5UJeNk+7FMwbwCvqUDqwPOl6HLNpF/Mp3wIEl5LzIcV4vReEvHK6+KI9mb0CdTIqRkiaqAt15leGZyJveTJ3gG4H+h" +
+			"La6Y1JoqfSnkIOFYI2o="
+		;
+
+	// ftp.example.com.	259200	IN	RRSIG	NSEC 5 3 259200 20260901000000 20160901000000 7086 example.com. SkhTibv2hL9UnL+XDesn6CrEqvUeUJZfIiSgub5IICxV3yyWf7PVHC7bEp/oeQIK2xyOf9rCOL0qw4YAJa/XdzOdrWsi5FH+IXyDtb2Tp2d+VjOf6NxrbxlsDlzzaogb7WtgWQ69cZdiOazDlKNHbKr9hS2uF94PRPdyI0aSRflATQuN34IBZ3wu9r1aAwJJLKUPCu6y2im/sUyNTphF9ZqfvLPpPjJfaxK6gVCL/9PSQzST4NdBP8t1EJcQ1FggSvf0iCQcm2fOAYovQkB19TMBED5ay0LUN/Oxq9FDeZjq62QNdBw0S5QPFrNW+eaqQaJFW1IThZCG9uXSouI6NQ==
+	static String signedRecord20 =
+		"A2Z0cAdleGFtcGxlA2NvbQAALgABAAP0gAEfAC8FAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAEpIU4m79oS/VJy/lw3rJ+gq" +
+			"xKr1HlCWXyIkoLm+SCAsVd8sln+z1Rwu2xKf6HkCCtscjn/awji9KsOGACWv13czna1rIuRR/iF8g7W9k6dnflYzn+jca28ZbA5c" +
+			"82qIG+1rYFkOvXGXYjmsw5SjR2yq/YUtrhfeD0T3ciNGkkX5QE0Ljd+CAWd8Lva9WgMCSSylDwrustopv7FMjU6YRfWan7yz6T4y" +
+			"X2sSuoFQi//T0kM0k+DXQT/LdRCXENRYIEr39IgkHJtnzgGKL0JAdfUzARA+WstC1DfzsavRQ3mY6utkDXQcNEuUDxazVvnmqkGi" +
+			"RVtSE4WQhvbl0qLiOjU="
+		;
+
+	// mirror.ftp.example.com.	315360000	IN	CNAME	ftp.example.com.
+	static String signedRecord21 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAAUAARLMAwAAEQNmdHAHZXhhbXBsZQNjb20A"
+		;
+
+	// mirror.ftp.example.com.	315360000	IN	RRSIG	CNAME 5 4 315360000 20260901000000 20160901000000 7086 example.com. cIKujjQiUKHv74J8I+1IZRw/94YXPPBBJmCjxGBgpYXKrmTLwdBq+IO7SnP2B+Z8oTajsbA8gufxdrsseatdkah25Mji0y7lA5AOYwd6CIftJZcpqWwwXdh2ogvXuOiKPP9wScAVK7exZ1hYYQkGic71oV6CmGEAWrqa51hxIRbVLTTCiezNW3meHnzhkunxopqLjsmuM5P0xP+12ZVKqHzNf8MR99HoL1tg4OnbPwTtlvBX3l4jxXq5M1fCZRzJg4tTLqREbPBsBKCZenA9D/mIWuNiqR2YLNNBQaXKbuqyA9e02Ui662Ab6gSNK6mLfz06auqzU3V0/Bbn2oGyjw==
+	static String signedRecord22 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAC4AARLMAwABHwAFBQQSzAMAapYVgFfHb4AbrgdleGFtcGxlA2NvbQBwgq6ONCJQoe/v" +
+			"gnwj7UhlHD/3hhc88EEmYKPEYGClhcquZMvB0Gr4g7tKc/YH5nyhNqOxsDyC5/F2uyx5q12RqHbkyOLTLuUDkA5jB3oIh+0llymp" +
+			"bDBd2HaiC9e46Io8/3BJwBUrt7FnWFhhCQaJzvWhXoKYYQBauprnWHEhFtUtNMKJ7M1beZ4efOGS6fGimouOya4zk/TE/7XZlUqo" +
+			"fM1/wxH30egvW2Dg6ds/BO2W8FfeXiPFerkzV8JlHMmDi1MupERs8GwEoJl6cD0P+Yha42KpHZgs00FBpcpu6rID17TZSLrrYBvq" +
+			"BI0rqYt/PTpq6rNTdXT8FufagbKP"
+		;
+
+	// mirror.ftp.example.com.	315360000	IN	RRSIG	CNAME 5 4 315360000 20260901000000 20160901000000 7086 example.com. JAyL9OaHa6F8uAn5gX2RMydADDaWcDc0xmOhP1DUAzgylhmpe7kLULer5Uiem3A7cjDgAunm1B9TflZFHTPLLaomGXgN4BR7Zmk2rjVED4ZvUan0e2UKvLMOmT1kNZ/gHmjGZu9ydEjdqKa1DAZupcagdF0YSuEtlIjDP+T9VQzG1WkVLcoD0wZbr6wfeOJOaHOMSRR10Z0kZ48k4ycqbxBDHEhQS26VUpbsAgHNtqaLPa1GR1+qR9iwmP7drhMeQNvXTfzYt+4gZ2rgR7DhYyncFfvp9jN6wKY/sS7zhJF7fnKyFTHnt22wkRl2YOEB4FvKNwjhNpSE5t/o+Q+IFw==
+	static String signedRecord23 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAC4AARLMAwABHwAFBQQSzAMAapYVgFfHb4AbrgdleGFtcGxlA2NvbQAkDIv05odroXy4" +
+			"CfmBfZEzJ0AMNpZwNzTGY6E/UNQDODKWGal7uQtQt6vlSJ6bcDtyMOAC6ebUH1N+VkUdM8stqiYZeA3gFHtmaTauNUQPhm9RqfR7" +
+			"ZQq8sw6ZPWQ1n+AeaMZm73J0SN2oprUMBm6lxqB0XRhK4S2UiMM/5P1VDMbVaRUtygPTBluvrB944k5oc4xJFHXRnSRnjyTjJypv" +
+			"EEMcSFBLbpVSluwCAc22pos9rUZHX6pH2LCY/t2uEx5A29dN/Ni37iBnauBHsOFjKdwV++n2M3rApj+xLvOEkXt+crIVMee3bbCR" +
+			"GXZg4QHgW8o3COE2lITm3+j5D4gX"
+		;
+
+	// mirror.ftp.example.com.	259200	IN	NSEC	www.example.com. CNAME RRSIG NSEC
+	static String signedRecord24 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAC8AAQAD9IAAGQN3d3cHZXhhbXBsZQNjb20AAAYEAAAAAAM="
+		;
+
+	// mirror.ftp.example.com.	259200	IN	RRSIG	NSEC 5 4 259200 20260901000000 20160901000000 7086 example.com. TDzexY2Ll8wYho+0KJdO40erisXwh89XmyFUOeXamYNNB3g0OxMeBcNh2+WIy5SoN4qaJQs4z4MddeGWBGkftmw4HH0GeIuTvDa1K2thYqwoRqjd2p4eL38Agj+2BBIle4nXqLoU+pgLsTtPSZCpJM05oRsU+pPobwewSKwXklhZmI+NnqmDIffDkcQFTn1VA8Su/9n25s0cSS2jd6mQOhhz0jZ5eGroVbSWzZf92oP+3NMb8iuRNKgjoaQkJ+XIqCJJVJPDcGDTEpixpbU05WfJtViYZ7QYujh2+zsJ16cXJGf7AH0a2HJH4MXuaRPmxAKeQ+5glQLmzvGIRHwlZQ==
+	static String signedRecord25 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAC4AAQAD9IABHwAvBQQAA/SAapYVgFfHb4AbrgdleGFtcGxlA2NvbQBMPN7FjYuXzBiG" +
+			"j7Qol07jR6uKxfCHz1ebIVQ55dqZg00HeDQ7Ex4Fw2Hb5YjLlKg3ipolCzjPgx114ZYEaR+2bDgcfQZ4i5O8NrUra2FirChGqN3a" +
+			"nh4vfwCCP7YEEiV7ideouhT6mAuxO09JkKkkzTmhGxT6k+hvB7BIrBeSWFmYj42eqYMh98ORxAVOfVUDxK7/2fbmzRxJLaN3qZA6" +
+			"GHPSNnl4auhVtJbNl/3ag/7c0xvyK5E0qCOhpCQn5cioIklUk8NwYNMSmLGltTTlZ8m1WJhntBi6OHb7OwnXpxckZ/sAfRrYckfg" +
+			"xe5pE+bEAp5D7mCVAubO8YhEfCVl"
+		;
+
+	// mirror.ftp.example.com.	259200	IN	RRSIG	NSEC 5 4 259200 20260901000000 20160901000000 7086 example.com. j8sDbrrosoIR05x2+hWgzuenmA/DkNsDM9lA14LtlDqTfHh5VdngH7YRw11Jo752g2dxLB7SWz9tR4Lojx8EDOTpgmTy51kgsESP0nWCtmBIuW0L+6EYWr6VhnfTAqx8ssRkf/kj+YjP5HFGeRVMJRAAvdYcfh57MzUw6DmXtGAv1JuydjSRwvJffWZUxf+2x8lb0e9ntFwwxt/C39lM/ZhKwf+Tv4IWNbdarkXjFwrVnJvoSv7iqjPrgCOOAXTj/L8slh7cVIycohYFxRxBE79iXhp056WZ+P7ooQ8EiyPJSG5ihkiWuv5fwdRb2Lc4lZ7Y1OQS4YBrszLN+H9sWA==
+	static String signedRecord26 =
+		"Bm1pcnJvcgNmdHAHZXhhbXBsZQNjb20AAC4AAQAD9IABHwAvBQQAA/SAapYVgFfHb4AbrgdleGFtcGxlA2NvbQCPywNuuuiyghHT" +
+			"nHb6FaDO56eYD8OQ2wMz2UDXgu2UOpN8eHlV2eAfthHDXUmjvnaDZ3EsHtJbP21HguiPHwQM5OmCZPLnWSCwRI/SdYK2YEi5bQv7" +
+			"oRhavpWGd9MCrHyyxGR/+SP5iM/kcUZ5FUwlEAC91hx+HnszNTDoOZe0YC/Um7J2NJHC8l99ZlTF/7bHyVvR72e0XDDG38Lf2Uz9" +
+			"mErB/5O/ghY1t1quReMXCtWcm+hK/uKqM+uAI44BdOP8vyyWHtxUjJyiFgXFHEETv2JeGnTnpZn4/uihDwSLI8lIbmKGSJa6/l/B" +
+			"1FvYtziVntjU5BLhgGuzMs34f2xY"
+		;
+
+	// www.example.com.	1814400	IN	A	11.22.33.44
+	static String signedRecord27 =
+		"A3d3dwdleGFtcGxlA2NvbQAAAQABABuvgAAECxYhLA=="
+		;
+
+	// www.example.com.	1814400	IN	A	55.66.77.88
+	static String signedRecord28 =
+		"A3d3dwdleGFtcGxlA2NvbQAAAQABABuvgAAEN0JNWA=="
+		;
+
+	// www.example.com.	1814400	IN	RRSIG	A 5 3 1814400 20260901000000 20160901000000 7086 example.com. Kbin5k9XaVV3aBhbujpiNun9Xp7iFPwyKIrR/XCr+x+bytiubung6HO5HgUovJxeaF879msZ44xLXKRgRbesUs0hicVkhTuLDUfDiO0hsnb2mWguvD3iUdVwGaCiIuW/LimHyMYYSuhg8sTstt7Oyq8trX+Peq/QgL4pXqyryXh0FpZfJN+eRA7pQbuIxOVvEBGTbxZ6eCRvUeddaVeEYXBs4ygKO9TjZBYgzYvR5lU18dJw2SbIKoc8qKZpJmjDQT3XkTOYOmMHA6qdTfo6Pt94JRTeY7FEl9/bGmTWwKkTaKoQ9qwyMbiaon/Yked2Gmj0Uhi+kZ8JQJ8GFqnNgQ==
+	static String signedRecord29 =
+		"A3d3dwdleGFtcGxlA2NvbQAALgABABuvgAEfAAEFAwAbr4BqlhWAV8dvgBuuB2V4YW1wbGUDY29tACm4p+ZPV2lVd2gYW7o6Yjbp" +
+			"/V6e4hT8MiiK0f1wq/sfm8rYrm7p4OhzuR4FKLycXmhfO/ZrGeOMS1ykYEW3rFLNIYnFZIU7iw1Hw4jtIbJ29ploLrw94lHVcBmg" +
+			"oiLlvy4ph8jGGEroYPLE7LbezsqvLa1/j3qv0IC+KV6sq8l4dBaWXyTfnkQO6UG7iMTlbxARk28Wengkb1HnXWlXhGFwbOMoCjvU" +
+			"42QWIM2L0eZVNfHScNkmyCqHPKimaSZow0E915EzmDpjBwOqnU36Oj7feCUU3mOxRJff2xpk1sCpE2iqEPasMjG4mqJ/2JHndhpo" +
+			"9FIYvpGfCUCfBhapzYE="
+		;
+
+	// www.example.com.	1814400	IN	RRSIG	A 5 3 1814400 20260901000000 20160901000000 7086 example.com. qvdxa8R5kthCTYQATZm7fEqymLKAT/ED9aWi9ROX7g/DTjcpr+TrbBsNAbf7by2XYzHjWX02ySnGTaT8D0PXFiZSKQ8KHfJUD3jiF4FGnhjbV4gP1vJa2l7fxet7DRTx4OWgl4aJNw+lCU1yoKqs9Fe8ONcnuiD64aLFhfvOqQljlUt7GBfwH1h+IptVe4PtniOVltvOmiVkd0cCr+z0rd6vka8CRiGlEoelX/VwG2kJ7qDIP2rTyP+MwbXXT2iHzKk4bVhHoKdMF1AfoK8O3fMogCpEQcWLcDaGAn5m6PfKoecWQ/gkzfvRNm5xNUOBp1JbuOvduIIwseRzivcY5w==
+	static String signedRecord30 =
+		"A3d3dwdleGFtcGxlA2NvbQAALgABABuvgAEfAAEFAwAbr4BqlhWAV8dvgBuuB2V4YW1wbGUDY29tAKr3cWvEeZLYQk2EAE2Zu3xK" +
+			"spiygE/xA/WlovUTl+4Pw043Ka/k62wbDQG3+28tl2Mx41l9Nskpxk2k/A9D1xYmUikPCh3yVA944heBRp4Y21eID9byWtpe38Xr" +
+			"ew0U8eDloJeGiTcPpQlNcqCqrPRXvDjXJ7og+uGixYX7zqkJY5VLexgX8B9YfiKbVXuD7Z4jlZbbzpolZHdHAq/s9K3er5GvAkYh" +
+			"pRKHpV/1cBtpCe6gyD9q08j/jMG1109oh8ypOG1YR6CnTBdQH6CvDt3zKIAqREHFi3A2hgJ+Zuj3yqHnFkP4JM370TZucTVDgadS" +
+			"W7jr3biCMLHkc4r3GOc="
+		;
+
+	// www.example.com.	259200	IN	AAAA	2001:db8:0:0:4:3:2:1
+	static String signedRecord31 =
+		"A3d3dwdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAABAADAAIAAQ=="
+		;
+
+	// www.example.com.	259200	IN	AAAA	2001:db8:0:0:5:6:7:8
+	static String signedRecord32 =
+		"A3d3dwdleGFtcGxlA2NvbQAAHAABAAP0gAAQIAENuAAAAAAABQAGAAcACA=="
+		;
+
+	// www.example.com.	259200	IN	RRSIG	AAAA 5 3 259200 20260901000000 20160901000000 7086 example.com. aLr5r/LMx0N0oZiLIRza84S4gFtKt1741mwWSduq1YBSPMV/wqhmzRBI/CYyHQ0YeZgWkBjXdRaZmyacJCoz8E2U3ri7L+7cHnv29ad40Eg6Oy9nubP4mpH0QUT1uYDMlTnyaFh6/iKJV9uCHkzjzmaqcKKvjWlFnwrG1qT5ThDHvVmkjaOrwtaGq1YanvGsTUEM2C333nUbhDragAQ3B9Mtk93GxD1qmgzmhDt5xjrl6X+g1AcSB6c9ho/fvrSFgOME2g2ZH7h91GiNu1v7d4noqAkxlOGg/eQz71e2rSabL3j0tjHvh7phOWmX0kPJFotPjXueyH81Tv3nHgs9tA==
+	static String signedRecord33 =
+		"A3d3dwdleGFtcGxlA2NvbQAALgABAAP0gAEfABwFAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAGi6+a/yzMdDdKGYiyEc2vOE" +
+			"uIBbSrde+NZsFknbqtWAUjzFf8KoZs0QSPwmMh0NGHmYFpAY13UWmZsmnCQqM/BNlN64uy/u3B579vWneNBIOjsvZ7mz+JqR9EFE" +
+			"9bmAzJU58mhYev4iiVfbgh5M485mqnCir41pRZ8Kxtak+U4Qx71ZpI2jq8LWhqtWGp7xrE1BDNgt9951G4Q62oAENwfTLZPdxsQ9" +
+			"apoM5oQ7ecY65el/oNQHEgenPYaP3760hYDjBNoNmR+4fdRojbtb+3eJ6KgJMZThoP3kM+9Xtq0mmy949LYx74e6YTlpl9JDyRaL" +
+			"T417nsh/NU795x4LPbQ="
+		;
+
+	// www.example.com.	259200	IN	RRSIG	AAAA 5 3 259200 20260901000000 20160901000000 7086 example.com. Qs6O4blUgwrjyO1hsW3lx7QNy6tDWZedSfcmdKMxlMIs9Sf2+r/gFaeKKRbGYBBmVku72lzkD/nQMOnK63lKQORdeugawatWNguiHlinK4bSBY8DQ7MH1FFzXHd643LYPtd4d2bZMILhcCd7twqhja+R4SJQq23ZpCZVvh4HpWsirKpyEmHZicaD5kpnIUA6Lvab7q3QhiS+6fg3vavFRnHDLDGebLzZvujeSBbfSTnoE4CaGsMJAaJUDVXW5kkL8tEn1Ynmn7sXDXhDQQX2WI1YXs2nNAkLu2Uf+VP54hPvhr5FfdCowJR3VLnAUWyVm59G2Bo4Fi27UH//UOOW/g==
+	static String signedRecord34 =
+		"A3d3dwdleGFtcGxlA2NvbQAALgABAAP0gAEfABwFAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAELOjuG5VIMK48jtYbFt5ce0" +
+			"DcurQ1mXnUn3JnSjMZTCLPUn9vq/4BWniikWxmAQZlZLu9pc5A/50DDpyut5SkDkXXroGsGrVjYLoh5YpyuG0gWPA0OzB9RRc1x3" +
+			"euNy2D7XeHdm2TCC4XAne7cKoY2vkeEiUKtt2aQmVb4eB6VrIqyqchJh2YnGg+ZKZyFAOi72m+6t0IYkvun4N72rxUZxwywxnmy8" +
+			"2b7o3kgW30k56BOAmhrDCQGiVA1V1uZJC/LRJ9WJ5p+7Fw14Q0EF9liNWF7NpzQJC7tlH/lT+eIT74a+RX3QqMCUd1S5wFFslZuf" +
+			"RtgaOBYtu1B//1Djlv4="
+		;
+
+	// www.example.com.	259200	IN	NSEC	mirror.www.example.com. A AAAA RRSIG NSEC
+	static String signedRecord35 =
+		"A3d3dwdleGFtcGxlA2NvbQAALwABAAP0gAAgBm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAAZAAAAIAAM="
+		;
+
+	// www.example.com.	259200	IN	RRSIG	NSEC 5 3 259200 20260901000000 20160901000000 7086 example.com. cE3/VoGDAp5ZF9RUMWKjHOVgY47dfN9gMo9qhRssB8b2hzkbzpaMVcY7Mg3Pb/yDCoQ0MQoQNY92FcfEr/+nwruszEmGxA0Iu8EUcTd0hMsrSjslSCXEyBLUGgUYG37TsbzDyhQeUffZxHACDawmZ3ROTyJfEtRsZtjNLcCxq4zSMKIDvuqICZIqMtzTp9iaKC73/EjB7QUE2HfWJXJFyzDOqocwJP0nMyZ4HZyf6NmrqXVqSThAlzHYlG0qLbCHcztHY7u8MYayw9XeRKrCtPIvJ7T03CO5lvpFSpN4SMWCetHsTG63Unl2X93E7KvAYy/knm765++nFiDBLKFfEA==
+	static String signedRecord36 =
+		"A3d3dwdleGFtcGxlA2NvbQAALgABAAP0gAEfAC8FAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAHBN/1aBgwKeWRfUVDFioxzl" +
+			"YGOO3XzfYDKPaoUbLAfG9oc5G86WjFXGOzINz2/8gwqENDEKEDWPdhXHxK//p8K7rMxJhsQNCLvBFHE3dITLK0o7JUglxMgS1BoF" +
+			"GBt+07G8w8oUHlH32cRwAg2sJmd0Tk8iXxLUbGbYzS3AsauM0jCiA77qiAmSKjLc06fYmigu9/xIwe0FBNh31iVyRcswzqqHMCT9" +
+			"JzMmeB2cn+jZq6l1akk4QJcx2JRtKi2wh3M7R2O7vDGGssPV3kSqwrTyLye09NwjuZb6RUqTeEjFgnrR7Exut1J5dl/dxOyrwGMv" +
+			"5J5u+ufvpxYgwSyhXxA="
+		;
+
+	// www.example.com.	259200	IN	RRSIG	NSEC 5 3 259200 20260901000000 20160901000000 7086 example.com. qmeTK9aNcVAz6G7NoSMB/4ZXkG1Bv5WZLwGOhtJRlOCJ9XYcrQIlno3yJ7ujEgJJLVd+Sue3kxvclPEDBlKEJf7+iSMgitYXvonqmmW8CgCSzQPW6x/FKDCArsKVtnrO9ouZRE0INCY3ipoEJ2S31jcWg/IIV4zOQzah3wFQ/cbyFezOZauHEN7cPSzVebDxuHMALrbqZ8ynaPjzOXxrxjdxY6ZSQQe1u/Mcs0qo6iomzNRs2qfttE2FpeV/uFQGBwKroiu0XaEUoLvQdgQHPaNtvicW3quXer0RSe9daRRj959+s4TZvAwDZmgPlB3j7wX/uI7N2/u3jwCFFW1DPg==
+	static String signedRecord37 =
+		"A3d3dwdleGFtcGxlA2NvbQAALgABAAP0gAEfAC8FAwAD9IBqlhWAV8dvgBuuB2V4YW1wbGUDY29tAKpnkyvWjXFQM+huzaEjAf+G" +
+			"V5BtQb+VmS8BjobSUZTgifV2HK0CJZ6N8ie7oxICSS1Xfkrnt5Mb3JTxAwZShCX+/okjIIrWF76J6pplvAoAks0D1usfxSgwgK7C" +
+			"lbZ6zvaLmURNCDQmN4qaBCdkt9Y3FoPyCFeMzkM2od8BUP3G8hXszmWrhxDe3D0s1Xmw8bhzAC626mfMp2j48zl8a8Y3cWOmUkEH" +
+			"tbvzHLNKqOoqJszUbNqn7bRNhaXlf7hUBgcCq6IrtF2hFKC70HYEBz2jbb4nFt6rl3q9EUnvXWkUY/effrOE2bwMA2ZoD5Qd4+8F" +
+			"/7iOzdv7t48AhRVtQz4="
+		;
+
+	// mirror.www.example.com.	315360000	IN	CNAME	www.example.com.
+	static String signedRecord38 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAAUAARLMAwAAEQN3d3cHZXhhbXBsZQNjb20A"
+		;
+
+	// mirror.www.example.com.	315360000	IN	RRSIG	CNAME 5 4 315360000 20260901000000 20160901000000 7086 example.com. exhZD2NsH4+Wl5oqmAGVL9qia+H09E5vYlMFNE0mNITxKOko/PGOTwqZ8RWxX1HxogazTRFLxwe2hUN/pZ5z7uB74YW0i9gDKaekvqsuV2Y9GfB+eygYDMjF2zPVBBEGyPe0+wUtN6aOaJrIxGQcQR9qzSXSvL6s15o8/LpmanP5EAn7H5Re9Tbb266Bg0vcDRjQtkqaGHhglxHul3OyO3VFjor+pzXTFMy8ZgzbvaZzkvF3ZGVwuP3j8q+Yd8gyZk9mn6SrYgh0xB0c+JpPfBBMaaQgZMVxIeVWsCDkG6cSAPskYmV1E10wQL/OyO39oYRuFggjD9oLMwaLCsyLEw==
+	static String signedRecord39 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAC4AARLMAwABHwAFBQQSzAMAapYVgFfHb4AbrgdleGFtcGxlA2NvbQB7GFkPY2wfj5aX" +
+			"miqYAZUv2qJr4fT0Tm9iUwU0TSY0hPEo6Sj88Y5PCpnxFbFfUfGiBrNNEUvHB7aFQ3+lnnPu4HvhhbSL2AMpp6S+qy5XZj0Z8H57" +
+			"KBgMyMXbM9UEEQbI97T7BS03po5omsjEZBxBH2rNJdK8vqzXmjz8umZqc/kQCfsflF71NtvbroGDS9wNGNC2SpoYeGCXEe6Xc7I7" +
+			"dUWOiv6nNdMUzLxmDNu9pnOS8XdkZXC4/ePyr5h3yDJmT2afpKtiCHTEHRz4mk98EExppCBkxXEh5VawIOQbpxIA+yRiZXUTXTBA" +
+			"v87I7f2hhG4WCCMP2gszBosKzIsT"
+		;
+
+	// mirror.www.example.com.	315360000	IN	RRSIG	CNAME 5 4 315360000 20260901000000 20160901000000 7086 example.com. gZyxIHqTEteEA0Eg0svk3Ykyl/kQd8+N0oiua9sy6GCHT0onwZ3FYzFDyBq7W3nJVTPPGy2+VtDB1ZTNT7oXXTp1g5AFOoXC252lOggpFB0QVS0eLd3KW6Rz8/uPHGLE16xUaVSOW1oRt2xrcGZSFpkg0Fe/VkV2XpKN369wf9zJIuQ9nVQ8UBMadetB3gf17xkA4cyb6T/ckxtQev2G7zyN351VAJjQ4rUS9+UYfPEtXdKtbfVwPZw3p+WLWNtt4c3OcgNVOxkwOvHrlATXCi/P2bGcAQ5njy4hQP7faYwtsbZKjyKDfVgFwerFPisBVC3rflQSvoTrsHEA0+pWYw==
+	static String signedRecord40 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAC4AARLMAwABHwAFBQQSzAMAapYVgFfHb4AbrgdleGFtcGxlA2NvbQCBnLEgepMS14QD" +
+			"QSDSy+TdiTKX+RB3z43SiK5r2zLoYIdPSifBncVjMUPIGrtbeclVM88bLb5W0MHVlM1PuhddOnWDkAU6hcLbnaU6CCkUHRBVLR4t" +
+			"3cpbpHPz+48cYsTXrFRpVI5bWhG3bGtwZlIWmSDQV79WRXZeko3fr3B/3Mki5D2dVDxQExp160HeB/XvGQDhzJvpP9yTG1B6/Ybv" +
+			"PI3fnVUAmNDitRL35Rh88S1d0q1t9XA9nDen5YtY223hzc5yA1U7GTA68euUBNcKL8/ZsZwBDmePLiFA/t9pjC2xtkqPIoN9WAXB" +
+			"6sU+KwFULet+VBK+hOuwcQDT6lZj"
+		;
+
+	// mirror.www.example.com.	259200	IN	NSEC	example.com. CNAME RRSIG NSEC
+	static String signedRecord41 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAC8AAQAD9IAAFQdleGFtcGxlA2NvbQAABgQAAAAAAw=="
+		;
+
+	// mirror.www.example.com.	259200	IN	RRSIG	NSEC 5 4 259200 20260901000000 20160901000000 7086 example.com. FJuXbcTQLDjZHx6+PdtsWJf6mBYAAAZVTbSnbUfPczO3S5uIyfw7JYYop8DhcKt2L9Rrpt54MYvDnB/nX54gNdkjnhyRrXMQKXi2GFIjZ7HBuvIrBbDC6RAyastrbFc8QYKRkdDlvrvWZVhhkBCK2AczvwcRUtq2qlOGvBjmkOOm0PaikFqGVVyBcco/l7wGOn4l3Ntt3hm6+oO6dx4SnKE6nlD534AnTIWPC8dhy0FDgrWrbaV1KGnO6hd3ig6dYc4cK0Y7Gwn7rpHW/Kvz0wAPPDHQPFJ/8rlmse/u2+OT3ceDKyO8qYMZqmGLpPDhRvH+xQlzOg9fuH8ovfnGGQ==
+	static String signedRecord42 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAC4AAQAD9IABHwAvBQQAA/SAapYVgFfHb4AbrgdleGFtcGxlA2NvbQAUm5dtxNAsONkf" +
+			"Hr4922xYl/qYFgAABlVNtKdtR89zM7dLm4jJ/DslhiinwOFwq3Yv1Gum3ngxi8OcH+dfniA12SOeHJGtcxApeLYYUiNnscG68isF" +
+			"sMLpEDJqy2tsVzxBgpGR0OW+u9ZlWGGQEIrYBzO/BxFS2raqU4a8GOaQ46bQ9qKQWoZVXIFxyj+XvAY6fiXc223eGbr6g7p3HhKc" +
+			"oTqeUPnfgCdMhY8Lx2HLQUOCtattpXUoac7qF3eKDp1hzhwrRjsbCfuukdb8q/PTAA88MdA8Un/yuWax7+7b45Pdx4MrI7ypgxmq" +
+			"YYuk8OFG8f7FCXM6D1+4fyi9+cYZ"
+		;
+
+	// mirror.www.example.com.	259200	IN	RRSIG	NSEC 5 4 259200 20260901000000 20160901000000 7086 example.com. juolOEekkCQNFcatcICnWE6QCUdEUevSNfvtZBkS+7ZzQytQ0SlbqZDaUHT6DX46RGkRTicM62xHFIr8v0/EuAgJRMoVWJAxwC4Z8ODDmSrMkvFAOAu8dUhFoPSmbiaUCFioT26UwXGw74y74AJt91n1ewEu1AtEWVA+K4J43kjLCapdX+nCqToyxinecHt8Kn1x2vr5ql+EcGHmq7bvocQxHm30fS/yEt1MPD8LvNAFNO+exeLP0WIKZt+RWgMTHQjuV64iAZjgqFNVKvpptkSjturcVAAWYipAy2YBW5Io/RPwgwvhinh164BJfTIa8LX9bg0O41pyAyoNDXLvOg==
+	static String signedRecord43 =
+		"Bm1pcnJvcgN3d3cHZXhhbXBsZQNjb20AAC4AAQAD9IABHwAvBQQAA/SAapYVgFfHb4AbrgdleGFtcGxlA2NvbQCO6iU4R6SQJA0V" +
+			"xq1wgKdYTpAJR0RR69I1++1kGRL7tnNDK1DRKVupkNpQdPoNfjpEaRFOJwzrbEcUivy/T8S4CAlEyhVYkDHALhnw4MOZKsyS8UA4" +
+			"C7x1SEWg9KZuJpQIWKhPbpTBcbDvjLvgAm33WfV7AS7UC0RZUD4rgnjeSMsJql1f6cKpOjLGKd5we3wqfXHa+vmqX4RwYeartu+h" +
+			"xDEebfR9L/IS3Uw8Pwu80AU0757F4s/RYgpm35FaAxMdCO5XriIBmOCoU1Uq+mm2RKO26txUABZiKkDLZgFbkij9E/CDC+GKeHXr" +
+			"gEl9Mhrwtf1uDQ7jWnIDKg0Ncu86"
+		;
+
+	// example.com.		1234000	IN	DS	15637 5 2 66CB3389BD6CF3462881AF506BE452DB6AD63D6FADC303BDB0B0629859DA8482
+	static String dsRecord0 =
+		"B2V4YW1wbGUDY29tAAArAAEAEtRQACQ9FQUCZsszib1s80Yoga9Qa+RS22rWPW+twwO9sLBimFnahII="
+		;
+
+	// example.com.		1234000	IN	DS	15637 5 2 66CB3389BD6CF3462881AF506BE452DB6AD63D6FADC303BDB0B0629859DA8482
+	static String dsRecord1 =
+		"B2V4YW1wbGUDY29tAAArAAEAEtRQACQ9FQUCZsszib1s80Yoga9Qa+RS22rWPW+twwO9sLBimFnahII="
+		;
+
+	// example.com.		31556952	IN	DNSKEY	256 3 5 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr1PW+AQIHyKwwHK02NhB79iHm/I4wmwCcSlpcBAGMrT7JNawC+9gKE5PGT9s8XTtEOZeVXjo/IB1c8Ml3sxJ7P2ds5sGsJ/4M3W36W+njhJeXuL2ljIbQprAs0IRbg5SP673ymZR9no3fgXGoH8CiGnNVz2l05S2xtMY5WSaVbYm9rvbTr206EqB0dqI0CLU98O57fvfMpaBaWu3UY7xdQshVsQDZtpySDOnkfdTtxQfM7UVmxsDFty0CoZotChqe+FlunnUt+odk0L7pQrFDU+1TmwRT+HKpv6KYJ/5kmA3XIQr+KHY0U69k+GnDqxY0QwmyF1MmOwc9WYxhzEJRQIDAQAB
+// keytag 7086
+	static String zoneDnsKeyRecord =
+		"ZXhhbXBsZS5jb20uCQkzMTU1Njk1MglJTglETlNLRVkJMjU2IDMgNSBNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1J" +
+			"SUJDZ0tDQVFFQXIxUFcrQVFJSHlLd3dISzAyTmhCNzlpSG0vSTR3bXdDY1NscGNCQUdNclQ3Sk5hd0MrOWdLRTVQR1Q5czhYVHRF" +
+			"T1plVlhqby9JQjFjOE1sM3N4SjdQMmRzNXNHc0ovNE0zVzM2VytuamhKZVh1TDJsakliUXByQXMwSVJiZzVTUDY3M3ltWlI5bm8z" +
+			"ZmdYR29IOENpR25OVnoybDA1UzJ4dE1ZNVdTYVZiWW05cnZiVHIyMDZFcUIwZHFJMENMVTk4TzU3ZnZmTXBhQmFXdTNVWTd4ZFFz" +
+			"aFZzUURadHB5U0RPbmtmZFR0eFFmTTdVVm14c0RGdHkwQ29ab3RDaHFlK0ZsdW5uVXQrb2RrMEw3cFFyRkRVKzFUbXdSVCtIS3B2" +
+			"NktZSi81a21BM1hJUXIrS0hZMFU2OWsrR25EcXhZMFF3bXlGMU1tT3djOVdZeGh6RUpSUUlEQVFBQg=="
+		;
+
+	// example.com.		315569520	IN	DNSKEY	257 3 5 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuhlsAmUsA9dDrRx08mkJv31Am4CUmajCzIlmR6nB/BQ09FOS9qiTP7FdFlBh7NvLz526Wx953A9ZubkeBEOFoBMmeFFpY5ZBkVcjgZ0ml26ecPcl2hLr8Nxy2VsIpefstvKuflcrNR+aDmd8RMB/tPF5ZWmHExbfmCRoinP9ZyEXrLHJsojyfqvKaITIGi1ZdxX28ThJPG+Bf6FyrgWfAmCDkQKpayhQKIm0jkc03XFsnNoNbzflcscIKvQNXpXZ5hn5UB9X0VGXp6SE6EnNU2Jm2Jsv1XbL/E/G6oHyfioJe4Y4mHcRbn/8ilD/Kd9RZWboXBElFZm4jlmeY8SVQwIDAQAB
+// keytag 7086
+	static String keyDnsKeyRecord =
+		"ZXhhbXBsZS5jb20uCQkzMTU1Njk1MjAJSU4JRE5TS0VZCTI1NyAzIDUgTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFN" +
+			"SUlCQ2dLQ0FRRUF1aGxzQW1Vc0E5ZERyUngwOG1rSnYzMUFtNENVbWFqQ3pJbG1SNm5CL0JRMDlGT1M5cWlUUDdGZEZsQmg3TnZM" +
+			"ejUyNld4OTUzQTladWJrZUJFT0ZvQk1tZUZGcFk1WkJrVmNqZ1owbWwyNmVjUGNsMmhMcjhOeHkyVnNJcGVmc3R2S3VmbGNyTlIr" +
+			"YURtZDhSTUIvdFBGNVpXbUhFeGJmbUNSb2luUDlaeUVYckxISnNvanlmcXZLYUlUSUdpMVpkeFgyOFRoSlBHK0JmNkZ5cmdXZkFt" +
+			"Q0RrUUtwYXloUUtJbTBqa2MwM1hGc25Ob05iemZsY3NjSUt2UU5YcFhaNWhuNVVCOVgwVkdYcDZTRTZFbk5VMkptMkpzdjFYYkwv" +
+			"RS9HNm9IeWZpb0plNFk0bUhjUmJuLzhpbEQvS2Q5UlpXYm9YQkVsRlptNGpsbWVZOFNWUXdJREFRQUI="
+		;
+
+	static List<Record> signedList;
+	static List<Record> postZoneList;
+	static List<Record> dsRecordList = new ArrayList<>();
+
+	public static List<String> getStringsNamedLike(String name, Class clazz) {
+		return Arrays.asList(clazz.getDeclaredFields()).stream()
+			.filter(field -> field.getName().contains(name))
+			.map(field -> {
+				try {
+					return field.get(null).toString();
+				}
+				catch (Exception e) {
+					System.out.println("Failed getting static field " + name + " for class " + clazz);
+					e.printStackTrace();
+				}
+				return null;
+			})
+			.collect(toList());
+	}
+
+	static Record toRecord(String record) {
+		try {
+			return Record.fromWire(Base64.getDecoder().decode(record.getBytes()), Section.ANSWER);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static void recreateData() throws Exception {
+		List<String> encodedRecords = getStringsNamedLike("signedRecord", SigningData.class);
+
+		signedList = encodedRecords.stream().map(SigningData::toRecord).collect(toList());
+
+		encodedRecords = getStringsNamedLike("postZoneRecord", SigningData.class);
+
+		postZoneList = encodedRecords.stream().map(SigningData::toRecord).collect(toList());
+
+		dsRecordList.clear();
+		dsRecordList.add(SigningData.toRecord(dsRecord0));
+		dsRecordList.add(SigningData.toRecord(dsRecord1));
+	}
+}

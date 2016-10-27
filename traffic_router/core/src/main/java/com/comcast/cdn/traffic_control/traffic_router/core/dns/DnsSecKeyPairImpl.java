@@ -1,8 +1,11 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1;
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.xbill.DNS.DNSKEYRecord;
+import org.xbill.DNS.DNSSEC;
 import org.xbill.DNS.Master;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
@@ -12,21 +15,21 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Calendar;
 import java.util.Date;
 
 public class DnsSecKeyPairImpl implements DnsSecKeyPair {
+	private static final Logger LOGGER = Logger.getLogger(DnsSecKeyPairImpl.class);
 	private long ttl;
 	private Date inception;
 	private Date effective;
 	private Date expiration;
 	private String name;
 	private DNSKEYRecord dnskeyRecord;
-//	private String privateKeyString;
 	private PrivateKey privateKey;
-	private PublicKey publicKey;
 
 	public DnsSecKeyPairImpl(final JSONObject keyPair, final long defaultTTL) throws JSONException, IOException {
 		this.inception = new Date(1000L * keyPair.getLong("inceptionDate"));
@@ -35,12 +38,16 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 		this.ttl = keyPair.optLong("ttl", defaultTTL);
 		this.name = keyPair.getString("name");
 
-//		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.getString("private"));
+		try {
+			privateKey = new Pkcs1(keyPair.getString("private")).getPrivateKey();
+		} catch (GeneralSecurityException e) {
+			LOGGER.error("Failed to decode PKCS1 key from json data!: " + e.getMessage(), e);
+		}
+
 		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.getString("public"));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);
-//			this.privateKeyString = new String(privateKey);
 
 			Record record;
 			while ((record = master.nextRecord()) != null) {
@@ -145,7 +152,12 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 
 	@Override
 	public PublicKey getPublic() {
-		return publicKey;
+		try {
+			return dnskeyRecord.getPublicKey();
+		} catch (DNSSEC.DNSSECException e) {
+			LOGGER.error("Failed to extract public key from DNSKEY record for " + name + " : " + e.getMessage(), e);
+		}
+		return null;
 	}
 
 	@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
