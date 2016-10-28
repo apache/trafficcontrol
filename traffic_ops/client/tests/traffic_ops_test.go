@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"github.com/jheitz200/test_helper"
 )
 
