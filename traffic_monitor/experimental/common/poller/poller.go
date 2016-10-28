@@ -22,14 +22,20 @@ type Poller interface {
 }
 
 type HttpPoller struct {
-	Config        HttpPollerConfig
-	ConfigChannel chan HttpPollerConfig
-	Fetcher       fetcher.Fetcher
-	TickChan      chan uint64
+	Config          HttpPollerConfig
+	ConfigChannel   chan HttpPollerConfig
+	FetcherTemplate fetcher.HttpFetcher // FetcherTemplate has all the constant settings, and is copied to create fetchers with custom HTTP client timeouts.
+	TickChan        chan uint64
+}
+
+type PollConfig struct {
+	URL     string
+	Timeout time.Duration
+	Handler handler.Handler
 }
 
 type HttpPollerConfig struct {
-	Urls     map[string]string
+	Urls     map[string]PollConfig
 	Interval time.Duration
 }
 
@@ -46,7 +52,7 @@ func NewHTTP(interval time.Duration, tick bool, httpClient *http.Client, counter
 		Config: HttpPollerConfig{
 			Interval: interval,
 		},
-		Fetcher: fetcher.HttpFetcher{
+		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:  fetchHandler,
 			Client:   httpClient,
 			Counters: counters,
@@ -124,7 +130,14 @@ func (p HttpPoller) Poll() {
 		for _, info := range additions {
 			kill := make(chan struct{})
 			killChans[info.ID] = kill
-			go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
+
+			fetcher := p.FetcherTemplate
+			if info.Timeout != 0 { // if the timeout isn't explicitly set, use the template value.
+				c := *fetcher.Client
+				fetcher.Client = &c // copy the client, so we don't change other fetchers.
+				fetcher.Client.Timeout = info.Timeout
+			}
+			go pollHttp(info.Interval, info.ID, info.URL, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
@@ -132,8 +145,10 @@ func (p HttpPoller) Poll() {
 
 type HTTPPollInfo struct {
 	Interval time.Duration
+	Timeout  time.Duration
 	ID       string
 	URL      string
+	Handler  handler.Handler
 }
 
 // diffConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
@@ -145,26 +160,41 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 		for id, _ := range old.Urls {
 			deletions = append(deletions, id)
 		}
-		for id, url := range new.Urls {
-			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: url})
+		for id, pollCfg := range new.Urls {
+			additions = append(additions, HTTPPollInfo{
+				Interval: new.Interval,
+				ID:       id,
+				URL:      pollCfg.URL,
+				Timeout:  pollCfg.Timeout,
+			})
 		}
 		return deletions, additions
 	}
 
-	for id, oldUrl := range old.Urls {
-		newUrl, newIdExists := new.Urls[id]
+	for id, oldPollCfg := range old.Urls {
+		newPollCfg, newIdExists := new.Urls[id]
 		if !newIdExists {
 			deletions = append(deletions, id)
-		} else if newUrl != oldUrl {
+		} else if newPollCfg != oldPollCfg {
 			deletions = append(deletions, id)
-			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: newUrl})
+			additions = append(additions, HTTPPollInfo{
+				Interval: new.Interval,
+				ID:       id,
+				URL:      newPollCfg.URL,
+				Timeout:  newPollCfg.Timeout,
+			})
 		}
 	}
 
-	for id, newUrl := range new.Urls {
+	for id, newPollCfg := range new.Urls {
 		_, oldIdExists := old.Urls[id]
 		if !oldIdExists {
-			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: newUrl})
+			additions = append(additions, HTTPPollInfo{
+				Interval: new.Interval,
+				ID:       id,
+				URL:      newPollCfg.URL,
+				Timeout:  newPollCfg.Timeout,
+			})
 		}
 	}
 

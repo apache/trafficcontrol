@@ -203,7 +203,8 @@ func processHealthResult(
 			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
 		}
 
-		healthHistory[healthResult.ID] = pruneHistory(append(healthHistory[healthResult.ID], healthResult), cfg.MaxHealthHistory)
+		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
+		healthHistory[healthResult.ID] = pruneHistory(append(healthHistory[healthResult.ID], healthResult), maxHistory)
 
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if localStates.Get().Caches[healthResult.ID].IsAvailable != isAvailable {

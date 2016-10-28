@@ -3,6 +3,7 @@ package peer
 import (
 	"encoding/json"
 	"io"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 )
@@ -29,7 +30,7 @@ type Result struct {
 }
 
 // Handle handles a response from a polled Traffic Monitor peer, parsing the data and forwarding it to the ResultChannel.
-func (handler Handler) Handle(id string, r io.Reader, err error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, err error, pollID uint64, pollFinished chan<- uint64) {
 	result := Result{
 		ID:           enum.TrafficMonitorName(id),
 		Available:    false,

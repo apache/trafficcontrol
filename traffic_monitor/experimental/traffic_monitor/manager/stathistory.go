@@ -11,6 +11,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // StatHistory is a map of cache names, to an array of result history from each cache.
@@ -37,18 +38,12 @@ func (a StatHistory) Copy() StatHistory {
 type StatHistoryThreadsafe struct {
 	statHistory *StatHistory
 	m           *sync.RWMutex
-	max         uint64
-}
-
-// Max returns the max history to be stored for any cache
-func (h StatHistoryThreadsafe) Max() uint64 {
-	return h.max
 }
 
 // NewStatHistoryThreadsafe returns a new StatHistory safe for multiple readers and a single writer.
-func NewStatHistoryThreadsafe(maxHistory uint64) StatHistoryThreadsafe {
+func NewStatHistoryThreadsafe() StatHistoryThreadsafe {
 	h := StatHistory{}
-	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: &h, max: maxHistory}
+	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: &h}
 }
 
 // Get returns the StatHistory. Callers MUST NOT modify. If mutation is necessary, call StatHistory.Copy()
@@ -99,7 +94,7 @@ func StartStatHistoryManager(
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 ) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsReader, UnpolledCachesThreadsafe) {
-	statHistory := NewStatHistoryThreadsafe(cfg.MaxStatHistory)
+	statHistory := NewStatHistoryThreadsafe()
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastStats := NewLastStatsThreadsafe()
@@ -122,14 +117,14 @@ func StartStatHistoryManager(
 					unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 				case <-tick:
 					log.Warnf("StatHistoryManager flushing queued results\n")
-					processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches)
+					processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get())
 					break innerLoop
 				default:
 					select {
 					case r := <-cacheStatChan:
 						results = append(results, r)
 					default:
-						processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches)
+						processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get())
 						break innerLoop
 					}
 				}
@@ -151,10 +146,11 @@ func processStatResults(
 	lastStatEndTimes map[enum.CacheName]time.Time,
 	lastStatDurationsThreadsafe DurationMapThreadsafe,
 	unpolledCaches UnpolledCachesThreadsafe,
+	mc to.TrafficMonitorConfigMap,
 ) {
 	statHistory := statHistoryThreadsafe.Get().Copy()
-	maxStats := statHistoryThreadsafe.Max()
 	for _, result := range results {
+		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
 		statHistory[result.ID] = pruneHistory(append(statHistory[result.ID], result), maxStats)
 	}
