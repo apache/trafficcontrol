@@ -164,7 +164,7 @@ sub update {
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
-		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "CDN update was successful." );
 	}
