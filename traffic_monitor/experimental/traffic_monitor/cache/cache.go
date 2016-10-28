@@ -27,6 +27,7 @@ type Handler struct {
 }
 
 // NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
+// TODO change this to take the ResultChan. It doesn't make sense for the Handler to 'own' the Result Chan.
 func NewHandler() Handler {
 	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
@@ -52,12 +53,13 @@ type PrecomputedData struct {
 
 // Result is the data result returned by a cache.
 type Result struct {
-	ID        enum.CacheName
-	Available bool
-	Error     error
-	Astats    Astats
-	Time      time.Time
-	Vitals    Vitals
+	ID          enum.CacheName
+	Available   bool
+	Error       error
+	Astats      Astats
+	Time        time.Time
+	RequestTime time.Duration
+	Vitals      Vitals
 	PrecomputedData
 	PollID       uint64
 	PollFinished chan<- uint64
@@ -135,11 +137,12 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, err error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, err error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
 		ID:           enum.CacheName(id),
 		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
+		RequestTime:  reqTime,
 		PollID:       pollID,
 		PollFinished: pollFinished,
 	}

@@ -2,14 +2,16 @@ package manager
 
 import (
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-	"strings"
-	"sync"
 )
 
 // CopyTrafficMonitorConfigMap returns a deep copy of the given TrafficMonitorConfigMap
@@ -92,6 +94,12 @@ func StartMonitorConfigManager(
 	return monitorConfig
 }
 
+// trafficOpsHealthConnectionTimeoutToDuration takes the int from Traffic Ops, which is in milliseconds, and returns a time.Duration
+// TODO change Traffic Ops Client API to a time.Duration
+func trafficOpsHealthConnectionTimeoutToDuration(t int) time.Duration {
+	return time.Duration(t) * time.Millisecond
+}
+
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
 func monitorConfigListen(
@@ -107,9 +115,9 @@ func monitorConfigListen(
 ) {
 	for monitorConfig := range monitorConfigPollChan {
 		monitorConfigTS.Set(monitorConfig)
-		healthUrls := map[string]string{}
-		statUrls := map[string]string{}
-		peerUrls := map[string]string{}
+		healthUrls := map[string]poller.PollConfig{}
+		statUrls := map[string]poller.PollConfig{}
+		peerUrls := map[string]poller.PollConfig{}
 		caches := map[string]string{}
 
 		for _, srv := range monitorConfig.TrafficServer {
@@ -137,10 +145,12 @@ func monitorConfigListen(
 				"application=", "application=plugin.remap",
 			)
 			url = r.Replace(url)
-			healthUrls[srv.HostName] = url
+
+			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
+			healthUrls[srv.HostName] = poller.PollConfig{URL: url, Timeout: connTimeout}
 			r = strings.NewReplacer("application=plugin.remap", "application=")
-			url = r.Replace(url)
-			statUrls[srv.HostName] = url
+			statUrl := r.Replace(url)
+			statUrls[srv.HostName] = poller.PollConfig{URL: statUrl, Timeout: connTimeout}
 		}
 
 		for _, srv := range monitorConfig.TrafficMonitor {
@@ -152,7 +162,7 @@ func monitorConfigListen(
 			}
 			// TODO: the URL should be config driven. -jse
 			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			peerUrls[srv.HostName] = url
+			peerUrls[srv.HostName] = poller.PollConfig{URL: url} // TODO determine timeout.
 		}
 
 		statURLSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: cfg.CacheStatPollingInterval}

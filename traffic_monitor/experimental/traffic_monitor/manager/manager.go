@@ -42,7 +42,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	// TODO investigate whether a unique client per cache to be polled is faster
 	sharedClient := &http.Client{
-		Timeout:   cfg.HTTPTimeout,
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
 

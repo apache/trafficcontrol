@@ -1,13 +1,15 @@
 package health
 
 import (
+	"fmt"
+	"math"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-
-	"fmt"
-	"strconv"
-	"strings"
 )
 
 func setError(newResult *cache.Result, err error) {
@@ -73,9 +75,34 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
+// getKbpsThreshold returns the numeric kbps threshold, from the Traffic Ops string value. If there is a parse error, it logs a warning and returns the max floating point number, signifying no limit
+// TODO add float64 to Traffic Ops Client interface
+func getKbpsThreshold(threshStr string) int64 {
+	if len(threshStr) == 0 {
+		log.Errorf("Empty Traffic Ops HealthThresholdAvailableBandwidthInKbps; setting no limit.\n")
+		return math.MaxInt64
+	}
+	if threshStr[0] == '>' {
+		threshStr = threshStr[1:]
+	}
+	thresh, err := strconv.ParseInt(threshStr, 10, 64)
+	if err != nil {
+		log.Errorf("Failed to parse Traffic Ops HealthThresholdAvailableBandwidthInKbps, setting no limit: '%v'\n", err)
+		return math.MaxInt64
+	}
+	return thresh
+}
+
+// TODO add time.Duration to Traffic Ops Client interface
+func getQueryThreshold(threshInt int64) time.Duration {
+	return time.Duration(threshInt) * time.Millisecond
+}
+
 // EvalCache returns whether the given cache should be marked available, and a string describing why
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
-	status := mc.TrafficServer[string(result.ID)].Status
+	toServer := mc.TrafficServer[string(result.ID)]
+	status := toServer.Status
+	params := mc.Profile[toServer.Profile].Parameters
 	switch {
 	case status == "ADMIN_DOWN":
 		return false, "set to ADMIN_DOWN"
@@ -85,10 +112,12 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 		return true, "set to ONLINE"
 	case result.Error != nil:
 		return false, fmt.Sprintf("error: %v", result.Error)
-	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HealthThresholdLoadAvg:
-		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HealthThresholdLoadAvg)
-	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
-		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, result.Vitals.MaxKbpsOut)
+	case result.Vitals.LoadAvg > params.HealthThresholdLoadAvg:
+		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, params.HealthThresholdLoadAvg)
+	case result.Vitals.KbpsOut >= getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps):
+		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps))
+	case result.RequestTime > getQueryThreshold(int64(params.HealthThresholdQueryTime)):
+		return false, fmt.Sprintf("request time %v exceeds max %v", result.RequestTime, getQueryThreshold(int64(params.HealthThresholdQueryTime)))
 	default:
 		return result.Available, "reported"
 	}

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"io"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 )
@@ -14,7 +15,7 @@ const (
 )
 
 type Handler interface {
-	Handle(string, io.Reader, error, uint64, chan<- uint64)
+	Handle(string, io.Reader, time.Duration, error, uint64, chan<- uint64)
 }
 
 type OpsConfigFileHandler struct {

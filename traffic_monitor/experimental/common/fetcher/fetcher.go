@@ -43,7 +43,9 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 	if f.Pending != nil {
 		f.Pending.Inc()
 	}
+	startReq := time.Now()
 	response, err := f.Client.Do(req)
+	reqTime := time.Now().Sub(startReq)
 	if f.Pending != nil {
 		f.Pending.Dec()
 	}
@@ -69,11 +71,11 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 			f.Success.Inc()
 		}
 		log.Debugf("poll %v %v fetch end\n", pollId, time.Now())
-		f.Handler.Handle(id, response.Body, err, pollId, pollFinishedChan)
+		f.Handler.Handle(id, response.Body, reqTime, err, pollId, pollFinishedChan)
 	} else {
 		if f.Fail != nil {
 			f.Fail.Inc()
 		}
-		f.Handler.Handle(id, nil, err, pollId, pollFinishedChan)
+		f.Handler.Handle(id, nil, reqTime, err, pollId, pollFinishedChan)
 	}
 }
