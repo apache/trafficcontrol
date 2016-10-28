@@ -15,7 +15,7 @@ var (
 	Error   *log.Logger
 )
 
-func Init(debugW, infoW, warnW, errW io.Writer) {
+func Init(errW, warnW, infoW, debugW io.Writer) {
 	Debug = log.New(debugW, "DEBUG: ", log.Lshortfile)
 	Info = log.New(infoW, "INFO: ", log.Lshortfile)
 	Warning = log.New(warnW, "WARNING: ", log.Lshortfile)
