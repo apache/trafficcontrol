@@ -356,3 +356,62 @@ func TestDeliveryServiceRoutingUnauthorized(t *testing.T) {
 		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
+
+func TestDeliveryServiceServer(t *testing.T) {
+	resp := fixtures.DeliveryServiceServer()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceServer")
+
+	s, err := to.DeliveryServiceServer("1", "1")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if s[0].LastUpdated != "lastUpdated" {
+		testHelper.Error(t, "Should get back \"lastUpdated\" for \"LastUpdated\", got: %s", s[0].LastUpdated)
+	} else {
+		testHelper.Success(t, "Should get back \"lastUpdated\" for \"LastUpdated\"")
+	}
+
+	if s[0].Server != "someServer" {
+		testHelper.Error(t, "Should get back \"someServer\" for \"Server\", got: %s", s[0].Server)
+	} else {
+		testHelper.Success(t, "Should get back \"someServer\" for \"Server\"")
+	}
+
+	if s[0].DeliveryService != "someService" {
+		testHelper.Error(t, "Should get back \"someService\" for \"DeliveryService\", got: %s", s[0].DeliveryService)
+	} else {
+		testHelper.Success(t, "Should get back \"someService\" for \"DeliveryService\"")
+	}
+}
+
+func TestDeliveryServiceServerUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceServer")
+
+	_, err := to.DeliveryServiceServer("1", "1")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}

@@ -111,7 +111,7 @@ func DeliveryServiceCapacity() *client.DeliveryServiceCapacityResponse {
 
 // DeliveryServiceRouting returns a default DeliveryServiceRoutingResponse to be used for testing.
 func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
-	dsc := client.DeliveryServiceRouting{
+	dsr := client.DeliveryServiceRouting{
 		StaticRoute:       1,
 		Miss:              2,
 		Geo:               3.33,
@@ -124,6 +124,22 @@ func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
 	}
 
 	return &client.DeliveryServiceRoutingResponse{
-		Response: dsc,
+		Response: dsr,
+	}
+}
+
+// DeliveryServiceServer returns a default DeliveryServiceServerResponse to be used for testing.
+func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
+	dss := client.DeliveryServiceServer{
+		LastUpdated:     "lastUpdated",
+		Server:          "someServer",
+		DeliveryService: "someService",
+	}
+
+	return &client.DeliveryServiceServerResponse{
+		Response: []client.DeliveryServiceServer{dss},
+		Page:     1,
+		OrderBy:  "foo",
+		Limit:    1,
 	}
 }

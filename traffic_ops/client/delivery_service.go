@@ -228,14 +228,14 @@ func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, e
 }
 
 // DeliveryServiceServer gets the DeliveryServiceServer
-func (to *Session) DeliveryServiceServer(page, limit string) (*[]DeliveryServiceServer, error) {
+func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceServer, error) {
 	var data DeliveryServiceServerResponse
 	err := get(to, deliveryServiceServerEp(page, limit), &data)
 	if err != nil {
 		return nil, err
 	}
 
-	return &data.Response, nil
+	return data.Response, nil
 }
 
 func get(to *Session, endpoint string, respStruct interface{}) error {
