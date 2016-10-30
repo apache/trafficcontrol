@@ -142,3 +142,27 @@ func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
 		Limit:    1,
 	}
 }
+
+// DeliveryServiceSSLKeys returns a default DeliveryServiceSSLKeysResponse to be used for testing.
+func DeliveryServiceSSLKeys() *client.DeliveryServiceSSLKeysResponse {
+	crt := client.DeliveryServiceSSLKeysCertificate{
+		Crt: "crt",
+		Key: "key",
+		CSR: "someService",
+	}
+
+	sslKeys := client.DeliveryServiceSSLKeys{
+		Certificate:  crt,
+		BusinessUnit: "businessUnit",
+		City:         "city",
+		Organization: "Kabletown",
+		Hostname:     "hostname",
+		Country:      "country",
+		State:        "state",
+		Version:      "version",
+	}
+
+	return &client.DeliveryServiceSSLKeysResponse{
+		Response: sslKeys,
+	}
+}

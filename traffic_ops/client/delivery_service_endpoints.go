@@ -49,3 +49,11 @@ func deliveryServiceRoutingEp(id string) string {
 func deliveryServiceServerEp(page, limit string) string {
 	return apiBase + "/deliveryserviceserver.json?page=" + page + "&limit=" + limit
 }
+
+func deliveryServiceSSLKeysByIDEp(id string) string {
+	return apiBase + dsPath + "/xmlId/" + id + "/sslkeys.json"
+}
+
+func deliveryServiceSSLKeysByHostnameEp(hostname string) string {
+	return apiBase + dsPath + "/hostname/" + hostname + "/sslkeys.json"
+}
