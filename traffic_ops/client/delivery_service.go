@@ -160,6 +160,30 @@ type DeliveryServiceServer struct {
 	DeliveryService string `json:"deliveryService"`
 }
 
+// DeliveryServiceSSLKeysResponse ...
+type DeliveryServiceSSLKeysResponse struct {
+	Response DeliveryServiceSSLKeys `json:"response"`
+}
+
+// DeliveryServiceSSLKeys ...
+type DeliveryServiceSSLKeys struct {
+	BusinessUnit string                            `json:"businessUnit"`
+	City         string                            `json:"city"`
+	Organization string                            `json:"organization"`
+	Hostname     string                            `json:"hostname"`
+	Country      string                            `json:"country"`
+	State        string                            `json:"state"`
+	Version      string                            `json:"version"`
+	Certificate  DeliveryServiceSSLKeysCertificate `json:"certificate"`
+}
+
+// DeliveryServiceSSLKeysCertificate ...
+type DeliveryServiceSSLKeysCertificate struct {
+	Crt string `json:"crt"`
+	Key string `json:"key"`
+	CSR string `json:"csr"`
+}
+
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	var data DeliveryServiceResponse
@@ -235,6 +259,28 @@ func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceS
 	}
 
 	return data.Response, nil
+}
+
+// DeliveryServiceSSLKeysByID gets the DeliveryServiceSSLKeys by ID
+func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKeys, error) {
+	var data DeliveryServiceSSLKeysResponse
+	err := get(to, deliveryServiceSSLKeysByIDEp(id), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
+}
+
+// DeliveryServiceSSLKeysByHostname gets the DeliveryServiceSSLKeys by Hostname
+func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*DeliveryServiceSSLKeys, error) {
+	var data DeliveryServiceSSLKeysResponse
+	err := get(to, deliveryServiceSSLKeysByHostnameEp(hostname), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
 }
 
 func get(to *Session, endpoint string, respStruct interface{}) error {

@@ -414,3 +414,109 @@ func TestDeliveryServiceServerUnauthorized(t *testing.T) {
 		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
 	}
 }
+
+func TestDeliveryServiceSSLKeysByID(t *testing.T) {
+	resp := fixtures.DeliveryServiceSSLKeys()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceSSLKeysByID")
+
+	ssl, err := to.DeliveryServiceSSLKeysByID("123")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if ssl.Certificate.Crt != "crt" {
+		testHelper.Error(t, "Should get back \"crt\" for \"Certificte.Crt\", got: %s", ssl.Certificate.Crt)
+	} else {
+		testHelper.Success(t, "Should get back \"crt\" for \"Certificate.Crt\"")
+	}
+
+	if ssl.Organization != "Kabletown" {
+		testHelper.Error(t, "Should get back \"Kabletown\" for \"Organization\", got: %s", ssl.Organization)
+	} else {
+		testHelper.Success(t, "Should get back \"Kabletown\" for \"Organization\"")
+	}
+}
+
+func TestDeliveryServiceSSLKeysByIDUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceSSLKeysByID")
+
+	_, err := to.DeliveryServiceSSLKeysByID("123")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}
+
+func TestDeliveryServiceSSLKeysByHostname(t *testing.T) {
+	resp := fixtures.DeliveryServiceSSLKeys()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceSSLKeysByHostname")
+
+	ssl, err := to.DeliveryServiceSSLKeysByHostname("hostname")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if ssl.Certificate.Crt != "crt" {
+		testHelper.Error(t, "Should get back \"crt\" for \"Certificte.Crt\", got: %s", ssl.Certificate.Crt)
+	} else {
+		testHelper.Success(t, "Should get back \"crt\" for \"Certificate.Crt\"")
+	}
+
+	if ssl.Organization != "Kabletown" {
+		testHelper.Error(t, "Should get back \"Kabletown\" for \"Organization\", got: %s", ssl.Organization)
+	} else {
+		testHelper.Success(t, "Should get back \"Kabletown\" for \"Organization\"")
+	}
+}
+
+func TestDeliveryServiceSSLKeysByHostnameUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceSSLKeysByHostname")
+
+	_, err := to.DeliveryServiceSSLKeysByHostname("hostname")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}
