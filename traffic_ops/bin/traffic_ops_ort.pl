@@ -1342,7 +1342,7 @@ sub check_lwp_response_code {
 		return 1;
 	}
 	elsif ( $lwp_response->code() >= 400 ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "!\n";
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "! " . $lwp_response->message() . " \n";
 		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
