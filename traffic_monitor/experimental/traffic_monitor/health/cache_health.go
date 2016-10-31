@@ -98,6 +98,11 @@ func getQueryThreshold(threshInt int64) time.Duration {
 	return time.Duration(threshInt) * time.Millisecond
 }
 
+func cacheCapacityKbps(result cache.Result) int64 {
+	kbpsInMbps := int64(1000)
+	return int64(result.Astats.System.InfSpeed) * kbpsInMbps
+}
+
 // EvalCache returns whether the given cache should be marked available, and a string describing why
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
 	toServer := mc.TrafficServer[string(result.ID)]
@@ -114,7 +119,7 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 		return false, fmt.Sprintf("error: %v", result.Error)
 	case result.Vitals.LoadAvg > params.HealthThresholdLoadAvg:
 		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, params.HealthThresholdLoadAvg)
-	case result.Vitals.KbpsOut >= getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps):
+	case result.Vitals.KbpsOut > cacheCapacityKbps(result)-getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps):
 		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps))
 	case result.RequestTime > getQueryThreshold(int64(params.HealthThresholdQueryTime)):
 		return false, fmt.Sprintf("request time %v exceeds max %v", result.RequestTime, getQueryThreshold(int64(params.HealthThresholdQueryTime)))
