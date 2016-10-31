@@ -317,7 +317,6 @@
 							</execution>
 						</executions>
 						<configuration>
-							<copyright>2011-2014, Comcast Converged Products</copyright>
 							<group>Applications/Internet</group>
 							<release>${env.GIT_REV_COUNT}.${buildNumber}.el6</release>
 							<needarch>x86_64</needarch>
