@@ -130,6 +130,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		errorCount,
 		localCacheStatus,
 		unpolledCaches,
+		monitorConfig,
 		cfg,
 	)
 

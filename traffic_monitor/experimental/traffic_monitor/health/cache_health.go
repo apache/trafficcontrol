@@ -9,6 +9,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -106,15 +107,19 @@ func cacheCapacityKbps(result cache.Result) int64 {
 // EvalCache returns whether the given cache should be marked available, and a string describing why
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
 	toServer := mc.TrafficServer[string(result.ID)]
-	status := toServer.Status
+	status := enum.CacheStatusFromString(toServer.Status)
+	if status == enum.CacheStatusInvalid {
+		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, toServer.Status)
+	}
 	params := mc.Profile[toServer.Profile].Parameters
 	switch {
-	case status == "ADMIN_DOWN":
-		return false, "set to ADMIN_DOWN"
-	case status == "OFFLINE":
-		return false, "set to OFFLINE"
-	case status == "ONLINE":
-		return true, "set to ONLINE"
+	case status == enum.CacheStatusAdminDown:
+		return false, "set to " + status.String()
+	case status == enum.CacheStatusOffline:
+		log.Errorf("Cache %v set to offline, but still polled\n", result.ID)
+		return false, "set to " + status.String()
+	case status == enum.CacheStatusOnline:
+		return true, "set to " + status.String()
 	case result.Error != nil:
 		return false, fmt.Sprintf("error: %v", result.Error)
 	case result.Vitals.LoadAvg > params.HealthThresholdLoadAvg:

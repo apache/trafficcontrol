@@ -20,6 +20,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // JSONEvents represents the structure we wish to serialize to JSON, for Events.
@@ -432,6 +433,7 @@ func DataRequest(
 	localCacheStatus CacheAvailableStatusThreadsafe,
 	lastStats LastStatsThreadsafe,
 	unpolledCaches UnpolledCachesThreadsafe,
+	monitorConfig TrafficMonitorConfigMapThreadsafe,
 ) (body []byte, responseCode int) {
 
 	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
@@ -520,7 +522,7 @@ func DataRequest(
 	case srvhttp.APICacheAvailableCount:
 		return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches))), http.StatusOK
 	case srvhttp.APICacheDownCount:
-		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches))), http.StatusOK
+		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches, monitorConfig.Get().TrafficServer))), http.StatusOK
 	case srvhttp.APIVersion:
 		s := "traffic_monitor-" + staticAppData.Version + "."
 		if len(staticAppData.GitRevision) > 6 {
@@ -670,7 +672,8 @@ func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[e
 	return conns
 }
 
-func cacheDownCount(caches map[enum.CacheName]peer.IsAvailable) int {
+// cacheOfflineCount returns the total caches not available, including marked unavailable, status offline, and status admin_down
+func cacheOfflineCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	count := 0
 	for _, available := range caches {
 		if !available.IsAvailable {
@@ -680,8 +683,20 @@ func cacheDownCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return count
 }
 
+// cacheAvailableCount returns the total caches available, including marked available and status online
 func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
-	return len(caches) - cacheDownCount(caches)
+	return len(caches) - cacheOfflineCount(caches)
+}
+
+// cacheOfflineCount returns the total reported caches marked down, excluding status offline and admin_down.
+func cacheDownCount(caches map[enum.CacheName]peer.IsAvailable, toServers map[string]to.TrafficServer) int {
+	count := 0
+	for cache, available := range caches {
+		if !available.IsAvailable && enum.CacheStatusFromString(toServers[string(cache)].Status) == enum.CacheStatusReported {
+			count++
+		}
+	}
+	return count
 }
 
 func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) APIPeerStates {

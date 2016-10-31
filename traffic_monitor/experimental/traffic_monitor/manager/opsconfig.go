@@ -65,6 +65,7 @@ func StartOpsConfigManager(
 	errorCount UintThreadsafe,
 	localCacheStatus CacheAvailableStatusThreadsafe,
 	unpolledCaches UnpolledCachesThreadsafe,
+	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	cfg config.Config,
 ) OpsConfigThreadsafe {
 
@@ -125,6 +126,7 @@ func StartOpsConfigManager(
 					localCacheStatus,
 					lastStats,
 					unpolledCaches,
+					monitorConfig,
 				)
 			}, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
 			if err != nil {
