@@ -1,15 +1,15 @@
 How To Contribute
 =================
 
-We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements for Traffic Control, we're more than happy to merge them in.
+We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://issues.apache.org/jira/browse/TC) and discussing it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-We have a few [guidelines](https://github.com/apache/incubator-trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
+Once your issue has been approved and you're ready to start slinging code, we have a few [guidelines](https://github.com/apache/incubator-trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
 
-Remember, it doesn't have to be perfect. If you want to help, hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
+Remember, your code doesn't have to be perfect. Hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
 
 CONTRIBUTORS.md
 -----------------------------
-Please take the opportunity of submitting your first PR to additionally include your name in CONTRIBUTORS.md
+Please take the opportunity of submitting your first PR to additionally include your name alphabetically in CONTRIBUTORS.md.
 
 Making a pull request
 ---------------------
@@ -23,7 +23,7 @@ Following the project conventions will make the pull request process go faster a
 
 If you want to add a new feature, make a [JIRA issue](https://issues.apache.org/jira/browse/TC) and discuss it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-If it's a bug fix, we need to know what the problem is and how to reproduce it so please create a [JIRA issue](https://issues.apache.org/jira/browse/TC) for that as well.
+If it's a bug fix, make a [JIRA issue](https://issues.apache.org/jira/browse/TC) and discuss it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We need to know what the problem is and how to reproduce it so please create a [JIRA issue](https://issues.apache.org/jira/browse/TC) for that as well.
 
 #### Documentation
 
