@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -103,9 +104,9 @@ public class ZoneManager extends Resolver {
 		DYNAMIC, STATIC
 	}
 
-	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils) throws IOException {
+	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) throws IOException {
 		initTopLevelDomain(tr.getCacheRegister());
-		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils);
+		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils, trafficRouterManager);
 		initZoneCache(tr);
 		this.trafficRouter = tr;
 		this.statTracker = statTracker;
@@ -132,8 +133,8 @@ public class ZoneManager extends Resolver {
 		setTopLevelDomain(new Name(tld));
 	}
 
-	private void initSignatureManager(final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils) {
-		final SignatureManager sm = new SignatureManager(this, cacheRegister, trafficOpsUtils);
+	private void initSignatureManager(final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) {
+		final SignatureManager sm = new SignatureManager(this, cacheRegister, trafficOpsUtils, trafficRouterManager);
 		ZoneManager.signatureManager = sm;
 	}
 
