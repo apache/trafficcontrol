@@ -35,7 +35,7 @@ import (
 	"syscall"
 	"time"
 
-	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
