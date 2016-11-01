@@ -3,7 +3,7 @@
 
 GoTO is a server/some other stuff written in Go that allows for RESTful interaction with SQL databases through an Angular web API.
 
-This is written for the Comcast [Traffic Ops](http://traffic-control-cdn.net/docs/latest/development/traffic_ops.html) database, but I'm pretty sure it should probably work for all databases.
+This is written for the Comcast [Traffic Ops](http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html) database, but I'm pretty sure it should probably work for all databases.
 
 ## Install
 
