@@ -2,6 +2,7 @@ package poller
 
 import (
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync/atomic"
@@ -235,11 +236,14 @@ func (p FilePoller) Poll() {
 
 // TODO iterationCount and/or p.TickChan?
 func pollHttp(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
+	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
 	lastTime := time.Now()
 	for {
 		select {
 		case now := <-tick.C:
+			tick = time.NewTicker(interval) // recreate timer, to avoid Go's "smoothing" nonsense
 			realInterval := now.Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
 				instr.TimerFail.Inc()
