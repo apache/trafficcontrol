@@ -1,5 +1,5 @@
 
-Traffic Control is an Open Source implementation of a Content Delivery Network.
+Apache Traffic Control (incubating) is an Open Source implementation of a Content Delivery Network.
 
 #### Documentation
 * [Intro](http://traffic-control-cdn.net/docs/latest/index.html)
@@ -10,11 +10,18 @@ Traffic Control is an Open Source implementation of a Content Delivery Network.
 
 ####Questions, Comments, Bugs and More
 * [Frequently Asked Questions](http://traffic-control-cdn.net/docs/latest/faq/index.html)
-* [Found a bug or file a feature request](https://github.com/Comcast/traffic_control/issues)
-* [Ask a question about using Traffic Control](https://groups.google.com/forum/#!forum/traffic_control)
+* [Found a bug or file a feature request](https://issues.apache.org/jira/browse/TC/?selectedTab=com.atlassian.jira.jira-projects-plugin:summary-panel)
+* [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
+* [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.incubator.apache.org)
+* [Search the email archives](https://lists.apache.org/list.html?dev@trafficcontrol.apache.org)
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
 ##### News
+* 17-October 2016 Traffic Control is now Apache Traffic Control (incubating)!
+    Code has been moved to Apache, use the new repo https://github.com/apache/incubator-trafficcontrol to create PRs. 
+	Mailing list have been updated, use the udpated links above. Website will be updated and moved soon.
+	Please bear with us as we move our project into the Apache incubator, and start aligning with the Apache 
+	processes.
 * 31-August 2016: Traffic Control 1.6.1 is released.
 	See https://github.com/Comcast/traffic_control/releases/tag/RELEASE-1.6.1 for the full change list.
 * 29-July 2016: Traffic Control 1.6.0 is released.

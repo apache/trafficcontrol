@@ -12,9 +12,7 @@
 
   </head>
   <body>
-    <div class="bkgdWrapper">
-      
-    </div>
+    <div class="bkgdWrapper"></div>
     <div class="appWrapper">
       <div class="appHeader">
             <div class="applogo"></div>
@@ -29,33 +27,36 @@
                 </ul>
               </div>
         </div>
-        <p class="sectionContainer">
-          Traffic Control allows you to build a large scale content delivery network using open source. Built around <a href="http://trafficserver.apache.org">Apache Traffic Server</a> as the caching software, Traffic Control implements all the core functions of a modern CDN:
-        </p>
 
-        <table class="tableMain" cellpadding="10">
-          <tr>
+    <p class="sectionContainer">
+    Traffic Control allows you to build a large scale content delivery network using open source. Built around <a href="http://trafficserver.apache.org">Apache Traffic Server</a> as the caching software, Traffic Control implements all the core functions of a modern CDN:
+    </p>
+
+    <table class="tableMain" cellpadding="10">
+        <tr>
             <td class="tableMainCell"><a href="traffic_router/index.html"><img src="images/traffic_router_logo.png"></a></td>
-            <td class="tableMainCell">Traffic Router is a Java Tomcat application that routes clients to the closest available cache on the CDN using both HTTP and DNS. By using consistent hashing it sends requests for the same content to the same cache in a group of caches working together in a location. It takes care of routing clients around hot spots and problems in the CDN by using the information from Traffic Monitor with regards to state of all the caches.</td>
-          </tr>
-          <tr>
+            <td class="tableMainCell">Traffic Router is a Java Tomcat application that routes clients to the closest available cache on the CDN using both HTTP and DNS. By using consistent hashing it sends requests for the same content to the same cache in a group of caches working together in a location. It takes care of routing clients around hot spots and problems in the CDN by using the information from Traffic Monitor with regards to state of all the caches. 
+            </td>
+        </tr>
+        <tr>
             <td class="tableMainCell"><a href="traffic_monitor/index.html"><img src="images/traffic_monitor_logo.png"></a></td>
-            <td class="tableMainCell">Traffic Monitor is a Java Tomcat application that implements the CDN health protocol. Every cache in the CDN is checked using HTTP for vital stats, and based on these stats, caches are declared healthy or unhealthy. This information is then used by Traffic Router to make it's routing decisions.</td>
-          </tr>
-          <tr>
+            <td class="tableMainCell">Traffic Monitor is a Java Tomcat application that implements the CDN health protocol. Every cache in the CDN is checked using HTTP for vital stats, and based on these stats, caches are declared healthy or unhealthy. This information is then used by Traffic Router to make it's routing decisions.
+            </td>
+        </tr>
+        <tr>
             <td class="tableMainCell"><a href="traffic_ops/index.html"><img src="images/traffic_operations_logo.png"></a></td>
             <td class="tableMainCell">Traffic Ops is a Mojolicious perl and jQuery UI application for management and monitoring of all servers in the CDN. All server and content routing information for the CDN is managed through Traffic Ops. It also exposes RESTful API enpoints for consumption by tools and other applications.
-          </td>
-          </tr>
-          <tr>
+            </td>
+        </tr>
+        <tr>
             <td class="tableMainCell"><a href="traffic_stats/index.html"><img src="images/traffic_stats_logo.png"></a></td>
             <td class="tableMainCell">Traffic Stats is a program written in Golang that is used to acquire and store statistics about CDNs controlled by Traffic Control. Traffic Stats mines metrics from Traffic Monitor’s JSON APIs and stores the data in InfluxDb.</td>
-          </tr>
-          <tr>
+        </tr>  
+        <tr>
             <td class="tableMainCell"><a href="traffic_portal/index.html"><img src="images/traffic_portal_logo.png"></a></td>
             <td class="tableMainCell">Traffic Portal is an AngularJS 1.x client served from a Node.js web server designed to consume the Traffic Ops 1.x API. Traffic Portal provides a set of functionality restricted to the delivery service(s) of the authenticated user. Functionality primarily includes a set of charts / graphs designed to provide insight into the performance of a user’s delivery service(s).</td>
-          </tr>
-        </table>
-      </div>
+        </tr>  
+    </table>
+
   </body>
 </html>

@@ -33,7 +33,7 @@ The following are requirements to ensure an accurate set up:
 
 1. Enter the Traffic Monitor server into Traffic Ops
 2. Make sure the FQDN of the Traffic Monitor is resolvable in DNS.
-3. Install Traffic Monitor and perl mods: ``sudo yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
+3. Install Traffic Monitor and Perl mods: ``sudo yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
 4. Take the config from Traffic Ops - run : ``sudo /opt/traffic_monitor/bin/traffic_monitor_config.pl``
  
 	Sample output: ::

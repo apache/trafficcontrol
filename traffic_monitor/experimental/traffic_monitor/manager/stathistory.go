@@ -4,25 +4,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
-	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
+// StatHistory is a map of cache names, to an array of result history from each cache.
 type StatHistory map[enum.CacheName][]cache.Result
 
 func copyStat(a []cache.Result) []cache.Result {
 	b := make([]cache.Result, len(a), len(a))
-	for i, v := range a {
-		b[i] = v
-	}
+	copy(b, a)
 	return b
 }
 
+// Copy copies returns a deep copy of this StatHistory
 func (a StatHistory) Copy() StatHistory {
 	b := StatHistory{}
 	for k, v := range a {
@@ -31,6 +31,7 @@ func (a StatHistory) Copy() StatHistory {
 	return b
 }
 
+// StatHistoryThreadsafe provides safe access for multiple goroutines readers and a single writer to a stored StatHistory object.
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and Deliveryservice maps?
 type StatHistoryThreadsafe struct {
@@ -39,27 +40,29 @@ type StatHistoryThreadsafe struct {
 	max         uint64
 }
 
+// Max returns the max history to be stored for any cache
 func (h StatHistoryThreadsafe) Max() uint64 {
 	return h.max
 }
 
+// NewStatHistoryThreadsafe returns a new StatHistory safe for multiple readers and a single writer.
 func NewStatHistoryThreadsafe(maxHistory uint64) StatHistoryThreadsafe {
 	h := StatHistory{}
 	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: &h, max: maxHistory}
 }
 
 // Get returns the StatHistory. Callers MUST NOT modify. If mutation is necessary, call StatHistory.Copy()
-func (t *StatHistoryThreadsafe) Get() StatHistory {
-	t.m.RLock()
-	defer t.m.RUnlock()
-	return *t.statHistory
+func (h *StatHistoryThreadsafe) Get() StatHistory {
+	h.m.RLock()
+	defer h.m.RUnlock()
+	return *h.statHistory
 }
 
 // Set sets the internal StatHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *StatHistoryThreadsafe) Set(v StatHistory) {
-	t.m.Lock()
-	*t.statHistory = v
-	t.m.Unlock()
+func (h *StatHistoryThreadsafe) Set(v StatHistory) {
+	h.m.Lock()
+	*h.statHistory = v
+	h.m.Unlock()
 }
 
 func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
@@ -95,7 +98,7 @@ func StartStatHistoryManager(
 	errorCount UintThreadsafe,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsThreadsafe, UnpolledCachesThreadsafe) {
+) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsReader, UnpolledCachesThreadsafe) {
 	statHistory := NewStatHistoryThreadsafe(cfg.MaxStatHistory)
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
@@ -133,7 +136,7 @@ func StartStatHistoryManager(
 			}
 		}
 	}()
-	return statHistory, lastStatDurations, lastStats, dsStats, unpolledCaches
+	return statHistory, lastStatDurations, lastStats, &dsStats, unpolledCaches
 }
 
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
@@ -153,7 +156,7 @@ func processStatResults(
 	maxStats := statHistoryThreadsafe.Max()
 	for _, result := range results {
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		statHistory[enum.CacheName(result.Id)] = pruneHistory(append(statHistory[enum.CacheName(result.Id)], result), maxStats)
+		statHistory[result.ID] = pruneHistory(append(statHistory[result.ID], result), maxStats)
 	}
 	statHistoryThreadsafe.Set(statHistory)
 
@@ -178,11 +181,11 @@ func processStatResults(
 	endTime := time.Now()
 	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
 	for _, result := range results {
-		if lastStatStart, ok := lastStatEndTimes[enum.CacheName(result.Id)]; ok {
+		if lastStatStart, ok := lastStatEndTimes[result.ID]; ok {
 			d := time.Since(lastStatStart)
-			lastStatDurations[enum.CacheName(result.Id)] = d
+			lastStatDurations[result.ID] = d
 		}
-		lastStatEndTimes[enum.CacheName(result.Id)] = endTime
+		lastStatEndTimes[result.ID] = endTime
 
 		// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
 		result.PollFinished <- result.PollID
