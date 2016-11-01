@@ -133,30 +133,30 @@ sub get_example_urls {
 			}
 		}
 	}
-	else {
+	else { # TODO:  Is this necessary? Could this be consolidated?
 		foreach my $re ( @{$regexp_set} ) {
 			if ( $re->{type} eq 'HOST_REGEXP' ) {
 				my $host = $re->{pattern};
-				my $url;
+				my $http_url;
+				my $https_url;
 				$host =~ s/\\//g;
 				$host =~ s/\.\*//g;
 				$host =~ s/\.//g;
-				my $p =
-					defined( $example_urls[ $re->{set_number} ] )
-					? $example_urls[ $re->{set_number} ]
-					: "";
+
 				if ( $re->{set_number} == 0 ) {
-					$example_urls[ $re->{set_number} ] = $scheme . '://ccr.' . $host . "." . $cdn_domain . $p;
+					$http_url =  $scheme . '://ccr.' . $host . "." . $cdn_domain;
+					push( @example_urls, $http_url );
 					if ($scheme2) {
-						$url = $scheme2 . '://ccr.' . $host . "." . $cdn_domain . $p;
-						push( @example_urls, $url );
+						$https_url = $scheme2 . '://ccr.' . $host . "." . $cdn_domain;
+						push( @example_urls, $https_url );
 					}
 				}
 				else {
-					$example_urls[ $re->{set_number} ] = $scheme . '://' . $re->{pattern} . $p;
+					 $http_url = $scheme . '://' . $re->{pattern};
+					 push( @example_urls, $http_url );
 					if ($scheme2) {
-						$url = $scheme2 . '://' . $re->{pattern} . $p;
-						push( @example_urls, $url );
+						$https_url = $scheme2 . '://' . $re->{pattern};
+						push( @example_urls, $https_url );
 					}
 				}
 			}
