@@ -152,14 +152,16 @@ func DeliveryServiceSSLKeys() *client.DeliveryServiceSSLKeysResponse {
 	}
 
 	sslKeys := client.DeliveryServiceSSLKeys{
-		Certificate:  crt,
-		BusinessUnit: "businessUnit",
-		City:         "city",
-		Organization: "Kabletown",
-		Hostname:     "hostname",
-		Country:      "country",
-		State:        "state",
-		Version:      "version",
+		CDN:             "cdn",
+		DeliveryService: "deliveryService",
+		Certificate:     crt,
+		BusinessUnit:    "businessUnit",
+		City:            "city",
+		Organization:    "Kabletown",
+		Hostname:        "hostname",
+		Country:         "country",
+		State:           "state",
+		Version:         "version",
 	}
 
 	return &client.DeliveryServiceSSLKeysResponse{

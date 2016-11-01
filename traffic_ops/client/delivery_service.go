@@ -167,14 +167,16 @@ type DeliveryServiceSSLKeysResponse struct {
 
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
-	BusinessUnit string                            `json:"businessUnit"`
-	City         string                            `json:"city"`
-	Organization string                            `json:"organization"`
-	Hostname     string                            `json:"hostname"`
-	Country      string                            `json:"country"`
-	State        string                            `json:"state"`
-	Version      string                            `json:"version"`
-	Certificate  DeliveryServiceSSLKeysCertificate `json:"certificate"`
+	CDN             string                            `json:"cdn"`
+	DeliveryService string                            `json:"DeliveryService"`
+	BusinessUnit    string                            `json:"businessUnit"`
+	City            string                            `json:"city"`
+	Organization    string                            `json:"organization"`
+	Hostname        string                            `json:"hostname"`
+	Country         string                            `json:"country"`
+	State           string                            `json:"state"`
+	Version         string                            `json:"version"`
+	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate"`
 }
 
 // DeliveryServiceSSLKeysCertificate ...
