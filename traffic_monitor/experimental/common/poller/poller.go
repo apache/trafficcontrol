@@ -9,12 +9,12 @@ import (
 
 	"gopkg.in/fsnotify.v1"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
-	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
-	to "github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/fetcher"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/handler"
+	instr "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/instrumentation"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 type Poller interface {
@@ -114,22 +114,19 @@ func (p HttpPoller) Poll() {
 	// iterationCount++ // on tick<:
 	// case p.TickChan <- iterationCount:
 	killChans := map[string]chan<- struct{}{}
-	for {
-		select {
-		case newConfig := <-p.ConfigChannel:
-			deletions, additions := diffConfigs(p.Config, newConfig)
-			for _, id := range deletions {
-				killChan := killChans[id]
-				go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
-				delete(killChans, id)
-			}
-			for _, info := range additions {
-				kill := make(chan struct{})
-				killChans[info.ID] = kill
-				go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
-			}
-			p.Config = newConfig
+	for newConfig := range p.ConfigChannel {
+		deletions, additions := diffConfigs(p.Config, newConfig)
+		for _, id := range deletions {
+			killChan := killChans[id]
+			go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
+			delete(killChans, id)
 		}
+		for _, info := range additions {
+			kill := make(chan struct{})
+			killChans[info.ID] = kill
+			go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
+		}
+		p.Config = newConfig
 	}
 }
 

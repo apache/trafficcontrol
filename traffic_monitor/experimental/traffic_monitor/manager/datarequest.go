@@ -11,31 +11,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	ds "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservice"
-	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
-	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
-	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 )
 
+// JSONEvents represents the structure we wish to serialize to JSON, for Events.
 type JSONEvents struct {
 	Events []Event `json:"events"`
 }
 
+// CacheState represents the available state of a cache.
 type CacheState struct {
 	Value bool `json:"value"`
 }
 
-type ApiPeerStates struct {
-	Peers       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
-	QueryParams string                                                      `json:"pp"`
-	DateStr     string                                                      `json:"date"`
+// APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.
+type APIPeerStates struct {
+	srvhttp.CommonAPIData
+	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
 }
 
+// CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
 	Type                  *string  `json:"type,omitempty"`
@@ -56,6 +59,7 @@ type CacheStatFilter struct {
 	cacheTypes   map[enum.CacheName]enum.CacheType
 }
 
+// UseCache returns whether the given cache is in the filter.
 func (f *CacheStatFilter) UseCache(name enum.CacheName) bool {
 	if _, inHosts := f.hosts[name]; len(f.hosts) != 0 && !inHosts {
 		return false
@@ -66,6 +70,7 @@ func (f *CacheStatFilter) UseCache(name enum.CacheName) bool {
 	return true
 }
 
+// UseStat returns whether the given stat is in the filter.
 func (f *CacheStatFilter) UseStat(statName string) bool {
 	if len(f.statsToUse) == 0 {
 		return true
@@ -74,7 +79,7 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 		_, ok := f.statsToUse[statName]
 		return ok
 	}
-	for statToUse, _ := range f.statsToUse {
+	for statToUse := range f.statsToUse {
 		if strings.Contains(statName, statToUse) {
 			return true
 		}
@@ -82,6 +87,7 @@ func (f *CacheStatFilter) UseStat(statName string) bool {
 	return false
 }
 
+// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
 func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 	if f.historyCount == 0 {
 		return true
@@ -103,7 +109,7 @@ func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
-	for param, _ := range params {
+	for param := range params {
 		if _, ok := validParams[param]; !ok {
 			return nil, fmt.Errorf("invalid query parameter '%v'", param)
 		}
@@ -172,6 +178,7 @@ type DSStatFilter struct {
 	dsTypes          map[enum.DeliveryServiceName]enum.DSType
 }
 
+// UseDeliveryService returns whether the given delivery service is in this filter.
 func (f *DSStatFilter) UseDeliveryService(name enum.DeliveryServiceName) bool {
 	if _, inDSes := f.deliveryServices[name]; len(f.deliveryServices) != 0 && !inDSes {
 		return false
@@ -182,6 +189,7 @@ func (f *DSStatFilter) UseDeliveryService(name enum.DeliveryServiceName) bool {
 	return true
 }
 
+// UseStat returns whether the given stat is in this filter.
 func (f *DSStatFilter) UseStat(statName string) bool {
 	if len(f.statsToUse) == 0 {
 		return true
@@ -190,7 +198,7 @@ func (f *DSStatFilter) UseStat(statName string) bool {
 		_, ok := f.statsToUse[statName]
 		return ok
 	}
-	for statToUse, _ := range f.statsToUse {
+	for statToUse := range f.statsToUse {
 		if strings.Contains(statName, statToUse) {
 			return true
 		}
@@ -198,6 +206,7 @@ func (f *DSStatFilter) UseStat(statName string) bool {
 	return false
 }
 
+// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
 func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
 	if f.historyCount == 0 {
 		return true
@@ -219,7 +228,7 @@ func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enu
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
-	for param, _ := range params {
+	for param := range params {
 		if _, ok := validParams[param]; !ok {
 			return nil, fmt.Errorf("invalid query parameter '%v'", param)
 		}
@@ -289,6 +298,7 @@ type PeerStateFilter struct {
 	cacheTypes   map[enum.CacheName]enum.CacheType
 }
 
+// UsePeer returns whether the given Traffic Monitor peer is in this filter.
 func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
 	if _, inPeers := f.peersToUse[name]; len(f.peersToUse) != 0 && !inPeers {
 		return false
@@ -296,6 +306,7 @@ func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
 	return true
 }
 
+// UseCache returns whether the given cache is in this filter.
 func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
 	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
 		return false
@@ -309,7 +320,7 @@ func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
 		_, ok := f.cachesToUse[name]
 		return ok
 	}
-	for cacheToUse, _ := range f.cachesToUse {
+	for cacheToUse := range f.cachesToUse {
 		if strings.Contains(string(name), string(cacheToUse)) {
 			return true
 		}
@@ -317,6 +328,7 @@ func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
 	return false
 }
 
+// WithinStatHistoryMax returns whether the given history index is less than the max history of this filter.
 func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
 	if f.historyCount == 0 {
 		return true
@@ -339,7 +351,7 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
-	for param, _ := range params {
+	for param := range params {
 		if _, ok := validParams[param]; !ok {
 			return nil, fmt.Errorf("invalid query parameter '%v'", param)
 		}
@@ -399,16 +411,16 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	}, nil
 }
 
-// DataRequest takes an `http_server.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
+// DataRequest takes an `srvhttp.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
 func DataRequest(
-	req http_server.DataRequest,
+	req srvhttp.DataRequest,
 	opsConfig OpsConfigThreadsafe,
 	toSession towrap.ITrafficOpsSession,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statHistory StatHistoryThreadsafe,
-	dsStats DSStatsThreadsafe,
+	dsStats DSStatsReader,
 	events EventsThreadsafe,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
@@ -431,7 +443,7 @@ func DataRequest(
 		log.Errorf("Request Error: %v\n", fmt.Errorf(req.Type.String()+": %v", err))
 	}
 
-	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `http_server`.
+	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`.
 	commonReturn := func(body []byte, err error) ([]byte, int) {
 		if err == nil {
 			return body, http.StatusOK
@@ -447,7 +459,7 @@ func DataRequest(
 
 	var err error
 	switch req.Type {
-	case http_server.TRConfig:
+	case srvhttp.TRConfig:
 		cdnName := opsConfig.Get().CdnName
 		if toSession == nil {
 			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"))
@@ -456,13 +468,13 @@ func DataRequest(
 			return commonReturn(nil, fmt.Errorf("No CDN Configured"))
 		}
 		return commonReturn(body, err)
-	case http_server.TRStateDerived:
+	case srvhttp.TRStateDerived:
 		body, err = peer.CrstatesMarshall(combinedStates.Get())
 		return commonReturn(body, err)
-	case http_server.TRStateSelf:
+	case srvhttp.TRStateSelf:
 		body, err = peer.CrstatesMarshall(localStates.Get())
 		return commonReturn(body, err)
-	case http_server.CacheStats:
+	case srvhttp.CacheStats:
 		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err)
@@ -470,7 +482,7 @@ func DataRequest(
 		}
 		body, err = cache.StatsMarshall(statHistory.Get(), filter, req.Parameters)
 		return commonReturn(body, err)
-	case http_server.DSStats:
+	case srvhttp.DSStats:
 		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
 		if err != nil {
 			handleErr(err)
@@ -478,24 +490,24 @@ func DataRequest(
 		}
 		body, err = json.Marshal(dsStats.Get().JSON(filter, req.Parameters)) // TODO marshall beforehand, for performance? (test to see how often requests are made)
 		return commonReturn(body, err)
-	case http_server.EventLog:
+	case srvhttp.EventLog:
 		body, err = json.Marshal(JSONEvents{Events: events.Get()})
 		return commonReturn(body, err)
-	case http_server.PeerStates:
+	case srvhttp.PeerStates:
 		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 
-		body, err = json.Marshal(createApiPeerStates(peerStates.Get(), filter, req.Parameters))
+		body, err = json.Marshal(createAPIPeerStates(peerStates.Get(), filter, req.Parameters))
 		return commonReturn(body, err)
-	case http_server.StatSummary:
+	case srvhttp.StatSummary:
 		return nil, http.StatusNotImplemented
-	case http_server.Stats:
+	case srvhttp.Stats:
 		body, err = getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
 		return commonReturn(body, err)
-	case http_server.ConfigDoc:
+	case srvhttp.ConfigDoc:
 		opsConfigCopy := opsConfig.Get()
 		// if the password is blank, leave it blank, so callers can see it's missing.
 		if opsConfigCopy.Password != "" {
@@ -503,13 +515,13 @@ func DataRequest(
 		}
 		body, err = json.Marshal(opsConfigCopy)
 		return commonReturn(body, err)
-	case http_server.APICacheCount: // TODO determine if this should use peerStates
+	case srvhttp.APICacheCount: // TODO determine if this should use peerStates
 		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
-	case http_server.APICacheAvailableCount:
+	case srvhttp.APICacheAvailableCount:
 		return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches))), http.StatusOK
-	case http_server.APICacheDownCount:
+	case srvhttp.APICacheDownCount:
 		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches))), http.StatusOK
-	case http_server.APIVersion:
+	case srvhttp.APIVersion:
 		s := "traffic_monitor-" + staticAppData.Version + "."
 		if len(staticAppData.GitRevision) > 6 {
 			s += staticAppData.GitRevision[:6]
@@ -517,13 +529,13 @@ func DataRequest(
 			s += staticAppData.GitRevision
 		}
 		return []byte(s), http.StatusOK
-	case http_server.APITrafficOpsURI:
+	case srvhttp.APITrafficOpsURI:
 		return []byte(opsConfig.Get().Url), http.StatusOK
-	case http_server.APICacheStates:
+	case srvhttp.APICacheStates:
 		body, err = json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
 			lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 		return commonReturn(body, err)
-	case http_server.APIBandwidthKbps:
+	case srvhttp.APIBandwidthKbps:
 		serverTypes := toData.Get().ServerTypes
 		kbpsStats := lastStats.Get()
 		sum := float64(0.0)
@@ -534,7 +546,7 @@ func DataRequest(
 			sum += data.Bytes.PerSec / ds.BytesPerKilobit
 		}
 		return []byte(fmt.Sprintf("%f", sum)), http.StatusOK
-	case http_server.APIBandwidthCapacityKbps:
+	case srvhttp.APIBandwidthCapacityKbps:
 		statHistory := statHistory.Get()
 		cap := int64(0)
 		for _, results := range statHistory {
@@ -601,7 +613,7 @@ func createCacheStatuses(
 		}
 
 		var kbps *float64
-		lastStat, ok := lastStats.Caches[enum.CacheName(cacheName)]
+		lastStat, ok := lastStats.Caches[cacheName]
 		if !ok {
 			log.Warnf("cache not in last kbps cache %s\n", cacheName)
 		} else {
@@ -610,7 +622,7 @@ func createCacheStatuses(
 		}
 
 		var connections *int64
-		connectionsVal, ok := conns[enum.CacheName(cacheName)]
+		connectionsVal, ok := conns[cacheName]
 		if !ok {
 			log.Warnf("cache not in connections %s\n", cacheName)
 		} else {
@@ -618,12 +630,12 @@ func createCacheStatuses(
 		}
 
 		var status *string
-		statusVal, ok := localCacheStatus[enum.CacheName(cacheName)]
+		statusVal, ok := localCacheStatus[cacheName]
 		if !ok {
 			log.Warnf("cache not in statuses %s\n", cacheName)
 		} else {
 			statusString := statusVal.Status + " - "
-			if localCacheStatus[enum.CacheName(cacheName)].Available {
+			if localCacheStatus[cacheName].Available {
 				statusString += "available"
 			} else {
 				statusString += "unavailable"
@@ -632,7 +644,7 @@ func createCacheStatuses(
 		}
 
 		cacheTypeStr := string(cacheType)
-		statii[enum.CacheName(cacheName)] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
+		statii[cacheName] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
 	}
 	return statii
 }
@@ -672,11 +684,10 @@ func cacheAvailableCount(caches map[enum.CacheName]peer.IsAvailable) int {
 	return len(caches) - cacheDownCount(caches)
 }
 
-func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) ApiPeerStates {
-	apiPeerStates := ApiPeerStates{
-		Peers:       map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
-		QueryParams: http_server.ParametersStr(params),
-		DateStr:     http_server.DateStr(time.Now()),
+func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) APIPeerStates {
+	apiPeerStates := APIPeerStates{
+		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
+		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
 	}
 
 	for peer, state := range peerStates {
@@ -698,6 +709,7 @@ func createApiPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, f
 	return apiPeerStates
 }
 
+// Stats contains statistics data about this running app. Designed to be returned via an API endpoint.
 type Stats struct {
 	MaxMemoryMB         uint64 `json:"Max Memory (MB)"`
 	GitRevision         string `json:"git-revision"`
