@@ -5,7 +5,7 @@
 
 # Example Build and Run:
 # docker network create cdnet
-# docker build --rm --tag traffic_ops:1.6.0 --build-arg=RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_ops-1.6.0-3503.4899d302.x86_64.rpm traffic_ops
+# docker build --rm --tag traffic_ops:1.7.0 --build-arg=RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm traffic_ops
 #
 # docker run --name my-traffic-ops-mysql --hostname my-traffic-ops-mysql --net cdnet --env MYSQL_ROOT_PASSWORD=secretrootpass --detach mysql:5.5
 #
@@ -18,7 +18,7 @@ RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
 RUN cpanm Carton
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
-ARG RPM=TODO
+ARG RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm
 ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 

@@ -3,9 +3,9 @@ package manager
 import (
 	"sort"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 )
 
 // StartPeerManager listens for peer results, and when it gets one, it adds it to the peerStates list, and optimistically combines the good results into combinedStates
@@ -16,13 +16,10 @@ func StartPeerManager(
 ) peer.CRStatesThreadsafe {
 	combinedStates := peer.NewCRStatesThreadsafe()
 	go func() {
-		for {
-			select {
-			case crStatesResult := <-peerChan:
-				peerStates.Set(crStatesResult.Id, crStatesResult.PeerStats)
-				combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
-				crStatesResult.PollFinished <- crStatesResult.PollID
-			}
+		for crStatesResult := range peerChan {
+			peerStates.Set(crStatesResult.ID, crStatesResult.PeerStats)
+			combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
+			crStatesResult.PollFinished <- crStatesResult.PollID
 		}
 	}()
 	return combinedStates
@@ -79,6 +76,7 @@ func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, local
 	return combinedStates
 }
 
+// CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
 type CacheNameSlice []enum.CacheName
 
 func (p CacheNameSlice) Len() int           { return len(p) }

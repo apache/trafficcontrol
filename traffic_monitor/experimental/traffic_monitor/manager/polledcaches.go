@@ -1,9 +1,9 @@
 package manager
 
 import (
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"sync"
 )
 
@@ -14,7 +14,6 @@ type UnpolledCachesThreadsafe struct {
 	allCaches      *map[enum.CacheName]struct{}
 	initialized    *bool
 	m              *sync.RWMutex
-	max            uint64
 }
 
 // NewUnpolledCachesThreadsafe returns a new UnpolledCachesThreadsafe object.
@@ -28,14 +27,14 @@ func NewUnpolledCachesThreadsafe() UnpolledCachesThreadsafe {
 	}
 }
 
-// Get returns the caches. Callers MUST NOT modify. If mutation is necessary, copy the map
+// UnpolledCaches returns a map of caches not yet polled. Callers MUST NOT modify. If mutation is necessary, copy the map
 func (t *UnpolledCachesThreadsafe) UnpolledCaches() map[enum.CacheName]struct{} {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return *t.unpolledCaches
 }
 
-// Set sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
+// setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
 func (t *UnpolledCachesThreadsafe) setUnpolledCaches(v map[enum.CacheName]struct{}) {
 	t.m.Lock()
 	*t.initialized = true
@@ -47,17 +46,17 @@ func (t *UnpolledCachesThreadsafe) setUnpolledCaches(v map[enum.CacheName]struct
 func (t *UnpolledCachesThreadsafe) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	allCaches := copyCaches(*t.allCaches) // not necessary to lock `allCaches`, as the single-writer is the only thing that accesses it.
-	for cache, _ := range unpolledCaches {
+	for cache := range unpolledCaches {
 		if _, ok := newCaches[cache]; !ok {
 			delete(unpolledCaches, cache)
 		}
 	}
-	for cache, _ := range allCaches {
+	for cache := range allCaches {
 		if _, ok := newCaches[cache]; !ok {
 			delete(allCaches, cache)
 		}
 	}
-	for cache, _ := range newCaches {
+	for cache := range newCaches {
 		if _, ok := allCaches[cache]; !ok {
 			unpolledCaches[cache] = struct{}{}
 			allCaches[cache] = struct{}{}
@@ -67,7 +66,7 @@ func (t *UnpolledCachesThreadsafe) SetNewCaches(newCaches map[enum.CacheName]str
 	t.setUnpolledCaches(unpolledCaches)
 }
 
-// AnyCachesUnpolled returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
+// Any returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
 func (t *UnpolledCachesThreadsafe) Any() bool {
 	t.m.Lock()
 	defer t.m.Unlock()
@@ -77,7 +76,7 @@ func (t *UnpolledCachesThreadsafe) Any() bool {
 // copyCaches performs a deep copy of the given map.
 func copyCaches(a map[enum.CacheName]struct{}) map[enum.CacheName]struct{} {
 	b := map[enum.CacheName]struct{}{}
-	for k, _ := range a {
+	for k := range a {
 		b[k] = struct{}{}
 	}
 	return b
@@ -93,10 +92,10 @@ func (t *UnpolledCachesThreadsafe) SetPolled(results []cache.Result, lastStatsTh
 		return
 	}
 	lastStats := lastStatsThreadsafe.Get()
-	for cache, _ := range unpolledCaches {
+	for cache := range unpolledCaches {
 	innerLoop:
 		for _, result := range results {
-			if result.Id != cache {
+			if result.ID != cache {
 				continue
 			}
 			if !result.Available || len(result.Errors) > 0 {

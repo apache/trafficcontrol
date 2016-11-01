@@ -2,7 +2,7 @@ var TrafficOpsService = function($http, $q) {
 
     this.getReleaseVersionInfo = function() {
         var deferred = $q.defer();
-        $http.get('trafficOps_release.json')
+        $http.get('traffic_ops_release.json')
             .success(function(result) {
                 deferred.resolve(result);
             })

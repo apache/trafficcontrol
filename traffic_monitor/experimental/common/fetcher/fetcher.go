@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/davecheney/gmx"
 )
 

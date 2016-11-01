@@ -1,0 +1,8 @@
+/var/log/traffic_ops_v2/access.log {
+    daily
+    copytruncate
+    missingok
+    compress
+    maxage 30
+    dateext
+}
