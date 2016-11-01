@@ -32,6 +32,7 @@ use File::Temp;
 use WWW::Curl::Easy;
 use LWP::UserAgent;
 use File::Copy;
+use Getopt::Long;
 
 my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
@@ -42,11 +43,18 @@ my $users_file        = "/opt/traffic_ops/install/data/json/users.json";
 my $profile_dir       = "/opt/traffic_ops/install/data/profiles/";
 my %dbdriver          = ( mysql => "mymysql", );
 
-my $reconfigure = "/opt/traffic_ops/.reconfigure";
+my $reconfigure          = "/opt/traffic_ops/.reconfigure";
 my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
-my $tmAdminUser = "";
-my $tmAdminPw = "";
+my $tmAdminUser          = "";
+my $tmAdminPw            = "";
 my $parameters;
+
+my $help     = 0;
+my $skip_ssl = 0;
+GetOptions(
+	"help"     => \$help,
+	"skip-ssl" => \$skip_ssl
+) or die("Error in command line arguments");
 
 my $installMsg = << 'EOF';
 
@@ -55,6 +63,13 @@ Please enter the following information in order to completely
 configure the Traffic Ops mysql database.
 
 EOF
+
+sub printUsage {
+	print "Traffic Ops Postinstall\n\n";
+	print " --help      Show this help text\n";
+	print " --skip-ssl  Skip SSL certificate generation\n";
+	exit(0);
+}
 
 sub readJson {
 	my $file = shift;
@@ -195,8 +210,8 @@ EOF
 		my $centosTarballFqn = '';
 		my $skip;
 		while (1) {
-			$centosTarballFqn = promptUser( "Fully qualified name of your CentOS ISO kickstart tarball, or 'na' to skip and add files later",
-				"/var/cache/centos72.tgz" );
+			$centosTarballFqn =
+				promptUser( "Fully qualified name of your CentOS ISO kickstart tarball, or 'na' to skip and add files later", "/var/cache/centos72.tgz" );
 			if ( $centosTarballFqn eq 'na' ) {
 				$skip = 1;
 				last;
@@ -254,7 +269,7 @@ EOF
 	my %user = ();
 	$tmAdminUser = promptUser( "Administration username for Traffic Ops", 'admin' );
 	$user{username} = $tmAdminUser;
-	$tmAdminPw = promptPasswordVerify("Password for the admin user $tmAdminUser");
+	$tmAdminPw      = promptPasswordVerify("Password for the admin user $tmAdminUser");
 	$user{password} = sha1_hex($tmAdminPw);
 
 	writeJson( $users_file, \%user );
@@ -324,22 +339,24 @@ EOF
 		# exit 1;
 	}
 
-	if ( -x "/usr/bin/openssl" ) {
-		print "\nInstalling SSL Certificates.\n\n";
-		$result = execCommand("/opt/traffic_ops/install/bin/generateCert");
+	if ( $skip_ssl == 0 ) {
+		if ( -x "/usr/bin/openssl" ) {
+			print "\nInstalling SSL Certificates.\n\n";
+			$result = execCommand("/opt/traffic_ops/install/bin/generateCert");
 
-		if ( $result != 0 ) {
-			print "\nSSL Certificate Installation failed.\n";
-			exit 3;
+			if ( $result != 0 ) {
+				print "\nSSL Certificate Installation failed.\n";
+				exit 3;
+			}
+			else {
+				print "\nSSL Certificates have been installed.\n";
+			}
 		}
 		else {
-			print "\nSSL Certificates have been installed.\n";
+			print "Unable to install SSL certificates as openssl is not installed.\n";
+			print "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates.\n";
+			exit 4;
 		}
-	}
-	else {
-		print "Unable to install SSL certificates as openssl is not installed.\n";
-		print "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates.\n";
-		exit 4;
 	}
 }    # end of Init
 
@@ -392,7 +409,7 @@ sub writeSecret {
 	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
 
 	# write whole config to temp file in pwd (keeps in same filesystem)
-	my $tmpfile = File::Temp->new(DIR => '.');
+	my $tmpfile = File::Temp->new( DIR => '.' );
 	print $tmpfile $dumper->Dump();
 	close $tmpfile;
 
@@ -412,6 +429,10 @@ sub writeSecret {
 
 	chown $uid, $gid, $cdn_conf;
 	chmod $perm, $cdn_conf;
+}
+
+if ( $help == 1 ) {
+	printUsage();
 }
 
 chdir("/opt/traffic_ops/install/bin");
@@ -443,168 +464,174 @@ else {
 }
 
 sub profile_replace {
-		my($profile) = @_;
-		my $profile_bak = $profile . ".bak";
-		rename($profile, $profile_bak) or die("rename(): $!");
-		open(my $fh, '<', $profile_bak) or die("open(): $!");
-		open(my $ofh, '>', $profile) or die("open(): $!");
-		while (<$fh>) {
-				s/{{.TmUrl}}/$parameters->{'tm.url'}/g;
-				s/{{.TmInfoUrl}}/$parameters->{"tminfo.url"}/g;
-				s/{{.TmInstanceName}}/$parameters->{"cdnname"}/g;
-				s/{{.GeolocationPollingUrl}}/$parameters->{"geolocation.polling.url"}/g;
-				s/{{.Geolocation6PollingUrl}}/$parameters->{"geolocation6.polling.url"}/g;
-				s/{{.TmUrl}}/$parameters->{'tm.url'}/g;
-				s/{{.TmToolName}}/Traffic Ops/g;
-				s/{{.HealthPollingInterval}}/$parameters->{"health.polling.interval"}/g;
-				s/{{.CoveragezonePollingUrl}}/$parameters->{"coveragezone.polling.url"}/g;
-				s/{{.DomainName}}/$parameters->{"domainname"}/g;
-				s/{{.TldSoaAdmin}}/$parameters->{"tld.soa.admin"}/g;
-				s/{{.DrivePrefix}}/$parameters->{"Drive_Prefix"}/g;
-				s/{{.HealthThresholdLoadavg}}/$parameters->{"health.threshold.loadavg"}/g;
-				s/{{.HealthThresholdAvailableBandwidthInKbps}}/$parameters->{"health.threshold.availableBandwidthInKbps"}/g;
-				s/{{.RAMDrivePrefix}}/$parameters->{"RAM_Drive_Prefix"}/g;
-				s/{{.RAMDriveLetters}}/$parameters->{"RAM_Drive_Letters"}/g;
-				s/{{.HealthConnectionTimeout}}/$parameters->{"health.connection.timeout"}/g;
-				s#{{.CronOrtSyncds}}#*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn $parameters->{'tm.url'} $tmAdminUser:$tmAdminPw > /tmp/ort/syncds.log 2>&1#g;
-				print $ofh $_;
-		}
-		close $fh;
-		close $ofh;
-		unlink $profile_bak;
+	my ($profile) = @_;
+	my $profile_bak = $profile . ".bak";
+	rename( $profile, $profile_bak ) or die("rename(): $!");
+	open( my $fh,  '<', $profile_bak ) or die("open(): $!");
+	open( my $ofh, '>', $profile )     or die("open(): $!");
+	while (<$fh>) {
+		s/{{.TmUrl}}/$parameters->{'tm.url'}/g;
+		s/{{.TmInfoUrl}}/$parameters->{"tminfo.url"}/g;
+		s/{{.TmInstanceName}}/$parameters->{"cdnname"}/g;
+		s/{{.GeolocationPollingUrl}}/$parameters->{"geolocation.polling.url"}/g;
+		s/{{.Geolocation6PollingUrl}}/$parameters->{"geolocation6.polling.url"}/g;
+		s/{{.TmUrl}}/$parameters->{'tm.url'}/g;
+		s/{{.TmToolName}}/Traffic Ops/g;
+		s/{{.HealthPollingInterval}}/$parameters->{"health.polling.interval"}/g;
+		s/{{.CoveragezonePollingUrl}}/$parameters->{"coveragezone.polling.url"}/g;
+		s/{{.DomainName}}/$parameters->{"domainname"}/g;
+		s/{{.TldSoaAdmin}}/$parameters->{"tld.soa.admin"}/g;
+		s/{{.DrivePrefix}}/$parameters->{"Drive_Prefix"}/g;
+		s/{{.HealthThresholdLoadavg}}/$parameters->{"health.threshold.loadavg"}/g;
+		s/{{.HealthThresholdAvailableBandwidthInKbps}}/$parameters->{"health.threshold.availableBandwidthInKbps"}/g;
+		s/{{.RAMDrivePrefix}}/$parameters->{"RAM_Drive_Prefix"}/g;
+		s/{{.RAMDriveLetters}}/$parameters->{"RAM_Drive_Letters"}/g;
+		s/{{.HealthConnectionTimeout}}/$parameters->{"health.connection.timeout"}/g;
+		s#{{.CronOrtSyncds}}#*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn $parameters->{'tm.url'} $tmAdminUser:$tmAdminPw > /tmp/ort/syncds.log 2>&1#g;
+		print $ofh $_;
+	}
+	close $fh;
+	close $ofh;
+	unlink $profile_bak;
 }
 
 sub replace_profile_templates() {
-	  while (!defined $parameters->{'tm.url'} ||  $parameters->{'tm.url'} eq "") {
-				$parameters->{'tm.url'} = InstallUtils::promptUser ("Traffic Ops url", "https://localhost");
-	  }
-	  while (!defined $parameters->{"tminfo.url"} || $parameters->{"tminfo.url"} eq "") {
-				$parameters->{"tminfo.url"} = "$parameters->{'tm.url'}/info"
-	  }
-	  while (!defined $parameters->{"cdnname"} || $parameters->{"cdnname"} eq "") {
-				$parameters->{"cdnname"} = InstallUtils::promptUser ("Human-readable CDN Name.  (No whitespace, please)", "kabletown_cdn");
-	  }
-	  while (!defined $parameters->{"geolocation.polling.url"} || $parameters->{"geolocation.polling.url"} eq "") {
-				$parameters->{"geolocation.polling.url"} = "$parameters->{'tm.url'}/routing/GeoIP2-City.mmdb.gz";
-	  }
-	  while (!defined $parameters->{"geolocation6.polling.url"} || $parameters->{"geolocation6.polling.url"} eq "") {
-				$parameters->{"geolocation6.polling.url"} = "$parameters->{'tm.url'}/routing/GeoIP2-Cityv6.mmdb.gz";
-	  }
-	  while (!defined $parameters->{"health.polling.interval"} || $parameters->{"health.polling.interval"} eq "") {
-				$parameters->{"health.polling.interval"} = InstallUtils::promptUser ("Health Polling Interval (milliseconds)", "8000");
-	  }
-	  while (!defined $parameters->{"coveragezone.polling.url"} || $parameters->{"coveragezone.polling.url"} eq "") {
-				$parameters->{"coveragezone.polling.url"} = "$parameters->{'tm.url'}/routing/coverage-zone.json"
-	  }
-	  while (!defined $parameters->{"domainname"} || $parameters->{"domainname"} eq "") {
-				$parameters->{"domainname"} = InstallUtils::promptUser ("DNS sub-domain for which your CDN is authoritative", "cdn1.kabletown.net");
-	  }
-	  while (!defined $parameters->{"tld.soa.admin"} || $parameters->{"tld.soa.admin"} eq "") {
-				$parameters->{"tld.soa.admin"} = InstallUtils::promptUser ("TLD SOA admin", "traffic_ops");
-	  }
-	  while (!defined $parameters->{"Drive_Prefix"} || $parameters->{"Drive_Prefix"} eq "") {
-				$parameters->{"Drive_Prefix"} = InstallUtils::promptUser ("TrafficServer Drive Prefix", "/dev/sd");
-	  }
-	  while (!defined $parameters->{"RAM_Drive_Prefix"} || $parameters->{"RAM_Drive_Prefix"} eq "") {
-				$parameters->{"RAM_Drive_Prefix"} = InstallUtils::promptUser ("TrafficServer RAM Drive Prefix", "/dev/ram");
-	  }
-	  while (!defined $parameters->{"RAM_Drive_Letters"} || $parameters->{"RAM_Drive_Letters"} eq "") {
-				$parameters->{"RAM_Drive_Letters"} = InstallUtils::promptUser ("TrafficServer RAM Drive Letters (comma separated)", "0,1,2,3,4,5,6,7");
-	  }
-	  while (!defined $parameters->{"health.threshold.loadavg"} || $parameters->{"health.threshold.loadavg"} eq "") {
-				$parameters->{"health.threshold.loadavg"} = InstallUtils::promptUser ("Health Threshold Load Average", "25");
-	  }
-	  while (!defined $parameters->{"health.threshold.availableBandwidthInKbps"} || $parameters->{"health.threshold.availableBandwidthInKbps"} eq "" || $parameters->{"health.threshold.availableBandwidthInKbps"} eq ">") {
-				$parameters->{"health.threshold.availableBandwidthInKbps"} = ">" . InstallUtils::promptUser ("Health Threshold Available Bandwidth in Kbps", "1750000");
-	  }
-	  while (!defined $parameters->{"health.connection.timeout"} || $parameters->{"health.connection.timeout"} eq "") {
-				$parameters->{"health.connection.timeout"} = InstallUtils::promptUser ("Traffic Server Health Connection Timeout (milliseconds)", "2000");
-	  }
+	while ( !defined $parameters->{'tm.url'} || $parameters->{'tm.url'} eq "" ) {
+		$parameters->{'tm.url'} = InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
+	}
+	while ( !defined $parameters->{"tminfo.url"} || $parameters->{"tminfo.url"} eq "" ) {
+		$parameters->{"tminfo.url"} = "$parameters->{'tm.url'}/info";
+	}
+	while ( !defined $parameters->{"cdnname"} || $parameters->{"cdnname"} eq "" ) {
+		$parameters->{"cdnname"} = InstallUtils::promptUser( "Human-readable CDN Name.  (No whitespace, please)", "kabletown_cdn" );
+	}
+	while ( !defined $parameters->{"geolocation.polling.url"} || $parameters->{"geolocation.polling.url"} eq "" ) {
+		$parameters->{"geolocation.polling.url"} = "$parameters->{'tm.url'}/routing/GeoIP2-City.mmdb.gz";
+	}
+	while ( !defined $parameters->{"geolocation6.polling.url"} || $parameters->{"geolocation6.polling.url"} eq "" ) {
+		$parameters->{"geolocation6.polling.url"} = "$parameters->{'tm.url'}/routing/GeoIP2-Cityv6.mmdb.gz";
+	}
+	while ( !defined $parameters->{"health.polling.interval"} || $parameters->{"health.polling.interval"} eq "" ) {
+		$parameters->{"health.polling.interval"} = InstallUtils::promptUser( "Health Polling Interval (milliseconds)", "8000" );
+	}
+	while ( !defined $parameters->{"coveragezone.polling.url"} || $parameters->{"coveragezone.polling.url"} eq "" ) {
+		$parameters->{"coveragezone.polling.url"} = "$parameters->{'tm.url'}/routing/coverage-zone.json";
+	}
+	while ( !defined $parameters->{"domainname"} || $parameters->{"domainname"} eq "" ) {
+		$parameters->{"domainname"} = InstallUtils::promptUser( "DNS sub-domain for which your CDN is authoritative", "cdn1.kabletown.net" );
+	}
+	while ( !defined $parameters->{"tld.soa.admin"} || $parameters->{"tld.soa.admin"} eq "" ) {
+		$parameters->{"tld.soa.admin"} = InstallUtils::promptUser( "TLD SOA admin", "traffic_ops" );
+	}
+	while ( !defined $parameters->{"Drive_Prefix"} || $parameters->{"Drive_Prefix"} eq "" ) {
+		$parameters->{"Drive_Prefix"} = InstallUtils::promptUser( "TrafficServer Drive Prefix", "/dev/sd" );
+	}
+	while ( !defined $parameters->{"RAM_Drive_Prefix"} || $parameters->{"RAM_Drive_Prefix"} eq "" ) {
+		$parameters->{"RAM_Drive_Prefix"} = InstallUtils::promptUser( "TrafficServer RAM Drive Prefix", "/dev/ram" );
+	}
+	while ( !defined $parameters->{"RAM_Drive_Letters"} || $parameters->{"RAM_Drive_Letters"} eq "" ) {
+		$parameters->{"RAM_Drive_Letters"} = InstallUtils::promptUser( "TrafficServer RAM Drive Letters (comma separated)", "0,1,2,3,4,5,6,7" );
+	}
+	while ( !defined $parameters->{"health.threshold.loadavg"} || $parameters->{"health.threshold.loadavg"} eq "" ) {
+		$parameters->{"health.threshold.loadavg"} = InstallUtils::promptUser( "Health Threshold Load Average", "25" );
+	}
+	while (!defined $parameters->{"health.threshold.availableBandwidthInKbps"}
+		|| $parameters->{"health.threshold.availableBandwidthInKbps"} eq ""
+		|| $parameters->{"health.threshold.availableBandwidthInKbps"} eq ">" )
+	{
+		$parameters->{"health.threshold.availableBandwidthInKbps"} =
+			">" . InstallUtils::promptUser( "Health Threshold Available Bandwidth in Kbps", "1750000" );
+	}
+	while ( !defined $parameters->{"health.connection.timeout"} || $parameters->{"health.connection.timeout"} eq "" ) {
+		$parameters->{"health.connection.timeout"} = InstallUtils::promptUser( "Traffic Server Health Connection Timeout (milliseconds)", "2000" );
+	}
 
-	  profile_replace($profile_dir . "profile.global.traffic_ops");
-	  profile_replace($profile_dir . "profile.traffic_monitor.traffic_ops");
-	  profile_replace($profile_dir . "profile.traffic_router.traffic_ops");
-	  profile_replace($profile_dir . "profile.trafficserver_edge.traffic_ops");
-	  profile_replace($profile_dir . "profile.trafficserver_mid.traffic_ops");
-	  writeJson( $post_install_cfg, $parameters );
+	profile_replace( $profile_dir . "profile.global.traffic_ops" );
+	profile_replace( $profile_dir . "profile.traffic_monitor.traffic_ops" );
+	profile_replace( $profile_dir . "profile.traffic_router.traffic_ops" );
+	profile_replace( $profile_dir . "profile.trafficserver_edge.traffic_ops" );
+	profile_replace( $profile_dir . "profile.trafficserver_mid.traffic_ops" );
+	writeJson( $post_install_cfg, $parameters );
 }
 
 # Takes the Traffic Ops URI, user, and password.
 # Returns the cookie, or the empty string on error
 sub get_traffic_ops_cookie {
-		my($uri, $user, $pass) = @_;
+	my ( $uri, $user, $pass ) = @_;
 
-		my $loginUri = "/api/1.2/user/login";
+	my $loginUri = "/api/1.2/user/login";
 
-		my $curl = WWW::Curl::Easy->new;
-		my $response_body = "";
-		open(my $fileb, ">", \$response_body);
-		my $loginData = JSON::encode_json({ u => $user, p => $pass});
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_URL, $uri . $loginUri);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_SSL_VERIFYPEER, 0);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_HEADER, 1); # include header in response
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_NOBODY, 1); # disclude body in response
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_POST, 1);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS, $loginData);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA, $fileb);	# put response in this var
-		$curl->perform();
+	my $curl          = WWW::Curl::Easy->new;
+	my $response_body = "";
+	open( my $fileb, ">", \$response_body );
+	my $loginData = JSON::encode_json( { u => $user, p => $pass } );
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_URL,            $uri . $loginUri );
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_SSL_VERIFYPEER, 0 );
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER,         1 );                  # include header in response
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_NOBODY,         1 );                  # disclude body in response
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_POST,           1 );
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS,     $loginData );
+	$curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA,      $fileb );             # put response in this var
+	$curl->perform();
 
-		my $cookie = $response_body;
-		if($cookie =~ /mojolicious=(.*); expires/)
-		{
-				$cookie = $1;
-		}
-		else
-		{
-				$cookie = ""
-		}
-		return $cookie;
+	my $cookie = $response_body;
+	if ( $cookie =~ /mojolicious=(.*); expires/ ) {
+		$cookie = $1;
+	}
+	else {
+		$cookie = "";
+	}
+	return $cookie;
 }
 
 # Takes the filename of a Traffic Ops (TO) profile to import, the TO URI, and the TO login cookie
 sub profile_import_single {
-    my($profileFilename, $uri, $trafficOpsCookie) = @_;
-    print "Importing Profiles with: " . "curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doI\
+	my ( $profileFilename, $uri, $trafficOpsCookie ) = @_;
+	print "Importing Profiles with: "
+		. "curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doI\
 mport";
-    my $rc = execCommand("curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doImport");
-    if ( $rc != 0 ) {
-        print "ERROR: failed to import Traffic Ops profile, check the console output and rerun postinstall once you've resolved the error.\n";
-    }
+	my $rc = execCommand(
+		"curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doImport"
+	);
+	if ( $rc != 0 ) {
+		print "ERROR: failed to import Traffic Ops profile, check the console output and rerun postinstall once you've resolved the error.\n";
+	}
 }
 
 sub import_profiles() {
-		while (length $tmAdminUser == 0) {
-				$tmAdminUser = InstallUtils::promptUser ("Administration username for Traffic Ops");
-		}
-		while ($tmAdminPw eq "") {
-				$tmAdminPw = InstallUtils::promptUser ("Password for the admin user $tmAdminUser", "", 1);
-		}
-    while (!defined $parameters->{'tm.url'} || length $parameters->{'tm.url'} == 0) {
-				$parameters->{'tm.url'} = InstallUtils::promptUser ("Traffic Ops url", "https://localhost");
-	  }
+	while ( length $tmAdminUser == 0 ) {
+		$tmAdminUser = InstallUtils::promptUser("Administration username for Traffic Ops");
+	}
+	while ( $tmAdminPw eq "" ) {
+		$tmAdminPw = InstallUtils::promptUser( "Password for the admin user $tmAdminUser", "", 1 );
+	}
+	while ( !defined $parameters->{'tm.url'} || length $parameters->{'tm.url'} == 0 ) {
+		$parameters->{'tm.url'} = InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
+	}
 
-		print "Importing profiles...\n";
-		# \todo take as params
-		my $toUri = $parameters->{'tm.url'};
-		my $toUser = $tmAdminUser;
-		my $toPass = $tmAdminPw;
+	print "Importing profiles...\n";
 
-		my $toCookie = get_traffic_ops_cookie($toUri, $toUser, $toPass);
+	# \todo take as params
+	my $toUri  = $parameters->{'tm.url'};
+	my $toUser = $tmAdminUser;
+	my $toPass = $tmAdminPw;
 
-		print "Got cookie: " . $toCookie;
+	my $toCookie = get_traffic_ops_cookie( $toUri, $toUser, $toPass );
 
-		# \todo use an array?
-		print "Importing Global profile...\n";
-		profile_import_single($profile_dir . "profile.global.traffic_ops", $toUri, $toCookie);
-		print "Importing Traffic Monitor profile...\n";
-		profile_import_single($profile_dir . "profile.traffic_monitor.traffic_ops", $toUri, $toCookie);
-		print "Importing Traffic Router profile...\n";
-		profile_import_single($profile_dir . "profile.traffic_router.traffic_ops", $toUri, $toCookie);
-		print "Importing TrafficServer Edge profile...\n";
-		profile_import_single($profile_dir . "profile.trafficserver_edge.traffic_ops", $toUri, $toCookie);
-		print "Importing TrafficServer Mid profile...\n";
-		profile_import_single($profile_dir . "profile.trafficserver_mid.traffic_ops", $toUri, $toCookie);
-		print "Finished Importing Profiles.\n";
+	print "Got cookie: " . $toCookie;
+
+	# \todo use an array?
+	print "Importing Global profile...\n";
+	profile_import_single( $profile_dir . "profile.global.traffic_ops", $toUri, $toCookie );
+	print "Importing Traffic Monitor profile...\n";
+	profile_import_single( $profile_dir . "profile.traffic_monitor.traffic_ops", $toUri, $toCookie );
+	print "Importing Traffic Router profile...\n";
+	profile_import_single( $profile_dir . "profile.traffic_router.traffic_ops", $toUri, $toCookie );
+	print "Importing TrafficServer Edge profile...\n";
+	profile_import_single( $profile_dir . "profile.trafficserver_edge.traffic_ops", $toUri, $toCookie );
+	print "Importing TrafficServer Mid profile...\n";
+	profile_import_single( $profile_dir . "profile.trafficserver_mid.traffic_ops", $toUri, $toCookie );
+	print "Finished Importing Profiles.\n";
 }
 
 print "\nStarting Traffic Ops.\n\n";
@@ -614,100 +641,97 @@ print "\nWaiting for Traffic Ops to start.\n\n";
 sleep(5);
 
 sub profiles_exist {
-		if ( -f $reconfigure_defaults ) {
-				print "Default profiles were previously created. Remove " . $reconfigure_defaults . " to create again.\n";
-				return 1;
+	if ( -f $reconfigure_defaults ) {
+		print "Default profiles were previously created. Remove " . $reconfigure_defaults . " to create again.\n";
+		return 1;
+	}
+
+	while ( length $tmAdminUser == 0 ) {
+		$tmAdminUser = InstallUtils::promptUser("Administration username for Traffic Ops");
+	}
+	while ( $tmAdminPw eq "" ) {
+		$tmAdminPw = InstallUtils::promptUser( "Password for the admin user $tmAdminUser", "", 1 );
+	}
+	while ( !defined $parameters->{'tm.url'}
+		|| length $parameters->{'tm.url'} == 0 )
+	{
+		$parameters->{'tm.url'} = InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
+	}
+
+	my $uri = $parameters->{'tm.url'};
+	my $toCookie = get_traffic_ops_cookie( $parameters->{'tm.url'}, $tmAdminUser, $tmAdminPw );
+
+	my $profileEndpoint = "/api/1.2/profiles.json";
+
+	my $ua = LWP::UserAgent->new;
+	$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
+	my $req = HTTP::Request->new( GET => $uri . $profileEndpoint );
+	$req->header( 'Cookie' => "mojolicious=" . $toCookie );
+	my $resp = $ua->request($req);
+
+	if ( !$resp->is_success ) {
+		print "Error checking if profiles exist: " . $resp->status_line . "\n";
+		return 1;    # return true, so we don't attempt to create profiles
+	}
+	my $message = $resp->decoded_content;
+
+	my $profiles = JSON->new->utf8->decode($message);
+	if (   ( !defined $profiles->{"response"} )
+		|| ( ref $profiles->{"response"} ne 'ARRAY' ) )
+	{
+		print "Error checking if profiles exist: invalid JSON: $message\n";
+		return 1;    # return true, so we don't attempt to create profiles
+	}
+
+	my $num_profiles = scalar( @{ $profiles->{"response"} } );
+	print "Existing Profile Count: $num_profiles\n";
+
+	my %initial_profiles = (
+		"INFLUXDB"       => 1,
+		"RIAK_ALL"       => 1,
+		"TRAFFIC_STATS"  => 1,
+		"TRAFFIC_PORTAL" => 1
+	);
+
+	my $profiles_response = $profiles->{"response"};
+	foreach my $profile (@$profiles_response) {
+		if ( !exists $initial_profiles{ $profile->{"name"} } ) {
+			print "Found existing profile (" . $profile->{"name"} . ")\n";
+			open( my $reconfigure_defaults_file, '>', $reconfigure_defaults ) or die("Failed to open() $reconfigure_defaults: $!");
+			close($reconfigure_defaults_file);
+			return 1;
 		}
-
-		while ( length $tmAdminUser == 0 ) {
-				$tmAdminUser =
-						InstallUtils::promptUser("Administration username for Traffic Ops");
-		}
-		while ( $tmAdminPw eq "" ) {
-				$tmAdminPw =
-						InstallUtils::promptUser( "Password for the admin user $tmAdminUser",
-																			"", 1 );
-		}
-		while ( !defined $parameters->{'tm.url'}
-						|| length $parameters->{'tm.url'} == 0 )
-		{
-				$parameters->{'tm.url'} =
-						InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
-		}
-
-		my $uri      = $parameters->{'tm.url'};
-		my $toCookie = get_traffic_ops_cookie( $parameters->{'tm.url'},
-																					 $tmAdminUser, $tmAdminPw );
-
-		my $profileEndpoint = "/api/1.2/profiles.json";
-
-		my $ua = LWP::UserAgent->new;
-		$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
-		my $req = HTTP::Request->new( GET => $uri . $profileEndpoint );
-		$req->header( 'Cookie' => "mojolicious=" . $toCookie );
-		my $resp = $ua->request($req);
-
-		if ( !$resp->is_success ) {
-				print "Error checking if profiles exist: " . $resp->status_line . "\n";
-				return 1;    # return true, so we don't attempt to create profiles
-		}
-		my $message = $resp->decoded_content;
-
-		my $profiles = JSON->new->utf8->decode($message);
-		if (   ( !defined $profiles->{"response"} )
-					 || ( ref $profiles->{"response"} ne 'ARRAY' ) )
-		{
-				print "Error checking if profiles exist: invalid JSON: $message\n";
-				return 1;    # return true, so we don't attempt to create profiles
-		}
-
-		my $num_profiles = scalar( @{ $profiles->{"response"} } );
-		print "Existing Profile Count: $num_profiles\n";
-
-		my %initial_profiles = (
-				"INFLUXDB"       => 1,
-				"RIAK_ALL"       => 1,
-				"TRAFFIC_STATS"  => 1,
-				"TRAFFIC_PORTAL" => 1
-				);
-
-		my $profiles_response = $profiles->{"response"};
-		foreach my $profile (@$profiles_response) {
-				if ( !exists $initial_profiles{ $profile->{"name"} } ) {
-						print "Found existing profile (" . $profile->{"name"} . ")\n";
-						open( my $reconfigure_defaults_file, '>', $reconfigure_defaults ) or die("Failed to open() $reconfigure_defaults: $!");
-						close( $reconfigure_defaults_file );
-						return 1;
-				}
-		}
-		return 0;
+	}
+	return 0;
 }
 
 if ( !profiles_exist() ) {
-		print "Creating default profiles...\n";
-		replace_profile_templates();
-		import_profiles();
-		profiles_exist(); # call again to create $reconfigure_defaults file if import was successful
+	print "Creating default profiles...\n";
+	replace_profile_templates();
+	import_profiles();
+	profiles_exist();    # call again to create $reconfigure_defaults file if import was successful
 }
 else {
-		print "Not creating default profiles.\n";
+	print "Not creating default profiles.\n";
 }
 
 #print "\nRunning smoke tests.\n\n";
 #$rc = execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{username}, $tmAdminPw, "0");
 {
-		my $ans = promptUser( "\nInstall Cron entry to clean install .iso files older than 7 days? [y/n]", "n" );
-		if ($ans eq "y" || $ans eq "Y") {
-				execCommand( "/bin/echo \"00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} \; > /dev/null 2>&1 \" > /etc/cron.d/trafops_clean_isos" );
-		}
+	my $ans = promptUser( "\nInstall Cron entry to clean install .iso files older than 7 days? [y/n]", "n" );
+	if ( $ans eq "y" || $ans eq "Y" ) {
+		execCommand(
+			"/bin/echo \"00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} \; > /dev/null 2>&1 \" > /etc/cron.d/trafops_clean_isos"
+		);
+	}
 }
 
 {
-		my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
-		if ( $ans eq "y" ) {
-				print "\nShutting down Traffic Ops.\n\n";
-				execCommand( "/sbin/service", "traffic_ops", "stop" );
-		}
+	my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
+	if ( $ans eq "y" ) {
+		print "\nShutting down Traffic Ops.\n\n";
+		execCommand( "/sbin/service", "traffic_ops", "stop" );
+	}
 }
 
 print "\nTo start Traffic Ops:  service traffic_ops start\n";
