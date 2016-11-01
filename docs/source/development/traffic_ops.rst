@@ -163,7 +163,7 @@ Installing The Developer Environment
 ====================================
 To install the Traffic Ops Developer environment:
 
-1. Clone the traffic_control repository from `github.com <https://github.com/Comcast/traffic_control>`_.
+1. Clone the traffic_control repository from `github.com <https://github.com/apache/incubator-trafficcontrol>`_.
 2. Install the local dependencies using Carton (cpanfile).
 
   ::

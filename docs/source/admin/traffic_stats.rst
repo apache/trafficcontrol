@@ -24,7 +24,7 @@ Installation
 
 **Installing Traffic Stats:**
 
-	- Download the Traffic Stats RPM from the traffic control `downloads <http://traffic-control-cdn.net/downloads/index.html>`_ page.
+	- Download the Traffic Stats RPM from the traffic control `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page.
 	- Copy the Traffic Stats RPM to your server
 	- sudo rpm -ivh <traffic_stats rpm>
 
@@ -88,7 +88,7 @@ Configuration
 
 	In order for Traffic Ops users to see Grafana graphs, Grafana will need to allow anonymous access.  Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_.
 
-	Traffic Ops uses custom dashboards to display information about individual delivery services or cache groups.  In order for the custom graphs to display correctly, the `traffic_ops_*.js <https://github.com/Comcast/traffic_control/blob/master/traffic_stats/grafana/>`_ files need to be in the ``/usr/share/grafana/public/dashboards/`` directory on the grafana server.  If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place.  If your grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.
+	Traffic Ops uses custom dashboards to display information about individual delivery services or cache groups.  In order for the custom graphs to display correctly, the `traffic_ops_*.js <https://github.com/apache/incubator-trafficcontrol/blob/master/traffic_stats/grafana/>`_ files need to be in the ``/usr/share/grafana/public/dashboards/`` directory on the grafana server.  If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place.  If your grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.
 
 	More information on custom scripted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
 
