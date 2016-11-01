@@ -171,7 +171,7 @@ One time configuration:
 ``riak-admin security grant riak_core.set_bucket on any to admin``
 
 2. Add the search schema to Riak.  This schema is a simple Apache Solr configuration file which will index all records on cdn, hostname, and deliveryservice.
-	* Get the schema file by either cloning the project and going to `traffic_ops/app/config/misc/riak_search` or from `github <https://github.com/Comcast/traffic_control/tree/master/traffic_ops/app/conf/misc/riak_search>`_.
+	* Get the schema file by either cloning the project and going to `traffic_ops/app/config/misc/riak_search` or from `github <https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_ops/app/conf/misc/riak_search>`_.
 	* Use curl to add the schema to riak: ``curl -kvs -XPUT "https://admin:pass@riakserver:8088/search/schema/sslkeys" -H 'Content-Type:application/xml'  -d @sslkeys.xml``
 
 3. Add search index to Riak
@@ -182,7 +182,7 @@ One time configuration:
 
 Riak Search (using Apache Solr) will now index all NEW records that are added to the "ssl" bucket.  The cdn, deliveryservice, and hostname fields are indexed and when a search is performed riak will return the indexed fields along with the crt and key values for a ssl record.  In order to add the indexed fields to current records and to get the current records added, a standalone script needs to be run.  The following explains how to run the script.
 
-1. Get script from github either by cloning the project and going to `traffic_ops/app/script` or from `here <https://github.com/Comcast/traffic_control/blob/master/traffic_ops/app/script/update_riak_for_search.pl>`_
+1. Get script from github either by cloning the project and going to `traffic_ops/app/script` or from `here <https://github.com/apache/incubator-trafficcontrol/blob/master/traffic_ops/app/script/update_riak_for_search.pl>`_
 2. Run the script by performing the following command ``./update_riak_for_search.pl -to_url=https://traffic-ops.kabletown.net -to_un=user -to_pw=password``
 
 Validate the search is working by querying against Riak directly:

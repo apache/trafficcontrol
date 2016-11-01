@@ -203,7 +203,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'TrafficControl.tex', u'Traffic Control Documentation', 'Comcast Cable', 'manual'),
+  ('index', 'TrafficControl.tex', u'Traffic Control Documentation', 'Apache Software Foundation', 'manual'),
 ]
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -244,7 +244,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Traffic Control', u'Traffic Control Documentation',
-   u'Comcast Cable', 'Traffic Control', 'One line description of project.',
+   u'Apache Software Foundation', 'Traffic Control', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -262,8 +262,8 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = u'Traffic Control'
-epub_author = u'Comcast Cable'
-epub_publisher = u'Comcast Cable'
+epub_author = u'Apache Software Foundation'
+epub_publisher = u'Apache Software Foundation'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
