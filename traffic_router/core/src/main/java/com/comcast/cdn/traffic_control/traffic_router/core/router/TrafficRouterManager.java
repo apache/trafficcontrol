@@ -99,7 +99,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry);
+		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry, this);
 		tr.setSteeringRegistry(steeringRegistry);
 		synchronized(this) {
 			if (state != null) {

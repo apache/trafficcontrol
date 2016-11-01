@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,8 +56,10 @@ public final class SignatureManager {
 	private static ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
 	private boolean useJDnsSec = true;
+	private final TrafficRouterManager trafficRouterManager;
 
-	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils) {
+	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) {
+		this.trafficRouterManager = trafficRouterManager;
 		this.setCacheRegister(cacheRegister);
 		this.setTrafficOpsUtils(trafficOpsUtils);
 		this.setZoneManager(zoneManager);
@@ -107,6 +110,8 @@ public final class SignatureManager {
 		return new Runnable() {
 			public void run() {
 				try {
+					trafficRouterManager.trackEvent("lastDnsSecKeysCheck");
+
 					final Map<String, List<DnsSecKeyPair>> newKeyMap = new HashMap<String, List<DnsSecKeyPair>>();
 					final JSONObject keyPairData = fetchKeyPairData(cacheRegister);
 
@@ -159,6 +164,7 @@ public final class SignatureManager {
 						} else if (hasNewKeys(keyMap, newKeyMap)) {
 							// incoming key map has new keys
 							LOGGER.debug("Found new keys in incoming keyMap; rebuilding zone caches");
+							trafficRouterManager.trackEvent("newDnsSecKeysFound");
 							keyMap = newKeyMap;
 							getZoneManager().rebuildZoneCache();
 						} // no need to overwrite the keymap if they're the same, so no else leg
