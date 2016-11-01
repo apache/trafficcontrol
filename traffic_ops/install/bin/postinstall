@@ -32,6 +32,7 @@ use File::Temp;
 use WWW::Curl::Easy;
 use LWP::UserAgent;
 use File::Copy;
+use Getopt::Long;
 
 my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
 my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
@@ -47,6 +48,10 @@ my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
 my $tmAdminUser = "";
 my $tmAdminPw = "";
 my $parameters;
+
+my $skip_ssl = 0;
+GetOptions("skip-ssl" => \$skip_ssl)
+or die ("Error in command line arguments");
 
 my $installMsg = << 'EOF';
 
@@ -323,24 +328,26 @@ EOF
 
 		# exit 1;
 	}
+        
+        if ($skip_ssl == 0) { 
+		if ( -x "/usr/bin/openssl" ) {
+                    print "\nInstalling SSL Certificates.\n\n";
+                    $result = execCommand("/opt/traffic_ops/install/bin/generateCert");
 
-	if ( -x "/usr/bin/openssl" ) {
-		print "\nInstalling SSL Certificates.\n\n";
-		$result = execCommand("/opt/traffic_ops/install/bin/generateCert");
-
-		if ( $result != 0 ) {
+                    if ( $result != 0 ) {
 			print "\nSSL Certificate Installation failed.\n";
 			exit 3;
-		}
-		else {
+                    }
+                    else {
 			print "\nSSL Certificates have been installed.\n";
-		}
-	}
-	else {
-		print "Unable to install SSL certificates as openssl is not installed.\n";
-		print "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates.\n";
-		exit 4;
-	}
+                    }
+                }
+                else {
+                    print "Unable to install SSL certificates as openssl is not installed.\n";
+                    print "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates.\n";
+                    exit 4;
+                }
+        }
 }    # end of Init
 
 sub writeSecret {
