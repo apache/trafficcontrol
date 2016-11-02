@@ -36,6 +36,7 @@ type Config struct {
 	LogLocationDebug             string        `json:"log_location_debug"`
 	ServeReadTimeout             time.Duration `json:"-"`
 	ServeWriteTimeout            time.Duration `json:"-"`
+	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
@@ -56,6 +57,7 @@ var DefaultConfig = Config{
 	LogLocationDebug:             LogLocationNull,
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
+	HealthToStatRatio:            4,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
