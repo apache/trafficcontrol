@@ -119,7 +119,7 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 }
 
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
-func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap) (time.Duration, time.Duration, time.Duration, error) {
+func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config) (time.Duration, time.Duration, time.Duration, error) {
 	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["health.polling.interval"]
 	if !healthPollIntervalExists {
 		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
@@ -153,12 +153,8 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap) (t
 	statPollInterval := trafficOpsHealthPollIntervalToDuration(int(statPollIntervalInt))
 
 	// Formerly, only 'health' polling existed. If TO still has old configuration and doesn't have a 'stat' parameter, this allows us to assume the 'health' poll is slow, and sets it to the stat poll (which used to be the only poll, getting all astats data) to the given presumed-slow health poll, and set the now-fast-and-small health poll to a short fraction of that.
-	// TODO make config?
-	healthIsQuarterStatIfStatNotExist := true
-	if healthIsQuarterStatIfStatNotExist {
-		if healthPollIntervalExists && !statPollIntervalExists {
-			healthPollInterval = healthPollInterval / 4
-		}
+	if healthPollIntervalExists && !statPollIntervalExists {
+		healthPollInterval = time.Duration(float64(healthPollInterval) / float64(cfg.HealthToStatRatio))
 	}
 
 	return healthPollInterval, peerPollInterval, statPollInterval, nil
@@ -184,7 +180,7 @@ func monitorConfigListen(
 		peerUrls := map[string]poller.PollConfig{}
 		caches := map[string]string{}
 
-		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig)
+		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg)
 		if err != nil {
 			continue
 		}
