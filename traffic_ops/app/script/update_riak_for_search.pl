@@ -40,6 +40,9 @@ foreach my $ds (@$dss) {
 		my $xml_id = $ds->{xmlId};
 		my $cdn = $ds->{cdnName};
 		my $record = &get_riak_record($xml_id, $to_url, $ua);
+		if (!defined($record)) {
+			next;
+		}
 		$record->{deliveryservice} = $xml_id;
 		$record->{cdn} = $cdn;
 		$record->{certificate}->{crt} = decode_base64($record->{certificate}->{crt});
@@ -117,8 +120,8 @@ sub get_riak_record {
 	my $response = $ua->get( $url );
 
 	if(!$response->is_success() || $response->code() > 400) {
-		print "Could not get ssl record for $xml_id from riak!  Response was ". $response->{_rc} . " - " . $response->{_msg} . "\n";
-		exit 1;
+		print "Could not get ssl record for $xml_id from riak!  Response was ". $response->{_rc} . " - " . $response->{_msg} . "Skipping...\n";
+		return;
 	}
 
 	my $content = decode_json($response->{_content});
