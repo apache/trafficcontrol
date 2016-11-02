@@ -2523,11 +2523,17 @@ sub adv_processing_ssl {
 
 		foreach my $keypair ( @{ $ssl_tracker->{'db_config'} } ) {
 			( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
-
 			my $remap = $keypair->{'key_name'};
 			$remap =~ s/\.key$//;
+			if ($remap !~ /^edge/) {
+				#remove routing name (ccr/tr) and add * for wildcard certs
+				$remap =~ /^(.*?)(\..*)/;
+				$remap = "*$2";
+			}
+			my $found = 0;
 			foreach my $record (@$certs){
 				if ($record->{'hostname'} eq $remap){
+					$found = 1;
 					my $ssl_key         = decode_base64($record->{'certificate'}->{'key'});
 					my $ssl_cert        = decode_base64($record->{'certificate'}->{'crt'});
 					( $log_level >> $DEBUG ) && print "DEBUG private key for $remap is:\n$ssl_key\n";
@@ -2544,14 +2550,16 @@ sub adv_processing_ssl {
 					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'component'} = "SSL";
 					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'contents'}  = $ssl_cert;
 					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'fname-in-TO'}  = $keypair->{'cert_name'};
-					return 0;
 				}
 			}
-				#if no cert is found, log error and exit
+			#if no cert is found, log error and exit
+			if (!$found) {
 				( $log_level >> $FATAL ) && print "FATAL SSL certificate for $remap not found!\n";
 				exit 1;
+			}
 		}
 	}
+	return 0;
 }
 
 sub setup_lwp {
