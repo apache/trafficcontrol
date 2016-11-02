@@ -2544,11 +2544,14 @@ sub adv_processing_ssl {
 					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'component'} = "SSL";
 					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'contents'}  = $ssl_cert;
 					$cfg_file_tracker->{ $keypair->{'cert_name'} }->{'fname-in-TO'}  = $keypair->{'cert_name'};
+					return 0;
 				}
 			}
+				#if no cert is found, log error and exit
+				( $log_level >> $FATAL ) && print "FATAL SSL certificate for $remap not found!\n";
+				exit 1;
 		}
 	}
-	return 0;
 }
 
 sub setup_lwp {
