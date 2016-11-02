@@ -17,179 +17,10 @@ package client
 
 import "encoding/json"
 
-// DeliveryServiceResponse ...
-type DeliveryServiceResponse struct {
-	Version  string            `json:"version"`
-	Response []DeliveryService `json:"response"`
-}
-
-// DeliveryService ...
-type DeliveryService struct {
-	ID                   string `json:"id"`
-	XMLID                string `json:"xmlId"`
-	Active               bool   `json:"active"`
-	DSCP                 string `json:"dscp"`
-	Signed               bool   `json:"signed"`
-	QStringIgnore        string `json:"qstringIgnore"`
-	GeoLimit             string `json:"geoLimit"`
-	GeoProvider          string `json:"geoProvider"`
-	HTTPBypassFQDN       string `json:"httpBypassFqdn"`
-	DNSBypassIP          string `json:"dnsBypassIp"`
-	DNSBypassIP6         string `json:"dnsBypassIp6"`
-	DNSBypassCname       string `json:"dnsBypassCname"`
-	DNSBypassTTL         string `json:"dnsBypassTtl"`
-	OrgServerFQDN        string `json:"orgServerFqdn"`
-	Type                 string `json:"type"`
-	ProfileName          string `json:"profileName"`
-	ProfileDesc          string `json:"profileDescription"`
-	CDNName              string `json:"cdnName"`
-	CCRDNSTTL            string `json:"ccrDnsTtl"`
-	GlobalMaxMBPS        string `json:"globalMaxMbps"`
-	GlobalMaxTPS         string `json:"globalMaxTps"`
-	LongDesc             string `json:"longDesc"`
-	LongDesc1            string `json:"longDesc1"`
-	LongDesc2            string `json:"longDesc2"`
-	MaxDNSAnswers        string `json:"maxDnsAnswers"`
-	InfoURL              string `json:"infoUrl"`
-	MissLat              string `json:"missLat"`
-	MissLong             string `json:"missLong"`
-	CheckPath            string `json:"checkPath"`
-	LastUpdated          string `json:"lastUpdated"`
-	Protocol             string `json:"protocol"`
-	IPV6RoutingEnabled   bool   `json:"ipv6RoutingEnabled"`
-	RangeRequestHandling string `json:"rangeRequestHandling"`
-	HeaderRewrite        string `json:"headerRewrite"`
-	EdgeHeaderRewrite    string `json:"edgeHeaderRewrite"`
-	MidHeaderRewrite     string `json:"midHeaderRewrite"`
-	TRResponseHeaders    string `json:"trResponseHeaders"`
-	RegexRemap           string `json:"regexRemap"`
-	CacheURL             string `json:"cacheurl"`
-	RemapText            string `json:"remapText"`
-	MultiSiteOrigin      string `json:"multiSiteOrigin"`
-	DisplayName          string `json:"displayName"`
-	InitialDispersion    string `json:"initialDispersion"`
-}
-
-// DeliveryServiceStateResponse ...
-type DeliveryServiceStateResponse struct {
-	Response DeliveryServiceState `json:"response"`
-}
-
-// DeliveryServiceState ...
-type DeliveryServiceState struct {
-	Enabled  bool                    `json:"enabled"`
-	Failover DeliveryServiceFailover `json:"failover"`
-}
-
-// DeliveryServiceFailover ...
-type DeliveryServiceFailover struct {
-	Locations   []string                   `json:"locations"`
-	Destination DeliveryServiceDestination `json:"destination"`
-	Configured  bool                       `json:"configured"`
-	Enabled     bool                       `json:"enabled"`
-}
-
-// DeliveryServiceDestination ...
-type DeliveryServiceDestination struct {
-	Location string `json:"location"`
-	Type     string `json:"type"`
-}
-
-// DeliveryServiceHealthResponse ...
-type DeliveryServiceHealthResponse struct {
-	Response DeliveryServiceHealth `json:"response"`
-}
-
-// DeliveryServiceHealth ...
-type DeliveryServiceHealth struct {
-	TotalOnline  int                         `json:"totalOnline"`
-	TotalOffline int                         `json:"totalOffline"`
-	CacheGroups  []DeliveryServiceCacheGroup `json:"cacheGroups"`
-}
-
-// DeliveryServiceCacheGroup ...
-type DeliveryServiceCacheGroup struct {
-	Online  int    `json:"online"`
-	Offline int    `json:"offline"`
-	Name    string `json:"name"`
-}
-
-// DeliveryServiceCapacityResponse ...
-type DeliveryServiceCapacityResponse struct {
-	Response DeliveryServiceCapacity `json:"response"`
-}
-
-// DeliveryServiceCapacity ...
-type DeliveryServiceCapacity struct {
-	AvailablePercent   float64 `json:"availablePercent"`
-	UnavailablePercent float64 `json:"unavailablePercent"`
-	UtilizedPercent    float64 `json:"utilizedPercent"`
-	MaintenancePercent float64 `json:"maintenancePercent"`
-}
-
-// DeliveryServiceRoutingResponse ...
-type DeliveryServiceRoutingResponse struct {
-	Response DeliveryServiceRouting `json:"response"`
-}
-
-// DeliveryServiceRouting ...
-type DeliveryServiceRouting struct {
-	StaticRoute       int     `json:"staticRoute"`
-	Miss              int     `json:"miss"`
-	Geo               float64 `json:"geo"`
-	Err               int     `json:"err"`
-	CZ                float64 `json:"cz"`
-	DSR               float64 `json:"dsr"`
-	Fed               int     `json:"fed"`
-	RegionalAlternate int     `json:"regionalAlternate"`
-	RegionalDenied    int     `json:"regionalDenied"`
-}
-
-// DeliveryServiceServerResponse ...
-type DeliveryServiceServerResponse struct {
-	Response []DeliveryServiceServer `json:"response"`
-	Page     int                     `json:"page"`
-	OrderBy  string                  `json:"orderby"`
-	Limit    int                     `json:"limit"`
-}
-
-// DeliveryServiceServer ...
-type DeliveryServiceServer struct {
-	LastUpdated     string `json:"lastUpdated"`
-	Server          string `json:"server"`
-	DeliveryService string `json:"deliveryService"`
-}
-
-// DeliveryServiceSSLKeysResponse ...
-type DeliveryServiceSSLKeysResponse struct {
-	Response DeliveryServiceSSLKeys `json:"response"`
-}
-
-// DeliveryServiceSSLKeys ...
-type DeliveryServiceSSLKeys struct {
-	CDN             string                            `json:"cdn"`
-	DeliveryService string                            `json:"DeliveryService"`
-	BusinessUnit    string                            `json:"businessUnit"`
-	City            string                            `json:"city"`
-	Organization    string                            `json:"organization"`
-	Hostname        string                            `json:"hostname"`
-	Country         string                            `json:"country"`
-	State           string                            `json:"state"`
-	Version         string                            `json:"version"`
-	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate"`
-}
-
-// DeliveryServiceSSLKeysCertificate ...
-type DeliveryServiceSSLKeysCertificate struct {
-	Crt string `json:"crt"`
-	Key string `json:"key"`
-	CSR string `json:"csr"`
-}
-
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	var data DeliveryServiceResponse
-	err := get(to, deliveryServicesEp(), &data)
+	err := makeReq(to, deliveryServicesEp(), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +31,7 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 // DeliveryService gets the DeliveryService for the ID it's passed
 func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 	var data DeliveryServiceResponse
-	err := get(to, deliveryServiceEp(id), &data)
+	err := makeReq(to, deliveryServiceEp(id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -208,10 +39,25 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 	return &data.Response[0], nil
 }
 
+// CreateDeliveryService creates the DeliveryService it's passed
+func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliveryServiceResponse, error) {
+	var data CreateDeliveryServiceResponse
+	jsonReq, err := json.Marshal(ds)
+	if err != nil {
+		return nil, err
+	}
+	err = makeReq(to, deliveryServicesEp(), jsonReq, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
 func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
 	var data DeliveryServiceStateResponse
-	err := get(to, deliveryServiceStateEp(id), &data)
+	err := makeReq(to, deliveryServiceStateEp(id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +68,7 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
 func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
 	var data DeliveryServiceHealthResponse
-	err := get(to, deliveryServiceHealthEp(id), &data)
+	err := makeReq(to, deliveryServiceHealthEp(id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +79,7 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
 func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
 	var data DeliveryServiceCapacityResponse
-	err := get(to, deliveryServiceCapacityEp(id), &data)
+	err := makeReq(to, deliveryServiceCapacityEp(id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +90,7 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 // DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
 func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
 	var data DeliveryServiceRoutingResponse
-	err := get(to, deliveryServiceRoutingEp(id), &data)
+	err := makeReq(to, deliveryServiceRoutingEp(id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +101,7 @@ func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, e
 // DeliveryServiceServer gets the DeliveryServiceServer
 func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceServer, error) {
 	var data DeliveryServiceServerResponse
-	err := get(to, deliveryServiceServerEp(page, limit), &data)
+	err := makeReq(to, deliveryServiceServerEp(page, limit), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +112,7 @@ func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceS
 // DeliveryServiceSSLKeysByID gets the DeliveryServiceSSLKeys by ID
 func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKeys, error) {
 	var data DeliveryServiceSSLKeysResponse
-	err := get(to, deliveryServiceSSLKeysByIDEp(id), &data)
+	err := makeReq(to, deliveryServiceSSLKeysByIDEp(id), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +123,7 @@ func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKey
 // DeliveryServiceSSLKeysByHostname gets the DeliveryServiceSSLKeys by Hostname
 func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*DeliveryServiceSSLKeys, error) {
 	var data DeliveryServiceSSLKeysResponse
-	err := get(to, deliveryServiceSSLKeysByHostnameEp(hostname), &data)
+	err := makeReq(to, deliveryServiceSSLKeysByHostnameEp(hostname), nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -285,8 +131,8 @@ func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*DeliveryS
 	return &data.Response, nil
 }
 
-func get(to *Session, endpoint string, respStruct interface{}) error {
-	resp, err := to.request(endpoint, nil)
+func makeReq(to *Session, endpoint string, body []byte, respStruct interface{}) error {
+	resp, err := to.request(endpoint, body)
 	if err != nil {
 		return err
 	}
