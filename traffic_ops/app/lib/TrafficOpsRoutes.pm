@@ -492,19 +492,19 @@ sub api_routes {
 		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: HEALTH
-	$r->get("/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )->to( 'DeliveryService#health', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )->to( 'Deliveryservice#health', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: CAPACITY
-	$r->get("/api/$version/deliveryservices/:id/capacity")->over( authenticated => 1 )->to( 'DeliveryService#capacity', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/capacity")->over( authenticated => 1 )->to( 'Deliveryservice#capacity', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: ROUTING
-	$r->get("/api/$version/deliveryservices/:id/routing")->over( authenticated => 1 )->to( 'DeliveryService#routing', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/routing")->over( authenticated => 1 )->to( 'Deliveryservice#routing', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: STATE
-	$r->get("/api/$version/deliveryservices/:id/state")->over( authenticated => 1 )->to( 'DeliveryService#state', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/state")->over( authenticated => 1 )->to( 'Deliveryservice#state', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: REQUEST NEW DELIVERY SERVICE
-	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'Deliveryservice#request', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: STEERING DELIVERYSERVICES
 	$r->get("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#index', namespace => 'API::DeliveryService' );
