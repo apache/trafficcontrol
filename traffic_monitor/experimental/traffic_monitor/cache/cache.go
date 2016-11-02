@@ -128,7 +128,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 					stats.Caches[id] = map[string][]Stat{}
 				}
 
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], Stat{Time: s.Time, Value: fmt.Sprintf("%v", s.Value)}) // convert stats to strings, for the TM1.0 /publish/CacheStats API
 			}
 		}
 	}
