@@ -123,7 +123,8 @@ func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error 
 		return fmt.Errorf("Error getting CRconfig from Traffic Ops: %v", err)
 	}
 	var crConfig CRConfig
-	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
+	err = json.Unmarshal(crConfigBytes, &crConfig)
+	if err != nil {
 		return fmt.Errorf("Error unmarshalling CRconfig: %v", err)
 	}
 
