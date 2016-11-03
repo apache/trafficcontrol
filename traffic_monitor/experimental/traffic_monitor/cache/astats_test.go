@@ -18,5 +18,5 @@ func TestAstats(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	fmt.Printf("Found %v key/val pairs in ats, and %v key/val pairs in system\n", len(aStats.Ats), len(aStats.System))
+	fmt.Printf("Found %v key/val pairs in ats\n", len(aStats.Ats))
 }
