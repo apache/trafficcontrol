@@ -317,7 +317,7 @@ sub stash_role {
 	my $self = shift;
 
 	if ( !defined( $self->current_user() ) ) {
-		return $self->redirect_to('/login.html');
+		return $self->redirect_to('/loginpage');
 	}
 
 	my $user = $self->current_user()->{username};
