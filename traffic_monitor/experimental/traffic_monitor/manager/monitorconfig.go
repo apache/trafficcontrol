@@ -148,7 +148,7 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 	statPollIntervalInt, statPollIntervalIsInt := statPollIntervalI.(float64)
 	if !statPollIntervalIsInt {
 		log.Warnf("Traffic Ops Monitor config 'stat.polling.interval' value '%v' type %T is not an integer, using health for stat\n", statPollIntervalI, statPollIntervalI)
-		statPollIntervalI = healthPollIntervalI
+		statPollIntervalInt = healthPollIntervalInt
 	}
 	statPollInterval := trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
 
