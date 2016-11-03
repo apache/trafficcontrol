@@ -53,16 +53,16 @@ type PrecomputedData struct {
 
 // Result is the data result returned by a cache.
 type Result struct {
-	ID          enum.CacheName
-	Available   bool
-	Error       error
-	Astats      Astats
-	Time        time.Time
-	RequestTime time.Duration
-	Vitals      Vitals
-	PrecomputedData
+	ID           enum.CacheName
+	Error        error
+	Astats       Astats
+	Time         time.Time
+	RequestTime  time.Duration
+	Vitals       Vitals
 	PollID       uint64
 	PollFinished chan<- uint64
+	PrecomputedData
+	Available bool
 }
 
 // Vitals is the vitals data returned from a cache.
