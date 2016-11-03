@@ -38,7 +38,7 @@ func (t CacheType) String() string {
 	case CacheTypeMid:
 		return "MID"
 	default:
-		return "INVALID"
+		return "INVALIDCACHETYPE"
 	}
 }
 
@@ -75,7 +75,7 @@ func (t DSType) String() string {
 	case DSTypeDNS:
 		return "DNS"
 	default:
-		return "INVALID"
+		return "INVALIDDSTYPE"
 	}
 }
 
@@ -120,7 +120,7 @@ func (t CacheStatus) String() string {
 	case CacheStatusReported:
 		return string(t)
 	default:
-		return "INVALID"
+		return "INVALIDCACHESTATUS"
 	}
 }
 
