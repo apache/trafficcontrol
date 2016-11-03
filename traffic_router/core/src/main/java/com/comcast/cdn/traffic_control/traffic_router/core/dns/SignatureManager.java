@@ -197,6 +197,7 @@ public final class SignatureManager {
 				}
 
 				if (!matched) {
+					LOGGER.info("Found new or changed key for " + newKeyPair.getName());
 					return true; // has a new key because we didn't find a match
 				}
 			}
