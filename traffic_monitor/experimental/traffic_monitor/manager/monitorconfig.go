@@ -190,11 +190,12 @@ func monitorConfigListen(
 
 			cacheName := enum.CacheName(srv.HostName)
 
-			if srv.Status == "ONLINE" {
+			srvStatus := enum.CacheStatusFromString(srv.Status)
+			if srvStatus == enum.CacheStatusOnline {
 				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: true})
 				continue
 			}
-			if srv.Status == "OFFLINE" {
+			if srvStatus == enum.CacheStatusOffline {
 				continue
 			}
 			// seed states with available = false until our polling cycle picks up a result
@@ -222,7 +223,7 @@ func monitorConfigListen(
 			if srv.HostName == staticAppData.Hostname {
 				continue
 			}
-			if srv.Status != "ONLINE" {
+			if enum.CacheStatusFromString(srv.Status) != enum.CacheStatusOnline {
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
