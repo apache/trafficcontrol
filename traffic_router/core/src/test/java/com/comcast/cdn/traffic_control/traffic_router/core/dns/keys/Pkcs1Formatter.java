@@ -7,7 +7,7 @@ import sun.security.util.DerValue;
 import java.io.IOException;
 import java.security.interfaces.RSAPublicKey;
 
-public class Pkcs1Converter {
+public class Pkcs1Formatter {
 
 	// https://tools.ietf.org/html/rfc3447#appendix-A.1.1
 

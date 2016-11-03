@@ -1,6 +1,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1;
+import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
+import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1KeySpecDecoder;
 import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
@@ -13,6 +14,7 @@ import org.xbill.DNS.SOARecord;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -24,6 +26,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static java.util.Base64.getMimeDecoder;
 import static org.xbill.DNS.DNSKEYRecord.Flags.SEP_KEY;
 import static org.xbill.DNS.DNSKEYRecord.Flags.ZONE_KEY;
 import static org.xbill.DNS.DNSKEYRecord.Protocol.DNSSEC;
@@ -57,11 +60,8 @@ public class ZoneTestRecords {
 	}
 
 	private static KeyPair recreateKeyPair(String publicKey, String privateKey) throws Exception {
-		Pkcs1 pkcs1 = new Pkcs1(privateKey, publicKey);
-
-		PrivateKey privateKeyCopy = pkcs1.getPrivateKey();
-		PublicKey publicKeyCopy = pkcs1.getPublicKey();
-
+		PrivateKey privateKeyCopy = new BindPrivateKey().decode(new String(getMimeDecoder().decode(privateKey)));
+		PublicKey publicKeyCopy = KeyFactory.getInstance("RSA").generatePublic(new Pkcs1KeySpecDecoder().decode(publicKey));
 		return new KeyPair(publicKeyCopy, privateKeyCopy);
 	}
 

@@ -6,7 +6,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPairImpl;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.JDnsSecSigner;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSignerImpl;
-import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import com.verisignlabs.dnssec.security.SignUtils;
@@ -17,21 +16,17 @@ import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Record;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static com.comcast.cdn.traffic_control.traffic_router.core.IsEqualCollection.equalTo;
 import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.keySigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.ksk1;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.ksk2;
 import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.origin;
 import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.sep_1_2016;
 import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.sep_1_2026;
 import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zoneSigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zsk1;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zsk2;
 import static java.util.Arrays.asList;
+import static java.util.Base64.getMimeDecoder;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertThat;
 import static org.xbill.DNS.DSRecord.SHA256_DIGEST_ID;
@@ -48,26 +43,30 @@ public class ZoneSignerTest {
 	private JSONObject zsk2Json;
 	private final long dsTtl = 1234000L;
 
+	private String decodePrivateKeyString(String encodedString) {
+		return new String(getMimeDecoder().decode(encodedString.getBytes()));
+	}
 	@Before
 	public void before() throws Exception {
 		ZoneTestRecords.generateZoneRecords(false);
 		SigningData.recreateData();
 
-		kskPair1 = new DnsKeyPair(keySigningKeyRecord, ksk1.getPrivate());
-		kskPair2 = new DnsKeyPair(keySigningKeyRecord, ksk2.getPrivate());
-		zskPair1 = new DnsKeyPair(zoneSigningKeyRecord, zsk1.getPrivate());
-		zskPair2 = new DnsKeyPair(zoneSigningKeyRecord, zsk2.getPrivate());
+		kskPair1 = new DnsKeyPair(keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk1Private));
+		kskPair2 = new DnsKeyPair(keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk2Private));
+		zskPair1 = new DnsKeyPair(zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk1Private));
+		zskPair2 = new DnsKeyPair(zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk2Private));
 
 		// Data like we would fetch from traffic ops api for dnsseckeys.json
-		ksk1Json = new JSONObject("{" +
-			"'inceptionDate':1475280000," +
-			"'effectiveDate': 1475280000," +
-			"'expirationDate': 1790812800," +
-			"'ttl': 3600," +
-			"'name':'example.com.'," +
-			"'private': '" + SigningData.ksk1Private + "'," +
-			"'public': '" + SigningData.keyDnsKeyRecord + "'" +
-			"}");
+		String s = "{" +
+			"\n\t'inceptionDate':1475280000," +
+			"\n\t'effectiveDate': 1475280000," +
+			"\n\t'expirationDate': 1790812800," +
+			"\n\t'ttl': 3600," +
+			"\n\t'name':'example.com.'," +
+			"\n\t'private': '" + SigningData.ksk1Private.replaceAll("\n", "\\\\n") + "'," +
+			"\n\t'public': '" + SigningData.keyDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
+			"\n}";
+		ksk1Json = new JSONObject(s);
 
 
 		ksk2Json = new JSONObject("{" +
@@ -76,8 +75,8 @@ public class ZoneSignerTest {
 			"'expirationDate': 1790812800," +
 			"'ttl': 3600," +
 			"'name':'example.com.'," +
-			"'private': '" + SigningData.ksk2Private + "'," +
-			"'public': '" + SigningData.keyDnsKeyRecord + "'" +
+			"'private': '" + SigningData.ksk2Private.replaceAll("\n", "\\\\n") + "'," +
+			"'public': '" + SigningData.keyDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
 			"}");
 
 		zsk1Json = new JSONObject("{" +
@@ -86,8 +85,8 @@ public class ZoneSignerTest {
 			"'expirationDate': 1790812800," +
 			"'ttl': 31556952," +
 			"'name':'example.com.'," +
-			"'private': '" + SigningData.zsk1Private + "'," +
-			"'public': '" + SigningData.zoneDnsKeyRecord + "'" +
+			"'private': '" + SigningData.zsk1Private.replaceAll("\n", "\\\\n") + "'," +
+			"'public': '" + SigningData.zoneDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
 			"}");
 
 		zsk2Json = new JSONObject("{" +
@@ -96,8 +95,8 @@ public class ZoneSignerTest {
 			"'expirationDate': 1790812800," +
 			"'ttl': 315569520," +
 			"'name':'example.com.'," +
-			"'private': '" + SigningData.zsk2Private + "'," +
-			"'public': '" + SigningData.zoneDnsKeyRecord + "'" +
+			"'private': '" + SigningData.zsk2Private.replaceAll("\n", "\\\\n") + "'," +
+			"'public': '" + SigningData.zoneDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
 			"}");
 	}
 
@@ -118,24 +117,20 @@ public class ZoneSignerTest {
 	@Test
 	public void itReturnsSameResults() throws Exception {
 		DNSKeyPairWrapper ksk1Wrapper = new DNSKeyPairWrapper(ksk1Json, 1234);
-		ksk1Wrapper.setPrivate(new Pkcs1(SigningData.ksk1Private).getPrivateKey());
 
 		assertThat(ksk1Wrapper.getDNSKEYRecord(), equalTo(kskPair1.getDNSKEYRecord()));
 
 		DNSKeyPairWrapper ksk2Wrapper = new DNSKeyPairWrapper(ksk2Json, 1234);
-		ksk2Wrapper.setPrivate(new Pkcs1(SigningData.ksk2Private).getPrivateKey());
 
 		assertThat(ksk2Wrapper.getDNSKEYRecord(), equalTo(kskPair2.getDNSKEYRecord()));
 
 		List<DnsSecKeyPair> kskWrapperPairs = new ArrayList<>(asList(ksk1Wrapper, ksk2Wrapper));
 
 		DNSKeyPairWrapper zsk1Wrapper = new DNSKeyPairWrapper(zsk1Json, 1234);
-		zsk1Wrapper.setPrivate(new Pkcs1(SigningData.zsk1Private).getPrivateKey());
 
 		assertThat(zsk1Wrapper.getDNSKEYRecord(), equalTo(zskPair1.getDNSKEYRecord()));
 
 		DNSKeyPairWrapper zsk2Wrapper = new DNSKeyPairWrapper(zsk2Json, 1234);
-		zsk2Wrapper.setPrivate(new Pkcs1(SigningData.zsk2Private).getPrivateKey());
 
 		assertThat(zsk2Wrapper.getDNSKEYRecord(), equalTo(zskPair2.getDNSKEYRecord()));
 

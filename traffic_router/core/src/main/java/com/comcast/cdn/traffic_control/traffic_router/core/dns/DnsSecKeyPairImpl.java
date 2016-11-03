@@ -1,6 +1,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1;
+import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,15 +11,16 @@ import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Type;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Base64.Decoder;
 import java.util.Calendar;
 import java.util.Date;
+
+import static java.util.Base64.getMimeDecoder;
 
 public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 	private static final Logger LOGGER = Logger.getLogger(DnsSecKeyPairImpl.class);
@@ -38,13 +39,14 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 		this.ttl = keyPair.optLong("ttl", defaultTTL);
 		this.name = keyPair.getString("name");
 
+		final Decoder mimeDecoder = getMimeDecoder();
 		try {
-			privateKey = new Pkcs1(keyPair.getString("private")).getPrivateKey();
-		} catch (GeneralSecurityException e) {
+			privateKey = new BindPrivateKey().decode(new String(mimeDecoder.decode(keyPair.getString("private"))));
+		} catch (Exception e) {
 			LOGGER.error("Failed to decode PKCS1 key from json data!: " + e.getMessage(), e);
 		}
 
-		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.getString("public"));
+		final byte[] publicKey = mimeDecoder.decode(keyPair.getString("public"));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);
