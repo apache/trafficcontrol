@@ -138,7 +138,7 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 	if !peerPollIntervalIsInt {
 		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'peers.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", peerPollIntervalI, peerPollIntervalI)
 	}
-	peerPollInterval := trafficOpsHealthPollIntervalToDuration(int(peerPollIntervalInt))
+	peerPollInterval := trafficOpsPeerPollIntervalToDuration(int(peerPollIntervalInt))
 
 	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["stat.polling.interval"]
 	if !statPollIntervalExists {
@@ -150,7 +150,7 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 		log.Warnf("Traffic Ops Monitor config 'stat.polling.interval' value '%v' type %T is not an integer, using health for stat\n", statPollIntervalI, statPollIntervalI)
 		statPollIntervalI = healthPollIntervalI
 	}
-	statPollInterval := trafficOpsHealthPollIntervalToDuration(int(statPollIntervalInt))
+	statPollInterval := trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
 
 	// Formerly, only 'health' polling existed. If TO still has old configuration and doesn't have a 'stat' parameter, this allows us to assume the 'health' poll is slow, and sets it to the stat poll (which used to be the only poll, getting all astats data) to the given presumed-slow health poll, and set the now-fast-and-small health poll to a short fraction of that.
 	if healthPollIntervalExists && !statPollIntervalExists {
