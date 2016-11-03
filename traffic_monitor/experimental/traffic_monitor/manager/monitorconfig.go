@@ -175,9 +175,9 @@ func monitorConfigListen(
 ) {
 	for monitorConfig := range monitorConfigPollChan {
 		monitorConfigTS.Set(monitorConfig)
-		healthUrls := map[string]poller.PollConfig{}
-		statUrls := map[string]poller.PollConfig{}
-		peerUrls := map[string]poller.PollConfig{}
+		healthURLs := map[string]poller.PollConfig{}
+		statURLs := map[string]poller.PollConfig{}
+		peerURLs := map[string]poller.PollConfig{}
 		caches := map[string]string{}
 
 		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg)
@@ -213,10 +213,10 @@ func monitorConfigListen(
 			url = r.Replace(url)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
-			healthUrls[srv.HostName] = poller.PollConfig{URL: url, Timeout: connTimeout}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Timeout: connTimeout}
 			r = strings.NewReplacer("application=plugin.remap", "application=")
-			statUrl := r.Replace(url)
-			statUrls[srv.HostName] = poller.PollConfig{URL: statUrl, Timeout: connTimeout}
+			statURL := r.Replace(url)
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Timeout: connTimeout}
 		}
 
 		for _, srv := range monitorConfig.TrafficMonitor {
@@ -228,12 +228,12 @@ func monitorConfigListen(
 			}
 			// TODO: the URL should be config driven. -jse
 			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			peerUrls[srv.HostName] = poller.PollConfig{URL: url} // TODO determine timeout.
+			peerURLs[srv.HostName] = poller.PollConfig{URL: url} // TODO determine timeout.
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statUrls, Interval: statPollInterval}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthUrls, Interval: healthPollInterval}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerUrls, Interval: peerPollInterval}
+		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: statPollInterval}
+		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: healthPollInterval}
+		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: peerPollInterval}
 
 		for cacheName := range localStates.GetCaches() {
 			if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {
