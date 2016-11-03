@@ -137,7 +137,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, err error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
 		ID:           enum.CacheName(id),
@@ -147,9 +147,9 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, err
 		PollFinished: pollFinished,
 	}
 
-	if err != nil {
-		log.Errorf("%v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
-		result.Error = err
+	if reqErr != nil {
+		log.Errorf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
+		result.Error = reqErr
 		handler.ResultChannel <- result
 		return
 	}
@@ -163,9 +163,9 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, err
 
 	result.PrecomputedData.Reporting = true
 
-	if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
-		log.Errorf("%s procnetdev decode error '%v'\n", id, err)
-		result.Error = err
+	if decodeErr := json.NewDecoder(r).Decode(&result.Astats); decodeErr != nil {
+		log.Errorf("%s procnetdev decode error '%v'\n", id, decodeErr)
+		result.Error = decodeErr
 		handler.ResultChannel <- result
 		return
 	}
@@ -180,9 +180,9 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, err
 
 	log.Debugf("poll %v %v handle decode end\n", pollID, time.Now())
 
-	if err != nil {
-		result.Error = err
-		log.Errorf("addkbps handle %s error '%v'\n", id, err)
+	if reqErr != nil {
+		result.Error = reqErr
+		log.Errorf("addkbps handle %s error '%v'\n", id, reqErr)
 	} else {
 		result.Available = true
 	}
