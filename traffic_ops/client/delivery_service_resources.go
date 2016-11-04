@@ -16,14 +16,14 @@
 
 package client
 
-// DeliveryServiceResponse ...
-type DeliveryServiceResponse struct {
+// GetDeliveryServiceResponse ...
+type GetDeliveryServiceResponse struct {
 	Version  string            `json:"version"`
 	Response []DeliveryService `json:"response"`
 }
 
 // CreateDeliveryServiceResponse ...
-type CreateDeliveryServiceResponse struct {
+type DeliveryServiceResponse struct {
 	Response DeliveryService        `json:"response"`
 	Alerts   []DeliveryServiceAlert `json:"alerts"`
 }

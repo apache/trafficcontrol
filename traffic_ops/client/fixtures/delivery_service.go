@@ -18,8 +18,8 @@ package fixtures
 import "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
 // DeliveryServices returns a default DeliveryServiceResponse to be used for testing.
-func DeliveryServices() *client.DeliveryServiceResponse {
-	return &client.DeliveryServiceResponse{
+func DeliveryServices() *client.GetDeliveryServiceResponse {
+	return &client.GetDeliveryServiceResponse{
 		Response: []client.DeliveryService{
 			client.DeliveryService{
 				ID:                   "001",
@@ -51,21 +51,8 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 	}
 }
 
-// CreateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
-func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
-	return &client.CreateDeliveryServiceResponse{
-		Response: DeliveryServices().Response[0],
-		Alerts: []client.DeliveryServiceAlert{
-			client.DeliveryServiceAlert{
-				Level: "level",
-				Text:  "text",
-			},
-		},
-	}
-}
-
-// UpdateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
-func UpdateDeliveryService() *client.CreateDeliveryServiceResponse {
+// DeliveryService returns a default DeliveryServiceResponse to be used for testing.
+func DeliveryService() *client.DeliveryServiceResponse {
 	return &client.CreateDeliveryServiceResponse{
 		Response: DeliveryServices().Response[0],
 		Alerts: []client.DeliveryServiceAlert{
