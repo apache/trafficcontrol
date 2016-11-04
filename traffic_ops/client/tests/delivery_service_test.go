@@ -139,7 +139,7 @@ func TestDeliveryServiceUnauthorized(t *testing.T) {
 }
 
 func TestCreateDeliveryService(t *testing.T) {
-	resp := fixtures.CreateDeliveryService()
+	resp := fixtures.DeliveryService()
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
@@ -187,7 +187,7 @@ func TestCreateDeliveryServiceUnauthorized(t *testing.T) {
 }
 
 func TestUpdateDeliveryService(t *testing.T) {
-	resp := fixtures.UpdateDeliveryService()
+	resp := fixtures.DeliveryService()
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 

@@ -19,7 +19,7 @@ import "encoding/json"
 
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
-	var data DeliveryServiceResponse
+	var data GetDeliveryServiceResponse
 	err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 
 // DeliveryService gets the DeliveryService for the ID it's passed
 func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
-	var data DeliveryServiceResponse
+	var data GetDeliveryServiceResponse
 	err := get(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -40,8 +40,8 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 }
 
 // CreateDeliveryService creates the DeliveryService it's passed
-func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliveryServiceResponse, error) {
-	var data CreateDeliveryServiceResponse
+func (to *Session) CreateDeliveryService(ds *DeliveryService) (*DeliveryServiceResponse, error) {
+	var data DeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
@@ -56,8 +56,8 @@ func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliverySe
 
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
-func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*CreateDeliveryServiceResponse, error) {
-	var data CreateDeliveryServiceResponse
+func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*DeliveryServiceResponse, error) {
+	var data DeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
