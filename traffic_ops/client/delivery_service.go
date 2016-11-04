@@ -70,6 +70,17 @@ func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*Deliv
 	return &data, nil
 }
 
+// DeleteDeliveryService deletes the DeliveryService matching the ID it's passed
+func (to *Session) DeleteDeliveryService(id string) (*DeleteDeliveryServiceResponse, error) {
+	var data DeleteDeliveryServiceResponse
+	err := del(to, deliveryServiceEp(id), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
 func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
 	var data DeliveryServiceStateResponse
@@ -157,6 +168,10 @@ func post(to *Session, endpoint string, body []byte, respStruct interface{}) err
 
 func put(to *Session, endpoint string, body []byte, respStruct interface{}) error {
 	return makeReq(to, "PUT", endpoint, body, respStruct)
+}
+
+func del(to *Session, endpoint string, respStruct interface{}) error {
+	return makeReq(to, "DELETE", endpoint, nil, respStruct)
 }
 
 func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) error {
