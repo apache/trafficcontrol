@@ -20,7 +20,7 @@ import "encoding/json"
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	var data DeliveryServiceResponse
-	err := makeReq(to, deliveryServicesEp(), nil, &data)
+	err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 // DeliveryService gets the DeliveryService for the ID it's passed
 func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 	var data DeliveryServiceResponse
-	err := makeReq(to, deliveryServiceEp(id), nil, &data)
+	err := get(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,23 @@ func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliverySe
 	if err != nil {
 		return nil, err
 	}
-	err = makeReq(to, deliveryServicesEp(), jsonReq, &data)
+	err = post(to, deliveryServicesEp(), jsonReq, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+// UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
+// the DeliveryService it is passed
+func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*CreateDeliveryServiceResponse, error) {
+	var data CreateDeliveryServiceResponse
+	jsonReq, err := json.Marshal(ds)
+	if err != nil {
+		return nil, err
+	}
+	err = put(to, deliveryServiceEp(id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +73,7 @@ func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliverySe
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
 func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
 	var data DeliveryServiceStateResponse
-	err := makeReq(to, deliveryServiceStateEp(id), nil, &data)
+	err := get(to, deliveryServiceStateEp(id), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +84,7 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
 func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
 	var data DeliveryServiceHealthResponse
-	err := makeReq(to, deliveryServiceHealthEp(id), nil, &data)
+	err := get(to, deliveryServiceHealthEp(id), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +95,7 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
 func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
 	var data DeliveryServiceCapacityResponse
-	err := makeReq(to, deliveryServiceCapacityEp(id), nil, &data)
+	err := get(to, deliveryServiceCapacityEp(id), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +106,7 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 // DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
 func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
 	var data DeliveryServiceRoutingResponse
-	err := makeReq(to, deliveryServiceRoutingEp(id), nil, &data)
+	err := get(to, deliveryServiceRoutingEp(id), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +117,7 @@ func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, e
 // DeliveryServiceServer gets the DeliveryServiceServer
 func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceServer, error) {
 	var data DeliveryServiceServerResponse
-	err := makeReq(to, deliveryServiceServerEp(page, limit), nil, &data)
+	err := get(to, deliveryServiceServerEp(page, limit), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +128,7 @@ func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceS
 // DeliveryServiceSSLKeysByID gets the DeliveryServiceSSLKeys by ID
 func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKeys, error) {
 	var data DeliveryServiceSSLKeysResponse
-	err := makeReq(to, deliveryServiceSSLKeysByIDEp(id), nil, &data)
+	err := get(to, deliveryServiceSSLKeysByIDEp(id), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +139,7 @@ func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKey
 // DeliveryServiceSSLKeysByHostname gets the DeliveryServiceSSLKeys by Hostname
 func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*DeliveryServiceSSLKeys, error) {
 	var data DeliveryServiceSSLKeysResponse
-	err := makeReq(to, deliveryServiceSSLKeysByHostnameEp(hostname), nil, &data)
+	err := get(to, deliveryServiceSSLKeysByHostnameEp(hostname), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +147,20 @@ func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*DeliveryS
 	return &data.Response, nil
 }
 
-func makeReq(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	resp, err := to.request(endpoint, body)
+func get(to *Session, endpoint string, respStruct interface{}) error {
+	return makeReq(to, "GET", endpoint, nil, respStruct)
+}
+
+func post(to *Session, endpoint string, body []byte, respStruct interface{}) error {
+	return makeReq(to, "POST", endpoint, body, respStruct)
+}
+
+func put(to *Session, endpoint string, body []byte, respStruct interface{}) error {
+	return makeReq(to, "PUT", endpoint, body, respStruct)
+}
+
+func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) error {
+	resp, err := to.request(method, endpoint, body)
 	if err != nil {
 		return err
 	}

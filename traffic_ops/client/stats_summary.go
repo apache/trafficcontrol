@@ -67,7 +67,7 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 		queryURL += queryParamString
 	}
 
-	resp, err := to.request(queryURL, nil)
+	resp, err := to.request("GET", queryURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 		queryURL += fmt.Sprintf("?statName=%s", statName)
 	}
 
-	resp, err := to.request(queryURL, nil)
+	resp, err := to.request("GET", queryURL, nil)
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +114,7 @@ func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
 	}
 
 	url := "/api/1.2/stats_summary/create"
-	resp, err := to.request(url, reqBody)
+	resp, err := to.request("POST", url, reqBody)
 	if err != nil {
 		return err
 	}

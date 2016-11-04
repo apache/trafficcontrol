@@ -37,7 +37,7 @@ type Parameter struct {
 // Parameters gets an array of parameter structs for the profile given
 func (to *Session) Parameters(profileName string) ([]Parameter, error) {
 	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
-	resp, err := to.request(url, nil)
+	resp, err := to.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

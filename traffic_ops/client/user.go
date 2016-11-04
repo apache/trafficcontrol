@@ -41,7 +41,7 @@ type User struct {
 // Users gets an array of Users.
 func (to *Session) Users() ([]User, error) {
 	url := "/api/1.2/users.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
