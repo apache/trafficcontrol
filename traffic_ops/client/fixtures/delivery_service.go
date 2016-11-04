@@ -53,7 +53,7 @@ func DeliveryServices() *client.GetDeliveryServiceResponse {
 
 // DeliveryService returns a default DeliveryServiceResponse to be used for testing.
 func DeliveryService() *client.DeliveryServiceResponse {
-	return &client.CreateDeliveryServiceResponse{
+	return &client.DeliveryServiceResponse{
 		Response: DeliveryServices().Response[0],
 		Alerts: []client.DeliveryServiceAlert{
 			client.DeliveryServiceAlert{
