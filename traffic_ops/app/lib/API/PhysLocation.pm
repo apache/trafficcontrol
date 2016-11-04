@@ -252,7 +252,7 @@ sub create {
 	}
 }
 
-sub create_for_reg {
+sub create_for_region {
 	my $self        = shift;
 	my $region_name = $self->param('region_name');
 	my $params      = $self->req->json;
