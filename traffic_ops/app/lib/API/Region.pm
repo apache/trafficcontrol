@@ -111,12 +111,12 @@ sub update {
 	}
 
 	if ( !defined( $params->{division} ) ) {
-		return $self->alert("Division Id is required.");
+		return $self->alert("Division is required.");
 	}
 
 	my $values = {
 		name     => $params->{name},
-		division => $params->{division}
+		division => $params->{division}->{id}
 	};
 
 	my $rs = $region->update($values);
@@ -151,7 +151,7 @@ sub create {
 
 	my $division_id = $params->{division};
 	if ( !defined($division_id) ) {
-		return $self->alert("Division Id is required.");
+		return $self->alert("Division is required.");
 	}
 
 	my $existing = $self->db->resultset('Region')->search( { name => $name } )->get_column('name')->single();
@@ -161,7 +161,7 @@ sub create {
 
 	my $values = {
 		name 		=> $params->{name} ,
-		division 	=> $params->{division}
+		division 	=> $params->{division}->{id}
 	};
 
 	my $insert = $self->db->resultset('Region')->create($values);
