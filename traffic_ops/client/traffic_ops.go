@@ -125,7 +125,7 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	}
 
 	path := "/api/1.2/user/login"
-	resp, err := to.request(path, credentials)
+	resp, err := to.request("POST", path, credentials)
 	if err != nil {
 		return nil, err
 	}
@@ -153,14 +153,14 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 }
 
 // request performs the actual HTTP request to Traffic Ops
-func (to *Session) request(path string, body []byte) (*http.Response, error) {
+func (to *Session) request(method, path string, body []byte) (*http.Response, error) {
 	url := fmt.Sprintf("%s%s", to.URL, path)
 
 	var req *http.Request
 	var err error
 
-	if body != nil {
-		req, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if body != nil && method != "GET" {
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 		if err != nil {
 			return nil, err
 		}
@@ -255,7 +255,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 // GetBytes - get []bytes array for a certain path on the to session.
 // returns the raw body
 func (to *Session) getBytes(path string) ([]byte, error) {
-	resp, err := to.request(path, nil)
+	resp, err := to.request("GET", path, nil)
 	if err != nil {
 		return nil, err
 	}

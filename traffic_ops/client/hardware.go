@@ -35,7 +35,7 @@ type Hardware struct {
 // Hardware gets an array of Hardware
 func (to *Session) Hardware() ([]Hardware, error) {
 	url := "/api/1.2/hwinfo.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

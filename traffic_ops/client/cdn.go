@@ -35,7 +35,7 @@ type CDN struct {
 // CDNs gets an array of CDNs
 func (to *Session) CDNs() ([]CDN, error) {
 	url := "/api/1.2/cdns.json"
-	resp, err := to.request(url, nil)
+	resp, err := to.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (to *Session) CDNs() ([]CDN, error) {
 // CDNName gets an array of CDNs
 func (to *Session) CDNName(name string) ([]CDN, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
-	resp, err := to.request(url, nil)
+	resp, err := to.request("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

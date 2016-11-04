@@ -64,6 +64,19 @@ func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
 	}
 }
 
+// UpdateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
+func UpdateDeliveryService() *client.CreateDeliveryServiceResponse {
+	return &client.CreateDeliveryServiceResponse{
+		Response: DeliveryServices().Response[0],
+		Alerts: []client.DeliveryServiceAlert{
+			client.DeliveryServiceAlert{
+				Level: "level",
+				Text:  "text",
+			},
+		},
+	}
+}
+
 // DeliveryServiceState returns a default DeliveryServiceStateResponse to be used for testing.
 func DeliveryServiceState() *client.DeliveryServiceStateResponse {
 	dest := client.DeliveryServiceDestination{
