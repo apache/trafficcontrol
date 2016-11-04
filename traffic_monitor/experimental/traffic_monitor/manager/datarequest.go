@@ -465,8 +465,8 @@ func DataRequest(
 		log.Errorf("Request Error: %v\n", fmt.Errorf(req.Type.String()+": %v", err))
 	}
 
-	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`.
-	commonReturn := func(body []byte, err error) ([]byte, int) {
+	// wrapErr takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`. It notably returns InternalServerError status on any error, for security reasons.
+	wrapErr := func(body []byte, err error) ([]byte, int) {
 		if err == nil {
 			return body, http.StatusOK
 		}
@@ -483,23 +483,23 @@ func DataRequest(
 	case srvhttp.TRConfig:
 		cdnName := opsConfig.Get().CdnName
 		if toSession == nil {
-			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"))
+			return wrapErr(nil, fmt.Errorf("Unable to connect to Traffic Ops"))
 		}
 		if cdnName == "" {
-			return commonReturn(nil, fmt.Errorf("No CDN Configured"))
+			return wrapErr(nil, fmt.Errorf("No CDN Configured"))
 		}
-		return commonReturn(toSession.CRConfigRaw(cdnName))
+		return wrapErr(toSession.CRConfigRaw(cdnName))
 	case srvhttp.TRStateDerived:
-		return commonReturn(peer.CrstatesMarshall(combinedStates.Get()))
+		return wrapErr(peer.CrstatesMarshall(combinedStates.Get()))
 	case srvhttp.TRStateSelf:
-		return commonReturn(peer.CrstatesMarshall(localStates.Get()))
+		return wrapErr(peer.CrstatesMarshall(localStates.Get()))
 	case srvhttp.CacheStats:
 		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
-		return commonReturn(cache.StatsMarshall(statHistory.Get(), filter, req.Parameters))
+		return wrapErr(cache.StatsMarshall(statHistory.Get(), filter, req.Parameters))
 	case srvhttp.DSStats:
 		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
 		if err != nil {
@@ -507,27 +507,27 @@ func DataRequest(
 			return []byte(err.Error()), http.StatusBadRequest
 		}
 		// TODO marshall beforehand, for performance? (test to see how often requests are made)
-		return commonReturn(json.Marshal(dsStats.Get().JSON(filter, req.Parameters)))
+		return wrapErr(json.Marshal(dsStats.Get().JSON(filter, req.Parameters)))
 	case srvhttp.EventLog:
-		return commonReturn(json.Marshal(JSONEvents{Events: events.Get()}))
+		return wrapErr(json.Marshal(JSONEvents{Events: events.Get()}))
 	case srvhttp.PeerStates:
 		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
 		if err != nil {
 			handleErr(err)
 			return []byte(err.Error()), http.StatusBadRequest
 		}
-		return commonReturn(json.Marshal(createAPIPeerStates(peerStates.Get(), filter, req.Parameters)))
+		return wrapErr(json.Marshal(createAPIPeerStates(peerStates.Get(), filter, req.Parameters)))
 	case srvhttp.StatSummary:
 		return nil, http.StatusNotImplemented
 	case srvhttp.Stats:
-		return commonReturn(getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get()))
+		return wrapErr(getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get()))
 	case srvhttp.ConfigDoc:
 		opsConfigCopy := opsConfig.Get()
 		// if the password is blank, leave it blank, so callers can see it's missing.
 		if opsConfigCopy.Password != "" {
 			opsConfigCopy.Password = "*****"
 		}
-		return commonReturn(json.Marshal(opsConfigCopy))
+		return wrapErr(json.Marshal(opsConfigCopy))
 	case srvhttp.APICacheCount: // TODO determine if this should use peerStates
 		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
 	case srvhttp.APICacheAvailableCount:
@@ -545,7 +545,7 @@ func DataRequest(
 	case srvhttp.APITrafficOpsURI:
 		return []byte(opsConfig.Get().Url), http.StatusOK
 	case srvhttp.APICacheStates:
-		return commonReturn(json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
+		return wrapErr(json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
 			lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus)))
 	case srvhttp.APIBandwidthKbps:
 		serverTypes := toData.Get().ServerTypes
@@ -569,7 +569,7 @@ func DataRequest(
 		}
 		return []byte(fmt.Sprintf("%d", cap)), http.StatusOK
 	default:
-		return commonReturn(nil, fmt.Errorf("Unknown Request Type"))
+		return wrapErr(nil, fmt.Errorf("Unknown Request Type"))
 	}
 }
 
