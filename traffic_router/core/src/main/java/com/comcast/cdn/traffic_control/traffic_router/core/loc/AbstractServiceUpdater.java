@@ -1,5 +1,4 @@
 /*
- * Copyright 2015 Comcast Cable Communications Management, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,7 +164,7 @@ public abstract class AbstractServiceUpdater {
 			}
 
 		} finally {
-			if (newDB != null && newDB.exists()) {
+			if (newDB != null && newDB != existingDB && newDB.exists()) {
 				LOGGER.info("[" + getClass().getSimpleName() + "] Try to delete downloaded temp file");
 				deleteDatabase(newDB);
 			}

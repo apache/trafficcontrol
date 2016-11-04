@@ -1,5 +1,4 @@
 /*
-   Copyright 2015 Comcast Cable Communications Management, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,7 +15,7 @@
 
 package fixtures
 
-import "github.com/Comcast/traffic_control/traffic_ops/client"
+import "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
 // DeliveryServices returns a default DeliveryServiceResponse to be used for testing.
 func DeliveryServices() *client.DeliveryServiceResponse {
@@ -47,6 +46,19 @@ func DeliveryServices() *client.DeliveryServiceResponse {
 				MultiSiteOrigin:      "0",
 				DisplayName:          "Testing",
 				InitialDispersion:    "1",
+			},
+		},
+	}
+}
+
+// CreateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
+func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
+	return &client.CreateDeliveryServiceResponse{
+		Response: DeliveryServices().Response[0],
+		Alerts: []client.DeliveryServiceAlert{
+			client.DeliveryServiceAlert{
+				Level: "level",
+				Text:  "text",
 			},
 		},
 	}
@@ -111,7 +123,7 @@ func DeliveryServiceCapacity() *client.DeliveryServiceCapacityResponse {
 
 // DeliveryServiceRouting returns a default DeliveryServiceRoutingResponse to be used for testing.
 func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
-	dsc := client.DeliveryServiceRouting{
+	dsr := client.DeliveryServiceRouting{
 		StaticRoute:       1,
 		Miss:              2,
 		Geo:               3.33,
@@ -124,6 +136,48 @@ func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
 	}
 
 	return &client.DeliveryServiceRoutingResponse{
-		Response: dsc,
+		Response: dsr,
+	}
+}
+
+// DeliveryServiceServer returns a default DeliveryServiceServerResponse to be used for testing.
+func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
+	dss := client.DeliveryServiceServer{
+		LastUpdated:     "lastUpdated",
+		Server:          "someServer",
+		DeliveryService: "someService",
+	}
+
+	return &client.DeliveryServiceServerResponse{
+		Response: []client.DeliveryServiceServer{dss},
+		Page:     1,
+		OrderBy:  "foo",
+		Limit:    1,
+	}
+}
+
+// DeliveryServiceSSLKeys returns a default DeliveryServiceSSLKeysResponse to be used for testing.
+func DeliveryServiceSSLKeys() *client.DeliveryServiceSSLKeysResponse {
+	crt := client.DeliveryServiceSSLKeysCertificate{
+		Crt: "crt",
+		Key: "key",
+		CSR: "someService",
+	}
+
+	sslKeys := client.DeliveryServiceSSLKeys{
+		CDN:             "cdn",
+		DeliveryService: "deliveryService",
+		Certificate:     crt,
+		BusinessUnit:    "businessUnit",
+		City:            "city",
+		Organization:    "Kabletown",
+		Hostname:        "hostname",
+		Country:         "country",
+		State:           "state",
+		Version:         "version",
+	}
+
+	return &client.DeliveryServiceSSLKeysResponse{
+		Response: sslKeys,
 	}
 }

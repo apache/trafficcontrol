@@ -1,5 +1,4 @@
 ..
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 ..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -595,7 +594,7 @@ Parameters in the Mid (parent) profile that influence this feature:
 
 Multi Site Origin
 +++++++++++++++++
-.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the traffic-control-cdn.net website.
+.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the trafficcontrol.apache.org website.
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions.
 
@@ -1026,7 +1025,7 @@ Fairly straight forward, this button set the **dnssec.enabled** param to either 
 
 **Generate Keys**
 
-Generate Keys will generate dnssec keys for the CDN TLD as well as for each Delivery Service in the CDN.  It is important to note that this button will create a new KSK for the TLD and, therefore, a new DS Record.  Any time a new DS Record is created, it will need to be added to the parent zone of the TLD in order for DNSSEC to work properly.  When a user clicks the **Generate Keys** button, they will be presented with a screen with the following fields:
+Generate Keys will generate DNSSEC keys for the CDN TLD as well as for each Delivery Service in the CDN.  It is important to note that this button will create a new KSK for the TLD and, therefore, a new DS Record.  Any time a new DS Record is created, it will need to be added to the parent zone of the TLD in order for DNSSEC to work properly.  When a user clicks the **Generate Keys** button, they will be presented with a screen with the following fields:
 
   - **CDN:** This is not editable and displays the CDN for which keys will be generated
   - **ZSK Expiration (Days):**  Sets how long (in days) the Zone Signing Key will be valid for the CDN and associated Delivery Services. The default is 30 days.

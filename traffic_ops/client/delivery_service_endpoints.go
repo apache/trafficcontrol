@@ -1,5 +1,4 @@
 /*
-   Copyright 2016 Comcast Cable Communications Management, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,14 +15,15 @@
 
 package client
 
-const dsPath = "/api/1.2/deliveryservices"
+const apiBase = "/api/1.2"
+const dsPath = "/deliveryservices"
 
 func deliveryServicesEp() string {
-	return dsPath + ".json"
+	return apiBase + dsPath + ".json"
 }
 
 func deliveryServiceBaseEp(id string) string {
-	return dsPath + "/" + id
+	return apiBase + dsPath + "/" + id
 }
 
 func deliveryServiceEp(id string) string {
@@ -44,4 +44,16 @@ func deliveryServiceCapacityEp(id string) string {
 
 func deliveryServiceRoutingEp(id string) string {
 	return deliveryServiceBaseEp(id) + "/routing.json"
+}
+
+func deliveryServiceServerEp(page, limit string) string {
+	return apiBase + "/deliveryserviceserver.json?page=" + page + "&limit=" + limit
+}
+
+func deliveryServiceSSLKeysByIDEp(id string) string {
+	return apiBase + dsPath + "/xmlId/" + id + "/sslkeys.json"
+}
+
+func deliveryServiceSSLKeysByHostnameEp(hostname string) string {
+	return apiBase + dsPath + "/hostname/" + hostname + "/sslkeys.json"
 }

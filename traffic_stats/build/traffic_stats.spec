@@ -1,5 +1,4 @@
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,10 +21,10 @@ Version:        %{traffic_control_version}
 Release:        %{build_number}
 Summary:	Tool to pull data from traffic monitor and store in Influxdb
 Packager:	david_neuman2 at Cable dot Comcast dot com
-Vendor:		Comcast Cable
+Vendor:		Apache Software Foundation
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/Comcast/traffic_control/
+URL:		https://github.com/apache/incubator-trafficcontrol
 Source:		%{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
 
 %description
@@ -53,7 +52,7 @@ go_get_version() {
 }
 
 # get traffic_ops client
-godir=src/github.com/Comcast/traffic_control/traffic_ops/client
+godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_ops/client/* . && \
@@ -61,7 +60,7 @@ godir=src/github.com/Comcast/traffic_control/traffic_ops/client
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 #get traffic_stats client
-godir=src/github.com/Comcast/traffic_control/traffic_stats
+godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
@@ -72,7 +71,7 @@ oldpwd=$(pwd)
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 #build influxdb_tools
-godir=src/github.com/Comcast/traffic_control/traffic_stats/influxdb_tools
+godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb_tools
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
@@ -92,7 +91,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
-src=src/github.com/Comcast/traffic_control/traffic_stats
+src=src/github.com/apache/incubator-trafficcontrol/traffic_stats
 cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
 cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
 cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml

@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -108,9 +107,9 @@ Below is a list of Traffic Server plugins that need to be configured in the para
 +------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
 |       Name       |  Config file  |                     Description                      |                                                  Details                                                   |
 +==================+===============+======================================================+============================================================================================================+
-| astats_over_http | package       | The package version for the astats_over_http plugin. | `astats_over_http <http://traffic-control-cdn.net/downloads/index.html>`_                                  |
+| astats_over_http | package       | The package version for the astats_over_http plugin. | `astats_over_http <http://trafficcontrol.apache.org/downloads/index.html>`_                                  |
 +------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
-| trafficserver    | package       | The package version for the trafficserver plugin.    | `trafficserver <http://traffic-control-cdn.net/downloads/index.html>`_                                     |
+| trafficserver    | package       | The package version for the trafficserver plugin.    | `trafficserver <http://trafficcontrol.apache.org/downloads/index.html>`_                                     |
 +------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
 | regex_revalidate | plugin.config | The config to be used for regex_revalidate.          | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_ |
 |                  |               | For example: --config regex_revalidate.config        |                                                                                                            |

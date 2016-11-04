@@ -1,6 +1,5 @@
 package API::User;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -286,6 +285,7 @@ sub current {
 				"email"           => "",
 				"fullName"        => "",
 				"newUser"         => \0,
+				"localUser"       => \0,
 				"addressLine1"    => "",
 				"addressLine2"    => "",
 				"city"            => "",
@@ -313,6 +313,7 @@ sub current {
 					"email"           => $row->email,
 					"fullName"        => $row->full_name,
 					"newUser"         => \$row->new_user,
+					"localUser"       => \1,
 					"addressLine1"    => $row->address_line1,
 					"addressLine2"    => $row->address_line2,
 					"city"            => $row->city,
