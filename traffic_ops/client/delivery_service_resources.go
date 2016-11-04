@@ -28,6 +28,11 @@ type DeliveryServiceResponse struct {
 	Alerts   []DeliveryServiceAlert `json:"alerts"`
 }
 
+// DeleteDeliveryServiceResponse ...
+type DeleteDeliveryServiceResponse struct {
+	Alerts []DeliveryServiceAlert `json:"alerts"`
+}
+
 // DeliveryService ...
 type DeliveryService struct {
 	ID                   string                 `json:"id"`

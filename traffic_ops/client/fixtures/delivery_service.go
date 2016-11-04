@@ -51,16 +51,27 @@ func DeliveryServices() *client.GetDeliveryServiceResponse {
 	}
 }
 
+func alerts() []client.DeliveryServiceAlert {
+	return []client.DeliveryServiceAlert{
+		client.DeliveryServiceAlert{
+			Level: "level",
+			Text:  "text",
+		},
+	}
+}
+
 // DeliveryService returns a default DeliveryServiceResponse to be used for testing.
 func DeliveryService() *client.DeliveryServiceResponse {
 	return &client.DeliveryServiceResponse{
 		Response: DeliveryServices().Response[0],
-		Alerts: []client.DeliveryServiceAlert{
-			client.DeliveryServiceAlert{
-				Level: "level",
-				Text:  "text",
-			},
-		},
+		Alerts:   alerts(),
+	}
+}
+
+// DeleteDeliveryService returns a default DeleteDeliveryServiceResponse to be used for testing.
+func DeleteDeliveryService() *client.DeleteDeliveryServiceResponse {
+	return &client.DeleteDeliveryServiceResponse{
+		Alerts: alerts(),
 	}
 }
 

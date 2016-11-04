@@ -234,6 +234,54 @@ func TestUpdateDeliveryServiceUnauthorized(t *testing.T) {
 	}
 }
 
+func TestDeleteDeliveryService(t *testing.T) {
+	resp := fixtures.DeleteDeliveryService()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request to delete a DeliveryService")
+
+	ds, err := to.DeleteDeliveryService("123")
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	actual := ds.Alerts[0].Text
+	if actual != "text" {
+		testHelper.Error(t, "Should get back \"text\" for \"Alerts[0].Text\", got: %s", actual)
+	} else {
+		testHelper.Success(t, "Should get back \"text\" for \"Alerts[0].Text\"")
+	}
+}
+
+func TestDeleteDeliveryServiceUnauthorized(t *testing.T) {
+	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
+	defer server.Close()
+
+	var httpClient http.Client
+	to := client.Session{
+		URL:       server.URL,
+		UserAgent: &httpClient,
+	}
+
+	testHelper.Context(t, "Given the need to test a failed Traffic Ops request to delete a DeliveryService")
+
+	_, err := to.DeleteDeliveryService("123")
+	if err == nil {
+		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}
+
 func TestDeliveryServiceState(t *testing.T) {
 	resp := fixtures.DeliveryServiceState()
 	server := testHelper.ValidHTTPServer(resp)
