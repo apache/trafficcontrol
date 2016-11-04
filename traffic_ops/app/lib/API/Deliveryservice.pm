@@ -53,13 +53,16 @@ sub index {
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
 		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
+		my $cdn 		= { "id" => $row->cdn->id, "name" => $row->cdn->name };
+		my $profile 	= { "id" => $row->profile->id, "name" => $row->profile->name };
+		my $type 		= { "id" => $row->type->id, "name" => $row->type->name };
+
 		push(
 			@data, {
 				"active"                   => \$row->active,
 				"cacheurl"                 => $row->cacheurl,
 				"ccrDnsTtl"                => $row->ccr_dns_ttl,
-				"cdnId"                    => $row->cdn->id,
-				"cdnName"                  => $row->cdn->name,
+				"cdn"                 	   => $cdn,
 				"checkPath"                => $row->check_path,
 				"displayName"              => $row->display_name,
 				"dnsBypassCname"           => $row->dns_bypass_cname,
@@ -93,9 +96,7 @@ sub index {
 				"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $row->org_server_fqdn,
 				"originShield"             => $row->origin_shield,
-				"profileId"                => $row->profile->id,
-				"profileName"              => $row->profile->name,
-				"profileDescription"       => $row->profile->description,
+				"profile"         	       => $profile,
 				"protocol"                 => $row->protocol,
 				"qstringIgnore"            => $row->qstring_ignore,
 				"rangeRequestHandling"     => $row->range_request_handling,
@@ -106,8 +107,7 @@ sub index {
 				"sslKeyVersion"            => $row->ssl_key_version,
 				"trRequestHeaders"         => $row->tr_request_headers,
 				"trResponseHeaders"        => $row->tr_response_headers,
-				"type"                     => $row->type->name,
-				"typeId"                   => $row->type->id,
+				"type"                     => $type,
 				"xmlId"                    => $row->xml_id
 			}
 		);
@@ -149,13 +149,16 @@ sub show {
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
 		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
+		my $cdn 		= { "id" => $row->cdn->id, "name" => $row->cdn->name };
+		my $profile 	= { "id" => $row->profile->id, "name" => $row->profile->name };
+		my $type 		= { "id" => $row->type->id, "name" => $row->type->name };
+
 		push(
 			@data, {
 				"active"                   => \$row->active,
 				"cacheurl"                 => $row->cacheurl,
 				"ccrDnsTtl"                => $row->ccr_dns_ttl,
-				"cdnId"                    => $row->cdn->id,
-				"cdnName"                  => $row->cdn->name,
+				"cdn"	                   => $cdn,
 				"checkPath"                => $row->check_path,
 				"displayName"              => $row->display_name,
 				"dnsBypassCname"           => $row->dns_bypass_cname,
@@ -190,9 +193,7 @@ sub show {
 				"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $row->org_server_fqdn,
 				"originShield"             => $row->origin_shield,
-				"profileId"                => $row->profile->id,
-				"profileName"              => $row->profile->name,
-				"profileDescription"       => $row->profile->description,
+				"profile"         	       => $profile,
 				"protocol"                 => $row->protocol,
 				"qstringIgnore"            => $row->qstring_ignore,
 				"rangeRequestHandling"     => $row->range_request_handling,
@@ -203,8 +204,7 @@ sub show {
 				"sslKeyVersion"            => $row->ssl_key_version,
 				"trRequestHeaders"         => $row->tr_request_headers,
 				"trResponseHeaders"        => $row->tr_response_headers,
-				"type"                     => $row->type->name,
-				"typeId"                   => $row->type->id,
+				"type"                     => $type,
 				"xmlId"                    => $row->xml_id
 			}
 		);
@@ -244,7 +244,7 @@ sub update {
 		active => $params->{active} ? 1 : 0,
 		cacheurl                    => $params->{cacheurl},
 		ccr_dns_ttl                 => $params->{ccrDnsTtl},
-		cdn_id                      => $params->{cdnId},
+		cdn_id                      => $params->{cdn}->{id},
 		check_path                  => $params->{checkPath},
 		display_name                => $params->{displayName},
 		dns_bypass_cname            => $params->{dnsBypassCname},
@@ -275,7 +275,7 @@ sub update {
 		multi_site_origin_algorithm => $params->{multiSiteOriginAlgorithm},
 		org_server_fqdn             => $params->{orgServerFqdn},
 		origin_shield               => $params->{originShield},
-		profile                     => $params->{profileId},
+		profile                     => $params->{profile}->{id},
 		protocol                    => $params->{protocol},
 		qstring_ignore              => $params->{qstringIgnore},
 		range_request_handling      => $params->{rangeRequestHandling},
@@ -286,20 +286,23 @@ sub update {
 		ssl_key_version             => $params->{sslKeyVersion},
 		tr_request_headers          => $params->{trRequestHeaders},
 		tr_response_headers         => $params->{trResponseHeaders},
-		type                        => $params->{typeId},
+		type                        => $params->{type}->{id},
 		xml_id                      => $params->{xmlId}
 	};
 
 	my $rs = $ds->update($values);
 	if ($rs) {
 		my @response;
+		my $cdn 		= { "id" => $rs->cdn->id, "name" => $rs->cdn->name };
+		my $profile 	= { "id" => $rs->profile->id, "name" => $rs->profile->name };
+		my $type 		= { "id" => $rs->type->id, "name" => $rs->type->name };
+
 		push(
 			@response, {
 				"active"                   => \$rs->active,
 				"cacheurl"                 => $rs->cacheurl,
 				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
-				"cdnId"                    => $rs->cdn->id,
-				"cdnName"                  => $rs->cdn->name,
+				"cdn"  		               => $cdn,
 				"checkPath"                => $rs->check_path,
 				"displayName"              => $rs->display_name,
 				"dnsBypassCname"           => $rs->dns_bypass_cname,
@@ -332,9 +335,7 @@ sub update {
 				"multiSiteOriginAlgorithm" => $rs->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $rs->org_server_fqdn,
 				"originShield"             => $rs->origin_shield,
-				"profileId"                => $rs->profile->id,
-				"profileName"              => $rs->profile->name,
-				"profileDescription"       => $rs->profile->description,
+				"profile"                  => $profile,
 				"protocol"                 => $rs->protocol,
 				"qstringIgnore"            => $rs->qstring_ignore,
 				"rangeRequestHandling"     => $rs->range_request_handling,
@@ -345,8 +346,7 @@ sub update {
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
-				"type"                     => $rs->type->name,
-				"typeId"                   => $rs->type->id,
+				"type"                     => $type,
 				"xmlId"                    => $rs->xml_id
 			}
 		);
@@ -384,7 +384,7 @@ sub create {
 		active => $params->{active} ? 1 : 0,
 		cacheurl                    => $params->{cacheurl},
 		ccr_dns_ttl                 => $params->{ccrDnsTtl},
-		cdn_id                      => $params->{cdnId},
+		cdn_id                      => $params->{cdn}->{id},
 		check_path                  => $params->{checkPath},
 		display_name                => $params->{displayName},
 		dns_bypass_cname            => $params->{dnsBypassCname},
@@ -415,7 +415,7 @@ sub create {
 		multi_site_origin_algorithm => $params->{multiSiteOriginAlgorithm},
 		org_server_fqdn             => $params->{orgServerFqdn},
 		origin_shield               => $params->{originShield},
-		profile                     => $params->{profileId},
+		profile                     => $params->{profile}->{id},
 		protocol                    => $params->{protocol},
 		qstring_ignore              => $params->{qstringIgnore},
 		range_request_handling      => $params->{rangeRequestHandling},
@@ -426,7 +426,7 @@ sub create {
 		ssl_key_version             => $params->{sslKeyVersion},
 		tr_request_headers          => $params->{trRequestHeaders},
 		tr_response_headers         => $params->{trResponseHeaders},
-		type                        => $params->{typeId},
+		type                        => $params->{type}->{id},
 		xml_id                      => $params->{xmlId}
 	};
 
@@ -434,13 +434,16 @@ sub create {
 	my $rs     = $insert->insert();
 	if ($rs) {
 		my @response;
+		my $cdn 		= { "id" => $rs->cdn->id, "name" => $rs->cdn->name };
+		my $profile 	= { "id" => $rs->profile->id, "name" => $rs->profile->name };
+		my $type 		= { "id" => $rs->type->id, "name" => $rs->type->name };
+
 		push(
 			@response, {
 				"active"                   => \$rs->active,
 				"cacheurl"                 => $rs->cacheurl,
 				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
-				"cdnId"                    => $rs->cdn->id,
-				"cdnName"                  => $rs->cdn->name,
+				"cdn"                      => $cdn,
 				"checkPath"                => $rs->check_path,
 				"displayName"              => $rs->display_name,
 				"dnsBypassCname"           => $rs->dns_bypass_cname,
@@ -473,9 +476,7 @@ sub create {
 				"multiSiteOriginAlgorithm" => $rs->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $rs->org_server_fqdn,
 				"originShield"             => $rs->origin_shield,
-				"profileId"                => $rs->profile->id,
-				"profileName"              => $rs->profile->name,
-				"profileDescription"       => $rs->profile->description,
+				"profile"                  => $profile,
 				"protocol"                 => $rs->protocol,
 				"qstringIgnore"            => $rs->qstring_ignore,
 				"rangeRequestHandling"     => $rs->range_request_handling,
@@ -486,8 +487,7 @@ sub create {
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
-				"type"                     => $rs->type->name,
-				"typeId"                   => $rs->type->id,
+				"type"                     => $type,
 				"xmlId"                    => $rs->xml_id
 			}
 		);
@@ -755,19 +755,19 @@ sub is_deliveryservice_valid {
 	my $self   = shift;
 	my $params = shift;
 
-	if ( !$self->is_valid_deliveryservice_type( $params->{typeId} ) ) {
+	if ( !$self->is_valid_deliveryservice_type( $params->{type}->{id} ) ) {
 		return ( 0, "Invalid deliveryservice type" );
 	}
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdn checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profile protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion trRequestHeaders trResponseHeaders type xmlId/
 		],
 
 		# Validation checks to perform
 		checks => [
 			active               => [ is_required("is required") ],
-			cdnId                => [ is_required("is required") ],
+			cdn                  => [ is_required("is required") ],
 			displayName          => [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
 			dscp                 => [ is_required("is required") ],
 			geoLimit             => [ is_required("is required") ],
@@ -779,13 +779,13 @@ sub is_deliveryservice_valid {
 			missLong             => [ \&is_valid_long ],
 			multiSiteOrigin      => [ is_required("is required") ],
 			orgServerFqdn        => [ is_required("is required"), is_like( qr/^(https?:\/\/)/, "must start with http:// or https://" ) ],
-			profileId            => [ is_required("is required") ],
+			profile              => [ is_required("is required") ],
 			protocol             => [ is_required("is required") ],
 			qstringIgnore        => [ is_required("is required") ],
 			rangeRequestHandling => [ is_required("is required") ],
 			regionalGeoBlocking  => [ is_required("is required") ],
 			signed               => [ is_required("is required") ],
-			typeId               => [ is_required("is required") ],
+			type                 => [ is_required("is required") ],
 			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
 		]
 	};
