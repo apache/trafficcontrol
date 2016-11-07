@@ -125,30 +125,28 @@ func StartOpsConfigManager(
 				log.Errorf("OpsConfigManager: %v\n", err)
 			}
 
-			err = httpServer.Run(func(req srvhttp.DataRequest) ([]byte, int) {
-				return DataRequest(
-					req,
-					opsConfig,
-					toSession,
-					localStates,
-					peerStates,
-					combinedStates,
-					statHistory,
-					dsStats,
-					events,
-					staticAppData,
-					healthPollInterval,
-					lastHealthDurations,
-					fetchCount,
-					healthIteration,
-					errorCount,
-					toData,
-					localCacheStatus,
-					lastStats,
-					unpolledCaches,
-					monitorConfig,
-				)
-			}, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
+			endpoints := MakeDispatchMap(
+				opsConfig,
+				toSession,
+				localStates,
+				peerStates,
+				combinedStates,
+				statHistory,
+				dsStats,
+				events,
+				staticAppData,
+				healthPollInterval,
+				lastHealthDurations,
+				fetchCount,
+				healthIteration,
+				errorCount,
+				toData,
+				localCacheStatus,
+				lastStats,
+				unpolledCaches,
+				monitorConfig,
+			)
+			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
 				continue
