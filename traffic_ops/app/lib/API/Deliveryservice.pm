@@ -32,7 +32,7 @@ use Validate::Tiny ':all';
 
 sub index {
 	my $self         = shift;
-	my $orderby      = $self->param('orderby') || "xml_id";
+	my $orderby      = "xml_id";
 	my $logs_enabled = $self->param('logsEnabled');
 	my $current_user = $self->current_user()->{username};
 	my @data;
