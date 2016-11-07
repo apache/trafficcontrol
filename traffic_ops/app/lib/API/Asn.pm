@@ -29,12 +29,12 @@ sub index {
 	my $orderby = $self->param('orderby') || "asn";
 	my $rs_data = $self->db->resultset("Asn")->search( undef, { prefetch => [ { 'cachegroup' => undef } ], order_by => "me." . $orderby } );
 	while ( my $row = $rs_data->next ) {
-		my $cachegroup = { "id" => $row->cachegroup->id, "name" => $row->cachegroup->name };
 		push(
 			@data, {
 				"id"           => $row->id,
 				"asn"          => $row->asn,
-				"cachegroup"   => $cachegroup,
+				"cachegroupId" => $row->cachegroup->id,
+				"cachegroup"   => $row->cachegroup->name,
 				"lastUpdated"  => $row->last_updated
 			}
 		);
@@ -50,12 +50,12 @@ sub show {
 	my $rs_data = $self->db->resultset("Asn")->search( { 'me.id' => $id }, { prefetch => ['cachegroup'] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
-		my $cachegroup = { "id" => $row->cachegroup->id, "name" => $row->cachegroup->name };
 		push(
 			@data, {
 				"id"           => $row->id,
 				"asn"          => $row->asn,
-				"cachegroup"   => $cachegroup,
+				"cachegroupId" => $row->cachegroup->id,
+				"cachegroup"   => $row->cachegroup->name,
 				"lastUpdated"  => $row->last_updated
 			}
 		);
@@ -85,23 +85,22 @@ sub update {
 		return $self->alert("ASN is required.");
 	}
 
-	if ( !defined( $params->{cachegroup} ) ) {
+	if ( !defined( $params->{cachegroupId} ) ) {
 		return $self->alert("Cachegroup is required.");
 	}
 
 	my $values = {
 		asn        => $params->{asn},
-		cachegroup => $params->{cachegroup}->{id}
+		cachegroup => $params->{cachegroupId}
 	};
 
 	my $rs = $asn->update($values);
 	if ( $rs ) {
 		my $response;
-		my $cachegroup = { "id" => $rs->cachegroup->id, "name" => $rs->cachegroup->name };
-
 		$response->{id}           = $rs->id;
 		$response->{asn}          = $rs->asn;
-		$response->{cachegroup}   = $cachegroup;
+		$response->{cachegroupId} = $rs->cachegroup->id;
+		$response->{cachegroup}   = $rs->cachegroup->name;
 		$response->{lastUpdated}  = $rs->last_updated;
 		&log( $self, "Updated ASN name '" . $rs->asn . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "ASN update was successful." );
@@ -124,24 +123,23 @@ sub create {
 		return $self->alert("ASN is required.");
 	}
 
-	if ( !defined($params->{cachegroup}) ) {
-		return $self->alert("Cachegroup is required.");
+	if ( !defined($params->{cachegroupId}) ) {
+		return $self->alert("Cachegroup Id is required.");
 	}
 
 	my $values = {
 		asn 		=> $params->{asn} ,
-		cachegroup 	=> $params->{cachegroup}->{id}
+		cachegroup 	=> $params->{cachegroupId}
 	};
 
 	my $insert = $self->db->resultset('Asn')->create($values);
 	my $rs = $insert->insert();
 	if ($rs) {
 		my $response;
-		my $cachegroup = { "id" => $rs->cachegroup->id, "name" => $rs->cachegroup->name };
-
 		$response->{id}          	= $rs->id;
 		$response->{asn}        	= $rs->asn;
-		$response->{cachegroup}   	= $cachegroup;
+		$response->{cachegroupId}   = $rs->cachegroup->id;
+		$response->{cachegroup}   	= $rs->cachegroup->name;
 		$response->{lastUpdated} 	= $rs->last_updated;
 
 		&log( $self, "Created ASN name '" . $rs->asn . "' for id: " . $rs->id, "APICHANGE" );
