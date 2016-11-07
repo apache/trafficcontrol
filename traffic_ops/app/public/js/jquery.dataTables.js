@@ -1,3 +1,7 @@
+/*! DataTables 1.10.4
+ * ©2008-2014 SpryMedia Ltd - datatables.net/license
+ */
+
 /**
  * @summary     DataTables
  * @description Paginate, search and order HTML tables
