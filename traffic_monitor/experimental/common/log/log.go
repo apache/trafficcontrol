@@ -85,3 +85,20 @@ func Closef(c io.Closer, contextFormat string, v ...interface{}) {
 		Errorf(": %v", err)
 	}
 }
+
+// Write calls `Write()` on the given Writer, and logs any error. On error, the context is logged, followed by a colon, the error message, and a newline.
+func Write(w io.Writer, b []byte, context string) {
+	_, err := w.Write(b)
+	if err != nil {
+		Errorf("%v: %v", context, err)
+	}
+}
+
+// Writef acts like Write, with a given format string and values, followed by a colon, the error message, and a newline. The given values are not coerced, concatenated, or printed unless an error occurs, so this is more efficient than `Write()`.
+func Writef(w io.Writer, b []byte, contextFormat string, v ...interface{}) {
+	_, err := w.Write(b)
+	if err != nil {
+		Errorf(contextFormat, v...)
+		Errorf(": %v", err)
+	}
+}
