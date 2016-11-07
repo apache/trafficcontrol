@@ -515,7 +515,7 @@ sub api_routes {
 	# -- DELIVERYSERVICE: SSL KEYS
 	# Support for SSL private keys, certs, and csrs
 	# gets the latest key by default unless a version query param is provided with ?version=x
-	$r->get("/api/$version/deliveryservices/xmlId/:xmlid/sslkeys")->over( authenticated => 1 )
+	$r->get("/api/$version/deliveryservices/xmlId/#xmlid/sslkeys")->over( authenticated => 1 )
 		->to( 'SslKeys#view_by_xml_id', namespace => 'API::DeliveryService' );
 	$r->get("/api/$version/deliveryservices/hostname/#hostname/sslkeys")->over( authenticated => 1 )
 		->to( 'SslKeys#view_by_hostname', namespace => 'API::DeliveryService' );

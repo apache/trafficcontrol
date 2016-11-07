@@ -39,6 +39,7 @@ foreach my $ds (@$dss) {
 	if ($ds->{protocol} > 0) {
 		my $xml_id = $ds->{xmlId};
 		my $cdn = $ds->{cdnName};
+		print "Updating record for: $xml_id\n";
 		my $record = &get_riak_record($xml_id, $to_url, $ua);
 		if (!defined($record)) {
 			next;
