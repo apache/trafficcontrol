@@ -7,15 +7,15 @@ echo "Building $target"
 echo "GITREPO=${GITREPO:=https://github.com/apache/incubator-trafficcontrol}"
 echo "BRANCH=${BRANCH:=master}"
 
-dir=$(basename $GITREPO)
 set -x
-git clone "$GITREPO" -b "$BRANCH" $dir || echo "Clone failed: $!"
+git clone $GITREPO -b $BRANCH traffic_control
+distdir=$(pwd)/traffic_control/dist
 
-cd $dir/$target
+cd traffic_control/traffic_ops/experimental/ui
 ./build/build_rpm.sh
 mkdir -p /artifacts
-cp ../dist/* /artifacts/.
+cp $distdir/* /artifacts/.
 
 # Clean up for next build
 cd -
-rm -r $dir
+rm -r traffic_control

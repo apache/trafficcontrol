@@ -8,12 +8,12 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-ENV GITREPO https://github.com/apache/incubator-trafficcontrol
+ENV GITREPO https://github.com/apache/incubator-trafficcontrol.git
 ENV BRANCH master
 
 WORKDIR /repo
 
-# traffic_portal specific
+# traffic_ops_v2 specific
 RUN	yum -y install \
 		gcc \
 		libffi-devel \
@@ -35,6 +35,6 @@ VOLUME ./artifacts:/artifacts
 
 ADD run-build.sh .
 
-CMD ./run-build.sh traffic_portal 2>&1 | tee /artifacts/build-traffic_portal.log
+CMD ./run-build.sh traffic_ops_v2 2>&1 | tee /artifacts/build-traffic_ops_v2.log
 
 # vi:syntax=Dockerfile
