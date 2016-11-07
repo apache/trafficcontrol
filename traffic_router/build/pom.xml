@@ -1,5 +1,4 @@
 <!--
-     Copyright 2015 Comcast Cable Communications Management, LLC
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -124,7 +123,6 @@
 							</execution>
 						</executions>
 						<configuration>
-							<copyright>2011, Comcast Converged Products</copyright>
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
 							<release>${env.GIT_REV_COUNT}.${buildNumber}.el6</release>

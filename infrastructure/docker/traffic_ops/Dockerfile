@@ -1,3 +1,19 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 ############################################################
 # Dockerfile to build Traffic Ops 1.6.0 container images
 # Based on CentOS 7.2
@@ -5,7 +21,7 @@
 
 # Example Build and Run:
 # docker network create cdnet
-# docker build --rm --tag traffic_ops:1.6.0 --build-arg=RPM=http://traffic-control-cdn.net/downloads/1.6.0/RELEASE-1.6.0/traffic_ops-1.6.0-3503.4899d302.x86_64.rpm traffic_ops
+# docker build --rm --tag traffic_ops:1.7.0 --build-arg=RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm traffic_ops
 #
 # docker run --name my-traffic-ops-mysql --hostname my-traffic-ops-mysql --net cdnet --env MYSQL_ROOT_PASSWORD=secretrootpass --detach mysql:5.5
 #
@@ -18,7 +34,7 @@ RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
 RUN cpanm Carton
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
-ARG RPM=TODO
+ARG RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm
 ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 

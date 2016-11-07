@@ -1,6 +1,5 @@
 package main;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,15 +40,15 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/asns.json")->status_is(200)->json_is( "/response/0/id", "1" )->json_is( "/response/0/cachegroup", "cg1-mid-northeast" )
+$t->get_ok("/api/1.2/asns.json")->status_is(200)->json_is( "/response/0/id", "1" )->json_is( "/response/0/cachegroup/name", "mid-northeast-group" )
   ->json_is( "/response/0/asn", "9939" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.2/asns.json?orderby=id")->status_is(200)->json_is( "/response/0/id", "1" )
-  ->json_is( "/response/0/cachegroup", "cg1-mid-northeast" )->json_is( "/response/0/asn", "9939" )
+  ->json_is( "/response/0/cachegroup/name", "mid-northeast-group" )->json_is( "/response/0/asn", "9939" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.2/asns.json?orderby=cachegroup")->status_is(200)->json_is( "/response/0/id", "1" )
-  ->json_is( "/response/0/cachegroup", "cg1-mid-northeast" )->json_is( "/response/0/asn", "9939" )
+  ->json_is( "/response/0/cachegroup/name", "mid-northeast-group" )->json_is( "/response/0/asn", "9939" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );

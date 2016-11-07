@@ -69,7 +69,6 @@ sub get_dbinfo {
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

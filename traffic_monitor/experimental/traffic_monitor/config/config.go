@@ -6,17 +6,24 @@ import (
 	"time"
 )
 
+// LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
 type LogLocation string
 
-const LogLocationStdout = "stdout"
-const LogLocationStderr = "stderr"
-const LogLocationNull = "null"
+const (
+	// LogLocationStdout indicates the stdout IO stream
+	LogLocationStdout = "stdout"
+	// LogLocationStderr indicates the stderr IO stream
+	LogLocationStderr = "stderr"
+	// LogLocationNull indicates the null IO stream (/dev/null)
+	LogLocationNull = "null"
+)
 
+// Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
 	CacheHealthPollingInterval   time.Duration `json:"-"`
 	CacheStatPollingInterval     time.Duration `json:"-"`
 	MonitorConfigPollingInterval time.Duration `json:"-"`
-	HttpTimeout                  time.Duration `json:"-"`
+	HTTPTimeout                  time.Duration `json:"-"`
 	PeerPollingInterval          time.Duration `json:"-"`
 	MaxEvents                    uint64        `json:"max_events"`
 	MaxStatHistory               uint64        `json:"max_stat_history"`
@@ -27,13 +34,16 @@ type Config struct {
 	LogLocationWarning           string        `json:"log_location_warning"`
 	LogLocationInfo              string        `json:"log_location_info"`
 	LogLocationDebug             string        `json:"log_location_debug"`
+	ServeReadTimeout             time.Duration `json:"-"`
+	ServeWriteTimeout            time.Duration `json:"-"`
 }
 
+// DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
 	CacheHealthPollingInterval:   6 * time.Second,
 	CacheStatPollingInterval:     6 * time.Second,
 	MonitorConfigPollingInterval: 5 * time.Second,
-	HttpTimeout:                  2 * time.Second,
+	HTTPTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
 	MaxEvents:                    200,
 	MaxStatHistory:               5,
@@ -44,6 +54,8 @@ var DefaultConfig = Config{
 	LogLocationWarning:           LogLocationStdout,
 	LogLocationInfo:              LogLocationNull,
 	LogLocationDebug:             LogLocationNull,
+	ServeReadTimeout:             10 * time.Second,
+	ServeWriteTimeout:            10 * time.Second,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -53,16 +65,18 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		CacheHealthPollingIntervalMs   uint64 `json:"cache_health_polling_interval_ms"`
 		CacheStatPollingIntervalMs     uint64 `json:"cache_stat_polling_interval_ms"`
 		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
-		HttpTimeoutMs                  uint64 `json:"http_timeout_ms"`
+		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
+		ServeReadTimeoutMs             uint64 `json:"serve_read_timeout_ms"`
+		ServeWriteTimeoutMs            uint64 `json:"serve_write_timeout_ms"`
 		*Alias
 	}{
 		CacheHealthPollingIntervalMs:   uint64(c.CacheHealthPollingInterval / time.Millisecond),
 		CacheStatPollingIntervalMs:     uint64(c.CacheStatPollingInterval / time.Millisecond),
 		MonitorConfigPollingIntervalMs: uint64(c.MonitorConfigPollingInterval / time.Millisecond),
-		HttpTimeoutMs:                  uint64(c.HttpTimeout / time.Millisecond),
+		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
 		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
@@ -70,16 +84,19 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON populates this config object from given JSON bytes.
 func (c *Config) UnmarshalJSON(data []byte) error {
 	type Alias Config
 	aux := &struct {
 		CacheHealthPollingIntervalMs   *uint64 `json:"cache_health_polling_interval_ms"`
 		CacheStatPollingIntervalMs     *uint64 `json:"cache_stat_polling_interval_ms"`
 		MonitorConfigPollingIntervalMs *uint64 `json:"monitor_config_polling_interval_ms"`
-		HttpTimeoutMs                  *uint64 `json:"http_timeout_ms"`
+		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
+		ServeReadTimeoutMs             *uint64 `json:"serve_read_timeout_ms"`
+		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -97,8 +114,8 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.MonitorConfigPollingIntervalMs != nil {
 		c.MonitorConfigPollingInterval = time.Duration(*aux.MonitorConfigPollingIntervalMs) * time.Millisecond
 	}
-	if aux.HttpTimeoutMs != nil {
-		c.HttpTimeout = time.Duration(*aux.HttpTimeoutMs) * time.Millisecond
+	if aux.HTTPTimeoutMS != nil {
+		c.HTTPTimeout = time.Duration(*aux.HTTPTimeoutMS) * time.Millisecond
 	}
 	if aux.PeerPollingIntervalMs != nil {
 		c.PeerPollingInterval = time.Duration(*aux.PeerPollingIntervalMs) * time.Millisecond
@@ -108,6 +125,12 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.StatFlushIntervalMs != nil {
 		c.StatFlushInterval = time.Duration(*aux.StatFlushIntervalMs) * time.Millisecond
+	}
+	if aux.ServeReadTimeoutMs != nil {
+		c.ServeReadTimeout = time.Duration(*aux.ServeReadTimeoutMs) * time.Millisecond
+	}
+	if aux.ServeWriteTimeoutMs != nil {
+		c.ServeWriteTimeout = time.Duration(*aux.ServeWriteTimeoutMs) * time.Millisecond
 	}
 	return nil
 }

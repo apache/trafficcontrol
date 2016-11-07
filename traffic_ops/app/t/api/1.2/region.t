@@ -1,6 +1,5 @@
 package main;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,7 +40,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
         "name" => "region1"})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "region1" )
-	->json_is( "/response/divisionName" => "mountain" )
+	->json_is( "/response/division/name" => "mountain" )
             , 'Does the region details return?';
 ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
         "name" => "region1"})->status_is(400);

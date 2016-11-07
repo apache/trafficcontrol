@@ -1,6 +1,5 @@
 package API::Server;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,12 +60,17 @@ sub index {
 	if ( defined($servers) ) {
 		my $is_admin = &is_admin($self);
 		while ( my $row = $servers->next ) {
+			my $cachegroup 		= { "id" => $row->cachegroup->id, "name" => $row->cachegroup->name };
+			my $cdn 			= { "id" => $row->cdn->id, "name" => $row->cdn->name };
+			my $physLocation 	= { "id" => $row->phys_location->id, "name" => $row->phys_location->name };
+			my $profile 		= { "id" => $row->profile->id, "name" => $row->profile->name };
+			my $status 			= { "id" => $row->status->id, "name" => $row->status->name };
+			my $type 			= { "id" => $row->type->id, "name" => $row->type->name };
+
 			push(
 				@data, {
-					"cachegroup"     => $row->cachegroup->name,
-					"cachegroupId"   => $row->cachegroup->id,
-					"cdnId"          => $row->cdn->id,
-					"cdnName"        => $row->cdn->name,
+					"cachegroup"     => $cachegroup,
+					"cdn" 	         => $cdn,
 					"domainName"     => $row->domain_name,
 					"guid"           => $row->guid,
 					"hostName"       => $row->host_name,
@@ -88,20 +92,15 @@ sub index {
 					"mgmtIpAddress"  => $row->mgmt_ip_address,
 					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
-					"offlineReason" => $row->offline_reason,
-					"physLocation"   => $row->phys_location->name,
-					"physLocationId" => $row->phys_location->id,
-					"profile"        => $row->profile->name,
-					"profileId"      => $row->profile->id,
-					"profileDesc"    => $row->profile->description,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $physLocation,
+					"profile"        => $profile,
 					"rack"           => $row->rack,
 					"routerHostName" => $row->router_host_name,
 					"routerPortName" => $row->router_port_name,
-					"status"         => $row->status->name,
-					"statusId"       => $row->status->id,
+					"status"         => $status,
 					"tcpPort"        => $row->tcp_port,
-					"type"           => $row->type->name,
-					"typeId"         => $row->type->id,
+					"type"           => $type,
 					"updPending"     => \$row->upd_pending
 				}
 			);
@@ -119,12 +118,17 @@ sub show {
 	my @data     = ();
 	my $is_admin = &is_admin($self);
 	while ( my $row = $rs_data->next ) {
+		my $cachegroup 		= { "id" => $row->cachegroup->id, "name" => $row->cachegroup->name };
+		my $cdn 			= { "id" => $row->cdn->id, "name" => $row->cdn->name };
+		my $physLocation 	= { "id" => $row->phys_location->id, "name" => $row->phys_location->name };
+		my $profile 		= { "id" => $row->profile->id, "name" => $row->profile->name };
+		my $status 			= { "id" => $row->status->id, "name" => $row->status->name };
+		my $type 			= { "id" => $row->type->id, "name" => $row->type->name };
+
 		push(
 			@data, {
-				"cachegroup"     => $row->cachegroup->name,
-				"cachegroupId"   => $row->cachegroup->id,
-				"cdnId"          => $row->cdn->id,
-				"cdnName"        => $row->cdn->name,
+				"cachegroup"     => $cachegroup,
+				"cdn"     	     => $cdn,
 				"domainName"     => $row->domain_name,
 				"guid"           => $row->guid,
 				"hostName"       => $row->host_name,
@@ -147,19 +151,14 @@ sub show {
 				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
 				"offline_reason" => $row->offline_reason,
-				"physLocation"   => $row->phys_location->name,
-				"physLocationId" => $row->phys_location->id,
-				"profile"        => $row->profile->name,
-				"profileId"      => $row->profile->id,
-				"profileDesc"    => $row->profile->description,
+				"physLocation"   => $physLocation,
+				"profile"        => $profile,
 				"rack"           => $row->rack,
 				"routerHostName" => $row->router_host_name,
 				"routerPortName" => $row->router_port_name,
-				"status"         => $row->status->name,
-				"statusId"       => $row->status->id,
+				"status"         => $status,
 				"tcpPort"        => $row->tcp_port,
-				"type"           => $row->type->name,
-				"typeId"         => $row->type->id,
+				"type"           => $type,
 				"updPending"     => \$row->upd_pending
 			}
 		);
@@ -188,8 +187,8 @@ sub update {
 	}
 
 	my $values = {
-		cachegroup               	=> $params->{cachegroupId},
-		cdn_id                     	=> $params->{cdnId},
+		cachegroup               	=> $params->{cachegroup}->{id},
+		cdn_id                     	=> $params->{cdn}->{id},
 		domain_name               	=> $params->{domainName},
 		host_name                   => $params->{hostName},
 		https_port           		=> $params->{httpsPort},
@@ -209,26 +208,31 @@ sub update {
 		mgmt_ip_netmask          	=> $params->{mgmtIpNetmask},
 		mgmt_ip_gateway           	=> $params->{mgmtIpGateway},
 		offline_reason            	=> $params->{offlineReason},
-		phys_location            	=> $params->{physLocationId},
-		profile             		=> $params->{profileId},
+		phys_location            	=> $params->{physLocation}->{id},
+		profile             		=> $params->{profile}->{id},
 		rack                     	=> $params->{rack},
 		router_host_name       		=> $params->{routerHostName},
 		router_port_name          	=> $params->{routerPortName},
-		status                   	=> $params->{statusId},
+		status                   	=> $params->{status}->{id},
 		tcp_port                 	=> $params->{tcpPort},
-		type                     	=> $params->{typeId},
+		type                     	=> $params->{type}->{id},
 		upd_pending               	=> $params->{updPending}
 	};
 
 	my $rs = $server->update($values);
 	if ($rs) {
 		my @response;
+		my $cachegroup 		= { "id" => $rs->cachegroup->id, "name" => $rs->cachegroup->name };
+		my $cdn 			= { "id" => $rs->cdn->id, "name" => $rs->cdn->name };
+		my $physLocation 	= { "id" => $rs->phys_location->id, "name" => $rs->phys_location->name };
+		my $profile 		= { "id" => $rs->profile->id, "name" => $rs->profile->name };
+		my $status 			= { "id" => $rs->status->id, "name" => $rs->status->name };
+		my $type 			= { "id" => $rs->type->id, "name" => $rs->type->name };
+
 		push(
 			@response, {
-				"cachegroup"     => $rs->cachegroup->name,
-				"cachegroupId"   => $rs->cachegroup->id,
-				"cdnId"          => $rs->cdn->id,
-				"cdnName"        => $rs->cdn->name,
+				"cachegroup"     => $cachegroup,
+				"cdn"          	 => $cdn,
 				"domainName"     => $rs->domain_name,
 				"guid"           => $rs->guid,
 				"hostName"       => $rs->host_name,
@@ -251,19 +255,14 @@ sub update {
 				"mgmtIpNetmask"  => $rs->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $rs->mgmt_ip_gateway,
 				"offlineReason"  => $rs->offline_reason,
-				"physLocation"   => $rs->phys_location->name,
-				"physLocationId" => $rs->phys_location->id,
-				"profile"        => $rs->profile->name,
-				"profileId"      => $rs->profile->id,
-				"profileDesc"    => $rs->profile->description,
+				"physLocation"   => $physLocation,
+				"profile"        => $profile,
 				"rack"           => $rs->rack,
 				"routerHostName" => $rs->router_host_name,
 				"routerPortName" => $rs->router_port_name,
-				"status"         => $rs->status->name,
-				"statusId"       => $rs->status->id,
+				"status"         => $status,
 				"tcpPort"        => $rs->tcp_port,
-				"type"           => $rs->type->name,
-				"typeId"         => $rs->type->id,
+				"type"           => $type,
 				"updPending"     => \$rs->upd_pending
 			}
 		);
@@ -292,8 +291,8 @@ sub create {
 	}
 
 	my $values = {
-		cachegroup               	=> $params->{cachegroupId},
-		cdn_id                     	=> $params->{cdnId},
+		cachegroup               	=> $params->{cachegroup}->{id},
+		cdn_id                     	=> $params->{cdn}->{id},
 		domain_name               	=> $params->{domainName},
 		host_name                   => $params->{hostName},
 		https_port           		=> $params->{httpsPort},
@@ -313,14 +312,14 @@ sub create {
 		mgmt_ip_netmask          	=> $params->{mgmtIpNetmask},
 		mgmt_ip_gateway           	=> $params->{mgmtIpGateway},
 		offline_reason            	=> $params->{offlineReason},
-		phys_location            	=> $params->{physLocationId},
-		profile             		=> $params->{profileId},
+		phys_location            	=> $params->{physLocation}->{id},
+		profile             		=> $params->{profile}->{id},
 		rack                     	=> $params->{rack},
 		router_host_name       		=> $params->{routerHostName},
 		router_port_name          	=> $params->{routerPortName},
-		status                   	=> $params->{statusId},
+		status                   	=> $params->{status}->{id},
 		tcp_port                 	=> $params->{tcpPort},
-		type                     	=> $params->{typeId},
+		type                     	=> $params->{type}->{id},
 		upd_pending               	=> $params->{updPending}
 	};
 
@@ -328,12 +327,17 @@ sub create {
 	my $rs = $insert->insert();
 	if ($rs) {
 		my @response;
+		my $cachegroup 		= { "id" => $rs->cachegroup->id, "name" => $rs->cachegroup->name };
+		my $cdn 			= { "id" => $rs->cdn->id, "name" => $rs->cdn->name };
+		my $physLocation 	= { "id" => $rs->phys_location->id, "name" => $rs->phys_location->name };
+		my $profile 		= { "id" => $rs->profile->id, "name" => $rs->profile->name };
+		my $status 			= { "id" => $rs->status->id, "name" => $rs->status->name };
+		my $type 			= { "id" => $rs->type->id, "name" => $rs->type->name };
+
 		push(
 			@response, {
-				"cachegroup"     => $rs->cachegroup->name,
-				"cachegroupId"   => $rs->cachegroup->id,
-				"cdnId"          => $rs->cdn->id,
-				"cdnName"        => $rs->cdn->name,
+				"cachegroup"     => $cachegroup,
+				"cdn"          	 => $cdn,
 				"domainName"     => $rs->domain_name,
 				"guid"           => $rs->guid,
 				"hostName"       => $rs->host_name,
@@ -356,19 +360,14 @@ sub create {
 				"mgmtIpNetmask"  => $rs->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $rs->mgmt_ip_gateway,
 				"offlineReason"  => $rs->offline_reason,
-				"physLocation"   => $rs->phys_location->name,
-				"physLocationId" => $rs->phys_location->id,
-				"profile"        => $rs->profile->name,
-				"profileId"      => $rs->profile->id,
-				"profileDesc"    => $rs->profile->description,
+				"physLocation"   => $physLocation,
+				"profile"        => $profile,
 				"rack"           => $rs->rack,
 				"routerHostName" => $rs->router_host_name,
 				"routerPortName" => $rs->router_port_name,
-				"status"         => $rs->status->name,
-				"statusId"       => $rs->status->id,
+				"status"         => $status,
 				"tcpPort"        => $rs->tcp_port,
-				"type"           => $rs->type->name,
-				"typeId"         => $rs->type->id,
+				"type"           => $type,
 				"updPending"     => \$rs->upd_pending
 			}
 		);
@@ -760,17 +759,17 @@ sub is_server_valid {
 	my $self   = shift;
 	my $params = shift;
 
-	if (!$self->is_valid_server_type($params->{typeId})) {
+	if (!$self->is_valid_server_type($params->{type}->{id})) {
 		return ( 0, "Invalid server type" );
 	}
 
 	my $rules = {
-		fields => [ qw/cachegroupId cdnId domainName hostName httpsPort iloIpAddress iloIpNetmask iloIpGateway iloUsername iloPassword interfaceMtu interfaceName ip6Address ip6Gateway ipAddress ipNetmask ipGateway mgmtIpAddress mgmtIpNetmask mgmtIpGateway offlineReason physLocationId profileId rack routerHostName routerPortName statusId tcpPort typeId updPending/ ],
+		fields => [ qw/cachegroup cdn domainName hostName httpsPort iloIpAddress iloIpNetmask iloIpGateway iloUsername iloPassword interfaceMtu interfaceName ip6Address ip6Gateway ipAddress ipNetmask ipGateway mgmtIpAddress mgmtIpNetmask mgmtIpGateway offlineReason physLocation profile rack routerHostName routerPortName status tcpPort type updPending/ ],
 
 		# Validation checks to perform
 		checks => [
-			cachegroupId => [ is_required("is required") ],
-			cdnId => [ is_required("is required") ],
+			cachegroup => [ is_required("is required") ],
+			cdn => [ is_required("is required") ],
 			domainName => [ is_required("is required") ],
 			hostName => [ is_required("is required") ],
 			interfaceMtu => [ is_required("is required") ],
@@ -778,10 +777,10 @@ sub is_server_valid {
 			ipAddress => [ is_required("is required") ],
 			ipNetmask => [ is_required("is required") ],
 			ipGateway => [ is_required("is required") ],
-			physLocationId => [ is_required("is required") ],
-			profileId => [ is_required("is required") ],
-			statusId => [ is_required("is required") ],
-			typeId => [ is_required("is required") ],
+			physLocation => [ is_required("is required") ],
+			profile => [ is_required("is required") ],
+			status => [ is_required("is required") ],
+			type => [ is_required("is required") ],
 			updPending => [ is_required("is required") ]
 		]
 	};

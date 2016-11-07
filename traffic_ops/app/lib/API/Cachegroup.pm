@@ -1,6 +1,5 @@
 package API::Cachegroup;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,6 +41,9 @@ sub index {
 
 	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
+		my $parent_cachegroup = ( defined $row->parent_cachegroup_id ) ? { "id" => $row->parent_cachegroup_id, "name" => $idnames{ $row->parent_cachegroup_id } } : undef;
+		my $secondary_parent_cachegroup = ( defined $row->secondary_parent_cachegroup_id ) ? { "id" => $row->secondary_parent_cachegroup_id, "name" => $idnames{ $row->secondary_parent_cachegroup_id } } : undef;
+		my $type = { "id" => $row->type->id, "name" => $row->type->name };
 		push(
 			@data, {
 				"id"                            => $row->id,
@@ -50,14 +52,9 @@ sub index {
 				"latitude"                      => $row->latitude,
 				"longitude"                     => $row->longitude,
 				"lastUpdated"                   => $row->last_updated,
-				"parentCachegroupId"            => $row->parent_cachegroup_id,
-				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
-				"secondaryParentCachegroupId"   => $row->secondary_parent_cachegroup_id,
-				"secondaryParentCachegroupName" => ( defined $row->secondary_parent_cachegroup_id )
-				? $idnames{ $row->secondary_parent_cachegroup_id }
-				: undef,
-				"typeId"   => $row->type->id,
-				"typeName" => $row->type->name
+				"parentCachegroup"            	=> $parent_cachegroup,
+				"secondaryParentCachegroup"   	=> $secondary_parent_cachegroup,
+				"type"   						=> $type
 			}
 		);
 	}
@@ -95,6 +92,9 @@ sub show {
 	}
 
 	while ( my $row = $rs_data->next ) {
+		my $parent_cachegroup = ( defined $row->parent_cachegroup_id ) ? { "id" => $row->parent_cachegroup_id, "name" => $idnames{ $row->parent_cachegroup_id } } : undef;
+		my $secondary_parent_cachegroup = ( defined $row->secondary_parent_cachegroup_id ) ? { "id" => $row->secondary_parent_cachegroup_id, "name" => $idnames{ $row->secondary_parent_cachegroup_id } } : undef;
+		my $type = { "id" => $row->type->id, "name" => $row->type->name };
 		push(
 			@data, {
 				"id"                            => $row->id,
@@ -103,14 +103,9 @@ sub show {
 				"latitude"                      => $row->latitude,
 				"longitude"                     => $row->longitude,
 				"lastUpdated"                   => $row->last_updated,
-				"parentCachegroupId"            => $row->parent_cachegroup_id,
-				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
-				"secondaryParentCachegroupId"   => $row->secondary_parent_cachegroup_id,
-				"secondaryParentCachegroupName" => ( defined $row->secondary_parent_cachegroup_id )
-				? $idnames{ $row->secondary_parent_cachegroup_id }
-				: undef,
-				"typeId"   => $row->type->id,
-				"typeName" => $row->type->name
+				"parentCachegroup"            	=> $parent_cachegroup,
+				"secondaryParentCachegroup"   	=> $secondary_parent_cachegroup,
+				"type"   						=> $type
 			}
 		);
 	}
@@ -158,9 +153,9 @@ sub update {
 		short_name                     => $params->{shortName},
 		latitude                       => $params->{latitude},
 		longitude                      => $params->{longitude},
-		parent_cachegroup_id           => $params->{parentCachegroupId},
-		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
-		type                           => $params->{typeId}
+		parent_cachegroup_id           => ( defined $params->{parentCachegroup} ) ? $params->{parentCachegroup}->{id} : undef,
+		secondary_parent_cachegroup_id => ( defined $params->{secondaryParentCachegroup} ) ? $params->{secondaryParentCachegroup}->{id} : undef,
+		type                           => $params->{type}->{id}
 	};
 
 	my $rs = $cachegroup->update($values);
@@ -173,24 +168,19 @@ sub update {
 			$idnames{ $row->id } = $row->name;
 		}
 
-		$response->{id}                 = $rs->id;
-		$response->{name}               = $rs->name;
-		$response->{shortName}          = $rs->short_name;
-		$response->{latitude}           = $rs->latitude;
-		$response->{longitude}          = $rs->longitude;
-		$response->{lastUpdated}        = $rs->last_updated;
-		$response->{parentCachegroupId} = $rs->parent_cachegroup_id;
-		$response->{parentCachegroupName} =
-			( defined $rs->parent_cachegroup_id )
-			? $idnames{ $rs->parent_cachegroup_id }
-			: undef;
-		$response->{secondaryParentCachegroupId} = $rs->secondary_parent_cachegroup_id;
-		$response->{secondaryParentCachegroupName} =
-			( defined $rs->secondary_parent_cachegroup_id )
-			? $idnames{ $rs->secondary_parent_cachegroup_id }
-			: undef;
-		$response->{typeId}   = $rs->type->id;
-		$response->{typeName} = $rs->type->name;
+		my $parent_cachegroup = ( defined $rs->parent_cachegroup_id ) ? { "id" => $rs->parent_cachegroup_id, "name" => $idnames{ $rs->parent_cachegroup_id } } : undef;
+		my $secondary_parent_cachegroup = ( defined $rs->secondary_parent_cachegroup_id ) ? { "id" => $rs->secondary_parent_cachegroup_id, "name" => $idnames{ $rs->secondary_parent_cachegroup_id } } : undef;
+		my $type = { "id" => $rs->type->id, "name" => $rs->type->name };
+
+		$response->{id}                 			= $rs->id;
+		$response->{name}               			= $rs->name;
+		$response->{shortName}          			= $rs->short_name;
+		$response->{latitude}           			= $rs->latitude;
+		$response->{longitude}          			= $rs->longitude;
+		$response->{lastUpdated}        			= $rs->last_updated;
+		$response->{parentCachegroup} 				= $parent_cachegroup;
+		$response->{secondaryParentCachegroup} 		= $secondary_parent_cachegroup;
+		$response->{type}   						= $type;
 
 		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -233,9 +223,9 @@ sub create {
 		short_name                     => $params->{shortName},
 		latitude                       => $params->{latitude},
 		longitude                      => $params->{longitude},
-		parent_cachegroup_id           => $params->{parentCachegroupId},
-		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
-		type                           => $params->{typeId}
+		parent_cachegroup_id           => ( defined $params->{parentCachegroup} ) ? $params->{parentCachegroup}->{id} : undef,
+		secondary_parent_cachegroup_id => ( defined $params->{secondaryParentCachegroup} ) ? $params->{secondaryParentCachegroup}->{id} : undef,
+		type                           => $params->{type}->{id}
 	};
 
 	my $insert = $self->db->resultset('Cachegroup')->create($values);
@@ -249,24 +239,19 @@ sub create {
 			$idnames{ $row->id } = $row->name;
 		}
 
-		$response->{id}                 = $rs->id;
-		$response->{name}               = $rs->name;
-		$response->{shortName}          = $rs->short_name;
-		$response->{latitude}           = $rs->latitude;
-		$response->{longitude}          = $rs->longitude;
-		$response->{lastUpdated}        = $rs->last_updated;
-		$response->{parentCachegroupId} = $rs->parent_cachegroup_id;
-		$response->{parentCachegroupName} =
-			( defined $rs->parent_cachegroup_id )
-			? $idnames{ $rs->parent_cachegroup_id }
-			: undef;
-		$response->{secondaryParentCachegroupId} = $rs->secondary_parent_cachegroup_id;
-		$response->{secondaryParentCachegroupName} =
-			( defined $rs->secondary_parent_cachegroup_id )
-			? $idnames{ $rs->secondary_parent_cachegroup_id }
-			: undef;
-		$response->{typeId}   = $rs->type->id;
-		$response->{typeName} = $rs->type->name;
+		my $parent_cachegroup = ( defined $rs->parent_cachegroup_id ) ? { "id" => $rs->parent_cachegroup_id, "name" => $idnames{ $rs->parent_cachegroup_id } } : undef;
+		my $secondary_parent_cachegroup = ( defined $rs->secondary_parent_cachegroup_id ) ? { "id" => $rs->secondary_parent_cachegroup_id, "name" => $idnames{ $rs->secondary_parent_cachegroup_id } } : undef;
+		my $type = { "id" => $rs->type->id, "name" => $rs->type->name };
+
+		$response->{id}                 			= $rs->id;
+		$response->{name}               			= $rs->name;
+		$response->{shortName}          			= $rs->short_name;
+		$response->{latitude}           			= $rs->latitude;
+		$response->{longitude}          			= $rs->longitude;
+		$response->{lastUpdated}        			= $rs->last_updated;
+		$response->{parentCachegroup} 				= $parent_cachegroup;
+		$response->{secondaryParentCachegroup} 		= $secondary_parent_cachegroup;
+		$response->{type}   						= $type;
 
 		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -444,18 +429,18 @@ sub is_cachegroup_valid {
 	my $self   = shift;
 	my $params = shift;
 
-	if (!$self->is_valid_cachegroup_type($params->{typeId})) {
+	if (!$self->is_valid_cachegroup_type($params->{type}->{id})) {
 		return ( 0, "Invalid cachegroup type" );
 	}
 
 	my $rules = {
-		fields => [ qw/name shortName latitude longitude parentCachegroupId secondaryParentCachegroupId typeId/ ],
+		fields => [ qw/name shortName latitude longitude parentCachegroup secondaryParentCachegroup type/ ],
 
 		# Validation checks to perform
 		checks => [
 			name => [ is_required("is required"), \&is_alphanumeric ],
 			shortName => [ is_required("is required"), \&is_alphanumeric ],
-			typeId => [ is_required("is required") ],
+			type => [ is_required("is required") ],
 			latitude => [ \&is_valid_lat ],
 			longitude => [ \&is_valid_long ]
 		]

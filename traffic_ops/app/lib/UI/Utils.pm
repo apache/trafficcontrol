@@ -1,6 +1,5 @@
 package UI::Utils;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -318,7 +317,7 @@ sub stash_role {
 	my $self = shift;
 
 	if ( !defined( $self->current_user() ) ) {
-		return $self->redirect_to('/login.html');
+		return $self->redirect_to('/loginpage');
 	}
 
 	my $user = $self->current_user()->{username};

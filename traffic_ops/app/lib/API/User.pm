@@ -1,6 +1,5 @@
 package API::User;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -77,6 +76,8 @@ sub index {
 	}
 
 	while ( my $row = $dbh->next ) {
+		my $role = { "id" => $row->role->id, "name" => $row->role->name };
+
 		push(
 			@data, {
 				"addressLine1"    => $row->address_line1,
@@ -94,8 +95,7 @@ sub index {
 				"postalCode"      => $row->postal_code,
 				"publicSshKey"    => $row->public_ssh_key,
 				"registrationSent"=> \$row->registration_sent,
-				"role"            => $row->role->id,
-				"rolename"        => $row->role->name,
+				"role"            => $role,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
 				"username"        => $row->username
@@ -112,6 +112,8 @@ sub show {
 	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' ] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
+		my $role = { "id" => $row->role->id, "name" => $row->role->name };
+
 		push(
 			@data, {
 				"addressLine1"    => $row->address_line1,
@@ -129,8 +131,7 @@ sub show {
 				"postalCode"      => $row->postal_code,
 				"publicSshKey"    => $row->public_ssh_key,
 				"registrationSent"=> \$row->registration_sent,
-				"role"            => $row->role->id,
-				"rolename"        => $row->role->name,
+				"role"            => $role,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
 				"username"        => $row->username
@@ -173,7 +174,7 @@ sub update {
 		postal_code 			=> $params->{postalCode},
 		public_ssh_key 			=> $params->{publicSshKey},
 		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
-		role 					=> $params->{role},
+		role 					=> $params->{role}->{id},
 		state_or_province 		=> $params->{stateOrProvince},
 		username 				=> $params->{username}
 	};
@@ -188,6 +189,8 @@ sub update {
 	my $rs = $user->update($values);
 	if ($rs) {
 		my $response;
+		my $role = { "id" => $rs->role->id, "name" => $rs->role->name };
+
 		$response->{addressLine1}        	= $rs->address_line1;
 		$response->{addressLine2} 			= $rs->address_line2;
 		$response->{city} 					= $rs->city;
@@ -203,8 +206,7 @@ sub update {
 		$response->{postalCode} 			= $rs->postal_code;
 		$response->{publicSshKey} 			= $rs->public_ssh_key;
 		$response->{registrationSent} 		= \$rs->registration_sent;
-		$response->{role} 					= $rs->role->id;
-		$response->{roleName} 				= $rs->role->name;
+		$response->{role} 					= $role;
 		$response->{stateOrProvince} 		= $rs->state_or_province;
 		$response->{uid} 					= $rs->uid;
 		$response->{username} 				= $rs->username;
@@ -286,6 +288,7 @@ sub current {
 				"email"           => "",
 				"fullName"        => "",
 				"newUser"         => \0,
+				"localUser"       => \0,
 				"addressLine1"    => "",
 				"addressLine2"    => "",
 				"city"            => "",
@@ -313,6 +316,7 @@ sub current {
 					"email"           => $row->email,
 					"fullName"        => $row->full_name,
 					"newUser"         => \$row->new_user,
+					"localUser"       => \1,
 					"addressLine1"    => $row->address_line1,
 					"addressLine2"    => $row->address_line2,
 					"city"            => $row->city,

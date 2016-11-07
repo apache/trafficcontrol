@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -19,4 +18,4 @@ Development
 
 How can I become involved?
 ==========================
-	See our `CONTRIBUTING <https://github.com/Comcast/traffic_control/blob/master/CONTRIBUTING.md>`_ page.
+	See our `CONTRIBUTING <https://github.com/apache/incubator-trafficcontrol/blob/master/CONTRIBUTING.md>`_ page.

@@ -1,6 +1,5 @@
 #!/usr/bin/env perl 
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +32,7 @@ my $usage = "\n"
 	. "--gpg-key          - Your gpg-key id. ie: 774ACED1\n"
 	. "--release-no       - The release-no name you want to cut. ie: 1.1.0\n"
 	. "--git-hash         - (optional) The git hash that will be used to reference the release. ie: da4aab57d \n"
-	. "--git-remote-url   - (optional) Overrides the git repo URL where the release will be pulled and sent (mostly for testing). ie: git\@github.com:yourrepo/traffic_control.git \n"
+	. "--git-remote-url   - (optional) Overrides the git repo URL where the release will be pulled and sent (mostly for testing). ie: git\@github.com:yourrepo/incubator-trafficcontrol.git \n"
 	. "--dry-run          - (optional) Simulation mode which will NOT apply any changes. \n"
 	. "--debug            - (optional) Show debug output\n"
 	. "\nArguments:   \n\n"
@@ -44,7 +43,7 @@ my $usage = "\n"
 my $git_remote_name = 'official';
 
 #my $git_remote_url = 'git@github.com:Comcast/traffic_control.git';
-my $git_remote_url = 'git@github.com:Comcast/traffic_control.git';
+my $git_remote_url = 'https://git-wip-us.apache.org/repos/asf/incubator-trafficcontrol.git';
 
 my $gpg_key;
 my $release_no;
@@ -207,7 +206,7 @@ sub check_branch_exists {
 
 sub clone_repo_to_tmp {
 	my $tmp_dir = "/tmp";
-	my $tc_dir  = "traffic_control";
+	my $tc_dir  = "incubator-trafficcontrol";
 	$working_dir = sprintf( "%s/%s", $tmp_dir, $tc_dir );
 	remove_tree($working_dir);
 	chdir $tmp_dir;

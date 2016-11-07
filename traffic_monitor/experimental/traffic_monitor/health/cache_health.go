@@ -1,43 +1,21 @@
 package health
 
 import (
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
 	"fmt"
 	"strconv"
 	"strings"
 )
 
-// Get the String value of one of those pesky map[string]interface{} things that seem so easy
-func getString(key string, intface map[string]interface{}) (string, error) {
-	str, ok := intface[key].(string)
-
-	if ok {
-		return str, nil
-	} else {
-		return "", fmt.Errorf("Error in getString: No string found for key %s", key)
-	}
-}
-
-// Get the float64 value of one of those pesky map[string]interface{} things that seem so easy
-func getNumber(key string, intface map[string]interface{}) (float64, error) {
-	val, ok := intface[key].(float64)
-
-	if ok {
-		return val, nil
-	} else {
-		return -1, fmt.Errorf("Error in getNumber: No number found for %s", key)
-	}
-}
-
 func setError(newResult *cache.Result, err error) {
 	newResult.Error = err
 	newResult.Available = false
 }
 
-// Get the vitals to decide health on in the right format
+// GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
@@ -54,7 +32,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 		}
 		newResult.Vitals.LoadAvg = oneMinAvg
 	} else {
-		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.Id))
+		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
 		return
 	}
 
@@ -90,14 +68,14 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	// inf.speed -- value looks like "10000" (without the quotes) so it is in Mbps.
 	// TODO JvD: Should we really be running this code every second for every cache polled????? I don't think so.
 	interfaceBandwidth := newResult.Astats.System.InfSpeed
-	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.Id)].Profile].Parameters.MinFreeKbps
+	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.ID)].Profile].Parameters.MinFreeKbps
 
 	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
 // EvalCache returns whether the given cache should be marked available, and a string describing why
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
-	status := mc.TrafficServer[string(result.Id)].Status
+	status := mc.TrafficServer[string(result.ID)].Status
 	switch {
 	case status == "ADMIN_DOWN":
 		return false, "set to ADMIN_DOWN"
@@ -107,8 +85,8 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 		return true, "set to ONLINE"
 	case result.Error != nil:
 		return false, fmt.Sprintf("error: %v", result.Error)
-	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg:
-		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg)
+	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HealthThresholdLoadAvg:
+		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HealthThresholdLoadAvg)
 	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
 		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, result.Vitals.MaxKbpsOut)
 	default:

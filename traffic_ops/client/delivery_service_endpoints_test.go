@@ -1,5 +1,4 @@
 /*
-   Copyright 2015 Comcast Cable Communications Management, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -91,5 +90,41 @@ func TestDeliveryServiceRoutingEp(t *testing.T) {
 		testHelper.Error(t, "Should get back %s for \"deliveryServiceRoutingEp\", got: %s", expected, ep)
 	} else {
 		testHelper.Success(t, "Should be able to get the correct delivery service routing endpoint")
+	}
+}
+
+func TestDeliveryServiceServerEp(t *testing.T) {
+	testHelper.Context(t, "Given the need to test that DeliveryServiceServer uses the correct URL")
+
+	ep := deliveryServiceServerEp("1", "2")
+	expected := "/api/1.2/deliveryserviceserver.json?page=1&limit=2"
+	if ep != expected {
+		testHelper.Error(t, "Should get back %s for \"deliveryServiceServerEp\", got: %s", expected, ep)
+	} else {
+		testHelper.Success(t, "Should be able to get the correct delivery service server endpoint")
+	}
+}
+
+func TestDeliveryServiceSSLKeysByIDEp(t *testing.T) {
+	testHelper.Context(t, "Given the need to test that DeliveryServiceSSLKeysByID uses the correct URL")
+
+	ep := deliveryServiceSSLKeysByIDEp("123")
+	expected := "/api/1.2/deliveryservices/xmlId/123/sslkeys.json"
+	if ep != expected {
+		testHelper.Error(t, "Should get back %s for \"deliveryServiceSSLKeysByIDEp\", got: %s", expected, ep)
+	} else {
+		testHelper.Success(t, "Should be able to get the correct delivery service SSL Keys by ID endpoint")
+	}
+}
+
+func TestDeliveryServiceSSLKeysByHostnameEp(t *testing.T) {
+	testHelper.Context(t, "Given the need to test that DeliveryServiceSSLKeysByHostname uses the correct URL")
+
+	ep := deliveryServiceSSLKeysByHostnameEp("some-host")
+	expected := "/api/1.2/deliveryservices/hostname/some-host/sslkeys.json"
+	if ep != expected {
+		testHelper.Error(t, "Should get back %s for \"deliveryServiceSSLKeysByHostnameEp\", got: %s", expected, ep)
+	} else {
+		testHelper.Success(t, "Should be able to get the correct delivery service SSL Keys by hostname endpoint")
 	}
 }

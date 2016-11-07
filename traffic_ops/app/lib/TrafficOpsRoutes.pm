@@ -1,6 +1,5 @@
 package TrafficOpsRoutes;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -493,19 +492,19 @@ sub api_routes {
 		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: HEALTH
-	$r->get("/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )->to( 'DeliveryService#health', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/health")->over( authenticated => 1 )->to( 'Deliveryservice#health', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: CAPACITY
-	$r->get("/api/$version/deliveryservices/:id/capacity")->over( authenticated => 1 )->to( 'DeliveryService#capacity', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/capacity")->over( authenticated => 1 )->to( 'Deliveryservice#capacity', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: ROUTING
-	$r->get("/api/$version/deliveryservices/:id/routing")->over( authenticated => 1 )->to( 'DeliveryService#routing', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/routing")->over( authenticated => 1 )->to( 'Deliveryservice#routing', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: STATE
-	$r->get("/api/$version/deliveryservices/:id/state")->over( authenticated => 1 )->to( 'DeliveryService#state', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:id/state")->over( authenticated => 1 )->to( 'Deliveryservice#state', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: REQUEST NEW DELIVERY SERVICE
-	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'DeliveryService#request', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/request")->over( authenticated => 1 )->to( 'Deliveryservice#request', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: STEERING DELIVERYSERVICES
 	$r->get("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#index', namespace => 'API::DeliveryService' );
@@ -550,9 +549,11 @@ sub api_routes {
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#index', namespace => $namespace );
 	$r->get( "/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Division#show', namespace => $namespace );
+	$r->get( "/api/$version/divisions/name/:name")->over( authenticated => 1 )->to( 'Division#index_by_name', namespace => $namespace );
 	$r->put("/api/$version/divisions/:id")->over( authenticated => 1 )->to( 'Division#update', namespace => $namespace );
 	$r->post("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#create', namespace => $namespace );
 	$r->delete("/api/$version/divisions/:id")->over( authenticated => 1 )->to( 'Division#delete', namespace => $namespace );
+	$r->delete("/api/$version/divisions/name/:name")->over( authenticated => 1 )->to( 'Division#delete_by_name', namespace => $namespace );
 
 	# -- FEDERATIONS
 	$r->get("/internal/api/$version/federations")->over( authenticated => 1 )->to( 'Federation#index', namespace => $namespace );
@@ -602,7 +603,6 @@ sub api_routes {
 	$r->get("/api/$version/phys_locations/trimmed")->over( authenticated => 1 )->to( 'PhysLocation#index_trimmed', namespace => $namespace );
 	$r->get( "/api/$version/phys_locations/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'PhysLocation#show', namespace => $namespace );
 	$r->post("/api/$version/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
-	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create_for_reg', namespace => $namespace );
 	$r->put("/api/$version/phys_locations/:id")->over( authenticated => 1 )->to( 'PhysLocation#update', namespace => $namespace );
 	$r->delete("/api/$version/phys_locations/:id")->over( authenticated => 1 )->to( 'PhysLocation#delete', namespace => $namespace );
 
@@ -624,10 +624,13 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/regions")->over( authenticated => 1 )->to( 'Region#index', namespace => $namespace );
 	$r->get( "/api/$version/regions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Region#show', namespace => $namespace );
+	$r->get( "/api/$version/regions/name/:name" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Region#index_by_name', namespace => $namespace );
 	$r->put("/api/$version/regions/:id")->over( authenticated => 1 )->to( 'Region#update', namespace => $namespace );
 	$r->post("/api/$version/regions")->over( authenticated => 1 )->to( 'Region#create', namespace => $namespace );
-	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create_for_div', namespace => $namespace );
+	$r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create_for_division', namespace => $namespace );
 	$r->delete("/api/$version/regions/:id")->over( authenticated => 1 )->to( 'Region#delete', namespace => $namespace );
+	$r->delete("/api/$version/regions/name/:name")->over( authenticated => 1 )->to( 'Region#delete_by_name', namespace => $namespace );
+	$r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create_for_region', namespace => $namespace );
 
 	# -- ROLES
 	# Supports ?orderby=key
