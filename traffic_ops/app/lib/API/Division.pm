@@ -24,6 +24,25 @@ sub index {
 	$self->success( \@data );
 }
 
+sub index_by_name {
+	my $self = shift;
+	my $name   = $self->param('name');
+
+	my $rs_data = $self->db->resultset("Division")->search( { name => $name } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"lastUpdated" => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+
 sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
@@ -141,6 +160,34 @@ sub delete {
 		return $self->alert( "Division delete failed." );
 	}
 }
+
+sub delete_by_name {
+	my $self = shift;
+	my $name     = $self->param('name');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $division = $self->db->resultset('Division')->find( { name => $name } );
+	if ( !defined($division) ) {
+		return $self->not_found();
+	}
+
+	my $regions = $self->db->resultset('Region')->find( { division => $division->id } );
+	if ( defined($regions) ) {
+		return $self->alert("This division is currently used by regions.");
+	}
+
+
+	my $rs = $division->delete();
+	if ($rs) {
+		return $self->success_message("Division deleted.");
+	} else {
+		return $self->alert( "Division delete failed." );
+	}
+}
+
 
 
 1;

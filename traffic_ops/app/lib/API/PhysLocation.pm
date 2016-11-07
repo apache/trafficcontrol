@@ -33,7 +33,9 @@ sub index {
 	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { prefetch => ['region'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 
-		next if $row->short_name eq 'UNDEF';
+		next if $row->short_name eq 'UNDEF'; # not sure what this is all about
+
+		my $region = { "id" => $row->region->id, "name" => $row->region->name };
 
 		push(
 			@data, {
@@ -46,8 +48,7 @@ sub index {
 				"name"        => $row->name,
 				"phone"       => $row->phone,
 				"poc"         => $row->poc,
-				"region"      => $row->region->name,
-				"regionId"    => $row->region->id,
+				"region"      => $region,
 				"shortName"   => $row->short_name,
 				"state"       => $row->state,
 				"zip"         => $row->zip
@@ -64,6 +65,8 @@ sub show {
 	my $rs_data = $self->db->resultset("PhysLocation")->search( { 'me.id' => $id }, { prefetch => ['region'] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
+		my $region = { "id" => $row->region->id, "name" => $row->region->name };
+
 		push(
 			@data, {
 				"address"     => $row->address,
@@ -75,8 +78,7 @@ sub show {
 				"name"        => $row->name,
 				"phone"       => $row->phone,
 				"poc"         => $row->poc,
-				"region"      => $row->region->name,
-				"regionId"    => $row->region->id,
+				"region"      => $region,
 				"shortName"   => $row->short_name,
 				"state"       => $row->state,
 				"zip"         => $row->zip
@@ -93,7 +95,7 @@ sub index_trimmed {
 	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { prefetch => ['region'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 
-		next if $row->short_name eq 'UNDEF';
+		next if $row->short_name eq 'UNDEF'; # not sure what this is all about
 
 		push(
 			@data, {
@@ -148,7 +150,7 @@ sub update {
 		name       => $name,
 		phone      => $params->{phone},
 		poc        => $params->{poc},
-		region     => $params->{regionId},
+		region     => $params->{region}->{id},
 		short_name => $short_name,
 		state      => $params->{state},
 		zip        => $params->{zip}
@@ -157,6 +159,8 @@ sub update {
 	my $rs = $phys_location->update($values);
 	if ($rs) {
 		my $response;
+		my $region = { "id" => $rs->region->id, "name" => $rs->region->name };
+
 		$response->{address}     = $rs->address;
 		$response->{city}        = $rs->city;
 		$response->{comments}    = $rs->comments;
@@ -166,8 +170,7 @@ sub update {
 		$response->{name}        = $rs->name;
 		$response->{phone}       = $rs->phone;
 		$response->{poc}         = $rs->poc;
-		$response->{region}      = $rs->region->name;
-		$response->{regionId}    = $rs->region->id;
+		$response->{region}      = $region;
 		$response->{shortName}   = $rs->short_name;
 		$response->{state}       = $rs->state;
 		$response->{zip}         = $rs->zip;
@@ -215,7 +218,7 @@ sub create {
 		name       => $name,
 		phone      => $params->{phone},
 		poc        => $params->{poc},
-		region     => $params->{regionId},
+		region     => $params->{region}->{id},
 		short_name => $short_name,
 		state      => $params->{state},
 		zip        => $params->{zip}
@@ -225,6 +228,8 @@ sub create {
 	my $rs = $insert->insert();
 	if ($rs) {
 		my $response;
+		my $region = { "id" => $rs->region->id, "name" => $rs->region->name };
+
 		$response->{address}     = $rs->address;
 		$response->{city}        = $rs->city;
 		$response->{comments}    = $rs->comments;
@@ -234,8 +239,7 @@ sub create {
 		$response->{name}        = $rs->name;
 		$response->{phone}       = $rs->phone;
 		$response->{poc}         = $rs->poc;
-		$response->{region}      = $rs->region->name;
-		$response->{regionId}    = $rs->region->id;
+		$response->{region}      = $region;
 		$response->{shortName}   = $rs->short_name;
 		$response->{state}       = $rs->state;
 		$response->{zip}         = $rs->zip;
@@ -248,7 +252,7 @@ sub create {
 	}
 }
 
-sub create_for_reg {
+sub create_for_region {
 	my $self        = shift;
 	my $region_name = $self->param('region_name');
 	my $params      = $self->req->json;
@@ -337,13 +341,13 @@ sub is_phys_location_valid {
 	my $params = shift;
 
 	my $rules = {
-		fields => [ qw/address city comments email name phone poc regionId shortName state zip/ ],
+		fields => [ qw/address city comments email name phone poc region shortName state zip/ ],
 
 		# Validation checks to perform
 		checks => [
 
 			# required fields
-			[ qw/address city name regionId shortName state zip/ ] => is_required("is required")
+			[ qw/address city name region shortName state zip/ ] => is_required("is required")
 
 		]
 	};

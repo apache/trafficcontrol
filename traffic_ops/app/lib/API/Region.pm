@@ -31,17 +31,41 @@ sub index {
 	my $orderby = $self->param('orderby') || "name";
 	my $rs_data = $self->db->resultset("Region")->search( undef, { prefetch => ['division'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
+	    my $division = { "id"     => $row->division->id, 
+		                 "name"   => $row->division->name 
+	   };
 		push(
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
-				"division"     => $row->division->id,
-				"divisionName" => $row->division->name
+				"division"     => $division,
 			}
 		);
 	}
 	$self->success( \@data );
 }
+
+sub index_by_name {
+	my $self = shift;
+	my $name   = $self->param('name');
+
+	my $rs_data = $self->db->resultset("Region")->search( { 'me.name' => $name }, { prefetch => ['division'] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+	    my $division = { "id"     => $row->division->id, 
+		                 "name"   => $row->division->name 
+	   };
+		push(
+			@data, {
+				"id"           => $row->id,
+				"name"         => $row->name,
+				"division"     => $division,
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 
 sub show {
 	my $self = shift;
@@ -50,12 +74,14 @@ sub show {
 	my $rs_data = $self->db->resultset("Region")->search( { 'me.id' => $id }, { prefetch => ['division'] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
+	    my $division = { "id"     => $row->division->id, 
+		                 "name"   => $row->division->name 
+	   };
 		push(
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
-				"division"     => $row->division->id,
-				"divisionName" => $row->division->name
+				"division"     => $division,
 			}
 		);
 	}
@@ -85,22 +111,22 @@ sub update {
 	}
 
 	if ( !defined( $params->{division} ) ) {
-		return $self->alert("Division Id is required.");
+		return $self->alert("Division is required.");
 	}
 
 	my $values = {
 		name     => $params->{name},
-		division => $params->{division}
+		division => $params->{division}->{id}
 	};
 
 	my $rs = $region->update($values);
 	if ($rs) {
 		my $response;
-		$response->{id}          = $rs->id;
-		$response->{name}        = $rs->name;
-		$response->{division}    = $rs->division->id;
-		$response->{divisionName}= $rs->division->name;
-		$response->{lastUpdated} = $rs->last_updated;
+		$response->{id}              = $rs->id;
+		$response->{name}            = $rs->name;
+		$response->{division}{id}    = $rs->division->id;
+		$response->{division}{name}  = $rs->division->name;
+		$response->{lastUpdated}     = $rs->last_updated;
 		&log( $self, "Updated Region name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "Region update was successful." );
 	}
@@ -125,7 +151,7 @@ sub create {
 
 	my $division_id = $params->{division};
 	if ( !defined($division_id) ) {
-		return $self->alert("Division Id is required.");
+		return $self->alert("Division is required.");
 	}
 
 	my $existing = $self->db->resultset('Region')->search( { name => $name } )->get_column('name')->single();
@@ -135,7 +161,7 @@ sub create {
 
 	my $values = {
 		name 		=> $params->{name} ,
-		division 	=> $params->{division}
+		division 	=> $params->{division}->{id}
 	};
 
 	my $insert = $self->db->resultset('Region')->create($values);
@@ -144,8 +170,8 @@ sub create {
 		my $response;
 		$response->{id}          	= $rs->id;
 		$response->{name}        	= $rs->name;
-		$response->{division}       = $rs->division->id;
-		$response->{divisionName}   = $rs->division->name;
+		$response->{division}{id}       = $rs->division->id;
+		$response->{division}{name} = $rs->division->name;
 		$response->{lastUpdated} 	= $rs->last_updated;
 
 		&log( $self, "Created Region name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
@@ -158,7 +184,7 @@ sub create {
 
 }
 
-sub create_for_div {
+sub create_for_division {
 	my $self          = shift;
 	my $division_name = $self->param('division_name');
 	my $params        = $self->req->json;
@@ -190,10 +216,10 @@ sub create_for_div {
 	my $response;
 	my $rs = $self->db->resultset('Region')->find( { id => $insert->id } );
 	if ( defined($rs) ) {
-		$response->{id}           = $rs->id;
-		$response->{name}         = $rs->name;
-		$response->{divisionName} = $division_name;
-		$response->{divsionId}    = $rs->division->id;
+		$response->{id}             = $rs->id;
+		$response->{name}           = $rs->name;
+		$response->{division}{id}   = $rs->division->id;
+		$response->{division}{name} = $division_name;
 		return $self->success($response);
 	}
 	return $self->alert( "create region " . $params->{name} . " failed." );
@@ -219,6 +245,28 @@ sub delete {
 		return $self->alert( "Region delete failed." );
 	}
 }
+
+sub delete_by_name {
+	my $self = shift;
+	my $name     = $self->param('name');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $region = $self->db->resultset('Region')->find( { name => $name } );
+	if ( !defined($region) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $region->delete();
+	if ($rs) {
+		return $self->success_message("Region deleted.");
+	} else {
+		return $self->alert( "Region delete failed." );
+	}
+}
+
 
 
 1;

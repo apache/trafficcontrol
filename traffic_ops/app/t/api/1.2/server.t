@@ -50,86 +50,85 @@ ok $t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(400)-
 	'Does the orderby work?';
 
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/hostName", "atlanta-mid-01" )->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-	->json_is( "/response/0/type", "MID" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
+  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
+  ->json_is( "/response/0/type/name", "MID" )
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/hostName", "atlanta-mid-01" )->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-	->json_is( "/response/0/type", "MID" )->json_is( "/response/0/status", "ONLINE" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
+  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
+  ->json_is( "/response/0/type/name", "MID" )
+  ->json_is( "/response/0/status/name", "ONLINE" )
+  ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok(
-	'/api/1.2/servers/create' => { Accept => 'application/json' } => json => {
-		"hostName"      => "server1",
-		"domainName"    => "example-domain.com",
-		"cachegroup"    => "cg2-mid-northwest",
-		"cdnName"       => "cdn1",
-		"ipAddress"     => "10.74.27.194",
-		"interfaceName" => "bond0",
-		"ipNetmask"     => "255.255.255.252",
-		"ipGateway"     => "10.74.27.194",
-		"interfaceMtu"  => "1500",
-		"physLocation"  => "Denver",
-		"type"          => "EDGE",
-		"profile"       => "EDGE1"
-	}
-)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Is a server created when all required fields are provided?';
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
+			"hostName" => "server1",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.194",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.194",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Is a server created when all required fields are provided?';
 
-ok $t->post_ok(
-	'/api/1.2/servers/create' => { Accept => 'application/json' } => json => {
-		"hostName"      => "server2",
-		"domainName"    => "example-domain.com",
-		"cachegroup"    => "cg2-mid-northwest",
-		"cdnName"       => "cdn1",
-		"ipAddress"     => "10.74.27.194",
-		"interfaceName" => "bond0",
-		"ipNetmask"     => "255.255.255.252",
-		"ipGateway"     => "10.74.27.194",
-		"interfaceMtu"  => "1500",
-		"physLocation"  => "Denver",
-		"type"          => "EDGE",
-		"profile"       => "EDGE1"
-	}
-)->status_is(400), 'Does the server creation fail because ip address is already used for the profile?';
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
+			"hostName" => "server2",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.194",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.194",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(400)
+	, 'Does the server creation fail because ip address is already used for the profile?';
 
-ok $t->post_ok(
-	'/api/1.2/servers/create' => { Accept => 'application/json' } => json => {
-		"hostName"      => "server3",
-		"domainName"    => "example-domain.com",
-		"cachegroup"    => "cg2-mid-northwest",
-		"cdnName"       => "cdn1",
-		"ipAddress"     => "10.74.27.85",
-		"interfaceName" => "bond0",
-		"ipNetmask"     => "255.255.255.252",
-		"ipGateway"     => "10.74.27.85",
-		"ip6Address"    => "2001:852:fe0f:27::2/64",
-		"ip6Gateway"    => "2001:852:fe0f:27::1",
-		"interfaceMtu"  => "1500",
-		"physLocation"  => "Denver",
-		"type"          => "EDGE",
-		"profile"       => "EDGE1"
-	}
-	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Is a server created when all required fields are provided plus an ip6 address?';
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
+			"hostName" => "server3",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.85",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.85",
+			"ip6Address" => "2001:852:fe0f:27::2/64",
+			"ip6Gateway" => "2001:852:fe0f:27::1",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Is a server created when all required fields are provided plus an ip6 address?';
 
-ok $t->post_ok(
-	'/api/1.2/servers/create' => { Accept => 'application/json' } => json => {
-		"hostName"      => "server3",
-		"domainName"    => "example-domain.com",
-		"cachegroup"    => "cg2-mid-northwest",
-		"cdnName"       => "cdn1",
-		"ipAddress"     => "10.74.27.77",
-		"interfaceName" => "bond0",
-		"ipNetmask"     => "255.255.255.252",
-		"ipGateway"     => "10.74.27.77",
-		"ip6Address"    => "2001:852:fe0f:27::2/64",
-		"ip6Gateway"    => "2001:852:fe0f:27::1",
-		"interfaceMtu"  => "1500",
-		"physLocation"  => "Denver",
-		"type"          => "EDGE",
-		"profile"       => "EDGE1"
-	}
-	)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Does the server creation fail because ip6 address is already used for the profile?';
+ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
+			"hostName" => "server3",
+			"domainName" => "example-domain.com",
+			"cachegroup" => "mid-northeast-group",
+			"cdnName" => "cdn1",
+			"ipAddress" => "10.74.27.77",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.77",
+			"ip6Address" => "2001:852:fe0f:27::2/64",
+			"ip6Gateway" => "2001:852:fe0f:27::1",
+			"interfaceMtu" => "1500",
+			"physLocation" => "Denver",
+			"type" => "EDGE",
+			"profile" => "EDGE1" })
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server creation fail because ip6 address is already used for the profile?';
 
 # Count the 'response number'
 my $count_response = sub {

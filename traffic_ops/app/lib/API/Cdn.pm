@@ -108,7 +108,7 @@ sub create {
 
 	my $value = { name => $params->{name}, };
 	if ( defined( $params->{dnssecEnabled} ) ) {
-		$value->{dnssec_enabled} = $params->{dnssecEnabled};
+		$value->{dnssec_enabled} = lc( $params->{dnssecEnabled} ) ne 'false' ? 1 : 0;
 	}
 
 	my $insert = $self->db->resultset('Cdn')->create($value);
@@ -119,7 +119,7 @@ sub create {
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
-		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
 		return $self->success( $response, "cdn was created." );
 	}
@@ -156,7 +156,7 @@ sub update {
 
 	my $value = { name => $params->{name}, };
 	if ( defined( $params->{dnssecEnabled} ) ) {
-		$value->{dnssec_enabled} = $params->{dnssecEnabled};
+		$value->{dnssec_enabled} = lc( $params->{dnssecEnabled} ) ne 'false' ? 1 : 0;
 	}
 
 	my $rs = $cdn->update($value);
@@ -164,7 +164,7 @@ sub update {
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
-		$response->{dnssecEnabled} = $rs->dnssec_enabled;
+		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "CDN update was successful." );
 	}
@@ -199,6 +199,37 @@ sub delete {
 	my $name = $cdn->get_column('name')->single();
 	$cdn->delete();
 	&log( $self, "Delete cdn " . $name, "APICHANGE" );
+	return $self->success_message("cdn was deleted.");
+}
+
+sub delete_by_name {
+	my $self = shift;
+	my $cdn_name   = $self->param('name');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $cdn = $self->db->resultset('Cdn')->find( { name => $cdn_name } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+	my $id = $cdn->id;
+
+	my $rs = $self->db->resultset('Server')->search( { cdn_id => $id } );
+	if ( $rs->count() > 0 ) {
+		$self->app->log->error("Failed to delete cdn id = $id has servers");
+		return $self->alert("Failed to delete cdn id = $id has servers");
+	}
+
+	$rs = $self->db->resultset('Deliveryservice')->search( { cdn_id => $id } );
+	if ( $rs->count() > 0 ) {
+		$self->app->log->error("Failed to delete cdn id = $id has delivery services");
+		return $self->alert("Failed to delete cdn id = $id has delivery services");
+	}
+
+	$cdn->delete();
+	&log( $self, "Delete cdn " . $cdn_name, "APICHANGE" );
 	return $self->success_message("cdn was deleted.");
 }
 
