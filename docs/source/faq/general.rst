@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -34,7 +33,7 @@ Who is using Traffic Control?
 
 How do I get help with Traffic Control?
 =======================================
-	Hop on to our Slack Channel by filling out `this form <https://goo.gl/Suzakj>`_, or send a question to our google forum `here <https://groups.google.com/forum/#!forum/traffic_control>`_.
+	Hop on to our Slack Channel by filling out `this form <https://goo.gl/Suzakj>`_, or send a question to our mailing list `here <mailto:users@trafficcontrol.incubator.apache.org>`_.
 	
 What is Rascal?
 ===============
@@ -50,4 +49,4 @@ What is Twelve Monkeys?
 
 What license is Traffic Control released under?
 ===============================================
-	See the `LICENSE file <https://github.com/Comcast/traffic_control/blob/master/LICENSE>`_
+	See the `LICENSE file <https://github.com/apache/incubator-trafficcontrol/blob/master/LICENSE>`_

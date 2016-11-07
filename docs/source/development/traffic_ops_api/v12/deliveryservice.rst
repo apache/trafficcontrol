@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -25,9 +24,9 @@ Delivery Service
 /api/1.2/deliveryservices
 +++++++++++++++++++++++++
 
-**GET /api/1.2/deliveryservices.json**
+**GET /api/1.2/deliveryservices**
 
-  Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
+  Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
   Authentication Required: Yes
 
@@ -63,8 +62,6 @@ Delivery Service
   | ``dscp``                 | string | The Differentiated Services Code Point (DSCP) with which to mark downstream (EDGE ->  customer) traffic.                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``edgeHeaderRewrite``    | string | The EDGE header rewrite actions to perform.                                                                                          |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``exampleURLs``          |  array | Entry points into the CDN for this deliveryservice.                                                                                  |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``geoLimitRedirectUrl``  | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -106,8 +103,6 @@ Delivery Service
   | ``longDesc1``            | string | Description field 2.                                                                                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``longDesc2``            | string | Description field 2.                                                                                                                 |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``matchList``            | array  | Array of matchList hashes.                                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``>>type``               | string | The type of MatchList (one of :ref:to-api-v11-types use_in_table='regex').                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -254,7 +249,7 @@ Delivery Service
 
 **GET /api/1.2/deliveryservices/:id**
 
-  Retrieves a specific delivery service. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
+  Retrieves a specific delivery service. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
   Authentication Required: Yes
 
@@ -482,7 +477,7 @@ Delivery Service
 Health
 ++++++
 
-**GET /api/1.2/deliveryservices/:id/state.json**
+**GET /api/1.2/deliveryservices/:id/state**
 
   Retrieves the failover state for a delivery service.
 
@@ -531,7 +526,7 @@ Health
 
 |
 
-**GET /api/1.2/deliveryservices/:id/health.json**
+**GET /api/1.2/deliveryservices/:id/health**
 
   Retrieves the health of all locations (cache groups) for a delivery service.
 
@@ -581,7 +576,7 @@ Health
 
 |
 
-**GET /api/1.2/deliveryservices/:id/capacity.json**
+**GET /api/1.2/deliveryservices/:id/capacity**
 
   Retrieves the capacity percentages of a delivery service.
 
@@ -629,7 +624,7 @@ Health
 
 |
 
-**GET /api/1.2/deliveryservices/:id/routing.json**
+**GET /api/1.2/deliveryservices/:id/routing**
 
   Retrieves the routing method percentages of a delivery service.
 
@@ -693,7 +688,7 @@ Health
 Server
 ++++++
 
-**GET /api/1.2/deliveryserviceserver.json**
+**GET /api/1.2/deliveryserviceserver**
 
   Authentication Required: Yes
 
@@ -749,7 +744,7 @@ Server
 SSL Keys
 +++++++++
 
-**GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys.json**
+**GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys**
 
   Authentication Required: Yes
 
@@ -774,29 +769,34 @@ SSL Keys
 
   **Response Properties**
 
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                                                               Description                                                               |
-  +==================+========+=========================================================================================================================================+
-  | ``crt``          | string | base64 encoded crt file for delivery service                                                                                            |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``csr``          | string | base64 encoded csr file for delivery service                                                                                            |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``key``          | string | base64 encoded private key file for delivery service                                                                                    |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``businessUnit`` | string | The business unit entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``city``         | string | The city entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response          |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``organization`` | string | The organization entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response  |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``hostname``     | string | The hostname entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response      |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``country``      | string | The country entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response       |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``state``        | string | The state entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response         |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``version``      | string | The version of the certificate record in Riak                                                                                           |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``crt``             | string | base64 encoded crt file for delivery service                                                                                            |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``csr``             | string | base64 encoded csr file for delivery service                                                                                            |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``key``             | string | base64 encoded private key file for delivery service                                                                                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdn``             | string | The CDN of the delivery service for which the certs were generated.                                                                     |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deliveryservice`` | string | The XML ID of the delivery service for which the cert was generated.                                                                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``businessUnit``    | string | The business unit entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``city``            | string | The city entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``organization``    | string | The organization entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response  |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``hostname``        | string | The hostname generated by Traffic Ops that is used as the common name when generating the certificate.                                  |
+  |                     |        | This will be a FQDN for DNS delivery services and a wildcard URL for HTTP delivery services.                                            |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``country``         | string | The country entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``state``           | string | The state entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``version``         | string | The version of the certificate record in Riak                                                                                           |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -807,6 +807,8 @@ SSL Keys
           "key": "key",
           "csr": "csr"
         },
+        "deliveryservice": "my-ds",
+        "cdn": "qa",
         "businessUnit": "CDN_Eng",
         "city": "Denver",
         "organization": "KableTown",
@@ -819,7 +821,7 @@ SSL Keys
 
 |
 
-**GET /api/1.2/deliveryservices/hostname/:hostname/sslkeys.json**
+**GET /api/1.2/deliveryservices/hostname/:hostname/sslkeys**
 
   Authentication Required: Yes
 
@@ -844,29 +846,34 @@ SSL Keys
 
   **Response Properties**
 
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  |    Parameter     |  Type  |                                                               Description                                                               |
-  +==================+========+=========================================================================================================================================+
-  | ``crt``          | string | base64 encoded crt file for delivery service                                                                                            |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``csr``          | string | base64 encoded csr file for delivery service                                                                                            |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``key``          | string | base64 encoded private key file for delivery service                                                                                    |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``businessUnit`` | string | The business unit entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``city``         | string | The city entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response          |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``organization`` | string | The organization entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response  |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``hostname``     | string | The hostname entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response      |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``country``      | string | The country entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response       |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``state``        | string | The state entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response         |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``version``      | string | The version of the certificate record in Riak                                                                                           |
-  +------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``crt``             | string | base64 encoded crt file for delivery service                                                                                            |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``csr``             | string | base64 encoded csr file for delivery service                                                                                            |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``key``             | string | base64 encoded private key file for delivery service                                                                                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdn``             | string | The CDN of the delivery service for which the certs were generated.                                                                     |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deliveryservice`` | string | The XML ID of the delivery service for which the cert was generated.                                                                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``businessUnit``    | string | The business unit entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``city``            | string | The city entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``organization``    | string | The organization entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response  |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``hostname``        | string | The hostname generated by Traffic Ops that is used as the common name when generating the certificate.                                  |
+  |                     |        | This will be a FQDN for DNS delivery services and a wildcard URL for HTTP delivery services.                                            |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``country``         | string | The country entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``state``           | string | The state entered by the user when generating certs.  Field is optional and if not provided by the user will not be in response         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``version``         | string | The version of the certificate record in Riak                                                                                           |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -877,6 +884,8 @@ SSL Keys
           "key": "key",
           "csr": "csr"
         },
+        "deliveryservice": "my-ds",
+        "cdn": "qa",
         "businessUnit": "CDN_Eng",
         "city": "Denver",
         "organization": "KableTown",
@@ -889,7 +898,7 @@ SSL Keys
 
 |
 
-**GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys/delete.json**
+**GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys/delete**
 
   Authentication Required: Yes
 

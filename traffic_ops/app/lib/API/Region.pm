@@ -1,6 +1,5 @@
 package API::Region;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +37,27 @@ sub index {
 				"name"         => $row->name,
 				"division"     => $row->division->id,
 				"divisionName" => $row->division->name
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub index_by_name {
+	my $self = shift;
+	my $name   = $self->param('name');
+
+	my $rs_data = $self->db->resultset("Region")->search( { 'me.name' => $name }, { prefetch => ['division'] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		my $division = { "id"     => $row->division->id,
+			"name"   => $row->division->name
+		};
+		push(
+			@data, {
+				"id"           => $row->id,
+				"name"         => $row->name,
+				"division"     => $division,
 			}
 		);
 	}
@@ -159,7 +179,7 @@ sub create {
 
 }
 
-sub create_for_div {
+sub create_for_division {
 	my $self          = shift;
 	my $division_name = $self->param('division_name');
 	my $params        = $self->req->json;
@@ -209,6 +229,27 @@ sub delete {
 	}
 
 	my $region = $self->db->resultset('Region')->find( { id => $id } );
+	if ( !defined($region) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $region->delete();
+	if ($rs) {
+		return $self->success_message("Region deleted.");
+	} else {
+		return $self->alert( "Region delete failed." );
+	}
+}
+
+sub delete_by_name {
+	my $self = shift;
+	my $name     = $self->param('name');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $region = $self->db->resultset('Region')->find( { name => $name } );
 	if ( !defined($region) ) {
 		return $self->not_found();
 	}

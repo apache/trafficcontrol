@@ -1,7 +1,28 @@
 package poller
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync/atomic"
@@ -9,12 +30,12 @@ import (
 
 	"gopkg.in/fsnotify.v1"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
-	instr "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
-	to "github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/fetcher"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/handler"
+	instr "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/instrumentation"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper" // TODO move to common
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 type Poller interface {
@@ -22,14 +43,20 @@ type Poller interface {
 }
 
 type HttpPoller struct {
-	Config        HttpPollerConfig
-	ConfigChannel chan HttpPollerConfig
-	Fetcher       fetcher.Fetcher
-	TickChan      chan uint64
+	Config          HttpPollerConfig
+	ConfigChannel   chan HttpPollerConfig
+	FetcherTemplate fetcher.HttpFetcher // FetcherTemplate has all the constant settings, and is copied to create fetchers with custom HTTP client timeouts.
+	TickChan        chan uint64
+}
+
+type PollConfig struct {
+	URL     string
+	Timeout time.Duration
+	Handler handler.Handler
 }
 
 type HttpPollerConfig struct {
-	Urls     map[string]string
+	Urls     map[string]PollConfig
 	Interval time.Duration
 }
 
@@ -46,7 +73,7 @@ func NewHTTP(interval time.Duration, tick bool, httpClient *http.Client, counter
 		Config: HttpPollerConfig{
 			Interval: interval,
 		},
-		Fetcher: fetcher.HttpFetcher{
+		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:  fetchHandler,
 			Client:   httpClient,
 			Counters: counters,
@@ -114,29 +141,35 @@ func (p HttpPoller) Poll() {
 	// iterationCount++ // on tick<:
 	// case p.TickChan <- iterationCount:
 	killChans := map[string]chan<- struct{}{}
-	for {
-		select {
-		case newConfig := <-p.ConfigChannel:
-			deletions, additions := diffConfigs(p.Config, newConfig)
-			for _, id := range deletions {
-				killChan := killChans[id]
-				go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
-				delete(killChans, id)
-			}
-			for _, info := range additions {
-				kill := make(chan struct{})
-				killChans[info.ID] = kill
-				go pollHttp(info.Interval, info.ID, info.URL, p.Fetcher, kill)
-			}
-			p.Config = newConfig
+	for newConfig := range p.ConfigChannel {
+		deletions, additions := diffConfigs(p.Config, newConfig)
+		for _, id := range deletions {
+			killChan := killChans[id]
+			go func() { killChan <- struct{}{} }() // go - we don't want to wait for old polls to die.
+			delete(killChans, id)
 		}
+		for _, info := range additions {
+			kill := make(chan struct{})
+			killChans[info.ID] = kill
+
+			fetcher := p.FetcherTemplate
+			if info.Timeout != 0 { // if the timeout isn't explicitly set, use the template value.
+				c := *fetcher.Client
+				fetcher.Client = &c // copy the client, so we don't change other fetchers.
+				fetcher.Client.Timeout = info.Timeout
+			}
+			go pollHttp(info.Interval, info.ID, info.URL, fetcher, kill)
+		}
+		p.Config = newConfig
 	}
 }
 
 type HTTPPollInfo struct {
 	Interval time.Duration
+	Timeout  time.Duration
 	ID       string
 	URL      string
+	Handler  handler.Handler
 }
 
 // diffConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
@@ -148,26 +181,41 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 		for id, _ := range old.Urls {
 			deletions = append(deletions, id)
 		}
-		for id, url := range new.Urls {
-			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: url})
+		for id, pollCfg := range new.Urls {
+			additions = append(additions, HTTPPollInfo{
+				Interval: new.Interval,
+				ID:       id,
+				URL:      pollCfg.URL,
+				Timeout:  pollCfg.Timeout,
+			})
 		}
 		return deletions, additions
 	}
 
-	for id, oldUrl := range old.Urls {
-		newUrl, newIdExists := new.Urls[id]
+	for id, oldPollCfg := range old.Urls {
+		newPollCfg, newIdExists := new.Urls[id]
 		if !newIdExists {
 			deletions = append(deletions, id)
-		} else if newUrl != oldUrl {
+		} else if newPollCfg != oldPollCfg {
 			deletions = append(deletions, id)
-			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: newUrl})
+			additions = append(additions, HTTPPollInfo{
+				Interval: new.Interval,
+				ID:       id,
+				URL:      newPollCfg.URL,
+				Timeout:  newPollCfg.Timeout,
+			})
 		}
 	}
 
-	for id, newUrl := range new.Urls {
+	for id, newPollCfg := range new.Urls {
 		_, oldIdExists := old.Urls[id]
 		if !oldIdExists {
-			additions = append(additions, HTTPPollInfo{Interval: new.Interval, ID: id, URL: newUrl})
+			additions = append(additions, HTTPPollInfo{
+				Interval: new.Interval,
+				ID:       id,
+				URL:      newPollCfg.URL,
+				Timeout:  newPollCfg.Timeout,
+			})
 		}
 	}
 
@@ -208,11 +256,14 @@ func (p FilePoller) Poll() {
 
 // TODO iterationCount and/or p.TickChan?
 func pollHttp(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
+	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
 	lastTime := time.Now()
 	for {
 		select {
 		case now := <-tick.C:
+			tick = time.NewTicker(interval) // recreate timer, to avoid Go's "smoothing" nonsense
 			realInterval := now.Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
 				instr.TimerFail.Inc()

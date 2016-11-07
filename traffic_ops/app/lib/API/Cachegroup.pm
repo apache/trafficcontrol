@@ -1,6 +1,5 @@
 package API::Cachegroup;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -300,7 +299,7 @@ sub delete {
 	if ( defined($parent_cgs) ) {
 		return $self->alert("This cachegroup is currently used as a parent cachegroup.");
 	}
-	
+
 	my $secondary_parent_cgs = $self->db->resultset('Cachegroup')->find( { secondary_parent_cachegroup_id => $cg->id } );
 	if ( defined($secondary_parent_cgs) ) {
 		return $self->alert("This cachegroup is currently used as a secondary parent cachegroup.");
@@ -310,7 +309,7 @@ sub delete {
 	if ( defined($asns) ) {
 		return $self->alert("This cachegroup is currently used by one or more ASNs.");
 	}
-	
+
 	my $rs = $cg->delete();
 	if ($rs) {
 		return $self->success_message("Cachegroup deleted.");

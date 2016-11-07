@@ -1,6 +1,5 @@
 package API::PhysLocation;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -249,7 +248,7 @@ sub create {
 	}
 }
 
-sub create_for_reg {
+sub create_for_region {
 	my $self        = shift;
 	my $region_name = $self->param('region_name');
 	my $params      = $self->req->json;

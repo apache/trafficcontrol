@@ -1,5 +1,4 @@
 /*
-	Copyright 2015 Comcast Cable Communications Management, LLC
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -157,6 +156,21 @@ insert into parameter (name, config_file, value) select * from (select 'DsStats'
 insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_4xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_4xx') limit 1 ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_5xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_5xx') limit 1 ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_total') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total') limit 1 ON CONFLICT DO NOTHING;
+
+
+insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'bandwidth') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'bandwidth') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'maxKbps') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'maxKbps') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'ats.proxy.process.http.current_client_connections') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.http.current_client_connections') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'ats.proxy.process.cache.volume_1.wrap_count') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.cache.volume_1.wrap_count') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'ats.proxy.process.cache.volume_2.wrap_count') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.cache.volume_2.wrap_count') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'kbps') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'kbps') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_2xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_2xx') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'status_4xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_4xx') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'status_5xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_5xx') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_3xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_3xx') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_4xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_4xx') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_5xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_5xx') limit 1;
+insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_total') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total') limit 1;
 
 
 insert into profile_parameter (profile, parameter) values (

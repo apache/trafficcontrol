@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -18,7 +17,7 @@ Introduction
 ============
 Traffic Control is a control plane for a CDN, which includes all of the components mentioned in the CDN Basics section, except for the Log File Analysis System. The caching software chosen for Traffic Control is `Apache Traffic Server <http://trafficserver.apache.org/>`_ (ATS). Although the current release only supports ATS as a cache, this may change with future releases. 
 
-Traffic Control was first developed at Comcast for internal use and released to Open Source in April of 2015.
+Traffic Control was first developed at Comcast for internal use and released to Open Source in April of 2015. Traffic Control moved into the Apache Incubator in August of 2016.
 
 Traffic Control implements the blue boxes in the architecture diagram below. 
 

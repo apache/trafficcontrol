@@ -1,5 +1,25 @@
 package main
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"bytes"
 	"flag"
@@ -12,14 +32,17 @@ import (
 	"runtime"
 	"time"
 
-	_ "github.com/Comcast/traffic_control/traffic_monitor/experimental/common/instrumentation"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/manager"
+	_ "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/instrumentation"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/manager"
 	_ "github.com/davecheney/gmx"
 )
 
+// GitRevision is the git revision of the app. The app SHOULD always be built with this set via the `-X` flag.
 var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevision=${git rev-parse HEAD}'"
+
+// BuildTimestamp is the time the app was built. The app SHOULD always be built with this set via the `-X` flag.
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
 
 // getHostNameWithoutDomain returns the machine hostname, without domain information.

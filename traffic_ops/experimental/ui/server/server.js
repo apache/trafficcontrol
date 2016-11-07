@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 var constants = require('constants'),
     express = require('express'),
     http = require('http'),
@@ -13,7 +32,7 @@ var config;
 
 try {
     // this should exist in prod environment. no need to create this file in dev as it will use the fallback (see catch)
-    config = require('/etc/trafficops/conf/config');
+    config = require('/etc/traffic_ops_v2/conf/config');
 }
 catch(e) {
     // this is used for dev environment
@@ -93,6 +112,6 @@ if (useSSL) {
     sslOptions.agent = new https.Agent(sslOptions);
 }
 
-console.log("Traffic Portal Port         : %s", config.port);
-console.log("Traffic Portal Proxy Port   : %s", config.proxyPort);
-console.log("Traffic Portal SSL Port     : %s", config.sslPort);
+console.log("Traffic Ops Port         : %s", config.port);
+console.log("Traffic Ops Proxy Port   : %s", config.proxyPort);
+console.log("Traffic Ops SSL Port     : %s", config.sslPort);

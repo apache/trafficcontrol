@@ -1,15 +1,36 @@
 package cache
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"encoding/json"
-	"io"
 )
 
+// Astats contains ATS data returned from the Astats ATS plugin. This includes generic stats, as well as fixed system stats.
 type Astats struct {
 	Ats    map[string]interface{} `json:"ats"`
 	System AstatsSystem           `json:"system"`
 }
 
+// AstatsSystem represents fixed system stats returne from ATS by the Astats plugin.
 type AstatsSystem struct {
 	InfName           string `json:"inf.name"`
 	InfSpeed          int    `json:"inf.speed"`
@@ -22,25 +43,9 @@ type AstatsSystem struct {
 	AstatsLoad        int    `json:"astatsLoad"`
 }
 
-type AstatsAdapter struct{}
-
+// Unmarshal unmarshalls the given bytes, which must be JSON Astats data, into an Astats object.
 func Unmarshal(body []byte) (Astats, error) {
 	var aStats Astats
 	err := json.Unmarshal(body, &aStats)
 	return aStats, err
-}
-
-func (AstatsAdapter) Transform(r io.Reader) ([]Astats, error) {
-	dec := json.NewDecoder(r)
-	var as []Astats
-
-	for {
-		var a Astats
-		if err := dec.Decode(&a); err == io.EOF {
-			return as, nil
-		} else if err != nil {
-			return as, err
-		}
-		as = append(as, a)
-	}
 }

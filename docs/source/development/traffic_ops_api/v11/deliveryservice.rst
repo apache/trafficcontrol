@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -27,7 +26,7 @@ Delivery Service
 
 **GET /api/1.1/deliveryservices**
 
-  Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
+  Retrieves all delivery services. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
   Authentication Required: Yes
 
@@ -63,8 +62,6 @@ Delivery Service
   | ``dscp``                 | string | The Differentiated Services Code Point (DSCP) with which to mark downstream (EDGE ->  customer) traffic.                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``edgeHeaderRewrite``    | string | The EDGE header rewrite actions to perform.                                                                                          |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``exampleURLs``          |  array | Entry points into the CDN for this deliveryservice.                                                                                  |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``geoLimitRedirectUrl``  | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -106,8 +103,6 @@ Delivery Service
   | ``longDesc1``            | string | Description field 2.                                                                                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``longDesc2``            | string | Description field 2.                                                                                                                 |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``matchList``            | array  | Array of matchList hashes.                                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``>>type``               | string | The type of MatchList (one of :ref:to-api-v11-types use_in_table='regex').                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -254,7 +249,7 @@ Delivery Service
 
 **GET /api/1.1/deliveryservices/:id**
 
-  Retrieves a specific delivery service. See also `Using Traffic Ops - Delivery Service <http://traffic-control-cdn.net/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
+  Retrieves a specific delivery service. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
 
   Authentication Required: Yes
 

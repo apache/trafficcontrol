@@ -1,16 +1,36 @@
 package trafficopsdata
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	"regexp"
 	"strings"
 	"sync"
 )
 
-// DsRegexes maps Delivery Service Regular Expressions to delivery services.
+// Regexes maps Delivery Service Regular Expressions to delivery services.
 // For performance, we categorize Regular Expressions into 3 categories:
 // 1. Direct string matches, with no regular expression matching characters
 // 2. .*\.foo\..* expressions, where foo is a direct string match with no regular expression matching characters
@@ -41,10 +61,12 @@ func (d Regexes) DeliveryService(fqdn string) (enum.DeliveryServiceName, bool) {
 	return "", false
 }
 
+// NewRegexes constructs a new Regexes object, initializing internal pointer members.
 func NewRegexes() Regexes {
 	return Regexes{DirectMatches: map[string]enum.DeliveryServiceName{}, DotStartSlashDotFooSlashDotDotStar: map[string]enum.DeliveryServiceName{}, RegexMatch: map[*regexp.Regexp]enum.DeliveryServiceName{}}
 }
 
+// TOData holds CDN data fetched from Traffic Ops.
 type TOData struct {
 	DeliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName
 	ServerDeliveryServices map[enum.CacheName][]enum.DeliveryServiceName
@@ -54,6 +76,7 @@ type TOData struct {
 	ServerCachegroups      map[enum.CacheName]enum.CacheGroupName
 }
 
+// New returns a new empty TOData object, initializing pointer members.
 func New() *TOData {
 	return &TOData{
 		DeliveryServiceServers: map[enum.DeliveryServiceName][]enum.CacheName{},
@@ -65,12 +88,14 @@ func New() *TOData {
 	}
 }
 
+// TODataThreadsafe provides safe access for multiple goroutine writers and one goroutine reader, to the encapsulated TOData object.
 // This could be made lock-free, if the performance was necessary
 type TODataThreadsafe struct {
 	toData *TOData
 	m      *sync.RWMutex
 }
 
+// NewThreadsafe returns a new TOData object, wrapped to be safe for multiple goroutine readers and a single writer.
 func NewThreadsafe() TODataThreadsafe {
 	return TODataThreadsafe{m: &sync.RWMutex{}, toData: New()}
 }
@@ -118,7 +143,8 @@ func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error 
 		return fmt.Errorf("Error getting CRconfig from Traffic Ops: %v", err)
 	}
 	var crConfig CRConfig
-	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
+	err = json.Unmarshal(crConfigBytes, &crConfig)
+	if err != nil {
 		return fmt.Errorf("Error unmarshalling CRconfig: %v", err)
 	}
 
@@ -157,7 +183,7 @@ func getDeliveryServiceServers(crc CRConfig) (map[enum.DeliveryServiceName][]enu
 	serverDses := map[enum.CacheName][]enum.DeliveryServiceName{}
 
 	for serverName, serverData := range crc.ContentServers {
-		for deliveryServiceName, _ := range serverData.DeliveryServices {
+		for deliveryServiceName := range serverData.DeliveryServices {
 			dsServers[deliveryServiceName] = append(dsServers[deliveryServiceName], serverName)
 			serverDses[serverName] = append(serverDses[serverName], deliveryServiceName)
 		}

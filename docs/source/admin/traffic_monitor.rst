@@ -1,5 +1,4 @@
 .. 
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 .. 
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -33,7 +32,7 @@ The following are requirements to ensure an accurate set up:
 
 1. Enter the Traffic Monitor server into Traffic Ops
 2. Make sure the FQDN of the Traffic Monitor is resolvable in DNS.
-3. Install Traffic Monitor and perl mods: ``sudo yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
+3. Install Traffic Monitor and Perl mods: ``sudo yum -y install traffic_monitor perl-JSON perl-WWW-Curl``
 4. Take the config from Traffic Ops - run : ``sudo /opt/traffic_monitor/bin/traffic_monitor_config.pl``
  
 	Sample output: ::

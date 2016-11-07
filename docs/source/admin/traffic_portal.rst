@@ -1,5 +1,4 @@
 ..
-.. Copyright 2015 Comcast Cable Communications Management, LLC
 ..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -24,7 +23,7 @@ The following are requirements to ensure an accurate set up:
 
 **Installing Traffic Portal**
 
-	- Download the Traffic Portal RPM from the traffic control `downloads <http://traffic-control-cdn.net/downloads/index.html>`_ page or build from `source <https://github.com/Comcast/traffic_control/tree/master/traffic_portal/build>`_.
+	- Download the Traffic Portal RPM from the traffic control `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page or build from `source <https://github.com/apache/incubator-trafficcontrol/traffic_portal/build>`_.
 	- Copy the Traffic Portal RPM to your server
 	- curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -
 	- sudo yum install -y nodejs

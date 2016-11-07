@@ -1,43 +1,44 @@
 package health
 
-import (
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	traffic_ops "github.com/Comcast/traffic_control/traffic_ops/client"
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
+
+import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
-
-// Get the String value of one of those pesky map[string]interface{} things that seem so easy
-func getString(key string, intface map[string]interface{}) (string, error) {
-	str, ok := intface[key].(string)
-
-	if ok {
-		return str, nil
-	} else {
-		return "", fmt.Errorf("Error in getString: No string found for key %s", key)
-	}
-}
-
-// Get the float64 value of one of those pesky map[string]interface{} things that seem so easy
-func getNumber(key string, intface map[string]interface{}) (float64, error) {
-	val, ok := intface[key].(float64)
-
-	if ok {
-		return val, nil
-	} else {
-		return -1, fmt.Errorf("Error in getNumber: No number found for %s", key)
-	}
-}
 
 func setError(newResult *cache.Result, err error) {
 	newResult.Error = err
 	newResult.Available = false
 }
 
-// Get the vitals to decide health on in the right format
+// GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
@@ -54,7 +55,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 		}
 		newResult.Vitals.LoadAvg = oneMinAvg
 	} else {
-		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.Id))
+		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
 		return
 	}
 
@@ -90,27 +91,63 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	// inf.speed -- value looks like "10000" (without the quotes) so it is in Mbps.
 	// TODO JvD: Should we really be running this code every second for every cache polled????? I don't think so.
 	interfaceBandwidth := newResult.Astats.System.InfSpeed
-	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.Id)].Profile].Parameters.MinFreeKbps
+	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.ID)].Profile].Parameters.MinFreeKbps
 
 	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
+// getKbpsThreshold returns the numeric kbps threshold, from the Traffic Ops string value. If there is a parse error, it logs a warning and returns the max floating point number, signifying no limit
+// TODO add float64 to Traffic Ops Client interface
+func getKbpsThreshold(threshStr string) int64 {
+	if len(threshStr) == 0 {
+		log.Errorf("Empty Traffic Ops HealthThresholdAvailableBandwidthInKbps; setting no limit.\n")
+		return math.MaxInt64
+	}
+	if threshStr[0] == '>' {
+		threshStr = threshStr[1:]
+	}
+	thresh, err := strconv.ParseInt(threshStr, 10, 64)
+	if err != nil {
+		log.Errorf("Failed to parse Traffic Ops HealthThresholdAvailableBandwidthInKbps, setting no limit: '%v'\n", err)
+		return math.MaxInt64
+	}
+	return thresh
+}
+
+// TODO add time.Duration to Traffic Ops Client interface
+func getQueryThreshold(threshInt int64) time.Duration {
+	return time.Duration(threshInt) * time.Millisecond
+}
+
+func cacheCapacityKbps(result cache.Result) int64 {
+	kbpsInMbps := int64(1000)
+	return int64(result.Astats.System.InfSpeed) * kbpsInMbps
+}
+
 // EvalCache returns whether the given cache should be marked available, and a string describing why
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
-	status := mc.TrafficServer[string(result.Id)].Status
+	toServer := mc.TrafficServer[string(result.ID)]
+	status := enum.CacheStatusFromString(toServer.Status)
+	if status == enum.CacheStatusInvalid {
+		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, toServer.Status)
+	}
+	params := mc.Profile[toServer.Profile].Parameters
 	switch {
-	case status == "ADMIN_DOWN":
-		return false, "set to ADMIN_DOWN"
-	case status == "OFFLINE":
-		return false, "set to OFFLINE"
-	case status == "ONLINE":
-		return true, "set to ONLINE"
+	case status == enum.CacheStatusAdminDown:
+		return false, "set to " + status.String()
+	case status == enum.CacheStatusOffline:
+		log.Errorf("Cache %v set to offline, but still polled\n", result.ID)
+		return false, "set to " + status.String()
+	case status == enum.CacheStatusOnline:
+		return true, "set to " + status.String()
 	case result.Error != nil:
 		return false, fmt.Sprintf("error: %v", result.Error)
-	case result.Vitals.LoadAvg > mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg:
-		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, mc.Profile[mc.TrafficServer[string(result.Id)].Profile].Parameters.HealthThresholdLoadAvg)
-	case result.Vitals.MaxKbpsOut < result.Vitals.KbpsOut:
-		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, result.Vitals.MaxKbpsOut)
+	case result.Vitals.LoadAvg > params.HealthThresholdLoadAvg:
+		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, params.HealthThresholdLoadAvg)
+	case result.Vitals.KbpsOut > cacheCapacityKbps(result)-getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps):
+		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps))
+	case result.RequestTime > getQueryThreshold(int64(params.HealthThresholdQueryTime)):
+		return false, fmt.Sprintf("request time %v exceeds max %v", result.RequestTime, getQueryThreshold(int64(params.HealthThresholdQueryTime)))
 	default:
 		return result.Available, "reported"
 	}

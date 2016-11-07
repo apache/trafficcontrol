@@ -1,6 +1,5 @@
 package API::Deliveryservice;
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,19 +49,6 @@ sub index {
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search( \%criteria, { order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
-		my $ds_regexes = $row->deliveryservice_regexes;
-		my @matchlist  = ();
-
-		while ( my $ds_regex = $ds_regexes->next ) {
-			push(
-				@matchlist, {
-					type      => $ds_regex->regex->type->name,
-					pattern   => $ds_regex->regex->pattern,
-					setNumber => $ds_regex->set_number
-				}
-			);
-		}
-
 		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
 		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
@@ -99,7 +85,6 @@ sub index {
 				"longDesc"                 => $row->long_desc,
 				"longDesc1"                => $row->long_desc_1,
 				"longDesc2"                => $row->long_desc_2,
-				"matchList"                => \@matchlist,
 				"maxDnsAnswers"            => $row->max_dns_answers,
 				"midHeaderRewrite"         => $row->mid_header_rewrite,
 				"missLat"                  => $row->miss_lat,

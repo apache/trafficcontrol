@@ -1,14 +1,34 @@
 package cache
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
-	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
 	"net/url"
 	"regexp"
@@ -17,6 +37,7 @@ import (
 	"time"
 )
 
+// Handler is a cache handler, which fulfills the common/handler `Handler` interface.
 type Handler struct {
 	ResultChannel      chan Result
 	Notify             int
@@ -25,20 +46,23 @@ type Handler struct {
 	MultipleSpaceRegex *regexp.Regexp
 }
 
-// NewHandler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
+// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
+// TODO change this to take the ResultChan. It doesn't make sense for the Handler to 'own' the Result Chan.
 func NewHandler() Handler {
 	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
 
-// NewPrecomputeHandler precomputes stat data and populates result.Precomputed before passing to ResultChannel.
+// NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChannel.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
 	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
-func (h Handler) Precompute() bool {
-	return h.ToData != nil && h.PeerStates != nil
+// Precompute returns whether this handler precomputes data before passing the result to the ResultChannel
+func (handler Handler) Precompute() bool {
+	return handler.ToData != nil && handler.PeerStates != nil
 }
 
+// PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
 	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
@@ -47,18 +71,21 @@ type PrecomputedData struct {
 	Reporting            bool
 }
 
+// Result is the data result returned by a cache.
 type Result struct {
-	Id        enum.CacheName
-	Available bool
-	Error     error
-	Astats    Astats
-	Time      time.Time
-	Vitals    Vitals
-	PrecomputedData
+	ID           enum.CacheName
+	Error        error
+	Astats       Astats
+	Time         time.Time
+	RequestTime  time.Duration
+	Vitals       Vitals
 	PollID       uint64
 	PollFinished chan<- uint64
+	PrecomputedData
+	Available bool
 }
 
+// Vitals is the vitals data returned from a cache.
 type Vitals struct {
 	LoadAvg    float64
 	BytesOut   int64
@@ -67,35 +94,30 @@ type Vitals struct {
 	MaxKbpsOut int64
 }
 
+// Stat is a generic stat, including the untyped value and the time the stat was taken.
 type Stat struct {
 	Time  int64       `json:"time"`
 	Value interface{} `json:"value"`
 }
 
+// Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
-	Caches      map[enum.CacheName]map[string][]Stat `json:"caches"`
-	QueryParams string                               `json:"pp"`
-	DateStr     string                               `json:"date"`
+	srvhttp.CommonAPIData
+	Caches map[enum.CacheName]map[string][]Stat `json:"caches"`
 }
 
+// Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
 	UseStat(name string) bool
 	UseCache(name enum.CacheName) bool
 	WithinStatHistoryMax(int) bool
 }
 
-const (
-	NOTIFY_NEVER = iota
-	NOTIFY_CHANGE
-	NOTIFY_ALWAYS
-)
-
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
 func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, params url.Values) ([]byte, error) {
 	stats := Stats{
-		Caches:      map[enum.CacheName]map[string][]Stat{},
-		QueryParams: http_server.ParametersStr(params),
-		DateStr:     http_server.DateStr(time.Now()),
+		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
+		Caches:        map[enum.CacheName]map[string][]Stat{},
 	}
 
 	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
@@ -126,7 +148,7 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 					stats.Caches[id] = map[string][]Stat{}
 				}
 
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], s)
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], Stat{Time: s.Time, Value: fmt.Sprintf("%v", s.Value)}) // convert stats to strings, for the TM1.0 /publish/CacheStats API
 			}
 		}
 	}
@@ -134,18 +156,20 @@ func StatsMarshall(statHistory map[enum.CacheName][]Result, filter Filter, param
 	return json.Marshal(stats)
 }
 
-func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, pollFinished chan<- uint64) {
-	log.Debugf("poll %v %v handle start\n", pollId, time.Now())
+// Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
-		Id:           enum.CacheName(id),
+		ID:           enum.CacheName(id),
 		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
-		PollID:       pollId,
+		RequestTime:  reqTime,
+		PollID:       pollID,
 		PollFinished: pollFinished,
 	}
 
-	if err != nil {
-		log.Errorf("%v handler given error '%v'\n", id, err) // error here, in case the thing that called Handle didn't error
-		result.Error = err
+	if reqErr != nil {
+		log.Errorf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
+		result.Error = reqErr
 		handler.ResultChannel <- result
 		return
 	}
@@ -159,9 +183,9 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 
 	result.PrecomputedData.Reporting = true
 
-	if err := json.NewDecoder(r).Decode(&result.Astats); err != nil {
-		log.Errorf("%s procnetdev decode error '%v'\n", id, err)
-		result.Error = err
+	if decodeErr := json.NewDecoder(r).Decode(&result.Astats); decodeErr != nil {
+		log.Errorf("%s procnetdev decode error '%v'\n", id, decodeErr)
+		result.Error = decodeErr
 		handler.ResultChannel <- result
 		return
 	}
@@ -174,23 +198,23 @@ func (handler Handler) Handle(id string, r io.Reader, err error, pollId uint64, 
 		log.Warnf("addkbps %s inf.speed empty\n", id)
 	}
 
-	log.Debugf("poll %v %v handle decode end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle decode end\n", pollID, time.Now())
 
-	if err != nil {
-		result.Error = err
-		log.Errorf("addkbps handle %s error '%v'\n", id, err)
+	if reqErr != nil {
+		result.Error = reqErr
+		log.Errorf("addkbps handle %s error '%v'\n", id, reqErr)
 	} else {
 		result.Available = true
 	}
 
 	if handler.Precompute() {
-		log.Debugf("poll %v %v handle precompute start\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute start\n", pollID, time.Now())
 		result = handler.precompute(result)
-		log.Debugf("poll %v %v handle precompute end\n", pollId, time.Now())
+		log.Debugf("poll %v %v handle precompute end\n", pollID, time.Now())
 	}
-	log.Debugf("poll %v %v handle write start\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle write start\n", pollID, time.Now())
 	handler.ResultChannel <- result
-	log.Debugf("poll %v %v handle end\n", pollId, time.Now())
+	log.Debugf("poll %v %v handle end\n", pollID, time.Now())
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
@@ -226,7 +250,7 @@ func (handler Handler) precompute(result Result) Result {
 	var err error
 	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName, handler.MultipleSpaceRegex); err != nil {
 		result.PrecomputedData.OutBytes = 0
-		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.Id, err)
+		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.ID, err)
 	}
 
 	kbpsInMbps := int64(1000)
@@ -234,9 +258,9 @@ func (handler Handler) precompute(result Result) Result {
 
 	for stat, value := range result.Astats.Ats {
 		var err error
-		stats, err = processStat(result.Id, stats, todata, stat, value, result.Time)
+		stats, err = processStat(result.ID, stats, todata, stat, value, result.Time)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			log.Errorf("precomputing cache %v stat %v value %v error %v", result.Id, stat, value, err)
+			log.Errorf("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}

@@ -1,5 +1,4 @@
 /*
-   Copyright 2015 Comcast Cable Communications Management, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,8 +20,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/Comcast/traffic_control/traffic_ops/client"
-	"github.com/Comcast/traffic_control/traffic_ops/client/fixtures"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/client/fixtures"
 	"github.com/jheitz200/test_helper"
 )
 

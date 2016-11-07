@@ -1,25 +1,48 @@
 package manager
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"sync"
 	"time"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/health"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
-	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
+// DurationMap represents a map of cache names to durations
 type DurationMap map[enum.CacheName]time.Duration
 
+// DurationMapThreadsafe wraps a DurationMap in an object safe for a single writer and multiple readers
 type DurationMapThreadsafe struct {
 	durationMap *DurationMap
 	m           *sync.RWMutex
 }
 
+// Copy copies this duration map.
 func (a DurationMap) Copy() DurationMap {
 	b := DurationMap{}
 	for k, v := range a {
@@ -28,6 +51,7 @@ func (a DurationMap) Copy() DurationMap {
 	return b
 }
 
+// NewDurationMapThreadsafe returns a new DurationMapThreadsafe safe for multiple readers and a single writer goroutine.
 func NewDurationMapThreadsafe() DurationMapThreadsafe {
 	m := DurationMap{}
 	return DurationMapThreadsafe{m: &sync.RWMutex{}, durationMap: &m}
@@ -40,6 +64,7 @@ func (o *DurationMapThreadsafe) Get() DurationMap {
 	return *o.durationMap
 }
 
+// Set sets the internal duration map. This MUST NOT be called by multiple goroutines.
 func (o *DurationMapThreadsafe) Set(d DurationMap) {
 	o.m.Lock()
 	*o.durationMap = d
@@ -83,9 +108,6 @@ func StartHealthResultManager(
 	)
 	return lastHealthDurations, events, localCacheStatus
 }
-
-// cacheAggregateSeconds is how often to aggregate stats, if the health chan is never empty. (Otherwise, we read from the chan until it's empty, then aggregate, continuously)
-const cacheAggregateSeconds = 1
 
 func healthResultManagerListen(
 	cacheHealthChan <-chan cache.Result,
@@ -192,7 +214,7 @@ func processHealthResult(
 		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
-		healthResultHistory := healthHistory[enum.CacheName(healthResult.Id)]
+		healthResultHistory := healthHistory[healthResult.ID]
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -201,16 +223,17 @@ func processHealthResult(
 			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
 		}
 
-		healthHistory[enum.CacheName(healthResult.Id)] = pruneHistory(append(healthHistory[enum.CacheName(healthResult.Id)], healthResult), cfg.MaxHealthHistory)
+		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
+		healthHistory[healthResult.ID] = pruneHistory(append(healthHistory[healthResult.ID], healthResult), maxHistory)
 
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-		if localStates.Get().Caches[healthResult.Id].IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.Id, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.Id, Hostname: healthResult.Id, Type: toDataCopy.ServerTypes[healthResult.Id].String(), Available: isAvailable})
+		if localStates.Get().Caches[healthResult.ID].IsAvailable != isAvailable {
+			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
+			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
 
-		localCacheStatus[healthResult.Id] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.Id)].Status} // TODO move within localStates?
-		localStates.SetCache(healthResult.Id, peer.IsAvailable{IsAvailable: isAvailable})
+		localCacheStatus[healthResult.ID] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
+		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
 		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
 		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 		log.Debugf("poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
@@ -220,11 +243,11 @@ func processHealthResult(
 
 	lastHealthDurations := lastHealthDurationsThreadsafe.Get().Copy()
 	for _, healthResult := range results {
-		if lastHealthStart, ok := lastHealthEndTimes[enum.CacheName(healthResult.Id)]; ok {
+		if lastHealthStart, ok := lastHealthEndTimes[healthResult.ID]; ok {
 			d := time.Since(lastHealthStart)
-			lastHealthDurations[enum.CacheName(healthResult.Id)] = d
+			lastHealthDurations[healthResult.ID] = d
 		}
-		lastHealthEndTimes[enum.CacheName(healthResult.Id)] = time.Now()
+		lastHealthEndTimes[healthResult.ID] = time.Now()
 
 		log.Debugf("poll %v %v finish\n", healthResult.PollID, time.Now())
 		healthResult.PollFinished <- healthResult.PollID

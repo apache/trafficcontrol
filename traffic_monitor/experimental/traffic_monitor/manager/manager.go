@@ -1,22 +1,43 @@
 package manager
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"crypto/tls"
 	"net/http"
 	"time"
 
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/fetcher"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/handler"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/poller"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/config"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
-	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
-	towrap "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
-	//	to "github.com/Comcast/traffic_control/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/fetcher"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/poller"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	//	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"github.com/davecheney/gmx"
 )
 
+// StaticAppData encapsulates data about the app available at startup
 type StaticAppData struct {
 	StartTime      time.Time
 	GitRevision    string
@@ -29,7 +50,7 @@ type StaticAppData struct {
 }
 
 //
-// Kicks off the pollers and handlers
+// Start starts the poller and handler goroutines
 //
 func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
@@ -41,7 +62,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	// TODO investigate whether a unique client per cache to be polled is faster
 	sharedClient := &http.Client{
-		Timeout:   cfg.HttpTimeout,
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
 
@@ -130,6 +150,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		errorCount,
 		localCacheStatus,
 		unpolledCaches,
+		monitorConfig,
+		cfg,
 	)
 
 	healthTickListener(cacheHealthPoller.TickChan, healthIteration)
@@ -137,10 +159,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
 func healthTickListener(cacheHealthTick <-chan uint64, healthIteration UintThreadsafe) {
-	for {
-		select {
-		case i := <-cacheHealthTick:
-			healthIteration.Set(i)
-		}
+	for i := range cacheHealthTick {
+		healthIteration.Set(i)
 	}
 }

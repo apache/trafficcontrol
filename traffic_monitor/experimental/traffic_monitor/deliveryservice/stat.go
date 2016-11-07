@@ -1,14 +1,34 @@
 package deliveryservice
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
 import (
 	"fmt"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/common/log"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/cache"
-	dsdata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/http_server"
-	"github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/peer"
-	todata "github.com/Comcast/traffic_control/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"net/url"
 	"strconv"
 	"time"
@@ -16,24 +36,30 @@ import (
 
 // TODO remove 'ds' and 'stat' from names
 
+// Stats is the JSON-serialisable representation of delivery service Stats. It maps delivery service names to individual stat objects.
 // TODO remove DeliveryService and set type to the map directly, or add other members
 type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]dsdata.Stat `json:"deliveryService"`
+	Time            time.Time                                `json:"-"`
 }
 
-func (a Stats) Copy() Stats {
+// Copy performs a deep copy of this Stats object.
+func (s Stats) Copy() Stats {
 	b := NewStats()
-	for k, v := range a.DeliveryService {
+	for k, v := range s.DeliveryService {
 		b.DeliveryService[k] = v.Copy()
 	}
+	b.Time = s.Time
 	return b
 }
 
-func (a Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
-	ds, ok := a.DeliveryService[name]
+// Get returns the stats for the given delivery service, and whether it exists.
+func (s Stats) Get(name enum.DeliveryServiceName) (dsdata.StatReadonly, bool) {
+	ds, ok := s.DeliveryService[name]
 	return ds, ok
 }
 
+// NewStats creates a new Stats object, initializing any pointer members.
 // TODO rename to just 'New'?
 func NewStats() Stats {
 	return Stats{DeliveryService: map[enum.DeliveryServiceName]dsdata.Stat{}}
@@ -59,7 +85,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			log.Warnf("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
 		}
-		cacheType, ok := serverTypes[enum.CacheName(cache)]
+		cacheType, ok := serverTypes[cache]
 		if !ok {
 			log.Warnf("CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
 			continue
@@ -71,19 +97,20 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 				continue
 			}
 
-			stat, ok := dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)]
+			stat, ok := dsStats.DeliveryService[deliveryService]
 			if !ok {
 				log.Warnf("CreateStats not adding availability data for '%s': not found in Stats\n", cache)
 				continue // TODO log warning? Error?
 			}
 
 			if available.IsAvailable {
-				// c.IsAvailable.Value
 				stat.CommonStats.IsAvailable.Value = true
+				// TODO fix to be whether the Delivery Service has exceeded max kbps defined in Traffic Ops in `/health/cdn-name`?
+				stat.CommonStats.IsHealthy.Value = true
 				stat.CommonStats.CachesAvailableNum.Value++
-				cacheGroupStats := stat.CacheGroups[enum.CacheGroupName(cacheGroup)]
+				cacheGroupStats := stat.CacheGroups[cacheGroup]
 				cacheGroupStats.IsAvailable.Value = true
-				stat.CacheGroups[enum.CacheGroupName(cacheGroup)] = cacheGroupStats
+				stat.CacheGroups[cacheGroup] = cacheGroupStats
 				stat.TotalStats.IsAvailable.Value = true
 				typeStats := stat.Types[cacheType]
 				typeStats.IsAvailable.Value = true
@@ -91,13 +118,13 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			}
 
 			// TODO fix nested ifs
-			if results, ok := statHistory[enum.CacheName(cache)]; ok {
+			if results, ok := statHistory[cache]; ok {
 				if len(results) < 1 {
 					log.Warnf("no results %v %v\n", cache, deliveryService)
 				} else {
 					result := results[0]
 					if result.PrecomputedData.Reporting {
-						stat.CommonStats.CachesReporting[enum.CacheName(cache)] = true
+						stat.CommonStats.CachesReporting[cache] = true
 					} else {
 						log.Debugf("no reporting %v %v\n", cache, deliveryService)
 					}
@@ -106,7 +133,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 				log.Debugf("no result for %v %v\n", cache, deliveryService)
 			}
 
-			dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = stat // TODO Necessary? Remove?
+			dsStats.DeliveryService[deliveryService] = stat // TODO Necessary? Remove?
 		}
 	}
 	return dsStats, nil
@@ -118,10 +145,12 @@ type LastStats struct {
 	Caches           map[enum.CacheName]LastStatsData
 }
 
+// NewLastStats returns a new LastStats object, initializing internal pointer values.
 func NewLastStats() LastStats {
 	return LastStats{DeliveryServices: map[enum.DeliveryServiceName]LastDSStat{}, Caches: map[enum.CacheName]LastStatsData{}}
 }
 
+// Copy performs a deep copy of this LastStats object.
 func (a LastStats) Copy() LastStats {
 	b := NewLastStats()
 	for k, v := range a.DeliveryServices {
@@ -133,6 +162,7 @@ func (a LastStats) Copy() LastStats {
 	return b
 }
 
+// LastDSStat maps and aggregates the last stats received for the given delivery service to caches, cache groups, types, and total.
 // TODO figure a way to associate this type with StatHTTP, with which its members correspond.
 type LastDSStat struct {
 	Caches      map[enum.CacheName]LastStatsData
@@ -141,6 +171,7 @@ type LastDSStat struct {
 	Total       LastStatsData
 }
 
+// Copy performs a deep copy of this LastDSStat object.
 func (a LastDSStat) Copy() LastDSStat {
 	b := LastDSStat{
 		CacheGroups: map[enum.CacheGroupName]LastStatsData{},
@@ -168,6 +199,7 @@ func newLastDSStat() LastDSStat {
 	}
 }
 
+// LastStatsData contains the last stats and per-second calculations for bytes and status codes received from a cache.
 type LastStatsData struct {
 	Bytes     LastStatData
 	Status2xx LastStatData
@@ -187,6 +219,7 @@ func (a LastStatsData) Sum(b LastStatsData) LastStatsData {
 	}
 }
 
+// LastStatData contains the value, time it was received, and per-second calculation since the previous stat, for a stat from a cache.
 type LastStatData struct {
 	PerSec float64
 	Stat   int64
@@ -201,6 +234,7 @@ func (a LastStatData) Sum(b LastStatData) LastStatData {
 	}
 }
 
+// BytesPerKilobit is the number of bytes in a kilobit.
 const BytesPerKilobit = 125
 
 func addLastStat(lastData LastStatData, newStat int64, newStatTime time.Time) (LastStatData, error) {
@@ -298,7 +332,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 	for cacheName, cacheStats := range stat.Caches {
 		lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
 		if err != nil {
-			log.Errorf("debugq %v Error adding kbps for cache %v: %v", cacheName, err)
+			log.Errorf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
 			continue
 		}
 		cacheStats.Kbps.Value = lastStat.Caches[cacheName].Bytes.PerSec / BytesPerKilobit
@@ -371,15 +405,16 @@ func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats
 	return dsStats, lastStats
 }
 
+// CreateStats aggregates and creates statistics from given stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
 func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
 	start := time.Now()
 	dsStats := NewStats()
-	for deliveryService, _ := range toData.DeliveryServiceServers {
+	for deliveryService := range toData.DeliveryServiceServers {
 		if deliveryService == "" {
 			log.Errorf("EMPTY CreateStats deliveryService")
 			continue
 		}
-		dsStats.DeliveryService[enum.DeliveryServiceName(deliveryService)] = *dsdata.NewStat()
+		dsStats.DeliveryService[deliveryService] = *dsdata.NewStat()
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
@@ -397,7 +432,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			log.Warnf("server %s has no cachegroup, skipping\n", server)
 			continue
 		}
-		serverType, ok := toData.ServerTypes[enum.CacheName(server)]
+		serverType, ok := toData.ServerTypes[server]
 		if !ok {
 			log.Warnf("server %s not in CRConfig, skipping\n", server)
 			continue
@@ -428,13 +463,20 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 
 	perSecStats, lastStats := addPerSecStats(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
+	perSecStats.Time = time.Now()
 	return perSecStats, lastStats, nil
 }
 
 func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64, filter dsdata.Filter) *dsdata.StatsOld {
 	add := func(name, val string) {
 		if filter.UseStat(name) {
-			s.DeliveryService[deliveryService][dsdata.StatName(prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+			// This is for compatibility with the Traffic Monitor 1.0 API.
+			// TODO abstract this? Or deprecate and remove it?
+			if name == "isAvailable" || name == "error-string" {
+				s.DeliveryService[deliveryService][dsdata.StatName("location."+prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+			} else {
+				s.DeliveryService[deliveryService][dsdata.StatName(prefix+name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
+			}
 		}
 	}
 	add("out_bytes", strconv.Itoa(int(c.OutBytes.Value)))
@@ -449,7 +491,7 @@ func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryServ
 	add("tps_4xx", fmt.Sprintf("%f", c.Tps4xx.Value))
 	add("tps_3xx", fmt.Sprintf("%f", c.Tps3xx.Value))
 	add("tps_2xx", fmt.Sprintf("%f", c.Tps2xx.Value))
-	add("error", c.ErrorString.Value)
+	add("error-string", c.ErrorString.Value)
 	add("tps_total", strconv.Itoa(int(c.TpsTotal.Value)))
 	return s
 }
@@ -470,16 +512,16 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 	return s
 }
 
-// StatsJSON returns an object formatted as expected to be serialized to JSON and served.
-func (dsStats Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
-	now := time.Now().Unix()
+// JSON returns an object formatted as expected to be serialized to JSON and served.
+func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
+	// TODO fix to be the time calculated, not the time requested
+	now := s.Time.UnixNano() / int64(time.Millisecond) // Traffic Monitor 1.0 API is 'ms since the epoch'
 	jsonObj := &dsdata.StatsOld{
+		CommonAPIData:   srvhttp.GetCommonAPIData(params, time.Now()),
 		DeliveryService: map[enum.DeliveryServiceName]map[dsdata.StatName][]dsdata.StatOld{},
-		QueryParams:     http_server.ParametersStr(params),
-		DateStr:         http_server.DateStr(time.Now()),
 	}
 
-	for deliveryService, stat := range dsStats.DeliveryService {
+	for deliveryService, stat := range s.DeliveryService {
 		if !filter.UseDeliveryService(deliveryService) {
 			continue
 		}
