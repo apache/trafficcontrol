@@ -1,0 +1,58 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+FROM centos:7
+
+MAINTAINER Dan Kirkwood
+
+RUN	yum -y install \
+		epel-release \
+		git \
+		rpm-build && \
+	yum -y clean all
+
+ENV GITREPO=https://github.com/apache/incubator-trafficcontrol
+ENV BRANCH=master
+
+# Above are common for all sub-projects.
+
+### traffic_monitor specific
+RUN	yum -y install \
+		which && \
+	yum -y clean all
+
+WORKDIR /opt
+RUN curl -L -b "oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-x64.tar.gz | tar xzf - && \
+    curl -L http://mirror.nexcess.net/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar xzf -
+RUN ln -s jdk* java && ln -s apache-maven* maven
+
+RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
+    alternatives --install /usr/bin/jar jar /opt/java/bin/jar 2 && \
+    alternatives --install /usr/bin/javac javac /opt/java/bin/javac 2 && \
+    alternatives --set java /opt/java/bin/java && \
+    alternatives --set jar /opt/java/bin/jar && \
+    alternatives --set javac /opt/java/bin/javac && \
+    alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
+WORKDIR /
+###
+
+VOLUME ./artifacts:/artifacts
+
+ADD run-build.sh .
+
+CMD ./run-build.sh traffic_monitor 2>&1 | tee /artifacts/build-traffic_monitor.log
+
+# vi:syntax=Dockerfile
