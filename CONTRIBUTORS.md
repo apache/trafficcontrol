@@ -1,6 +1,7 @@
 Sorted alphabetically
 
 * **[Alejandro Bueno (abueno001)] (https://github.com/abueno001)**
+* **[Brian Luke (bluke7922)] (https://github.com/bluke7922)**
 * **[Carol Stemley (cstemley)] (https://github.com/cstemley)**
 * **[Crystal Qian (cjqian)](https://github.com/cjqian)**
 * **[Dan Kirkwood (dangogh)](https://github.com/dangogh)**
