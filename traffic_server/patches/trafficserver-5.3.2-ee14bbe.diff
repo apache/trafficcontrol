@@ -1,0 +1,673 @@
+diff --git a/configure.ac b/configure.ac
+index 2c79ca4..a46a43e 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1960,6 +1960,7 @@ AS_IF([test "x$enable_experimental_plugins" = xyes], [
+     plugins/experimental/hipes/Makefile
+     plugins/experimental/metalink/Makefile
+     plugins/experimental/mysql_remap/Makefile
++    plugins/experimental/money_trace/Makefile
+     plugins/experimental/regex_revalidate/Makefile
+     plugins/experimental/remap_stats/Makefile
+     plugins/experimental/s3_auth/Makefile
+diff --git a/iocore/aio/AIO.cc b/iocore/aio/AIO.cc
+index 4dd1842..5c4b217 100644
+--- a/iocore/aio/AIO.cc
++++ b/iocore/aio/AIO.cc
+@@ -187,6 +187,10 @@ struct AIOThreadInfo : public Continuation {
+   {
+     (void)event;
+     (void)e;
++#if TS_USE_HWLOC
++    hwloc_set_membind_nodeset(ink_get_topology(), hwloc_topology_get_topology_nodeset(ink_get_topology()), HWLOC_MEMBIND_INTERLEAVE,
++                              HWLOC_MEMBIND_THREAD);
++#endif
+     aio_thread_main(this);
+     return EVENT_DONE;
+   }
+diff --git a/iocore/hostdb/HostDB.cc b/iocore/hostdb/HostDB.cc
+index a7f5c55..8a21a70 100644
+--- a/iocore/hostdb/HostDB.cc
++++ b/iocore/hostdb/HostDB.cc
+@@ -1470,6 +1470,12 @@ HostDBContinuation::dnsEvent(int event, HostEnt *e)
+     // @c lookup_done should always return a valid value so @a r should be null @c NULL.
+     ink_assert(r && r->app.allotment.application1 == 0 && r->app.allotment.application2 == 0);
+ 
++    // lookup_done() returned null due to full hostdb database.
++    if (!r) {
++      Debug("hostdb", "HostDBInfo pointer 'r' is NULL");
++      failed = true;
++    }
++
+     if (rr) {
+       const int rrsize = HostDBRoundRobin::size(n, e->srv_hosts.srv_hosts_length);
+       HostDBRoundRobin *rr_data = (HostDBRoundRobin *)hostDB.alloc(&r->app.rr.offset, rrsize);
+diff --git a/mgmt/api/TSControlMain.cc b/mgmt/api/TSControlMain.cc
+index a771ca3..a3e64a4 100644
+--- a/mgmt/api/TSControlMain.cc
++++ b/mgmt/api/TSControlMain.cc
+@@ -967,7 +967,7 @@ handle_stats_reset(int fd, void *req, size_t reqlen)
+   MgmtMarshallInt err;
+ 
+   err = recv_mgmt_request(req, reqlen, STATS_RESET_NODE, &optype, &name);
+-  if (err != TS_ERR_OKAY) {
++  if (err == TS_ERR_OKAY) {
+     err = StatsReset(optype == STATS_RESET_CLUSTER, name);
+   }
+ 
+diff --git a/plugins/experimental/Makefile.am b/plugins/experimental/Makefile.am
+index adb6da8..8f5d48e 100644
+--- a/plugins/experimental/Makefile.am
++++ b/plugins/experimental/Makefile.am
+@@ -33,6 +33,7 @@ SUBDIRS = \
+  healthchecks \
+  hipes \
+  metalink \
++ money_trace \
+  regex_revalidate \
+  remap_stats \
+  s3_auth \
+diff --git a/plugins/experimental/money_trace/money_trace.cc b/plugins/experimental/money_trace/money_trace.cc
+index adb8980..09f8cd4 100644
+--- a/plugins/experimental/money_trace/money_trace.cc
++++ b/plugins/experimental/money_trace/money_trace.cc
+@@ -71,7 +71,7 @@ freeTransactionData(struct txndata *txn_data)
+ 
+ /**
+  * The TS_EVENT_HTTP_CACHE_LOOKUP_COMPLETE event callback.
+- * 
++ *
+  * If there is a cache hit only schedule a TS_HTTP_SEND_RESPONSE_HDR_HOOK
+  * continuation to send back the money trace header in the response to the
+  * client.
+@@ -79,7 +79,7 @@ freeTransactionData(struct txndata *txn_data)
+  * If there is a cache miss, a new money trace header is created and a
+  * TS_HTTP_SEND_REQUES_HDR_HOOK continuation is scheduled to add the
+  * new money trace header to the parent request.
+- */ 
++ */
+ static void
+ mt_cache_lookup_check(TSCont contp, TSHttpTxn txnp, struct txndata *txn_data)
+ {
+@@ -157,10 +157,10 @@ mt_check_request_header(TSHttpTxn txnp)
+ 
+ /**
+  * The TS_EVENT_HTTP_SEND_RESPONSE_HDR callback.
+- * 
++ *
+  * Adds the money trace header received in the client request to the
+  * client response headers.
+- */ 
++ */
+ static void
+ mt_send_client_response(TSHttpTxn txnp, struct txndata *txn_data)
+ {
+diff --git a/plugins/experimental/url_sig/README b/plugins/experimental/url_sig/README
+index 81fdd33..e4c4ca2 100644
+--- a/plugins/experimental/url_sig/README
++++ b/plugins/experimental/url_sig/README
+@@ -84,15 +84,19 @@ Signing a URL using path parameters instead of using a query string.
+   in the request url.  Any origin application query parameters then follow
+   the file part of the request and are never part of the sign string.
+ 
+-  Path parameters are separated by a ';' in the path.  The following is an
+-  example signed request using the path parameter method and with an origin
+-  application query string:
++  Path parameters are separated by a ';' in the path.  The complete signature
++  string is base64 encoded as a single path parameter that is assinged to the 
++  'siganchor', and will appear in that path as siganchor=base64string. The 
++  following is an example signed request using the path parameter method and 
++  with an origin application query string:
+ 
+-  http://ds-01.comcast.net/vod/t;E=1454013671;A=1;K=3;P=1;S=686945c15e8c4e02146af86a9fd8ee29ff432b0a/Frag10Num10.ts?appid=2&t=1
++  http://ds-01.comcast.net/vod/t;urlsig=O0U9MTQ2MzkyOTYxODtBPTE7Sz0zO1A9MTtTPTEyZDlmN2RiNjUyZWI0YmI4MWYyNmVlMjE3MzczZGE5Y2VkYTRmZGY/Frag10Num10.ts?appid=2&t=1
+ 
+-  Note that the signing parameters are embedded in the path between the last directory part and before the file part of
+-  the request.  Using 'parts' in sign.pl, the signature may be signed accordingly up to S= in the above request.  To
+-  generate a signed url using this method, use the --pathparams option in sign.pl
++  Note that the signing string is embedded in the path between the last
++  directory part and before the file part of the request.  Using 'parts' in
++  sign.pl, the signature may be signed accordingly up to S= in the above
++  request. To generate a signed url using this method, use the --pathparams
++  option in sign.pl
+ 
+ 
+ 
+@@ -163,7 +167,8 @@ Example
+ 		Authorization Denied$
+ 		$
+ 
+-	Sign the URL and try it again. Run the script with appropriate params, and it will output the curl line to run:
++	Sign the URL and try it again. Run the script with appropriate params, and
++	it will output the curl line to run:
+ 
+ 		$ ./sign.pl --url http://test-remap.domain.com/ --useparts 1 --algorithm 1 --duration 60 --keyindex 3 --key DTV4Tcn046eM9BzJMeYrYpm3kbqOtBs7
+ 		curl -s -o /dev/null -v --max-redirs 0 'http://test-remap.domain.com/?E=1397603088&A=1&K=3&P=1&S=28d822f68ac7265db61a8441e0877a98fe1007cc'
+@@ -205,7 +210,12 @@ Example
+ 
+ Generating a signed URL with path parameters:
+ 
+-  $ ./sign.pl --url "http://test-remap.domain.com/vod/t/prog_index.m3u8?appid=2&t=1" --useparts 1 --algorithm 1 --duration 86400 --keyindex 3 --key kSCE1_uBREdGI3TPnr_dXKc9f_J4ZV2f --pathparams
++  $ ./sign.pl --url "http://test-remap.domain.com/vod/t/prog_index.m3u8?appid=2&t=1" --useparts 1 --algorithm 1 --duration 86400 --keyindex 3 --key kSCE1_uBREdGI3TPnr_dXKc9f_J4ZV2f --pathparams --siganchor urlsig
+ 
+-  curl -s -o /dev/null -v --max-redirs 0 'http://test-remap.domain.com/vod/t;E=1454015105;A=1;K=3;P=1;S=/173f2ff3667371e666fa17be6c37bfdfe6e89eccprog_index.m3u8?appid=2&t=1'
++  curl -s -o /dev/null -v --max-redirs 0 'http://test-remap.domain.com/vod/t;urlsig=O0U9MTQ2MzkyOTM4NTtBPTE7Sz0zO1A9MTtTPTIxYzk2YWRiZWZkOGJkMDFhYmM3MmZkMTEzMWVkMGM5ZmU1ZmFiMjE/prog_index.m3u8?appid=2&t=1'
+ 
++
++Client IP in the Signing Script
++	Below is an example of how to include client ip in the signing script
++	Works for both IPv4 and IPv6
++	--client 10.10.10.10
+diff --git a/plugins/experimental/url_sig/url_sig.c b/plugins/experimental/url_sig/url_sig.c
+index baf381f..b2b522c 100644
+--- a/plugins/experimental/url_sig/url_sig.c
++++ b/plugins/experimental/url_sig/url_sig.c
+@@ -176,9 +176,9 @@ TSRemapNewInstance(int argc, char *argv[], void **ih, char *errbuf, int errbuf_s
+         cfg->err_url = TSstrndup(value, strlen(value));
+       else
+         cfg->err_url = NULL;
+-    } else if (strncmp(line, "sig_anchor", 10) == 0) { 
+-        cfg->sig_anchor = TSstrndup(value, strlen(value));
+-        TSDebug(PLUGIN_NAME, "sig_anchor: %s", cfg->sig_anchor);
++    } else if (strncmp(line, "sig_anchor", 10) == 0) {
++      cfg->sig_anchor = TSstrndup(value, strlen(value));
++      TSDebug(PLUGIN_NAME, "sig_anchor: %s", cfg->sig_anchor);
+     } else if (strncmp(line, "excl_regex", 10) == 0) {
+       // compile and study regex
+       const char *errptr;
+@@ -317,7 +317,7 @@ urlParse(bool *https, char *anchor, char *url, char *new_path_seg, int new_path_
+         segment[numtoks] = p;
+         if (anchor != NULL && sig_anchor_seg == 0) {
+           // look for the signed anchor string.
+-          if ((sig_anchor = strcasestr(segment[numtoks],anchor)) != NULL) {
++          if ((sig_anchor = strcasestr(segment[numtoks], anchor)) != NULL) {
+             // null terminate this segment just before he signing anchor, this should be a ';'.
+             *(sig_anchor - 1) = '\0';
+             if ((sig_anchor = strstr(sig_anchor, "=")) != NULL) {
+@@ -343,7 +343,7 @@ urlParse(bool *https, char *anchor, char *url, char *new_path_seg, int new_path_
+   for (i = 2; i < numtoks; i++) {
+     // if no signing anchor is found, skip the signed parameters segment.
+     if (sig_anchor == NULL && i == numtoks - 2) {
+-      // the signing parameters when no signature anchor is found, should be in the 
++      // the signing parameters when no signature anchor is found, should be in the
+       // last path segment so skip them.
+       continue;
+     }
+@@ -382,12 +382,12 @@ urlParse(bool *https, char *anchor, char *url, char *new_path_seg, int new_path_
+   // to be in the last path segment.
+   if (sig_anchor == NULL) {
+     if (TSBase64Decode(segment[numtoks - 2], strlen(segment[numtoks - 2]), decoded_string, sizeof(decoded_string),
+-                      (size_t *)&decoded_len) != TS_SUCCESS) {
++                       (size_t *)&decoded_len) != TS_SUCCESS) {
+       TSDebug(PLUGIN_NAME, "Unable to decode the  path parameter string.");
+     }
+   } else {
+-    if (TSBase64Decode(sig_anchor, strlen(sig_anchor), decoded_string, sizeof(decoded_string),
+-                      (size_t *)&decoded_len) != TS_SUCCESS) {
++    if (TSBase64Decode(sig_anchor, strlen(sig_anchor), decoded_string, sizeof(decoded_string), (size_t *)&decoded_len) !=
++        TS_SUCCESS) {
+       TSDebug(PLUGIN_NAME, "Unable to decode the  path parameter string.");
+     }
+   }
+@@ -412,7 +412,7 @@ urlParse(bool *https, char *anchor, char *url, char *new_path_seg, int new_path_
+       continue;
+     }
+     strncat(new_url, segment[i], strlen(segment[i]));
+-    if (i < numtoks - 1) { 
++    if (i < numtoks - 1) {
+       strncat(new_url, "/", 1);
+     }
+   }
+@@ -518,52 +518,52 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
+   p = strstr(query, CIP_QSTRING "=");
+   if (p != NULL) {
+     p += (strlen(CIP_QSTRING) + 1);
+-    struct sockaddr const *ip = TSHttpTxnClientAddrGet(txnp); 
++    struct sockaddr const *ip = TSHttpTxnClientAddrGet(txnp);
+     if (ip == NULL) {
+       TSError("Can't get client ip address.");
+       goto deny;
+     } else {
+       switch (ip->sa_family) {
+-        case AF_INET:
+-          TSDebug(PLUGIN_NAME, "ip->sa_family: AF_INET");
+-          isClient_ipv6 = false;
+-          has_path_params == false ? (pp = strstr(p, "&")) : (pp = strstr(p, ";"));
+-          if ((pp - p) > INET_ADDRSTRLEN - 1 || (pp - p) < 4) {
+-            err_log(url, "IP address string too long or short.");
+-            goto deny;
+-          }
+-          strncpy(client_ipv4, p, (pp - p));
+-          client_ipv4[pp - p] = '\0';
+-          TSDebug(PLUGIN_NAME, "CIP: -%s-", client_ipv4);
+-          inet_ntop(AF_INET, &(((struct sockaddr_in *)ip)->sin_addr), ipstr_v4, sizeof ipstr_v4);
+-          TSDebug(PLUGIN_NAME, "Peer address: -%s-", ipstr_v4);
+-          if (strcmp(ipstr_v4, client_ipv4) != 0) {
+-            err_log(url, "Client IP doesn't match signature.");
+-            goto deny;
+-          }
+-          break;
+-        case AF_INET6:
+-          TSDebug(PLUGIN_NAME, "ip->sa_family: AF_INET6");
+-          isClient_ipv6 = true;
+-          has_path_params == false ? (pp = strstr(p, "&")) : (pp = strstr(p, ";"));
+-          if ((pp - p) > INET6_ADDRSTRLEN - 1 || (pp - p) < 4) {
+-            err_log(url, "IP address string too long or short.");
+-            goto deny;
+-          }
+-          strncpy(client_ipv6, p, (pp - p));
+-          client_ipv6[pp - p] = '\0';
+-          TSDebug(PLUGIN_NAME, "CIP: -%s-", client_ipv6);
+-          inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)ip)->sin6_addr), ipstr_v6, sizeof ipstr_v6);
+-          TSDebug(PLUGIN_NAME, "Peer address: -%s-", ipstr_v6);
+-          if (strcmp(ipstr_v6, client_ipv6) != 0) {
+-            err_log(url, "Client IP doesn't match signature.");
+-            goto deny;
+-          }
+-          break;
+-        default:
+-          TSError("%s: Unknown address family %d", PLUGIN_NAME, ip->sa_family);
++      case AF_INET:
++        TSDebug(PLUGIN_NAME, "ip->sa_family: AF_INET");
++        isClient_ipv6 = false;
++        has_path_params == false ? (pp = strstr(p, "&")) : (pp = strstr(p, ";"));
++        if ((pp - p) > INET_ADDRSTRLEN - 1 || (pp - p) < 4) {
++          err_log(url, "IP address string too long or short.");
++          goto deny;
++        }
++        strncpy(client_ipv4, p, (pp - p));
++        client_ipv4[pp - p] = '\0';
++        TSDebug(PLUGIN_NAME, "CIP: -%s-", client_ipv4);
++        inet_ntop(AF_INET, &(((struct sockaddr_in *)ip)->sin_addr), ipstr_v4, sizeof ipstr_v4);
++        TSDebug(PLUGIN_NAME, "Peer address: -%s-", ipstr_v4);
++        if (strcmp(ipstr_v4, client_ipv4) != 0) {
++          err_log(url, "Client IP doesn't match signature.");
+           goto deny;
+-          break;
++        }
++        break;
++      case AF_INET6:
++        TSDebug(PLUGIN_NAME, "ip->sa_family: AF_INET6");
++        isClient_ipv6 = true;
++        has_path_params == false ? (pp = strstr(p, "&")) : (pp = strstr(p, ";"));
++        if ((pp - p) > INET6_ADDRSTRLEN - 1 || (pp - p) < 4) {
++          err_log(url, "IP address string too long or short.");
++          goto deny;
++        }
++        strncpy(client_ipv6, p, (pp - p));
++        client_ipv6[pp - p] = '\0';
++        TSDebug(PLUGIN_NAME, "CIP: -%s-", client_ipv6);
++        inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)ip)->sin6_addr), ipstr_v6, sizeof ipstr_v6);
++        TSDebug(PLUGIN_NAME, "Peer address: -%s-", ipstr_v6);
++        if (strcmp(ipstr_v6, client_ipv6) != 0) {
++          err_log(url, "Client IP doesn't match signature.");
++          goto deny;
++        }
++        break;
++      default:
++        TSError("%s: Unknown address family %d", PLUGIN_NAME, ip->sa_family);
++        goto deny;
++        break;
+       }
+     }
+   }
+@@ -639,7 +639,7 @@ TSRemapDoRemap(void *ih, TSHttpTxn txnp, TSRemapRequestInfo *rri)
+             keyindex, parts, signature);
+   } else {
+     TSDebug(PLUGIN_NAME, "Found all needed parameters: C=%s E=%d A=%d K=%d P=%s S=%s", client_ipv4, (int)expiration, algorithm,
+-          keyindex, parts, signature);
++            keyindex, parts, signature);
+   }
+   /* find the string that was signed - cycle through the parts letters, adding the part of the fqdn/path if it is 1 */
+   has_path_params == false ? (p = strstr(url, "?")) : (p = strstr(url, ";"));
+diff --git a/proxy/ParentConsistentHash.cc b/proxy/ParentConsistentHash.cc
+index 1171ab9..5775e52 100644
+--- a/proxy/ParentConsistentHash.cc
++++ b/proxy/ParentConsistentHash.cc
+@@ -153,7 +153,7 @@ ParentConsistentHash::selectParent(const ParentSelectionPolicy *policy, bool fir
+     // check to see if it is retryable.
+     if (pRec && !pRec->available) {
+       Debug("parent_select", "Parent.failedAt = %u, retry = %u, xact_start = %u", (unsigned int)pRec->failedAt,
+-        (unsigned int)policy->ParentRetryTime, (unsigned int)request_info->xact_start);
++            (unsigned int)policy->ParentRetryTime, (unsigned int)request_info->xact_start);
+       if ((pRec->failedAt + policy->ParentRetryTime) < request_info->xact_start) {
+         // make sure that the proper state is recorded in the result structure
+         result->last_parent = pRec->idx;
+@@ -164,7 +164,8 @@ ParentConsistentHash::selectParent(const ParentSelectionPolicy *policy, bool fir
+         } else {
+           result->r = PARENT_SPECIFIED;
+         }
+-        Debug("parent_select", "Down parent %s is now retryable, pRec: %p, result->retry: %d.", pRec->hostname, pRec, result->retry);
++        Debug("parent_select", "Down parent %s is now retryable, pRec: %p, result->retry: %d.", pRec->hostname, pRec,
++              result->retry);
+       } else { // if not retryable find an available host on the primary ring.
+         last_lookup = PRIMARY;
+         fhash = chash[PRIMARY];
+@@ -206,10 +207,10 @@ ParentConsistentHash::selectParent(const ParentSelectionPolicy *policy, bool fir
+       if (now > last_unavailable) {
+         int len = 0;
+         char *request_str = url->string_get_ref(&len);
+-        if(request_str) {
+-            Note("No available parents for request: %*s.", len, request_str);
++        if (request_str) {
++          Note("No available parents for request: %*s.", len, request_str);
+         }
+-       ink_atomic_swap(&last_unavailable, now);
++        ink_atomic_swap(&last_unavailable, now);
+       }
+       result->r = PARENT_FAIL;
+     }
+diff --git a/proxy/ParentRoundRobin.cc b/proxy/ParentRoundRobin.cc
+index c387e8c..0295324 100644
+--- a/proxy/ParentRoundRobin.cc
++++ b/proxy/ParentRoundRobin.cc
+@@ -25,6 +25,7 @@
+ ParentRoundRobin::ParentRoundRobin(ParentRecord *parent_record, ParentRR_t _round_robin_type)
+ {
+   round_robin_type = _round_robin_type;
++  latched_parent = 0;
+ 
+   if (is_debug_tag_set("parent_select")) {
+     switch (round_robin_type) {
+@@ -37,6 +38,9 @@ ParentRoundRobin::ParentRoundRobin(ParentRecord *parent_record, ParentRR_t _roun
+     case P_HASH_ROUND_ROBIN:
+       Debug("parent_select", "Using a round robin parent selection strategy of type P_HASH_ROUND_ROBIN.");
+       break;
++    case P_LATCHED_ROUND_ROBIN:
++      Debug("parent_select", "Using a round robin parent selection strategy of type P_LATCHED_ROUND_ROBIN.");
++      break;
+     default:
+       // should never see this, there is a problem if you do.
+       Debug("parent_select", "Using a round robin parent selection strategy of type UNKNOWN TYPE.");
+@@ -100,13 +104,16 @@ ParentRoundRobin::selectParent(const ParentSelectionPolicy *policy, bool first_c
+       case P_NO_ROUND_ROBIN:
+         cur_index = result->start_parent = 0;
+         break;
++      case P_LATCHED_ROUND_ROBIN:
++        cur_index = latched_parent;
++        break;
+       default:
+         ink_release_assert(0);
+       }
+     }
+   } else {
+     // Move to next parent due to failure
+-    cur_index = (result->last_parent + 1) % result->rec->num_parents;
++    latched_parent = cur_index = (result->last_parent + 1) % result->rec->num_parents;
+ 
+     // Check to see if we have wrapped around
+     if ((unsigned int)cur_index == result->start_parent) {
+@@ -169,7 +176,7 @@ ParentRoundRobin::selectParent(const ParentSelectionPolicy *policy, bool first_c
+       Debug("parent_select", "Chosen parent = %s.%d", result->hostname, result->port);
+       return;
+     }
+-    cur_index = (cur_index + 1) % result->rec->num_parents;
++    latched_parent = cur_index = (cur_index + 1) % result->rec->num_parents;
+   } while ((unsigned int)cur_index != result->start_parent);
+ 
+   if (result->rec->go_direct == true && result->rec->parent_is_proxy) {
+diff --git a/proxy/ParentRoundRobin.h b/proxy/ParentRoundRobin.h
+index 57b6832..818e26c 100644
+--- a/proxy/ParentRoundRobin.h
++++ b/proxy/ParentRoundRobin.h
+@@ -35,6 +35,7 @@
+ class ParentRoundRobin : public ParentSelectionStrategy
+ {
+   ParentRR_t round_robin_type;
++  int latched_parent;
+ 
+ public:
+   ParentRoundRobin(ParentRecord *_parent_record, ParentRR_t _round_robin_type);
+diff --git a/proxy/ParentSelection.cc b/proxy/ParentSelection.cc
+index 81431a8..aa3c4b6 100644
+--- a/proxy/ParentSelection.cc
++++ b/proxy/ParentSelection.cc
+@@ -436,6 +436,7 @@ ParentRecord::ProcessParents(char *val, bool isPrimary)
+       this->parents[i].hostname[tmp - current] = '\0';
+       this->parents[i].port = port;
+       this->parents[i].failedAt = 0;
++      this->parents[i].failCount = 0;
+       this->parents[i].scheme = scheme;
+       this->parents[i].idx = i;
+       this->parents[i].name = this->parents[i].hostname;
+@@ -446,6 +447,7 @@ ParentRecord::ProcessParents(char *val, bool isPrimary)
+       this->secondary_parents[i].hostname[tmp - current] = '\0';
+       this->secondary_parents[i].port = port;
+       this->secondary_parents[i].failedAt = 0;
++      this->parents[i].failCount = 0;
+       this->secondary_parents[i].scheme = scheme;
+       this->secondary_parents[i].idx = i;
+       this->secondary_parents[i].name = this->secondary_parents[i].hostname;
+@@ -543,6 +545,8 @@ ParentRecord::Init(matcher_line *line_info)
+         round_robin = P_NO_ROUND_ROBIN;
+       } else if (strcasecmp(val, "consistent_hash") == 0) {
+         round_robin = P_CONSISTENT_HASH;
++      } else if (strcasecmp(val, "latched") == 0) {
++        round_robin = P_LATCHED_ROUND_ROBIN;
+       } else {
+         round_robin = P_NO_ROUND_ROBIN;
+         errPtr = "invalid argument to round_robin directive";
+@@ -621,6 +625,7 @@ ParentRecord::Init(matcher_line *line_info)
+   case P_NO_ROUND_ROBIN:
+   case P_STRICT_ROUND_ROBIN:
+   case P_HASH_ROUND_ROBIN:
++  case P_LATCHED_ROUND_ROBIN:
+     TSDebug("parent_select", "allocating ParentRoundRobin() lookup strategy.");
+     selection_strategy = new ParentRoundRobin(this, round_robin);
+     break;
+@@ -654,6 +659,7 @@ ParentRecord::UpdateMatch(ParentResult *result, RequestData *rdata)
+ ParentRecord::~ParentRecord()
+ {
+   ats_free(parents);
++  ats_free(secondary_parents);
+   delete selection_strategy;
+ }
+ 
+diff --git a/proxy/ParentSelection.h b/proxy/ParentSelection.h
+index ab970c0..264dd0c 100644
+--- a/proxy/ParentSelection.h
++++ b/proxy/ParentSelection.h
+@@ -60,6 +60,7 @@ enum ParentRR_t {
+   P_STRICT_ROUND_ROBIN,
+   P_HASH_ROUND_ROBIN,
+   P_CONSISTENT_HASH,
++  P_LATCHED_ROUND_ROBIN
+ };
+ 
+ // struct pRecord
+diff --git a/tools/rc_admin.pl b/tools/rc_admin.pl
+new file mode 100755
+index 0000000..554e0b6
+--- /dev/null
++++ b/tools/rc_admin.pl
+@@ -0,0 +1,120 @@
++#!/usr/bin/env perl
++#
++#
++use strict;
++use warnings;
++
++use File::Copy;
++
++my %el_versions = ( "6" => 1, "7" => 1);
++my %modes = ("install" => 1, "upgrade" => 1, "uninstall" => 1);
++my %phases = ("pre-uninstall" => 1, "post-install" => 1);
++my $installdir; 
++my $mode;
++my $phase;
++
++# returns the enterprise linux version.
++sub el_version {
++  my $el_version = 0;
++	
++  if (`uname -r` =~ m/.+el(\d)\.x86_64/) {
++    $el_version = $1;
++  }
++	exists $el_versions{$el_version} ? return $el_version 
++		: die("unsupported el_version: $el_version");
++}
++
++sub usage {
++	print STDERR "\nUsage: rc_admin.pl phase mode install_directory\n\n";
++	print "\tvalid phase arguments:\n";
++	print "\t\t'pre-uninstall'  - pre uninstall phase\n";
++	print "\t\t'post-install'   - post install phase\n";
++
++	print "\tvalid mode arguments:\n";
++	print "\t\t'install' or 'uninstall'\n\n";
++	exit 1;
++}
++
++if ( $#ARGV < 2 || !(exists $phases{$ARGV[0]}) || !(exists $modes{$ARGV[1]})) {
++        &usage();
++} else {
++	$phase = $ARGV[0];
++	$mode = $ARGV[1];
++	$installdir = $ARGV[2];
++}
++
++my $EL_VERSION = el_version();
++
++if (-d "$installdir/rc") {
++	chdir("$installdir/rc");
++} else {
++	die("no such directory $installdir/rc");
++}
++
++if ($phase eq "post-install") {
++	if ($EL_VERSION eq "6" && $mode eq "install") {
++		print "installing /etc/init.d/trafficserver.\n";
++		`/bin/cp trafficserver /etc/init.d/`;			
++		if ($? != 0) {
++			print "Failed to copy trafficsever to /etc/init.d/ : $!";
++		} else {
++			chmod(0755, "/etc/init.d/trafficserver");
++		}
++		`/sbin/chkconfig --add trafficserver`;
++		if ($? != 0) {
++			print "Failed running /sbin/chkconfig --add  trafficsever";
++		} 
++
++	} elsif ("$EL_VERSION" eq "7" && $mode eq "install") {
++		print "installing /usr/lib/systemd/system/trafficserver.service.\n";
++		`/bin/cp trafficserver.service /usr/lib/systemd/system/`;			
++		if ($? != 0) {
++			print "Failed to copy trafficsever.service to /usr/lib/systemd/system: $!";
++		} else {
++			chmod(0644, "/usr/lib/systemd/system/trafficserver.service");
++		}
++		`/bin/systemctl daemon-reload`;
++		if ($? != 0) {
++			print "Failed running /bin/systemctl daemon-reload";
++		} 
++		`/bin/systemctl enable trafficserver`;
++		if ($? != 0) {
++			print "Failed running /bin/systemctl enable  trafficsever";
++		} 
++	}
++} elsif ($phase eq "pre-uninstall") {
++	print "Shutting down trafficserver.\n";
++	`/sbin/service trafficserver stop`;
++	if ($? != 0) {
++		print "Failed running /sbin/service trafficsever stop\n";
++	}  else {
++		print "trafficserver has stopped.\n";
++	}
++
++	if ($mode eq "uninstall") {
++		print "disabling trafficserver.\n";
++		if ($EL_VERSION eq "6") {
++			`/sbin/chkconfig --del trafficserver`;
++			if ($? != 0) {
++				print "Failed running /sbin/chkconfig --del trafficsever";
++			}  else {
++				print "trafficserver has been disabled.\n";
++			}
++			unlink("/etc/init.d/trafficserver");
++		} elsif ($EL_VERSION eq "7") {
++			`/bin/systemctl disable trafficserver`;
++			if ($? != 0) {
++				print "Failed running /sbin/systemctl disable trafficsever";
++			}  else {
++				print "trafficserver has been disabled.\n";
++			}
++			unlink ("/usr/lib/systemd/system/trafficserver.service");
++			`/bin/systemctl daemon-reload`;
++			if ($? != 0) {
++				print "Failed running /bin/systemctl daemon-reload";
++			} 
++		}
++	}
++}
++
++exit 0;
+diff --git a/trafficserver.spec b/trafficserver.spec
+index 9e74377..3ddb4dd 100644
+--- a/trafficserver.spec
++++ b/trafficserver.spec
+@@ -29,7 +29,6 @@ git clone git@github.comcast.com:cdneng/trafficserver.git %{name}
+ git checkout build-master
+ git checkout %{commit} .
+ autoreconf -vfi
+-#id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
+ 
+ %build
+ ./configure --prefix=%{install_prefix}/%{name} --with-user=ats --with-group=ats --with-build-number=%{release} --enable-experimental-plugins --with-max-api-stats=%{api_stats}
+@@ -42,8 +41,10 @@ make DESTDIR=$RPM_BUILD_ROOT install
+ # ..so why haven't we fixed them? VSSCDNENG-767
+ 
+ mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/etc/trafficserver/snapshots
+-mkdir -p $RPM_BUILD_ROOT/etc/init.d
+-cp $RPM_BUILD_DIR/%{name}/rc/trafficserver $RPM_BUILD_ROOT/etc/init.d/
++mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/rc
++cp $RPM_BUILD_DIR/%{name}/rc/trafficserver $RPM_BUILD_ROOT/opt/trafficserver/rc/
++cp $RPM_BUILD_DIR/%{name}/rc/trafficserver.service $RPM_BUILD_ROOT/opt/trafficserver/rc/
++cp $RPM_BUILD_DIR/%{name}/tools/rc_admin.pl $RPM_BUILD_ROOT/opt/trafficserver/rc/
+ 
+ %clean
+ rm -rf $RPM_BUILD_ROOT
+@@ -52,14 +53,14 @@ rm -rf $RPM_BUILD_ROOT
+ id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
+ 
+ %post
+-chkconfig --add %{name}
++/opt/trafficserver/rc/rc_admin.pl post-install install /opt/trafficserver
+ 
+ %preun
+-/etc/init.d/%{name} stop
+-
+ # if 0 uninstall, if 1 upgrade
+ if [ "$1" = "0" ]; then
+-	chkconfig --del %{name}
++	/opt/trafficserver/rc/rc_admin.pl pre-uninstall uninstall /opt/trafficserver
++elif [ "$1" = "1" ]; then
++	/opt/trafficserver/rc/rc_admin.pl pre-uninstall upgrade /opt/trafficserver
+ fi
+ 
+ %postun
+@@ -72,7 +73,6 @@ fi
+ 
+ %files
+ %defattr(-,root,root)
+-%attr(755,-,-) /etc/init.d/trafficserver
+ %dir /opt/trafficserver
+ /opt/trafficserver/bin
+ /opt/trafficserver/include
+@@ -80,6 +80,7 @@ fi
+ /opt/trafficserver/lib64
+ /opt/trafficserver/libexec
+ /opt/trafficserver/share
++/opt/trafficserver/rc
+ %dir /opt/trafficserver/var
+ %attr(-,ats,ats) /opt/trafficserver/var/trafficserver
+ %dir /opt/trafficserver/var/log
+@@ -112,6 +113,9 @@ fi
+ %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/stats.config.xml
+ 
+ %changelog
++* Wed Jun 8 2016 John Rushford <john_rushford(at)cable.comcast.com>
++- Added tools/rc_admin.pl to complete rpm tasks under both Enterprise Linux 6 or 7 using either chkconfig or systemd commands.
++- Modified this spec file to use rc_admin.pl
+ * Wed Aug 7 2013 Jeff Elsloo <jeffrey_elsloo(at)cable.comcast.com>
+ - Modified to support building 3.3.x
+ - Modified to support upgrades
