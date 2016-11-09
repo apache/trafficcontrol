@@ -64,10 +64,6 @@ sub promptUser {
 		}
 		return $response;
 	}
-	elsif ( $::auto && defined $defaultValue ) {
-		print( "$defaultValue\n" );
-		return $defaultValue;
-	}
 	else {
 		$| = 1;
 		$_ = <STDIN>;
@@ -100,11 +96,6 @@ sub promptPassword {
 sub promptPasswordVerify {
 	my $prompt = shift;
 	my $pw     = shift;
-	
-	if ( $::auto && defined $pw ) {
-		print( "$prompt: $pw\n" );
-		return $pw;
-	}
 
 	while (1) {
 		$pw = promptPassword($prompt);
