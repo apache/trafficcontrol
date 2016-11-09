@@ -8,9 +8,9 @@ package poller
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package poller
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"io/ioutil"
@@ -263,6 +262,7 @@ func pollHttp(interval time.Duration, id string, url string, fetcher fetcher.Fet
 	for {
 		select {
 		case now := <-tick.C:
+			tick.Stop()                     // old ticker MUST call Stop() to release resources. Else, memory leak.
 			tick = time.NewTicker(interval) // recreate timer, to avoid Go's "smoothing" nonsense
 			realInterval := now.Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
