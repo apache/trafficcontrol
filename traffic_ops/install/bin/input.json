@@ -1,0 +1,82 @@
+{
+	"testdb.conf": [
+		{
+			"Database type": "mysql",
+			"config_var": "type"
+		},
+		{
+			"Database name": "traffic_ops",
+			"config_var": "dbname"
+		},
+		{
+			"Database server hostname IP or FQDN": "localhost",
+			"config_var": "hostname"
+		},
+		{
+			"Database port number": "3306",
+			"config_var": "port"
+		},
+                {
+                        "Root database user": "root",
+                        "config_var": "root_user"
+                },
+                {
+                        "Root database password": "default",
+                        "config_var": "root_passwd"
+                }
+	],
+	"testtodb.conf": [
+                {
+                        "Traffic Ops database user": "root",
+                        "config_var": "dbAdminUser"
+                },
+                {
+                        "Password for Traffic Ops database user": "default",
+                        "config_var": "dbAdminPw"
+                }
+	],
+	"testcdn.conf": [
+		{
+			"Generate a new secret?": "yes",
+			"config_var": "genSecret"
+		},
+		{
+			"Number of secrets to keep?": "10",
+			"config_var": "keepSecrets"
+		}
+	],
+	"testldap.conf": [
+		{
+			"Do you want to set up LDAP?": "no",
+			"config_var": "setupLdap"
+		},
+		{
+			"LDAP server hostname": "",
+			"config_var": "hostname"
+		},
+		{
+			"LDAP Admin DN": "",
+			"config_var": "admin_dn"
+		},
+		{
+			"LDAP Admin Password": "",
+			"config_var": "password"
+		},
+		{
+			"LDAP Search Base": "",
+			"config_var": "search_base"
+		}
+	],
+	"testpost_install.json": [],
+	"testusers.json": [
+		{
+			"Administration username for Traffic Ops": "admin",
+			"config_var": "tmAdminUser"
+		},
+		{
+			"Password for the admin user": "default",
+			"config_var": "tmAdminPw"
+		}
+	],
+	"testprofiles/": []
+}

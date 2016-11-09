@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 #
+# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +15,19 @@
 # limitations under the License.
 #
 
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
+$ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
+$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
+
 use strict;
 use warnings;
 use Getopt::Std;
 use InstallUtils;
 
 our ($opt_i);
+
+my $auto = $ARGV[0];
+print $auto;
 
 my @dependencies = (
 	"expat-devel",   "mod_ssl",      "mkisofs",     "libpcap",  "libpcap-devel", "libcurl",
@@ -33,38 +41,6 @@ In order to complete this operation, Development tools such as the gcc
 compiler will be installed on this machine.
 
 EOF
-
-sub promptUser {
-	my ( $promptString, $defaultValue, $noEcho ) = @_;
-
-	if ($defaultValue) {
-		print $promptString, " [", $defaultValue, "]:  ";
-	}
-	else {
-		print $promptString, ":  ";
-	}
-
-	if ( defined $noEcho && $noEcho ) {
-		my $response = read_password('');
-		if ( ( !defined $response || $response eq '' ) && ( defined $defaultValue && $defaultValue ne '' ) ) {
-			$response = $defaultValue;
-		}
-		return $response;
-	}
-	else {
-		$| = 1;
-		$_ = <STDIN>;
-		chomp;
-
-		if ("$defaultValue") {
-			return $_ ? $_ : $defaultValue;
-		}
-		else {
-			return $_;
-		}
-		return $_;
-	}
-}
 
 sub trim {
 	my $str = shift;
@@ -96,7 +72,9 @@ if ( $ENV{USER} ne "root" ) {
 
 print $msg;
 
-promptUser( "Hit ENTER to continue", "" );
+if ( !$auto ) {
+	InstallUtils::promptUser( "Hit ENTER to continue", "" );
+}
 
 chdir("/opt/traffic_ops/app");
 
