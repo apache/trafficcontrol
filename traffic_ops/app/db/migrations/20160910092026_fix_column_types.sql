@@ -25,7 +25,7 @@ ALTER TABLE cdn
 	ALTER COLUMN dnssec_enabled TYPE boolean
 		USING CASE WHEN dnssec_enabled = 0 THEN FALSE
 			WHEN dnssec_enabled = 1 THEN TRUE
-			ELSE FALSE
+			ELSE NULL
 			END,
   ALTER COLUMN dnssec_enabled SET DEFAULT FALSE;
 
@@ -85,6 +85,15 @@ ALTER TABLE deliveryservice
 			ELSE NULL
 			END,
   ALTER COLUMN logs_enabled SET DEFAULT FALSE;
+
+ALTER TABLE goose_db_version
+  ALTER COLUMN is_applied DROP DEFAULT,
+	ALTER COLUMN is_applied TYPE boolean
+		USING CASE WHEN is_applied = 0 THEN FALSE
+			WHEN is_applied = 1 THEN TRUE
+			ELSE FALSE
+			END,
+  ALTER COLUMN is_applied SET DEFAULT FALSE;
 
 ALTER TABLE parameter
   ALTER COLUMN secure DROP DEFAULT,
@@ -172,6 +181,12 @@ ALTER TABLE deliveryservice
 	ALTER COLUMN logs_enabled TYPE SMALLINT
    USING CASE WHEN logs_enabled THEN 1 ELSE 0 END,
   ALTER COLUMN logs_enabled SET DEFAULT 0;
+
+ALTER TABLE goose_db_version
+  ALTER COLUMN is_applied DROP DEFAULT,
+	ALTER COLUMN is_applied TYPE SMALLINT
+   USING CASE WHEN is_applied THEN 1 ELSE 0 END,
+  ALTER COLUMN is_applied SET DEFAULT 0;
 
 ALTER TABLE parameter
   ALTER COLUMN secure DROP DEFAULT,
