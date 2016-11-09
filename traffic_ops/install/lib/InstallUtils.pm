@@ -25,7 +25,7 @@ package InstallUtils;
 
 use Term::ReadPassword;
 use base qw{ Exporter };
-our @EXPORT_OK = qw{ execCommand randomWord promptUser promptRequired promptPassword promptPasswordVerify trim};
+our @EXPORT_OK = qw{ execCommand randomWord promptUser promptRequired promptPassword promptPasswordVerify trim readJson writeJson writePerl};
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 sub execCommand {
@@ -64,6 +64,10 @@ sub promptUser {
 		}
 		return $response;
 	}
+	elsif ( $::auto && defined $defaultValue ) {
+		print( "$defaultValue\n" );
+		return $defaultValue;
+	}
 	else {
 		$| = 1;
 		$_ = <STDIN>;
@@ -96,6 +100,11 @@ sub promptPassword {
 sub promptPasswordVerify {
 	my $prompt = shift;
 	my $pw     = shift;
+	
+	if ( $::auto && defined $pw ) {
+		print( "$prompt: $pw\n" );
+		return $pw;
+	}
 
 	while (1) {
 		$pw = promptPassword($prompt);
@@ -113,6 +122,37 @@ sub trim {
 	$str =~ s/^\s+$//;
 
 	return $str;
+}
+
+sub readJson {
+	my $file = shift;
+	open( my $fh, '<', $file ) or return;
+	local $/;    # slurp mode
+	my $text = <$fh>;
+	undef $fh;
+	return JSON->new->utf8->decode($text);
+}
+
+sub writeJson {
+	my $file = shift;
+	open( my $fh, '>', $file ) or die("open(): $!");
+	foreach my $data (@_) {
+		my $json_text = JSON->new->utf8->pretty->encode($data);
+		print $fh $json_text, "\n";
+	}
+	close $fh;
+}
+
+sub writePerl {
+	my $file = shift;
+ 	my $data = shift;
+ 
+ 	open( my $fh, '>', $file ) or die("open(): $!");
+ 	my $dumper = Data::Dumper->new([ $data ]);
+ 
+ 	# print without var names and with simple indentation
+ 	print $fh $dumper->Terse(1)->Dump();
+ 	close $fh;
 }
 
 1;
