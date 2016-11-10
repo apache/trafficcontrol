@@ -29,7 +29,9 @@ checkEnvironment
 
 # Create tarball first
 projName=$(basename $(pwd))
-createTarball "$TC_DIR"
+echo "-----  Building tarball ..."
+tarball=$(createTarball "$TC_DIR")
+ls -l $tarball
 
 
 if [[ $# -gt 0 ]]; then
