@@ -28,13 +28,8 @@ export TC_DIR=$(dirname $(dirname "$topscript"))
 checkEnvironment
 
 # Create tarball first
-if isInGitTree; then
-	echo "-----  Building tarball ..."
-	tarball=$(createTarball "$TC_DIR")
-	ls -l $tarball
-else
-	echo "---- Skipping tarball creation"
-fi
+projName=$(basename $(pwd))
+createTarball "$TC_DIR"
 
 if [[ $# -gt 0 ]]; then
 	projects=( "$*" )
