@@ -134,7 +134,7 @@ func writeFile(schemas []ColumnSchema, table string) (int, error) {
 	if strings.Contains(sString, "null.") {
 		header += "null \"gopkg.in/guregu/null.v3\"\n"
 	}
-	header += "_ \"github.com/Comcast/traffic_control/traffic_ops/experimental/server/output_format\" // needed for swagger\n"
+	header += "_ \"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/output_format\" // needed for swagger\n"
 	if strings.Contains(sString, "time.") {
 		header += "\"time\"\n"
 	}
