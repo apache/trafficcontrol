@@ -90,7 +90,7 @@ Note: for now, we are using the web.go method to get the swagger pages up, later
   ```
   [jvd@laika swagger-api]$ pwd
   /Users/jvd/work/gh/swagger-api
-  [jvd@laika swagger-api]$ swagger -apiPackage github.com/Comcast/traffic_control/traffic_ops/experimental/server/api -mainApiFile github.com/Comcast/traffic_control/traffic_ops/experimental/server/api/api.go -format go
+  [jvd@laika swagger-api]$ swagger -apiPackage github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/api -mainApiFile github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/api/api.go -format go
   2016/01/16 09:57:34 Start parsing
   2016/01/16 09:57:36 Finish parsing
   2016/01/16 09:57:36 Doc file generated
