@@ -451,7 +451,7 @@ sub adeliveryservice {
             $row->type->name,               $row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,
             $geo_limits{ $row->geo_limit }, $protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling,
             $row->http_bypass_fqdn,         $row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,
-            $row->miss_lat,                 $row->miss_long,
+            0.0 + $row->miss_lat,           0.0 + $row->miss_long,
         ];
         push( @{ $data{'aaData'} }, $line );
     }
@@ -606,7 +606,7 @@ sub acachegroup {
 
     while ( my $row = $rs->next ) {
         my @line = [
-            $row->id, $row->name, $row->short_name, $row->type->name, $row->latitude, $row->longitude,
+            $row->id, $row->name, $row->short_name, $row->type->name, 0.0 + $row->latitude, 0.0 + $row->longitude,
             defined( $row->parent_cachegroup_id )
             ? $id_to_name{ $row->parent_cachegroup_id }
             : undef,
