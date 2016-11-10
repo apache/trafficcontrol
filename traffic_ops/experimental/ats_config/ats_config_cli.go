@@ -17,8 +17,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	configfiles "github.com/Comcast/traffic_control/traffic_ops/experimental/ats_config/config_files"
-	"github.com/Comcast/traffic_control/traffic_ops/experimental/ats_config/traffic_ops"
+	configfiles "github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/ats_config/config_files"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/ats_config/traffic_ops"
 )
 
 // Args encapsulates the command line arguments
