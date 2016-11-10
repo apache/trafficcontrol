@@ -165,4 +165,5 @@ function createTarball() {
         # create the tarball only from files in repo and BUILD_NUMBER
         tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$projName/@" $(git ls-files)
         rm -r "$bndir"
+        echo "$tarball"
 }
