@@ -60,8 +60,12 @@ function getBuildNumber() {
 		local sha=$(git rev-parse --short=8 HEAD)
 		echo "$commits.$sha"
 	else
-		# TODO: is this a good method for generating a build number in absence of git?
-		tar cf - . | sha1sum || { echo "Could not produce sha1sum of tar'd directory"; exit 1; }
+		# Expect it's from the released tarball -- if BUILD_NUMBER file is not present,  abort
+		if [[ ! -f $TC_DIR/BUILD_NUMBER ]]; then
+			echo "Not in git repository and no BUILD_NUMBER present -- aborting!"
+			exit 1
+		fi
+		grep -v '^#' $TC_DIR/BUILD_NUMBER
 	fi
 }
 
@@ -144,4 +148,21 @@ function buildRpm () {
 		cp "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
 		cp "$RPMBUILD/SRPMS/$srpm" "$DIST/." || { echo "Could not copy $srpm to $DIST: $?"; exit 1; }
 	done
+}
+
+# ---------------------------------------
+function createTarball() {
+	local projDir=$(cd "$1"; pwd)
+	local projName=$(basename $projDir)
+	local version=$(getVersion "$TC_DIR")
+	local buildNum=$(getBuildNumber)
+	local tarball="dist/$projName-$version.$buildNum.tar.gz"
+
+	# Create a BULDNUMBER file and add to tarball
+	local bndir=$(mktemp -d)
+        echo "$buildNum" >"$bndir/BUILD_NUMBER"
+
+        # create the tarball only from files in repo and BUILD_NUMBER
+        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$projName/@" $(git ls-files)
+        rm -r "$bndir"
 }

@@ -20,8 +20,17 @@
 
 # make sure we start out in traffic_control dir
 topscript=$(readlink -f $0)
-top=$(dirname $(dirname "$topscript"))
-[[ -n $top ]] && cd "$top" || { echo "Could not cd $top"; exit 1; }
+export TC_DIR=$(dirname $(dirname "$topscript"))
+[[ -n $TC_DIR ]] && cd "$TC_DIR" || { echo "Could not cd $TC_DIR"; exit 1; }
+
+. build/functions.sh
+
+checkEnvironment
+
+# Create tarball first
+projName=$(basename $(pwd))
+createTarball "$TC_DIR"
+
 
 if [[ $# -gt 0 ]]; then
 	projects=( "$*" )
