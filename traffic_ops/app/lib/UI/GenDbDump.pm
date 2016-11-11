@@ -16,6 +16,7 @@ package UI::GenDbDump;
 #
 #
 use Mojo::Base 'Mojolicious::Controller';
+use Data::Dumper;
 
 sub dbdump {
 	my $self = shift;
@@ -23,18 +24,18 @@ sub dbdump {
 
 	my $db_user = $Schema::user;
 	my $db_pass = $Schema::pass;
-	my $db_name = ( split( /:/, $Schema::dsn ) )[2];
-	my $db_host = $Schema::hostname;
-	$db_name =~ s/database=//;
+	my $db_name = $Schema::dsn;
+	my $host;
+	my $port;
+	my $dsn = $Schema::dsn;
+	($db_name, $host, $port) = $dsn =~ /:database=(\w+);host=(\w+);port=(\d+)/;
 
-	my $cmd	      = "pg_dump --username=" . $db_user . " " . $db_name . " > " . $filename;
+	my $cmd = "pg_dump -U " . $db_user . " -h localhost -C --column-insert";
 	my $extension = ".psql";
 
 	my $data = `$cmd`;
 
-
 	$self->res->headers->content_type("application/download");
-
 	$self->res->headers->content_disposition( "attachment; filename=\"" . $filename . "\"" );
 	$self->render( data => $data );
 }
