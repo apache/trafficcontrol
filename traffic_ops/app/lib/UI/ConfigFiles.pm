@@ -150,10 +150,6 @@ sub server_data {
 
 	my $server;
 
-	#	if ( defined( $self->app->session->{server_data} ) ) {
-	#		$server = $self->app->session->{server_data};
-	#		return $server;
-	#	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
@@ -161,7 +157,6 @@ sub server_data {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
 
-	#	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
