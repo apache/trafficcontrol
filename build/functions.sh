@@ -49,13 +49,14 @@ function getRevCount() {
 
 # ---------------------------------------
 function isInGitTree() {
-	git rev-parse --is-inside-work-tree 2>/dev/null
+	# ignore output -- use exit status
+	git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
 # ---------------------------------------
 function getBuildNumber() {
-	local in_git=$(isInGitTree)
-	if [[ $in_git ]]; then
+	local in_git=$()
+	if isInGitTree; then
 		local commits=$(getRevCount)
 		local sha=$(git rev-parse --short=8 HEAD)
 		echo "$commits.$sha"
