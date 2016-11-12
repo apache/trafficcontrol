@@ -50,7 +50,8 @@ function getRevCount() {
 
 # ---------------------------------------
 function isInGitTree() {
-	git rev-parse --is-inside-work-tree 2>/dev/null
+	# ignore output -- use exit status
+	git rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
 # ---------------------------------------
