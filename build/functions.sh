@@ -44,7 +44,8 @@ function versionOk() {
 
 # ---------------------------------------
 function getRevCount() {
-	git rev-list HEAD 2>/dev/null | wc -l
+	local buildNum=$(getBuildNumber)
+	echo ${buildNum%.*}
 }
 
 # ---------------------------------------
@@ -54,9 +55,9 @@ function isInGitTree() {
 
 # ---------------------------------------
 function getBuildNumber() {
-	local in_git=$(isInGitTree)
-	if [[ $in_git ]]; then
-		local commits=$(getRevCount)
+	local in_git=$()
+	if isInGitTree; then
+		local commits=$(git rev-list HEAD 2>/dev/null | wc -l)
 		local sha=$(git rev-parse --short=8 HEAD)
 		echo "$commits.$sha"
 	else
@@ -80,7 +81,8 @@ function getRhelVersion {
 
 # ---------------------------------------
 function getCommit() {
-	git rev-parse HEAD
+	local buildNum=$(getBuildNumber)
+	echo ${buildNum%.*}
 }
 
 # ---------------------------------------
