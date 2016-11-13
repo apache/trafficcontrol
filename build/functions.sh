@@ -58,7 +58,7 @@ function isInGitTree() {
 function getBuildNumber() {
 	local in_git=$()
 	if isInGitTree; then
-		local commits=$(getRevCount)
+		local commits=$(git rev-list HEAD 2>/dev/null | wc -l)
 		local sha=$(git rev-parse --short=8 HEAD)
 		echo "$commits.$sha"
 	else
