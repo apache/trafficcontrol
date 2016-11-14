@@ -53,7 +53,7 @@ sub getField {
 		# if no config value and in interactive mode prompt user
                 if ($::interactive) {
                         return promptUser($question);
-                }
+		}
 
 		# if no answer given in input file attempt to use default answer
 		foreach my $var (@{ $::defaultInputs->{$fileName} }) {
@@ -63,7 +63,7 @@ sub getField {
 		}
 		
 		#No way of getting answer
-		errorOut("No config answer given\n");
+		errorOut("No config answer given for question \'$question\'\n");
 	}	
 	
 	errorOut("error: end of function");
@@ -90,8 +90,8 @@ sub getConfig {
 	}
 
 	foreach my $var (@{ $userInput->{$fileName} }) {
-        	my $question = ( (keys $var)[0] eq "config_var" ? (keys $var)[1] : (keys $var)[0] );
-        	my $answer = $config{$var->{"config_var"}} = getField($question, $var->{$question}, $fileName);
+		my $question = ( (keys $var)[0] eq "config_var" ? (keys $var)[1] : (keys $var)[0] );
+		my $answer = $config{$var->{"config_var"}} = getField($question, $var->{$question}, $fileName);
     		
 		$config{$var->{"config_var"}} = $answer;
 		if ($::debug) {
@@ -149,7 +149,7 @@ sub generateCdnConf {
 	my %cdnconf = getConfig($userInput, $fileName);
 	
 	if (! looks_like_number($cdnconf{keepSecrets}) ) {
-		errorOut("Number of secrets to keep must be a number\n");
+		errorOut("Error: Number of secrets to keep must be a number\n");
 	}
 
 	if ( lc $cdnconf{genSecret} =~ /^y(?:es)?/ ) {
@@ -223,8 +223,8 @@ sub generateProfilesDir {
 
 # userInput: The entire input config file which is either user input or the defaults
 #
-# Checks the input config file against the default inputs. If there is a question located in the input config file
-#  which is not present in the defaults it will output a warning message.
+# Checks the input config file against the default inputs. If there is a question located in the default inputs which
+#  is not located in the input config file it will output a warning message.
 #
 # This does not check the other way meaning questions which are present in defaults but not present in the input config
 #  file will not be checked
@@ -233,19 +233,25 @@ sub sanityCheckConfig {
 	my $userInput = shift;
 	my $diffs = 0;
 		
-	foreach my $file ( (keys $userInput) ) {	
-		if (!defined $::defaultInputs->{$file}) {
-			print "Warning: File \'$file\' found in input but not defaults\n";
+	foreach my $file ( (keys $::defaultInputs) ) {	
+		if (!defined $userInput->{$file}) {
+			print "Warning: File \'$file\' found in defaults but not config file\n";
 			next;
 		}
 		
-		my $counter = 0;
-		foreach my $value (@ { $userInput->{$file} }) {
-			if ( !defined $::defaultInputs->{$file}[$counter]->{"config_var"} ) {
-				print "Warning: Value " . Dumper($value) . "found in file \'$file\' but not defaults\n";
-				$diffs++;
+		foreach my $defaultValue (@ { $::defaultInputs->{$file} }) {
+			
+			my $found = 0;
+			foreach my $configValue (@ { $userInput->{$file} }) {
+				if ($defaultValue->{"config_var"} eq $configValue->{"config_var"} ) {
+					$found = 1;	
+				}
 			}
-			$counter++;
+
+			if (!$found) {
+				print "Warning: Value " . Dumper($defaultValue) . "found in defaults but not in \'$file\'\n";
+                                $diffs++;
+			}
 		}		
 	}
     
