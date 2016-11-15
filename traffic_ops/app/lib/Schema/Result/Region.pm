@@ -25,9 +25,10 @@ __PACKAGE__->table("region");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'region_id_seq'
 
 =head2 name
 
@@ -37,32 +38,37 @@ __PACKAGE__->table("region");
 
 =head2 division
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "region_id_seq",
+  },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "division",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -80,7 +86,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<name_UNIQUE>
+=head2 C<idx_39742_name_unique>
 
 =over 4
 
@@ -90,7 +96,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("name_UNIQUE", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_39742_name_unique", ["name"]);
 
 =head1 RELATIONS
 
@@ -106,7 +112,7 @@ __PACKAGE__->belongs_to(
   "division",
   "Schema::Result::Division",
   { id => "division" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 phys_locations
@@ -125,8 +131,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NvsRmrkhGooZnljic2zfBA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:rWahmAZ6JkPd8ankOZ+/5w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
