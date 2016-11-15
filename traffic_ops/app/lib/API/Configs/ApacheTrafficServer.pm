@@ -22,6 +22,7 @@ use Switch;
 use Mojo::Base 'Mojolicious::Controller';
 use Date::Manip;
 use NetAddr::IP;
+use Data::Dumper;
 use UI::DeliveryService;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
@@ -125,7 +126,7 @@ sub get_cdn_config {
 
 	switch ($filename) {
 		case "bg_fetch.config" { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case "cacheurl.config" { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $type ); }
+		case /cacheurl.*\.config/ { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $type ); }
 		case /hdr_rw_.*\.config/ { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $action, $type ); }
 		case /regex_remap_.*\.config/ { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $action, $type ); }
 		case "regex_revalidate.config" { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $type ); }
@@ -801,6 +802,7 @@ sub storage_dot_config {
 
 	return $text;
 }
+
 
 sub to_ext_dot_config {
 	my $self = shift;
