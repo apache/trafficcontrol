@@ -25,13 +25,14 @@ __PACKAGE__->table("hwinfo");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'hwinfo_id_seq'
 
 =head2 serverid
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
@@ -49,28 +50,33 @@ __PACKAGE__->table("hwinfo");
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "hwinfo_id_seq",
+  },
   "serverid",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "description",
   { data_type => "varchar", is_nullable => 0, size => 256 },
   "val",
   { data_type => "varchar", is_nullable => 0, size => 256 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -88,7 +94,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<serverid>
+=head2 C<idx_39644_serverid>
 
 =over 4
 
@@ -100,7 +106,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("serverid", ["serverid", "description"]);
+__PACKAGE__->add_unique_constraint("idx_39644_serverid", ["serverid", "description"]);
 
 =head1 RELATIONS
 
@@ -116,12 +122,12 @@ __PACKAGE__->belongs_to(
   "serverid",
   "Schema::Result::Server",
   { id => "serverid" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Oq3GIhYgP8bbIBTlZvetMQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wVTEBN+UdPkHDLwwb39UHw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

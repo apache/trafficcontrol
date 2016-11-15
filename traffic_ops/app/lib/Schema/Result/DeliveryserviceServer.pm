@@ -25,36 +25,36 @@ __PACKAGE__->table("deliveryservice_server");
 
 =head2 deliveryservice
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 server
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "deliveryservice",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "server",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -86,7 +86,7 @@ __PACKAGE__->belongs_to(
   "deliveryservice",
   "Schema::Result::Deliveryservice",
   { id => "deliveryservice" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 =head2 server
@@ -101,12 +101,12 @@ __PACKAGE__->belongs_to(
   "server",
   "Schema::Result::Server",
   { id => "server" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eRvXjjQnrQhZbcm5MrYl3A
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:4C6p2bSPmbMu+sXa8QHukw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
