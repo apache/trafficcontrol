@@ -1,10 +1,8 @@
 #!/usr/bin/perl
 
-use lib
-  qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
-$ENV{PATH} = "/opt/traffic_ops/install/bin:$ENV{PATH}";
-$ENV{PERL5LIB} =
-"/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
+$ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
+$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
 
 use strict;
 use warnings;
@@ -47,7 +45,7 @@ sub getField {
     my $config_answer = shift;
     my $fileName      = shift;
 
-# if there is no config file and not in automatic mode prompt for all questions with default answers
+    # if there is no config file and not in automatic mode prompt for all questions with default answers
     if ( $::inputFile eq "" && !$::automatic ) {
         return promptUser( $question, $config_answer );
     }
@@ -97,10 +95,11 @@ sub getConfig {
     }
 
     foreach my $var ( @{ $userInput->{$fileName} } ) {
-        my $question =
-          (   ( keys $var )[0] eq "config_var"
+        my $question = (
+              ( keys $var )[0] eq "config_var"
             ? ( keys $var )[1]
-            : ( keys $var )[0] );
+            : ( keys $var )[0]
+        );
 
         my $answer = $config{ $var->{"config_var"} } =
           getField( $question, $var->{$question}, $fileName );
@@ -141,8 +140,7 @@ sub generateDbConf {
     print $fh "name: dbconf.yml\n\n";
     print $fh "production:\n";
     print $fh "        driver: ", getDbDriver() . "\n";
-    print $fh
-"        open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{root_user}/$dbconf{root_passwd}\n";
+    print $fh "        open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{root_user}/$dbconf{root_passwd}\n";
     close $fh;
 
     return \%todbconf;
@@ -241,24 +239,21 @@ sub generateProfilesDir {
 sub sanityCheckDefaults {
     foreach my $file ( ( keys $::defaultInputs ) ) {
         foreach my $defaultValue ( @{ $::defaultInputs->{$file} } ) {
-            my $question =
-              (   ( keys $defaultValue )[0] eq "config_var"
+            my $question = (
+                  ( keys $defaultValue )[0] eq "config_var"
                 ? ( keys $defaultValue )[1]
-                : ( keys $defaultValue )[0] );
+                : ( keys $defaultValue )[0]
+            );
             if ( !defined $defaultValue->{$question}
                 || $defaultValue->{$question} eq "" )
             {
-                errorOut(
-"Error: question \'$question\' in file \'$file\' has no default answer\n"
-                );
+                errorOut( "Error: question \'$question\' in file \'$file\' has no default answer\n" );
             }
 
             if ( !defined $defaultValue->{"config_var"}
                 || $defaultValue->{"config_var"} eq "" )
             {
-                errorOut(
-"Error: question \'$question\' in file \'$file\' has no config_var"
-                );
+                errorOut( "Error: question \'$question\' in file \'$file\' has no config_var" );
             }
         }
     }
@@ -278,8 +273,7 @@ sub sanityCheckConfig {
 
     foreach my $file ( ( keys $::defaultInputs ) ) {
         if ( !defined $userInput->{$file} ) {
-            print
-              "Warning: File \'$file\' found in defaults but not config file\n";
+            print "Warning: File \'$file\' found in defaults but not config file\n";
             next;
         }
 
@@ -287,27 +281,24 @@ sub sanityCheckConfig {
 
             my $found = 0;
             foreach my $configValue ( @{ $userInput->{$file} } ) {
-                if ( $defaultValue->{"config_var"} eq
-                    $configValue->{"config_var"} )
-                {
+                if ( $defaultValue->{"config_var"} eq $configValue->{"config_var"} ) {
                     $found = 1;
                 }
             }
 
-          # if the question is not found in the config file add it from defaults
+            # if the question is not found in the config file add it from defaults
             if ( !$found ) {
-                print "Warning: Value "
-                  . Dumper($defaultValue)
-                  . "found in defaults but not in \'$file\'\n";
+                print "Warning: Value " . Dumper($defaultValue) . "found in defaults but not in \'$file\'\n";
 
-                my $question =
-                  (   ( keys $defaultValue )[0] eq "config_var"
+                my $question = (
+                      ( keys $defaultValue )[0] eq "config_var"
                     ? ( keys $defaultValue )[1]
-                    : ( keys $defaultValue )[0] );
+                    : ( keys $defaultValue )[0]
+                );
 
                 my %temp;
 
-              # if not in automatic mode add the question without default answer
+                # if not in automatic mode add the question without default answer
                 if ( !$::automatic ) {
                     %temp = (
                         "config_var" => $defaultValue->{"config_var"},
@@ -497,8 +488,7 @@ sub main {
     # The generator functions handle checking input/default/automatic mode
 
     # todbconf will be used later when setting up the database
-    my $todbconf = generateDbConf( $userInput, 'testdb.conf', 'testtodb.conf',
-        'testdbconf.yml' );
+    my $todbconf = generateDbConf( $userInput, 'testdb.conf', 'testtodb.conf', 'testdbconf.yml' );
     generateCdnConf( $userInput, 'testcdn.conf' );
     generateLdapConf( $userInput, 'testldap.conf' );
     generatePostInstallConf( $userInput, 'testpost_install.json' );
