@@ -20,7 +20,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	api "github.com/Comcast/traffic_control/traffic_ops/experimental/server/api"
+	api "github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/api"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"io/ioutil"

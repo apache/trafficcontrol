@@ -432,9 +432,223 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 	}, nil
 }
 
-// DataRequest takes an `srvhttp.DataRequest`, and the monitored data objects, and returns the appropriate response, and the status code.
-func DataRequest(
-	req srvhttp.DataRequest,
+// HandleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
+func HandleErr(errorCount UintThreadsafe, reqPath string, err error) {
+	if err == nil {
+		return
+	}
+	errorCount.Inc()
+	log.Errorf("Request Error: %v\n", fmt.Errorf(reqPath+": %v", err))
+}
+
+// WrapErrCode takes the body, err, and log context (errorCount, reqPath). It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`. It notably returns InternalServerError status on any error, for security reasons.
+func WrapErrCode(errorCount UintThreadsafe, reqPath string, body []byte, err error) ([]byte, int) {
+	if err == nil {
+		return body, http.StatusOK
+	}
+	HandleErr(errorCount, reqPath, err)
+	return nil, http.StatusInternalServerError
+}
+
+// WrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
+func WrapBytes(f func() []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Write(w, f(), r.URL.EscapedPath())
+	}
+}
+
+// WrapErr takes a function which returns bytes and an error, and wraps it as a http.HandlerFunc. If the error is nil, the bytes are written with Status OK. Else, the error is logged, and InternalServerError is returned as the response code. If you need to return a different response code (for example, StatusBadRequest), call wrapRespCode.
+func WrapErr(errorCount UintThreadsafe, f func() ([]byte, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bytes, err := f()
+		_, code := WrapErrCode(errorCount, r.URL.EscapedPath(), bytes, err)
+		w.WriteHeader(code)
+		log.Write(w, bytes, r.URL.EscapedPath())
+	}
+}
+
+// SrvFunc is a function which takes URL parameters, and returns the requested data, and a response code. Note it does not take the full http.Request, and does not have the path. SrvFunc functions should be called via dispatch, and any additional data needed should be closed via a lambda.
+// TODO split params and path into 2 separate wrappers?
+// TODO change to simply take the http.Request?
+type SrvFunc func(params url.Values, path string) ([]byte, int)
+
+// WrapParams takes a SrvFunc and wraps it as an http.HandlerFunc. Note if the SrvFunc returns 0 bytes, an InternalServerError is returned, and the response code is ignored, for security reasons. If an error response code is necessary, return bytes to that effect, for example, "Bad Request". DO NOT return informational messages regarding internal server errors; these should be logged, and only a 500 code returned to the client, for security reasons.
+func WrapParams(f SrvFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bytes, code := f(r.URL.Query(), r.URL.EscapedPath())
+		if len(bytes) > 0 {
+			w.WriteHeader(code)
+			if _, err := w.Write(bytes); err != nil {
+				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			if _, err := w.Write([]byte("Internal Server Error")); err != nil {
+				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
+			}
+		}
+	}
+}
+
+func srvTRConfig(opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) ([]byte, error) {
+	cdnName := opsConfig.Get().CdnName
+	if toSession == nil {
+		return nil, fmt.Errorf("Unable to connect to Traffic Ops")
+	}
+	if cdnName == "" {
+		return nil, fmt.Errorf("No CDN Configured")
+	}
+	return toSession.CRConfigRaw(cdnName)
+}
+
+func makeWrapAll(errorCount UintThreadsafe, unpolledCaches UnpolledCachesThreadsafe) func(http.HandlerFunc) http.HandlerFunc {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return wrapUnpolledCheck(unpolledCaches, errorCount, f)
+	}
+}
+
+func makeCrConfigHandler(wrapper func(http.HandlerFunc) http.HandlerFunc, errorCount UintThreadsafe, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) http.HandlerFunc {
+	return wrapper(WrapErr(errorCount, func() ([]byte, error) {
+		return srvTRConfig(opsConfig, toSession)
+	}))
+}
+
+func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
+	if _, raw := params["raw"]; raw {
+		return srvTRStateSelf(localStates)
+	}
+	return srvTRStateDerived(combinedStates)
+}
+
+func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
+	return peer.CrstatesMarshall(combinedStates.Get())
+}
+
+func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
+	return peer.CrstatesMarshall(localStates.Get())
+}
+
+// TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
+func srvCacheStats(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, statHistory StatHistoryThreadsafe) ([]byte, int) {
+	filter, err := NewCacheStatFilter(params, toData.Get().ServerTypes)
+	if err != nil {
+		HandleErr(errorCount, errContext, err)
+		return []byte(err.Error()), http.StatusBadRequest
+	}
+	bytes, err := cache.StatsMarshall(statHistory.Get(), filter, params)
+	return WrapErrCode(errorCount, errContext, bytes, err)
+}
+
+func srvDSStats(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, dsStats DSStatsReader) ([]byte, int) {
+	filter, err := NewDSStatFilter(params, toData.Get().DeliveryServiceTypes)
+	if err != nil {
+		HandleErr(errorCount, errContext, err)
+		return []byte(err.Error()), http.StatusBadRequest
+	}
+	bytes, err := json.Marshal(dsStats.Get().JSON(filter, params))
+	return WrapErrCode(errorCount, errContext, bytes, err)
+}
+
+func srvEventLog(events EventsThreadsafe) ([]byte, error) {
+	return json.Marshal(JSONEvents{Events: events.Get()})
+}
+
+func srvPeerStates(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int) {
+	filter, err := NewPeerStateFilter(params, toData.Get().ServerTypes)
+	if err != nil {
+		HandleErr(errorCount, errContext, err)
+		return []byte(err.Error()), http.StatusBadRequest
+	}
+	bytes, err := json.Marshal(createAPIPeerStates(peerStates.Get(), filter, params))
+	return WrapErrCode(errorCount, errContext, bytes, err)
+}
+
+func srvStatSummary() ([]byte, int) {
+	return nil, http.StatusNotImplemented
+}
+
+func srvStats(staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe) ([]byte, error) {
+	return getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
+}
+
+func srvConfigDoc(opsConfig OpsConfigThreadsafe) ([]byte, error) {
+	opsConfigCopy := opsConfig.Get()
+	// if the password is blank, leave it blank, so callers can see it's missing.
+	if opsConfigCopy.Password != "" {
+		opsConfigCopy.Password = "*****"
+	}
+	return json.Marshal(opsConfigCopy)
+}
+
+// TODO determine if this should use peerStates
+func srvAPICacheCount(localStates peer.CRStatesThreadsafe) []byte {
+	return []byte(strconv.Itoa(len(localStates.Get().Caches)))
+}
+
+func srvAPICacheAvailableCount(localStates peer.CRStatesThreadsafe) []byte {
+	return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches)))
+}
+
+func srvAPICacheDownCount(localStates peer.CRStatesThreadsafe, monitorConfig TrafficMonitorConfigMapThreadsafe) []byte {
+	return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches, monitorConfig.Get().TrafficServer)))
+}
+
+func srvAPIVersion(staticAppData StaticAppData) []byte {
+	s := "traffic_monitor-" + staticAppData.Version + "."
+	if len(staticAppData.GitRevision) > 6 {
+		s += staticAppData.GitRevision[:6]
+	} else {
+		s += staticAppData.GitRevision
+	}
+	return []byte(s)
+}
+
+func srvAPITrafficOpsURI(opsConfig OpsConfigThreadsafe) []byte {
+	return []byte(opsConfig.Get().Url)
+}
+func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory StatHistoryThreadsafe, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats LastStatsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) ([]byte, error) {
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
+}
+
+func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats LastStatsThreadsafe) []byte {
+	serverTypes := toData.Get().ServerTypes
+	kbpsStats := lastStats.Get()
+	sum := float64(0.0)
+	for cache, data := range kbpsStats.Caches {
+		if serverTypes[cache] != enum.CacheTypeEdge {
+			continue
+		}
+		sum += data.Bytes.PerSec / ds.BytesPerKilobit
+	}
+	return []byte(fmt.Sprintf("%f", sum))
+}
+func srvAPIBandwidthCapacityKbps(statHistoryThs StatHistoryThreadsafe) []byte {
+	statHistory := statHistoryThs.Get()
+	cap := int64(0)
+	for _, results := range statHistory {
+		if len(results) == 0 {
+			continue
+		}
+		cap += results[0].MaxKbps
+	}
+	return []byte(fmt.Sprintf("%d", cap))
+}
+
+// WrapUnpolledCheck wraps an http.HandlerFunc, returning ServiceUnavailable if any caches are unpolled; else, calling the wrapped func.
+func wrapUnpolledCheck(unpolledCaches UnpolledCachesThreadsafe, errorCount UintThreadsafe, f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if unpolledCaches.Any() {
+			HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled"))
+			w.WriteHeader(http.StatusServiceUnavailable)
+			log.Write(w, []byte("Service Unavailable"), r.URL.EscapedPath())
+			return
+		}
+		f(w, r)
+	}
+}
+
+// MakeDispatchMap returns the map of paths to http.HandlerFuncs for dispatching.
+func MakeDispatchMap(
 	opsConfig OpsConfigThreadsafe,
 	toSession towrap.ITrafficOpsSession,
 	localStates peer.CRStatesThreadsafe,
@@ -454,122 +668,66 @@ func DataRequest(
 	lastStats LastStatsThreadsafe,
 	unpolledCaches UnpolledCachesThreadsafe,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) ([]byte, int) {
+) map[string]http.HandlerFunc {
 
-	// handleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
-	handleErr := func(err error) {
-		if err == nil {
-			return
-		}
-		errorCount.Inc()
-		log.Errorf("Request Error: %v\n", fmt.Errorf(req.Type.String()+": %v", err))
+	// wrap composes all universal wrapper functions. Right now, it's only the UnpolledCheck, but there may be others later. For example, security headers.
+	wrap := func(f http.HandlerFunc) http.HandlerFunc {
+		return wrapUnpolledCheck(unpolledCaches, errorCount, f)
 	}
 
-	// commonReturn takes the body, err, and the data request Type which has been processed. It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`.
-	commonReturn := func(body []byte, err error) ([]byte, int) {
-		if err == nil {
-			return body, http.StatusOK
-		}
-		handleErr(err)
-		return nil, http.StatusInternalServerError
-	}
-
-	if unpolledCaches.Any() {
-		handleErr(fmt.Errorf("service still starting, some caches unpolled"))
-		return []byte("Service Unavailable"), http.StatusServiceUnavailable
-	}
-
-	switch req.Type {
-	case srvhttp.TRConfig:
-		cdnName := opsConfig.Get().CdnName
-		if toSession == nil {
-			return commonReturn(nil, fmt.Errorf("Unable to connect to Traffic Ops"))
-		}
-		if cdnName == "" {
-			return commonReturn(nil, fmt.Errorf("No CDN Configured"))
-		}
-		return commonReturn(toSession.CRConfigRaw(cdnName))
-	case srvhttp.TRStateDerived:
-		return commonReturn(peer.CrstatesMarshall(combinedStates.Get()))
-	case srvhttp.TRStateSelf:
-		return commonReturn(peer.CrstatesMarshall(localStates.Get()))
-	case srvhttp.CacheStats:
-		filter, err := NewCacheStatFilter(req.Parameters, toData.Get().ServerTypes)
-		if err != nil {
-			handleErr(err)
-			return []byte(err.Error()), http.StatusBadRequest
-		}
-		return commonReturn(cache.StatsMarshall(statHistory.Get(), filter, req.Parameters))
-	case srvhttp.DSStats:
-		filter, err := NewDSStatFilter(req.Parameters, toData.Get().DeliveryServiceTypes)
-		if err != nil {
-			handleErr(err)
-			return []byte(err.Error()), http.StatusBadRequest
-		}
-		// TODO marshall beforehand, for performance? (test to see how often requests are made)
-		return commonReturn(json.Marshal(dsStats.Get().JSON(filter, req.Parameters)))
-	case srvhttp.EventLog:
-		return commonReturn(json.Marshal(JSONEvents{Events: events.Get()}))
-	case srvhttp.PeerStates:
-		filter, err := NewPeerStateFilter(req.Parameters, toData.Get().ServerTypes)
-		if err != nil {
-			handleErr(err)
-			return []byte(err.Error()), http.StatusBadRequest
-		}
-		return commonReturn(json.Marshal(createAPIPeerStates(peerStates.Get(), filter, req.Parameters)))
-	case srvhttp.StatSummary:
-		return nil, http.StatusNotImplemented
-	case srvhttp.Stats:
-		return commonReturn(getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get()))
-	case srvhttp.ConfigDoc:
-		opsConfigCopy := opsConfig.Get()
-		// if the password is blank, leave it blank, so callers can see it's missing.
-		if opsConfigCopy.Password != "" {
-			opsConfigCopy.Password = "*****"
-		}
-		return commonReturn(json.Marshal(opsConfigCopy))
-	case srvhttp.APICacheCount: // TODO determine if this should use peerStates
-		return []byte(strconv.Itoa(len(localStates.Get().Caches))), http.StatusOK
-	case srvhttp.APICacheAvailableCount:
-		return []byte(strconv.Itoa(cacheAvailableCount(localStates.Get().Caches))), http.StatusOK
-	case srvhttp.APICacheDownCount:
-		return []byte(strconv.Itoa(cacheDownCount(localStates.Get().Caches, monitorConfig.Get().TrafficServer))), http.StatusOK
-	case srvhttp.APIVersion:
-		s := "traffic_monitor-" + staticAppData.Version + "."
-		if len(staticAppData.GitRevision) > 6 {
-			s += staticAppData.GitRevision[:6]
-		} else {
-			s += staticAppData.GitRevision
-		}
-		return []byte(s), http.StatusOK
-	case srvhttp.APITrafficOpsURI:
-		return []byte(opsConfig.Get().Url), http.StatusOK
-	case srvhttp.APICacheStates:
-		return commonReturn(json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(),
-			lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus)))
-	case srvhttp.APIBandwidthKbps:
-		serverTypes := toData.Get().ServerTypes
-		kbpsStats := lastStats.Get()
-		sum := float64(0.0)
-		for cache, data := range kbpsStats.Caches {
-			if serverTypes[cache] != enum.CacheTypeEdge {
-				continue
-			}
-			sum += data.Bytes.PerSec / ds.BytesPerKilobit
-		}
-		return []byte(fmt.Sprintf("%f", sum)), http.StatusOK
-	case srvhttp.APIBandwidthCapacityKbps:
-		statHistory := statHistory.Get()
-		cap := int64(0)
-		for _, results := range statHistory {
-			if len(results) == 0 {
-				continue
-			}
-			cap += results[0].MaxKbps
-		}
-		return []byte(fmt.Sprintf("%d", cap)), http.StatusOK
-	default:
-		return commonReturn(nil, fmt.Errorf("Unknown Request Type"))
+	return map[string]http.HandlerFunc{
+		"/publish/CrConfig": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvTRConfig(opsConfig, toSession)
+		})),
+		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			bytes, err := srvTRState(params, localStates, combinedStates)
+			return WrapErrCode(errorCount, path, bytes, err)
+		})),
+		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvCacheStats(params, errorCount, path, toData, statHistory)
+		})),
+		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvDSStats(params, errorCount, path, toData, dsStats)
+		})),
+		"/publish/EventLog": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvEventLog(events)
+		})),
+		"/publish/PeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvPeerStates(params, errorCount, path, toData, peerStates)
+		})),
+		"/publish/StatSummary": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvStatSummary()
+		})),
+		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount)
+		})),
+		"/publish/ConfigDoc": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvConfigDoc(opsConfig)
+		})),
+		"/api/cache-count": wrap(WrapBytes(func() []byte {
+			return srvAPICacheCount(localStates)
+		})),
+		"/api/cache-available-count": wrap(WrapBytes(func() []byte {
+			return srvAPICacheAvailableCount(localStates)
+		})),
+		"/api/cache-down-count": wrap(WrapBytes(func() []byte {
+			return srvAPICacheDownCount(localStates, monitorConfig)
+		})),
+		"/api/version": wrap(WrapBytes(func() []byte {
+			return srvAPIVersion(staticAppData)
+		})),
+		"/api/traffic-ops-uri": wrap(WrapBytes(func() []byte {
+			return srvAPITrafficOpsURI(opsConfig)
+		})),
+		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvAPICacheStates(toData, statHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
+		})),
+		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
+			return srvAPIBandwidthKbps(toData, lastStats)
+		})),
+		"/api/bandwidth-capacity-kbps": wrap(WrapBytes(func() []byte {
+			return srvAPIBandwidthCapacityKbps(statHistory)
+		})),
 	}
 }
 
