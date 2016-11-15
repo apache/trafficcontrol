@@ -474,6 +474,11 @@ sub api_routes {
 	$r->get("/api/$version/logs/:days/days")->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
 	$r->get("/api/$version/logs/newcount")->over( authenticated => 1 )->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
+	# -- CONFIG FILES
+	$r->get("/api/$version/profiles/:id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_profile_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/servers/:id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_server_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/cdns/:id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_cdn_config', namespace => 'API::Configs' );
+
 	# -- DELIVERYSERVICES
 	# -- DELIVERYSERVICES: CRUD
 	$r->get("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#index', namespace => $namespace );
