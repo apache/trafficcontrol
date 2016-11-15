@@ -1,24 +1,6 @@
 use utf8;
 package Schema::Result::StatsSummary;
 
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-# 
-#   http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-
-
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
@@ -43,9 +25,10 @@ __PACKAGE__->table("stats_summary");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'stats_summary_id_seq'
 
 =head2 cdn_name
 
@@ -68,27 +51,31 @@ __PACKAGE__->table("stats_summary");
 
 =head2 stat_value
 
-  data_type: 'float'
+  data_type: 'double precision'
   is_nullable: 0
 
 =head2 summary_time
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 0
+  original: {default_value => \"now()"}
 
 =head2 stat_date
 
   data_type: 'date'
-  datetime_undef_if_invalid: 1
   is_nullable: 1
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "stats_summary_id_seq",
+  },
   "cdn_name",
   {
     data_type => "varchar",
@@ -101,16 +88,16 @@ __PACKAGE__->add_columns(
   "stat_name",
   { data_type => "varchar", is_nullable => 0, size => 255 },
   "stat_value",
-  { data_type => "float", is_nullable => 0 },
+  { data_type => "double precision", is_nullable => 0 },
   "summary_time",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 0,
+    is_nullable   => 0,
+    original      => { default_value => \"now()" },
   },
   "stat_date",
-  { data_type => "date", datetime_undef_if_invalid => 1, is_nullable => 1 },
+  { data_type => "date", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -126,8 +113,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2015-07-21 15:49:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LymxjQoZIaTrV1NC2uSgzA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 08:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:CQAvseXJISwuk+Q5hDYVKg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

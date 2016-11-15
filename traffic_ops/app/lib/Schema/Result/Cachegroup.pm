@@ -25,9 +25,10 @@ __PACKAGE__->table("cachegroup");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'cachegroup_id_seq'
 
 =head2 name
 
@@ -43,64 +44,69 @@ __PACKAGE__->table("cachegroup");
 
 =head2 latitude
 
-  data_type: 'double precision'
+  data_type: 'numeric'
   is_nullable: 1
 
 =head2 longitude
 
-  data_type: 'double precision'
+  data_type: 'numeric'
   is_nullable: 1
 
 =head2 parent_cachegroup_id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 1
 
 =head2 secondary_parent_cachegroup_id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 1
 
 =head2 type
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "cachegroup_id_seq",
+  },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 45 },
   "short_name",
   { data_type => "varchar", is_nullable => 0, size => 255 },
   "latitude",
-  { data_type => "double precision", is_nullable => 1 },
+  { data_type => "numeric", is_nullable => 1 },
   "longitude",
-  { data_type => "double precision", is_nullable => 1 },
+  { data_type => "numeric", is_nullable => 1 },
   "parent_cachegroup_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "secondary_parent_cachegroup_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "type",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -120,7 +126,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<cg_name_UNIQUE>
+=head2 C<idx_62382_cg_name_unique>
 
 =over 4
 
@@ -130,9 +136,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("cg_name_UNIQUE", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_62382_cg_name_unique", ["name"]);
 
-=head2 C<cg_short_UNIQUE>
+=head2 C<idx_62382_cg_short_unique>
 
 =over 4
 
@@ -142,9 +148,9 @@ __PACKAGE__->add_unique_constraint("cg_name_UNIQUE", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("cg_short_UNIQUE", ["short_name"]);
+__PACKAGE__->add_unique_constraint("idx_62382_cg_short_unique", ["short_name"]);
 
-=head2 C<lo_id_UNIQUE>
+=head2 C<idx_62382_lo_id_unique>
 
 =over 4
 
@@ -154,7 +160,7 @@ __PACKAGE__->add_unique_constraint("cg_short_UNIQUE", ["short_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("lo_id_UNIQUE", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_62382_lo_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -231,7 +237,7 @@ __PACKAGE__->belongs_to(
   "Schema::Result::Cachegroup",
   { id => "parent_cachegroup_id" },
   {
-    is_deferrable => 1,
+    is_deferrable => 0,
     join_type     => "LEFT",
     on_delete     => "NO ACTION",
     on_update     => "NO ACTION",
@@ -251,7 +257,7 @@ __PACKAGE__->belongs_to(
   "Schema::Result::Cachegroup",
   { id => "secondary_parent_cachegroup_id" },
   {
-    is_deferrable => 1,
+    is_deferrable => 0,
     join_type     => "LEFT",
     on_delete     => "NO ACTION",
     on_update     => "NO ACTION",
@@ -300,12 +306,12 @@ __PACKAGE__->belongs_to(
   "type",
   "Schema::Result::Type",
   { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-06-03 08:58:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wrtmgvbod7oMIUahcjwa/w
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 08:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:UOgywBKBk+oN2KO2eEz0uQ
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
