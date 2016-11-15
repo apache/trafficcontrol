@@ -25,9 +25,10 @@ __PACKAGE__->table("regex");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'regex_id_seq'
 
 =head2 pattern
 
@@ -38,32 +39,37 @@ __PACKAGE__->table("regex");
 
 =head2 type
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "regex_id_seq",
+  },
   "pattern",
   { data_type => "varchar", default_value => "", is_nullable => 0, size => 255 },
   "type",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -83,7 +89,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<re_id_UNIQUE>
+=head2 C<idx_62567_re_id_unique>
 
 =over 4
 
@@ -93,7 +99,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("re_id_UNIQUE", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_62567_re_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -124,12 +130,12 @@ __PACKAGE__->belongs_to(
   "type",
   "Schema::Result::Type",
   { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xCUxEKNSlL9G3qGq0MJDwA
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 08:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OhOv/71ZQWhr+P+pNokePA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -25,9 +25,10 @@ __PACKAGE__->table("parameter");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'parameter_id_seq'
 
 =head2 name
 
@@ -38,7 +39,7 @@ __PACKAGE__->table("parameter");
 =head2 config_file
 
   data_type: 'varchar'
-  is_nullable: 0
+  is_nullable: 1
   size: 256
 
 =head2 value
@@ -49,37 +50,42 @@ __PACKAGE__->table("parameter");
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =head2 secure
 
-  data_type: 'tinyint'
-  default_value: 0
+  data_type: 'boolean'
+  default_value: false
   is_nullable: 0
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "parameter_id_seq",
+  },
   "name",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "config_file",
-  { data_type => "varchar", is_nullable => 0, size => 256 },
+  { data_type => "varchar", is_nullable => 1, size => 256 },
   "value",
   { data_type => "varchar", is_nullable => 0, size => 1024 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
   "secure",
-  { data_type => "tinyint", default_value => 0, is_nullable => 0 },
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -127,8 +133,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-03-15 23:28:01
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aTrkVhWmNRR9aZ9VqhH1Pg
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 08:31:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:UrhSJ0+OA0xf6xyIwTkikA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
