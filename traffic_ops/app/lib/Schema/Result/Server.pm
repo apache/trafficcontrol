@@ -25,9 +25,10 @@ __PACKAGE__->table("server");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'server_id_seq'
 
 =head2 host_name
 
@@ -43,8 +44,7 @@ __PACKAGE__->table("server");
 
 =head2 tcp_port
 
-  data_type: 'integer'
-  extra: {unsigned => 1}
+  data_type: 'bigint'
   is_nullable: 1
 
 =head2 xmpp_id
@@ -97,13 +97,13 @@ __PACKAGE__->table("server");
 
 =head2 interface_mtu
 
-  data_type: 'integer'
+  data_type: 'bigint'
   default_value: 9000
   is_nullable: 0
 
 =head2 phys_location
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
@@ -115,45 +115,44 @@ __PACKAGE__->table("server");
 
 =head2 cachegroup
 
-  data_type: 'integer'
+  data_type: 'bigint'
   default_value: 0
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 type
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 status
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 offline_reason
 
   data_type: 'varchar'
-  default_value: 'N/A'
-  is_nullable: 0
+  is_nullable: 1
   size: 256
 
 =head2 upd_pending
 
-  data_type: 'tinyint'
-  default_value: 0
+  data_type: 'boolean'
+  default_value: false
   is_nullable: 0
 
 =head2 profile
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 cdn_id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
@@ -225,27 +224,32 @@ __PACKAGE__->table("server");
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =head2 https_port
 
-  data_type: 'smallint'
+  data_type: 'bigint'
   is_nullable: 1
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "server_id_seq",
+  },
   "host_name",
   { data_type => "varchar", is_nullable => 0, size => 63 },
   "domain_name",
   { data_type => "varchar", is_nullable => 0, size => 63 },
   "tcp_port",
-  { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
   "xmpp_id",
   { data_type => "varchar", is_nullable => 1, size => 256 },
   "xmpp_passwd",
@@ -263,35 +267,30 @@ __PACKAGE__->add_columns(
   "ip6_gateway",
   { data_type => "varchar", is_nullable => 1, size => 50 },
   "interface_mtu",
-  { data_type => "integer", default_value => 9000, is_nullable => 0 },
+  { data_type => "bigint", default_value => 9000, is_nullable => 0 },
   "phys_location",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "rack",
   { data_type => "varchar", is_nullable => 1, size => 64 },
   "cachegroup",
   {
-    data_type      => "integer",
+    data_type      => "bigint",
     default_value  => 0,
     is_foreign_key => 1,
     is_nullable    => 0,
   },
   "type",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "status",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "offline_reason",
-  {
-    data_type => "varchar",
-    default_value => "N/A",
-    is_nullable => 0,
-    size => 256,
-  },
+  { data_type => "varchar", is_nullable => 1, size => 256 },
   "upd_pending",
-  { data_type => "tinyint", default_value => 0, is_nullable => 0 },
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "profile",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "cdn_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "mgmt_ip_address",
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "mgmt_ip_netmask",
@@ -316,13 +315,13 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 45 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
   "https_port",
-  { data_type => "smallint", is_nullable => 1 },
+  { data_type => "bigint", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -347,7 +346,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<ip6_profile>
+=head2 C<idx_39755_ip6_profile>
 
 =over 4
 
@@ -359,9 +358,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("ip6_profile", ["ip6_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_39755_ip6_profile", ["ip6_address", "profile"]);
 
-=head2 C<ip_profile>
+=head2 C<idx_39755_ip_profile>
 
 =over 4
 
@@ -373,9 +372,9 @@ __PACKAGE__->add_unique_constraint("ip6_profile", ["ip6_address", "profile"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("ip_profile", ["ip_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_39755_ip_profile", ["ip_address", "profile"]);
 
-=head2 C<se_id_UNIQUE>
+=head2 C<idx_39755_se_id_unique>
 
 =over 4
 
@@ -385,7 +384,7 @@ __PACKAGE__->add_unique_constraint("ip_profile", ["ip_address", "profile"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("se_id_UNIQUE", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_39755_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -401,7 +400,7 @@ __PACKAGE__->belongs_to(
   "cachegroup",
   "Schema::Result::Cachegroup",
   { id => "cachegroup" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "RESTRICT" },
+  { is_deferrable => 0, on_delete => "CASCADE", on_update => "RESTRICT" },
 );
 
 =head2 cdn
@@ -416,7 +415,7 @@ __PACKAGE__->belongs_to(
   "cdn",
   "Schema::Result::Cdn",
   { id => "cdn_id" },
-  { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
+  { is_deferrable => 0, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
 =head2 deliveryservice_servers
@@ -461,7 +460,7 @@ __PACKAGE__->belongs_to(
   "phys_location",
   "Schema::Result::PhysLocation",
   { id => "phys_location" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 profile
@@ -476,7 +475,7 @@ __PACKAGE__->belongs_to(
   "profile",
   "Schema::Result::Profile",
   { id => "profile" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 servercheck
@@ -506,7 +505,7 @@ __PACKAGE__->belongs_to(
   "status",
   "Schema::Result::Status",
   { id => "status" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 type
@@ -521,12 +520,12 @@ __PACKAGE__->belongs_to(
   "type",
   "Schema::Result::Type",
   { id => "type" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-09-08 16:03:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:I3HqV6I4I5taXrqaaNTESw
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:bW9kYn0q4JnPYnYWFZ8FkA
 # These lines were loaded from '/Users/drichard/projects/github.com/traffic_control/traffic_ops/app/lib/Schema/Result/Server.pm' found in @INC.
 # They are now part of the custom portion of this file
 # for you to hand-edit.  If you do not either delete
