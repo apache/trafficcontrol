@@ -45,6 +45,11 @@ sub getField {
     my $config_answer = shift;
     my $fileName      = shift;
 
+    # if there is no config file and interactive mode prompt for all questions with default answers
+    if ( $::inputFile eq "" && $::interactive ) {
+        return promptUser( $question, $config_answer );
+    }
+
     # if answer provided in config file use it
     if ($config_answer) {
         return $config_answer;
@@ -57,7 +62,7 @@ sub getField {
 
         # if no answer given in input file attempt to use default answer
         foreach my $var ( @{ $::defaultInputs->{$fileName} } ) {
-            if ( defined $var->{$question} ) {
+            if ( defined $var->{$question} && $var->{$question} ne "" ) {
                 return $var->{$question};
             }
         }
@@ -91,6 +96,7 @@ sub getConfig {
 
     foreach my $var ( @{ $userInput->{$fileName} } ) {
         my $question = ( ( keys $var )[0] eq "config_var" ? ( keys $var )[1] : ( keys $var )[0] );
+
         my $answer = $config{ $var->{"config_var"} } = getField( $question, $var->{$question}, $fileName );
 
         $config{ $var->{"config_var"} } = $answer;
@@ -221,6 +227,21 @@ sub generateProfilesDir {
     my $userIn = $userInput->{$fileName};
 }
 
+sub sanityCheckDefaults {
+    foreach my $file ( ( keys $::defaultInputs ) ) {
+        foreach my $defaultValue ( @{ $::defaultInputs->{$file} } ) {
+            my $question = ( ( keys $defaultValue )[0] eq "config_var" ? ( keys $defaultValue )[1] : ( keys $defaultValue )[0] );
+            if ( !defined $defaultValue->{$question} || $defaultValue->{$question} eq "" ) {
+                errorOut("Error: question \'$question\' in file \'$file\' has no default answer\n");
+            }
+
+            if ( !defined $defaultValue->{"config_var"} || $defaultValue->{"config_var"} eq "" ) {
+                errorOut("Error: question \'$question\' in file \'$file\' has no config_var");
+            }
+        }
+    }
+}
+
 # userInput: The entire input config file which is either user input or the defaults
 #
 # Checks the input config file against the default inputs. If there is a question located in the default inputs which
@@ -248,8 +269,26 @@ sub sanityCheckConfig {
                 }
             }
 
+            # if the question is not found in the config file add it from defaults
             if ( !$found ) {
                 print "Warning: Value " . Dumper($defaultValue) . "found in defaults but not in \'$file\'\n";
+
+                my $question = ( ( keys $defaultValue )[0] eq "config_var" ? ( keys $defaultValue )[1] : ( keys $defaultValue )[0] );
+
+                my %temp;
+
+                # if interactive add the question without default answer
+                if ($::interactive) {
+                    %temp = ( "config_var" => $defaultValue->{"config_var"}, $question => "" );
+                }
+
+                # if not interactive add question with default answer
+                else {
+                    %temp = ( "config_var" => $defaultValue->{"config_var"}, $question => $defaultValue->{$question} );
+                }
+
+                push $userInput->{$file}, \%temp;
+
                 $diffs++;
             }
         }
@@ -364,13 +403,14 @@ sub getDefaults {
 #  if no answer in default die
 
 sub main {
-    my $inputFile = "";
-    my $help      = 0;
+    our $inputFile = "";
+    my $help = 0;
     our $interactive = 0;
     our $debug       = 0;
 
     GetOptions(
         "cfile=s" => \$inputFile,
+        "c=s"     => \$inputFile,
         "i"       => \$interactive,
         "d"       => \$debug,
         "h"       => \$help,
@@ -397,13 +437,18 @@ sub main {
     #  will either be input config file or defaults
     my $userInput;
 
-    if ( $inputFile eq "" ) {
+    if ( $::inputFile eq "" ) {
         print "No input file given - using defaults\n";
         $userInput = $::defaultInputs;
     }
     else {
-        print "Using input file $inputFile\n";
-        $userInput = readJson($inputFile);
+        print "Using input file $::inputFile\n";
+        $userInput = readJson($::inputFile);
+    }
+
+    # check the defaults
+    if ( $::inputFile eq "" && !$::interactive ) {
+        sanityCheckDefaults();
     }
 
     # check the input config file against the defaults
