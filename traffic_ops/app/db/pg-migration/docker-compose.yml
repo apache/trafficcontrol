@@ -1,5 +1,18 @@
 version: '2'
 services:
+  dataimport:
+    build:
+        dockerfile: Dockerfile-traffic_ops-client
+        context: .
+    restart: "no"
+    environment:
+      - TO_USER
+      - TO_PASSWORD
+      - TO_SERVER
+
+    volumes:
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+
   mysql_host:
     image: mysql:5.6
     restart: "no"
@@ -8,6 +21,8 @@ services:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_PASSWORD=twelve
       - MYSQL_USER=to_user
+    depends_on:
+      - dataimport
     volumes:
       - ./mysql/conf.d:/etc/mysql/conf.d
       - ./mysql/initdb.d:/docker-entrypoint-initdb.d
@@ -29,6 +44,9 @@ services:
       dockerfile: Dockerfile-pgloader
       context: .
     restart: "no"
+    depends_on:
+      - mysql_host
+      - postgres_host
     environment:
       - MYSQL_HOST=mysql_host
       - MYSQL_DATABASE=traffic_ops_db
