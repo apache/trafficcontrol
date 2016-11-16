@@ -18,52 +18,52 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
-	CCR1 => {
-		new   => 'Profile',
-		using => {
-			name        => 'CCR1',
-			description => 'ccr description',
-		},
-	},
-	## id => 2
 	EDGE1 => {
 		new   => 'Profile',
 		using => {
+			id          => 1,
 			name        => 'EDGE1',
 			description => 'edge description',
 		},
 	},
-	## id => 3
 	MID1 => {
 		new   => 'Profile',
 		using => {
+			id          => 2,
 			name        => 'MID1',
 			description => 'mid description',
 		},
 	},
-	## id => 4
+	CCR1 => {
+		new   => 'Profile',
+		using => {
+			id          => 3,
+			name        => 'CCR1',
+			description => 'ccr description',
+		},
+	},
+	RIAK1 => {
+		new   => 'Profile',
+		using => {
+			id          => 5,
+			name        => 'RIAK1',
+			description => 'riak description',
+		},
+	},
 	RASCAL1 => {
 		new   => 'Profile',
 		using => {
+			id          => 6,
 			name        => 'RASCAL1',
 			description => 'rascal description',
 		},
 	},
-	## id => 5
 	RASCAL2 => {
 		new   => 'Profile',
 		using => {
+			id          => 7,
 			name        => 'RASCAL2',
 			description => 'rascal2 description',
-		},
-	},
-	## id => 6
-	RIAK1 => {
-		new   => 'Profile',
-		using => {
-			name        => 'RIAK1',
-			description => 'riak description',
 		},
 	},
 );
@@ -76,7 +76,7 @@ sub get_definition {
 sub all_fixture_names {
 
 	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

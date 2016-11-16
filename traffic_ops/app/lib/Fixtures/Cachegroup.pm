@@ -25,8 +25,8 @@ my %definition_for = (
 			name                 => 'mid-northeast-group',
 			short_name           => 'ne',
 			type                 => 18,
-			latitude             => 120,
-			longitude            => 120,
+			latitude             => 98.0,
+			longitude            => 98.0,
 			parent_cachegroup_id => undef,
 		},
 	},
@@ -37,8 +37,8 @@ my %definition_for = (
 			name                 => 'mid-northwest-group',
 			short_name           => 'nw',
 			type                 => 18,
-			latitude             => 100,
-			longitude            => 100,
+			latitude             => 98.0,
+			longitude            => 98.0,
 			parent_cachegroup_id => 1,
 		},
 	},
@@ -49,8 +49,8 @@ my %definition_for = (
 			name                 => 'mid_cg3',
 			short_name           => 'mid_cg3',
 			type                 => 6,
-			latitude             => 100,
-			longitude            => 100,
+			latitude             => 98.0,
+			longitude            => 98.0,
 			parent_cachegroup_id => undef,
 		},
 	},
@@ -61,8 +61,8 @@ my %definition_for = (
 			name                 => 'edge_cg4',
 			short_name           => 'edge_cg4',
 			type                 => 5,
-			latitude             => 100,
-			longitude            => 100,
+			latitude             => 98.0,
+			longitude            => 98.0,
 			parent_cachegroup_id => 8,
 		},
 	},
@@ -76,7 +76,7 @@ sub get_definition {
 sub all_fixture_names {
 
 	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 # sub all_fixture_names {
