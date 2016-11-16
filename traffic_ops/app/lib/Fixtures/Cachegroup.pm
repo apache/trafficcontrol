@@ -18,27 +18,27 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
 	mid_northeast => {
 		new   => 'Cachegroup',
 		using => {
+			id                   => 1,
 			name                 => 'mid-northeast-group',
 			short_name           => 'ne',
-			type                 => 18,
-			latitude             => 98.0,
-			longitude            => 98.0,
+			type                 => 2,
+			latitude             => 120,
+			longitude            => 120,
 			parent_cachegroup_id => undef,
 		},
 	},
-	## id => 2
 	mid_northwest => {
 		new   => 'Cachegroup',
 		using => {
+			id                   => 2,
 			name                 => 'mid-northwest-group',
 			short_name           => 'nw',
-			type                 => 18,
-			latitude             => 98.0,
-			longitude            => 98.0,
+			type                 => 2,
+			latitude             => 100,
+			longitude            => 100,
 			parent_cachegroup_id => 1,
 		},
 	},
@@ -49,8 +49,8 @@ my %definition_for = (
 			name                 => 'mid_cg3',
 			short_name           => 'mid_cg3',
 			type                 => 6,
-			latitude             => 98.0,
-			longitude            => 98.0,
+			latitude             => 100,
+			longitude            => 100,
 			parent_cachegroup_id => undef,
 		},
 	},
@@ -61,8 +61,8 @@ my %definition_for = (
 			name                 => 'edge_cg4',
 			short_name           => 'edge_cg4',
 			type                 => 5,
-			latitude             => 98.0,
-			longitude            => 98.0,
+			latitude             => 100,
+			longitude            => 100,
 			parent_cachegroup_id => 8,
 		},
 	},
