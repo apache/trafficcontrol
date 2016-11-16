@@ -21,43 +21,43 @@ my %definition_for = (
 	test_ds1_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 8,
+			deliveryservice => 1,
 			server          => 1,
 		},
 	},
 	test_ds1_server_edge13 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 8,
-			server          => 3,
+			deliveryservice => 1,
+			server          => 13,
 		},
 	},
 	test_ds1_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 8,
-			server          => 4,
+			deliveryservice => 1,
+			server          => 2,
 		},
 	},
 	test_ds2_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 9,
-			server          => 2,
+			deliveryservice => 2,
+			server          => 7,
 		},
 	},
 	test_ds2_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 9,
-			server          => 5,
+			deliveryservice => 2,
+			server          => 8,
 		},
 	},
 	test_ds5_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 5,
-			server          => 12,
+			server          => 14,
 		},
 	},
 	test_ds5_server_edge15 => {
@@ -89,7 +89,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{deliveryservice} cmp $definition_for{$b}{using}{deliveryservice} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
