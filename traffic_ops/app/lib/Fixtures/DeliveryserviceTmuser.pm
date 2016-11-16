@@ -21,22 +21,22 @@ my %definition_for = (
 	admin => {
 		new   => 'DeliveryserviceTmuser',
 		using => {
-			deliveryservice => 8,
+			deliveryservice => 1,
 			tm_user_id      => 1,
 		},
 	},
 	portal_ds1 => {
 		new   => 'DeliveryserviceTmuser',
 		using => {
-			deliveryservice => 8,
-			tm_user_id      => 5,
+			deliveryservice => 1,
+			tm_user_id      => 2,
 		},
 	},
 	ds_steering_user1 => {
 		new   => 'DeliveryserviceTmuser',
 		using => {
 			deliveryservice => 1,
-			tm_user_id      => 6,
+			tm_user_id      => 7,
 		},
 	},
 	ds_steering_user2 => {
