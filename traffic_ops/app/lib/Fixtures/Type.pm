@@ -19,265 +19,274 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	## id => 1
-	AAAA_RECORD => {
-		new   => 'Type',
-		using => {
-			name         => 'AAAA_RECORD',
-			description  => 'Static DNS AAAA entry',
-			use_in_table => 'staticdnsentry',
-		}
-	},
-	## id => 2
-	ACTIVE_DIRECTORY => {
-		new   => 'Type',
-		using => {
-			name         => 'ACTIVE_DIRECTORY',
-			description  => 'Active Directory User',
-			use_in_table => 'tm_user',
-		}
-	},
-	## id => 3
-	A_RECORD => {
-		new   => 'Type',
-		using => {
-			name         => 'A_RECORD',
-			description  => 'Static DNS A entry',
-			use_in_table => 'staticdnsentry',
-		}
-	},
-	## id => 4
-	ANY_MAP => {
-		new   => 'Type',
-		using => {
-			name         => 'ANY_MAP',
-			description  => 'any_map type',
-			use_in_table => 'deliveryservice',
-		}
-	},
-	## id => 5
-	CCR => {
-		new   => 'Type',
-		using => {
-			name         => 'CCR',
-			description  => 'Kabletown Content Router',
-			use_in_table => 'server',
-		},
-	},
-	## id => 6
-	CNAME_RECORD => {
-		new   => 'Type',
-		using => {
-			name         => 'CNAME_RECORD',
-			description  => 'Static DNS CNAME entry',
-			use_in_table => 'staticdnsentry',
-		}
-	},
-	## id => 7
-	DNS => {
-		new   => 'Type',
-		using => {
-			name         => 'DNS',
-			description  => 'DNS Content Routing',
-			use_in_table => 'deliveryservice',
-		},
-	},
-	## id => 8
-	DNS_LIVE_NATNL => {
-		new   => 'Type',
-		using => {
-			name         => 'DNS_LIVE_NATNL',
-			description  => 'DNS Content routing, RAM cache, National',
-			use_in_table => 'deliveryservice',
-		}
-	},
-	## id => 9
 	EDGE => {
 		new   => 'Type',
 		using => {
+			id           => 1,
 			name         => 'EDGE',
 			description  => 'Edge Cache',
 			use_in_table => 'server',
 		},
 	},
-	## id => 10
-	EDGE_LOC => {
-		new   => 'Type',
-		using => {
-			name         => 'EDGE_LOC',
-			description  => 'Edge Cachegroup',
-			use_in_table => 'cachegroup',
-		},
-	},
-	## id => 11
-	HTTP => {
-		new   => 'Type',
-		using => {
-			name         => 'HTTP',
-			description  => 'HTTP Content routing cache ',
-			use_in_table => 'deliveryservice',
-		},
-	},
-	## id => 12
-	HTTP_LIVE => {
-		new   => 'Type',
-		using => {
-			name         => 'HTTP_LIVE',
-			description  => 'HTTP Content routing cache in RAM ',
-			use_in_table => 'deliveryservice',
-		},
-	},
-	## id => 13
-	HTTP_LIVE_NATNL => {
-		new   => 'Type',
-		using => {
-			name         => 'HTTP_LIVE_NATNL',
-			description  => 'HTTP Content routing, RAM cache, National',
-			use_in_table => 'deliveryservice',
-		}
-	},
-	## id => 14
-	HTTP_NO_CACHE => {
-		new   => 'Type',
-		using => {
-			name         => 'HTTP_NO_CACHE',
-			description  => 'HTTP Content Routing, no caching',
-			use_in_table => 'deliveryservice',
-		},
-	},
-	## id => 15
-	HOST_REGEXP => {
-		new   => 'Type',
-		using => {
-			name         => 'HOST_REGEXP',
-			description  => 'Host header regular expression',
-			use_in_table => 'regex',
-		},
-	},
-	## id => 16
-	INFLUXDB => {
-		new   => 'Type',
-		using => {
-			name         => 'INFLUXDB',
-			description  => 'influxdb type',
-			use_in_table => 'server',
-		}
-	},
-	## id => 17
-	LOCAL => {
-		new   => 'Type',
-		using => {
-			name         => 'LOCAL',
-			description  => 'Local User',
-			use_in_table => 'tm_user',
-		}
-	},
-	## id => 18
 	MID => {
 		new   => 'Type',
 		using => {
+			id           => 2,
 			name         => 'MID',
 			description  => 'Mid Tier Cache',
 			use_in_table => 'server',
 		},
 	},
-	## id => 19
-	MID_LOC => {
-		new   => 'Type',
-		using => {
-			name         => 'MID_LOC',
-			description  => 'Mid Cachegroup',
-			use_in_table => 'cachegroup',
-		},
-	},
-	## id => 20
 	ORG => {
 		new   => 'Type',
 		using => {
+			id           => 3,
 			name         => 'ORG',
 			description  => 'Origin',
 			use_in_table => 'server',
 		},
 	},
-	## id => 21
+	CCR => {
+		new   => 'Type',
+		using => {
+			id           => 4,
+			name         => 'CCR',
+			description  => 'Kabletown Content Router',
+			use_in_table => 'server',
+		},
+	},
+	EDGE_LOC => {
+		new   => 'Type',
+		using => {
+			id           => 5,
+			name         => 'EDGE_LOC',
+			description  => 'Edge Cachegroup',
+			use_in_table => 'cachegroup',
+		},
+	},
+	MID_LOC => {
+		new   => 'Type',
+		using => {
+			id           => 6,
+			name         => 'MID_LOC',
+			description  => 'Mid Cachegroup',
+			use_in_table => 'cachegroup',
+		},
+	},
+	DNS => {
+		new   => 'Type',
+		using => {
+			id           => 7,
+			name         => 'DNS',
+			description  => 'DNS Content Routing',
+			use_in_table => 'deliveryservice',
+		},
+	},
 	OTHER_CDN => {
 		new   => 'Type',
 		using => {
+			id           => 8,
 			name         => 'OTHER_CDN',
 			description  => 'Other CDN (CDS-IS, Akamai, etc)',
 			use_in_table => 'server',
 		},
 	},
-	## id => 22
-	PATH_REGEXP => {
+	HTTP_NO_CACHE => {
 		new   => 'Type',
 		using => {
-			name         => 'PATH_REGEXP',
-			description  => 'Path regular expression',
-			use_in_table => 'regex',
+			id           => 9,
+			name         => 'HTTP_NO_CACHE',
+			description  => 'HTTP Content Routing, no caching',
+			use_in_table => 'deliveryservice',
 		},
 	},
-	## id => 23
+	HTTP_LIVE => {
+		new   => 'Type',
+		using => {
+			id           => 11,
+			name         => 'HTTP_LIVE',
+			description  => 'HTTP Content routing cache in RAM ',
+			use_in_table => 'deliveryservice',
+		},
+	},
+	HTTP_LIVE => {
+		new   => 'Type',
+		using => {
+			id           => 12,
+			name         => 'HTTP_LIVE',
+			description  => 'HTTP Content routing cache in RAM ',
+			use_in_table => 'deliveryservice',
+		},
+	},
 	RASCAL => {
 		new   => 'Type',
 		using => {
+			id           => 14,
 			name         => 'RASCAL',
 			description  => 'Rascal health polling & reporting',
 			use_in_table => 'server',
 		},
 	},
-	## id => 24
-	RESOLVE4 => {
+	HOST_REGEXP => {
 		new   => 'Type',
 		using => {
-			name         => 'RESOLVE4',
-			description  => 'federation type resolve4',
-			use_in_table => 'federation',
-		}
-	},
-	## id => 25
-	RESOLVE6 => {
-		new   => 'Type',
-		using => {
-			name         => 'RESOLVE6',
-			description  => 'federation type resolve6',
-			use_in_table => 'federation',
+			id           => 19,
+			name         => 'HOST_REGEXP',
+			description  => 'Host header regular expression',
+			use_in_table => 'regex',
 		},
 	},
-	## id => 26
+	PATH_REGEXP => {
+		new   => 'Type',
+		using => {
+			id           => 20,
+			name         => 'PATH_REGEXP',
+			description  => 'Path regular expression',
+			use_in_table => 'regex',
+		},
+	},
+	A_RECORD => {
+		new   => 'Type',
+		using => {
+			id           => 21,
+			name         => 'A_RECORD',
+			description  => 'Static DNS A entry',
+			use_in_table => 'staticdnsentry',
+		}
+	},
+	AAAA_RECORD => {
+		new   => 'Type',
+		using => {
+			id           => 22,
+			name         => 'AAAA_RECORD',
+			description  => 'Static DNS AAAA entry',
+			use_in_table => 'staticdnsentry',
+		}
+	},
+	CNAME_RECORD => {
+		new   => 'Type',
+		using => {
+			id           => 23,
+			name         => 'CNAME_RECORD',
+			description  => 'Static DNS CNAME entry',
+			use_in_table => 'staticdnsentry',
+		}
+	},
+	HTTP_LIVE_NATNL => {
+		new   => 'Type',
+		using => {
+			id           => 24,
+			name         => 'HTTP_LIVE_NATNL',
+			description  => 'HTTP Content routing, RAM cache, National',
+			use_in_table => 'deliveryservice',
+		}
+	},
+	DNS_LIVE_NATNL => {
+		new   => 'Type',
+		using => {
+			id           => 26,
+			name         => 'DNS_LIVE_NATNL',
+			description  => 'DNS Content routing, RAM cache, National',
+			use_in_table => 'deliveryservice',
+		}
+	},
+	DNS_LIVE_NATNL => {
+		new   => 'Type',
+		using => {
+			id           => 27,
+			name         => 'DNS_LIVE_NATNL',
+			description  => 'DNS Content routing, RAM cache, National',
+			use_in_table => 'deliveryservice',
+		}
+	},
+	LOCAL => {
+		new   => 'Type',
+		using => {
+			id           => 28,
+			name         => 'LOCAL',
+			description  => 'Local User',
+			use_in_table => 'tm_user',
+		}
+	},
+	ACTIVE_DIRECTORY => {
+		new   => 'Type',
+		using => {
+			id           => 29,
+			name         => 'ACTIVE_DIRECTORY',
+			description  => 'Active Directory User',
+			use_in_table => 'tm_user',
+		}
+	},
+	TOOLS_SERVER => {
+		new   => 'Type',
+		using => {
+			id           => 30,
+			name         => 'TOOLS_SERVER',
+			description  => 'Ops hosts for management',
+			use_in_table => 'server',
+		}
+	},
 	RIAK => {
 		new   => 'Type',
 		using => {
+			id           => 31,
 			name         => 'RIAK',
 			description  => 'riak type',
 			use_in_table => 'server',
 		}
 	},
-	## id => 27
-	STEERING => {
+	INFLUXDB => {
 		new   => 'Type',
 		using => {
-			name         => 'STEERING',
-			description  => 'Steering Delivery Service',
+			id           => 32,
+			name         => 'INFLUXDB',
+			description  => 'influxdb type',
+			use_in_table => 'server',
+		}
+	},
+	RESOLVE4 => {
+		new   => 'Type',
+		using => {
+			id           => 33,
+			name         => 'RESOLVE4',
+			description  => 'federation type resolve4',
+			use_in_table => 'federation',
+		}
+	},
+	RESOLVE6 => {
+		new   => 'Type',
+		using => {
+			id           => 34,
+			name         => 'RESOLVE6',
+			description  => 'federation type resolve6',
+			use_in_table => 'federation',
+		},
+	},
+	ANY_MAP => {
+		new   => 'Type',
+		using => {
+			id           => 35,
+			name         => 'ANY_MAP',
+			description  => 'any_map type',
 			use_in_table => 'deliveryservice',
 		}
 	},
-	## id => 28
-	STEERING_REGEXP => {
+	HTTP => {
 		new   => 'Type',
 		using => {
-			name         => 'STEERING_REGEXP',
-			description  => 'Steering target filter regular expression',
-			use_in_table => 'regex',
+			id           => 36,
+			name         => 'HTTP',
+			description  => 'HTTP Content routing cache ',
+			use_in_table => 'deliveryservice',
 		},
 	},
-	## id => 29
-	TOOLS_SERVER => {
+	STEERING => {
 		new   => 'Type',
 		using => {
-			name         => 'TOOLS_SERVER',
-			description  => 'Ops hosts for management',
-			use_in_table => 'server',
+			id           => 37,
+			name         => 'STEERING',
+			description  => 'Steering Delivery Service',
+			use_in_table => 'deliveryservice',
 		}
 	}
 );
@@ -288,8 +297,7 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
+	return keys %definition_for;
 }
 
 __PACKAGE__->meta->make_immutable;
