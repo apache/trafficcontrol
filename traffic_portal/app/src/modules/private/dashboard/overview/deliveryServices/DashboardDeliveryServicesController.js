@@ -159,7 +159,7 @@ var DashboardDeliveryServicesController = function($window, $rootScope, $scope, 
 
     $scope.hideDeliveryService = function(ds) {
         var query = $scope.search.query.toLowerCase(),
-            id = ds.id,
+            id = ds.id.toString(),
             xmlId = ds.xmlId.toLowerCase(),
             displayName = ds.displayName.toLowerCase(),
             isSubstring = (id.indexOf(query) !== -1) || (xmlId.indexOf(query) !== -1) || (displayName.indexOf(query) !== -1);
