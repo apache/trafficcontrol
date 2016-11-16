@@ -19,839 +19,839 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-  domain_name3 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 1,
-      parameter => 13,
-    },
-  },
-  'edge1_allow_ip' => {
-    new   => 'ProfileParameter',
-      using => {
-      profile   => 2,
-      parameter => 1,
-    },
-  },
-  'edge1_allow_ip6' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 2,
-    },
-  },
-  'edge1_astats_over_http.so' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 3,
-    },
-  },
-  'edge1_CONFIG-proxy.config.allocator.debug_filter' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 4,
-    },
-  },
-  'edge1_CONFIG-proxy.config.allocator.enable_reclaim' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 5,
-    },
-  },
-  'edge1_CONFIG-proxy.config.allocator.max_overage' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 6,
-    },
-  },
-  'edge1_CONFIG-proxy.config.cache.control.filename' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 7,
-    },
-  },
-  'edge1_CONFIG-proxy.config.diags.show_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 8,
-    },
-  },
-  'edge1_CONFIG-proxy.config.http.cache.allow_empty_doc' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 9,
-    },
-  },
-  'edge1_CONFIG-proxy.config.http.parent_proxy.file' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 10,
-    },
-  },
-  'edge1_CONFIG-proxy.config.hostdb.storage_size' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 11,
-    },
-  },
-  'edge1_Disk_Volume' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 12,
-    },
-  },
-  domain_name => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 13,
-    },
-  },
-  'edge1_Drive_Letters' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 14,
-    },
-  },
-  'edge1_Drive_Prefix' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 15,
-    },
-  },
-  'edge1_error_url' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 16,
-    },
-  },
-  edge1_key0 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 20,
-    },
-  },
-  edge1_key1 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 21,
-    },
-  },
-  edge1_key2 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 22,
-    },
-  },
-  edge1_key3 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 23,
-    },
-  },
-  edge1_key4 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 24,
-    },
-  },
-  edge1_key5 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 25,
-    },
-  },
-  edge1_key6 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 26,
-    },
-  },
-  edge1_key7 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 27,
-    },
-  },
-  edge1_key8 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 28,
-    },
-  },
-  edge1_key9 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 29,
-    },
-  },
-  edge1_key10 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 30,
-    },
-  },
-  edge1_key11 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 31,
-    },
-  },
-  edge1_key12 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 32,
-    },
-  },
-  edge1_key13 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 33,
-    },
-  },
-  edge1_key14 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 34,
-    },
-  },
-  edge1_key15 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 35,
-    },
-  },
-  'LOCAL-proxy.config.cache.interim.storage' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 36,
-    },
-  },
-  'edge1_url_sig_cdl-c2.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 37,
-    },
-  },
-  'edge1_12M_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 38,
-    },
-  },
-  'edge1_cacheurl_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 39,
-    },
-  },
-  'edge1_ip_allow_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 40,
-    },
-  },
-  'edge1_crontab_root_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 41,
-    },
-  },
-  'edge1_hdr_rw_cdl-c2.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 42,
-    },
-  },
-  'edge1_50-ats.rules_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 43,
-    },
-  },
-  'edge1_parent.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 44,
-    },
-  },
-  'edge1_remap.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 45,
-    },
-  },
-  'edge1_drop_qstring.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-        parameter => 46,
-    },
-  },
-  'edge1_cache.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 47,
-    },
-  },
-  'edge1_regex_revalidate.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 48,
-    },
-  },
-  'edge1_hosting.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 49,
-    },
-  },
-  'edge1_volume.config_location' => {
-      new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 50,
-    },
-  },
-  'edge1_astats.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 51,
-    },
-  },
-  'edge1_storage.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 52,
-    },
-  },
-  'edge1_LogFormat.Format' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 53,
-    },
-  },
-  'edge1_LogFormat.Name' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 54,
-    },
-  },
-  'edge1_LogObject.Format' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 55,
-    },
-  },
-  'edge1_LogObject.Filename' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 56,
-    },
-  },
-  'edge1_astats.config_path' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 59,
-    },
-  },
-  'edge1_record_types' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 60,
-    },
-  },
-  'edge1_regex_revalidate.so' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 2,
-      parameter => 61,
-    },
-  },
-  'mid1_allow_ip' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 1,
-    },
-  },
-  'mid1_allow_ip6' => {
-    new   => 'ProfileParameter',
-    using => {
-        profile   => 3,
-        parameter => 2,
-    },
-  },
-  'mid1_astats_over_http.so' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 3,
-    },
-    },
-  'mid1_CONFIG-proxy.config.allocator.debug_filter' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 4,
-    },
-  },
-  'mid1_CONFIG-proxy.config.allocator.enable_reclaim' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 5,
-    },
-  },
-  'mid1_CONFIG-proxy.config.allocator.max_overage' => {
-    new   => 'ProfileParameter',
-    using => {
-        profile   => 3,
-        parameter => 6,
-    },
-  },
-  'mid1_CONFIG-proxy.config.cache.control.filename' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 7,
-    },
-    },
-  'mid1_CONFIG-proxy.config.diags.show_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 8,
-    },
-  },
-  'mid1_CONFIG-proxy.config.http.cache.allow_empty_doc' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 9,
-    },
-  },
-  'mid1_CONFIG-proxy.config.http.parent_proxy.file' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 10,
-    },
-  },
-  'mid1_CONFIG-proxy.config.hostdb.storage_size' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 11,
-    },
-  },
-  'mid1_Disk_Volume' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 12,
-    },
-  },
-  domain_name2 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 13,
-    },
-  },
-  'mid1_Drive_Letters' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 14,
-    },
-  },
-  'mid1_Drive_Prefix' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 15,
-    },
-  },
-  'mid1_error_url' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 16,
-    },
-  },
-  rascal_properties2 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 17,
-    },
-  },
-  rascal_properties1 => {
-    new   => 'ProfileParameter',
-      using => {
-      profile   => 3,
-      parameter => 18,
-    },
-  },
-  rascal_properties2 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 19,
-    },
-  },
-  mid1_key0 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 20,
-    },
-  },
-  mid1_key1 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 21,
-    },
-  },
-  mid1_key2 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 22,
-    },
-  },
-  mid1_key3 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 23,
-    },
-  },
-  mid1_key4 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 24,
-    },
-  },
-  mid1_key5 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 25,
-    },
-  },
-  mid1_key6 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 26,
-    },
-  },
-  mid1_key7 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 27,
-    },
-  },
-  mid1_key8 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 28,
-    },
-  },
+    domain_name => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 3,
+        },
+    },
+    domain_name2 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 3,
+        },
+    },
+    domain_name3 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 3,
+            parameter => 3,
+        },
+    },
+    domain_name5 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 5,
+            parameter => 3,
+        },
+    },
+    domain_name6 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 6,
+            parameter => 3,
+        },
+    },
+    domain_name7 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 7,
+            parameter => 3,
+        },
+    },
+    rascal_properties1 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 4,
+        },
+    },
+    rascal_properties2 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 5,
+        },
+    },
+    rascal_properties2 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 6,
+        },
+    },
+    edge1_key0 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 7,
+        },
+    },
+    edge1_key1 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 8,
+        },
+    },
+    edge1_key2 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 9,
+        },
+    },
+    edge1_key3 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 10,
+        },
+    },
+    edge1_key4 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 11,
+        },
+    },
+    edge1_key5 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 12,
+        },
+    },
+    edge1_key6 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 13,
+        },
+    },
+    edge1_key7 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 14,
+        },
+    },
+    edge1_key8 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 15,
+        },
+    },
+    edge1_key9 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 16,
+        },
+    },
+    edge1_key10 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 17,
+        },
+    },
+    edge1_key11 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 18,
+        },
+    },
+    edge1_key12 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 19,
+        },
+    },
+    edge1_key13 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 20,
+        },
+    },
+    edge1_key14 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 21,
+        },
+    },
+    edge1_key15 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 22,
+        },
+    },
+    'edge1_url_sig_cdl-c2.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 23,
+        },
+    },
+    'edge1_error_url' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 24,
+        },
+    },
+    'edge1_CONFIG-proxy.config.allocator.debug_filter' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 25,
+        },
+    },
+    'edge1_CONFIG-proxy.config.allocator.enable_reclaim' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 26,
+        },
+    },
+    'edge1_CONFIG-proxy.config.allocator.max_overage' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 27,
+        },
+    },
+    'edge1_CONFIG-proxy.config.diags.show_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 28,
+        },
+    },
+    'edge1_CONFIG-proxy.config.http.cache.allow_empty_doc' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 29,
+        },
+    },
+    'LOCAL-proxy.config.cache.interim.storage' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 30,
+        },
+    },
+    'edge1_CONFIG-proxy.config.http.parent_proxy.file' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 31,
+        },
+    },
+    'edge1_12M_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 32,
+        },
+    },
+    'edge1_cacheurl_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 33,
+        },
+    },
+    'edge1_ip_allow_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 34,
+        },
+    },
+    'edge1_astats_over_http.so' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 35,
+        },
+    },
+    'edge1_crontab_root_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 36,
+        },
+    },
+    'edge1_hdr_rw_cdl-c2.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 37,
+        },
+    },
+    'edge1_50-ats.rules_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 38,
+        },
+    },
+    'edge1_parent.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 39,
+        },
+    },
+    'edge1_remap.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 40,
+        },
+    },
+    'edge1_drop_qstring.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 41,
+        },
+    },
+    'edge1_LogFormat.Format' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 42,
+        },
+    },
+    'edge1_LogFormat.Name' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 43,
+        },
+    },
+    'edge1_LogObject.Format' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 44,
+        },
+    },
+    'edge1_LogObject.Filename' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 45,
+        },
+    },
+    'edge1_cache.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 46,
+        },
+    },
+    'edge1_CONFIG-proxy.config.cache.control.filename' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 47,
+        },
+    },
+    'edge1_regex_revalidate.so' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 48,
+        },
+    },
+    'edge1_regex_revalidate.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 49,
+        },
+    },
+    'edge1_hosting.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 50,
+        },
+    },
+    'edge1_volume.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 51,
+        },
+    },
+    'edge1_allow_ip' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 52,
+        },
+    },
+    'edge1_allow_ip6' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 53,
+        },
+    },
+    'edge1_record_types' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 54,
+        },
+    },
+    'edge1_astats.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 55,
+        },
+    },
+    'edge1_astats.config_path' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 56,
+        },
+    },
+    'edge1_storage.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 57,
+        },
+    },
+    'edge1_Drive_Prefix' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 58,
+        },
+    },
+    'edge1_Drive_Letters' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 59,
+        },
+    },
+    'edge1_Disk_Volume' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 60,
+        },
+    },
+    'edge1_CONFIG-proxy.config.hostdb.storage_size' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 1,
+            parameter => 61,
+        },
+    },
+    mid1_key0 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 7,
+        },
+    },
+    mid1_key1 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 8,
+        },
+    },
+    mid1_key2 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 9,
+        },
+    },
+    mid1_key3 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 10,
+        },
+    },
+    mid1_key4 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 11,
+        },
+    },
+    mid1_key5 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 12,
+        },
+    },
+    mid1_key6 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 13,
+        },
+    },
+    mid1_key7 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 14,
+        },
+    },
+    mid1_key8 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 15,
+        },
+    },
     mid1_key9 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 29,
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 16,
+        },
     },
-  },
-  mid1_key10 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 30,
+    mid1_key10 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 17,
+        },
     },
-  },
-  mid1_key11 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 31,
+    mid1_key11 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 18,
+        },
     },
-  },
-  mid1_key12 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 32,
+    mid1_key12 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 19,
+        },
     },
-  },
-  mid1_key13 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 33,
+    mid1_key13 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 20,
+        },
     },
-  },
-  mid1_key14 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 34,
+    mid1_key14 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 21,
+        },
     },
-  },
-  mid1_key15 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 35,
+    mid1_key15 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 22,
+        },
     },
-  },
-  'LOCAL-proxy.config.cache.interim.storage' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 36,
+    'mid1_url_sig_cdl-c2.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 23,
+        },
     },
-  },
-  'mid1_url_sig_cdl-c2.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 37,
+    'mid1_error_url' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 24,
+        },
     },
-  },
-  'mid1_12M_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 38,
+    'mid1_CONFIG-proxy.config.allocator.debug_filter' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 25,
+        },
     },
-  },
-  'mid1_cacheurl_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 39,
+    'mid1_CONFIG-proxy.config.allocator.enable_reclaim' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 26,
+        },
     },
-  },
-  'mid1_ip_allow_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 40,
+    'mid1_CONFIG-proxy.config.allocator.max_overage' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 27,
+        },
     },
-  },
-  'mid1_crontab_root_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 41,
+    'mid1_CONFIG-proxy.config.diags.show_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 28,
+        },
     },
-  },
-  'mid1_hdr_rw_cdl-c2.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 42,
+    'mid1_CONFIG-proxy.config.http.cache.allow_empty_doc' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 29,
+        },
     },
-  },
-  'mid1_50-ats.rules_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 43,
+    'LOCAL-proxy.config.cache.interim.storage' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 30,
+        },
     },
-  },
-  'mid1_parent.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-    profile   => 3,
-    parameter => 44,
+    'mid1_CONFIG-proxy.config.http.parent_proxy.file' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 31,
+        },
     },
-  },
-  'mid1_remap.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 45,
+    'mid1_12M_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 32,
+        },
     },
-  },
-  'mid1_drop_qstring.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 46,
+    'mid1_cacheurl_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 33,
+        },
     },
-  },
-  'mid1_cache.config_location' => {
-      new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 47,
+    'mid1_ip_allow_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 34,
+        },
     },
-  },
-  'mid1_regex_revalidate.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 48,
+    'mid1_astats_over_http.so' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 35,
+        },
     },
-  },
-  'mid1_hosting.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 49,
+    'mid1_crontab_root_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 36,
+        },
     },
-  },
-  'mid1_volume.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 50,
+    'mid1_hdr_rw_cdl-c2.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 37,
+        },
     },
-  },
-  'mid1_astats.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 51,
+    'mid1_50-ats.rules_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 38,
+        },
     },
-  },
-  'mid1_storage.config_location' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 52,
+    'mid1_parent.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 39,
+        },
     },
-  },
-  'mid1_LogFormat.Format' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 53,
+    'mid1_remap.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 40,
+        },
     },
-  },
-  'mid1_LogFormat.Name' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 54,
+    'mid1_drop_qstring.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 41,
+        },
     },
-  },
-  'mid1_LogObject.Format' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 55,
+    'mid1_LogFormat.Format' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 42,
+        },
     },
-  },
-  'mid1_LogObject.Filename' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 56,
-      },
-  },
-  'mid1_astats.config_path' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 59,
+    'mid1_LogFormat.Name' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 43,
+        },
     },
-  },
-  'mid1_record_types' => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 60,
+    'mid1_LogObject.Format' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 44,
+        },
     },
-  },
-  'mid1_regex_revalidate.so' => {
-      new   => 'ProfileParameter',
-    using => {
-      profile   => 3,
-      parameter => 61,
+    'mid1_LogObject.Filename' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 45,
+        },
     },
-  },
-  domain_name6 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 4,
-      parameter => 13,
+    'mid1_cache.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 46,
+        },
     },
-  },
-  domain_name7 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 5,
-      parameter => 13,
+    'mid1_CONFIG-proxy.config.cache.control.filename' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 47,
+        },
     },
+    'mid1_regex_revalidate.so' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 48,
+        },
     },
-  domain_name5 => {
-    new   => 'ProfileParameter',
-    using => {
-      profile   => 6,
-      parameter => 13,
+    'mid1_regex_revalidate.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 49,
+        },
     },
-  },
+    'mid1_hosting.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 50,
+        },
+    },
+    'mid1_volume.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 51,
+        },
+    },
+    'mid1_allow_ip' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 52,
+        },
+    },
+    'mid1_allow_ip6' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 53,
+        },
+    },
+    'mid1_record_types' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 54,
+        },
+    },
+    'mid1_astats.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 55,
+        },
+    },
+    'mid1_astats.config_path' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 56,
+        },
+    },
+    'mid1_storage.config_location' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 57,
+        },
+    },
+    'mid1_Drive_Prefix' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 58,
+        },
+    },
+    'mid1_Drive_Letters' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 59,
+        },
+    },
+    'mid1_Disk_Volume' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 60,
+        },
+    },
+    'mid1_CONFIG-proxy.config.hostdb.storage_size' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 2,
+            parameter => 61,
+        },
+    },
 );
 
 sub get_definition {

@@ -19,73 +19,73 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	## id => 1
-	admin => {
-		new   => 'Role',
-		using => {
-			name        => 'admin',
-			description => 'super-user',
-			priv_level  => 30,
-		},
-	},
-	## id => 2
 	disallowed => {
 		new   => 'Role',
 		using => {
+			id          => 1,
 			name        => 'disallowed',
 			description => 'block all access',
 			priv_level  => 0,
 		},
 	},
-	## id => 3
-	federation => {
-		new   => 'Role',
-		using => {
-			name        => 'federation',
-			description => 'Role for Secondary CZF',
-			priv_level  => 11,
-		},
-	},
-	## id => 4
-	migrations => {
-		new   => 'Role',
-		using => {
-			name        => 'migrations',
-			description => 'database migrations user - DO NOT REMOVE',
-			priv_level  => 20,
-		},
-	},
-	## id => 5
-	operations => {
-		new   => 'Role',
-		using => {
-			name        => 'operations',
-			description => 'block all access',
-			priv_level  => 20,
-		},
-	},
-	## id => 6
-	portal => {
-		new   => 'Role',
-		using => {
-			name        => 'portal',
-			description => 'Portal User',
-			priv_level  => 2,
-		},
-	},
-	## id => 7
 	read_only => {
 		new   => 'Role',
 		using => {
+			id          => 2,
 			name        => 'read-only user',
 			description => 'block all access',
 			priv_level  => 10,
 		},
 	},
-	## id => 8
+	federation => {
+		new   => 'Role',
+		using => {
+			id          => 7,
+			name        => 'federation',
+			description => 'Role for Secondary CZF',
+			priv_level  => 11,
+		},
+	},
+	operations => {
+		new   => 'Role',
+		using => {
+			id          => 3,
+			name        => 'operations',
+			description => 'block all access',
+			priv_level  => 20,
+		},
+	},
+	admin => {
+		new   => 'Role',
+		using => {
+			id          => 4,
+			name        => 'admin',
+			description => 'super-user',
+			priv_level  => 30,
+		},
+	},
+	migrations => {
+		new   => 'Role',
+		using => {
+			id          => 5,
+			name        => 'migrations',
+			description => 'database migrations user - DO NOT REMOVE',
+			priv_level  => 20,
+		},
+	},
+	portal => {
+		new   => 'Role',
+		using => {
+			id          => 6,
+			name        => 'portal',
+			description => 'Portal User',
+			priv_level  => 2,
+		},
+	},
 	steering => {
 		new   => 'Role',
 		using => {
+			id          => 8,
 			name        => 'steering',
 			description => 'Role for Steering Delivery Service',
 			priv_level  => 11,

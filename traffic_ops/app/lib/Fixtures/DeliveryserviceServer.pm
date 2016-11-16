@@ -57,7 +57,7 @@ my %definition_for = (
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 5,
-			server          => 14,
+			server          => 12,
 		},
 	},
 	test_ds5_server_edge15 => {
