@@ -145,7 +145,11 @@ sub update {
 	}
 
 	if ( !defined( $params->{name} ) ) {
-		return $self->alert("CDN 'name' is required.");
+		return $self->alert("Name is required.");
+	}
+
+	if ( !defined( $params->{dnssecEnabled} ) ) {
+		return $self->alert("dnssecEnabled is required.");
 	}
 
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
@@ -154,12 +158,12 @@ sub update {
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
-	my $value = { name => $params->{name}, };
-	if ( defined( $params->{dnssecEnabled} ) ) {
-		$value->{dnssec_enabled} = lc( $params->{dnssecEnabled} ) ne 'false' ? 1 : 0;
-	}
+	my $values = {
+		name => $params->{name},
+		dnssec_enabled => $params->{dnssecEnabled},
+	};
 
-	my $rs = $cdn->update($value);
+	my $rs = $cdn->update($values);
 	if ( $rs ) {
 		my $response;
 		$response->{id}            = $rs->id;
