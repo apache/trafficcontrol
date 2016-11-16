@@ -18,108 +18,108 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
-	target_filter_1 => {
-		new => 'Regex',
-		using => {
-			pattern => '.*/force-to-one/.*',
-			type => 28,
-		},
-	},
-	## id => 2
-	target_filter_1_2 => {
-		new => 'Regex',
-		using => {
-			pattern => '.*/force-to-one-also/.*',
-			type => 28,
-		},
-	},
-	## id => 3
-	target_filter_4 => {
-		new => 'Regex',
-		using => {
-			pattern => '.*/go-to-four/.*',
-			type => 28,
-		},
-	},
-	## id => 4
-	target_filter_3 => {
-		new => 'Regex',
-		using => {
-			pattern => '.*/use-three/.*',
-			type => 28,
-		},
-	},
-	## id => 5
-	regex_1 => {
-		new   => 'Regex',
-		using => {
-			pattern => '.*\.foo\..*',
-			type    => 15,
-		},
-	},
-	## id => 6
-	hr_new_steering => {
-		new => 'Regex',
-		using => {
-			pattern => '.*\.new-steering-ds\..*',
-			type => 15,
-		},
-	},
-	## id => 7
 	regex_omg01 => {
 		new   => 'Regex',
 		using => {
+			id      => 1,
 			pattern => '.*\.omg-01\..*',
-			type    => 15,
+			type    => 19,
 		},
 	},
-	## id => 8
+	regex_1 => {
+		new   => 'Regex',
+		using => {
+			id      => 2,
+			pattern => '.*\.foo\..*',
+			type    => 19,
+		},
+	},
+	target_filter_1 => {
+		new => 'Regex',
+		using => {
+			id      => 3,
+			pattern => '.*/force-to-one/.*',
+			type => 20,
+		},
+	},
+	target_filter_1_2 => {
+		new => 'Regex',
+		using => {
+			id      => 4,
+			pattern => '.*/force-to-one-also/.*',
+			type => 20,
+		},
+	},
+	target_filter_4 => {
+		new => 'Regex',
+		using => {
+			id      => 5,
+			pattern => '.*/go-to-four/.*',
+			type => 20,
+		},
+	},
+	target_filter_3 => {
+		new => 'Regex',
+		using => {
+			id      => 6,
+			pattern => '.*/use-three/.*',
+			type => 20,
+		},
+	},
+	hr_new_steering => {
+		new => 'Regex',
+		using => {
+			id      => 7,
+			pattern => '.*\.new-steering-ds\..*',
+			type => 19,
+		},
+	},
 	hr_steering_1 => {
 		new => 'Regex',
 		using => {
+			id      => 8,
 			pattern => '.*\.steering-ds1\..*',
-			type => 15,
+			type => 19,
 		},
 	},
-	## id => 9
 	hr_steering_2 => {
 		new => 'Regex',
 		using => {
+			id      => 9,
 			pattern => '.*\.steering-ds2\..*',
-			type => 15,
+			type => 19,
 		},
 	},
-	## id => 10
 	hr_target_1 => {
 		new => 'Regex',
 		using => {
+			id      => 10,
 			pattern => '.*\.target-ds1\..*',
-			type => 15,
+			type => 19,
 		},
 	},
-	## id => 11
 	hr_target_2 => {
 		new => 'Regex',
 		using => {
+			id      => 11,
 			pattern => '.*\.target-ds2\..*',
-			type => 15,
+			type => 19,
 		},
 	},
-	## id => 12
 	hr_target_3 => {
 		new => 'Regex',
 		using => {
+			id      => 12,
 			pattern => '.*\.target-ds3\..*',
-			type => 15,
+			type => 19,
 		},
 	},
-	## id => 13
 	hr_target_4 => {
 		new => 'Regex',
 		using => {
+			id      => 13,
 			pattern => '.*\.target-ds4\..*',
-			type => 15,
+			type => 19,
 		},
 	},
 );
@@ -131,7 +131,7 @@ sub get_definition {
 
 sub all_fixture_names {
 	# sort by db pattern to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{pattern} cmp $definition_for{$b}{using}{pattern} } keys %definition_for);
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
