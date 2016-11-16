@@ -42,7 +42,7 @@ ok $t->post_ok( '/login', => form => { u => 'portal', p => Test::TestHelper::ADM
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.1/deliveryserviceserver.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/server", "1" )->json_is( "/response/0/deliveryService", "8" )->json_is( "/limit", "20" )
+	->json_is( "/response/0/server", "1" )->json_is( "/response/0/deliveryService", "1" )->json_is( "/limit", "20" )
 	->json_is( "/orderby", "deliveryservice" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
