@@ -249,7 +249,7 @@ sub update {
 	}
 
 	my $values = {
-		active => $params->{active} ? 1 : 0,
+		active                      => $params->{active},
 		cacheurl                    => $params->{cacheurl},
 		ccr_dns_ttl                 => $params->{ccrDnsTtl},
 		cdn_id                      => $params->{cdnId},
@@ -270,8 +270,8 @@ sub update {
 		http_bypass_fqdn            => $params->{httpBypassFqdn},
 		info_url                    => $params->{infoUrl},
 		initial_dispersion          => $params->{initialDispersion},
-		ipv6_routing_enabled        => $params->{ipv6RoutingEnabled} ? 1 : 0,
-		logs_enabled                => $params->{logsEnabled} ? 1 : 0,
+		ipv6_routing_enabled        => $params->{ipv6RoutingEnabled},
+		logs_enabled                => $params->{logsEnabled},
 		long_desc                   => $params->{longDesc},
 		long_desc_1                 => $params->{longDesc1},
 		long_desc_2                 => $params->{longDesc2},
@@ -279,7 +279,7 @@ sub update {
 		mid_header_rewrite          => $params->{midHeaderRewrite},
 		miss_lat                    => $params->{missLat},
 		miss_long                   => $params->{missLong},
-		multi_site_origin           => $params->{multiSiteOrigin} ? 1 : 0,
+		multi_site_origin           => $params->{multiSiteOrigin},
 		multi_site_origin_algorithm => $params->{multiSiteOriginAlgorithm},
 		org_server_fqdn             => $params->{orgServerFqdn},
 		origin_shield               => $params->{originShield},
@@ -288,14 +288,14 @@ sub update {
 		qstring_ignore              => $params->{qstringIgnore},
 		range_request_handling      => $params->{rangeRequestHandling},
 		regex_remap                 => $params->{regexRemap},
-		regional_geo_blocking       => $params->{regionalGeoBlocking} ? 1 : 0,
+		regional_geo_blocking       => $params->{regionalGeoBlocking},
 		remap_text                  => $params->{remapText},
-		signed                      => $params->{signed} ? 1 : 0,
+		signed                      => $params->{signed},
 		ssl_key_version             => $params->{sslKeyVersion},
 		tr_request_headers          => $params->{trRequestHeaders},
 		tr_response_headers         => $params->{trResponseHeaders},
 		type                        => $params->{typeId},
-		xml_id                      => $params->{xmlId}
+		xml_id                      => $params->{xmlId},
 	};
 
 	my $rs = $ds->update($values);
@@ -389,7 +389,7 @@ sub create {
 	}
 
 	my $values = {
-		active => $params->{active} ? 1 : 0,
+		active                      => $params->{active},
 		cacheurl                    => $params->{cacheurl},
 		ccr_dns_ttl                 => $params->{ccrDnsTtl},
 		cdn_id                      => $params->{cdnId},
@@ -410,8 +410,8 @@ sub create {
 		http_bypass_fqdn            => $params->{httpBypassFqdn},
 		info_url                    => $params->{infoUrl},
 		initial_dispersion          => $params->{initialDispersion},
-		ipv6_routing_enabled        => $params->{ipv6RoutingEnabled} ? 1 : 0,
-		logs_enabled                => $params->{logsEnabled} ? 1 : 0,
+		ipv6_routing_enabled        => $params->{ipv6RoutingEnabled},
+		logs_enabled                => $params->{logsEnabled},
 		long_desc                   => $params->{longDesc},
 		long_desc_1                 => $params->{longDesc1},
 		long_desc_2                 => $params->{longDesc2},
@@ -419,7 +419,7 @@ sub create {
 		mid_header_rewrite          => $params->{midHeaderRewrite},
 		miss_lat                    => $params->{missLat},
 		miss_long                   => $params->{missLong},
-		multi_site_origin           => $params->{multiSiteOrigin} ? 1 : 0,
+		multi_site_origin           => $params->{multiSiteOrigin},
 		multi_site_origin_algorithm => $params->{multiSiteOriginAlgorithm},
 		org_server_fqdn             => $params->{orgServerFqdn},
 		origin_shield               => $params->{originShield},
@@ -428,14 +428,14 @@ sub create {
 		qstring_ignore              => $params->{qstringIgnore},
 		range_request_handling      => $params->{rangeRequestHandling},
 		regex_remap                 => $params->{regexRemap},
-		regional_geo_blocking       => $params->{regionalGeoBlocking} ? 1 : 0,
+		regional_geo_blocking       => $params->{regionalGeoBlocking},
 		remap_text                  => $params->{remapText},
-		signed                      => $params->{signed} ? 1 : 0,
+		signed                      => $params->{signed},
 		ssl_key_version             => $params->{sslKeyVersion},
 		tr_request_headers          => $params->{trRequestHeaders},
 		tr_response_headers         => $params->{trResponseHeaders},
 		type                        => $params->{typeId},
-		xml_id                      => $params->{xmlId}
+		xml_id                      => $params->{xmlId},
 	};
 
 	my $insert = $self->db->resultset('Deliveryservice')->create($values);
