@@ -1,0 +1,14 @@
+FROM debian
+MAINTAINER Dan Kirkwood <dangogh@apache.org>
+
+# install nc to check that postgres and mysql are ready..
+RUN apt-get -y update && apt-get -y install curl
+
+ENV TO_SERVER=$TO_SERVER
+ENV TO_USER=$TO_USER
+ENV TO_PASSWORD=$TO_PASSWORD
+
+ADD get-to-data.sh /
+
+# get data, trigger mysql startup
+CMD /get-to-data.sh /docker-entrypoint-initdb.d/traffic_ops.sql
