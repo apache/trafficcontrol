@@ -18,57 +18,57 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
-	status_admin_down => {
-		new   => 'Status',
-		using => {
-			name => 'ADMIN_DOWN',
-			description =>
-				'Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches',
-		},
-	},
-	## id => 2
-	status_ccr_ignore => {
-		new   => 'Status',
-		using => {
-			name        => 'CCR_IGNORE',
-			description => 'Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now',
-		},
-	},
-	## id => 3
 	status_offline => {
 		new   => 'Status',
 		using => {
+			id   => 1,
 			name => 'OFFLINE',
 			description =>
 				'Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches',
 		},
 	},
-	## id => 4
 	status_online => {
 		new   => 'Status',
 		using => {
+			id   => 2,
 			name => 'ONLINE',
 			description =>
 				'Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges',
 		},
 	},
-	## id => 5
-	status_pre_prod => {
-		new   => 'Status',
-		using => {
-			name        => 'PRE_PROD',
-			description => 'Pre Production. Not active in any configuration.',
-		},
-	},
-	## id => 6
 	status_reported => {
 		new   => 'Status',
 		using => {
+			id          => 3,
 			name        => 'REPORTED',
 			description => 'Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now',
 		},
 	},
+	status_admin_down => {
+		new   => 'Status',
+		using => {
+			id   => 4,
+			name => 'ADMIN_DOWN',
+			description =>
+				'Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches',
+		},
+	},
+	status_ccr_ignore => {
+		new   => 'Status',
+		using => {
+			id          => 5,
+			name        => 'CCR_IGNORE',
+			description => 'Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now',
+		},
+	},
+    status_pre_prod => {
+        new   => 'Status',
+        using => {
+            id          => 6,
+            name        => 'PRE_PROD',
+            description => 'Pre Production. Not active in any configuration.',
+        },
+    },
 );
 
 sub get_definition {
@@ -78,7 +78,7 @@ sub get_definition {
 
 sub all_fixture_names {
 	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
