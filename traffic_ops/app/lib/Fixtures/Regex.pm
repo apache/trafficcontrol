@@ -21,7 +21,7 @@ my %definition_for = (
 	regex_omg01 => {
 		new   => 'Regex',
 		using => {
-			id      => 1,
+			id      => 100,
 			pattern => '.*\.omg-01\..*',
 			type    => 19,
 		},
@@ -29,7 +29,7 @@ my %definition_for = (
 	regex_1 => {
 		new   => 'Regex',
 		using => {
-			id      => 2,
+			id      => 200,
 			pattern => '.*\.foo\..*',
 			type    => 19,
 		},
@@ -37,7 +37,7 @@ my %definition_for = (
 	target_filter_1 => {
 		new => 'Regex',
 		using => {
-			id      => 3,
+			id      => 300,
 			pattern => '.*/force-to-one/.*',
 			type => 20,
 		},
@@ -45,7 +45,7 @@ my %definition_for = (
 	target_filter_1_2 => {
 		new => 'Regex',
 		using => {
-			id      => 4,
+			id      => 400,
 			pattern => '.*/force-to-one-also/.*',
 			type => 20,
 		},
@@ -53,7 +53,7 @@ my %definition_for = (
 	target_filter_4 => {
 		new => 'Regex',
 		using => {
-			id      => 5,
+			id      => 500,
 			pattern => '.*/go-to-four/.*',
 			type => 20,
 		},
@@ -61,7 +61,7 @@ my %definition_for = (
 	target_filter_3 => {
 		new => 'Regex',
 		using => {
-			id      => 6,
+			id      => 600,
 			pattern => '.*/use-three/.*',
 			type => 20,
 		},
@@ -69,7 +69,7 @@ my %definition_for = (
 	hr_new_steering => {
 		new => 'Regex',
 		using => {
-			id      => 7,
+			id      => 700,
 			pattern => '.*\.new-steering-ds\..*',
 			type => 19,
 		},
@@ -77,7 +77,7 @@ my %definition_for = (
 	hr_steering_1 => {
 		new => 'Regex',
 		using => {
-			id      => 8,
+			id      => 800,
 			pattern => '.*\.steering-ds1\..*',
 			type => 19,
 		},
@@ -85,7 +85,7 @@ my %definition_for = (
 	hr_steering_2 => {
 		new => 'Regex',
 		using => {
-			id      => 9,
+			id      => 900,
 			pattern => '.*\.steering-ds2\..*',
 			type => 19,
 		},
@@ -93,7 +93,7 @@ my %definition_for = (
 	hr_target_1 => {
 		new => 'Regex',
 		using => {
-			id      => 10,
+			id      => 1000,
 			pattern => '.*\.target-ds1\..*',
 			type => 19,
 		},
@@ -101,7 +101,7 @@ my %definition_for = (
 	hr_target_2 => {
 		new => 'Regex',
 		using => {
-			id      => 11,
+			id      => 1100,
 			pattern => '.*\.target-ds2\..*',
 			type => 19,
 		},
@@ -109,7 +109,7 @@ my %definition_for = (
 	hr_target_3 => {
 		new => 'Regex',
 		using => {
-			id      => 12,
+			id      => 1200,
 			pattern => '.*\.target-ds3\..*',
 			type => 19,
 		},
@@ -117,7 +117,7 @@ my %definition_for = (
 	hr_target_4 => {
 		new => 'Regex',
 		using => {
-			id      => 13,
+			id      => 1300,
 			pattern => '.*\.target-ds4\..*',
 			type => 19,
 		},
