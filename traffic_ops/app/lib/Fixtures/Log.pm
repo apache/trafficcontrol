@@ -18,20 +18,20 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
 	message1 => {
 		new   => 'Log',
 		using => {
+			id        => 1,
 			level     => 'APICHANGE',
 			ticketnum => 123,
 			message   => 'Message1',
 			tm_user   => 1,
 		},
 	},
-	## id => 2
 	message2 => {
 		new   => 'Log',
 		using => {
+			id        => 2,
 			level     => 'APICHANGE',
 			ticketnum => 456,
 			message   => 'Message2',

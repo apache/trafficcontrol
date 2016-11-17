@@ -196,7 +196,7 @@ sub read {
 	my $self = shift;
 	my @data;
 	my $orderby = "xml_id";
-	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+	$orderby = $self->param('orderby') || 'id';
 	my $rs_data = $self->db->resultset("Deliveryservice")->search(
 		undef, {
 			prefetch => [ 'cdn', 'deliveryservice_regexes' ],
@@ -219,6 +219,7 @@ sub read {
 		}
 		push(
 			@data, {
+				"id"                          => $row->id,
 				"xml_id"                      => $row->xml_id,
 				"display_name"                => $row->display_name,
 				"dscp"                        => $row->dscp,
