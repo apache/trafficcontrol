@@ -22,63 +22,70 @@ my %definition_for = (
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 100,
-			server          => 1,
+			server          => 100,
 		},
 	},
 	test_ds1_server_edge13 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 100,
-			server          => 13,
+			server          => 1300,
 		},
 	},
 	test_ds1_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 100,
-			server          => 2,
+			server          => 300,
 		},
 	},
 	test_ds2_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 200,
-			server          => 7,
+			server          => 700,
 		},
 	},
 	test_ds2_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 200,
-			server          => 8,
+			server          => 800,
 		},
 	},
 	test_ds5_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 500,
-			server          => 14,
+			server          => 1400,
 		},
 	},
 	test_ds5_server_edge15 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 500,
-			server          => 15,
+			server          => 1500,
 		},
 	},
 	test_ds6_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 600,
-			server          => 14,
+			server          => 1400,
 		},
 	},
 	test_ds6_server_edge15 => {
 		new   => 'DeliveryserviceServer',
 		using => {
 			deliveryservice => 600,
-			server          => 15,
+			server          => 1500,
+		},
+	},
+	test_steering_ds1 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 700,
+			server          => 900,
 		},
 	},
 );
