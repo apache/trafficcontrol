@@ -29,11 +29,14 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
+my $schema_values = { schema => $schema, no_transactions => 1 };
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
-my $schema_values = { schema => $schema, no_transactions => 1 };
 Test::TestHelper->unload_core_data($schema);
+
+# Load the test data up until 'cachegroup', because this test case creates
+# them.
 Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );

@@ -16,11 +16,20 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
+my $schema_values = { schema => $schema, no_transactions => 1 };
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_core_data($schema);
+
+# Load the test data up until 'cachegroup', because this test case creates
+# them.
+Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Status->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Type->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Profile->new($schema_values) );
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
@@ -79,9 +88,25 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
              configFile  => 'CRConfig.json',
             'secure'     => '0'
         }
+    ])->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
+        {
+            'name'  => 'param3',
+            'configFile' => 'configFile3',
+            'value'      => 'value3',
+            'secure'     => '0'
+        },
+        {
+             name        => 'domain_name',
+             value       => 'foo.com',
+             configFile  => 'CRConfig.json',
+            'secure'     => '0'
+        }
     ])->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/text" => "parameter [name:domain_name , configFile:CRConfig.json , value:foo.com] already exists." )
+	->json_is( "/alerts/0/text" => "parameter [name:param3 , configFile:configFile3 , value:value3] already exists." )
 		, 'Does the paramters created return?';
 
 ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
@@ -98,8 +123,8 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
         }
     ])->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/text" => 'there is parameter value does not provide , name:param3 , configFile:CRConfig.json' )
-		, 'Does the paramters created return?';
+	->json_is( "/alerts/0/text" => 'parameter [name:param3 , configFile:configFile3 , value:value3] already exists.' )
+		, 'Does the paramters create return?';
 
 ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
         {
@@ -147,12 +172,20 @@ ok $t->put_ok('/api/1.2/parameters/0' => {Accept => 'application/json'} => json 
 
 ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		, 'Does the paramter delete return?';
+		, 'Does the parameter delete return?';
 
-ok $t->delete_ok('/api/1.2/parameters/3' )->status_is(400)
+$para_id = &get_param_id('param10');
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
+	"profileId" => 300, "parameterId" => $para_id })->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/0/profileId" => "300" )
+	->json_is( "/response/0/parameterId" => $para_id )
+		, 'Does the profile parameter details return?';
+
+ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_like( "/alerts/0/text" => qr/has profile associated/ )
-		, 'Does the paramter delete return?';
+		, 'Does the parameter delete return?';
 
 ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} => json => {
             'name'  => 'param1',
@@ -230,7 +263,8 @@ ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(403)
 	->json_is( "/alerts/0/text" => "You must be an admin or oper to perform this operation!" )
 		, 'Does the paramter delete return?';
 
-ok $t->get_ok('/api/1.2/parameters/3')->status_is(200)
+$para_id = &get_param_id('domain_name');
+ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/name" => "domain_name" )
 	->json_is( "/response/0/value" => "foo.com" )
