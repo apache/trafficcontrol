@@ -25,7 +25,7 @@ my %definition_for = (
 			level     => 'APICHANGE',
 			ticketnum => 123,
 			message   => 'Message1',
-			tm_user   => 1,
+			tm_user   => 100,
 		},
 	},
 	message2 => {
@@ -35,7 +35,7 @@ my %definition_for = (
 			level     => 'APICHANGE',
 			ticketnum => 456,
 			message   => 'Message2',
-			tm_user   => 1,
+			tm_user   => 100,
 		},
 	},
 );
