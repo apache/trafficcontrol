@@ -43,7 +43,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => 
 
 $t->get_ok("/api/1.1/hwinfo.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/description", "BACKPLANE FIRMWA" )->json_is( "/response/0/val", "7.0.0.29" )
-	->json_is( "/response/0/serverHostName", "atlanta-edge-02" )->json_is( "/response/1/description", "DRAC FIRMWA" )
+	->json_is( "/response/0/serverHostName", "atlanta-edge-01" )->json_is( "/response/1/description", "DRAC FIRMWA" )
 	->json_is( "/response/1/val", "1.0.0.29" )->json_is( "/response/1/serverHostName", "atlanta-mid-01" )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
