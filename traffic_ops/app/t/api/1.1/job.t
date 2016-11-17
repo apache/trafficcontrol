@@ -73,7 +73,7 @@ ok $t->get_ok('/api/1.1/user/current/jobs.json')->status_is(200)->json_has( '/re
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		regex     => '/foo1/.*',
 		ttl       => 48,
 		startTime => $now,
@@ -84,31 +84,31 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		regex     => '/foo1/.*',
 		ttl       => 0,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 2160" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 72" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper low range?';
 
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		regex     => '/foo1/.*',
 		ttl       => 3000,
 		startTime => $now,
 	}
-	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 2160" } ] )
+	)->status_is(400)->json_is( '/alerts', [ { level => "error", text => "ttl should be between 1 and 72" } ] )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Will not create a purge job without the ttl in the proper high range?';
 
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => $now,
@@ -118,7 +118,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 9,
+		dsId      => 800,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => $now,
@@ -128,7 +128,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		ttl       => 49,
 		startTime => $now,
 	}
@@ -139,7 +139,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId  => 8,
+		dsId  => 100,
 		regex => '/foo2/.*',
 		ttl   => 49,
 	}
@@ -150,7 +150,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		regex     => '/foo2/.*',
 		ttl       => 49,
 		startTime => '2015-01-09',
@@ -163,7 +163,7 @@ ok $t->post_ok(
 ok $t->post_ok(
 	'/api/1.1/user/current/jobs',
 	json => {
-		dsId      => 8,
+		dsId      => 100,
 		regex     => '/foo2/.*',
 		startTime => $now,
 	}
