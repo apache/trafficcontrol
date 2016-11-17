@@ -25,7 +25,7 @@ my %definition_for = (
 			host            => 'A_RECORD_HOST',
 			address         => '127.0.0.1',
 			type            => 21,
-			deliveryservice => 1,
+			deliveryservice => 100,
 			cachegroup      => 1,
 		},
 	},
