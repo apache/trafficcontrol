@@ -19,6 +19,8 @@ use Test::Mojo;
 use DBI;
 use strict;
 use warnings;
+no warnings 'once';
+use warnings 'all';
 use Test::TestHelper;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
@@ -26,21 +28,24 @@ use Test::TestHelper;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
-my $t      = Test::Mojo->new('TrafficOps');
-my $dbh    = Schema->database_handle;
 my $schema = Schema->connect_to_database;
+my $dbh    = Schema->database_handle;
+my $t      = Test::Mojo->new('TrafficOps');
 
-#unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
-
-#load core test data
 Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-$t->get_ok("/api/1.2/cdns/capacity.json")->status_is(200)->json_is( "/response/unavailablePercent", "0" )->json_is( "/response/availablePercent", "0" )
-	->json_is( "/response/utilizedPercent", "0" )->json_is( "/response/maintenancePercent", "0" )
+ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
+        "name" => "cdn_test"
+        })
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/name" => "cdn_test" )
+    ->json_is( "/alerts/0/level" => "success" )
+    ->json_is( "/alerts/0/text" => "cdn was created." )
+            , 'Does the cdn details return?';
 
 my $cdn_id = &get_cdn_id('cdn_test');
 
@@ -60,6 +65,16 @@ ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => j
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
 $dbh->disconnect();
 done_testing();
+
+sub get_cdn_id {
+    my $name = shift;
+    my $q    = "select id from cdn where name = \'$name\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}
