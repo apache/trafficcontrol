@@ -149,7 +149,7 @@ ok $t->post_ok(
 		'ds.geolimit_redirect_url'       => '',
 	}
 )->status_is(302), "create DNS DeliveryService";
-my $t2_id = &get_ds_id('tst_xml_id_2');
+$t2_id = &get_ds_id('tst_xml_id_2');
 ok defined($t2_id), "validated dns ds was added";
 
 #create DS ALL FIELDS
