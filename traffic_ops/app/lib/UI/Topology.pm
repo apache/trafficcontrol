@@ -506,10 +506,10 @@ sub gen_crconfig_json {
         }
 
         if ( defined( $row->miss_lat ) && $row->miss_lat ne "" ) {
-            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat;
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat + 0;
         }
         if ( defined( $row->miss_long ) && $row->miss_long ne "" ) {
-            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'long'} = $row->miss_long;
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'long'} = $row->miss_long + 0;
         }
 
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttls'} = {
