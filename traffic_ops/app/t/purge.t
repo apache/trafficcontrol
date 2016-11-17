@@ -46,7 +46,7 @@ ok $schema->resultset('Profile')->find( { name => 'EDGE1' } ), 'Profile edge1 ex
 ok $schema->resultset('Deliveryservice')->find( { xml_id => 'test-ds1' } ), 'Deliveryservice test-ds1 exists?';
 $t->post_ok( '/login', => form => { u => 'admin', p => 'password' } )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-my $q = 'SELECT deliveryservice.id, 
+my $q = "SELECT deliveryservice.id, 
            deliveryservice.xml_id, 
            org_server_fqdn, 
            type, 
@@ -55,7 +55,7 @@ my $q = 'SELECT deliveryservice.id,
      FROM deliveryservice 
      JOIN profile ON profile.id = deliveryservice.profile 
      JOIN cdn ON cdn.id = deliveryservice.cdn_id
-     WHERE deliveryservice.active = 1 ORDER BY RANDOM() LIMIT 1';
+     WHERE deliveryservice.active = 'true' ORDER BY RANDOM() LIMIT 1";
 
 my $get_ds = $dbh->prepare($q);
 $get_ds->execute();
