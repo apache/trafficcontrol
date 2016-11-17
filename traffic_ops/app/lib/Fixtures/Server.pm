@@ -50,7 +50,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 3,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_mid1 => {
@@ -85,7 +85,7 @@ my %definition_for = (
 			profile          => 2,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	rascal_server => {
@@ -120,7 +120,7 @@ my %definition_for = (
 			profile          => 3,
 			cdn_id           => 2,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	riak_server1 => {
@@ -155,7 +155,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	rascal_server2 => {
@@ -190,7 +190,7 @@ my %definition_for = (
 			profile          => 3,
 			cdn_id           => 2,
 			cachegroup       => 1,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_edge2 => {
@@ -225,7 +225,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 3,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_mid2 => {
@@ -260,7 +260,7 @@ my %definition_for = (
 			profile          => 2,
 			cdn_id           => 2,
 			cachegroup       => 2,
-			phys_location    => 2,
+			phys_location    => 200,
 		},
 	},
 	riak_server2 => {
@@ -295,7 +295,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 2,
+			phys_location    => 200,
 		},
 	},
 	influxdb_server1 => {
@@ -330,7 +330,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 3,
+			phys_location    => 300,
 		},
 	},
 	influxdb_server2 => {
@@ -365,7 +365,7 @@ my %definition_for = (
 			profile          => 5,
 			cdn_id           => 1,
 			cachegroup       => 1,
-			phys_location    => 3,
+			phys_location    => 300,
 		},
 	},
 	server_router => {
@@ -400,7 +400,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 3,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_edge_reported => {
@@ -435,7 +435,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 3,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_edge13 => {
@@ -470,7 +470,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 9,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_edge14 => {
@@ -505,7 +505,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 9,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 	server_mid15 => {
@@ -540,7 +540,7 @@ my %definition_for = (
 			profile          => 1,
 			cdn_id           => 1,
 			cachegroup       => 8,
-			phys_location    => 1,
+			phys_location    => 100,
 		},
 	},
 );
