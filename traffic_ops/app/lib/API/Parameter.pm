@@ -93,8 +93,6 @@ sub create {
         return $self->forbidden("You must be an admin or oper to perform this operation!");
     }
 
-    $self->app->log->info("params = " . Dumper($params));
-
     if ( ref($params) ne 'ARRAY' ) {
         #not a array, create single parameter
         my @temparry;
@@ -255,6 +253,7 @@ sub delete {
     }
 
     my $find = $self->db->resultset('Parameter')->find({ id => $id } );
+	$self->app->log->debug("defined find #-> " . defined($find));
     if ( !defined($find) ) {
         return $self->not_found("parameter [id:".$id."] does not exist.");
     }
