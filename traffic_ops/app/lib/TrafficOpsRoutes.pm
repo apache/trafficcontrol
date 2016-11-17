@@ -741,28 +741,7 @@ sub api_routes {
 	# TM Status in use JvD
 	$r->get("/api/$version/traffic_monitor/stats")->over( authenticated => 1 )->to( 'TrafficMonitor#get_host_stats', namespace => $namespace );
 
-	# API HEALTH CHECK
-  $r->post( "/api/$version/profiles" )->over( authenticated => 1 )->to( 'Profile#create', namespace => $namespace );
-  $r->post( "/api/$version/profiles/name/:profile_name/copy/:profile_copy_from" )->over( authenticated => 1 )->to( 'Profile#copy', namespace => $namespace );
-  $r->post("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#create', namespace => $namespace );
-  $r->post("/api/$version/divisions/:division_name/regions")->over( authenticated => 1 )->to( 'Region#create', namespace => $namespace );
-  $r->post("/api/$version/regions/:region_name/phys_locations")->over( authenticated => 1 )->to( 'PhysLocation#create', namespace => $namespace );
-	$r->post("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#create',   namespace => $namespace );
-	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update',   namespace => $namespace );
-	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete',   namespace => $namespace );
-	$r->post("/api/$version/servers/:id/queue_update")->over( authenticated => 1 )->to( 'Server#postupdatequeue',   namespace => $namespace );
-  $r->post("/api/$version/cachegroups")->over( authenticated => 1 )->to( 'Cachegroup#create', namespace => $namespace );
-  $r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#update', namespace => $namespace );
-  $r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
-	$r->post("/api/$version/cachegroups/:id/queue_update")->over( authenticated => 1 )->to( 'Cachegroup#postupdatequeue',   namespace => $namespace );
-	$r->post("/api/$version/cachegroups/:id/deliveryservices")->over( authenticated => 1 )->to( 'DeliveryServiceServer#assign_ds_to_cachegroup',   namespace => $namespace );
-  $r->post("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'DeliveryService#create', namespace => $namespace );
-  $r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'DeliveryService#update', namespace => $namespace );
-  $r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'DeliveryService#delete', namespace => $namespace );
-  $r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )->to( 'DeliveryService#assign_servers', namespace => $namespace );
-  $r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
-
-	# -- Ping - health check for CodeBig
+	# -- Ping API
 	$r->get(
 		"/api/$version/ping" => sub {
 			my $self = shift;
