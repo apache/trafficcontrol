@@ -31,8 +31,7 @@ BEGIN { $ENV{MOJO_MODE} = "test" }
 my $dbh    = Schema->database_handle;
 my $schema = Schema->connect_to_database;
 my $t      = Test::Mojo->new('TrafficOps');
-my $t3_id;
-
+my $t2_id;
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
@@ -48,15 +47,6 @@ ok $t->post_ok(
 		p => Test::TestHelper::ADMIN_USER_PASSWORD
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-#add - validate 200 response (data is actually added to DB when create is called)
-ok $t->get_ok('/ds/add')->status_is(200), "validate add screen";
-
-# validate existing delivery service
-ok $t->get_ok('/ds/1')->status_is(200), "validate existing delivery service";
-
-# validate existing delivery service
-ok $t->get_ok('/ds/2')->status_is(200), "validate existing delivery service";
 
 # ####################### RW testing - careful with these! #####################################################
 
@@ -193,7 +183,7 @@ ok $t->post_ok(
 		'ds.qstring_ignore'              => '1',
 		'ds.signed'                      => '1',
 		'ds.type'                        => '9',
-		'ds.xml_id'                      => 'tst_xml_id_3',
+		'ds.xml_id'                      => 'tst_xml_id_2',
 		'ds.protocol'                    => '0',
 		'ds.edge_header_rewrite'         => '',
 		'ds.mid_header_rewrite'          => '',
@@ -211,27 +201,39 @@ ok $t->post_ok(
 		'ds.regional_geo_blocking'       => '0',
 		'ds.geolimit_redirect_url'       => 'http://knutsel3.com',
 	}
-)->status_is(302), "create HTTP_NO_CACHE deliveryservice";
+)->status_is(200), "create HTTP_NO_CACHE deliveryservice";
+
+#add - validate 200 response (data is actually added to DB when create is called)
+ok $t->get_ok('/ds/add')->status_is(200), "validate add screen";
+
+# validate existing delivery service
+ok $t->get_ok('/ds/1')->status_is(200), "validate existing delivery service";
+
+# validate existing delivery service
+ok $t->get_ok('/ds/1')->status_is(200), "validate existing delivery service";
 
 #Validate create
 # Note the 4 is the index, not the id.
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
-ok $t->get_ok('/datadeliveryservice')->status_is(200)
-  ->json_is( '/4/xml_id' => 'steering-target-ds2' )->json_is( '/4/dscp' => '40' )
-  ->json_is( '/4/active' => '1' )->json_is( '/4/protocol' => '1' )
-  ->json_is( '/4/display_name'          => 'target-ds2-displayname' )
-  ->json_is( '/4/regional_geo_blocking' => '1' )
-  ->json_is( '/0/regional_geo_blocking' => '1' )
-  ->json_is( '/1/regional_geo_blocking' => '1' ),
-  "validate delivery services were created";
 
-$t3_id = &get_ds_id('tst_xml_id_3');
-ok defined($t3_id), "validated delivery service with all fields was added";
+ok $t->get_ok('/datadeliveryservice')->
+	status_is(200)->
+	json_is( '/0/dscp' => '40' )
+	->json_is( '/0/active' => '1' )
+	->json_is( '/0/protocol' => '3' )
+	->json_is( '/0/display_name' => 'display name 1' )
+	->json_is( '/0/regional_geo_blocking' => '1' )
+	->json_is( '/0/regional_geo_blocking' => '1' )
+	->json_is( '/1/regional_geo_blocking' => '0' ),
+	"validate delivery services were created";
+
+$t2_id = &get_ds_id('tst_xml_id_2');
+ok defined($t2_id), "validated delivery service with all fields was added";
 
 # update DS
 #post update
 ok $t->post_ok(
-	"/ds/$t3_id/update" => form => {
+	"/ds/$t2_id/update" => form => {
 		'ds.active'                      => '0',
 		'ds.ccr_dns_ttl'                 => '3601',
 		'ds.check_path'                  => '/clientaccesspolicy.xml_update',
@@ -240,7 +242,7 @@ ok $t->post_ok(
 		'ds.dns_bypass_cname'            => 'updateby.knutsel.com',
 		'ds.dns_bypass_ttl'              => '31',
 		'ds.dscp'                        => '41',
-		'ds.geo_limit'                   => '1',
+		'ds.geo_limit'                   => '2',
 		'ds.geo_limit_countries'         => '',
 		'ds.geo_provider'                => '1',
 		'ds.global_max_mbps'             => '4T',
@@ -256,12 +258,12 @@ ok $t->post_ok(
 		'ds.org_server_fqdn'             => 'http://update.knutsel.com',
 		'ds.multi_site_origin'           => '0',
 		'ds.multi_site_origin_algorithm' => '0',
-		'ds.profile'                     => '3',
+		'ds.profile'                     => '2',
 		'ds.cdn_id'                      => '2',
 		'ds.qstring_ignore'              => '0',
 		'ds.signed'                      => '0',
 		'ds.type'                        => '7',
-		'ds.xml_id'                      => 'tst_xml_id_3_update',
+		'ds.xml_id'                      => 'tst_xml_id_2',
 		'ds.protocol'                    => '1',
 		'ds.edge_header_rewrite'         => '',
 		'ds.mid_header_rewrite'          => '',
@@ -286,30 +288,38 @@ ok $t->post_ok(
 #This can potentially make the tests fragile if more ds's are added to the fixtures...
 ok $t->get_ok('/datadeliveryservice')->status_is(200)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( '/6/dscp' => '40' )->json_is( '/6/active' => '1' )
-  ->json_is( '/6/profile_description' => 'ccr description' )
-  ->json_is( '/6/org_server_fqdn'     => 'http://target-ds4.edge' )
-  ->json_is( '/6/xml_id'              => 'steering-target-ds4' )
-  ->json_is( '/6/signed'         => '0' )->json_is( '/6/qstring_ignore' => '0' )
-  ->json_is( '/6/dns_bypass_ip'  => 'hokeypokey' )
-  ->json_is( '/6/dns_bypass_ttl' => '10' )->json_is( '/6/ccr_dns_ttl' => 3600 )
-  ->json_is( '/6/global_max_mbps' => 0 )
-  ->json_is( '/6/global_max_tps' => 0 )->json_is( '/6/miss_lat' => '41.881944' )
-  ->json_is( '/6/miss_long' => '-87.627778' )->json_is( '/6/long_desc' => 'target-ds4 long_desc' )
-  ->json_is( '/6/long_desc_1' => 'target-ds4 long_desc_1' )
-  ->json_is( '/6/long_desc_2' => 'target-ds4 long_desc_2' )
-  ->json_is( '/6/info_url'    => 'http://target-ds4.edge/info_url.html' )
-  ->json_is( '/6/protocol'    => '1' )->json_is( '/6/profile_name' => 'CCR1' )
-  ->json_is( '/6/display_name'          => 'target-ds4-displayname' )
-  ->json_is( '/6/regional_geo_blocking' => '1' ),
+  ->json_is( '/1/dscp' => '41' )
+  ->json_is( '/1/active' => '0' )
+  ->json_is( '/1/profile_description' => 'mid description' )
+  ->json_is( '/1/org_server_fqdn'     => 'http://update.knutsel.com' )
+  ->json_is( '/1/xml_id'              => 'tst_xml_id_2' )
+  ->json_is( '/1/signed'         => '0' )
+  ->json_is( '/1/qstring_ignore' => '0' )
+  ->json_is( '/1/dns_bypass_ip'  => '10.10.10.11' )
+  ->json_is( '/1/dns_bypass_ip6' => '2001:558:fee8:180::1/64' )
+  ->json_is( '/1/dns_bypass_ttl' => '31' )
+  ->json_is( '/1/ccr_dns_ttl' => 3601 )
+  ->json_is( '/1/global_max_mbps' => 4000000 )
+  ->json_is( '/1/global_max_tps' => 10001 )
+  ->json_is( '/1/miss_lat' => '0' )
+  ->json_is( '/1/miss_long' => '0' )
+  ->json_is( '/1/long_desc' => 'long_update' )
+  ->json_is( '/1/long_desc_1' => 'cust_update' )
+  ->json_is( '/1/long_desc_2' => 'service_update' )
+  ->json_is( '/1/info_url'    => 'http://knutsel-update.com' )
+  ->json_is( '/1/protocol'    => '1' )
+  ->json_is( '/1/profile_name' => 'MID1' )
+  ->json_is( '/1/geolimit_redirect_url' => 'http://update.redirect.url.com' )
+  ->json_is( '/1/display_name'          => 'Testing Delivery Service' )
+  ->json_is( '/1/regional_geo_blocking' => '1' ),
   "validate delivery service was updated";
 
 #delete delivery service
-# ok $t->get_ok("/ds/$t3_id/delete")->status_is(302), "delete ds";
-#
-# #validate it was deleted
-# $t3_id = &get_ds_id('tst_xml_id_3_update');
-# ok !defined($t3_id), "validated delivery service was deleted";
+ok $t->get_ok("/ds/$t2_id/delete")->status_is(302), "delete ds";
+
+#validate it was deleted
+$t2_id = &get_ds_id('tst_xml_id_2');
+ok !defined($t2_id), "validated delivery service was deleted";
 
 sub get_ds_id {
 	my $xml_id = shift;

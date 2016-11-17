@@ -25,19 +25,20 @@ my %definition_for = (
 		new   => 'FederationTmuser',
 		using => {
 			federation => 1,
-			tm_user    => 3,
-			role       => 3,
+			tm_user    => 5,
+			role       => 7,
 		},
 	},
 	federation_tm_user2 => {
 		new   => 'FederationTmuser',
 		using => {
 			federation => 2,
-			tm_user    => 3,
-			role       => 3,
+			tm_user    => 5,
+			role       => 7,
 		},
 	}
 );
+
 
 sub get_definition {
 	my ( $self, $name ) = @_;
