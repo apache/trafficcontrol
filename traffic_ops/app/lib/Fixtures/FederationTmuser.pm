@@ -25,7 +25,7 @@ my %definition_for = (
 		new   => 'FederationTmuser',
 		using => {
 			federation => 1,
-			tm_user    => 5,
+			tm_user    => 500,
 			role       => 7,
 		},
 	},
@@ -33,7 +33,7 @@ my %definition_for = (
 		new   => 'FederationTmuser',
 		using => {
 			federation => 2,
-			tm_user    => 5,
+			tm_user    => 500,
 			role       => 7,
 		},
 	}
