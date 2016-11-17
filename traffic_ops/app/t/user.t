@@ -45,7 +45,7 @@ ok $t->post_ok(
 	=> form => {
 		'tm_user.full_name'            => 'fullname',
 		'tm_user.username'             => 'testcase',
-		'tm_user.public_ssh_key'			 => 'ssh-key',
+		'tm_user.public_ssh_key'	   => 'ssh-key',
 		'tm_user.phone_number'         => 'phone_number',
 		'tm_user.email'                => 'email@email.com',
 		'tm_user.local_passwd'         => 'password',
@@ -55,7 +55,7 @@ ok $t->post_ok(
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a user be created?';
 
-ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 1 ), 'Does the admin username exist?';
+ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 4 ), 'Does the admin username exist?';
 
 ok $t->get_ok('/datauser/orderby/role')->status_is(200)->json_has('/0/rolename')->json_has('/0/username')->json_has('/0/id')->json_has('/0/role'),
 	'Does the user sort by role?';
