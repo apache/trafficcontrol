@@ -19,24 +19,51 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	## id => 1
 	hw1 => {
 		new   => 'Hwinfo',
 		using => {
-			serverid    => 2,
+			id          => 1,
+			serverid    => 1,
 			description => 'BACKPLANE FIRMWA',
 			val         => '7.0.0.29',
 		},
 	},
-	## id => 2
 	hw2 => {
 		new   => 'Hwinfo',
 		using => {
-			serverid    => 4,
+			id          => 2,
+			serverid    => 2,
 			description => 'DRAC FIRMWA',
 			val         => '1.0.0.29',
 		},
-	}
+	},
+	hw3 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 3,
+			serverid    => 2,
+			description => 'ServiceTag',
+			val         => 'XXX',
+		},
+	},
+	hw4 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 4,
+			serverid    => 2,
+			description => 'Manufacturer',
+			val         => 'Dell Inc.',
+		},
+	},
+	hw5 => {
+		new   => 'Hwinfo',
+		using => {
+			id          => 5,
+			serverid    => 2,
+			description => 'Model',
+			val         => 'Beetle',
+		},
+	},
 );
 
 sub get_definition {
