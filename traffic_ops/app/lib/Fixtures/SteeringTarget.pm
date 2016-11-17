@@ -30,7 +30,7 @@ my %definition_for = (
     steering_target_1 => {
         new => 'SteeringTarget',
         using => {
-            deliveryservice => 1,
+            deliveryservice => 10,
             target => 4,
             weight => 1000,
         }

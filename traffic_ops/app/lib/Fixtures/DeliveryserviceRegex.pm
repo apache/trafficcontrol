@@ -18,107 +18,107 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	regex1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 100,
+			regex           => 200,
+			set_number      => 0,
+		},
+	},
 	regex2 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 9,
-			regex           => 7,
+			deliveryservice => 200,
+			regex           => 100,
 			set_number      => 0,
 		},
 	},
 	target_r1_filter => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 4,
-			regex           => 1,
-			set_number      => 0,
-		},
-	},
-	regex1 => {
-		new   => 'DeliveryserviceRegex',
-		using => {
-			deliveryservice => 8,
-			regex           => 5,
+			deliveryservice => 400,
+			regex           => 100,
 			set_number      => 0,
 		},
 	},
 	target_r2_filter => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 4,
-			regex           => 2,
+			deliveryservice => 400,
+			regex           => 200,
 			set_number      => 0,
 		},
 	},
 	target_r4_filter => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 7,
-			regex           => 3,
+			deliveryservice => 700,
+			regex           => 300,
 			set_number      => 0,
 		},
 	},
 	target_r3_filter => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 6,
-			regex           => 4,
+			deliveryservice => 600,
+			regex           => 400,
 			set_number      => 0,
 		},
 	},
 	new_steering => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 3,
-			regex           => 6,
+			deliveryservice => 300,
+			regex           => 600,
 			set_number      => 0,
 		},
 	},
 	steering_1 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 1,
-			regex           => 8,
+			deliveryservice => 100,
+			regex           => 800,
 			set_number      => 0,
 		},
 	},
 	steering_2 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 2,
-			regex           => 9,
+			deliveryservice => 200,
+			regex           => 900,
 			set_number      => 0,
 		},
 	},
 	target_1 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 4,
-			regex           => 10,
+			deliveryservice => 400,
+			regex           => 1000,
 			set_number      => 0,
 		},
 	},
 	target_2 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 5,
-			regex           => 11,
+			deliveryservice => 500,
+			regex           => 1100,
 			set_number      => 0,
 		},
 	},
 	target_3 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 6,
-			regex           => 12,
+			deliveryservice => 600,
+			regex           => 1200,
 			set_number      => 0,
 		},
 	},
 		target_4 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 7,
-			regex           => 13,
+			deliveryservice => 700,
+			regex           => 1300,
 			set_number      => 0,
 		},
 	},

@@ -21,37 +21,37 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	## id => 1
 	name1 => {
 		new   => 'Federation',
 		using => {
+			id          => 1,
 			cname       => 'cname1.',
 			description => 'resolver4 type',
 			ttl         => 86400,
 		},
 	},
-	## id => 2
 	name2 => {
 		new   => 'Federation',
 		using => {
+			id          => 2,
 			cname       => 'cname2.',
 			description => 'resolver4 type',
 			ttl         => 86400,
 		},
 	},
-	## id => 3
 	name3 => {
 		new   => 'Federation',
 		using => {
+			id          => 3,
 			cname       => 'cname3.',
 			description => 'resolver4 type',
 			ttl         => 86400,
 		},
 	},
-	## id => 4
 	name4 => {
 		new   => 'Federation',
 		using => {
+			id          => 4,
 			cname       => 'cname4.',
 			description => 'resolver4 type',
 			ttl         => 86400,
@@ -66,7 +66,7 @@ sub get_definition {
 
 sub all_fixture_names {
 	# sort by db cname to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{cname} cmp $definition_for{$b}{using}{cname} } keys %definition_for);
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -22,6 +22,7 @@ my %definition_for = (
 	mountain => {
 		new   => 'Division',
 		using => {
+			id         => 1,
 			name       => 'mountain',
 		},
 	},
@@ -34,7 +35,7 @@ sub get_definition {
 
 sub all_fixture_names {
 	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;
