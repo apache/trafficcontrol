@@ -50,6 +50,8 @@ sub register {
 			);
 
 			while ( my $row = $rs_pp->next ) {
+			    my $profile_name = $row->profile->name;
+				$self->app->log->debug("profile_name #-> " . Dumper($profile_name));
 				if ( $row->profile->name =~ m/^RASCAL/ ) {
 					$rascal_profile = $row->profile->name;
 				}
