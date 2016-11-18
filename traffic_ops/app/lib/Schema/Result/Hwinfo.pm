@@ -38,15 +38,13 @@ __PACKAGE__->table("hwinfo");
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 256
 
 =head2 val
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 256
 
 =head2 last_updated
 
@@ -68,9 +66,9 @@ __PACKAGE__->add_columns(
   "serverid",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "description",
-  { data_type => "varchar", is_nullable => 0, size => 256 },
+  { data_type => "text", is_nullable => 0 },
   "val",
-  { data_type => "varchar", is_nullable => 0, size => 256 },
+  { data_type => "text", is_nullable => 0 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -94,7 +92,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_39644_serverid>
+=head2 C<idx_54359_serverid>
 
 =over 4
 
@@ -106,7 +104,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_39644_serverid", ["serverid", "description"]);
+__PACKAGE__->add_unique_constraint("idx_54359_serverid", ["serverid", "description"]);
 
 =head1 RELATIONS
 
@@ -126,8 +124,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wVTEBN+UdPkHDLwwb39UHw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:I+M1bzpwgbsfvx1RyUqMDQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
