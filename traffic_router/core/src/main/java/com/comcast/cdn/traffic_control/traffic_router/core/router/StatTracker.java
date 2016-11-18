@@ -44,6 +44,18 @@ public class StatTracker {
 		public void setGeoCount(final int geoCount) {
 			this.geoCount = geoCount;
 		}
+		public int getDeepCzCount() {
+			return deepCzCount;
+		}
+		public void setDeepCzCount(final int deepCzCount) {
+			this.deepCzCount = deepCzCount;
+		}
+		public int getDeepCzMissCount() {
+			return deepCzMissCount;
+		}
+		public void setDeepCzMissCount(final int deepCzMissCount) {
+			this.deepCzMissCount = deepCzMissCount;
+		}
 		public int getDsrCount() {
 			return dsrCount;
 		}
@@ -89,6 +101,8 @@ public class StatTracker {
 
 		public int czCount;
 		public int geoCount;
+		public int deepCzCount;
+		public int deepCzMissCount;
 		public int missCount;
 		public int dsrCount;
 		public int errCount;
@@ -104,7 +118,7 @@ public class StatTracker {
 		}
 
 		public static enum ResultType {
-			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED, RGDENY, RGALT, GEO_REDIRECT
+			ERROR, CZ, GEO, MISS, STATIC_ROUTE, DS_REDIRECT, DS_MISS, INIT, FED, RGDENY, RGALT, GEO_REDIRECT, DEEP_CZ, DEEP_CZ_MISS
 		}
 
 		public enum ResultDetails {
@@ -273,6 +287,12 @@ public class StatTracker {
 			break;
 		case GEO:
 			tallies.geoCount++;
+			break;
+		case DEEP_CZ:
+			tallies.deepCzCount++;
+			break;
+		case DEEP_CZ_MISS:
+			tallies.deepCzMissCount++;
 			break;
 		case MISS:
 			tallies.missCount++;

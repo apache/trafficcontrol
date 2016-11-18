@@ -93,6 +93,11 @@ public class DeliveryService {
 	private final boolean acceptHttp;
 	private final boolean acceptHttps;
 	private final boolean redirectToHttps;
+	private int deepCache; // should this be final or should it be settable?
+
+	// enums are hard in Java.
+	public static final int DC_NEVER   = 0;
+	public static final int DC_ALWAYS  = 1;
 
 	public DeliveryService(final String id, final JsonNode dsJo) throws JsonUtilsException {
 		this.id = id;
@@ -145,6 +150,7 @@ public class DeliveryService {
 		acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps");
 		redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps");
 
+		this.deepCache = JsonUtils.optInt(dsJo, "deepCachingType", DC_NEVER);
 	}
 
 	public String getId() {
@@ -388,6 +394,14 @@ public class DeliveryService {
 	public void setDns(final boolean isDns) {
 		this.isDns = isDns;
 	}
+
+	public int getDeepCache() {
+		return deepCache;
+	}
+	public void setDeepCache(final int deepCache) {
+		this.deepCache = deepCache;
+	}
+
 
 	public boolean appendQueryString() {
 		return shouldAppendQueryString;
