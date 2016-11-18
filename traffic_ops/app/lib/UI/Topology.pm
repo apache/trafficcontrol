@@ -399,6 +399,8 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = $geoEnabled;
         }
 
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'deepCachingType'} = $row->deep_caching_type;
+
         # Default to 'http only'
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'false';
@@ -704,6 +706,9 @@ sub stringify_ds {
     }
     if ( defined( $ds->{'missLocation'} ) ) {
         $string .= "|GeoMiss: " . $ds->{'missLocation'}->{'lat'} . "," . $ds->{'missLocation'}->{'long'};
+    }
+    if (defined( $ds->{'deepCachingType'} ) ) {
+        $string .= "|deepCachingType: " . $ds->{'deepCachingType'};
     }
     if ( defined( $ds->{'bypassDestination'} ) ) {
         $string .= "<br>|BypassDest:";
