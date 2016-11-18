@@ -835,7 +835,7 @@ sub get_servers_by_profile_id {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { profile => $profile_id } );
+	$servers = $self->db->resultset('Server')->search( { profile => $profile_id } );
 	return ( $forbidden, $servers );
 }
 
