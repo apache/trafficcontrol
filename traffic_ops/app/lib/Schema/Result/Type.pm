@@ -32,21 +32,18 @@ __PACKAGE__->table("type");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 use_in_table
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 last_updated
 
@@ -66,11 +63,11 @@ __PACKAGE__->add_columns(
     sequence          => "type_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "use_in_table",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -94,7 +91,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_39826_name_unique>
+=head2 C<idx_54562_name_unique>
 
 =over 4
 
@@ -104,7 +101,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_39826_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_54562_name_unique", ["name"]);
 
 =head1 RELATIONS
 
@@ -214,8 +211,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6/jizJUQmkHwt9g7bIOZRA
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JIvzUMeCc2ZVQpQLxITmHQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

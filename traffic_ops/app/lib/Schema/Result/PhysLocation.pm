@@ -32,63 +32,53 @@ __PACKAGE__->table("phys_location");
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 short_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 12
 
 =head2 address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 128
 
 =head2 city
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 128
 
 =head2 state
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 2
 
 =head2 zip
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 5
 
 =head2 poc
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 phone
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 email
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 comments
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 region
 
@@ -114,25 +104,25 @@ __PACKAGE__->add_columns(
     sequence          => "phys_location_id_seq",
   },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "short_name",
-  { data_type => "varchar", is_nullable => 0, size => 12 },
+  { data_type => "text", is_nullable => 0 },
   "address",
-  { data_type => "varchar", is_nullable => 0, size => 128 },
+  { data_type => "text", is_nullable => 0 },
   "city",
-  { data_type => "varchar", is_nullable => 0, size => 128 },
+  { data_type => "text", is_nullable => 0 },
   "state",
-  { data_type => "varchar", is_nullable => 0, size => 2 },
+  { data_type => "text", is_nullable => 0 },
   "zip",
-  { data_type => "varchar", is_nullable => 0, size => 5 },
+  { data_type => "text", is_nullable => 0 },
   "poc",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "phone",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "email",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "comments",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "region",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
@@ -158,7 +148,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_39713_name_unique>
+=head2 C<idx_54431_name_unique>
 
 =over 4
 
@@ -168,9 +158,9 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_39713_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_54431_name_unique", ["name"]);
 
-=head2 C<idx_39713_short_name_unique>
+=head2 C<idx_54431_short_name_unique>
 
 =over 4
 
@@ -180,7 +170,7 @@ __PACKAGE__->add_unique_constraint("idx_39713_name_unique", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_39713_short_name_unique", ["short_name"]);
+__PACKAGE__->add_unique_constraint("idx_54431_short_name_unique", ["short_name"]);
 
 =head1 RELATIONS
 
@@ -215,8 +205,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qoZbC6exGiOWYVpc4lnPxw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dfZ3YiJtRAHKueGHNdVM5Q
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
