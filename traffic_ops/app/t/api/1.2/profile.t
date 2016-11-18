@@ -103,7 +103,7 @@ ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/jso
         })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/profiles?param=9' => {Accept => 'application/json'})->status_is(200)
+ok $t->get_ok('/api/1.2/profiles?param=9&orderby=profile' => {Accept => 'application/json'})->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/id" => "100" )
 	->json_is( "/response/0/name" => "EDGE1" )
