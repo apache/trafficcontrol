@@ -106,6 +106,7 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'applicat
         "interfaceMtu" => "1500",
         "physLocation" => "Denver",
         "type" => "EDGE",
+        "status" => "OFFLINE",
         "profile" => "EDGE1" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/hostName" => "tc1_ats3")
@@ -118,6 +119,7 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'applicat
     ->json_is( "/response/interfaceMtu" => "1500")
     ->json_is( "/response/physLocation" => "Denver")
     ->json_is( "/response/type" => "EDGE")
+    ->json_is( "/response/status" => "OFFLINE")
     ->json_is( "/response/profile" => "EDGE1")
             , 'Does the server details return?';
 

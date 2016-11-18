@@ -110,6 +110,13 @@ sub check_server_params {
         return ( \%params, "'type' $json->{'type'} not found!" );
     }
 
+    if ( defined( $json->{'status'} ) ) {
+        eval { $params{'status'} = &admin_status_id( $self, $json->{'status'} ); };
+        if ( $@ || ( !defined( $params{'status'} ) ) ) {
+            return ( \%params, "'status' $json->{'status'} not found!" );
+        }
+    }
+
     eval { $params{'profile'} = &profile_id( $self, $json->{'profile'} ); };
     if ( $@ || ( !defined( $params{'profile'} ) ) ) {       # $@ holds Perl errors
         return ( \%params, "'profile' $json->{'profile'} not found!" );
