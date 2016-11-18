@@ -29,10 +29,14 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
+my $schema_values = { schema => $schema, no_transactions => 1 };
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_core_data($schema);
+Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Division->new($schema_values) );
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
