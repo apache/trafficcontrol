@@ -21,7 +21,7 @@ my %definition_for = (
 	EDGE1 => {
 		new   => 'Profile',
 		using => {
-			id          => 1,
+			id          => 100,
 			name        => 'EDGE1',
 			description => 'edge description',
 		},
@@ -29,7 +29,7 @@ my %definition_for = (
 	MID1 => {
 		new   => 'Profile',
 		using => {
-			id          => 2,
+			id          => 200,
 			name        => 'MID1',
 			description => 'mid description',
 		},
@@ -37,7 +37,7 @@ my %definition_for = (
 	CCR1 => {
 		new   => 'Profile',
 		using => {
-			id          => 3,
+			id          => 300,
 			name        => 'CCR1',
 			description => 'ccr description',
 		},
@@ -45,7 +45,7 @@ my %definition_for = (
 	RIAK1 => {
 		new   => 'Profile',
 		using => {
-			id          => 5,
+			id          => 500,
 			name        => 'RIAK1',
 			description => 'riak description',
 		},
@@ -53,7 +53,7 @@ my %definition_for = (
 	RASCAL1 => {
 		new   => 'Profile',
 		using => {
-			id          => 6,
+			id          => 600,
 			name        => 'RASCAL1',
 			description => 'rascal description',
 		},
@@ -61,7 +61,7 @@ my %definition_for = (
 	RASCAL2 => {
 		new   => 'Profile',
 		using => {
-			id          => 7,
+			id          => 700,
 			name        => 'RASCAL2',
 			description => 'rascal2 description',
 		},
@@ -74,7 +74,9 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

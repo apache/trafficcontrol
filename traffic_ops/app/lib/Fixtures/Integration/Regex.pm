@@ -26,27 +26,93 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-'0' => { new => 'Regex', => using => { pattern => '.*\.movies\..*', type => '18', id => '1', last_updated => '2015-12-10 15:43:45', }, }, 
-'1' => { new => 'Regex', => using => { id => '2', last_updated => '2015-12-10 15:43:45', pattern => '.*\.images\..*', type => '18', }, }, 
-'2' => { new => 'Regex', => using => { id => '3', last_updated => '2015-12-10 15:43:45', pattern => '.*\.games\..*', type => '18', }, }, 
-'3' => { new => 'Regex', => using => { id => '4', last_updated => '2015-12-10 15:43:45', pattern => '.*\.tv\..*', type => '18', }, }, 
-'4' => { new => 'Regex', => using => { id => '11', last_updated => '2015-12-10 15:43:45', pattern => '.*\.movies\..*', type => '18', }, }, 
-'5' => { new => 'Regex', => using => { id => '12', last_updated => '2015-12-10 15:43:45', pattern => '.*\.images\..*', type => '18', }, }, 
-'6' => { new => 'Regex', => using => { id => '13', last_updated => '2015-12-10 15:43:45', pattern => '.*\.games\..*', type => '18', }, }, 
-'7' => { new => 'Regex', => using => { id => '14', last_updated => '2015-12-10 15:43:45', pattern => '.*\.tv\..*', type => '18', }, }, 
-); 
+	## id => 1
+	'0' => {
+		new => 'Regex',
+		using => {
+			pattern => '.*\.games\..*',
+			last_updated => '2015-12-10 15:43:45',
+			type => '20',
+		},
+	},
+	## id => 2
+	'1' => {
+		new => 'Regex',
+		using => {
+			pattern => '.*\.games\..*',
+			last_updated => '2015-12-10 15:43:45',
+			type => '20',
+		},
+	},
+	## id => 3
+	'2' => {
+ 		new => 'Regex',
+ 		using => {
+			pattern => '.*\.images\..*',
+ 			last_updated => '2015-12-10 15:43:45',
+ 			type => '20',
+ 		},
+	},
+	## id => 4
+	'3' => {
+		new => 'Regex',
+		using => {
+			pattern => '.*\.images\..*',
+			last_updated => '2015-12-10 15:43:45',
+			type => '20',
+		},
+	},
+	## id => 5
+	'4' => {
+		new => 'Regex',
+		using => {
+			pattern => '.*\.movies\..*',
+			type => '20',
+			last_updated => '2015-12-10 15:43:45',
+		},
+	},
+	## id => 6
+	'5' => {
+		new => 'Regex',
+		using => {
+			pattern => '.*\.movies\..*',
+			last_updated => '2015-12-10 15:43:45',
+			type => '20',
+		},
+	},
+	## id => 7
+	'6' => {
+ 		new => 'Regex',
+ 		using => {
+			pattern => '.*\.tv\..*',
+ 			last_updated => '2015-12-10 15:43:45',
+ 			type => '20',
+ 		},
+	},
+	## id => 8
+	'7' => {
+ 		new => 'Regex',
+ 		using => {
+			pattern => '.*\.tv\..*',
+ 			last_updated => '2015-12-10 15:43:45',
+ 			type => '20',
+ 		},
+	},
+);
 
 sub name {
 		return "Regex";
 }
 
-sub get_definition { 
-		my ( $self, $name ) = @_;
+sub get_definition {
+		my ( $self,
+ 			$name ) = @_;
 		return $definition_for{$name};
 }
 
 sub all_fixture_names {
-		return keys %definition_for;
+	# sort by db pattern to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{pattern} cmp $definition_for{$b}{using}{pattern} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

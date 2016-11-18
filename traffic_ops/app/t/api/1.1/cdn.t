@@ -1,5 +1,6 @@
 package main;
 #
+# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,57 +27,25 @@ use Test::TestHelper;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
-my $schema = Schema->connect_to_database;
-my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
+my $dbh    = Schema->database_handle;
+my $schema = Schema->connect_to_database;
 
+#unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+
+#load core test data
 Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-my $q      = 'select * from type limit 1';
-my $get_ds = $dbh->prepare($q);
-$get_ds->execute();
-my $p = $get_ds->fetchall_arrayref( {} );
-$get_ds->finish();
+$t->get_ok("/api/1.1/cdns/capacity.json")->status_is(200)->json_is( "/response/unavailablePercent", "0" )->json_is( "/response/availablePercent", "0" )
+	->json_is( "/response/utilizedPercent", "0" )->json_is( "/response/maintenancePercent", "0" )
 
-# create a new param
-$t->post_ok(
-	'/types/create' => form => {
-		'type_data.name'         => 'JLP_TEST_SERVER',
-		'type_data.description'  => 'JLP test host',
-		'type_data.use_in_table' => 'server'
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-	}
-)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-# modify and delete it
-&upd_and_del();
-
-sub upd_and_del() {
-	my $q      = 'select id from type where name = \'JLP_TEST_SERVER\'';
-	my $get_ds = $dbh->prepare($q);
-	$get_ds->execute();
-	my $p = $get_ds->fetchall_arrayref( {} );
-	$get_ds->finish();
-	my $i = 0;
-	while ( defined( $p->[$i] ) ) {
-		my $id = $p->[$i]->{id};
-		$t->post_ok(
-			      '/types/'
-				. $id
-				. '/update' => form => {
-				'type_data.name'         => 'JLP_TEST_SERVER',
-				'type_data.description'  => 'JLP test host updated',
-				'type_data.use_in_table' => 'server'
-				}
-		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-		$t->get_ok( '/types/' . $id . '/delete' )->status_is(302);
-		$i++;
-	}
-}
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 $dbh->disconnect();
 done_testing();

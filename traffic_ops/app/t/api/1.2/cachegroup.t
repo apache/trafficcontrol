@@ -29,11 +29,25 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
+my $schema_values = { schema => $schema, no_transactions => 1 };
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_core_data($schema);
+
+# Load the test data up until 'cachegroup', because this test case creates
+# them.
+Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Status->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Parameter->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Profile->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::ProfileParameter->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Division->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Region->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::PhysLocation->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Type->new($schema_values) );
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
@@ -53,6 +67,23 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
     ->json_is( "/response/parentCachegroup" => "")
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
+
+ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+        "name" => "mid-northeast-group",
+        "shortName" => "mid-ne-group",
+        "latitude" => "44",
+        "longitude" => "66",
+        "parentCachegroup" => "",
+        "secondaryParentCachegroup" => "",
+        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/name" => "mid-northeast-group" )
+    ->json_is( "/response/shortName" => "mid-ne-group")
+    ->json_is( "/response/latitude" => "44")
+    ->json_is( "/response/longitude" => "66")
+    ->json_is( "/response/parentCachegroup" => "")
+    ->json_is( "/response/secondaryParentCachegroup" => "")
+            , 'Does the cache group details return?';
+
 
 ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge",
@@ -107,7 +138,7 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
 
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
         "hostName" => "tc1_ats2",
-        "domainName" => "my.cisco.com",
+        "domainName" => "my.domain.com",
         "cachegroup" => "mid-northeast-group",
         "cdnName" => "cdn1",
         "interfaceName" => "eth0",

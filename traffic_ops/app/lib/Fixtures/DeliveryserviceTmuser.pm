@@ -21,15 +21,29 @@ my %definition_for = (
 	admin => {
 		new   => 'DeliveryserviceTmuser',
 		using => {
-			deliveryservice => 1,
-			tm_user_id      => 1,
+			deliveryservice => 100,
+			tm_user_id      => 100,
 		},
 	},
 	portal_ds1 => {
 		new   => 'DeliveryserviceTmuser',
 		using => {
-			deliveryservice => 1,
-			tm_user_id      => 2,
+			deliveryservice => 100,
+			tm_user_id      => 200,
+		},
+	},
+	ds_steering_user1 => {
+		new   => 'DeliveryserviceTmuser',
+		using => {
+			deliveryservice => 700,
+			tm_user_id      => 700,
+		},
+	},
+	ds_steering_user2 => {
+		new   => 'DeliveryserviceTmuser',
+		using => {
+			deliveryservice => 800,
+			tm_user_id      => 700,
 		},
 	},
 );
@@ -40,9 +54,9 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db deliveryservice to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{deliveryservice} cmp $definition_for{$b}{using}{deliveryservice} } keys %definition_for);
 }
-
 __PACKAGE__->meta->make_immutable;
 
 1;

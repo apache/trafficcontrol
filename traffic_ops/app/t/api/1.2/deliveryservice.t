@@ -42,10 +42,10 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 # It gets existing delivery services
 ok $t->get_ok("/api/1.2/deliveryservices/list")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
-		->json_is( "/response/0/xmlId", "test-ds1" )
-		->json_is( "/response/0/logsEnabled", 1 )
+		->json_is( "/response/0/xmlId", "steering-ds1" )
+		->json_is( "/response/0/logsEnabled", 0 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-		->json_is( "/response/1/xmlId", "test-ds2" );
+		->json_is( "/response/1/xmlId", "steering-ds2" );
 
 ok $t->get_ok("/api/1.2/deliveryservices/list?logsEnabled=true")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "test-ds1" )
@@ -308,7 +308,9 @@ ok $t->post_ok(
 	->json_is( "/response/serverNames/0" => "atlanta-edge-01" )->json_is( "/response/serverNames/1" => "atlanta-edge-02" ),
 	'Does the assigned servers return?';
 
-
+ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+	->json_is( "/response/0/xmlId", "ds_2" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 0 )
+	->json_is( "/response/1/xmlId", "ds_3" );
 
 # Count the 'response number'
 my $count_response = sub {

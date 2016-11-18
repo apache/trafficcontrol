@@ -18,6 +18,7 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
+	## id => 1
 	mountain => {
 		new   => 'Division',
 		using => {
@@ -33,7 +34,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

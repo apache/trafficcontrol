@@ -44,41 +44,40 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 ok $t->post_ok(
 	'/create/dsserver',
 	=> form => {
-		server          => '1',
-		deliveryservice => '2'
+		server          => '100',
+		deliveryservice => '200'
 	}
 )->status_is(302), "create deliveryservice_server";
 
 # validate ds_server was created
-ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'test-ds1' )->json_is( '/1/server' => '2' ),
+ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'test-ds1' )->json_is( '/1/server' => '300' ),
 	"validate deliveryservice_server was added";
 
 # validate edit route
-ok $t->get_ok('/dss/1/edit')->status_is(200), "validate edit screen";
+ok $t->get_ok('/dss/200/edit')->status_is(200), "validate edit screen";
 
 #assign_servers
 ok $t->post_ok(
-	'/dss/1/update' => form => {
-		'id'         => '1',
-		'serverid_2' => 'on',
-		'serverid_1' => 'off'
+	'/dss/100/update' => form => {
+		'serverid_200' => 'on',
+		'serverid_100' => 'off'
 	}
 )->status_is(302), "assign server to ds";
 
 #clone_server
 ok $t->post_ok(
-	'/update/cpdss/2' => form => {
-		'from_server' => '1',
-		'to_server'   => '2',
+	'/update/cpdss/200' => form => {
+		'from_server' => '100',
+		'to_server'   => '200',
 	}
 )->status_is(302), "clone server";
 
 #validate clone
-ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/1/deliveryservice' => 'test-ds2' )->json_is( '/1/server' => '2' ),
+ok $t->get_ok('/datadeliveryserviceserver')->status_is(200)->json_is( '/8/deliveryservice' => 'steering-ds1' )->json_is( '/8/server' => '900' ),
 	"validate deliveryservice was cloned";
 
 #validate cp dss view
-ok $t->get_ok('/cpdssiframe/view/1')->status_is(200), "cpdss iframe";
+ok $t->get_ok('/cpdssiframe/view/100')->status_is(200), "cpdss iframe";
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

@@ -41,7 +41,7 @@ Test::TestHelper->unload_core_data($schema);
 #load core test data
 Test::TestHelper->load_core_data($schema);
 
-my $q           = 'select * from server where type = 2 limit 1';
+my $q           = 'select * from server where type = 1 limit 1';
 my $get_servers = $dbh->prepare($q);
 $get_servers->execute();
 my $svr = $get_servers->fetchall_arrayref( {} );
@@ -116,10 +116,10 @@ $t->post_ok(
 		ip6_address      => '2009:334:333::2/64',
 		ip6_gateway      => '2009:334:333::1',
 		interface_mtu    => '9000',
-		phys_location    => 1,
+		phys_location    => 100,
 		cachegroup       => 1,
 		type             => 1,
-		profile          => 1,
+		profile          => 100,
 		cdn              => 1,
 		mgmt_ip_address  => '192.168.1.1',
 		mgmt_ip_gateway  => '192.168.1.2',
@@ -161,10 +161,10 @@ sub upd_and_del() {
 				ip6_address      => '2009:334:333::2/64',
 				ip6_gateway      => '2009:334:333::1',
 				interface_mtu    => '9000',
-				phys_location    => 1,
+				phys_location    => 100,
 				cachegroup       => 1,
 				type             => 1,
-				profile          => 1,
+				profile          => 100,
 				cdn_id           => 1,
 				mgmt_ip_address  => '192.168.3.1',
 				mgmt_ip_netmask  => '192.168.3.2',

@@ -164,7 +164,7 @@ sub check_profile_input {
 		my $profile_rs = $self->db->resultset('Profile');
 		my $orig_name = $profile_rs->search( { id => $id } )->get_column('name')->single();
 		if ( $name ne $orig_name ) {
-			my $profiles = $profile_rs->search( { id => { -not_like => $id } } )->get_column('name');
+			my $profiles = $profile_rs->search( { id => { '!=' => $id } } )->get_column('name');
 			while ( my $db_name = $profiles->next ) {
 				if ( $db_name eq $name ) {
 					$self->field('profile.name')->is_equal( "", "Profile with name \"$name\" already exists." );
@@ -177,7 +177,7 @@ sub check_profile_input {
 		if ( $description ne $orig_desc ) {
 
 			#get all other descriptions
-			my $profiles = $profile_rs->search( { id => { -not_like => $id } } )->get_column('description');
+			my $profiles = $profile_rs->search( { id => { '!=' => $id } } )->get_column('description');
 			while ( my $db_desc = $profiles->next ) {
 				if ( $db_desc eq $description ) {
 					$self->field('profile.description')->is_equal( "", "A profile with the exact same description already exists!" );
