@@ -138,7 +138,7 @@ public class TrafficRouterTest {
 
         List<Cache> caches = new ArrayList<Cache>();
         caches.add(cache);
-        when(trafficRouter.selectCaches(any(Request.class), any(DeliveryService.class), any(Track.class))).thenReturn(caches);
+        when(trafficRouter.selectCaches(any(HTTPRequest.class), any(DeliveryService.class), any(Track.class))).thenReturn(caches);
         when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.getClientLocation(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenReturn(new Geolocation(40, -100));
         when(trafficRouter.getCachesByGeo(any(DeliveryService.class), any(Geolocation.class), any(Track.class))).thenCallRealMethod();
@@ -168,7 +168,7 @@ public class TrafficRouterTest {
         when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(true);
         when(deliveryService.filterAvailableLocations(any(Collection.class))).thenCallRealMethod();
 
-        when(trafficRouter.selectCaches(any(Request.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.selectCaches(any(HTTPRequest.class), any(DeliveryService.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.selectCachesByGeo(anyString(), any(DeliveryService.class), any(CacheLocation.class), any(Track.class))).thenCallRealMethod();
 
         Geolocation clientLocation = new Geolocation(40, -100);

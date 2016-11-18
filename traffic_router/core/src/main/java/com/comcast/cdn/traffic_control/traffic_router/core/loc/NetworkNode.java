@@ -35,13 +35,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 
 public class NetworkNode implements Comparable<NetworkNode> {
     private static final Logger LOGGER = Logger.getLogger(NetworkNode.class);
     private static final String DEFAULT_SUB_STR = "0.0.0.0/0";
 
     private static NetworkNode instance;
+    private static NetworkNode deepInstance;
+
+    private static CacheRegister cacheRegister;
 
     private CidrAddress cidrAddress;
     private String loc;
@@ -63,13 +68,39 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return instance;
     }
 
-    public static NetworkNode generateTree(final File f, final boolean verifyOnly) throws IOException {
-        final ObjectMapper mapper = new ObjectMapper();
-        return generateTree(mapper.readTree(f), verifyOnly);
+    public static NetworkNode getDeepInstance() {
+        if (deepInstance != null) {
+            return deepInstance;
+        }
+
+        try {
+            deepInstance = new NetworkNode(DEFAULT_SUB_STR);
+        } catch (NetworkNodeException e) {
+            LOGGER.warn(e);
+        }
+
+        return deepInstance;
     }
 
-    @SuppressWarnings("PMD.CyclomaticComplexity")
+    public static void setCacheRegister(final CacheRegister cr) {
+        cacheRegister = cr;
+    }
+
+    public static NetworkNode generateTree(final File f, final boolean verifyOnly, final boolean useDeep) throws IOException  {
+        final ObjectMapper mapper = new ObjectMapper();
+        return generateTree(mapper.readTree(f), verifyOnly, useDeep);
+    }
+
+    public static NetworkNode generateTree(final File f, final boolean verifyOnly) throws IOException  {
+        return generateTree(f, verifyOnly, false);
+    }
+
     public static NetworkNode generateTree(final JsonNode json, final boolean verifyOnly) {
+        return generateTree(json, verifyOnly, false);
+    }
+
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+    public static NetworkNode generateTree(final JsonNode json, final boolean verifyOnly, final boolean useDeep) {
         try {
             final JsonNode coverageZones = JsonUtils.getJsonNode(json, "coverageZones");
 
@@ -87,13 +118,40 @@ public class NetworkNode implements Comparable<NetworkNode> {
                     final double longitude = coordinates.get("longitude").asDouble();
                     geolocation = new Geolocation(latitude, longitude);
                 }
+                CacheLocation deepLoc = null;
+                if (useDeep) {
+                    try {
+                        final JsonNode caches = JsonUtils.getJsonNode(locData, "caches");
+                        for (final JsonNode cacheJson : caches) {
+                            final String cacheHostname = cacheJson.asText();
+                            if (deepLoc == null) {
+                                deepLoc = new CacheLocation( "deep." + loc, new Geolocation(0.0, 0.0));  // TODO JvD
+                            }
+                            // Get the cache from the cacheregister here - don't create a new cache due to the deep file, only reuse the
+                            // ones we already know about.
+                            final Cache cache = cacheRegister.getCacheMap().get(cacheHostname);
+                            if (cache == null) {
+                                LOGGER.error("DDC: deep cache entry " + cacheHostname + " not found in crconfig server list!");
+                            } else {
+                                LOGGER.info("DDC: Adding " + cacheHostname + " to " + deepLoc.getId() + ".");
+                                deepLoc.addCache(cache);
+                            }
+                        }
+                    } catch (JsonUtilsException ex) {
+                        LOGGER.warn("An exception was caught while accessing the caches key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
+                    }
+                }
 
                 try {
                     for (final JsonNode network6 : JsonUtils.getJsonNode(locData, "network6")) {
                         final String ip = network6.asText();
 
                         try {
-                            root.add6(new NetworkNode(ip, loc, geolocation));
+                            final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
+                            if (useDeep && deepLoc != null) { // for deepLoc, we add the location here; normally it gets added by setLocation.
+                                nn.setCacheLocation(deepLoc);
+                            }
+                            root.add6(nn);
                         } catch (NetworkNodeException ex) {
                             LOGGER.error(ex, ex);
                             return null;
@@ -108,7 +166,11 @@ public class NetworkNode implements Comparable<NetworkNode> {
                         final String ip = network.asText();
 
                         try {
-                            root.add(new NetworkNode(ip, loc, geolocation));
+                            final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
+                            if (useDeep && deepLoc != null) {
+                                nn.setCacheLocation(deepLoc);
+                            }
+                            root.add(nn);
                         } catch (NetworkNodeException ex) {
                             LOGGER.error(ex, ex);
                             return null;
@@ -120,7 +182,11 @@ public class NetworkNode implements Comparable<NetworkNode> {
             }
 
             if (!verifyOnly) {
-                instance = root;
+                if (useDeep) {
+                    deepInstance = root;
+                } else {
+                    instance = root;
+                }
             }
 
             return root;

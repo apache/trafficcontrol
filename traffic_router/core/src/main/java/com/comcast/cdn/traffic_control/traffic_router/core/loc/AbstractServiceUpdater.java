@@ -48,6 +48,7 @@ public abstract class AbstractServiceUpdater {
 	protected String databaseName;
 	protected ScheduledExecutorService executorService;
 	private long pollingInterval;
+	private long initialDelay = -1;
 	protected boolean loaded = false;
 	protected ScheduledFuture<?> scheduledService;
 	private TrafficRouterManager trafficRouterManager;
@@ -92,9 +93,13 @@ public abstract class AbstractServiceUpdater {
 
 	public void init() {
 		final long pollingInterval = getPollingInterval();
+        if (initialDelay == -1) {
+             initialDelay = pollingInterval;
+        }
+
 		final Date nextFetchDate = new Date(System.currentTimeMillis() + pollingInterval);
 		LOGGER.info("[" + getClass().getSimpleName() + "] Fetching external resource " + dataBaseURL + " at interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS + " next update occurrs at " + nextFetchDate);
-		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
+		scheduledService = executorService.scheduleWithFixedDelay(updater, initialDelay, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
@@ -193,6 +198,11 @@ public abstract class AbstractServiceUpdater {
 		pollingInterval = 0;
 		dataBaseURL = null;
 	}
+
+    public void setDataBaseURL(final String url, final long refresh, final long iDelay) {
+        this.initialDelay = iDelay;
+        this.setDataBaseURL(url, refresh);
+    }
 
 	public void setDataBaseURL(final String url, final long refresh) {
 		if (refresh !=0 && refresh != pollingInterval) {
