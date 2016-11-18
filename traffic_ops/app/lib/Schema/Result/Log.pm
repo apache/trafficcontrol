@@ -32,15 +32,13 @@ __PACKAGE__->table("log");
 
 =head2 level
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 message
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 1024
 
 =head2 tm_user
 
@@ -50,9 +48,8 @@ __PACKAGE__->table("log");
 
 =head2 ticketnum
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 64
 
 =head2 last_updated
 
@@ -72,13 +69,13 @@ __PACKAGE__->add_columns(
     sequence          => "log_id_seq",
   },
   "level",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "message",
-  { data_type => "varchar", is_nullable => 0, size => 1024 },
+  { data_type => "text", is_nullable => 0 },
   "tm_user",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "ticketnum",
-  { data_type => "varchar", is_nullable => 1, size => 64 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -120,8 +117,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JBW6m8ZglGpSaWd7LJhsGQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/BiMbdnbr6B/YxMPjExknw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
