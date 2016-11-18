@@ -105,10 +105,10 @@ ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/jso
 
 ok $t->get_ok('/api/1.2/profiles?param=9' => {Accept => 'application/json'})->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/id" => "1" )
+	->json_is( "/response/0/id" => "100" )
 	->json_is( "/response/0/name" => "EDGE1" )
 	->json_is( "/response/0/description" => "edge description" )
-	->json_is( "/response/1/id" => "2" )
+	->json_is( "/response/1/id" => "200" )
 	->json_is( "/response/1/name" => "MID1" )
 	->json_is( "/response/1/description" => "mid description" )
 		, 'Does the profile details return?';
