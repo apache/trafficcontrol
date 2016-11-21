@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"encoding/json"
@@ -611,13 +610,13 @@ func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory StatHistoryTh
 }
 
 func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats LastStatsThreadsafe) []byte {
-	serverTypes := toData.Get().ServerTypes
+	// serverTypes := toData.Get().ServerTypes
 	kbpsStats := lastStats.Get()
 	sum := float64(0.0)
-	for cache, data := range kbpsStats.Caches {
-		if serverTypes[cache] != enum.CacheTypeEdge {
-			continue
-		}
+	for _, data := range kbpsStats.Caches {
+		// if serverTypes[cache] != enum.CacheTypeEdge {
+		// 	continue
+		// }
 		sum += data.Bytes.PerSec / ds.BytesPerKilobit
 	}
 	return []byte(fmt.Sprintf("%f", sum))
@@ -629,7 +628,7 @@ func srvAPIBandwidthCapacityKbps(statHistoryThs StatHistoryThreadsafe) []byte {
 		if len(results) == 0 {
 			continue
 		}
-		cap += results[0].MaxKbps
+		cap += results[0].PrecomputedData.MaxKbps
 	}
 	return []byte(fmt.Sprintf("%d", cap))
 }
