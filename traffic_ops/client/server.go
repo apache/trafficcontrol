@@ -32,13 +32,13 @@ type ServerResponse struct {
 type Server struct {
 	DomainName    string `json:"domainName"`
 	HostName      string `json:"hostName"`
-	ID            string `json:"id"`
+	ID            int    `json:"id"`
 	IloIPAddress  string `json:"iloIpAddress"`
 	IloIPGateway  string `json:"iloIpGateway"`
 	IloIPNetmask  string `json:"iloIpNetmask"`
 	IloPassword   string `json:"iloPassword"`
 	IloUsername   string `json:"iloUsername"`
-	InterfaceMtu  string `json:"interfaceMtu"`
+	InterfaceMtu  int    `json:"interfaceMtu"`
 	InterfaceName string `json:"interfaceName"`
 	IP6Address    string `json:"ip6Address"`
 	IP6Gateway    string `json:"ip6Gateway"`
@@ -59,7 +59,7 @@ type Server struct {
 	RouterHostName string `json:"routerHostName"`
 	RouterPortName string `json:"routerPortName"`
 	Status         string `json:"status"`
-	TCPPort        string `json:"tcpPort"`
+	TCPPort        int    `json:"tcpPort"`
 	Type           string `json:"type"`
 	XMPPID         string `json:"xmppId"`
 	XMPPPasswd     string `json:"xmppPasswd"`
