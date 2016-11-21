@@ -1,6 +1,3 @@
-ALTER TABLE cachegroup ALTER COLUMN latitude  TYPE numeric;
-ALTER TABLE cachegroup ALTER COLUMN longitude TYPE numeric;
-
 ALTER TABLE cdn
   ALTER COLUMN dnssec_enabled DROP DEFAULT,
 	ALTER COLUMN dnssec_enabled TYPE boolean
@@ -8,9 +5,6 @@ ALTER TABLE cdn
 			ELSE FALSE
 			END,
   ALTER COLUMN dnssec_enabled SET DEFAULT FALSE;
-
-ALTER TABLE deliveryservice ALTER COLUMN miss_lat                     TYPE numeric;
-ALTER TABLE deliveryservice ALTER COLUMN miss_long                    TYPE numeric;
 
 ALTER TABLE deliveryservice
   ALTER COLUMN active DROP DEFAULT,
