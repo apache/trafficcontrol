@@ -87,7 +87,7 @@
 						<configuration>
 							<rules>
 								<requireEnvironmentVariable>
-									<variableName>GIT_REV_COUNT</variableName>
+									<variableName>BUILD_NUMBER</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -125,7 +125,7 @@
 						<configuration>
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
-							<release>${env.GIT_REV_COUNT}.${buildNumber}.el6</release>
+							<release>${env.BUILD_NUMBER}.el6</release>
 							<needarch>x86_64</needarch>
 							<mappings>
 								<mapping>
