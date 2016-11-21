@@ -30,15 +30,95 @@ use URI;
 use File::Basename;
 use File::Path;
 
+sub ort {
+	my $self = shift;
+	my $action = $self->param('action');
+	my $id = $self->param('id');
+	my $filename = 'ort';
+	my $scope = 'server';
+
+	if (!defined($action)) { $action = "fetch"; }
+	if ( ($action ne "fetch") && ($action ne "db") && ($action ne "publish") ) {
+		return $self->alert("Invalid action.");
+	}
+
+	##check user access
+    if ( !&is_oper($self) ) {
+        return $self->forbidden();
+    }
+
+    ##verify that a valid server ID has been used
+	my $server_obj = $self->server_data($id); 
+	if (!defined($server_obj)) {
+		return $self->not_found();
+	}
+
+	my $data_obj;
+	my $host_name = $server_obj->host_name;
+
+		if ( $action eq "fetch" ) {
+		my $file_contents = get_file( $scope, $host_name, $filename );
+		if (!defined($file_contents)) {
+			$action = 'db';
+		}
+		else {
+			return $self->render(text => $file_contents, format => 'txt');
+		}
+	}
+
+	my %condition = ( 'me.host_name' => $host_name );
+	my $rs_profile = $self->db->resultset('Server')
+		->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
+
+	my $row = $rs_profile->next;
+	if ($row) {
+		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+
+		$data_obj->{'profile'}->{'name'}   = $row->profile->name;
+		$data_obj->{'profile'}->{'id'}     = $row->profile->id;
+		$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
+
+		%condition = (
+			'profile_parameters.profile' => $data_obj->{'profile'}->{'id'},
+			-or                          => [ 'name' => 'location', 'name' => 'scope' ]
+		);
+		my $rs_config = $self->db->resultset('Parameter')
+			->search( \%condition, { join => 'profile_parameters' } );
+		while ( my $row = $rs_config->next ) {
+			if ( $row->name eq 'location' ) {
+				$data_obj->{'config_files'}->{ $row->config_file }
+					->{'location'} = $row->value;
+			}
+			elsif ( $row->name eq 'scope' ) {
+				$data_obj->{'config_files'}->{ $row->config_file }
+					->{'scope'} = $row->value;
+			}
+		}
+	}
+
+	#print STDERR Dumper($data_obj);
+	my $file_contents=encode_json($data_obj);
+
+	if ( $action eq "publish" ) {
+		my $result = publish_file( $scope, $host_name, $filename, $file_contents );
+		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
+		return $self->alert("Error - Unable to publish $filename.");
+	}
+	return $self->render(text => $file_contents, format => 'txt');
+}
+
 sub get_server_config {
 	my $self = shift;
 	my $filename = $self->param("filename");
 	my $action = $self->param('action');
 	my $id = $self->param('id');
-	my $type = "servers";
+	my $scope = "server";
 
 	## fetch is the default action. ?action=db and ?action=publish can also be used.
 	if (!defined($action)) { $action = "fetch"; }
+	if ( ($action ne "fetch") && ($action ne "db") && ($action ne "publish") ) {
+		return $self->alert("Invalid action.");
+	}
 
 	##check user access
     if ( !&is_oper($self) ) {
@@ -55,7 +135,7 @@ sub get_server_config {
 
 	#If we're fetching and the file exists, return it from disk.  If not, switch action to DB mode and return it live from the DB.
 	if ( $action eq "fetch" ) {
-		$file_contents = get_file( $type, $server_obj->host_name, $filename );
+		$file_contents = get_file( $scope, $server_obj->host_name, $filename );
 		if (!defined($file_contents)) {
 			$action = 'db';
 		}
@@ -65,14 +145,16 @@ sub get_server_config {
 	}
 
 	switch ($filename) {
-		case "12M_facts" { $file_contents = $self->facts( $server_obj, $filename, $action, $type ); }
-		case "ip_allow.config" { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $action, $type ); }
-		case "parent.config" { $file_contents = $self->parent_dot_config( $server_obj, $filename, $action, $type ); }
-		case "records.config" { $file_contents = $self->generic_server_config( $server_obj, $filename, $action, $type ); }
-		case "remap.config" { $file_contents = $self->remap_dot_config( $server_obj, $filename, $action, $type ); }
-		case /to_ext_.*\.config/ { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $action, $type ); }
-		case "hosting.config" { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $action, $type ); }
-		case "cache.config" { $file_contents = $self->cache_dot_config( $server_obj, $filename, $action, $type ); }
+		case "12M_facts" { $file_contents = $self->facts( $server_obj, $filename, $action, $scope ); }
+		case "ip_allow.config" { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $action, $scope ); }
+		case "parent.config" { $file_contents = $self->parent_dot_config( $server_obj, $filename, $action, $scope ); }
+		case "records.config" { $file_contents = $self->generic_server_config( $server_obj, $filename, $action, $scope ); }
+		case "remap.config" { $file_contents = $self->remap_dot_config( $server_obj, $filename, $action, $scope ); }
+		case /to_ext_.*\.config/ { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $action, $scope ); }
+		case "hosting.config" { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $action, $scope ); }
+		case "cache.config" { $file_contents = $self->cache_dot_config( $server_obj, $filename, $action, $scope ); }
+		case "packages" { $file_contents = $self->get_package_versions( $server_obj, $filename, $action, $scope ); $file_contents=encode_json($file_contents); }
+		case "chkconfig" { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents=encode_json($file_contents); }
 		else { return $self->not_found(); }
 	}
 
@@ -81,9 +163,11 @@ sub get_server_config {
 		return $self->not_found();
 	}
 
+
 	#if the action was publish, attempt to write the file and return the success or failure.
+	my $result;
 	if ( $action eq "publish" ) {
-		my $result = publish_file( $type, $server_obj->host_name, $filename, $file_contents );
+		$result = publish_file( $scope, $server_obj->host_name, $filename, $file_contents );
 		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
@@ -96,9 +180,12 @@ sub get_cdn_config {
 	my $filename = $self->param("filename");
 	my $action = $self->param('action');
 	my $id = $self->param('id');
-	my $type = "cdns";
+	my $scope = "cdn";
 
 	if (!defined($action)) { $action = "fetch"; }
+	if ( ($action ne "fetch") && ($action ne "db") && ($action ne "publish") ) {
+		return $self->alert("Invalid action.");
+	}
 	
 
 	##check user access
@@ -115,7 +202,7 @@ sub get_cdn_config {
 	my $file_contents;
 
 	if ( $action eq "fetch" ) {
-		$file_contents = get_file( $type, $cdn_obj->name, $filename );
+		$file_contents = get_file( $scope, $cdn_obj->name, $filename );
 		if (!defined($file_contents)) {
 			$action = 'db';
 		}
@@ -125,18 +212,18 @@ sub get_cdn_config {
 	}
 
 	switch ($filename) {
-		case "bg_fetch.config" { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case /cacheurl.*\.config/ { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case /hdr_rw_.*\.config/ { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case /regex_remap_.*\.config/ { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case "regex_revalidate.config" { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case /set_dscp_.*\.config/ { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $action, $type ); }
-		case "ssl_multicert.config" { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $action, $type ); }
+		case "bg_fetch.config" { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $action, $scope ); }
+		case /cacheurl.*\.config/ { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $scope ); }
+		case /hdr_rw_.*\.config/ { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $action, $scope ); }
+		case /regex_remap_.*\.config/ { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $action, $scope ); }
+		case "regex_revalidate.config" { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $scope ); }
+		case /set_dscp_.*\.config/ { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $action, $scope ); }
+		case "ssl_multicert.config" { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $action, $scope ); }
 		case /url_sig_.*\.config/ { 
 			if ( $action eq "publish" ) {
 				return $self->forbidden();
 			}
-			$file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $action, $type );
+			$file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $action, $scope );
 		}
 		else { return $self->not_found(); }
 	}
@@ -146,7 +233,7 @@ sub get_cdn_config {
 	}
 
 	if ( $action eq "publish" ) {
-		my $result = publish_file( $type, $cdn_obj->name, $filename, $file_contents );
+		my $result = publish_file( $scope, $cdn_obj->name, $filename, $file_contents );
 		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
@@ -158,7 +245,7 @@ sub get_profile_config {
 	my $filename = $self->param("filename");
 	my $action = $self->param('action');
 	my $id = $self->param('id');
-	my $type = "profiles";
+	my $scope = "profile";
 
 	if (!defined($action)) { $action = "fetch"; }
 
@@ -176,7 +263,7 @@ sub get_profile_config {
 	my $file_contents;
 
 	if ( $action eq "fetch" ) {
-		$file_contents = get_file( $type, $profile_obj->name, $filename );
+		$file_contents = get_file( $scope, $profile_obj->name, $filename );
 		if (!defined($file_contents)) {
 			$action = 'db';
 		}
@@ -186,14 +273,14 @@ sub get_profile_config {
 	}
 
 	switch ($filename) {
-		case "50-ats.rules" { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $action, $type ); }
-		case "astats.config" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $type ); }
-		case "drop_qstring.config" { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $action, $type ); }
-		case "logs_xml.config" { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename, $action, $type ); }
-		case "plugin.config" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $type ); }
-		case "storage.config" { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $action, $type ); }
-		case "sysctl.conf" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $type ); }
-		case "volume.config" { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $action, $type ); }
+		case "50-ats.rules" { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $action, $scope ); }
+		case "astats.config" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
+		case "drop_qstring.config" { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $action, $scope ); }
+		case "logs_xml.config" { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename, $action, $scope ); }
+		case "plugin.config" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
+		case "storage.config" { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $action, $scope ); }
+		case "sysctl.conf" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
+		case "volume.config" { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $action, $scope ); }
 		else { return $self->not_found(); }
 	}
 
@@ -202,7 +289,7 @@ sub get_profile_config {
 	}
 
 	if ( $action eq "publish" ) {
-		my $result = publish_file( $type, $profile_obj->name, $filename, $file_contents );
+		my $result = publish_file( $scope, $profile_obj->name, $filename, $file_contents );
 		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
@@ -210,10 +297,10 @@ sub get_profile_config {
 }
 
 sub get_file{
-	my $type = shift;
+	my $scope = shift;
 	my $name = shift;
 	my $filename = shift;
-	my $path = "public/ATS-Config-Snapshots/$type/$name/$filename";
+	my $path = "public/ATS-Config-Snapshots/$scope/$name/$filename";
 
 	open my $fh, '<', $path;
 	if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
@@ -224,12 +311,12 @@ sub get_file{
 }
 
 sub publish_file {
-	my $type = shift;
+	my $scope = shift;
 	my $name = shift;
 	my $filename = shift;
 	my $file_contents = shift;
 
-	my $path = "public/ATS-Config-Snapshots/$type/$name/$filename";
+	my $path = "public/ATS-Config-Snapshots/$scope/$name/$filename";
 	my $dir = dirname($path);
 	
 	if ( !-d $dir ) {
@@ -242,7 +329,7 @@ sub publish_file {
         return 1;
     }
 
-    print $fh $file_contents;
+	print $fh $file_contents;
     close($fh);
     return;
     #return $path . " has been published.";
@@ -627,7 +714,7 @@ sub facts {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $server_obj->host_name );
 	$text .= "profile:" . $server_obj->profile->name . "\n";
@@ -640,7 +727,7 @@ sub generic_profile_config {
 	my $profile_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
 
@@ -660,7 +747,7 @@ sub generic_server_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
 
@@ -680,7 +767,7 @@ sub ats_dot_rules {
 	my $profile_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $profile_obj->name );
 	my $data   = $self->profile_param_data( $profile_obj->id, "storage.config" );    # ats.rules is based on the storage.config params
@@ -708,7 +795,7 @@ sub drop_qstring_dot_config {
 	my $profile_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $profile_obj->name );
 
@@ -729,7 +816,7 @@ sub logs_xml_dot_config {
 	my $profile_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $data   = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
 	my $text   = $self->header_comment( $profile_obj->name );
@@ -779,7 +866,7 @@ sub storage_dot_config {
 	my $profile_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 	
 	my $text   = $self->header_comment( $profile_obj->name );
 	my $data   = $self->profile_param_data( $profile_obj->id, "storage.config" );
@@ -809,7 +896,7 @@ sub to_ext_dot_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $server_obj->host_name );
 
@@ -856,7 +943,7 @@ sub volume_dot_config {
 	my $profile_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $data   = $self->profile_param_data( $profile_obj->id, "storage.config" );
 	my $text   = $self->header_comment( $profile_obj->name );
@@ -887,7 +974,7 @@ sub bg_fetch_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $cdn_obj->name );
 	$text .= "include User-Agent *\n";
@@ -900,7 +987,7 @@ sub header_rewrite_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text      = $self->header_comment( $cdn_obj->name );
 	my $ds_xml_id = undef;
@@ -927,7 +1014,7 @@ sub cacheurl_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $cdn_obj->name );
 	my $data = $self->cdn_ds_data($cdn_obj->id);
@@ -965,7 +1052,7 @@ sub regex_remap_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $cdn_obj->name );
 
@@ -985,7 +1072,7 @@ sub regex_revalidate_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text = "# DO NOT EDIT - Generated for CDN " . $cdn_obj->name . " by " . &name_version_string($self) . " on " . `date`;
 
@@ -1062,7 +1149,7 @@ sub set_dscp_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $cdn_obj->name );
 	my $dscp_decimal;
@@ -1082,7 +1169,7 @@ sub ssl_multicert_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $cdn_obj->name );
 
@@ -1117,7 +1204,7 @@ sub url_sig_dot_config {
 	my $cdn_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $sep    = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
 	my $data   = $self->profile_param_data( $cdn_obj, $filename );
@@ -1150,7 +1237,7 @@ sub cache_dot_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $server_obj->host_name );
 	my $data = $self->ds_data($server_obj);
@@ -1171,7 +1258,7 @@ sub hosting_dot_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $storage_data   = $self->param_data( $server_obj, "storage.config" );
 	my $text   = $self->header_comment( $server_obj->host_name );
@@ -1356,7 +1443,7 @@ sub ip_allow_dot_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $text   = $self->header_comment( $server_obj->host_name );
 	my $data   = $self->ip_allow_data( $server_obj, $filename );
@@ -1503,7 +1590,7 @@ sub parent_dot_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 
 	my $data;
 
@@ -1702,7 +1789,7 @@ sub remap_dot_config {
 	my $server_obj = shift;
 	my $filename = shift;
 	my $action = shift;
-	my $type = shift;
+	my $scope = shift;
 	my $data;
 
 	my $pdata  = $self->param_data( $server_obj, 'package' );
@@ -1822,5 +1909,94 @@ sub build_remap_line {
 	$text .= "\n";
 	return $text;
 }
+
+sub __get_json_parameter_list_by_host {
+	my $self = shift;
+	my $host = shift;
+	my $value = shift;
+	my $key_name = shift || "name";
+	my $key_value = shift || "value";
+	my $data_obj = [];
+
+	my $profile_id = $self->db->resultset('Server')->search( { host_name => $host } )->get_column('profile')->single();
+	
+	my %condition = ( 'profile_parameters.profile' => $profile_id, config_file => $value );
+	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
+
+	while ( my $row = $rs_config->next ) {
+		push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
+	}
+
+	return($data_obj);
+}
+
+sub __get_json_parameter_by_host {
+	my $self      = shift;
+	my $host      = shift;
+	my $parameter = shift;
+	my $value     = shift;
+	my $key_name  = shift || "name";
+	my $key_value = shift || "value";
+	my $data_obj;
+
+	my $rs_profile
+		= $self->db->resultset('Server')->search( { 'me.host_name' => $host },
+		{ prefectch => [ 'cdn', 'profile' ] } );
+
+	my $row = $rs_profile->next;
+	my $id  = $row->id;
+	if ( defined($row) && defined( $row->cdn->name ) ) {
+		push(
+			@{$data_obj},
+			{ $key_name => "CDN_Name", $key_value => $row->cdn->name }
+		);
+	}
+
+	my %condition = (
+		'profile_parameters.profile' => $id,
+		'config_file'                => $value,
+		name                         => $parameter
+	);
+	my $rs_config = $self->db->resultset('Parameter')
+		->search( \%condition, { join => 'profile_parameters' } );
+	$row = $rs_config->next;
+
+	if ( defined($row) && defined( $row->name ) && defined( $row->value ) ) {
+		push(
+			@{$data_obj},
+			{ $key_name => $row->name, $key_value => $row->value }
+		);
+	}
+
+	return ($data_obj);
+}
+
+sub get_package_versions {
+	my $self = shift;
+	my $server_obj = shift;
+	my $filename = shift;
+	my $action = shift;
+	my $scope = shift;	
+
+	my $host_name = $server_obj->host_name;
+	my $data_obj = __get_json_parameter_list_by_host($self, $host_name, "package", "name", "version");
+
+	return ($data_obj);
+}
+
+
+sub get_chkconfig {
+	my $self = shift;
+	my $server_obj = shift;
+	my $filename = shift;
+	my $action = shift;
+	my $scope = shift;	
+	
+	my $host_name = $server_obj->host_name;
+	my $data_obj = __get_json_parameter_list_by_host($self, $host_name, "chkconfig");
+	
+	return ($data_obj);
+}
+
 
 1;
