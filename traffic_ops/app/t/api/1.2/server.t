@@ -424,7 +424,7 @@ $svr_id1 = &get_svr_id('server1');
 my $svr_id2 = &get_svr_id('server3');
 my $svr_id3 = &get_svr_id('tc1_ats1');
 my $svr_id4 = &get_svr_id('tc1_ats2');
-ok $t->get_ok('/api/1.2/servers?profileId=100' => {Accept => 'application/json'})->status_is(200)
+ok $t->get_ok('/api/1.2/servers?profileId=100&orderby=id' => {Accept => 'application/json'})->status_is(200)
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/0/id", $svr_id1 )
     ->json_is( "/response/1/id", $svr_id2 )
