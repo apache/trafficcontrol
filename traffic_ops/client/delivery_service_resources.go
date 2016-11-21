@@ -35,39 +35,39 @@ type DeleteDeliveryServiceResponse struct {
 
 // DeliveryService ...
 type DeliveryService struct {
-	ID                   string                 `json:"id"`
+	ID                   int                    `json:"id"`
 	XMLID                string                 `json:"xmlId"`
 	Active               bool                   `json:"active"`
-	DSCP                 string                 `json:"dscp"`
+	DSCP                 int                    `json:"dscp"`
 	Signed               bool                   `json:"signed"`
-	QStringIgnore        string                 `json:"qstringIgnore"`
-	GeoLimit             string                 `json:"geoLimit"`
-	GeoProvider          string                 `json:"geoProvider"`
+	QStringIgnore        int                    `json:"qstringIgnore"`
+	GeoLimit             int                    `json:"geoLimit"`
+	GeoProvider          int                    `json:"geoProvider"`
 	HTTPBypassFQDN       string                 `json:"httpBypassFqdn"`
 	DNSBypassIP          string                 `json:"dnsBypassIp"`
 	DNSBypassIP6         string                 `json:"dnsBypassIp6"`
 	DNSBypassCname       string                 `json:"dnsBypassCname"`
-	DNSBypassTTL         string                 `json:"dnsBypassTtl"`
+	DNSBypassTTL         int                    `json:"dnsBypassTtl"`
 	OrgServerFQDN        string                 `json:"orgServerFqdn"`
 	Type                 string                 `json:"type"`
 	ProfileName          string                 `json:"profileName"`
 	ProfileDesc          string                 `json:"profileDescription"`
 	CDNName              string                 `json:"cdnName"`
-	CCRDNSTTL            string                 `json:"ccrDnsTtl"`
-	GlobalMaxMBPS        string                 `json:"globalMaxMbps"`
-	GlobalMaxTPS         string                 `json:"globalMaxTps"`
+	CCRDNSTTL            int                    `json:"ccrDnsTtl"`
+	GlobalMaxMBPS        int                    `json:"globalMaxMbps"`
+	GlobalMaxTPS         int                    `json:"globalMaxTps"`
 	LongDesc             string                 `json:"longDesc"`
 	LongDesc1            string                 `json:"longDesc1"`
 	LongDesc2            string                 `json:"longDesc2"`
-	MaxDNSAnswers        string                 `json:"maxDnsAnswers"`
+	MaxDNSAnswers        int                    `json:"maxDnsAnswers"`
 	InfoURL              string                 `json:"infoUrl"`
-	MissLat              string                 `json:"missLat"`
-	MissLong             string                 `json:"missLong"`
+	MissLat              float64                `json:"missLat"`
+	MissLong             float64                `json:"missLong"`
 	CheckPath            string                 `json:"checkPath"`
 	LastUpdated          string                 `json:"lastUpdated"`
-	Protocol             string                 `json:"protocol"`
+	Protocol             int                    `json:"protocol"`
 	IPV6RoutingEnabled   bool                   `json:"ipv6RoutingEnabled"`
-	RangeRequestHandling string                 `json:"rangeRequestHandling"`
+	RangeRequestHandling int                    `json:"rangeRequestHandling"`
 	HeaderRewrite        string                 `json:"headerRewrite"`
 	EdgeHeaderRewrite    string                 `json:"edgeHeaderRewrite"`
 	MidHeaderRewrite     string                 `json:"midHeaderRewrite"`
@@ -75,9 +75,9 @@ type DeliveryService struct {
 	RegexRemap           string                 `json:"regexRemap"`
 	CacheURL             string                 `json:"cacheurl"`
 	RemapText            string                 `json:"remapText"`
-	MultiSiteOrigin      string                 `json:"multiSiteOrigin"`
+	MultiSiteOrigin      int                    `json:"multiSiteOrigin"`
 	DisplayName          string                 `json:"displayName"`
-	InitialDispersion    string                 `json:"initialDispersion"`
+	InitialDispersion    int                    `json:"initialDispersion"`
 	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
 }
 
