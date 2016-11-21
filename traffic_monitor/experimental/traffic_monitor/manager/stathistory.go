@@ -20,7 +20,6 @@ package manager
  */
 
 import (
-	"sync"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
@@ -32,52 +31,6 @@ import (
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
-
-// StatHistory is a map of cache names, to an array of result history from each cache.
-type StatHistory map[enum.CacheName][]cache.Result
-
-func copyStat(a []cache.Result) []cache.Result {
-	b := make([]cache.Result, len(a), len(a))
-	copy(b, a)
-	return b
-}
-
-// Copy copies returns a deep copy of this StatHistory
-func (a StatHistory) Copy() StatHistory {
-	b := StatHistory{}
-	for k, v := range a {
-		b[k] = copyStat(v)
-	}
-	return b
-}
-
-// StatHistoryThreadsafe provides safe access for multiple goroutines readers and a single writer to a stored StatHistory object.
-// This could be made lock-free, if the performance was necessary
-// TODO add separate locks for Caches and Deliveryservice maps?
-type StatHistoryThreadsafe struct {
-	statHistory *StatHistory
-	m           *sync.RWMutex
-}
-
-// NewStatHistoryThreadsafe returns a new StatHistory safe for multiple readers and a single writer.
-func NewStatHistoryThreadsafe() StatHistoryThreadsafe {
-	h := StatHistory{}
-	return StatHistoryThreadsafe{m: &sync.RWMutex{}, statHistory: &h}
-}
-
-// Get returns the StatHistory. Callers MUST NOT modify. If mutation is necessary, call StatHistory.Copy()
-func (h *StatHistoryThreadsafe) Get() StatHistory {
-	h.m.RLock()
-	defer h.m.RUnlock()
-	return *h.statHistory
-}
-
-// Set sets the internal StatHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (h *StatHistoryThreadsafe) Set(v StatHistory) {
-	h.m.Lock()
-	*h.statHistory = v
-	h.m.Unlock()
-}
 
 func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	if uint64(len(history)) > limit {
@@ -112,8 +65,8 @@ func StartStatHistoryManager(
 	errorCount UintThreadsafe,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) (StatHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsReader, UnpolledCachesThreadsafe) {
-	statHistory := NewStatHistoryThreadsafe()
+) (ResultHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsReader, UnpolledCachesThreadsafe) {
+	statHistory := NewResultHistoryThreadsafe()
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastStats := NewLastStatsThreadsafe()
@@ -156,7 +109,7 @@ func StartStatHistoryManager(
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
 func processStatResults(
 	results []cache.Result,
-	statHistoryThreadsafe StatHistoryThreadsafe,
+	statHistoryThreadsafe ResultHistoryThreadsafe,
 	combinedStates peer.Crstates,
 	lastStats LastStatsThreadsafe,
 	toData todata.TOData,

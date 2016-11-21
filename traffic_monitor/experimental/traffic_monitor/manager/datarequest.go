@@ -61,12 +61,14 @@ type APIPeerStates struct {
 // CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
-	Type                  *string  `json:"type,omitempty"`
-	Status                *string  `json:"status,omitempty"`
-	LoadAverage           *float64 `json:"load_average,omitempty"`
-	QueryTimeMilliseconds *int64   `json:"query_time_ms,omitempty"`
-	BandwidthKbps         *float64 `json:"bandwidth_kbps,omitempty"`
-	ConnectionCount       *int64   `json:"connection_count,omitempty"`
+	Type                   *string  `json:"type,omitempty"`
+	Status                 *string  `json:"status,omitempty"`
+	LoadAverage            *float64 `json:"load_average,omitempty"`
+	QueryTimeMilliseconds  *int64   `json:"query_time_ms,omitempty"`
+	HealthTimeMilliseconds *int64   `json:"health_time_ms,omitempty"`
+	StatTimeMilliseconds   *int64   `json:"stat_time_ms,omitempty"`
+	BandwidthKbps          *float64 `json:"bandwidth_kbps,omitempty"`
+	ConnectionCount        *int64   `json:"connection_count,omitempty"`
 }
 
 // CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.
@@ -528,7 +530,7 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 }
 
 // TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
-func srvCacheStats(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, statHistory StatHistoryThreadsafe) ([]byte, int) {
+func srvCacheStats(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, statHistory ResultHistoryThreadsafe) ([]byte, int) {
 	filter, err := NewCacheStatFilter(params, toData.Get().ServerTypes)
 	if err != nil {
 		HandleErr(errorCount, errContext, err)
@@ -605,7 +607,7 @@ func srvAPIVersion(staticAppData StaticAppData) []byte {
 func srvAPITrafficOpsURI(opsConfig OpsConfigThreadsafe) []byte {
 	return []byte(opsConfig.Get().Url)
 }
-func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory StatHistoryThreadsafe, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats LastStatsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) ([]byte, error) {
+func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory ResultHistoryThreadsafe, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats LastStatsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) ([]byte, error) {
 	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 }
 
@@ -621,7 +623,7 @@ func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats LastStatsThre
 	}
 	return []byte(fmt.Sprintf("%f", sum))
 }
-func srvAPIBandwidthCapacityKbps(statHistoryThs StatHistoryThreadsafe) []byte {
+func srvAPIBandwidthCapacityKbps(statHistoryThs ResultHistoryThreadsafe) []byte {
 	statHistory := statHistoryThs.Get()
 	cap := int64(0)
 	for _, results := range statHistory {
@@ -653,7 +655,7 @@ func MakeDispatchMap(
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	statHistory StatHistoryThreadsafe,
+	statHistory ResultHistoryThreadsafe,
 	dsStats DSStatsReader,
 	events EventsThreadsafe,
 	staticAppData StaticAppData,
@@ -813,7 +815,14 @@ func createCacheStatuses(
 		}
 
 		cacheTypeStr := string(cacheType)
-		statii[cacheName] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
+		statii[cacheName] = CacheStatus{
+			Type:                  &cacheTypeStr,
+			LoadAverage:           loadAverage,
+			QueryTimeMilliseconds: queryTime,
+			BandwidthKbps:         kbps,
+			ConnectionCount:       connections,
+			Status:                status,
+		}
 	}
 	return statii
 }
