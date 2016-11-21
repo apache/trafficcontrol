@@ -56,7 +56,7 @@ function buildRpmTrafficRouter () {
 	installDnsSec
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
-	export GIT_REV_COUNT=$(getRevCount)
+	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	mvn -P rpm-build -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
 
