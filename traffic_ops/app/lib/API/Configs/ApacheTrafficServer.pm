@@ -2,7 +2,7 @@ package API::Configs::ApacheTrafficServer;
 
 #
 # Copyright 2015 Comcast Cable Communications Management, LLC
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -31,44 +31,43 @@ use File::Basename;
 use File::Path;
 
 sub ort {
-	my $self = shift;
-	my $action = $self->param('action');
-	my $id = $self->param('id');
+	my $self     = shift;
+	my $action   = $self->param('action');
+	my $id       = $self->param('id');
 	my $filename = 'ort';
-	my $scope = 'server';
+	my $scope    = 'server';
 
-	if (!defined($action)) { $action = "fetch"; }
-	if ( ($action ne "fetch") && ($action ne "db") && ($action ne "publish") ) {
+	if ( !defined($action) ) { $action = "fetch"; }
+	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
 		return $self->alert("Invalid action.");
 	}
 
 	##check user access
-    if ( !&is_oper($self) ) {
-        return $self->forbidden();
-    }
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
 
-    ##verify that a valid server ID has been used
-	my $server_obj = $self->server_data($id); 
-	if (!defined($server_obj)) {
+	##verify that a valid server ID has been used
+	my $server_obj = $self->server_data($id);
+	if ( !defined($server_obj) ) {
 		return $self->not_found();
 	}
 
 	my $data_obj;
 	my $host_name = $server_obj->host_name;
 
-		if ( $action eq "fetch" ) {
+	if ( $action eq "fetch" ) {
 		my $file_contents = get_file( $scope, $host_name, $filename );
-		if (!defined($file_contents)) {
+		if ( !defined($file_contents) ) {
 			$action = 'db';
 		}
 		else {
-			return $self->render(text => $file_contents, format => 'txt');
+			return $self->render( text => $file_contents, format => 'txt' );
 		}
 	}
 
 	my %condition = ( 'me.host_name' => $host_name );
-	my $rs_profile = $self->db->resultset('Server')
-		->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
+	my $rs_profile = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
 
 	my $row = $rs_profile->next;
 	if ($row) {
@@ -82,52 +81,49 @@ sub ort {
 			'profile_parameters.profile' => $data_obj->{'profile'}->{'id'},
 			-or                          => [ 'name' => 'location', 'name' => 'scope' ]
 		);
-		my $rs_config = $self->db->resultset('Parameter')
-			->search( \%condition, { join => 'profile_parameters' } );
+		my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 		while ( my $row = $rs_config->next ) {
 			if ( $row->name eq 'location' ) {
-				$data_obj->{'config_files'}->{ $row->config_file }
-					->{'location'} = $row->value;
+				$data_obj->{'config_files'}->{ $row->config_file }->{'location'} = $row->value;
 			}
 			elsif ( $row->name eq 'scope' ) {
-				$data_obj->{'config_files'}->{ $row->config_file }
-					->{'scope'} = $row->value;
+				$data_obj->{'config_files'}->{ $row->config_file }->{'scope'} = $row->value;
 			}
 		}
 	}
 
 	#print STDERR Dumper($data_obj);
-	my $file_contents=encode_json($data_obj);
+	my $file_contents = encode_json($data_obj);
 
 	if ( $action eq "publish" ) {
 		my $result = publish_file( $scope, $host_name, $filename, $file_contents );
-		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
+		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
-	return $self->render(text => $file_contents, format => 'txt');
+	return $self->render( text => $file_contents, format => 'txt' );
 }
 
 sub get_server_config {
-	my $self = shift;
+	my $self     = shift;
 	my $filename = $self->param("filename");
-	my $action = $self->param('action');
-	my $id = $self->param('id');
-	my $scope = "server";
+	my $action   = $self->param('action');
+	my $id       = $self->param('id');
+	my $scope    = "server";
 
 	## fetch is the default action. ?action=db and ?action=publish can also be used.
-	if (!defined($action)) { $action = "fetch"; }
-	if ( ($action ne "fetch") && ($action ne "db") && ($action ne "publish") ) {
+	if ( !defined($action) ) { $action = "fetch"; }
+	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
 		return $self->alert("Invalid action.");
 	}
 
 	##check user access
-    if ( !&is_oper($self) ) {
-        return $self->forbidden();
-    }
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
 
-    ##verify that a valid server ID has been used
-	my $server_obj = $self->server_data($id); 
-	if (!defined($server_obj)) {
+	##verify that a valid server ID has been used
+	my $server_obj = $self->server_data($id);
+	if ( !defined($server_obj) ) {
 		return $self->not_found();
 	}
 
@@ -136,11 +132,11 @@ sub get_server_config {
 	#If we're fetching and the file exists, return it from disk.  If not, switch action to DB mode and return it live from the DB.
 	if ( $action eq "fetch" ) {
 		$file_contents = get_file( $scope, $server_obj->host_name, $filename );
-		if (!defined($file_contents)) {
+		if ( !defined($file_contents) ) {
 			$action = 'db';
 		}
 		else {
-			return $self->render(text => $file_contents, format => 'txt');
+			return $self->render( text => $file_contents, format => 'txt' );
 		}
 	}
 
@@ -153,49 +149,51 @@ sub get_server_config {
 		case /to_ext_.*\.config/ { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $action, $scope ); }
 		case "hosting.config" { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $action, $scope ); }
 		case "cache.config" { $file_contents = $self->cache_dot_config( $server_obj, $filename, $action, $scope ); }
-		case "packages" { $file_contents = $self->get_package_versions( $server_obj, $filename, $action, $scope ); $file_contents=encode_json($file_contents); }
-		case "chkconfig" { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents=encode_json($file_contents); }
+		case "packages" {
+			$file_contents = $self->get_package_versions( $server_obj, $filename, $action, $scope );
+			$file_contents = encode_json($file_contents);
+		}
+		case "chkconfig" { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents = encode_json($file_contents); }
 		else { return $self->not_found(); }
 	}
 
 	#if we get an empty file, just send back an error.
-	if (!defined($file_contents)) {
+	if ( !defined($file_contents) ) {
 		return $self->not_found();
 	}
-
 
 	#if the action was publish, attempt to write the file and return the success or failure.
 	my $result;
 	if ( $action eq "publish" ) {
 		$result = publish_file( $scope, $server_obj->host_name, $filename, $file_contents );
-		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
+		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
+
 	#return the file contents for fetch and db actions.
-	return $self->render(text => $file_contents, format => 'txt');
+	return $self->render( text => $file_contents, format => 'txt' );
 }
 
 sub get_cdn_config {
-	my $self = shift;
+	my $self     = shift;
 	my $filename = $self->param("filename");
-	my $action = $self->param('action');
-	my $id = $self->param('id');
-	my $scope = "cdn";
+	my $action   = $self->param('action');
+	my $id       = $self->param('id');
+	my $scope    = "cdn";
 
-	if (!defined($action)) { $action = "fetch"; }
-	if ( ($action ne "fetch") && ($action ne "db") && ($action ne "publish") ) {
+	if ( !defined($action) ) { $action = "fetch"; }
+	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
 		return $self->alert("Invalid action.");
 	}
-	
 
 	##check user access
-    if ( !&is_oper($self) ) {
-        return $self->forbidden();
-    }
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
 
-    ##verify that a valid cdn ID has been used
-	my $cdn_obj = $self->cdn_data($id); 
-	if (!defined($cdn_obj)) {
+	##verify that a valid cdn ID has been used
+	my $cdn_obj = $self->cdn_data($id);
+	if ( !defined($cdn_obj) ) {
 		return $self->not_found();
 	}
 
@@ -203,11 +201,11 @@ sub get_cdn_config {
 
 	if ( $action eq "fetch" ) {
 		$file_contents = get_file( $scope, $cdn_obj->name, $filename );
-		if (!defined($file_contents)) {
+		if ( !defined($file_contents) ) {
 			$action = 'db';
 		}
 		else {
-			return $self->render(text => $file_contents, format => 'txt');
+			return $self->render( text => $file_contents, format => 'txt' );
 		}
 	}
 
@@ -219,7 +217,8 @@ sub get_cdn_config {
 		case "regex_revalidate.config" { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $scope ); }
 		case /set_dscp_.*\.config/ { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $action, $scope ); }
 		case "ssl_multicert.config" { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case /url_sig_.*\.config/ { 
+		case /url_sig_.*\.config/ {
+
 			if ( $action eq "publish" ) {
 				return $self->forbidden();
 			}
@@ -228,35 +227,35 @@ sub get_cdn_config {
 		else { return $self->not_found(); }
 	}
 
-	if (!defined($file_contents)) {
+	if ( !defined($file_contents) ) {
 		return $self->not_found();
 	}
 
 	if ( $action eq "publish" ) {
 		my $result = publish_file( $scope, $cdn_obj->name, $filename, $file_contents );
-		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
+		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
-	return $self->render(text => $file_contents, format => 'txt');
+	return $self->render( text => $file_contents, format => 'txt' );
 }
 
 sub get_profile_config {
-	my $self = shift;
+	my $self     = shift;
 	my $filename = $self->param("filename");
-	my $action = $self->param('action');
-	my $id = $self->param('id');
-	my $scope = "profile";
+	my $action   = $self->param('action');
+	my $id       = $self->param('id');
+	my $scope    = "profile";
 
-	if (!defined($action)) { $action = "fetch"; }
+	if ( !defined($action) ) { $action = "fetch"; }
 
 	##check user access
-    if ( !&is_oper($self) ) {
-        return $self->forbidden();
-    }
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
 
-    ##verify that a valid profile ID has been used
-	my $profile_obj = $self->profile_data($id); 
-	if (!defined($profile_obj)) {
+	##verify that a valid profile ID has been used
+	my $profile_obj = $self->profile_data($id);
+	if ( !defined($profile_obj) ) {
 		return $self->not_found();
 	}
 
@@ -264,11 +263,11 @@ sub get_profile_config {
 
 	if ( $action eq "fetch" ) {
 		$file_contents = get_file( $scope, $profile_obj->name, $filename );
-		if (!defined($file_contents)) {
+		if ( !defined($file_contents) ) {
 			$action = 'db';
 		}
 		else {
-			return $self->render(text => $file_contents, format => 'txt');
+			return $self->render( text => $file_contents, format => 'txt' );
 		}
 	}
 
@@ -284,55 +283,56 @@ sub get_profile_config {
 		else { return $self->not_found(); }
 	}
 
-	if (!defined($file_contents)) {
+	if ( !defined($file_contents) ) {
 		return $self->not_found();
 	}
 
 	if ( $action eq "publish" ) {
 		my $result = publish_file( $scope, $profile_obj->name, $filename, $file_contents );
-		if (!defined($result)) { return $self->success("Success! $filename has been published."); }
+		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
 		return $self->alert("Error - Unable to publish $filename.");
 	}
-	return $self->render(text => $file_contents, format => 'txt');
+	return $self->render( text => $file_contents, format => 'txt' );
 }
 
-sub get_file{
-	my $scope = shift;
-	my $name = shift;
+sub get_file {
+	my $scope    = shift;
+	my $name     = shift;
 	my $filename = shift;
-	my $path = "public/ATS-Config-Snapshots/$scope/$name/$filename";
+	my $path     = "public/ATS-Config-Snapshots/$scope/$name/$filename";
 
 	open my $fh, '<', $path;
 	if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-        return;
-    }
+		return;
+	}
 	my $file_contents = do { local $/; <$fh> };
 	return $file_contents;
 }
 
 sub publish_file {
-	my $scope = shift;
-	my $name = shift;
-	my $filename = shift;
+	my $scope         = shift;
+	my $name          = shift;
+	my $filename      = shift;
 	my $file_contents = shift;
 
 	my $path = "public/ATS-Config-Snapshots/$scope/$name/$filename";
-	my $dir = dirname($path);
-	
-	if ( !-d $dir ) {
-        print "$dir does not exist; attempting to create\n";
-        mkpath($dir);
-    }
+	my $dir  = dirname($path);
 
-    open my $fh, '>', $path;
-    if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-        return 1;
-    }
+	if ( !-d $dir ) {
+		print "$dir does not exist; attempting to create\n";
+		mkpath($dir);
+	}
+
+	open my $fh, '>', $path;
+	if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
+		return 1;
+	}
 
 	print $fh $file_contents;
-    close($fh);
-    return;
-    #return $path . " has been published.";
+	close($fh);
+	return;
+
+	#return $path . " has been published.";
 }
 
 my $separator ||= {
@@ -385,9 +385,9 @@ sub header_comment {
 }
 
 sub param_data {
-	my $self     = shift;
-	my $server_obj   = shift;
-	my $filename = shift;
+	my $self       = shift;
+	my $server_obj = shift;
+	my $filename   = shift;
 	my $data;
 
 	my $rs = $self->db->resultset('ProfileParameter')->search( { -and => [ profile => $server_obj->profile->id, 'parameter.config_file' => $filename ] },
@@ -413,7 +413,7 @@ sub param_data {
 
 sub profile_param_data {
 	my $self     = shift;
-	my $profile   = shift;
+	my $profile  = shift;
 	my $filename = shift;
 	my $data;
 
@@ -456,7 +456,8 @@ sub cdn_data {
 	my $id   = shift;
 
 	my $cdn_obj;
-    #DG# CODE NEEDED: will resultset('Profile') work like i think it will here?
+
+	#DG# CODE NEEDED: will resultset('Profile') work like i think it will here?
 	if ( $id =~ /^\d+$/ ) {
 		$cdn_obj = $self->db->resultset('Cdn')->search( { id => $id } )->single;
 	}
@@ -469,12 +470,12 @@ sub cdn_data {
 
 sub cdn_ds_data {
 	my $self = shift;
-	my $id = shift;
+	my $id   = shift;
 
 	my $dsinfo;
 
 	my $rs;
-	$rs = $self->db->resultset('DeliveryServiceInfoForCdnList')->search( {}, { bind => [ $id ] } );
+	$rs = $self->db->resultset('DeliveryServiceInfoForCdnList')->search( {}, { bind => [$id] } );
 
 	my $j = 0;
 	while ( my $row = $rs->next ) {
@@ -504,8 +505,8 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
-				my $portstr = ":" . "SERVER_TCP_PORT";
+				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -529,7 +530,7 @@ sub cdn_ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
@@ -537,13 +538,13 @@ sub cdn_ds_data {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
 					#add the second with https
 					my $map_from2 = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
 				}
 			}
 		}
-
 
 		$dsinfo->{dslist}->[$j]->{"dscp"}                        = $dscp;
 		$dsinfo->{dslist}->[$j]->{"org"}                         = $org_server;
@@ -583,7 +584,7 @@ sub cdn_ds_data {
 }
 
 sub ds_data {
-	my $self   = shift;
+	my $self       = shift;
 	my $server_obj = shift;
 
 	my $dsinfo;
@@ -659,7 +660,7 @@ sub ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
@@ -667,6 +668,7 @@ sub ds_data {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
 					#add the second with https
 					my $map_from2 = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
@@ -710,49 +712,49 @@ sub ds_data {
 }
 
 sub facts {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
-	my $text   = $self->header_comment( $server_obj->host_name );
+	my $text = $self->header_comment( $server_obj->host_name );
 	$text .= "profile:" . $server_obj->profile->name . "\n";
 
 	return $text;
 }
 
 sub generic_profile_config {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename    = shift;
+	my $action      = shift;
+	my $scope       = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
 
-	my $data   = $self->profile_param_data( $profile_obj->id, $filename );
-	my $text   = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, $filename );
+	my $text = $self->header_comment( $profile_obj->name );
 	foreach my $parameter ( sort keys %{$data} ) {
 		my $p_name = $parameter;
 		$p_name =~ s/__\d+$//;
 		$text .= $p_name . $sep . $data->{$parameter} . "\n";
 	}
-	
+
 	return $text;
 }
 
 sub generic_server_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
 
-	my $data   = $self->param_data( $server_obj, $filename );
-	my $text   = $self->header_comment( $server_obj->host_name );
+	my $data = $self->param_data( $server_obj, $filename );
+	my $text = $self->header_comment( $server_obj->host_name );
 	foreach my $parameter ( sort keys %{$data} ) {
 		my $p_name = $parameter;
 		$p_name =~ s/__\d+$//;
@@ -763,14 +765,14 @@ sub generic_server_config {
 }
 
 sub ats_dot_rules {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename    = shift;
+	my $action      = shift;
+	my $scope       = shift;
 
-	my $text   = $self->header_comment( $profile_obj->name );
-	my $data   = $self->profile_param_data( $profile_obj->id, "storage.config" );    # ats.rules is based on the storage.config params
+	my $text = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, "storage.config" );    # ats.rules is based on the storage.config params
 
 	my $drive_prefix = $data->{Drive_Prefix};
 	my @drive_postfix = split( /,/, $data->{Drive_Letters} );
@@ -786,18 +788,18 @@ sub ats_dot_rules {
 			$text .= "KERNEL==\"" . $drive_prefix . $l . "\", OWNER=\"ats\"\n";
 		}
 	}
-	
+
 	return $text;
 }
 
 sub drop_qstring_dot_config {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename    = shift;
+	my $action      = shift;
+	my $scope       = shift;
 
-	my $text   = $self->header_comment( $profile_obj->name );
+	my $text = $self->header_comment( $profile_obj->name );
 
 	my $drop_qstring = $self->profile_param_value( $profile_obj->id, 'drop_qstring.config', 'content', undef );
 
@@ -807,19 +809,19 @@ sub drop_qstring_dot_config {
 	else {
 		$text .= "/([^?]+) \$s://\$t/\$1\n";
 	}
-	
+
 	return $text;
 }
 
 sub logs_xml_dot_config {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename    = shift;
+	my $action      = shift;
+	my $scope       = shift;
 
-	my $data   = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
-	my $text   = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
+	my $text = $self->header_comment( $profile_obj->name );
 
 	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
 	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
@@ -862,14 +864,14 @@ sub storage_dot_config_volume_text {
 }
 
 sub storage_dot_config {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
-	
-	my $text   = $self->header_comment( $profile_obj->name );
-	my $data   = $self->profile_param_data( $profile_obj->id, "storage.config" );
+	my $filename    = shift;
+	my $action      = shift;
+	my $scope       = shift;
+
+	my $text = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, "storage.config" );
 
 	my $next_volume = 1;
 	if ( defined( $data->{Drive_Prefix} ) ) {
@@ -890,15 +892,14 @@ sub storage_dot_config {
 	return $text;
 }
 
-
 sub to_ext_dot_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
-	my $text   = $self->header_comment( $server_obj->host_name );
+	my $text = $self->header_comment( $server_obj->host_name );
 
 	# get the subroutine name for this file from the parameter
 	my $subroutine = $self->profile_param_value( $server_obj->profile->id, $filename, 'SubRoutine', undef );
@@ -939,14 +940,14 @@ sub volume_dot_config_volume_text {
 }
 
 sub volume_dot_config {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename    = shift;
+	my $action      = shift;
+	my $scope       = shift;
 
-	my $data   = $self->profile_param_data( $profile_obj->id, "storage.config" );
-	my $text   = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, "storage.config" );
+	my $text = $self->header_comment( $profile_obj->name );
 
 	my $num_volumes = get_num_volumes($data);
 
@@ -970,24 +971,24 @@ sub volume_dot_config {
 
 # This is a temporary workaround until we have real partial object caching support in ATS, so hardcoding for now
 sub bg_fetch_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
-	my $text   = $self->header_comment( $cdn_obj->name );
+	my $text = $self->header_comment( $cdn_obj->name );
 	$text .= "include User-Agent *\n";
 
 	return $text;
 }
 
 sub header_rewrite_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
 	my $text      = $self->header_comment( $cdn_obj->name );
 	my $ds_xml_id = undef;
@@ -1010,14 +1011,14 @@ sub header_rewrite_dot_config {
 }
 
 sub cacheurl_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
-	my $text   = $self->header_comment( $cdn_obj->name );
-	my $data = $self->cdn_ds_data($cdn_obj->id);
+	my $text = $self->header_comment( $cdn_obj->name );
+	my $data = $self->cdn_ds_data( $cdn_obj->id );
 
 	if ( $filename eq "cacheurl_qstring.config" ) {    # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
 		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
@@ -1043,18 +1044,18 @@ sub cacheurl_dot_config {
 	}
 
 	$text =~ s/\s*__RETURN__\s*/\n/g;
-	
+
 	return $text;
 }
 
 sub regex_remap_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
-	my $text   = $self->header_comment( $cdn_obj->name );
+	my $text = $self->header_comment( $cdn_obj->name );
 
 	if ( $filename =~ /^regex_remap_(.*)\.config$/ ) {
 		my $ds_xml_id = $1;
@@ -1068,11 +1069,11 @@ sub regex_remap_dot_config {
 }
 
 sub regex_revalidate_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
 	my $text = "# DO NOT EDIT - Generated for CDN " . $cdn_obj->name . " by " . &name_version_string($self) . " on " . `date`;
 
@@ -1085,7 +1086,9 @@ sub regex_revalidate_dot_config {
 	}
 
 	my %regex_time;
-	$max_days = $self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	$max_days =
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
+		->first;
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 
@@ -1145,13 +1148,13 @@ sub regex_revalidate_dot_config {
 }
 
 sub set_dscp_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
-	my $text   = $self->header_comment( $cdn_obj->name );
+	my $text = $self->header_comment( $cdn_obj->name );
 	my $dscp_decimal;
 	if ( $filename =~ /^set_dscp_(\d+)\.config$/ ) {
 		$dscp_decimal = $1;
@@ -1165,13 +1168,13 @@ sub set_dscp_dot_config {
 }
 
 sub ssl_multicert_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
-	my $text   = $self->header_comment( $cdn_obj->name );
+	my $text = $self->header_comment( $cdn_obj->name );
 
 	## We should break this search out into a separate sub later
 	my $protocol_search = '> 0';
@@ -1200,15 +1203,15 @@ sub ssl_multicert_dot_config {
 }
 
 sub url_sig_dot_config {
-	my $self = shift;
-	my $cdn_obj = shift;
+	my $self     = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $action   = shift;
+	my $scope    = shift;
 
-	my $sep    = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
-	my $data   = $self->profile_param_data( $cdn_obj, $filename );
-	my $text   = $self->header_comment( $cdn_obj->name );
+	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
+	my $data = $self->profile_param_data( $cdn_obj, $filename );
+	my $text = $self->header_comment( $cdn_obj->name );
 
 	my $response_container = $self->riak_get( URL_SIG_KEYS_BUCKET, $filename );
 	my $response = $response_container->{response};
@@ -1224,7 +1227,7 @@ sub url_sig_dot_config {
 		foreach my $parameter ( sort keys %{$keys} ) {
 			$text .= $parameter . $sep . $keys->{$parameter} . "\n";
 		}
-		
+
 		return $text;
 	}
 	else {
@@ -1233,13 +1236,13 @@ sub url_sig_dot_config {
 }
 
 sub cache_dot_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
-	my $text   = $self->header_comment( $server_obj->host_name );
+	my $text = $self->header_comment( $server_obj->host_name );
 	my $data = $self->ds_data($server_obj);
 
 	foreach my $remap ( @{ $data->{dslist} } ) {
@@ -1254,15 +1257,15 @@ sub cache_dot_config {
 }
 
 sub hosting_dot_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
-	my $storage_data   = $self->param_data( $server_obj, "storage.config" );
-	my $text   = $self->header_comment( $server_obj->host_name );
-	
+	my $storage_data = $self->param_data( $server_obj, "storage.config" );
+	my $text = $self->header_comment( $server_obj->host_name );
+
 	my $data = $self->ds_data($server_obj);
 
 	if ( defined( $storage_data->{RAM_Drive_Prefix} ) ) {
@@ -1288,14 +1291,14 @@ sub hosting_dot_config {
 			}
 		}
 	}
-	my $disk_volume = 1; # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
+	my $disk_volume = 1;    # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
 	$text .= "hostname=*   volume=" . $disk_volume . "\n";
 
 	return $text;
 }
 
 sub ip_allow_data {
-	my $self   = shift;
+	my $self       = shift;
 	my $server_obj = shift;
 
 	my $ipallow;
@@ -1439,14 +1442,14 @@ sub ip_allow_data {
 }
 
 sub ip_allow_dot_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
-	my $text   = $self->header_comment( $server_obj->host_name );
-	my $data   = $self->ip_allow_data( $server_obj, $filename );
+	my $text = $self->header_comment( $server_obj->host_name );
+	my $data = $self->ip_allow_data( $server_obj, $filename );
 
 	foreach my $access ( @{$data} ) {
 		$text .= sprintf( "src_ip=%-70s action=%-10s method=%-20s\n", $access->{src_ip}, $access->{action}, $access->{method} );
@@ -1512,7 +1515,7 @@ sub cachegroup_profiles {
 }
 
 sub parent_data {
-	my $self   = shift;
+	my $self       = shift;
 	my $server_obj = shift;
 
 	my @parent_cachegroup_ids;
@@ -1542,25 +1545,25 @@ sub parent_data {
 	$self->cachegroup_profiles( \@secondary_parent_cachegroup_ids, \%profile_cache, \%deliveryservices );
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
-			my $pid            = $row->profile->id;
-			my $ds_domain      = $profile_cache{$pid}->{domain_name};
-			my $weight         = $profile_cache{$pid}->{weight};
-			my $port           = $profile_cache{$pid}->{port};
-			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
-			my $rank           = $profile_cache{$pid}->{rank};
-			my $primary_parent         = $server_obj->cachegroup->parent_cachegroup_id // -1;
-			my $secondary_parent      = $server_obj->cachegroup->secondary_parent_cachegroup_id // -1;
+			my $pid              = $row->profile->id;
+			my $ds_domain        = $profile_cache{$pid}->{domain_name};
+			my $weight           = $profile_cache{$pid}->{weight};
+			my $port             = $profile_cache{$pid}->{port};
+			my $use_ip_address   = $profile_cache{$pid}->{use_ip_address};
+			my $rank             = $profile_cache{$pid}->{rank};
+			my $primary_parent   = $server_obj->cachegroup->parent_cachegroup_id // -1;
+			my $secondary_parent = $server_obj->cachegroup->secondary_parent_cachegroup_id // -1;
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 				my %p = (
-					host_name      => $row->host_name,
-					port           => defined($port) ? $port : $row->tcp_port,
-					domain_name    => $row->domain_name,
-					weight         => $weight,
-					use_ip_address => $use_ip_address,
-					rank           => $rank,
-					ip_address     => $row->ip_address,
-					primary_parent         => ( $primary_parent == $row->cachegroup->id ) ? 1 : 0,
-					secondary_parent      => ( $secondary_parent == $row->cachegroup->id ) ? 1 : 0,
+					host_name        => $row->host_name,
+					port             => defined($port) ? $port : $row->tcp_port,
+					domain_name      => $row->domain_name,
+					weight           => $weight,
+					use_ip_address   => $use_ip_address,
+					rank             => $rank,
+					ip_address       => $row->ip_address,
+					primary_parent   => ( $primary_parent == $row->cachegroup->id ) ? 1 : 0,
+					secondary_parent => ( $secondary_parent == $row->cachegroup->id ) ? 1 : 0,
 				);
 				push @{ $parent_info{$prefix} }, \%p;
 			}
@@ -1586,18 +1589,18 @@ sub format_parent_info {
 }
 
 sub parent_dot_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
 	my $data;
 
 	my $server_type = $server_obj->type->name;
 	my $parent_qstring;
 	my $pinfo;
-	my $text        = $self->header_comment( $server_obj->host_name );
+	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
@@ -1605,16 +1608,16 @@ sub parent_dot_config {
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origin;
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id                      = $ds->{ds_xml_id};
-			my $os                          = $ds->{origin_shield};
-			$parent_qstring 		= "ignore";
-			my $multi_site_origin           = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
+			my $xml_id = $ds->{ds_xml_id};
+			my $os     = $ds->{origin_shield};
+			$parent_qstring = "ignore";
+			my $multi_site_origin           = defined( $ds->{multi_site_origin} )           ? $ds->{multi_site_origin}           : 0;
 			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
 
-			my $org_uri = URI->new($ds->{org});
-			
+			my $org_uri = URI->new( $ds->{org} );
+
 			# Don't duplicate origin line if multiple seen
-			next if ( grep( /^$org_uri$/, @unique_origin));
+			next if ( grep( /^$org_uri$/, @unique_origin ) );
 			push @unique_origin, $org_uri;
 
 			if ( defined($os) ) {
@@ -1633,15 +1636,13 @@ sub parent_dot_config {
 					$pinfo = $self->parent_data($server_obj);
 				}
 
-
 				my @ranked_parents = ();
-				if ( exists( $pinfo->{$org_uri->host} ) ) {
-					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_uri->host} };
+				if ( exists( $pinfo->{ $org_uri->host } ) ) {
+					@ranked_parents = sort by_parent_rank @{ $pinfo->{ $org_uri->host } };
 				}
 				else {
 					$self->app->log->debug( "BUG: Did not match an origin: " . $org_uri );
 				}
-
 
 				my @parent_info;
 				my @secondary_parent_info;
@@ -1650,7 +1651,7 @@ sub parent_dot_config {
 					if ( $parent->{primary_parent} ) {
 						push @parent_info, format_parent_info($parent);
 					}
-					elsif ($parent ->{secondary_parent} ) {
+					elsif ( $parent->{secondary_parent} ) {
 						push @secondary_parent_info, format_parent_info($parent);
 					}
 					else {
@@ -1668,8 +1669,8 @@ sub parent_dot_config {
 					my %seen;
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
 				}
-                
-                my $parents = 'parent="' . join( '', @parent_info ) . '' . join ( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+
+				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
 				my $mso_algorithm = "";
 				if ( $multi_site_origin_algorithm == 0 ) {
 					$mso_algorithm = "consistent_hash";
@@ -1744,7 +1745,12 @@ sub parent_dot_config {
 				}
 				my $round_robin = 'round_robin=consistent_hash';
 				my $go_direct   = 'go_direct=false';
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
+				$text
+					.= "dest_domain="
+					. $org_uri->host
+					. " port="
+					. $org_uri->port
+					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 			}
 			$done{$org} = 1;
 		}
@@ -1785,15 +1791,15 @@ sub parent_dot_config {
 }
 
 sub remap_dot_config {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 	my $data;
 
-	my $pdata  = $self->param_data( $server_obj, 'package' );
-	my $text   = $self->header_comment( $server_obj->host_name );
+	my $pdata = $self->param_data( $server_obj, 'package' );
+	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
@@ -1804,7 +1810,7 @@ sub remap_dot_config {
 			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
 				next;    # Live local delivery services skip mids
 			}
-			if ( defined( $remap->{org} ) && defined( $mid_remap{$remap->{org} } ) ) {
+			if ( defined( $remap->{org} ) && defined( $mid_remap{ $remap->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
 
@@ -1843,14 +1849,14 @@ sub remap_dot_config {
 }
 
 sub build_remap_line {
-	my $self     = shift;
-	my $server_obj   = shift;
-	my $pdata    = shift;
-	my $text     = shift;
-	my $data     = shift;
-	my $remap    = shift;
-	my $map_from = shift;
-	my $map_to   = shift;
+	my $self       = shift;
+	my $server_obj = shift;
+	my $pdata      = shift;
+	my $text       = shift;
+	my $data       = shift;
+	my $remap      = shift;
+	my $map_from   = shift;
+	my $map_to     = shift;
 
 	if ( $remap->{type} eq 'ANY_MAP' ) {
 		$text .= $remap->{remap_text} . "\n";
@@ -1911,23 +1917,23 @@ sub build_remap_line {
 }
 
 sub __get_json_parameter_list_by_host {
-	my $self = shift;
-	my $host = shift;
-	my $value = shift;
-	my $key_name = shift || "name";
+	my $self      = shift;
+	my $host      = shift;
+	my $value     = shift;
+	my $key_name  = shift || "name";
 	my $key_value = shift || "value";
-	my $data_obj = [];
+	my $data_obj  = [];
 
 	my $profile_id = $self->db->resultset('Server')->search( { host_name => $host } )->get_column('profile')->single();
-	
+
 	my %condition = ( 'profile_parameters.profile' => $profile_id, config_file => $value );
 	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 
 	while ( my $row = $rs_config->next ) {
-		push(@{$data_obj}, { $key_name => $row->name, $key_value => $row->value });
+		push( @{$data_obj}, { $key_name => $row->name, $key_value => $row->value } );
 	}
 
-	return($data_obj);
+	return ($data_obj);
 }
 
 sub __get_json_parameter_by_host {
@@ -1939,17 +1945,12 @@ sub __get_json_parameter_by_host {
 	my $key_value = shift || "value";
 	my $data_obj;
 
-	my $rs_profile
-		= $self->db->resultset('Server')->search( { 'me.host_name' => $host },
-		{ prefectch => [ 'cdn', 'profile' ] } );
+	my $rs_profile = $self->db->resultset('Server')->search( { 'me.host_name' => $host }, { prefectch => [ 'cdn', 'profile' ] } );
 
 	my $row = $rs_profile->next;
 	my $id  = $row->id;
 	if ( defined($row) && defined( $row->cdn->name ) ) {
-		push(
-			@{$data_obj},
-			{ $key_name => "CDN_Name", $key_value => $row->cdn->name }
-		);
+		push( @{$data_obj}, { $key_name => "CDN_Name", $key_value => $row->cdn->name } );
 	}
 
 	my %condition = (
@@ -1957,46 +1958,40 @@ sub __get_json_parameter_by_host {
 		'config_file'                => $value,
 		name                         => $parameter
 	);
-	my $rs_config = $self->db->resultset('Parameter')
-		->search( \%condition, { join => 'profile_parameters' } );
+	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 	$row = $rs_config->next;
 
 	if ( defined($row) && defined( $row->name ) && defined( $row->value ) ) {
-		push(
-			@{$data_obj},
-			{ $key_name => $row->name, $key_value => $row->value }
-		);
+		push( @{$data_obj}, { $key_name => $row->name, $key_value => $row->value } );
 	}
 
 	return ($data_obj);
 }
 
 sub get_package_versions {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;	
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
 
 	my $host_name = $server_obj->host_name;
-	my $data_obj = __get_json_parameter_list_by_host($self, $host_name, "package", "name", "version");
+	my $data_obj = __get_json_parameter_list_by_host( $self, $host_name, "package", "name", "version" );
 
 	return ($data_obj);
 }
-
 
 sub get_chkconfig {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
-	my $filename = shift;
-	my $action = shift;
-	my $scope = shift;	
-	
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
+
 	my $host_name = $server_obj->host_name;
-	my $data_obj = __get_json_parameter_list_by_host($self, $host_name, "chkconfig");
-	
+	my $data_obj = __get_json_parameter_list_by_host( $self, $host_name, "chkconfig" );
+
 	return ($data_obj);
 }
-
 
 1;
