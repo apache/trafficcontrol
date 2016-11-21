@@ -117,7 +117,7 @@ ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->sta
 	'Can a non-existent DeliveryService url keys for the portal user be regenerated?';
 
 # OFFLINE all riak servers
-my $rs = $schema->resultset('Server')->search( { type => 26 } );
+my $rs = $schema->resultset('Server')->search( { type => 31 } );
 $rs->update_all( { status => 1 } );
 
 ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->status_is(400)
