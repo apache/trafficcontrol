@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"sync"
@@ -82,7 +81,7 @@ func (h *StatHistoryThreadsafe) Set(v StatHistory) {
 
 func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	if uint64(len(history)) > limit {
-		history = history[1:]
+		history = history[:limit-1]
 	}
 	return history
 }
@@ -172,7 +171,7 @@ func processStatResults(
 	for _, result := range results {
 		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		statHistory[result.ID] = pruneHistory(append(statHistory[result.ID], result), maxStats)
+		statHistory[result.ID] = pruneHistory(append([]cache.Result{result}, statHistory[result.ID]...), maxStats)
 	}
 	statHistoryThreadsafe.Set(statHistory)
 
