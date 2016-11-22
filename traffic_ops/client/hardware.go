@@ -16,16 +16,17 @@
 package client
 
 import "encoding/json"
+import "fmt"
 
 // HardwareResponse ...
 type HardwareResponse struct {
-	Version  string     `json:"version"`
+	Limit    int        `json:"limit"`
 	Response []Hardware `json:"response"`
 }
 
 // Hardware ...
 type Hardware struct {
-	ID          string `json:"serverId"`
+	ID          int    `json:"serverId"`
 	HostName    string `json:"serverHostName"`
 	LastUpdated string `json:"lastUpdated"`
 	Value       string `json:"val"`
@@ -33,8 +34,11 @@ type Hardware struct {
 }
 
 // Hardware gets an array of Hardware
-func (to *Session) Hardware() ([]Hardware, error) {
+func (to *Session) Hardware(limit int) ([]Hardware, error) {
 	url := "/api/1.2/hwinfo.json"
+	if limit > 0 {
+		url += fmt.Sprintf("?limit=%v", limit)
+	}
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
 		return nil, err
