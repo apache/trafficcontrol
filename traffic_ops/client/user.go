@@ -26,10 +26,10 @@ type UserResponse struct {
 type User struct {
 	Username     string `json:"username,omitempty"`
 	PublicSSHKey string `json:"publicSshKey,omitempty"`
-	Role         string `json:"role,omitempty"`
+	Role         int    `json:"role,omitempty"`
 	RoleName     string `json:"rolename,omitempty"`
-	UID          string `json:"uid,omitempty"`
-	GID          string `json:"gid,omitempty"`
+	UID          int    `json:"uid,omitempty"`
+	GID          int    `json:"gid,omitempty"`
 	Company      string `json:"company,omitempty"`
 	Email        string `json:"email,omitempty"`
 	FullName     string `json:"fullName,omitempty"`
