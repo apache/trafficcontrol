@@ -22,7 +22,7 @@ func Hardware() *client.HardwareResponse {
 	return &client.HardwareResponse{
 		Response: []client.Hardware{
 			client.Hardware{
-				ID:          "18",
+				ID:          18,
 				HostName:    "odol-atsmid-cen-09",
 				LastUpdated: "2015-07-16 09:04:20",
 				Value:       "1.00",
