@@ -15,15 +15,18 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
-import org.apache.tomcat.util.net.SSLImplementation;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.ServerSocketFactory;
+import org.apache.tomcat.util.net.jsse.JSSEImplementation;
 
 import javax.net.ssl.SSLSession;
 import java.net.Socket;
 
-public class RouterSslImplementation extends SSLImplementation {
+public class RouterSslImplementation extends JSSEImplementation {
 	RouterJsseFactory factory = new RouterJsseFactory();
+
+	public RouterSslImplementation() throws ClassNotFoundException {
+	}
 
 	@Override
 	public String getImplementationName() {

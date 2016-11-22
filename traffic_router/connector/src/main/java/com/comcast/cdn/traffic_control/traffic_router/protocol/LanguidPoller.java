@@ -22,15 +22,15 @@ import javax.management.ObjectName;
 
 public class LanguidPoller extends Thread {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidPoller.class);
-	final private LanguidProtocol languidProtocol;
+	final private RouterProtocolHandler protocolHandler;
 
-	public LanguidPoller(final LanguidProtocol languidProtocol) {
-		this.languidProtocol = languidProtocol;
+	public LanguidPoller(final RouterProtocolHandler protocolHandler) {
+		this.protocolHandler = protocolHandler;
 	}
 
 	@Override
 	public void run() {
-		log.info("Waiting for state from mbean path " + languidProtocol.getMbeanPath());
+		log.info("Waiting for state from mbean path " + protocolHandler.getMbeanPath());
 
 		boolean firstTime = true;
 		while (true) {
@@ -38,9 +38,9 @@ public class LanguidPoller extends Thread {
 				final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 				// See src/main/opt/conf/server.xml
 				// This is calling traffic-router:name=languidState
-				final ObjectName languidState = new ObjectName(languidProtocol.getMbeanPath());
-				final Object readyValue = mbs.getAttribute(languidState, languidProtocol.getReadyAttribute());
-				final Object portValue = mbs.getAttribute(languidState, languidProtocol.getPortAttribute());
+				final ObjectName languidState = new ObjectName(protocolHandler.getMbeanPath());
+				final Object readyValue = mbs.getAttribute(languidState, protocolHandler.getReadyAttribute());
+				final Object portValue = mbs.getAttribute(languidState, protocolHandler.getPortAttribute());
 				final boolean ready = Boolean.parseBoolean(readyValue.toString());
 				final int port = Integer.parseInt(portValue.toString());
 
@@ -50,12 +50,12 @@ public class LanguidPoller extends Thread {
 				
 				if (ready) {
 					if (port > 0) {
-						languidProtocol.setPort(port);
+						protocolHandler.setPort(port);
 					}
 
-					log.info("Traffic Router published the ready state; calling init() on our reference to Connector with a listen port of " + languidProtocol.getPort());
-					languidProtocol.setReady(true);
-					languidProtocol.init();
+					log.info("Traffic Router published the ready state; calling init() on our reference to Connector with a listen port of " + protocolHandler.getPort());
+					protocolHandler.setReady(true);
+					protocolHandler.init();
 					break;
 				}
 			} catch (Exception ex) {
