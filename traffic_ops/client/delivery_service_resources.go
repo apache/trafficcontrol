@@ -18,7 +18,6 @@ package client
 
 // GetDeliveryServiceResponse ...
 type GetDeliveryServiceResponse struct {
-	Version  string            `json:"version"`
 	Response []DeliveryService `json:"response"`
 }
 
