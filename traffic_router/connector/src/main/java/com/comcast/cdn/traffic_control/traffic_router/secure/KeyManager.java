@@ -102,8 +102,9 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 
 	@Override
 	public X509Certificate[] getCertificateChain(final String alias) {
-		if (certificateRegistry.getAliases().contains(alias)) {
-			return certificateRegistry.getHandshakeData(alias).getCertificateChain();
+		final HandshakeData handshakeData = certificateRegistry.getHandshakeData(alias);
+		if (handshakeData != null) {
+			return handshakeData.getCertificateChain();
 		}
 
 		log.error("No certificate chain for alias " + alias);
@@ -112,8 +113,9 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 
 	@Override
 	public PrivateKey getPrivateKey(final String alias) {
-		if (certificateRegistry.getAliases().contains(alias)) {
-			return certificateRegistry.getHandshakeData(alias).getPrivateKey();
+		final HandshakeData handshakeData = certificateRegistry.getHandshakeData(alias);
+		if (handshakeData != null) {
+			return handshakeData.getPrivateKey();
 		}
 
 		log.error("No private key for alias " + alias);
