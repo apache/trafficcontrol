@@ -61,12 +61,19 @@ type APIPeerStates struct {
 // CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
-	Type                   *string  `json:"type,omitempty"`
-	Status                 *string  `json:"status,omitempty"`
-	LoadAverage            *float64 `json:"load_average,omitempty"`
-	QueryTimeMilliseconds  *int64   `json:"query_time_ms,omitempty"`
-	HealthTimeMilliseconds *int64   `json:"health_time_ms,omitempty"`
-	StatTimeMilliseconds   *int64   `json:"stat_time_ms,omitempty"`
+	Type        *string  `json:"type,omitempty"`
+	Status      *string  `json:"status,omitempty"`
+	LoadAverage *float64 `json:"load_average,omitempty"`
+	// QueryTimeMilliseconds is the time it took this app to perform a complete query and process the data, end-to-end, for the latest health query.
+	QueryTimeMilliseconds *int64 `json:"query_time_ms,omitempty"`
+	// HealthTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest health query.
+	HealthTimeMilliseconds *int64 `json:"health_time_ms,omitempty"`
+	// StatTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest stat query.
+	StatTimeMilliseconds *int64 `json:"stat_time_ms,omitempty"`
+	// StatSpanMilliseconds is the length of time between completing the most recent two stat queries. This can be used as a rough gauge of the end-to-end query processing time.
+	StatSpanMilliseconds *int64 `json:"stat_span_ms,omitempty"`
+	// HealthSpanMilliseconds is the length of time between completing the most recent two health queries. This can be used as a rough gauge of the end-to-end query processing time.
+	HealthSpanMilliseconds *int64   `json:"health_span_ms,omitempty"`
 	BandwidthKbps          *float64 `json:"bandwidth_kbps,omitempty"`
 	ConnectionCount        *int64   `json:"connection_count,omitempty"`
 }
@@ -607,8 +614,8 @@ func srvAPIVersion(staticAppData StaticAppData) []byte {
 func srvAPITrafficOpsURI(opsConfig OpsConfigThreadsafe) []byte {
 	return []byte(opsConfig.Get().Url)
 }
-func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory ResultHistoryThreadsafe, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats LastStatsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) ([]byte, error) {
-	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
+func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory ResultHistoryThreadsafe, healthHistory ResultHistoryThreadsafe, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats LastStatsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) ([]byte, error) {
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 }
 
 func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats LastStatsThreadsafe) []byte {
@@ -656,6 +663,7 @@ func MakeDispatchMap(
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	statHistory ResultHistoryThreadsafe,
+	healthHistory ResultHistoryThreadsafe,
 	dsStats DSStatsReader,
 	events EventsThreadsafe,
 	staticAppData StaticAppData,
@@ -721,7 +729,7 @@ func MakeDispatchMap(
 			return srvAPITrafficOpsURI(opsConfig)
 		})),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
-			return srvAPICacheStates(toData, statHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
+			return srvAPICacheStates(toData, statHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
 		})),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)
@@ -732,9 +740,61 @@ func MakeDispatchMap(
 	}
 }
 
+// latestResultTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result.
+func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+	results, ok := history[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v has no history", cacheName)
+	}
+	if len(results) == 0 {
+		return 0, fmt.Errorf("cache %v history empty", cacheName)
+	}
+	result := cache.Result{}
+	foundResult := false
+	for _, r := range results {
+		if r.Error == nil {
+			result = r
+			foundResult = true
+			break
+		}
+	}
+	if !foundResult {
+		return 0, fmt.Errorf("cache %v No unerrored result", cacheName)
+	}
+	return int64(result.RequestTime / time.Millisecond), nil
+}
+
+func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheName]time.Duration) (int64, error) {
+	queryTime, ok := lastDurations[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v not in last durations\n", cacheName)
+	}
+	return int64(queryTime / time.Millisecond), nil
+}
+
+// resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
+func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+	results, ok := history[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v has no history", cacheName)
+	}
+	if len(results) == 0 {
+		return 0, fmt.Errorf("cache %v history empty", cacheName)
+	}
+	if len(results) < 2 {
+		return 0, fmt.Errorf("cache %v history only has one result, can't compute span between results", cacheName)
+	}
+
+	latestResult := results[0]
+	penultimateResult := results[1]
+	span := latestResult.Time.Sub(penultimateResult.Time)
+	return int64(span / time.Millisecond), nil
+}
+
 func createCacheStatuses(
 	cacheTypes map[enum.CacheName]enum.CacheType,
 	statHistory map[enum.CacheName][]cache.Result,
+	healthHistory map[enum.CacheName][]cache.Result,
 	lastHealthDurations map[enum.CacheName]time.Duration,
 	cacheStates map[enum.CacheName]peer.IsAvailable,
 	lastStats ds.LastStats,
@@ -774,13 +834,29 @@ func createCacheStatuses(
 			}
 		}
 
-		var queryTime *int64
-		queryTimeVal, ok := lastHealthDurations[cacheName]
-		if !ok {
-			log.Warnf("cache not in last health durations cache %s\n", cacheName)
-		} else {
-			queryTimeInt := int64(queryTimeVal / time.Millisecond)
-			queryTime = &queryTimeInt
+		healthQueryTime, err := latestQueryTimeMS(cacheName, lastHealthDurations)
+		if err != nil {
+			log.Warnf("Error getting cache %v health query time: %v\n", cacheName, err)
+		}
+
+		statTime, err := latestResultTimeMS(cacheName, statHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v stat result time: %v\n", cacheName, err)
+		}
+
+		healthTime, err := latestResultTimeMS(cacheName, healthHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v health result time: %v\n", cacheName, err)
+		}
+
+		statSpan, err := resultSpanMS(cacheName, statHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v stat span: %v\n", cacheName, err)
+		}
+
+		healthSpan, err := resultSpanMS(cacheName, healthHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v health span: %v\n", cacheName, err)
 		}
 
 		var kbps *float64
@@ -816,12 +892,16 @@ func createCacheStatuses(
 
 		cacheTypeStr := string(cacheType)
 		statii[cacheName] = CacheStatus{
-			Type:                  &cacheTypeStr,
-			LoadAverage:           loadAverage,
-			QueryTimeMilliseconds: queryTime,
-			BandwidthKbps:         kbps,
-			ConnectionCount:       connections,
-			Status:                status,
+			Type:                   &cacheTypeStr,
+			LoadAverage:            loadAverage,
+			QueryTimeMilliseconds:  &healthQueryTime,
+			StatTimeMilliseconds:   &statTime,
+			HealthTimeMilliseconds: &healthTime,
+			StatSpanMilliseconds:   &statSpan,
+			HealthSpanMilliseconds: &healthSpan,
+			BandwidthKbps:          kbps,
+			ConnectionCount:        connections,
+			Status:                 status,
 		}
 	}
 	return statii
