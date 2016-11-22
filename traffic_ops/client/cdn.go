@@ -22,8 +22,7 @@ import (
 
 // CDNResponse ...
 type CDNResponse struct {
-	Version  string `json:"version"`
-	Response []CDN  `json:"response"`
+	Response []CDN `json:"response"`
 }
 
 // CDN ...

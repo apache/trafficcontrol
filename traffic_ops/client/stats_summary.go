@@ -20,7 +20,6 @@ import (
 
 // StatsSummaryResponse ...
 type StatsSummaryResponse struct {
-	Version  string         `json:"version"`
 	Response []StatsSummary `json:"response"`
 }
 

@@ -19,7 +19,6 @@ import "encoding/json"
 
 // CacheGroupResponse ...
 type CacheGroupResponse struct {
-	Version  string       `json:"version"`
 	Response []CacheGroup `json:"response"`
 }
 

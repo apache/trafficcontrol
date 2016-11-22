@@ -24,7 +24,6 @@ import (
 
 // ServerResponse ...
 type ServerResponse struct {
-	Version  string   `json:"version"`
 	Response []Server `json:"response"`
 }
 
