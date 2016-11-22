@@ -22,7 +22,6 @@ import (
 
 // TRConfigResponse ...
 type TRConfigResponse struct {
-	Version  string              `json:"version"`
 	Response TrafficRouterConfig `json:"response"`
 }
 
