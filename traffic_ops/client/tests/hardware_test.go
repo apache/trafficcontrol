@@ -37,7 +37,7 @@ func TestHardware(t *testing.T) {
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for Hardware")
 
-	hardware, err := to.Hardware()
+	hardware, err := to.Hardware(0)
 	if err != nil {
 		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
@@ -83,7 +83,7 @@ func TestHardwareUnauthorized(t *testing.T) {
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for Hardware")
 
-	_, err := to.Hardware()
+	_, err := to.Hardware(0)
 	if err == nil {
 		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
