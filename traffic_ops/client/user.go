@@ -19,7 +19,6 @@ import "encoding/json"
 
 // UserResponse ...
 type UserResponse struct {
-	Version  string `json:"version"`
 	Response []User `json:"response"`
 }
 
