@@ -9,6 +9,7 @@ use warnings;
 
 use Safe;
 use JSON;
+use POSIX;
 use File::Basename qw{dirname};
 use File::Path qw{make_path};
 use InstallUtils qw{ :all };
@@ -18,8 +19,41 @@ use Scalar::Util qw(looks_like_number);
 
 use Getopt::Long;
 
+# paths of the output configuration files
+our $databaseConfFile = "testdb.conf";
+our $dbConfFile       = "testdbconf.yml";
+our $cdnConfFile      = "testcdn.conf";
+our $ldapConfFile     = "testldap.conf";
+our $usersConfFile    = "testusers.json";
+our $profilesConfFile = "testprofiles.json";
+
+# log file for the installer
+our $logFile = "/var/log/traffic_ops/postinstall.log";
+
+# configuration file output with answers which can be used as input to postinstall
+our $outputConfigFile = "/var/log/traffic_ops/configuration_file.json";
+
 sub errorOut {
-    die @_;
+    logger( @_, "error" );
+    die;
+}
+
+# outputs logging messages to terminal and log file
+sub logger {
+    my $output = shift;
+    my $type   = shift;
+
+    my $message = $output . "\n";
+
+    # if in debug mode or message is more critical than info print to console
+    if ( $::debug || ( defined $type && $type ne "" && $type ne "info" ) ) {
+        print($message);
+    }
+
+    # output to log file
+    open my $fh, '>>', $::logFile or errorOut("Couldn't open log file");
+    print $fh localtime . ": " . uc($type) . ' ' . $message;
+    close $fh;
 }
 
 sub getDbDriver {
@@ -29,6 +63,12 @@ sub getDbDriver {
 sub getInstallPath {
     my $relPath = shift;
     return join( '/', "/tmp/traffic_ops", $relPath );
+}
+
+# given a var to the hash of config_var and question, will return the question
+sub getConfigQuestion {
+    my $var = shift;
+    return ( keys $var )[0] eq "config_var" ? ( keys $var )[1] : ( keys $var )[0];
 }
 
 # question: The question given in the config file
@@ -46,32 +86,11 @@ sub getField {
     my $fileName      = shift;
 
     # if there is no config file and not in automatic mode prompt for all questions with default answers
-    if ( $::inputFile eq "" && !$::automatic ) {
+    if ( !$::inputFile && !$::automatic ) {
         return promptUser( $question, $config_answer );
     }
 
-    # if answer provided in config file use it
-    if ($config_answer) {
-        return $config_answer;
-    }
-    else {
-        # if no config value and not in automatic mode prompt user
-        if ( !$::automatic ) {
-            return promptUser($question);
-        }
-
-        # if no answer given in input file attempt to use default answer
-        foreach my $var ( @{ $::defaultInputs->{$fileName} } ) {
-            if ( defined $var->{$question} && $var->{$question} ne "" ) {
-                return $var->{$question};
-            }
-        }
-
-        #No way of getting answer
-        errorOut("No config answer given for question \'$question\'\n");
-    }
-
-    errorOut("error: end of function");
+    return $config_answer;
 }
 
 # userInput: The entire input config file which is either user input or the defaults
@@ -87,27 +106,22 @@ sub getConfig {
     my %config;
 
     if ( !defined $userInput->{$fileName} ) {
-        print "Error: No $fileName found in config\n";
+        logger( "No $fileName found in config", "error" );
     }
 
-    if ($::debug) {
-        print "===========$fileName===========\n";
-    }
+    logger( "===========$fileName===========", "info" );
 
+    my $counter = 0;
     foreach my $var ( @{ $userInput->{$fileName} } ) {
-        my $question = (
-              ( keys $var )[0] eq "config_var"
-            ? ( keys $var )[1]
-            : ( keys $var )[0]
-        );
 
-        my $answer = $config{ $var->{"config_var"} } =
-          getField( $question, $var->{$question}, $fileName );
+        my $question = getConfigQuestion($var);
+
+        my $answer = $config{ $var->{"config_var"} } = getField( $question, $var->{$question}, $fileName );
 
         $config{ $var->{"config_var"} } = $answer;
-        if ($::debug) {
-            print "$question:  $answer\n";
-        }
+        logger( "$question:  $answer", "info" );
+
+        $counter++;
     }
     return %config;
 }
@@ -120,27 +134,26 @@ sub getConfig {
 # Generates a config file for the database based on the questions and answers in the input config file
 
 sub generateDbConf {
-    my $userInput        = shift;
-    my $dbFileName       = shift;
-    my $toDBFileName     = shift;
-    my $dbAccessFileName = shift;
+    my $userInput    = shift;
+    my $dbFileName   = shift;
+    my $toDBFileName = shift;
 
     my %dbconf = getConfig( $userInput, $dbFileName );
 
     make_path( dirname($dbFileName), { mode => 0755 } );
     writeJson( $dbFileName, \%dbconf );
+    logger( "Database configuration has been saved", "info" );
 
     # broken out into separate file/config area
     my %todbconf = getConfig( $userInput, $toDBFileName );
 
     # No YAML library installed, but this is a simple file..
-    open( my $fh, '>', $dbAccessFileName )
-      or errorOut("Can't write to $dbAccessFileName $!");
+    open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
     print $fh "version: 1.0\n";
     print $fh "name: dbconf.yml\n\n";
     print $fh "production:\n";
     print $fh "        driver: ", getDbDriver() . "\n";
-    print $fh "        open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{root_user}/$dbconf{root_passwd}\n";
+    print $fh "        open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
     close $fh;
 
     return \%todbconf;
@@ -155,26 +168,21 @@ sub generateCdnConf {
     my $userInput = shift;
     my $fileName  = shift;
 
+    my %cdnConfiguration = getConfig( $userInput, $fileName );
+
     # First,  read existing one -- already loaded with a bunch of stuff
-    my $cdnConf = Safe->new->rdo($fileName)
-      or errorOut("Error loading $fileName: $@");
-
-    my %cdnconf = getConfig( $userInput, $fileName );
-
-    if ( !looks_like_number( $cdnconf{keepSecrets} ) ) {
-        errorOut("Error: Number of secrets to keep must be a number\n");
+    my $cdnConf;
+    if ( -e $fileName ) {
+        $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
     }
-
-    if ( lc $cdnconf{genSecret} =~ /^y(?:es)?/ ) {
+    if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
         my @secrets   = @{ $cdnConf->{secrets} };
         my $newSecret = randomWord();
         unshift @secrets, randomWord();
-        if (   $cdnconf{keepSecrets} > 0
-            && $#secrets > $cdnconf{keepSecrets} - 1 )
-        {
+        if ( $cdnConfiguration{keepSecrets} > 0 && $#secrets > $cdnConfiguration{keepSecrets} - 1 ) {
 
             # Shorten the array to requested length
-            $#secrets = $cdnconf{keepSecrets} - 1;
+            $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
     writePerl( $fileName, $cdnConf );
@@ -192,28 +200,15 @@ sub generateLdapConf {
     my $useLdap = $userInput->{$fileName}[0]->{"Do you want to set up LDAP?"};
 
     if ( $useLdap eq "no" || $useLdap eq "n" ) {
-        if ($::debug) {
-            print "Not setting up ldap\n";
-        }
+        logger( "Not setting up ldap", "info" );
+
         return;
     }
 
     my %ldapConf = getConfig( $userInput, $fileName );
 
-    if ( $::debug && $ldapConf{setupLdap} eq "no" ) {
-        print "Not setting up ldap\n";
-        return;
-    }
-
     make_path( dirname($fileName), { mode => 0755 } );
     writeJson( $fileName, \%ldapConf );
-}
-
-sub generatePostInstallConf {
-    my $userInput = shift;
-    my $fileName  = shift;
-
-    my $userIn = $userInput->{$fileName};
 }
 
 sub generateUsersConf {
@@ -236,24 +231,14 @@ sub generateProfilesDir {
     my $userIn = $userInput->{$fileName};
 }
 
+# check default values for missing config_var parameter
 sub sanityCheckDefaults {
     foreach my $file ( ( keys $::defaultInputs ) ) {
         foreach my $defaultValue ( @{ $::defaultInputs->{$file} } ) {
-            my $question = (
-                  ( keys $defaultValue )[0] eq "config_var"
-                ? ( keys $defaultValue )[1]
-                : ( keys $defaultValue )[0]
-            );
-            if ( !defined $defaultValue->{$question}
-                || $defaultValue->{$question} eq "" )
-            {
-                errorOut( "Error: question \'$question\' in file \'$file\' has no default answer\n" );
-            }
+            my $question = getConfigQuestion($defaultValue);
 
-            if ( !defined $defaultValue->{"config_var"}
-                || $defaultValue->{"config_var"} eq "" )
-            {
-                errorOut( "Error: question \'$question\' in file \'$file\' has no config_var" );
+            if ( !defined $defaultValue->{"config_var"} || $defaultValue->{"config_var"} eq "" ) {
+                errorOut("Question \'$question\' in file \'$file\' has no config_var");
             }
         }
     }
@@ -273,7 +258,7 @@ sub sanityCheckConfig {
 
     foreach my $file ( ( keys $::defaultInputs ) ) {
         if ( !defined $userInput->{$file} ) {
-            print "Warning: File \'$file\' found in defaults but not config file\n";
+            logger( "File \'$file\' found in defaults but not config file", "warn" );
             next;
         }
 
@@ -288,32 +273,30 @@ sub sanityCheckConfig {
 
             # if the question is not found in the config file add it from defaults
             if ( !$found ) {
-                print "Warning: Value " . Dumper($defaultValue) . "found in defaults but not in \'$file\'\n";
+                logger( "Value " . Dumper($defaultValue) . "found in defaults but not in \'$file\'", "warn" );
 
-                my $question = (
-                      ( keys $defaultValue )[0] eq "config_var"
-                    ? ( keys $defaultValue )[1]
-                    : ( keys $defaultValue )[0]
-                );
+                my $question = getConfigQuestion($defaultValue);
 
                 my %temp;
 
-                # if not in automatic mode add the question without default answer
-                if ( !$::automatic ) {
-                    %temp = (
-                        "config_var" => $defaultValue->{"config_var"},
-                        $question    => ""
-                    );
-                }
+                # in automatic mode add the missing question with default answer
+                if ($::automatic) {
+                    logger( "Adding question \'$question\' with default answer \'$defaultValue->{$question}\'", "info" );
 
-                # if in automatic mode add question with default answer
-                else {
                     %temp = (
                         "config_var" => $defaultValue->{"config_var"},
                         $question    => $defaultValue->{$question}
                     );
                 }
 
+                # in interactive mode prompt the user for answer to missing question
+                else {
+                    logger( "Prompting user for answer", "info" );
+
+                    my $answer = promptUser( $question, $defaultValue->{$question} );
+
+                    %temp = ( "config_var" => $defaultValue->{"config_var"}, $question => $answer );
+                }
                 push $userInput->{$file}, \%temp;
 
                 $diffs++;
@@ -321,13 +304,12 @@ sub sanityCheckConfig {
         }
     }
 
-    if ( $::debug && $diffs == 0 ) {
-        print "File sanity check complete - found $diffs differences\n";
-    }
+    logger( "File sanity check complete - found $diffs differences", "info" ) if ( $::debug && $diffs == 0 );
+    logger( "File sanity check complete - found $diffs difference(s)", "info" ) if ( $diffs > 0 );
+}
 
-    if ( $diffs > 0 ) {
-        print "File sanity check complete - found $diffs difference(s)\n";
-    }
+sub writeOutputConf {
+    writeJson( $::outputConfigFile, \%::outputConf );
 }
 
 # A function which returns the default inputs data structure. These questions and answers will be used if there is no
@@ -335,43 +317,43 @@ sub sanityCheckConfig {
 
 sub getDefaults {
     return {
-        "testdb.conf" => [
+        $::databaseConfFile => [
             {
                 "Database type" => "mysql",
-                "config_var"    => "type"
+                "config_var"    => "type",
             },
             {
                 "Database name" => "traffic_ops",
-                "config_var"    => "dbname"
+                "config_var"    => "dbname",
             },
             {
                 "Database server hostname IP or FQDN" => "localhost",
-                "config_var"                          => "hostname"
+                "config_var"                          => "hostname",
             },
             {
                 "Database port number" => 3306,
                 "config_var"           => "port"
             },
             {
-                "Root database user" => "root",
-                "config_var"         => "root_user"
-            },
-            {
-                "Root database password" => "default",
-                "config_var"             => "root_passwd"
-            }
-        ],
-        "testtodb.conf" => [
-            {
-                "Traffic Ops database user" => "root",
-                "config_var"                => "dbAdminUser"
+                "Traffic Ops database user" => "traffic_ops",
+                "config_var"                => "user"
             },
             {
                 "Password for Traffic Ops database user" => "default",
-                "config_var"                             => "dbAdminPw"
+                "config_var"                             => "password"
             }
         ],
-        "testcdn.conf" => [
+        $::dbConfFile => [
+            {
+                "Database server root (admin) user" => "root",
+                "config_var"                        => "dbAdminUser"
+            },
+            {
+                "Password for database server admin" => "default",
+                "config_var"                         => "dbAdminPw"
+            }
+        ],
+        $::cdnConfFile => [
             {
                 "Generate a new secret?" => "yes",
                 "config_var"             => "genSecret"
@@ -381,7 +363,7 @@ sub getDefaults {
                 "config_var"                 => "keepSecrets"
             }
         ],
-        "testldap.conf" => [
+        $::ldapConfFile => [
             {
                 "Do you want to set up LDAP?" => "no",
                 "config_var"                  => "setupLdap"
@@ -403,8 +385,7 @@ sub getDefaults {
                 "config_var"       => "search_base"
             }
         ],
-        "testpost_install.json" => [],
-        "testusers.json"        => [
+        $::usersConfFile => [
             {
                 "Administration username for Traffic Ops" => "admin",
                 "config_var"                              => "tmAdminUser"
@@ -414,7 +395,7 @@ sub getDefaults {
                 "config_var"                  => "tmAdminPw"
             }
         ],
-        "testprofiles/" => []
+        $::profilesConfFile => []
     };
 }
 
@@ -431,20 +412,20 @@ sub main {
     our $debug     = 0;
     my $help = 0;
 
+    my $usageString = "Usage: postinstall [-a] [-d] -cfile=[config_file]\n";
+
     GetOptions(
-        "cfile=s" => \$inputFile,
-        "c=s"     => \$inputFile,
-        "a"       => \$automatic,
-        "d"       => \$debug,
-        "h"       => \$help,
-        "help"    => \$help
-    ) or die("Error in command line arguments");
+        "cfile=s"   => \$inputFile,
+        "automatic" => \$automatic,
+        "debug"     => \$debug,
+        "help"      => \$help
+    ) or die($usageString);
 
     # stores the default questions and answers
     our $defaultInputs = getDefaults();
 
     if ($help) {
-        print "Usage: postinstall [-a] [-d] -cfile=[config_file]\n";
+        print $usageString;
         exit(0);
     }
 
@@ -456,46 +437,45 @@ sub main {
         print "Running in automatic mode\n";
     }
 
-    # used to store the questions and answers -
-    #  will either be input config file or defaults
+    logger( "Starting postinstall", "info" );
+
+    # used to store the questions and answers provided by the user
     my $userInput;
 
     if ( $::inputFile eq "" ) {
-        print "No input file given - using defaults\n";
+        print "No input file given - using defaults\n" if ($::debug);
         $userInput = $::defaultInputs;
     }
     else {
-        print "Using input file $::inputFile\n";
+        print "Using input file $::inputFile\n" if ($::debug);
 
-        if ( !-e $::inputFile ) {
-            errorOut("Error: file \'$::inputFile\' not found\n");
-        }
+        # check if the input file exists
+        errorOut("File \'$::inputFile\' not found") if ( !-e $::inputFile );
 
+        # read and store the input file
         $userInput = readJson($::inputFile);
     }
 
-    # check the defaults if running them automatically
-    if ( $::inputFile eq "" && $::automatic ) {
-        sanityCheckDefaults();
-    }
+    # sanity check the defaults if running them automatically
+    sanityCheckDefaults();
 
-    # check the input config file against the defaults
-    #  to check for missing questions
-    if ( $inputFile ne "" ) {
-        sanityCheckConfig($userInput);
-    }
+    # check the input config file against the defaults to check for missing questions
+    sanityCheckConfig($userInput) if ( $inputFile ne "" );
+
+    writeJson( $outputConfigFile, $userInput );
 
     # The generator functions handle checking input/default/automatic mode
 
     # todbconf will be used later when setting up the database
-    my $todbconf = generateDbConf( $userInput, 'testdb.conf', 'testtodb.conf', 'testdbconf.yml' );
-    generateCdnConf( $userInput, 'testcdn.conf' );
-    generateLdapConf( $userInput, 'testldap.conf' );
-    generatePostInstallConf( $userInput, 'testpost_install.json' );
-    generateUsersConf( $userInput, 'testusers.json' );
-    generateProfilesDir( $userInput, 'testprofiles/' );
+    generateDbConf( $userInput, $::databaseConfFile, $::dbConfFile );
+    generateCdnConf( $userInput, $::cdnConfFile );
+    generateLdapConf( $userInput, $::ldapConfFile );
+    generateUsersConf( $userInput, $::usersConfFile );
+    generateProfilesDir( $userInput, $::profilesConfFile );
 }
 
 main;
+
+logger( "Postinstall complete\n", "info" );
 
 # vi:syntax=perl
