@@ -236,10 +236,8 @@ func processHealthResult(
 
 		localCacheStatus[healthResult.ID] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
 		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
-		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
-		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
-		log.Debugf("poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
 	}
+	calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 	healthHistory.Set(healthHistoryCopy)
 	localCacheStatusThreadsafe.Set(localCacheStatus)
 	// TODO determine if we should combineCrStates() here
