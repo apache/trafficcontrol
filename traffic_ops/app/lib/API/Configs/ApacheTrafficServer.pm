@@ -108,7 +108,7 @@ sub get_server_config {
 	my $filename = $self->param("filename");
 	my $action   = $self->param('action');
 	my $id       = $self->param('id');
-	my $scope    = "server";
+	my $scope    = get_scope($filename);
 
 	## fetch is the default action. ?action=db and ?action=publish can also be used.
 	if ( !defined($action) ) { $action = "fetch"; }
@@ -179,7 +179,7 @@ sub get_cdn_config {
 	my $filename = $self->param("filename");
 	my $action   = $self->param('action');
 	my $id       = $self->param('id');
-	my $scope    = "cdn";
+	my $scope    = get_scope($filename);
 
 	if ( !defined($action) ) { $action = "fetch"; }
 	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
@@ -244,7 +244,7 @@ sub get_profile_config {
 	my $filename = $self->param("filename");
 	my $action   = $self->param('action');
 	my $id       = $self->param('id');
-	my $scope    = "profile";
+	my $scope    = get_scope($filename);
 
 	if ( !defined($action) ) { $action = "fetch"; }
 
@@ -342,6 +342,42 @@ my $separator ||= {
 	"url_sig_.config" => " = ",
 	"astats.config"   => "=",
 };
+
+sub get_scope {
+	my $fname      = shift;
+	my $scope;
+
+	switch ($fname) {
+		case "12M_facts" { $scope = 'server' }
+		case "ip_allow.config" { $scope = 'server' }
+		case "parent.config" { $scope = 'server' }
+		case "records.config" { $scope = 'server' }
+		case "remap.config" { $scope = 'server' }
+		case /to_ext_.*\.config/ { $scope = 'server' }
+		case "hosting.config" { $scope = 'server' }
+		case "cache.config" { $scope = 'server' }
+		case "packages" { $scope = 'server' }
+		case "chkconfig" { $scope = 'server' }
+		case "50-ats.rules" { $scope = 'profile' }
+		case "astats.config" { $scope = 'profile' }
+		case "drop_qstring.config" { $scope = 'profile' }
+		case "logs_xml.config" { $scope = 'profile' }
+		case "plugin.config" { $scope = 'profile' }
+		case "storage.config" { $scope = 'profile' }
+		case "sysctl.conf" { $scope = 'profile' }
+		case "volume.config" { $scope = 'profile' }
+		case "bg_fetch.config" { $scope = 'cdn' }
+		case /cacheurl.*\.config/ { $scope = 'cdn' }
+		case /hdr_rw_.*\.config/ { $scope = 'cdn' }
+		case /regex_remap_.*\.config/ { $scope = 'cdn' }
+		case "regex_revalidate.config" { $scope = 'cdn' }
+		case /set_dscp_.*\.config/ { $scope = 'cdn' }
+		case "ssl_multicert.config" { $scope = 'cdn' }
+		case /url_sig_.*\.config/ { $scope = 'cdn' }
+		else { $scope = 'server' }
+	}
+	return $scope;
+}
 
 sub server_data {
 	my $self = shift;

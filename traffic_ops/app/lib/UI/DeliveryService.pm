@@ -19,9 +19,11 @@ package UI::DeliveryService;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use API::Configs::ApacheTrafficServer;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
+
 
 sub index {
 	my $self = shift;
@@ -586,6 +588,21 @@ sub header_rewrite {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+
+		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
+		if (!defined($scope_id) ) {
+			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name 		=> 'scope',
+					value 		=> $scope
+				}
+			);
+			$insert->insert();
+			$scope_id = $insert->id;
+		}
+
 		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
@@ -612,6 +629,21 @@ sub header_rewrite {
 					}
 				);
 
+			}
+			my $scope_link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $scope_id } )->single();
+			if ( !defined($scope_link) ) {
+				if ($cdn_name) {
+					my $p_cdn_param = $self->db->resultset('Server')->search( { 'me.profile' => $profile_id }, { prefetch => 'cdn' } );
+					if ( $p_cdn_param->next->cdn->name ne $cdn_name ) {
+						next;
+					}
+				}
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $scope_id
+					}
+				);
 			}
 		}
 	}
@@ -650,6 +682,21 @@ sub regex_remap {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+
+		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
+		if (!defined($scope_id) ) {
+			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name 		=> 'scope',
+					value 		=> $scope
+				}
+			);
+			$insert->insert();
+			$scope_id = $insert->id;
+		}
+
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -659,6 +706,15 @@ sub regex_remap {
 					{
 						profile   => $profile_id,
 						parameter => $param_id
+					}
+				);
+			}
+			my $scope_link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $scope_id } )->single();
+			if ( !defined($scope_link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $scope_id
 					}
 				);
 			}
@@ -696,6 +752,21 @@ sub cacheurl {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+
+		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
+		if (!defined($scope_id) ) {
+			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name 		=> 'scope',
+					value 		=> $scope
+				}
+			);
+			$insert->insert();
+			$scope_id = $insert->id;
+		}
+
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -708,10 +779,87 @@ sub cacheurl {
 					}
 				);
 			}
+			my $scope_link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $scope_id } )->single();
+			if ( !defined($scope_link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $scope_id
+					}
+				);
+			}
 		}
 	}
 	else {
 		&delete_cfg_file( $self, "cacheurl_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+	}
+}
+
+sub url_sig {
+	my $self       = shift;
+	my $ds_id      = shift;
+	my $ds_profile = shift;
+	my $ds_name    = shift;
+	my $signed    = shift;
+
+	if ( defined($signed) && $signed == 1 ) {
+		my $fname = "url_sig_" . $ds_name . ".config";
+		my $ats_cfg_loc =
+			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		$ats_cfg_loc =~ s/\/$//;
+
+		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		if ( !defined($param_id) ) {
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name        => 'location',
+					value       => $ats_cfg_loc
+				}
+			);
+			$insert->insert();
+			$param_id = $insert->id;
+		}
+
+		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
+		if (!defined($scope_id) ) {
+			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name 		=> 'scope',
+					value 		=> $scope
+				}
+			);
+			$insert->insert();
+			$scope_id = $insert->id;
+		}
+
+		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
+		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		foreach my $profile_id (@profiles) {
+			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			if ( !defined($link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $param_id
+					}
+				);
+			}
+			my $scope_link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $scope_id } )->single();
+			if ( !defined($scope_link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $scope_id
+					}
+				);
+			}
+		}
+	}
+	else {
+		&delete_cfg_file( $self, "url_sig_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
@@ -724,6 +872,13 @@ sub delete_cfg_file {
 		$self->app->log->info( 'deleting location parameter for ' . $fname );
 		my $delete = $self->db->resultset('Parameter')->search( { id => $param_id } );
 		$delete->delete();
+	}
+
+	my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
+	if ( defined($scope_id) ) {
+		$self->app->log->info( 'deleting scope parameter for ' . $fname );
+		my $delete = $self->db->resultset('Parameter')->search( { id => $scope_id } );
+		$delete->delete();		
 	}
 }
 
@@ -892,6 +1047,7 @@ sub update {
 		);
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
+		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.signed') );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
