@@ -26,8 +26,8 @@ type CacheGroupResponse struct {
 type CacheGroup struct {
 	Name        string  `json:"name"`
 	ShortName   string  `json:"shortName"`
-	Latitude    float64 `json:"latitude,string"`
-	Longitude   float64 `json:"longitude,string"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
 	ParentName  string  `json:"parentCachegroupName,omitempty"`
 	Type        string  `json:"typeName,omitempty"`
 	LastUpdated string  `json:"lastUpdated,omitempty"`
