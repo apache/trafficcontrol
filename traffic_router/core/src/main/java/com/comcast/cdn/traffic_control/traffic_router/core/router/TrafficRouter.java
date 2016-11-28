@@ -48,13 +48,17 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
+import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Node;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -78,13 +82,15 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
 
-@SuppressWarnings("PMD.ExcessivePublicCount")
+@SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount"})
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 	public static final String XTC_STEERING_OPTION = "x-tc-steering-option";
 	public static final String CLIENT_STEERING_DIVERSITY = "client.steering.forced.diversity";
 	public static final String DNSSEC_ENABLED = "dnssec.enabled";
 	public static final String DNSSEC_ZONE_DIFFING = "dnssec.zone.diffing.enabled";
+	private static final long DEFAULT_EDGE_NS_TTL = 3600;
+	private static final int DEFAULT_EDGE_TR_LIMIT = 4;
 
 	private final CacheRegister cacheRegister;
 	private final ZoneManager zoneManager;
@@ -95,10 +101,15 @@ public class TrafficRouter {
 	private final boolean consistentDNSRouting;
 	private final boolean clientSteeringDiversityEnabled;
 	private final boolean dnssecZoneDiffingEnabled;
+	private final boolean edgeDNSRouting;
+	private final boolean edgeHTTPRouting;
+	private final long edgeNSttl; // 1 hour default
+	private final int edgeDNSRoutingLimit;
+	private final int edgeHTTPRoutingLimit;
 
 	private final Random random = new Random(System.nanoTime());
 	private Set<String> requestHeaders = new HashSet<String>();
-	private static final Geolocation GEO_ZERO_ZERO = new Geolocation(0,0);
+	private static final Geolocation GEO_ZERO_ZERO = new Geolocation(0, 0);
 	private ApplicationContext applicationContext;
 
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
@@ -119,10 +130,11 @@ public class TrafficRouter {
 		this.geolocationService6 = geolocationService6;
 		this.anonymousIpService = anonymousIpService;
 		this.federationRegistry = federationRegistry;
-		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
 		this.clientSteeringDiversityEnabled = JsonUtils.optBoolean(cr.getConfig(), CLIENT_STEERING_DIVERSITY);
 		this.dnssecZoneDiffingEnabled = JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ENABLED) && JsonUtils.optBoolean(cr.getConfig(), DNSSEC_ZONE_DIFFING);
-		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
+		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing"); // previous/default behavior
+		this.edgeDNSRouting =  JsonUtils.optBoolean(cr.getConfig(), "edge.dns.routing") && cr.hasEdgeTrafficRouters();
+		this.edgeHTTPRouting = JsonUtils.optBoolean(cr.getConfig(), "edge.http.routing") && cr.hasEdgeTrafficRouters();
 
 		if (cr.getConfig() != null) {
 			// maxmindDefaultOverride: {countryCode: , lat: , long: }
@@ -136,6 +148,18 @@ public class TrafficRouter {
 				}
 			}
 		}
+
+		final JsonNode ttls = cacheRegister.getConfig().get("ttls");
+
+		if (ttls != null && ttls.has("NS")) {
+			this.edgeNSttl = JsonUtils.optLong(ttls, "NS");
+		} else {
+			this.edgeNSttl = DEFAULT_EDGE_NS_TTL;
+		}
+
+		this.edgeDNSRoutingLimit = JsonUtils.optInt(cr.getConfig(), "edge.dns.limit", DEFAULT_EDGE_TR_LIMIT);
+		this.edgeHTTPRoutingLimit = JsonUtils.optInt(cr.getConfig(), "edge.http.limit", DEFAULT_EDGE_TR_LIMIT); // NOTE: this can be overridden per-DS via maxDnsAnswers
+		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 	}
 
 	public ZoneManager getZoneManager() {
@@ -170,13 +194,14 @@ public class TrafficRouter {
 	public CacheRegister getCacheRegister() {
 		return cacheRegister;
 	}
-	protected DeliveryService selectDeliveryService(final Request request, final boolean isHttp) {
-		if(cacheRegister==null) {
+
+	protected DeliveryService selectDeliveryService(final Request request) {
+		if (cacheRegister == null) {
 			LOGGER.warn("no caches yet");
 			return null;
 		}
 
-		final DeliveryService deliveryService = cacheRegister.getDeliveryService(request, isHttp);
+		final DeliveryService deliveryService = cacheRegister.getDeliveryService(request);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Selected DeliveryService: " + deliveryService);
@@ -204,7 +229,9 @@ public class TrafficRouter {
 			return false;
 		}
 		final Map<String, Cache> cacheMap = cacheRegister.getCacheMap();
-		if(cacheMap == null) { return false; }
+		if (cacheMap == null) {
+			return false;
+		}
 		for (final String cacheName : cacheMap.keySet()) {
 			final String monitorCacheName = cacheName.replaceFirst("@.*", "");
 			final JsonNode state = cacheStates.get(monitorCacheName);
@@ -267,7 +294,8 @@ public class TrafficRouter {
 		final int locationLimit = ds.getLocationLimit();
 		final List<CacheLocation> geoEnabledCacheLocations = filterEnabledLocations(getCacheRegister().getCacheLocations(), LocalizationMethod.GEO);
 		final List<CacheLocation> cacheLocations1 = ds.filterAvailableLocations(geoEnabledCacheLocations);
-		final List<CacheLocation> cacheLocations = orderCacheLocations(cacheLocations1, clientLocation);
+		@SuppressWarnings("unchecked")
+		final List<CacheLocation> cacheLocations = (List<CacheLocation>) orderLocations(cacheLocations1, clientLocation);
 
 		for (final CacheLocation location : cacheLocations) {
 			final List<Cache> caches = selectCaches(location, ds);
@@ -279,7 +307,7 @@ public class TrafficRouter {
 				return caches;
 			}
 			locationsTested++;
-			if(locationLimit != 0 && locationsTested >= locationLimit) {
+			if (locationLimit != 0 && locationsTested >= locationLimit) {
 				return null;
 			}
 		}
@@ -348,7 +376,7 @@ public class TrafficRouter {
 				//will use the NGB redirect
 				LOGGER.debug(String
 						.format("client is blocked by geolimit, use the NGB redirect url: %s",
-							deliveryService.getGeoRedirectUrl()));
+								deliveryService.getGeoRedirectUrl()));
 				return enforceGeoRedirect(track, deliveryService, clientIp, track.getClientGeolocation());
 			} else {
 				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
@@ -370,11 +398,182 @@ public class TrafficRouter {
 		return caches;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
+		final DeliveryService ds = selectDeliveryService(request);
+
 		track.setRouteType(RouteType.DNS, request.getHostname());
 
-		final DeliveryService ds = selectDeliveryService(request, false);
+		// TODO: getHostname or getName -- !ds.getRoutingName().equalsIgnoreCase(request.getHostname().split("\\.")[0]))
+		if (ds != null && ds.isDns() && request.getName().toString().toLowerCase().matches(ds.getRoutingName().toLowerCase() + "\\..*")) {
+			return getEdgeCaches(request, ds, track);
+		} else {
+			return getEdgeTrafficRouters(request, ds, track);
+		}
+	}
+
+	private DNSRouteResult getEdgeTrafficRouters(final DNSRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
+		final DNSRouteResult result = new DNSRouteResult();
+
+		result.setDeliveryService(ds);
+		result.setAddresses(selectTrafficRouters(request, ds, track));
+
+		return result;
+	}
+
+	private List<InetRecord> selectTrafficRouters(final DNSRequest request, final DeliveryService ds) throws GeolocationException {
+		return selectTrafficRouters(request, ds, null);
+	}
+
+	private List<InetRecord> selectTrafficRouters(final DNSRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
+		final List<InetRecord> result = new ArrayList<>();
+		ResultType resultType = null;
+
+		if (track != null) {
+			track.setResultDetails(ResultDetails.LOCALIZED_DNS);
+		}
+
+		Geolocation clientGeolocation = null;
+
+		final NetworkNode networkNode = getNetworkNode(request.getClientIP());
+
+		if (networkNode != null && networkNode.getGeolocation() != null) {
+			clientGeolocation = networkNode.getGeolocation();
+			resultType = ResultType.CZ;
+		} else {
+			clientGeolocation = getClientGeolocation(request.getClientIP(), track, ds);
+			resultType = ResultType.GEO;
+		}
+
+		if (clientGeolocation == null) {
+			result.addAll(selectTrafficRoutersMiss(request.getZoneName(), ds));
+			resultType = ResultType.MISS;
+		} else {
+			result.addAll(selectTrafficRoutersLocalized(clientGeolocation, request.getZoneName(), ds, track, request.getQueryType()));
+
+			if (track != null) {
+				track.setClientGeolocation(clientGeolocation);
+			}
+		}
+
+		if (track != null) {
+			track.setResult(resultType);
+		}
+
+		return result;
+	}
+
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	public List<InetRecord> selectTrafficRoutersMiss(final String zoneName, final DeliveryService ds) throws GeolocationException {
+		final List<InetRecord> trafficRouterRecords = new ArrayList<>();
+
+		if (!isEdgeDNSRouting() && !isEdgeHTTPRouting()) {
+			return trafficRouterRecords;
+		}
+
+		final List<TrafficRouterLocation> trafficRouterLocations = getCacheRegister().getEdgeTrafficRouterLocations();
+		final List<Node> edgeTrafficRouters = new ArrayList<>();
+		final Map<String, List<Node>> orderedNodes = new HashMap<>();
+
+		int limit = (getEdgeDNSRoutingLimit() > getEdgeHTTPRoutingLimit(ds)) ? getEdgeDNSRoutingLimit() : getEdgeHTTPRoutingLimit(ds);
+		int index = 0;
+		boolean exhausted = false;
+
+		// if limits don't exist, or do exist and are higher than the number of edge TRs, use the number of edge TRs as the limit
+		if (limit == 0 || limit > getCacheRegister().getEdgeTrafficRouterCount()) {
+			limit = getCacheRegister().getEdgeTrafficRouterCount();
+		}
+
+		// grab one TR per location until the limit is reached
+		while (edgeTrafficRouters.size() < limit && !exhausted) {
+			final int initialCount = edgeTrafficRouters.size();
+
+			for (final TrafficRouterLocation location : trafficRouterLocations) {
+			    if (edgeTrafficRouters.size() >= limit) {
+					break;
+				}
+
+				if (!orderedNodes.containsKey(location.getId())) {
+					orderedNodes.put(location.getId(), consistentHasher.selectHashables(location.getTrafficRouters(), zoneName));
+				}
+
+				final List<Node> trafficRouters = orderedNodes.get(location.getId());
+
+				if (trafficRouters == null || trafficRouters.isEmpty() || index >= trafficRouters.size()) {
+					continue;
+				}
+
+				edgeTrafficRouters.add(trafficRouters.get(index));
+			}
+
+			/*
+			 * we iterated through every location and attempted to add edge TR at index, but none were added....
+			 * normally, these values would never match unless we ran out of options...
+			 * if so, we've exhausted our options so we need to break out of the while loop
+			 */
+			if (initialCount == edgeTrafficRouters.size()) {
+				exhausted = true;
+			}
+
+			index++;
+		}
+
+		if (!edgeTrafficRouters.isEmpty()) {
+			if (isEdgeDNSRouting()) {
+				trafficRouterRecords.addAll(nsRecordsFromNodes(ds, edgeTrafficRouters));
+			}
+
+			if (ds != null && !ds.isDns() && isEdgeHTTPRouting()) { // only generate edge routing records for HTTP DSs when necessary
+				trafficRouterRecords.addAll(inetRecordsFromNodes(ds, edgeTrafficRouters));
+			}
+		}
+
+		return trafficRouterRecords;
+	}
+
+	public List<InetRecord> selectTrafficRoutersLocalized(final Geolocation clientGeolocation, final String name, final DeliveryService ds) throws GeolocationException {
+		return selectTrafficRoutersLocalized(clientGeolocation, name, ds, null, 0);
+	}
+
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	public List<InetRecord> selectTrafficRoutersLocalized(final Geolocation clientGeolocation, final String zoneName, final DeliveryService ds, final Track track, final int queryType) throws GeolocationException {
+		final List<InetRecord> trafficRouterRecords = new ArrayList<>();
+
+		if (!isEdgeDNSRouting() && !isEdgeHTTPRouting()) {
+			return trafficRouterRecords;
+		}
+
+		final List<TrafficRouterLocation> trafficRouterLocations = (List<TrafficRouterLocation>) orderLocations(getCacheRegister().getEdgeTrafficRouterLocations(), clientGeolocation);
+
+		for (final TrafficRouterLocation location : trafficRouterLocations) {
+			final List<Node> trafficRouters = consistentHasher.selectHashables(location.getTrafficRouters(), zoneName);
+
+			if (trafficRouters == null || trafficRouters.isEmpty()) {
+				continue;
+			}
+
+			if (isEdgeDNSRouting()) {
+				trafficRouterRecords.addAll(nsRecordsFromNodes(ds, trafficRouters));
+			}
+
+			if (ds != null && !ds.isDns() && isEdgeHTTPRouting()) { // only generate edge routing records for HTTP DSs when necessary
+				trafficRouterRecords.addAll(inetRecordsFromNodes(ds, trafficRouters));
+			}
+
+			if (track != null) {
+				track.setResultLocation(location.getGeolocation());
+			}
+
+			break;
+		}
+
+
+		return trafficRouterRecords;
+	}
+
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	private DNSRouteResult getEdgeCaches(final DNSRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
+		final DNSRouteResult result = new DNSRouteResult();
+		result.setDeliveryService(ds);
 
 		if (ds == null) {
 			track.setResult(ResultType.STATIC_ROUTE);
@@ -382,17 +581,9 @@ public class TrafficRouter {
 			return null;
 		}
 
-		if (!ds.getRoutingName().equalsIgnoreCase(request.getHostname().split("\\.")[0])) {
-			// request matched the Delivery Service but is using the wrong routing name
-			track.setResult(ResultType.STATIC_ROUTE);
-			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
-			return null;
-		}
-
-		final DNSRouteResult result = new DNSRouteResult();
-
 		if (!ds.isAvailable()) {
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
+			result.addAddresses(selectTrafficRouters(request, ds));
 			return result;
 		}
 
@@ -403,6 +594,7 @@ public class TrafficRouter {
 			track.setResult(ResultType.CZ);
 			track.setClientGeolocation(cacheLocation.getGeolocation());
 			result.setAddresses(inetRecordsFromCaches(ds, caches, request));
+			result.addAddresses(selectTrafficRouters(request, ds));
 			return result;
 		}
 
@@ -410,6 +602,7 @@ public class TrafficRouter {
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
+			result.addAddresses(selectTrafficRouters(request, ds));
 			return result;
 		}
 
@@ -437,11 +630,56 @@ public class TrafficRouter {
 			result.setAddresses(ds.getFailureDnsResponse(request, track));
 		}
 
+		result.addAddresses(selectTrafficRouters(request, ds));
+
 		return result;
 	}
 
+	private List<InetRecord> nsRecordsFromNodes(final DeliveryService ds, final List<Node> nodes) {
+		final List<InetRecord> nsRecords = new ArrayList<>();
+		final int limit = (getEdgeDNSRoutingLimit() > nodes.size()) ? nodes.size() : getEdgeDNSRoutingLimit();
+
+		long ttl = getEdgeNSttl();
+
+		if (ds != null && ds.getTtls().has("NS")) {
+			ttl = JsonUtils.optLong(ds.getTtls(), "NS"); // no exception
+		}
+
+		for (int i = 0; i < limit; i++) {
+			final Node node = nodes.get(i);
+			nsRecords.add(new InetRecord(node.getFqdn(), ttl, Type.NS));
+		}
+
+		return nsRecords;
+	}
+
+	public List<InetRecord> inetRecordsFromNodes(final DeliveryService ds, final List<Node> nodes) {
+		final List<InetRecord> addresses = new ArrayList<>();
+		final int limit = (getEdgeHTTPRoutingLimit(ds) > nodes.size()) ? nodes.size() : getEdgeHTTPRoutingLimit(ds);
+
+		if (ds == null) {
+			return addresses;
+		}
+
+		final JsonNode ttls = ds.getTtls();
+
+		for (int i = 0; i < limit; i++) {
+			final Node node = nodes.get(i);
+
+			if (node.getIp4() != null) {
+				addresses.add(new InetRecord(node.getIp4(), JsonUtils.optLong(ttls, "A")));
+			}
+
+			if (node.getIp6() != null && ds.isIp6RoutingEnabled()) {
+				addresses.add(new InetRecord(node.getIp6(), JsonUtils.optLong(ttls,"AAAA")));
+			}
+		}
+
+		return addresses;
+	}
+
 	public List<InetRecord> inetRecordsFromCaches(final DeliveryService ds, final List<Cache> caches, final Request request) {
-		final List<InetRecord> addresses = new ArrayList<InetRecord>();
+		final List<InetRecord> addresses = new ArrayList<>();
 		final int maxDnsIps = ds.getMaxDnsIps();
 		List<Cache> selectedCaches;
 
@@ -478,18 +716,27 @@ public class TrafficRouter {
 	}
 
 	public Geolocation getClientGeolocation(final String clientIp, final Track track, final DeliveryService deliveryService) throws GeolocationException {
-		if (track.isClientGeolocationQueried()) {
+		if (track != null && track.isClientGeolocationQueried()) {
 			return track.getClientGeolocation();
 		}
 
-		final Geolocation clientGeolocation = getLocation(clientIp, deliveryService);
-		track.setClientGeolocation(clientGeolocation);
-		track.setClientGeolocationQueried(true);
+		final Geolocation clientGeolocation;
+
+		if (deliveryService != null) {
+			clientGeolocation = getLocation(clientIp, deliveryService);
+		} else {
+			clientGeolocation = getLocation(clientIp);
+		}
+
+		if (track != null) {
+			track.setClientGeolocation(clientGeolocation);
+			track.setClientGeolocationQueried(true);
+		}
 
 		return clientGeolocation;
 	}
 
-	public Geolocation getClientLocation(final String clientIp, final DeliveryService ds, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
+	public Geolocation getClientLocation(final String clientIp, final DeliveryService ds, final Location cacheLocation, final Track track) throws GeolocationException {
 		if (cacheLocation != null) {
 			return cacheLocation.getGeolocation();
 		}
@@ -537,7 +784,7 @@ public class TrafficRouter {
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
-		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
+		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request);
 
 		final List<SteeringResult> steeringResults = getSteeringResults(request, track, entryDeliveryService);
 
@@ -794,7 +1041,7 @@ public class TrafficRouter {
 
 	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
 		final String xtcSteeringOption = request.getHeaderValue(XTC_STEERING_OPTION);
-		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request, true), request, xtcSteeringOption);
+		final DeliveryService deliveryService = consistentHashDeliveryService(cacheRegister.getDeliveryService(request), request, xtcSteeringOption);
 
 		if (deliveryService == null) {
 			track.setResult(ResultType.DS_MISS);
@@ -855,7 +1102,7 @@ public class TrafficRouter {
 		}
 
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
-		CacheLocation cacheLocation = networkNode.getCacheLocation();
+		CacheLocation cacheLocation = (CacheLocation) networkNode.getLocation();
 
 		if (useDeep && cacheLocation != null) {
 			// lazily load deep Caches into the deep CacheLocation
@@ -888,7 +1135,7 @@ public class TrafficRouter {
 
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			// lazy loading in case a CacheLocation has not yet been associated with this NetworkNode
-			networkNode.setCacheLocation(cacheLocation);
+			networkNode.setLocation(cacheLocation);
 			return cacheLocation;
 		}
 
@@ -917,9 +1164,10 @@ public class TrafficRouter {
 
 		// We had a hit in the CZF but the name does not match a known cache location.
 		// Check whether the CZF entry has a geolocation and use it if so.
-		List<CacheLocation> availableLocations = cacheRegister.filterAvailableLocations(deliveryServiceId);
+		List<CacheLocation> availableLocations = cacheRegister.filterAvailableCacheLocations(deliveryServiceId);
 		availableLocations = filterEnabledLocations(availableLocations, localizationMethod);
 		final CacheLocation closestCacheLocation = getClosestCacheLocation(availableLocations, networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
+
 		if (closestCacheLocation != null) {
 			LOGGER.debug("Got closest CZ cache group " + closestCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
 			if (track != null) {
@@ -939,11 +1187,11 @@ public class TrafficRouter {
 		return getCoverageZoneCacheLocation(ip, deliveryService, true, null);
 	}
 
-	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final boolean useDeep, final Track track) {
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final boolean useDeep, final Track track) {
 		return getCoverageZoneCacheLocation(ip, deliveryService.getId(), useDeep, track);
 	}
 
-	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
 		return getCoverageZoneCacheLocation(ip, deliveryService.getId());
 	}
 
@@ -1017,8 +1265,8 @@ public class TrafficRouter {
 
 		List<Cache> caches = null;
 		if (deliveryService.isCoverageZoneOnly() && deliveryService.getGeoRedirectUrl() != null) {
-				//use the NGB redirect
-				caches = enforceGeoRedirect(StatTracker.getTrack(), deliveryService, ip, null);
+			//use the NGB redirect
+			caches = enforceGeoRedirect(StatTracker.getTrack(), deliveryService, ip, null);
 		} else {
 			final CacheLocation cacheLocation = getCoverageZoneCacheLocation(ip, deliveryServiceId);
 
@@ -1049,7 +1297,7 @@ public class TrafficRouter {
 	}
 
 	private boolean isMultiRouteRequest(final HTTPRequest request) {
-		final DeliveryService deliveryService = cacheRegister.getDeliveryService(request, true);
+		final DeliveryService deliveryService = cacheRegister.getDeliveryService(request);
 
 		if (deliveryService == null || !isSteeringDeliveryService(deliveryService)) {
 			return false;
@@ -1208,17 +1456,16 @@ public class TrafficRouter {
 	}
 
 	/**
-	 * Returns a list {@link CacheLocation}s sorted by distance from the client.
+	 * Returns a list {@link Location}s sorted by distance from the client.
 	 * If the client's location could not be determined, then the list is
 	 * unsorted.
 	 *
-	 * @param cacheLocations
-	 *            the collection of CacheLocations to order
+	 * @param locations the collection of Locations to order
 	 * @return the ordered list of locations
 	 */
-	public List<CacheLocation> orderCacheLocations(final List<CacheLocation> cacheLocations, final Geolocation clientLocation) {
-		Collections.sort(cacheLocations, new CacheLocationComparator(clientLocation));
-		return cacheLocations;
+	public List<? extends Location> orderLocations(final List<? extends Location> locations, final Geolocation clientLocation) {
+		Collections.sort(locations, new LocationComparator(clientLocation));
+		return locations;
 	}
 
 	private CacheLocation getClosestCacheLocation(final List<CacheLocation> cacheLocations, final Geolocation clientLocation, final DeliveryService deliveryService) {
@@ -1226,7 +1473,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, clientLocation);
+	    final List<CacheLocation> orderedLocations = (List<CacheLocation>) orderLocations(cacheLocations, clientLocation);
 
 		for (final CacheLocation cacheLocation : orderedLocations) {
 			if (!getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
@@ -1363,5 +1610,29 @@ public class TrafficRouter {
 
 	public void setSteeringRegistry(final SteeringRegistry steeringRegistry) {
 		this.steeringRegistry = steeringRegistry;
+	}
+
+	public boolean isEdgeDNSRouting() {
+		return edgeDNSRouting;
+	}
+
+	public boolean isEdgeHTTPRouting() {
+		return edgeHTTPRouting;
+	}
+
+	private long getEdgeNSttl() {
+		return edgeNSttl;
+	}
+
+	private int getEdgeDNSRoutingLimit() {
+		return edgeDNSRoutingLimit;
+	}
+
+	private int getEdgeHTTPRoutingLimit(final DeliveryService ds) {
+		if (ds != null && ds.getMaxDnsIps() != 0 && ds.getMaxDnsIps() != edgeHTTPRoutingLimit) {
+			return ds.getMaxDnsIps();
+		}
+
+		return edgeHTTPRoutingLimit;
 	}
 }

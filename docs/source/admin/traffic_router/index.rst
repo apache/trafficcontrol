@@ -378,9 +378,60 @@ Rolling Zone Signing Keys
 -------------------------
 Traffic Router currently follows the :abbr:`ZSK (Zone Signing Key)` pre-publishing operational best practice described in :rfc:`6781#section-4.1.1.1`. Once :abbr:`DNSSEC (Domain Name System Security Extensions)` is enabled for a CDN in Traffic Portal, key rolls are triggered by Traffic Ops via the automated key generation process, and Traffic Router selects the active :abbr:`ZSK (Zone Signing Keys)`\ s based on the expiration information returned from the 'keystore' API of Traffic Ops.
 
+.. _tr-edge_traffic_routing:
+
+Edge Traffic Routing
+====================
+
+Overview
+--------
+Edge Traffic Routing is a feature that enables localization for more DNS record types than just the routing name for DNS delivery services. This feature has two main components: localization of HTTP delivery service routing names and localization for CDN-managed NS records. This allows Traffic Router to scale horizontally more easily, as there is a practical limit to how many records can be in an RRset for ``NS``, ``A``, or ``AAAA`` record types. The practical limit is typically an answer size exceeding 512 bytes; we have observed issues where some clients and/or resolvers do not honor larger answer responses, while in some cases, resolvers are unable to use TCP for larger responses. Additionally, this feature allows Traffic Router to serve an RRset containing only Traffic Routers that are near the client (resolver), placing more control over which Traffic Routers a given resolver or client will interact with.
+
+Localizing ``NS`` records reduces latency for the resolver, which, due to caching in DNS is of little utility for ``NS`` records, but it will force resolvers to use the closest Traffic Routers for all queries. This is important for lookups of CDN routing name records that have very short TTLs, meaning DNS traffic for routing name records is frequent. Like localization for routing names of DNS delivery services, localizing the routing name for HTTP delivery services provides the client (end user) with a list of Traffic Routers that are physically close, reducing latency when the client moves from DNS resolution to the HTTP connection to Traffic Router for the 302 redirect to the edge cache. This feature reduces latency between a resolver and Traffic Router, reduces latency for the client's HTTP request to Traffic Router, and allows Traffic Control to dictate which Traffic Routers are used in any given location when a client can be localized.
+
+Edge DNS Routing
+----------------
+Edge DNS routing refers to the localization of ``NS`` records in Traffic Router. This can be turned on and off via the ``edge.dns.routing`` parameter; the number of records returned is controlled via ``edge.dns.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. See :ref:`ccr-profile` documentation for parameter details.
+
+Edge HTTP Routing
+-----------------
+Edge HTTP routing refers to the localization of ``A`` and ``AAAA`` records that represent routing names for HTTP delivery services. This can be turned on and off via the ``edge.http.routing`` parameter; the number of records returned is controlled via ``edge.http.limit`` and there is a hardcoded default limit of 4 when this feature is enabled. The default or global limit can be overridden by modifying the ``maxDnsAnswers`` setting on the delivery service. See :ref:`ccr-profile` documentation for parameter details.
+
+Edge Traffic Router Selection
+-----------------------------
+Traffic Router performs localization on client requests in order to determine which Traffic Routers should service a given request. After localization, Traffic Router will perform a consistent hash on the incoming name and will use the value to refine Traffic Router selection. There are two main cases for Traffic Router selection: a localization hit, and a localization miss.
+
+Localization Hit: Consistent Hash (CH)
+**************************************
+When a client is localized, Traffic Router selects the nearest Traffic Router Location (cachegroup) based on proximity. Proximity is determined by using the latitude and longitude of the client, regardless of whether it is a coverage zone or geolocation hit, and the latitude and longitude specified on Traffic Router Locations. Once the location is identified, a consistent hash is performed on the incoming name and the list of Traffic Routers is ordered based upon the consistent hash. Once ordered, the list is limited to the appropriate number based on the limit parameter specified by the hardcoded default (4), ``edge.dns.limit``, ``edge.http.limit``, or ``maxDnsAnswers``, depending on the configuration and request being localized. This approach can be thought of as the consistent hash (CH) selection process.
+
+Localization Miss: Consistent Hash + Round Robin (CH + RR)
+**********************************************************
+When a client cannot be localized, Traffic Router still needs to produce a list of Traffic Routers to service the request. Because the number of Traffic Routers in the CDN could far exceed the practical limits of what constitutes a "normal" sized answer, a selection algorithm is applied to select Traffic Routers. Much like the localization hit scenario, the incoming request name is consistent hashed and results size is limited by the same parameters. Because no client location is known, Traffic Router must distribute the load across all Traffic Router Locations. To distribute the load, Traffic Router will order all Traffic Routers at each location based on the consistent hash, selecting a Traffic Router at the nth position, incrementing the index, n, after iterating over all locations.
+
+For example, with four Traffic Router Locations each containing 10 Traffic Routers and a limit of 6, the algorithm would:
+
+- Consistent hash the incoming name
+- Order the Traffic Routers at each location by the consistent hash
+- Select the Traffic Router at at the first position of each location
+- Select the Traffic Router at the second position of each location, stopping after selecting the 6th Traffic Router
+
+Because the algorithm employs consistent hashing, the answers should be consistent as long as the topology remains the same. This approach can be thought of as the consistent hash round robin (CH + RR) selection process.
+
+Example Request Flow
+********************
+The following is an example of the request flow when a client requests the routing name for an example delivery service, ``tr.service.cdn.example.com``. The request flow assumes that the resolver is cold and has yet to build a local cache of lookups, meaning it has to walk the domain hierarchy asking for ``NS`` records until it reaches ``service.cdn.example.com``. This example starts after the resolver has determined which name servers are authoritative for ``cdn.example.com``. Note that the same logic is applied for each of the three queries made by the resolver.
+
+.. figure:: images/edge_tr_example.png
+   :scale: 30%
+   :align: center
+   :alt: Example Request Flow for Edge Traffic Routing
+
+   Example Request Flow for Edge Traffic Routing. Note this picks up when the resolver hits the CDN managed domain.
+
 .. _tr-logs:
 
-Troubleshooting and Log Files
+Troubleshooting and log files
 =============================
 Traffic Router log files can be found under :file:`/opt/traffic_router/var/log` and :file:`/opt/tomcat/logs`. Initialization and shutdown logs are in :file:`/opt/tomcat/logs/catalina{date}.out`. Application related logging is in :file:`/opt/traffic_router/var/log/traffic_router.log`, while access logs are written to :file:`/opt/traffic_router/var/log/access.log`.
 

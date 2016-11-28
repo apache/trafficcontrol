@@ -13,81 +13,59 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.cache;
+package com.comcast.cdn.traffic_control.traffic_router.core.edge;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
-import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
-
-public class Cache implements Comparable<Cache>, Hashable<Cache> {
-	private static final Logger LOGGER = Logger.getLogger(Cache.class);
+public class Node extends DefaultHashable {
+	private static final Logger LOGGER = Logger.getLogger(Node.class);
 	private static final int REPLICAS = 1000;
 
 	public enum IpVersions {
 		IPV4ONLY, IPV6ONLY, BOTH
 	}
 	private IpVersions ipAvailableVersions;
-	private final String id;
+	protected final String id;
 	private String fqdn;
 	private List<InetRecord> ipAddresses;
 	private List<InetRecord> unavailableIpAddresses;
 	private int port;
-	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
-	private final Geolocation geolocation;
-	private final Hashable hashable = new DefaultHashable();
 	private int httpsPort = 443;
 
-	public Cache(final String id, final String hashId, final int hashCount, final Geolocation geolocation) {
+	public Node(final String id) {
 		this.id = id;
-		hashable.generateHashes(hashId, hashCount > 0 ? hashCount : REPLICAS);
-		this.geolocation = geolocation;
+		generateHashes(id, REPLICAS);
 	}
 
-	public Cache(final String id, final String hashId, final int hashCount) {
-		this(id, hashId, hashCount, null);
-	}
-
-	@Override
-	public int compareTo(final Cache o) {
-		return getId().compareTo(o.getId());
+	// alternate constructor
+	public Node(final String id, final String hashId, final int hashCount) {
+		this.id = id;
+		generateHashes(hashId, hashCount > 0 ? hashCount : REPLICAS);
 	}
 
 	@Override
 	public boolean equals(final Object obj) {
 		if (this == obj) {
 			return true;
-		} else if (obj instanceof Cache) {
-			final Cache rhs = (Cache) obj;
+		} else if (obj instanceof Node) {
+			final Node rhs = (Node) obj;
 			return new EqualsBuilder()
 			.append(getId(), rhs.getId())
 			.isEquals();
 		} else {
 			return false;
 		}
-	}
-
-	public Collection<DeliveryServiceReference> getDeliveryServices() {
-		return deliveryServices.values();
-	}
-
-	public Geolocation getGeolocation() {
-		return geolocation;
 	}
 
 	public String getFqdn() {
@@ -141,16 +119,6 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		.toHashCode();
 	}
 
-	public void setDeliveryServices(final Collection<DeliveryServiceReference> deliveryServices) {
-		for (final DeliveryServiceReference deliveryServiceReference : deliveryServices) {
-			this.deliveryServices.put(deliveryServiceReference.getDeliveryServiceId(), deliveryServiceReference);
-		}
-	}
-
-	public boolean hasDeliveryService(final String deliveryServiceId) {
-		return deliveryServices.containsKey(deliveryServiceId);
-	}
-
 	public void setFqdn(final String fqdn) {
 		this.fqdn = fqdn;
 	}
@@ -165,33 +133,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 
 	@Override
 	public String toString() {
-		return "Cache [id=" + id + "] ";
-	}
-
-	/**
-	 * Contains a reference to a DeliveryService ID and the FQDN that should be used if this Cache
-	 * is used when supporting the DeliveryService.
-	 */
-	public static class DeliveryServiceReference {
-		private final String deliveryServiceId;
-		private final String fqdn;
-
-		public DeliveryServiceReference(final String deliveryServiceId, final String fqdn) throws ParseException {
-			if (fqdn.split("\\.", 2).length != 2) {
-				throw new ParseException("Invalid FQDN (" + fqdn + ") on delivery service " + deliveryServiceId + "; please verify the HOST regex(es) in Traffic Ops");
-			}
-
-			this.deliveryServiceId = deliveryServiceId;
-			this.fqdn = fqdn;
-		}
-
-		public String getDeliveryServiceId() {
-			return deliveryServiceId;
-		}
-
-		public String getFqdn() {
-			return fqdn;
-		}
+		return "Node [id=" + id + "] ";
 	}
 
 	boolean isAvailable = false;
@@ -283,43 +225,12 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 
 	}
 
-	@Override
-	public Hashable<Cache> generateHashes(final String hashId, final int hashCount) {
-		hashable.generateHashes(hashId, hashCount);
-		return this;
-	}
-
-	@Override
-	public double getClosestHash(final double hash) {
-		return hashable.getClosestHash(hash);
-	}
-
-	@Override
-	public List<Double> getHashValues() {
-		return hashable.getHashValues();
-	}
-
 	public int getHttpsPort() {
 		return httpsPort;
 	}
 
 	public void setHttpsPort(final int httpsPort) {
 		this.httpsPort = httpsPort;
-	}
-
-	@Override
-	public boolean hasHashes() {
-		return hashable.hasHashes();
-	}
-
-	@Override
-	public int getOrder() {
-		return hashable.getOrder();
-	}
-
-	@Override
-	public void setOrder(final int order) {
-		hashable.setOrder(order);
 	}
 
 	public IpVersions getIpAvailableVersions() {

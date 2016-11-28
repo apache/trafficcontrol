@@ -46,7 +46,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -69,19 +68,22 @@ import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache.DeliveryServiceReference;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Resolver;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Resolver;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.DNSRouteResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheBuilderSpec;
 import com.google.common.cache.CacheLoader;
@@ -110,7 +112,6 @@ public class ZoneManager extends Resolver {
 	private static SignatureManager signatureManager;
 
 	private static Name topLevelDomain;
-	private static Set<String> dnsRoutingNames;
 	private static final String AAAA = "AAAA";
 
 	protected static enum ZoneCacheType {
@@ -118,7 +119,6 @@ public class ZoneManager extends Resolver {
 	}
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) throws IOException {
-		initDnsRoutingNames(tr.getCacheRegister());
 		initTopLevelDomain(tr.getCacheRegister());
 		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils, trafficRouterManager);
 		initZoneCache(tr);
@@ -134,16 +134,6 @@ public class ZoneManager extends Resolver {
 
 	protected void rebuildZoneCache() {
 		initZoneCache(trafficRouter);
-	}
-
-	private static void initDnsRoutingNames(final CacheRegister cacheRegister) {
-		final Set<String> dnsRoutingNames = new HashSet<>();
-		for (final DeliveryService ds : cacheRegister.getDeliveryServices().values()) {
-			if (ds.isDns()) {
-				dnsRoutingNames.add(ds.getRoutingName());
-			}
-		}
-		setDnsRoutingNames(dnsRoutingNames);
 	}
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -479,20 +469,20 @@ public class ZoneManager extends Resolver {
 		final Name name = newName(domain);
 		final List<Record> list = zoneMap.get(domain);
 		final Name admin = newName(ZoneUtils.getAdminString(soa, "admin", "traffic_ops", domain));
-		list.add(new SOARecord(name, DClass.IN, 
+		list.add(new SOARecord(name, DClass.IN,
 				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.get(hostname), name, hostname), admin,
-				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())), 
-				ZoneUtils.getLong(soa, "refresh", 28800), 
-				ZoneUtils.getLong(soa, "retry", 7200), 
-				ZoneUtils.getLong(soa, "expire", 604800), 
+				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())),
+				ZoneUtils.getLong(soa, "refresh", 28800),
+				ZoneUtils.getLong(soa, "retry", 7200),
+				ZoneUtils.getLong(soa, "expire", 604800),
 				ZoneUtils.getLong(soa, "minimum", 60)));
-		addTrafficRouters(list, trafficRouters, name, ttl, domain, ds);
+		addTrafficRouters(list, trafficRouters, name, ttl, domain, ds, tr);
 		addStaticDnsEntries(list, ds, domain);
 
 		final List<Record> records = new ArrayList<Record>();
+		final long maxTTL = ZoneUtils.getMaximumTTL(list);
 
 		try {
-			final long maxTTL = ZoneUtils.getMaximumTTL(list);
 			records.addAll(signatureManager.generateDSRecords(name, maxTTL));
 			list.addAll(signatureManager.generateDNSKEYRecords(name, maxTTL));
 		} catch (NoSuchAlgorithmException ex) {
@@ -533,25 +523,60 @@ public class ZoneManager extends Resolver {
 				final CacheRegister data = tr.getCacheRegister();
 				final JsonNode config = data.getConfig();
 				final boolean primeDynCache = JsonUtils.optBoolean(config, "dynamic.cache.primer.enabled", true);
-
-				// prime the dynamic zone cache
-				if (primeDynCache && ds != null && ds.isDns()) {
-					primingTasks.add(() -> {
-						try {
-							primeDNSDeliveryServices(domain, tr, dzc, zone, ds, data);
-						} catch (TextParseException ex) {
-							LOGGER.fatal("Unable to prime dynamic zone " + domain, ex);
-						}
-					});
+				if (!primeDynCache || ds == null || (!ds.isDns() && !tr.isEdgeHTTPRouting())){
+					return;
 				}
+				primingTasks.add(() -> {
+					try {
+						// prime the dynamic zone cache
+						if (ds.isDns()) {
+							primeDNSDeliveryServices(domain, name, tr, dzc, zone, ds, data);
+						} else if (!ds.isDns() && tr.isEdgeHTTPRouting()) {
+							primeHTTPDeliveryServices(domain, tr, dzc, zone, ds, data);
+						}
+					} catch (TextParseException ex) {
+						LOGGER.fatal("Unable to prime dynamic zone " + domain, ex);
+					}
+				});
 			} catch (ExecutionException ex) {
 				LOGGER.fatal("Unable to load zone into cache: " + ex.getMessage(), ex);
 			}
 		});
 	}
 
+	private static void primeHTTPDeliveryServices(final String domain, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc,
+			final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
+		final Name edgeName = newName(ds.getRoutingName(), domain);
+
+		LOGGER.info("Priming " + edgeName);
+
+		final DNSRequest request = new DNSRequest(zone, edgeName, Type.A);
+		request.setDnssec(signatureManager.isDnssecEnabled());
+		request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
+
+		// prime the miss case first
+		try {
+			final DNSRouteResult result = new DNSRouteResult();
+			result.setAddresses(tr.selectTrafficRoutersMiss(request.getZoneName(), ds));
+			fillDynamicZone(dzc, zone, request, result);
+		} catch (GeolocationException ex) {
+			LOGGER.warn(ex, ex);
+		}
+
+		// prime answers for each of our edge locations
+		for (final TrafficRouterLocation trLocation : data.getEdgeTrafficRouterLocations()) {
+			try {
+				final DNSRouteResult result = new DNSRouteResult();
+				result.setAddresses(tr.selectTrafficRoutersLocalized(trLocation.getGeolocation(), request.getZoneName(), ds));
+				fillDynamicZone(dzc, zone, request, result);
+			} catch (GeolocationException ex) {
+				LOGGER.warn(ex, ex);
+			}
+		}
+    }
+
 	@SuppressWarnings("PMD.CyclomaticComplexity")
-	private static void primeDNSDeliveryServices(final String domain, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc,
+	private static void primeDNSDeliveryServices(final String domain, final Name name, final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> dzc,
 			final Zone zone, final DeliveryService ds, final CacheRegister data) throws TextParseException {
 		final Name edgeName = newName(ds.getRoutingName(), domain);
 		final JsonNode config = data.getConfig();
@@ -559,7 +584,8 @@ public class ZoneManager extends Resolver {
 
 		LOGGER.info("Priming " + edgeName);
 
-		final DNSRequest request = new DNSRequest();
+		final DNSRequest request = new DNSRequest(zone, name, Type.A);
+		request.setDnssec(signatureManager.isDnssecEnabled());
 		request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
 
 		for (final CacheLocation cacheLocation : data.getCacheLocations()) {
@@ -572,22 +598,38 @@ public class ZoneManager extends Resolver {
 			// calculate number of permutations if maxDnsIpsForLocation > 0 and we're not using consistent DNS routing
 			int p = 1;
 
-			if (ds.getMaxDnsIps() > 0 && !tr.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
+			if (ds.isDns() && ds.getMaxDnsIps() > 0 && !tr.isConsistentDNSRouting() && caches.size() > ds.getMaxDnsIps()) {
 				for (int c = caches.size(); c > (caches.size() - ds.getMaxDnsIps()); c--) {
 					p *= c;
 				}
 			}
 
-			final Set<List<InetRecord>> pset = new HashSet<>();
+			final Set<List<InetRecord>> pset = new HashSet<List<InetRecord>>();
 
 			for (int i = 0; i < primerLimit; i++) {
 				final List<InetRecord> records = tr.inetRecordsFromCaches(ds, caches, request);
+				final DNSRouteResult result = new DNSRouteResult();
+				result.setAddresses(records);
 
 				if (!pset.contains(records)) {
-					fillDynamicZone(dzc, zone, edgeName, records, signatureManager.isDnssecEnabled());
+					if (!tr.isEdgeDNSRouting()) {
+						fillDynamicZone(dzc, zone, request, result);
+					} else {
+						try {
+							final DNSRouteResult hitResult = new DNSRouteResult();
+							final List<InetRecord> hitRecords = tr.selectTrafficRoutersLocalized(cacheLocation.getGeolocation(), request.getZoneName(), ds);
+							hitRecords.addAll(records);
+							hitResult.setAddresses(hitRecords);
+							fillDynamicZone(dzc, zone, request, hitResult);
+						} catch (GeolocationException ex) {
+							LOGGER.warn(ex, ex);
+						}
+					}
+
 					pset.add(records);
-					LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
 				}
+
+				LOGGER.debug("Primed " + ds.getId() + " @ " + cacheLocation.getId() + "; permutation " + pset.size() + "/" + p);
 
 				if (pset.size() == p) {
 					break;
@@ -671,10 +713,10 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static void addTrafficRouters(final List<Record> list, final JsonNode trafficRouters, final Name name,
-			final JsonNode ttl, final String domain, final DeliveryService ds)
-					throws TextParseException, UnknownHostException {
+			final JsonNode ttl, final String domain, final DeliveryService ds, final TrafficRouter tr) throws TextParseException, UnknownHostException {
+
 		final boolean ip6RoutingEnabled = (ds == null || (ds != null && ds.isIp6RoutingEnabled())) ? true : false;
 
 		final Iterator<String> keyIter = trafficRouters.fieldNames();
@@ -682,18 +724,19 @@ public class ZoneManager extends Resolver {
 			final String key = keyIter.next();
 			final JsonNode trJo = trafficRouters.get(key);
 
-			if(trJo.has("status") && "OFFLINE".equals(trJo.get("status").asText())) {
-				// if "status": "OFFLINE"
+			if (!trJo.has("status") || "OFFLINE".equals(trJo.get("status").asText()) || "ADMIN_DOWN".equals(trJo.get("status").asText())) {
 				continue;
 			}
 
 			final Name trName = newName(key, domain);
 
-			String ip6 = JsonUtils.optString(trJo, IP6);
+			// NSRecords will be replaced later if tr.isEdgeDNSRouting() is true; we need these to allow stub zones to be signed, etc
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
 					InetAddress.getByName(JsonUtils.optString(trJo, IP))));
+
+			String ip6 = trJo.get("ip6").asText();
 
 			if (ip6 != null && !ip6.isEmpty() && ip6RoutingEnabled) {
 				ip6 = ip6.replaceAll("/.*", "");
@@ -703,7 +746,8 @@ public class ZoneManager extends Resolver {
 						Inet6Address.getByName(ip6)));
 			}
 
-			if (ds != null && !ds.isDns()) {
+			// only add static routing name entries for HTTP DSs if necessary
+			if (ds != null && !ds.isDns() && !tr.isEdgeHTTPRouting()) {
 				addHttpRoutingRecords(list, ds.getRoutingName(), domain, trJo, ttl, ip6RoutingEnabled);
 			}
 		}
@@ -840,22 +884,23 @@ public class ZoneManager extends Resolver {
 	 * @return the Zone to use to resolve the specified Name
 	 */
 	public Zone getZone(final Name name, final int qtype) {
-		Zone result = null;
 		final Map<ZoneKey, Zone> zoneMap = zoneCache.asMap();
 		final List<ZoneKey> sorted = new ArrayList<ZoneKey>(zoneMap.keySet());
 
+		Zone result = null;
+		Name target = name;
+
 		Collections.sort(sorted);
 
-		// put the superDomains at the beginning of the list so we look there first for DS records
 		if (qtype == Type.DS) {
-			Collections.reverse(sorted);
+			target = new Name(name, 1); // DS records are in the parent zone, change target accordingly
 		}
 
 		for (final ZoneKey key : sorted) {
 			final Zone zone = zoneMap.get(key);
 			final Name origin = zone.getOrigin();
 
-			if (name.subdomain(origin)) {
+			if (target.subdomain(origin)) {
 				result = zone;
 				break;
 			}
@@ -870,30 +915,22 @@ public class ZoneManager extends Resolver {
 	 * 
 	 * @param staticZone
 	 *            The Zone that would normally serve this request
-	 * @param name
-	 *            the Name that is being requested
-	 * @param clientAddress
-	 *            the IP address of the requestor
-	 * @param dnssecRequest
-	 *            whether the client requested DNSSEC
+	 * @param builder
+	 *            DNSAccessRecord.Builder access logging
+	 * @param request
+	 * 	          DNSRequest representing the query
 	 * @return the new Zone to serve the request or null if the static Zone should be used
 	 */
-	private Zone createDynamicZone(final Zone staticZone, final Name name, final int qtype, final InetAddress clientAddress, final boolean dnssecRequest, final DNSAccessRecord.Builder builder) {
-		if (clientAddress==null) {
-			return staticZone;
-		}
-
-		final DNSRequest request = new DNSRequest();
-		request.setClientIP(clientAddress.getHostAddress());
-		request.setHostname(name.relativize(Name.root).toString());
-		request.setQtype(qtype);
+	private Zone createDynamicZone(final Zone staticZone, final DNSAccessRecord.Builder builder, final DNSRequest request) {
 		final Track track = StatTracker.getTrack();
 
 		try {
 			final DNSRouteResult result = trafficRouter.route(request, track);
 
 			if (result != null) {
-				return fillDynamicZone(dynamicZoneCache, staticZone, name, result.getAddresses(), dnssecRequest);
+				final Zone dynamicZone = fillDynamicZone(dynamicZoneCache, staticZone, request, result);
+				track.setResultCode(dynamicZone, request.getName(), request.getQueryType());
+				return dynamicZone;
 			} else {
 				return null;
 			}
@@ -909,27 +946,64 @@ public class ZoneManager extends Resolver {
 		return null;
 	}
 
-	private static Zone fillDynamicZone(final LoadingCache<ZoneKey, Zone> dzc, final Zone staticZone, final Name name, final List<InetRecord> addresses, final boolean dnssecRequest) {
-		if (addresses == null) {
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	private static Zone fillDynamicZone(final LoadingCache<ZoneKey, Zone> dzc, final Zone staticZone, final DNSRequest request, final DNSRouteResult result) {
+		if (result == null || result.getAddresses() == null) {
 			return null;
 		}
 
 		try {
-			final List<Record> records = createZoneRecords(staticZone);
-			int recordsAdded = 0;
+			boolean nsSeen = false;
+			final List<Record> records = new ArrayList<>();
 
-			for (final InetRecord address : addresses) {
+			for (final InetRecord address : result.getAddresses()) {
+				final DeliveryService ds = result.getDeliveryService();
+				Name name = request.getName();
+
+				if (address.getType() == Type.NS) {
+					name = staticZone.getOrigin();
+				} else if (ds != null && (address.getType() == Type.A || address.getType() == Type.AAAA)) {
+					final String routingName = ds.getRoutingName();
+					name = new Name(routingName, staticZone.getOrigin()); // routingname.ds.cdn.tld
+				}
+
 				final Record record = createRecord(name, address);
 
 				if (record != null) {
 					records.add(record);
-					recordsAdded++;
+				}
+
+				if (record instanceof NSRecord) {
+					nsSeen = true;
 				}
 			}
 
-			if (recordsAdded > 0) {
+			// populate the dynamic zone with any static entries that aren't NS records or routing names
+			final Iterator<RRset> it = staticZone.iterator();
+
+			while (it.hasNext()) {
+				final RRset rrset = it.next();
+				final Iterator<Record> rit = rrset.rrs();
+
+				while (rit.hasNext()) {
+					final Record r = rit.next();
+
+					if (r instanceof NSRecord) { // NSRecords are handled below
+						continue;
+					}
+
+					records.add(r);
+				}
+
+			}
+
+			if (!records.isEmpty()) {
+				if (!nsSeen) {
+					records.addAll(createZoneNSRecords(staticZone));
+				}
+
 				try {
-					final ZoneKey zoneKey = signatureManager.generateDynamicZoneKey(staticZone.getOrigin(), records, dnssecRequest);
+					final ZoneKey zoneKey = signatureManager.generateDynamicZoneKey(staticZone.getOrigin(), records, request.isDnssec());
 					final Zone zone = dzc.get(zoneKey);
 					return zone;
 				} catch (ExecutionException e) {
@@ -950,6 +1024,16 @@ public class ZoneManager extends Resolver {
 
 		if (address.isAlias()) {
 			record = new CNAMERecord(name, DClass.IN, address.getTTL(), newName(address.getAlias()));
+		} else if (address.getType() == Type.NS) {
+			final Name tld = getTopLevelDomain();
+			String target = address.getTarget();
+
+			// fix up target to be TR host name plus top level domain
+			if (name.subdomain(tld) && !name.equals(tld)) {
+				target = String.format("%s.%s", target.split("\\.", 2)[0], tld.toString());
+			}
+
+			record = new NSRecord(name, DClass.IN, address.getTTL(), newName(target));
 		} else if (address.isInet4()) { // address instanceof Inet4Address
 			record = new ARecord(name, DClass.IN, address.getTTL(), address.getAddress());
 		} else if (address.isInet6()) {
@@ -959,11 +1043,8 @@ public class ZoneManager extends Resolver {
 		return record;
 	}
 
-	private static List<Record> createZoneRecords(final Zone staticZone) throws IOException {
+	private static List<Record> createZoneNSRecords(final Zone staticZone) throws IOException {
 		final List<Record> records = new ArrayList<Record>();
-		records.add(staticZone.getSOA());
-
-		@SuppressWarnings("unchecked")
 		final Iterator<Record> ns = staticZone.getNS().rrs();
 
 		while (ns.hasNext()) {
@@ -981,7 +1062,6 @@ public class ZoneManager extends Resolver {
 			final RRset[] answers = sr.answers();
 
 			for (final RRset answer : answers) {
-				@SuppressWarnings("unchecked")
 				final Iterator<Record> it = answer.rrs();
 
 				while (it.hasNext()) {
@@ -1025,10 +1105,15 @@ public class ZoneManager extends Resolver {
 			Zone zone = getZone(name);
 			final InetAddress addr = InetAddress.getByName(address);
 			final int qtype = (addr instanceof Inet6Address) ? Type.AAAA : Type.A;
-			final Zone dynamicZone = createDynamicZone(zone, name, qtype, addr, true, builder);
+			final DNSRequest request = new DNSRequest(zone, name, qtype);
+			request.setClientIP(addr.getHostAddress());
+			request.setHostname(name.relativize(Name.root).toString());
+			request.setDnssec(true);
 
-			if (dynamicZone != null) { 
-				zone = dynamicZone; 
+			final Zone dynamicZone = createDynamicZone(zone, builder, request);
+
+			if (dynamicZone != null) {
+				zone = dynamicZone;
 			}
 
 			if (zone == null) {
@@ -1051,31 +1136,27 @@ public class ZoneManager extends Resolver {
 			return null;
 		}
 
-		final SetResponse sr = zone.findRecords(qname, qtype);
+		// all queries must be dynamic when edge DNS routing is enabled, as NS RRsets are used for the authority section and must be localized
+		if (!trafficRouter.isEdgeDNSRouting()) {
+			final SetResponse sr = zone.findRecords(qname, qtype);
 
-		if (sr.isSuccessful()) {
-			return zone;
-		} else if (isDnsRoutingName(qname.toString().toLowerCase().split("\\.")[0])) {
-			final Zone dynamicZone = createDynamicZone(zone, qname, qtype, clientAddress, isDnssecRequest, builder);
-
-			if (dynamicZone != null) {
-				return dynamicZone;
+			if (sr.isSuccessful()) {
+				return zone;
 			}
 		}
 
+		final DNSRequest request = new DNSRequest(zone, qname, qtype);
+		request.setClientIP(clientAddress.getHostAddress());
+		request.setHostname(qname.relativize(Name.root).toString());
+		request.setDnssec(isDnssecRequest);
+
+		final Zone dynamicZone = createDynamicZone(zone, builder, request);
+
+		if (dynamicZone != null) {
+			return dynamicZone;
+		}
+
 		return zone;
-	}
-
-	private static boolean isDnsRoutingName(final String routingName) {
-		return getDnsRoutingNames().contains(routingName);
-	}
-
-	private static Set<String> getDnsRoutingNames() {
-		return dnsRoutingNames;
-	}
-
-	private static void setDnsRoutingNames(final Set<String> dnsRoutingNames) {
-		ZoneManager.dnsRoutingNames = dnsRoutingNames;
 	}
 
 	public static File getZoneDirectory() {

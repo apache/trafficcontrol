@@ -17,20 +17,20 @@ package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
 import java.util.Comparator;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 /**
  * 
  */
-public class CacheLocationComparator implements Comparator<CacheLocation> {
+public class LocationComparator implements Comparator<Location> {
 
     private final Geolocation sourceLocation;
 
     /**
      * @param sourceLocation
      */
-    public CacheLocationComparator(final Geolocation sourceLocation) {
+    public LocationComparator(final Geolocation sourceLocation) {
         this.sourceLocation = sourceLocation;
     }
 
@@ -40,7 +40,7 @@ public class CacheLocationComparator implements Comparator<CacheLocation> {
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     @Override
-    public int compare(final CacheLocation loc1, final CacheLocation loc2) {
+    public int compare(final Location loc1, final Location loc2) {
         final Double d1 = sourceLocation.getDistanceFrom(loc1.getGeolocation());
         final Double d2 = sourceLocation.getDistanceFrom(loc2.getGeolocation());
         return d1.compareTo(d2);
