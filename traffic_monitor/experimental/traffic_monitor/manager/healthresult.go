@@ -273,7 +273,6 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
 			}
 		}
-		deliveryServices[deliveryServiceName] = deliveryServiceState
+		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
 	}
-	states.SetDeliveryServices(deliveryServices)
 }

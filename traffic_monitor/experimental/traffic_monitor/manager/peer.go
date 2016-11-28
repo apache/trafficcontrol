@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"sort"
@@ -38,7 +37,7 @@ func StartPeerManager(
 	go func() {
 		for crStatesResult := range peerChan {
 			peerStates.Set(crStatesResult.ID, crStatesResult.PeerStats)
-			combinedStates.Set(combineCrStates(peerStates.Get(), localStates.Get()))
+			combineCrStates(peerStates.Get(), localStates.Get(), combinedStates)
 			crStatesResult.PollFinished <- crStatesResult.PollID
 		}
 	}()
@@ -46,20 +45,20 @@ func StartPeerManager(
 }
 
 // TODO JvD: add deliveryservice stuff
-func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, localStates peer.Crstates) peer.Crstates {
-	combinedStates := peer.NewCrstates()
+func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
+		available := false
 		if localCacheState.IsAvailable {
 			// log.Infof(cacheName, " is available locally - setting to IsAvailable: true")
-			combinedStates.Caches[cacheName] = peer.IsAvailable{IsAvailable: true} // we don't care about the peers, we got a "good one", and we're optimistic
+			available = true // we don't care about the peers, we got a "good one", and we're optimistic
 		} else {
 			downVotes++ // localStates says it's not happy
 			for _, peerCrStates := range peerStates {
 				if peerCrStates.Caches[cacheName].IsAvailable {
 					// log.Infoln(cacheName, "- locally we think it's down, but", peerName, "says IsAvailable: ", peerCrStates.Caches[cacheName].IsAvailable, "trusting the peer.")
-					combinedStates.Caches[cacheName] = peer.IsAvailable{IsAvailable: true} // we don't care about the peers, we got a "good one", and we're optimistic
-					break                                                                  // one peer that thinks we're good is all we need.
+					available = true // we don't care about the peers, we got a "good one", and we're optimistic
+					break            // one peer that thinks we're good is all we need.
 				} else {
 					// log.Infoln(cacheName, "- locally we think it's down, and", peerName, "says IsAvailable: ", peerCrStates.Caches[cacheName].IsAvailable, "down voting")
 					downVotes++ // peerStates for this peer doesn't like it
@@ -68,8 +67,9 @@ func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, local
 		}
 		if downVotes > len(peerStates) {
 			// log.Infoln(cacheName, "-", downVotes, "down votes, setting to IsAvailable: false")
-			combinedStates.Caches[cacheName] = peer.IsAvailable{IsAvailable: false}
+			available = false
 		}
+		combinedStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: available})
 	}
 
 	for deliveryServiceName, localDeliveryService := range localStates.Deliveryservice {
@@ -90,10 +90,8 @@ func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, local
 			}
 			deliveryService.DisabledLocations = intersection(deliveryService.DisabledLocations, peerDeliveryService.DisabledLocations)
 		}
-		combinedStates.Deliveryservice[deliveryServiceName] = deliveryService
+		combinedStates.SetDeliveryService(deliveryServiceName, deliveryService)
 	}
-
-	return combinedStates
 }
 
 // CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
