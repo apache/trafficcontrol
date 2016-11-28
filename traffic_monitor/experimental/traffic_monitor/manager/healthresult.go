@@ -229,7 +229,7 @@ func processHealthResult(
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-		if localStates.Get().Caches[healthResult.ID].IsAvailable != isAvailable {
+		if available, ok := localStates.GetCache(healthResult.ID); !ok || available.IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
 			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
@@ -267,7 +267,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 		deliveryServiceState.IsAvailable = false
 		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 		for _, server := range deliveryServiceServers[deliveryServiceName] {
-			if states.GetCache(server).IsAvailable {
+			if available, _ := states.GetCache(server); available.IsAvailable {
 				deliveryServiceState.IsAvailable = true
 			} else {
 				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
