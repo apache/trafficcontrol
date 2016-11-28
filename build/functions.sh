@@ -93,7 +93,8 @@ function getCommit() {
 # ---------------------------------------
 function checkEnvironment {
 	export TC_VERSION=$(getVersion "$TC_DIR")
-	export BUILD_NUMBER="${BUILD_NUMBER:-$(getBuildNumber)}.$(getRhelVersion)"
+	export BUILD_NUMBER=$(getBuildNumber)
+	export RHEL_VERSION=$(getRhelVersion)
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
@@ -115,6 +116,7 @@ function checkEnvironment {
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
 	echo "BUILD_NUMBER: $BUILD_NUMBER"
+	echo "RHEL_VERSION: $RHEL_VERSION"
 	echo "TC_VERSION: $TC_VERSION"
 	echo "--------------------------------------------------"
 }
@@ -130,15 +132,16 @@ function createSourceDir() {
 # ---------------------------------------
 function buildRpm () {
 	for package in "$@"; do
-		local rpm="${package}-${TC_VERSION}-${BUILD_NUMBER}.$(uname -m).rpm"
-		local srpm="${package}-${TC_VERSION}-${BUILD_NUMBER}.src.rpm"
+		local pre="${package}-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}"
+		local rpm="${pre}.$(uname -m).rpm"
+		local srpm="${pre}.src.rpm"
 		echo "Building the rpm."
 
 		cd "$RPMBUILD" && \
 			rpmbuild --define "_topdir $(pwd)" \
 				 --define "traffic_control_version $TC_VERSION" \
 				 --define "commit $(getCommit)" \
-				 --define "build_number $BUILD_NUMBER" \
+				 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 				 -ba SPECS/$package.spec || \
 				 { echo "RPM BUILD FAILED: $?"; exit 1; }
 
