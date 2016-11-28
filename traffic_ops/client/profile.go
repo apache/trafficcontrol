@@ -19,7 +19,6 @@ import "encoding/json"
 
 // ProfileResponse ...
 type ProfileResponse struct {
-	Version  string    `json:"version"`
 	Response []Profile `json:"response"`
 }
 

@@ -52,8 +52,7 @@ func (e *HTTPError) Error() string {
 
 // Result {"response":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
 type Result struct {
-	Alerts  []Alert
-	Version string `json:"version"`
+	Alerts []Alert
 }
 
 // Alert ...

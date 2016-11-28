@@ -22,7 +22,6 @@ import (
 
 // TypeResponse ...
 type TypeResponse struct {
-	Version  string `json:"version"`
 	Response []Type `json:"response"`
 }
 

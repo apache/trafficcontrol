@@ -22,11 +22,18 @@ func Hardware() *client.HardwareResponse {
 	return &client.HardwareResponse{
 		Response: []client.Hardware{
 			client.Hardware{
-				ID:          "18",
-				HostName:    "odol-atsmid-cen-09",
+				ID:          18,
+				HostName:    "edge-den-01",
 				LastUpdated: "2015-07-16 09:04:20",
-				Value:       "1.00",
-				Description: "BACKPLANE FIRMWARE",
+				Value:       "DIS1",
+				Description: "Phys Disk",
+			},
+			client.Hardware{
+				ID:          19,
+				HostName:    "edge-den-02",
+				LastUpdated: "2015-07-16 09:04:20",
+				Value:       "DIS2",
+				Description: "Physical Disk",
 			},
 		},
 	}

@@ -57,7 +57,7 @@ func TestDeliveryServices(t *testing.T) {
 			testHelper.Success(t, "Should get back \"ds-test\" for \"XMLID\"")
 		}
 
-		if s.MissLong != "-99.123456" {
+		if s.MissLong != -99.123456 {
 			testHelper.Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", s.MissLong)
 		} else {
 			testHelper.Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
@@ -111,7 +111,7 @@ func TestDeliveryService(t *testing.T) {
 		testHelper.Success(t, "Should get back \"ds-test\" for \"XMLID\"")
 	}
 
-	if ds.MissLong != "-99.123456" {
+	if ds.MissLong != -99.123456 {
 		testHelper.Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", ds.MissLong)
 	} else {
 		testHelper.Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
@@ -159,7 +159,7 @@ func TestCreateDeliveryService(t *testing.T) {
 	}
 
 	actual := ds.Response.ID
-	if actual != "001" {
+	if actual != 001 {
 		testHelper.Error(t, "Should get back \"001\" for \"Response.ID\", got: %s", actual)
 	} else {
 		testHelper.Success(t, "Should get back \"0001\" for \"Response.ID\"")
@@ -207,7 +207,7 @@ func TestUpdateDeliveryService(t *testing.T) {
 	}
 
 	actual := ds.Response.ID
-	if actual != "001" {
+	if actual != 001 {
 		testHelper.Error(t, "Should get back \"001\" for \"Response.ID\", got: %s", actual)
 	} else {
 		testHelper.Success(t, "Should get back \"0001\" for \"Response.ID\"")

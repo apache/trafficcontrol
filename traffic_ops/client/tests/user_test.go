@@ -57,7 +57,7 @@ func TestUsers(t *testing.T) {
 			testHelper.Success(t, "Should get back \"some-ssh-key\" for \"PublicSSHKey\"")
 		}
 
-		if u.Role != "3" {
+		if u.Role != 3 {
 			testHelper.Error(t, "Should get back \"3\" for \"Role\", got %s", u.Role)
 		} else {
 			testHelper.Success(t, "Should get back \"3\" for \"Role\"")
