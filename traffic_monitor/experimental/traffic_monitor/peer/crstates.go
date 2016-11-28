@@ -8,9 +8,9 @@ package peer
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package peer
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"encoding/json"
@@ -146,38 +145,24 @@ func (t *CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) D
 	return t.crStates.Deliveryservice[name]
 }
 
-// Set sets the internal Crstates data. This MUST NOT be called by multiple goroutines.
-func (t *CRStatesThreadsafe) Set(newCRStates Crstates) {
-	t.m.Lock()
-	*t.crStates = newCRStates
-	t.m.Unlock()
-}
-
-// SetCache sets the internal availability data for a particular cache. This MUST NOT be called by multiple goroutines.
+// SetCache sets the internal availability data for a particular cache.
 func (t *CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
 	t.m.Lock()
 	t.crStates.Caches[cacheName] = available
 	t.m.Unlock()
 }
 
-// DeleteCache deletes the given cache from the internal data. This MUST NOT be called by multiple goroutines.
+// DeleteCache deletes the given cache from the internal data.
 func (t *CRStatesThreadsafe) DeleteCache(name enum.CacheName) {
 	t.m.Lock()
 	delete(t.crStates.Caches, name)
 	t.m.Unlock()
 }
 
-// SetDeliveryService sets the availability data for the given delivery service. This MUST NOT be called by multiple goroutines.
+// SetDeliveryService sets the availability data for the given delivery service.
 func (t *CRStatesThreadsafe) SetDeliveryService(name enum.DeliveryServiceName, ds Deliveryservice) {
 	t.m.Lock()
 	t.crStates.Deliveryservice[name] = ds
-	t.m.Unlock()
-}
-
-// SetDeliveryServices sets the availability data for all delivery service. This MUST NOT be called by multiple goroutines.
-func (t *CRStatesThreadsafe) SetDeliveryServices(deliveryServices map[enum.DeliveryServiceName]Deliveryservice) {
-	t.m.Lock()
-	t.crStates.Deliveryservice = deliveryServices
 	t.m.Unlock()
 }
 
