@@ -27,13 +27,15 @@ import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.CacheStats;
+
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Resolver;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Location;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Resolver;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkNode;
@@ -90,7 +92,7 @@ public class DataExporter {
 		final Map<String, Object> map = new HashMap<String, Object>();
 		map.put("requestIp", ip);
 
-		final CacheLocation cl = getLocationFromCzm(ip);
+		final Location cl = getLocationFromCzm(ip);
 
 		if (cl != null) {
 			map.put("locationByCoverageZone", cl.getProperties());
@@ -127,7 +129,7 @@ public class DataExporter {
 		return map;
 	}
 
-	private CacheLocation getLocationFromCzm(final String ip) {
+	private Location getLocationFromCzm(final String ip) {
 		NetworkNode nn = null;
 
 		try {
@@ -139,7 +141,7 @@ public class DataExporter {
 		if (nn == null) { return null; }
 
 		final String locId = nn.getLoc();
-		final CacheLocation cl = nn.getCacheLocation();
+		final Location cl = nn.getLocation();
 
 		if (cl != null) {
 			return cl;

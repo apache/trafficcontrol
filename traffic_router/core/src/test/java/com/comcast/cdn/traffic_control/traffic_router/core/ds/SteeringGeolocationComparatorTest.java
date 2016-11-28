@@ -15,7 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 import org.junit.Before;

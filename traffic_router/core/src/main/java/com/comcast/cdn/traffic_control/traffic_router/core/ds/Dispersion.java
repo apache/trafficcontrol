@@ -24,7 +24,7 @@ import java.util.SortedMap;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 
 public class Dispersion {
 	public final static int DEFAULT_LIMIT = 1;

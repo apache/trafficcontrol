@@ -15,12 +15,15 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 
 public class DNSRouteResult implements RouteResult {
 	private List<InetRecord> addresses;
+	private DeliveryService deliveryService;
 
 	public Object getResult() {
 		return getAddresses();
@@ -32,5 +35,21 @@ public class DNSRouteResult implements RouteResult {
 
 	public void setAddresses(final List<InetRecord> addresses) {
 		this.addresses = addresses;
+	}
+
+	public void addAddresses(final List<InetRecord> addresses) {
+		if (this.addresses == null) {
+			this.addresses = new ArrayList<>();
+		}
+
+		this.addresses.addAll(addresses);
+	}
+
+	public DeliveryService getDeliveryService() {
+		return deliveryService;
+	}
+
+	public void setDeliveryService(final DeliveryService deliveryService) {
+		this.deliveryService = deliveryService;
 	}
 }

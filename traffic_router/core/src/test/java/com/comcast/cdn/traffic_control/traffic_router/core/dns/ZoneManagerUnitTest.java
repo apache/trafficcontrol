@@ -15,7 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -63,8 +63,6 @@ public class ZoneManagerUnitTest {
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
 
         PowerMockito.spy(ZoneManager.class);
-        PowerMockito.doNothing().when(ZoneManager.class, "initDnsRoutingNames", cacheRegister);
-        PowerMockito.doReturn(true).when(ZoneManager.class, "isDnsRoutingName", anyString());
         PowerMockito.doNothing().when(ZoneManager.class, "initTopLevelDomain", cacheRegister);
         PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", trafficRouter);
 
@@ -84,6 +82,7 @@ public class ZoneManagerUnitTest {
 
         Zone zone = mock(Zone.class);
         when(zone.findRecords(any(Name.class), anyInt())).thenReturn(setResponse);
+        when(zone.getOrigin()).thenReturn(new Name(qname, 1));
 
         DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1L, client);
         builder = spy(builder);

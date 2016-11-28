@@ -898,6 +898,7 @@ sub update {
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 			deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
 			anonymous_blocking_enabled => $self->paramAsScalar('ds.anonymous_blocking_enabled'),
+			max_dns_answers    => $self->paramAsScalar('ds.max_dns_answers'),
 		);
 
 		my $typename = $self->typename();
@@ -905,7 +906,6 @@ sub update {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
-			$hash{max_dns_answers}  = $self->paramAsScalar('ds.max_dns_answers');
 			$hash{dns_bypass_ttl} =
 				$self->paramAsScalar('ds.dns_bypass_ttl') eq ""
 				? undef

@@ -48,9 +48,9 @@ import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -73,7 +73,7 @@ public class ZoneManagerTest {
 	public void setUp() throws Exception {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
 		trafficRouterManager.getTrafficRouter().setApplicationContext(context);
-		final File file = new File("src/test/resources/czmap.json");
+		final File file = new File("src/test/db/czmap.json");
 		final ObjectMapper mapper = new ObjectMapper();
 		final JsonNode jsonNode = mapper.readTree(file);
 		final JsonNode coverageZones = jsonNode.get("coverageZones");
@@ -107,14 +107,14 @@ public class ZoneManagerTest {
 
 			final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
 
-			for (CacheLocation location : cacheRegister.getCacheLocations()) {
+			for (InetAddress source : netMap.values()) {
+				final CacheLocation location = trafficRouter.getCoverageZoneCacheLocation(source.getHostAddress(), ds);
 				final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);
 
 				if (caches == null) {
 					continue;
 				}
 
-				final InetAddress source = netMap.get(location.getId());
 				final DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1, source);
 				final Set<Zone> zones = new HashSet<Zone>();
 				final int maxDnsIps = ds.getMaxDnsIps();

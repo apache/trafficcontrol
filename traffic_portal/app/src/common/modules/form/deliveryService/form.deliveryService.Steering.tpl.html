@@ -425,6 +425,22 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.maxDnsAnswers), 'has-feedback': hasError(routingConfig.maxDnsAnswers)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="maxDnsAnswers">Max DNS Answers<div class="helptooltip">
+                            <div class="helptext">
+                                Max number of IP addresses in DNS answer (0 means all)
+                            </div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="maxDnsAnswers" name="maxDnsAnswers" type="number" class="form-control" placeholder="Max number of IP addresses in DNS answer (0 means all)" ng-model="deliveryService.maxDnsAnswers" step="1" min="0">
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.maxDnsAnswers, 'min')">Too Small (must be greater than or equal to 0)</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.maxDnsAnswers != dsCurrent.maxDnsAnswers">
+                                <h3>Current Value</h3>
+                                <pre>{{::dsCurrent.maxDnsAnswers}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(routingConfig.ccrDnsTtl), 'has-feedback': hasError(routingConfig.ccrDnsTtl)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="ccrDnsTtl">Delivery Service DNS TTL<div class="helptooltip">
                             <div class="helptext">The <abbr title="Time To Live">TTL</abbr> on the DNS record for the Traffic Router A and AAAA records. Setting too high or too low will result in poor caching performance.</div>
