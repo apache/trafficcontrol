@@ -57,16 +57,16 @@ func TestCacheGroup(t *testing.T) {
 			testHelper.Success(t, "Should get back \"edge-philadelphia\" for \"Name\"")
 		}
 
-		if cacheGroup.Longitude != 5 {
-			testHelper.Error(t, "Should get back \"5\" for \"Longitude\", got: %v", cacheGroup.Longitude)
+		if cacheGroup.Longitude != -5.66 {
+			testHelper.Error(t, "Should get back \"-5.66\" for \"Longitude\", got: %v", cacheGroup.Longitude)
 		} else {
-			testHelper.Success(t, "Should get back \"5\" for \"Longitude\"")
+			testHelper.Success(t, "Should get back \"-5.66\" for \"Longitude\"")
 		}
 
-		if cacheGroup.Latitude != 55 {
-			testHelper.Error(t, "Should get back \"55\" for \"Latitude\", got: %v", cacheGroup.Latitude)
+		if cacheGroup.Latitude != 55.67 {
+			testHelper.Error(t, "Should get back \"55.67\" for \"Latitude\", got: %v", cacheGroup.Latitude)
 		} else {
-			testHelper.Success(t, "Should get back \"55\" for \"Latitude\"")
+			testHelper.Success(t, "Should get back \"55.67\" for \"Latitude\"")
 		}
 
 		if cacheGroup.ParentName != "mid-northeast" {
