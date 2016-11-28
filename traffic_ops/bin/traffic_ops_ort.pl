@@ -172,7 +172,6 @@ my %install_tracker;
 my $config_dirs      = undef;
 my $cfg_file_tracker = undef;
 my $ssl_tracker      = undef;
-my $ats_uid          = getpwnam("ats");
 
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Start main flow
@@ -198,7 +197,8 @@ if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == 
 my $header_comment = &get_header_comment($traffic_ops_host);
 
 &process_packages( $hostname_short, $traffic_ops_host );
-
+# get the ats user's UID after package installation in case this is the initial badass
+my $ats_uid          = getpwnam("ats");
 &process_chkconfig( $hostname_short, $traffic_ops_host );
 
 #### First time
