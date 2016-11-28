@@ -109,7 +109,6 @@ func NewCRStatesThreadsafe() CRStatesThreadsafe {
 }
 
 // Get returns the internal Crstates object for reading.
-// TODO add GetCaches, GetDeliveryservices?
 func (t *CRStatesThreadsafe) Get() Crstates {
 	t.m.RLock()
 	defer t.m.RUnlock()
@@ -125,10 +124,11 @@ func (t *CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]
 }
 
 // GetCache returns the availability data of the given cache. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetCache(name enum.CacheName) IsAvailable {
+func (t *CRStatesThreadsafe) GetCache(name enum.CacheName) (available IsAvailable, ok bool) {
 	t.m.RLock()
-	defer t.m.RUnlock()
-	return t.crStates.Caches[name]
+	available, ok = t.crStates.Caches[name]
+	t.m.RUnlock()
+	return
 }
 
 // GetCaches returns the availability data of all caches. This does not mutate, and is thus safe for multiple goroutines to call.
@@ -139,10 +139,11 @@ func (t *CRStatesThreadsafe) GetCaches() map[enum.CacheName]IsAvailable {
 }
 
 // GetDeliveryService returns the availability data of the given delivery service. This does not mutate, and is thus safe for multiple goroutines to call.
-func (t *CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) Deliveryservice {
+func (t *CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) (ds Deliveryservice, ok bool) {
 	t.m.RLock()
-	defer t.m.RUnlock()
-	return t.crStates.Deliveryservice[name]
+	ds, ok = t.crStates.Deliveryservice[name]
+	t.m.RUnlock()
+	return
 }
 
 // SetCache sets the internal availability data for a particular cache.
