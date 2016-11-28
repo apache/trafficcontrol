@@ -619,13 +619,9 @@ func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory ResultHistory
 }
 
 func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats LastStatsThreadsafe) []byte {
-	// serverTypes := toData.Get().ServerTypes
 	kbpsStats := lastStats.Get()
 	sum := float64(0.0)
 	for _, data := range kbpsStats.Caches {
-		// if serverTypes[cache] != enum.CacheTypeEdge {
-		// 	continue
-		// }
 		sum += data.Bytes.PerSec / ds.BytesPerKilobit
 	}
 	return []byte(fmt.Sprintf("%f", sum))
