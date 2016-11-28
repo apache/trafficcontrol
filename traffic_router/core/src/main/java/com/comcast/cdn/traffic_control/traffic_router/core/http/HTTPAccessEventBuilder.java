@@ -106,6 +106,7 @@ public class HTTPAccessEventBuilder {
         final String xMmClientIpHeader = httpServletRequest.getHeader(HTTPRequest.X_MM_CLIENT_IP);
         final String fakeIpParameter = httpServletRequest.getParameter(HTTPRequest.FAKE_IP);
 
+        final String remoteIp = chi;
         if (xMmClientIpHeader != null) {
             chi = xMmClientIpHeader;
         } else if (fakeIpParameter != null) {
@@ -115,8 +116,17 @@ public class HTTPAccessEventBuilder {
         final String rgb = formatObject(httpAccessRecord.getRegionalGeoResult());
 
         final StringBuilder stringBuilder = new StringBuilder(timeString)
-            .append(" qtype=HTTP chi=").append(chi)
-            .append(" url=\"").append(url)
+            .append(" qtype=HTTP chi=")
+            .append(chi)
+            .append(" rhi=");
+
+        if (!remoteIp.equals(chi)) {
+            stringBuilder.append(remoteIp);
+        } else {
+            stringBuilder.append('-');
+        }
+
+        stringBuilder.append(" url=\"").append(url)
             .append("\" cqhm=").append(cqhm)
             .append(" cqhv=").append(cqhv)
             .append(" rtype=").append(resultType)
