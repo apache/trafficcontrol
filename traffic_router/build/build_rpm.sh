@@ -117,7 +117,7 @@ function initBuildArea() {
 
 	export MVN_CMD="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
 	echo $MVN_CMD
-	$MVN_CMD
+	(cd $TR_DIR; $MVN_CMD)
 	cp -r "$TR_DIR"/{build,connector,core} "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; exit 1; }
 	cp  "$TR_DIR"/pom.xml "$tr_dest" || { echo "Could not copy to $tr_dest: $?"; exit 1; }
 
