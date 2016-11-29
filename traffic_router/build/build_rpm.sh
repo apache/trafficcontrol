@@ -105,7 +105,6 @@ function checkEnvironment() {
 	echo "TC_VERSION: $TC_VERSION"
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
-    export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
 }
 
 # ---------------------------------------
@@ -115,7 +114,7 @@ function initBuildArea() {
 
 	tr_dest=$(createSourceDir traffic_router)
 
-	export MVN_CMD="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
+	export MVN_CMD="mvn versions:set -DnewVersion=$TC_VERSION"
 	echo $MVN_CMD
 	(cd $TR_DIR; $MVN_CMD)
 	cp -r "$TR_DIR"/{build,connector,core} "$tr_dest"/. || { echo "Could not copy to $tr_dest: $?"; exit 1; }
