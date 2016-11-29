@@ -492,3 +492,21 @@ During the test it will provide feedback about request latency and transactions 
 
 While it is running it is suggested that you monitor your Traffic Router nodes for memory and CPU utilization.
 
+Tuning Recommendations
+======================
+
+The following is an example of /opt/tomcat/bin/setenv.sh that has been tested on a multi core server running under HTTPS load test requests.
+This is following the general recommendation to use the G1 garbage collector for JVM applications running on multi core machines.
+In addition to using the G1 garbage collector the InitiatingHeapOccupancyPercent was lowered to run garbage collection more frequently which
+improved overall throughput for Traffic Router and reduced 'Stop the World' garbage collection. Note that setting the min and max heap settings
+in setenv.sh will override init scripts in /etc/init.d/tomcat.
+
+  /opt/tomcat/bin/setenv.sh::
+
+
+      #! /bin/sh
+      export CATALINA_OPTS="$CATALINA_OPTS -server"
+      export CATALINA_OPTS="$CATALINA_OPTS -Xms2g -Xmx2g"
+      export CATALINA_OPTS="$CATALINA_OPTS -XX:+UseG1GC"
+      export CATALINA_OPTS="$CATALINA_OPTS -XX:+UnlockExperimentalVMOptions"
+      export CATALINA_OPTS="$CATALINA_OPTS -XX:InitiatingHeapOccupancyPercent=30"
