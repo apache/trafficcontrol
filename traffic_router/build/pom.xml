@@ -88,6 +88,7 @@
 							<rules>
 								<requireEnvironmentVariable>
 									<variableName>BUILD_NUMBER</variableName>
+									<variableName>RHEL_VERSION</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -125,7 +126,7 @@
 						<configuration>
 							<group>Applications/Internet</group>
 							<name>${project.parent.artifactId}</name>
-							<release>${env.BUILD_NUMBER}.el6</release>
+							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
 							<needarch>x86_64</needarch>
 							<mappings>
 								<mapping>
