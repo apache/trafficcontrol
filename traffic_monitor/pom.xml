@@ -26,7 +26,7 @@ under the License.
 
 	<groupId>com.comcast.cdn.traffic_control</groupId>
 	<artifactId>traffic_monitor</artifactId>
-	<version>1.8.0</version>
+	<version>1.9.0</version>
 	<packaging>war</packaging>
 
 	<scm>
