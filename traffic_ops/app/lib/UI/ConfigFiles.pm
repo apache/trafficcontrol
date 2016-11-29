@@ -987,13 +987,19 @@ sub remap_dot_config {
 
 	# mids don't get here.
 	foreach my $remap ( @{ $data->{dslist} } ) {
-		foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
-			my $map_to = $remap->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+        	my @path_prefixes = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $remap->{ds_id} } )->get_column('path_prefix')->all();
+        	if (0 == @path_prefixes) {
+			@path_prefixes = ("/");
 		}
-		foreach my $map_from ( keys %{ $remap->{remap_line2} } ) {
-			my $map_to = $remap->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to );
+		foreach my $path_prefix ( @path_prefixes ) {
+			foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
+				my $map_to = $remap->{remap_line}->{$map_from};
+				$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to, $path_prefix );
+			}
+			foreach my $map_from ( keys %{ $remap->{remap_line2} } ) {
+				my $map_to = $remap->{remap_line2}->{$map_from};
+				$text = $self->build_remap_line( $server, $pdata, $text, $data, $remap, $map_from, $map_to, $path_prefix );
+			}
 		}
 	}
 	return $text;
@@ -1008,6 +1014,7 @@ sub build_remap_line {
 	my $remap    = shift;
 	my $map_from = shift;
 	my $map_to   = shift;
+	my $path     = shift;
 
 	if ( $remap->{type} eq 'ANY_MAP' ) {
 		$text .= $remap->{remap_text} . "\n";
@@ -1018,6 +1025,7 @@ sub build_remap_line {
 	my $dscp      = $remap->{dscp};
 
 	$map_from =~ s/ccr/$host_name/;
+	$map_from .= substr( $path, 1, length($path) );
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;

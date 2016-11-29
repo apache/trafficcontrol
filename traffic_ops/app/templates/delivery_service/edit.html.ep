@@ -151,6 +151,7 @@
 
 	var re_row_num = Object;
 	var row = 0;
+	var path_prefix_row = 0;
 	$(function(){
 		$.get("/datatype/orderby/id", function(data){
 			$.each(data, function(idx, val) {
@@ -198,6 +199,9 @@ function setup_form(speed) {
 		if (type_selected.match(/^HTTP/)) {
 			$("#regexp_selector :nth-child(3)").removeAttr('disabled');
 			$("#regexp_selector :nth-child(4)").removeAttr('disabled');
+			$('#path_prefix_headline').show(speed);
+			$('#path_prefix_table').show(speed);
+			$('#add_path_prefix').show(speed);
 			$('#ccr_dns_ttl').show(speed);
 			$('#protocoli_row').show(speed);
 			$('#dscp_row').show(speed);
@@ -238,6 +242,9 @@ function setup_form(speed) {
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
 			$("#regexp_selector :nth-child(4)").attr('disabled','disabled');
+			$('#path_prefix_headline').hide(speed);
+			$('#path_prefix_table').hide(speed);
+			$('#add_path_prefix').hide(speed);
 			$('#ccr_dns_ttl').show(speed);
 			$('#protocoli_row').show(speed);
             $('#dscp_row').show(speed);
@@ -429,8 +436,27 @@ function setup_form(speed) {
       });
     });
 
+	function add_path_prefix_line() {
+		$('#path_prefix_table_body').append(
+			"<tr>" +
+			"<td>Path prefix:</td>" +
+			"<td><input type=\"text\" size=111 id=\"path_prefix_new_" + path_prefix_row + "\" name=\"path_prefix_new_" + path_prefix_row + "\"></input></td>" +
+			"</tr>"
+		);
+		path_prefix_row++;
+	}
 
 </script>
+<style>
+#add_path_prefix {
+    border-radius: 8px;
+    background: #ffffff;
+    border: 2px solid;
+    padding: 2px;
+    width: 125px;
+    height: 15px;
+}
+</style>
 </head>
 
    <div id='accordion' class "dialog_border" style='padding-left:10px;'>
@@ -518,6 +544,43 @@ function setup_form(speed) {
 				% }
 				</tbody>
 			</table>
+
+			<h2 id="path_prefix_headline" style="color:white;">Path prefixes for this delivery service:</h2>
+			<!--DN: hidden field for validation of path prefix table.
+				Cause I didnt re-factor the table to use FormFields. (yet?)-->
+			<div class="block">
+				%= label_for 'prefix' => '', class => 'label'
+				%= field('hidden.prefix')->hidden(class => 'field', id => 'hidden.prefix', name => 'prefix', value => '_____');
+				<% unless (field('hidden.prefix')->valid) { %>
+				<span class="field-with-error"><%= field('hidden.prefix')->error %></span>
+				<% } %>
+			</div>
+			<table id="path_prefix_table" width=100% cellpadding="10">
+				<tbody id="path_prefix_table_body">
+				%foreach ( my $prefix=0; $prefix<( scalar @{ $path_prefix_set } ); $prefix++ ) {
+					<tr id="tr_prefix_row_<%= $prefix %>">
+	            		<td width="130px">Path prefix:</td>
+	            		<td>
+	            			<% if ($priv_level >= 20) { %>
+	            			<input type="text" name="path_prefix_<%= $prefix %>" value= "<%= $path_prefix_set->[$prefix] %>" size=111/>
+	            			<% } else { %>
+	            			<input type="text" name="path_prefix_<%= $prefix %>" value= "<%= $path_prefix_set->[$prefix] %>" size=111 readonly/>
+	            			<% } %>
+	            		</td>
+	            		<% if ($priv_level >= 20) { %>
+	            		<td id="rm_prefix_row_<%= $prefix %>"><a href="#" onclick="removeRegexp(tr_prefix_row_<%= $prefix %>)">remove</a></td>
+	            		<% } %>
+	       			</tr>
+				% }
+				</tbody>
+			</table>
+			<br>
+			<% if ($priv_level >= 20) { %>
+			<p id="add_path_prefix" onclick="add_path_prefix_line()">Add a new path prefix</p>
+			<% } %>
+			<br>
+
+
 			<br><hr>
 			<% if ($priv_level >= 20) { %>
 			   <input class="button" style="margin-left:5px;" type="submit" value="Save"/>

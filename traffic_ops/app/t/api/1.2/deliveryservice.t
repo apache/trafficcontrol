@@ -343,6 +343,169 @@ $t->get_ok('/api/1.2/deliveryservices/list?logsEnabled=true')->status_is(200)->$
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+# path prefix
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
+        "xmlId" => "ds_7",
+        "displayName" => "ds_displayname_7",
+        "protocol" => "1",
+        "orgServerFqdn" => "http://10.75.168.92",
+        "cdnName" => "cdn1",
+        "profileName" => "CCR1",
+        "type" => "HTTP",
+        "multiSiteOrigin" => "0",
+        "active" => "0",
+        "pathPrefixList" => ["/path1/"],
+        "matchList" => [
+            {
+                "type" =>  "HOST_REGEXP",
+                "setNumber" =>  "0",
+                "pattern" => ".*\\.ds_path_prefix\\..*"
+            }
+        ]})
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/xmlId" => "ds_7")
+    ->json_is( "/response/displayName" => "ds_displayname_7")
+    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.92")
+    ->json_is( "/response/cdnName" => "cdn1")
+    ->json_is( "/response/profileName" => "CCR1")
+    ->json_is( "/response/protocol" => "1")
+    ->json_is( "/response/multiSiteOrigin" => "0")
+    ->json_is( "/response/pathPrefixList" => ["/path1/"])
+    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
+    ->json_is( "/response/matchList/0/setNumber" => "0")
+    ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_path_prefix\\..*")
+            , 'Does the deliveryservice details return?';
+
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
+        "xmlId" => "ds_8",
+        "displayName" => "ds_displayname_8",
+        "protocol" => "1",
+        "orgServerFqdn" => "http://10.75.168.92",
+        "cdnName" => "cdn1",
+        "profileName" => "CCR1",
+        "type" => "HTTP",
+        "multiSiteOrigin" => "0",
+        "active" => "0",
+        "pathPrefixList" => ["/path2/"],
+        "matchList" => [
+            {
+                "type" =>  "HOST_REGEXP",
+                "setNumber" =>  "0",
+                "pattern" => ".*\\.ds_path_prefix\\..*"
+            }
+        ]})
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/xmlId" => "ds_8")
+    ->json_is( "/response/displayName" => "ds_displayname_8")
+    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.92")
+    ->json_is( "/response/cdnName" => "cdn1")
+    ->json_is( "/response/profileName" => "CCR1")
+    ->json_is( "/response/protocol" => "1")
+    ->json_is( "/response/multiSiteOrigin" => "0")
+    ->json_is( "/response/pathPrefixList" => ["/path2/"])
+    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
+    ->json_is( "/response/matchList/0/setNumber" => "0")
+    ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_path_prefix\\..*")
+            , 'Does the deliveryservice details return?';
+
+$ds_id = &get_ds_id('ds_8');
+
+ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . "/update" => {Accept => 'application/json'} => json => {
+        "xmlId" => "ds_8",
+        "displayName" => "ds_displayname_8",
+        "protocol" => "1",
+        "orgServerFqdn" => "http://10.75.168.92",
+        "cdnName" => "cdn1",
+        "profileName" => "CCR1",
+        "type" => "HTTP",
+        "multiSiteOrigin" => "0",
+        "active" => "0",
+        "pathPrefixList" => ["/path3/", "/path4/"],
+        "matchList" => [
+            {
+                "type" =>  "HOST_REGEXP",
+                "setNumber" =>  "0",
+                "pattern" => ".*\\.ds_path_prefix\\..*"
+            }
+        ]})
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/xmlId" => "ds_8")
+    ->json_is( "/response/displayName" => "ds_displayname_8")
+    ->json_is( "/response/orgServerFqdn" => "http://10.75.168.92")
+    ->json_is( "/response/cdnName" => "cdn1")
+    ->json_is( "/response/profileName" => "CCR1")
+    ->json_is( "/response/protocol" => "1")
+    ->json_is( "/response/multiSiteOrigin" => "0")
+    ->json_is( "/response/pathPrefixList" => ["/path3/", "/path4/"])
+    ->json_is( "/response/matchList/0/type" => "HOST_REGEXP")
+    ->json_is( "/response/matchList/0/setNumber" => "0")
+    ->json_is( "/response/matchList/0/pattern" => ".*\\.ds_path_prefix\\..*")
+            , 'Does the deliveryservice details return?';
+
+ok $t->get_ok("/api/1.2/deliveryservices/" . $ds_id . "/get")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+		->json_is( "/response/0/xmlId", "ds_8" )
+		->json_is( "/response/0/pathPrefixList", ["/path3/", "/path4/"] );
+
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
+        "xmlId" => "ds_9",
+        "displayName" => "ds_displayname_9",
+        "protocol" => "1",
+        "orgServerFqdn" => "http://10.75.168.92",
+        "cdnName" => "cdn1",
+        "profileName" => "CCR1",
+        "type" => "HTTP",
+        "multiSiteOrigin" => "0",
+        "active" => "0",
+        "pathPrefixList" => ["/"],
+        "matchList" => [
+            {
+                "type" =>  "HOST_REGEXP",
+                "setNumber" =>  "0",
+                "pattern" => ".*\\.ds_path_prefix\\..*"
+            }
+        ]})
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
+        "xmlId" => "ds_9",
+        "displayName" => "ds_displayname_9",
+        "protocol" => "1",
+        "orgServerFqdn" => "http://10.75.168.92",
+        "cdnName" => "cdn1",
+        "profileName" => "CCR1",
+        "type" => "HTTP",
+        "multiSiteOrigin" => "0",
+        "active" => "0",
+        "pathPrefixList" => ["path"],
+        "matchList" => [
+            {
+                "type" =>  "HOST_REGEXP",
+                "setNumber" =>  "0",
+                "pattern" => ".*\\.ds_path_prefix\\..*"
+            }
+        ]})
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/json'} => json => {
+        "xmlId" => "ds_9",
+        "displayName" => "ds_displayname_9",
+        "protocol" => "1",
+        "orgServerFqdn" => "http://10.75.168.92",
+        "cdnName" => "cdn1",
+        "profileName" => "CCR1",
+        "type" => "HTTP",
+        "multiSiteOrigin" => "0",
+        "active" => "0",
+        "pathPrefixList" => ["/path1/sub/"],
+        "matchList" => [
+            {
+                "type" =>  "HOST_REGEXP",
+                "setNumber" =>  "0",
+                "pattern" => ".*\\.ds_path_prefix\\..*"
+            }
+        ]})
+    ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

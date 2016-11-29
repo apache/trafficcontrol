@@ -50,6 +50,7 @@ sub edit {
 	my $data = $rs_ds->single;
 
 	my $regexp_set   = &get_regexp_set( $self, $id );
+	my $path_prefix_set = &get_path_prefix_set( $self, $id );
 	my $cdn_domain = $data->cdn->domain_name;
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
@@ -60,14 +61,15 @@ sub edit {
 	$self->stash_cdn_selector($data->cdn->id);
 	&stash_role($self);
 	$self->stash(
-		ds           => $data,
-		server_count => $server_count,
-		static_count => $static_count,
-		fbox_layout  => 1,
-		regexp_set   => $regexp_set,
-		example_urls => \@example_urls,
-		hidden       => {},               # for form validation purposes
-		mode         => 'edit'            # for form generation
+		ds              => $data,
+		server_count    => $server_count,
+		static_count    => $static_count,
+		fbox_layout     => 1,
+		regexp_set      => $regexp_set,
+		path_prefix_set => $path_prefix_set,
+		example_urls    => \@example_urls,
+		hidden          => {},               # for form validation purposes
+		mode            => 'edit'            # for form generation
 	);
 }
 
@@ -124,6 +126,12 @@ sub get_example_urls {
 		}
 	}
 	else { # TODO:  Is this necessary? Could this be consolidated?
+		my $path_prefix = "";
+		my @path_prefixes = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $id } )->get_column('path_prefix')->all();
+		if ( @path_prefixes ) {
+			$path_prefix = $path_prefixes[0];
+		}
+
 		foreach my $re ( @{$regexp_set} ) {
 			if ( $re->{type} eq 'HOST_REGEXP' ) {
 				my $host = $re->{pattern};
@@ -152,10 +160,10 @@ sub get_example_urls {
 			}
 			elsif ( $re->{type} eq 'PATH_REGEXP' ) {
 				if ( defined( $example_urls[ $re->{set_number} ] ) ) {
-					$example_urls[ $re->{set_number} ] .= $re->{pattern};
+					$example_urls[ $re->{set_number} ] .= $path_prefix . $re->{pattern};
 				}
 				else {
-					$example_urls[ $re->{set_number} ] = $re->{pattern};
+					$example_urls[ $re->{set_number} ] = $path_prefix . $re->{pattern};
 				}
 			}
 		}
@@ -179,6 +187,19 @@ sub get_regexp_set {
 		$i++;
 	}
 	return $regexp_set;
+}
+
+sub get_path_prefix_set {
+	my $self = shift;
+	my $id   = shift;
+	my $path_prefix_set = [];
+	my $i = 0;
+	my $rs = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $id } );
+	while ( my $row = $rs->next ) {
+		$path_prefix_set->[$i] = $row->path_prefix;
+		$i++;
+	}
+	return $path_prefix_set;
 }
 
 # Read
@@ -372,29 +393,6 @@ sub check_deliveryservice_input {
 					$self->field('hidden.regex')->is_equal( "", $err );
 				}
 			}
-
-			if ( $param =~ /^re_re_(\d+)/ || $param =~ /^re_re_new_(\d+)/ ) {
-				my $order_no = $1;
-				my $new_regex;
-				my $new_regex_type;
-
-				if ( defined( $self->param( 're_type_' . $order_no ) ) ) {
-					$new_regex      = $self->param( 're_re_' . $order_no );
-					$new_regex_type = $self->param( 're_type_' . $order_no );
-				}
-
-				if ( defined( $self->param( 're_type_new_' . $order_no ) ) ) {
-					$new_regex      = $self->param( 're_re_new_' . $order_no );
-					$new_regex_type = $self->param( 're_type_new_' . $order_no );
-				}
-
-				my $conflicting_regex = $self->find_existing_host_regex( $new_regex_type, $new_regex, $cdn_domain, $cdn_id, $ds_id );
-				if ( defined($conflicting_regex) ) {
-					$self->field('hidden.regex')
-						->is_equal( "",
-						"There already is a HOST_REGEXP (" . $conflicting_regex . ") that matches " . $new_regex . "; Please choose another." );
-				}
-			}
 		}
 		elsif ( $param =~ /^re_order_.*(\d+)/ ) {
 			if ( $self->param($param) !~ /^\d+$/ ) {
@@ -421,6 +419,61 @@ sub check_deliveryservice_input {
 	if ( !$match_one ) {
 		$self->field('hidden.regex')->is_equal( "", "A minimum of one host regexp with order 0 is needed per delivery service." );
 	}
+
+	my $path_prefix_number=0;
+	my $path_prefixes;
+	foreach my $param ( $self->param ) {
+		if ( ( $param =~ /path_prefix_/ ) || ( $param =~ /path_prefix_new_/ ) ) {
+			if ( $self->param($param) eq "" ) {
+				next;
+			}
+			if ( length($self->param($param)) > 255 ) {
+				$self->field('hidden.prefix')->is_equal( "", "Max length of path prefix is 255." );
+			}
+			if ( (not $self->param($param) =~ /^\/[0-9a-zA-Z_\!\~\*\'\(\)\.\;\?\:\@\&\=\+\$\,\%\#\-\/]+$/) || $self->param($param) =~ /\/\//) {
+				$self->field('hidden.prefix')->is_equal( "", "Invalid path prefix: " . $self->param($param) );
+			}
+			$path_prefixes->[$path_prefix_number++] = $self->param($param);
+			if ( $path_prefix_number > 10 ) {
+				$self->field('hidden.prefix')->is_equal( "", "At most 10 path prefixes can be configured per delivery service." );
+			}
+		}
+	}
+	if ( 0 == $path_prefix_number ) {
+		$path_prefixes->[0] = "/";
+	}
+
+	my $new_regex;
+	my $index = 0;
+	foreach my $param ( $self->param ) {
+		if ( $self->param($param) eq 'HOST_REGEXP' ) {
+			if ( $param =~ /re_type_(\d+)/ ) {
+				if ( defined( $self->param( 're_re_' . $1 ) ) )
+				{
+					$new_regex->[$index++] = $self->param( 're_re_' . $1 );
+				}
+			}
+			if ( $param =~ /re_type_new_(\d+)/ ) {
+				if ( defined( $self->param( 're_re_new_' . $1 ) ) )
+				{
+					$new_regex->[$index++] = $self->param( 're_re_new_' . $1 );
+				}
+			}
+		}
+	}
+	my $conflicting_regex_path_prefix = $self->find_existing_host_regex_path_prefix( $new_regex, $cdn_id, $path_prefixes, $ds_id );
+	if ( defined($conflicting_regex_path_prefix) ) {
+		if ("/" eq $path_prefixes->[0]) {
+			$self->field('hidden.regex')
+				->is_equal( "",
+				"Please solve the conflict: " . $conflicting_regex_path_prefix );
+		} else {
+			$self->field('hidden.prefix')
+				->is_equal( "",
+				"Please solve the conflict: " . $conflicting_regex_path_prefix );
+		}
+	}
+
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
 		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
 	}
@@ -920,6 +973,29 @@ sub update {
 			}
 		}
 
+		my $path_prefix_set_orig = $self->get_path_prefix_set( $id );
+		my $path_prefix_set_new = [];
+		my $index = 0;
+		foreach my $param ( $self->param ) {
+			if ( ( ( $param =~ /path_prefix_/ ) || ( $param =~ /path_prefix_new/ ) ) && ( $self->param($param) ne "" ) ) {
+				$path_prefix_set_new->[$index] = $self->param($param);
+				$index++;
+			}
+		}
+		if ( not ( @{$path_prefix_set_orig} ~~ @{$path_prefix_set_new} ) ) {
+			my $delete = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $id } );
+			$delete->delete();
+			foreach my $path_prefix ( @{$path_prefix_set_new} ) {
+				my $ds_path_prefix_insert = $self->db->resultset('DeliveryservicePathPrefix')->create(
+					{
+						deliveryservice => $id,
+						path_prefix     => $path_prefix,
+					}
+				);
+				$ds_path_prefix_insert->insert();
+			}
+		}
+
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
 		$self->header_rewrite(
 			$self->param('id'),
@@ -950,18 +1026,20 @@ sub update {
 		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 		my $regexp_set   = &get_regexp_set( $self, $id );
+		my $path_prefix_set = &get_path_prefix_set( $self, $id );
 		my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 		my $action;
 
 		$self->stash(
-			ds           => $data,
-			fbox_layout  => 1,
-			server_count => $server_count,
-			static_count => $static_count,
-			regexp_set   => $regexp_set,
-			example_urls => \@example_urls,
-			hidden       => {},               # for form validation purposes
-			mode         => "edit",
+			ds              => $data,
+			fbox_layout     => 1,
+			server_count    => $server_count,
+			static_count    => $static_count,
+			regexp_set      => $regexp_set,
+			path_prefix_set => $path_prefix_set,
+			example_urls    => \@example_urls,
+			hidden          => {},               # for form validation purposes
+			mode            => "edit",
 		);
 		$self->render('delivery_service/edit');
 	}
@@ -1118,6 +1196,18 @@ sub create {
 				}
 			);
 			$de_re_insert->insert();
+		}
+
+		foreach my $param ( $self->param ) {
+			if ( ( $param =~ /path_prefix_/ ) && ( $self->param($param) ne "" ) ) {
+				my $ds_path_prefix_insert = $self->db->resultset('DeliveryservicePathPrefix')->create(
+					{
+						deliveryservice => $new_id,
+						path_prefix     => $self->param($param),
+					}
+				);
+				$ds_path_prefix_insert->insert();
+			}
 		}
 
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();

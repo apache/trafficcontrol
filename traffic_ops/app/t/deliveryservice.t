@@ -281,6 +281,91 @@ ok $t->post_ok(
 	}
 )->status_is(302), "update deliveryservice";
 
+# path prefix DS
+ok $t->post_ok(
+	'/ds/create' => form => {
+		'ds.active'                 => '1',
+		'ds.ccr_dns_ttl'            => '3600',
+		'ds.dscp'                   => '40',
+		'ds.geo_limit'              => '0',
+		'ds.http_bypass_fqdn'       => '',
+		'ds.org_server_fqdn'        => 'http://jvd.knutsel.com',
+		'ds.multi_site_origin'      => '0',
+		'ds.max_dns_answers'        => '0',
+		'ds.profile'                => '1',
+		'ds.cdn_id'                 => '1',
+		'ds.qstring_ignore'         => '0',
+		're_order_0'                => '0',
+		're_re_0'                   => '.*\.jvdtest_pathprefix\..*',
+		're_type_0'                 => 'HOST_REGEXP',
+		'path_prefix_0'             => '/path1/',
+		'ds.type'                   => '36',
+		'ds.xml_id'                 => 'tst_xml_id_5',
+		'ds.protocol'               => '0',
+		'ds.display_name'           => 'display name 5',
+		'ds.regional_geo_blocking'  => '0',
+		'ds.geolimit_redirect_url'  => '',
+		'ds.use_content_prepositioning' => '0',
+	}
+)->status_is(302), "create HTTP PREPOSITION delivery service";
+
+ok $t->post_ok(
+	'/ds/create' => form => {
+		'ds.active'                 => '1',
+		'ds.ccr_dns_ttl'            => '3600',
+		'ds.dscp'                   => '40',
+		'ds.geo_limit'              => '0',
+		'ds.http_bypass_fqdn'       => '',
+		'ds.org_server_fqdn'        => 'http://jvd.knutsel.com',
+		'ds.multi_site_origin'      => '0',
+		'ds.max_dns_answers'        => '0',
+		'ds.profile'                => '1',
+		'ds.cdn_id'                 => '1',
+		'ds.qstring_ignore'         => '0',
+		're_order_0'                => '0',
+		're_re_0'                   => '.*\.jvdtest_pathprefix\..*',
+		're_type_0'                 => 'HOST_REGEXP',
+		'path_prefix_0'             => '/path2/',
+		'ds.type'                   => '36',
+		'ds.xml_id'                 => 'tst_xml_id_6',
+		'ds.protocol'               => '0',
+		'ds.display_name'           => 'display name 6',
+		'ds.regional_geo_blocking'  => '0',
+		'ds.geolimit_redirect_url'  => '',
+		'ds.use_content_prepositioning' => '0',
+	}
+)->status_is(302), "create HTTP PREPOSITION delivery service";
+
+my $ds_id_path_prefix = &get_ds_id('tst_xml_id_6');
+
+ok $t->post_ok(
+	'/ds/' . $ds_id_path_prefix . '/update' => form => {
+		'ds.active'                 => '1',
+		'ds.ccr_dns_ttl'            => '3600',
+		'ds.dscp'                   => '40',
+		'ds.geo_limit'              => '0',
+		'ds.http_bypass_fqdn'       => '',
+		'ds.org_server_fqdn'        => 'http://jvd.knutsel.com',
+		'ds.multi_site_origin'      => '0',
+		'ds.max_dns_answers'        => '0',
+		'ds.profile'                => '1',
+		'ds.cdn_id'                 => '1',
+		'ds.qstring_ignore'         => '0',
+		're_order_0'                => '0',
+		're_re_0'                   => '.*\.jvdtest_pathprefix\..*',
+		're_type_0'                 => 'HOST_REGEXP',
+		'path_prefix_0'             => '/path3/',
+		'path_prefix_1'             => '/path4/',
+		'ds.type'                   => '36',
+		'ds.xml_id'                 => 'tst_xml_id_6',
+		'ds.protocol'               => '0',
+		'ds.display_name'           => 'display name 6',
+		'ds.regional_geo_blocking'  => '0',
+		'ds.geolimit_redirect_url'  => '',
+		'ds.use_content_prepositioning' => '0',
+	}
+)->status_is(302), "create HTTP PREPOSITION delivery service";
+
 #Validate update
 # 1.0 API
 # Note the 4 is the index, not the id.

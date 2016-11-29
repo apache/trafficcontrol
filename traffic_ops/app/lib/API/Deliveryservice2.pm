@@ -74,6 +74,7 @@ sub delivery_services {
 				);
 			}
 
+        		my @path_prefixes = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $row->id } )->get_column('path_prefix')->all();
 			my $cdn_domain = $self->get_cdn_domain_by_ds_id($row->id);
 			my $regexp_set = &UI::DeliveryService::get_regexp_set( $self, $row->id );
 			my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
@@ -111,6 +112,7 @@ sub delivery_services {
 					"longDesc1"                => $row->long_desc_1,
 					"longDesc2"                => $row->long_desc_2,
 					"matchList"                => \@matchlist,
+					"pathPrefixList"           => \@path_prefixes,
 					"maxDnsAnswers"            => $row->max_dns_answers,
 					"midHeaderRewrite"         => $row->mid_header_rewrite,
 					"missLat"                  => $row->miss_lat,
@@ -264,6 +266,18 @@ sub create {
 				}
 			);
 			$de_re_insert->insert();
+		}
+
+		if ( defined($params->{pathPrefixList}) ) {
+			foreach my $path_prefix ( @{ $params->{pathPrefixList} } ) {
+				my $ds_path_prefix_insert = $self->db->resultset('DeliveryservicePathPrefix')->create(
+					{
+						deliveryservice => $new_id,
+						path_prefix     => $path_prefix,
+					}
+				);
+				$ds_path_prefix_insert->insert();
+			}
 		}
 
 		my $profile_id=$transformed_params->{ profile_id };
@@ -452,22 +466,6 @@ sub _check_params {
 		if ((scalar $match_list) == 0) {
 			return (undef, "At least have 1 pattern in matchList.");
 		}
-
-		my $cdn_domain = undef;
-
-		if (defined($ds_id)) {
-			$cdn_domain = $self->get_cdn_domain_by_ds_id($ds_id);
-		} else {
-			my $profile_id = $self->get_profile_id_for_name($params->{profileName});
-			$cdn_domain = $self->get_cdn_domain_by_profile_id($profile_id);
-		}
-
-		foreach my $match_item (@$match_list) {
-			my $conflicting_regex = $self->find_existing_host_regex($match_item->{'type'}, $match_item->{'pattern'}, $cdn_domain, $cdn_id, $ds_id);
-			if (defined($conflicting_regex)) {
-				return(undef, "Another delivery service is already using host regex $conflicting_regex");
-			}
-		}
 	} else {
 		return (undef, "parameter matchList is must." );
 	}
@@ -502,6 +500,37 @@ sub _check_params {
 		}
 	} else {
 		$transformed_params->{logsEnabled} = 0;
+	}
+
+	my $path_prefixes;
+	if ( defined($params->{pathPrefixList}) ) {
+		foreach my $path_prefix ( @{ $params->{pathPrefixList} } ) {
+			if ( length($path_prefix) > 255 ) {
+				return (undef, "Max length of path prefix is 255." );
+			}
+			if ( (not $path_prefix =~ /^\/[0-9a-zA-Z_\!\~\*\'\(\)\.\;\?\:\@\&\=\+\$\,\%\#\-\/]+$/) || $path_prefix =~ /\/\//) {
+				return (undef, "Invalid path prefix: " .  $path_prefix);
+			}
+		}
+		if ( (scalar @{ $params->{pathPrefixList} }) > 10 ) {
+			return (undef, "At most 10 path prefixes can be configured per delivery service.");
+		}
+		$path_prefixes = $params->{pathPrefixList};
+	} else {
+		$path_prefixes->[0] = "/";
+	}
+
+	my $new_regex = [];
+	my $match_list = $params->{matchList};
+	foreach my $match_item (@$match_list) {
+		if ( $match_item->{'type'} eq "HOST_REGEXP" ) {
+			push( @{$new_regex}, $match_item->{'pattern'} );
+		}
+	}
+
+        my $conflicting_regex_path_prefix = $self->find_existing_host_regex_path_prefix( $new_regex, $cdn_id, $path_prefixes, $ds_id );
+	if ( defined($conflicting_regex_path_prefix) ) {
+		return (undef, "Host_regex/path_prefix conflict: " . $conflicting_regex_path_prefix);
 	}
 
 	return ($transformed_params, undef);
@@ -635,6 +664,9 @@ sub get_response {
 	}
 	$response->{matchList} = \@pats;
 
+	my @path_prefixes = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $ds_id } )->get_column('path_prefix')->all();
+	$response->{pathPrefixList} = \@path_prefixes;
+
 	return $response;
 }
 
@@ -722,6 +754,23 @@ sub update {
 			$delete_re->delete();
 			$row = $rs->next;
 		}
+	}
+
+	if ( defined($params->{pathPrefixList}) ) {
+		my $path_prefix_set_orig = &UI::DeliveryService::get_path_prefix_set( $self, $id );
+		if ( not ( @{$path_prefix_set_orig} ~~ @{$params->{pathPrefixList}} ) ) {
+                        my $delete = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $id } );
+                        $delete->delete();
+                        foreach my $path_prefix ( @{$params->{pathPrefixList}} ) {
+                                my $ds_path_prefix_insert = $self->db->resultset('DeliveryservicePathPrefix')->create(
+                                        {
+                                                deliveryservice => $id,
+                                                path_prefix     => $path_prefix,
+                                        }
+                                );
+                                $ds_path_prefix_insert->insert();
+                        }
+                }
 	}
 
 	my $profile_id=$transformed_params->{ profile_id };

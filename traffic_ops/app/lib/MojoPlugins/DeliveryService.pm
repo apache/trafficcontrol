@@ -23,6 +23,7 @@ use Utils::Helper::DateHelper;
 use JSON;
 use HTTP::Date;
 use Common::ReturnCodes qw(SUCCESS ERROR);
+use Storable 'dclone';
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
@@ -202,6 +203,68 @@ sub register {
 
 				if ($existing_regex eq $new_regex) {
 					return $existing_regex;
+				}
+			}
+
+			return undef;
+		}
+	);
+
+	$app->renderer->add_helper(
+		find_existing_host_regex_path_prefix => sub {
+			my $self = shift || confess($no_instance_message);
+			my $host_regex_set = shift || confess("Please supply a host regular expression set");
+			my $cdn_id = shift || confess("Please supply a cdn_name");
+			my $path_prefixes = shift || confess("Please supply a path prefix set");
+			my $ds_id = shift;
+
+			my $type_id = $self->db->resultset('Type')->search( { name => 'HOST_REGEXP' } )->get_column('id')->single();
+			my $rs = $self->db->resultset('DeliveryserviceRegex')->search(
+					 {
+					 	-and =>
+							[
+								'deliveryservice.cdn_id' => $cdn_id,
+								'regex.pattern' => { -in => $host_regex_set },
+								'regex.type' => $type_id
+							]
+					},
+					{ prefetch => [ 'deliveryservice', 'regex' ] }
+				);
+
+			my @other_path_prefixes=();
+			while (my $row = $rs->next) {
+				if (defined($ds_id) && $ds_id == $row->deliveryservice->id) {
+					next;
+				}
+				my @path_prefix = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $row->deliveryservice->id } )->get_column('path_prefix')->all();
+				if ( @path_prefix ) {
+					push( @other_path_prefixes, @path_prefix );
+				} else {
+					return "conflict with delivery service \"" . $row->deliveryservice->xml_id . "\"";
+				}
+			}
+
+			my $path_prefix_new = scalar @{$path_prefixes};
+			my $path_prefix_orig = scalar @other_path_prefixes;
+			my $all_path_prefixes = dclone $path_prefixes;
+			push(@{$all_path_prefixes}, @other_path_prefixes);
+			my ($a, $b);
+			for ( my $i=0; $i<$path_prefix_new; $i++ ) {
+				for ( my $j=$i+1; $j<$path_prefix_new+$path_prefix_orig; $j++ ) {
+					if ( length($all_path_prefixes->[$i]) < length($all_path_prefixes->[$j]) ) {
+						$a = $all_path_prefixes->[$i];
+						$b = $all_path_prefixes->[$j];
+					} else {
+						$a = $all_path_prefixes->[$j];
+						$b = $all_path_prefixes->[$i];
+					}
+					if ( $a eq substr($b,0,length($a)) ) {
+						if ("/" eq $a) {
+							return "confilict with path prefix \"" . $b . "\"";
+						} else {
+							return "path prefix \"" . $a . "\"" . "confilict with path prefix \"" . $b . "\"";
+						}
+					}
 				}
 			}
 

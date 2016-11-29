@@ -451,6 +451,21 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 0, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
+=head2 deliveryservice_path_prefixes
+
+Type: has_many
+
+Related object: L<Schema::Result::DeliveryservicePathPrefix>
+
+=cut
+
+__PACKAGE__->has_many(
+  "deliveryservice_path_prefixes",
+  "Schema::Result::DeliveryservicePathPrefix",
+  { "foreign.deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 deliveryservice_regexes
 
 Type: has_many

@@ -27,6 +27,7 @@ use Time::HiRes qw(gettimeofday);
 use File::Basename;
 use File::Path;
 use Scalar::Util qw(looks_like_number);
+use Storable 'dclone';
 
 sub ccr_config {
     my $self     = shift;
@@ -335,6 +336,24 @@ sub gen_crconfig_json {
                 );
             }
         }
+	my @path_prefixes = $self->db->resultset('DeliveryservicePathPrefix')->search( { deliveryservice => $row->id } )->get_column('path_prefix')->all();
+	if (@path_prefixes) {
+		my @matchsets = @{ $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'matchsets'} };
+		@{ $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'matchsets'} } = ();
+		foreach my $path_prefix ( @path_prefixes ) {
+			foreach my $one_set ( @matchsets ) {
+				my $matchset = dclone $one_set;
+				push(
+					@{ $matchset->{'matchlist'} },
+					{ 'match-type' => 'PATH', 'regex' => "^" . $path_prefix . ".*" }
+				);
+				push(
+					@{ $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'matchsets'} },
+					$matchset
+				);
+			}
+		}
+	}
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'domains'} = \@domains;
 
         if ( scalar(@server_subrows) ) {
