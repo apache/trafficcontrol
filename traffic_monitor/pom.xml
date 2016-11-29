@@ -281,7 +281,8 @@
 						<configuration>
 							<rules>
 								<requireEnvironmentVariable>
-									<variableName>GIT_REV_COUNT</variableName>
+									<variableName>BUILD_NUMBER</variableName>
+									<variableName>RHEL_VERSION</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -318,7 +319,7 @@
 						</executions>
 						<configuration>
 							<group>Applications/Internet</group>
-							<release>${env.GIT_REV_COUNT}.${buildNumber}.el6</release>
+							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
 							<needarch>x86_64</needarch>
 							<mappings>
 								<mapping>
