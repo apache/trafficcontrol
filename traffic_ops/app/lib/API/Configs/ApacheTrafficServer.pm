@@ -93,6 +93,7 @@ sub ort {
 	}
 
 	#print STDERR Dumper($data_obj);
+
 	my $file_contents = encode_json($data_obj);
 
 	if ( $action eq "publish" ) {
@@ -108,7 +109,7 @@ sub get_server_config {
 	my $filename = $self->param("filename");
 	my $action   = $self->param('action');
 	my $id       = $self->param('id');
-	my $scope    = get_scope($filename);
+	my $scope    = $self->get_scope($filename);
 
 	## fetch is the default action. ?action=db and ?action=publish can also be used.
 	if ( !defined($action) ) { $action = "fetch"; }
@@ -119,6 +120,11 @@ sub get_server_config {
 	##check user access
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
+	}
+
+	##check the scope - is this the correct route?
+	if ( $scope ne 'server' ) {
+		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
 	}
 
 	##verify that a valid server ID has been used
@@ -154,7 +160,13 @@ sub get_server_config {
 			$file_contents = encode_json($file_contents);
 		}
 		case "chkconfig" { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents = encode_json($file_contents); }
-		else { return $self->not_found(); }
+		else { 
+			my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
+			if (!defined($file_param) ) {
+				return $self->not_found();
+			}
+			$file_contents = $self->take_and_bake_server( $server_obj, $filename, $action, $scope );
+		 }
 	}
 
 	#if we get an empty file, just send back an error.
@@ -179,7 +191,7 @@ sub get_cdn_config {
 	my $filename = $self->param("filename");
 	my $action   = $self->param('action');
 	my $id       = $self->param('id');
-	my $scope    = get_scope($filename);
+	my $scope    = $self->get_scope($filename);
 
 	if ( !defined($action) ) { $action = "fetch"; }
 	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
@@ -189,6 +201,11 @@ sub get_cdn_config {
 	##check user access
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
+	}
+
+	##check the scope - is this the correct route?
+	if ( $scope ne 'cdn' ) {
+		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
 	}
 
 	##verify that a valid cdn ID has been used
@@ -244,13 +261,18 @@ sub get_profile_config {
 	my $filename = $self->param("filename");
 	my $action   = $self->param('action');
 	my $id       = $self->param('id');
-	my $scope    = get_scope($filename);
+	my $scope    = $self->get_scope($filename);
 
 	if ( !defined($action) ) { $action = "fetch"; }
 
 	##check user access
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
+	}
+
+	##check the scope - is this the correct route?
+	if ( $scope ne 'profile' ) {
+		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
 	}
 
 	##verify that a valid profile ID has been used
@@ -280,7 +302,13 @@ sub get_profile_config {
 		case "storage.config" { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $action, $scope ); }
 		case "sysctl.conf" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
 		case "volume.config" { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $action, $scope ); }
-		else { return $self->not_found(); }
+		else { 
+			my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
+			if (!defined($file_param) ) {
+				return $self->not_found();
+			}
+			$file_contents = $self->take_and_bake_profile( $profile_obj, $filename, $action, $scope );
+		 }		
 	}
 
 	if ( !defined($file_contents) ) {
@@ -344,6 +372,7 @@ my $separator ||= {
 };
 
 sub get_scope {
+	my $self       = shift;
 	my $fname      = shift;
 	my $scope;
 
@@ -374,7 +403,12 @@ sub get_scope {
 		case /set_dscp_.*\.config/ { $scope = 'cdn' }
 		case "ssl_multicert.config" { $scope = 'cdn' }
 		case /url_sig_.*\.config/ { $scope = 'cdn' }
-		else { $scope = 'server' }
+		else {  
+			$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->single();
+			if (!defined($scope) ) {
+				$scope = 'server';
+			}
+		}
 	}
 	return $scope;
 }
@@ -757,6 +791,36 @@ sub facts {
 	my $text = $self->header_comment( $server_obj->host_name );
 	$text .= "profile:" . $server_obj->profile->name . "\n";
 
+	return $text;
+}
+
+sub take_and_bake_server {
+	my $self = shift;
+	my $server_obj = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
+
+	my $data   = $self->param_data( $server_obj, $filename );
+	my $text   = $self->header_comment( $server_obj->host_name );
+	foreach my $parameter ( sort keys %{$data} ) {
+		$text .= $data->{$parameter} . "\n";
+	}
+	return $text;
+}
+
+sub take_and_bake_profile {
+	my $self = shift;
+	my $profile_obj = shift;
+	my $filename   = shift;
+	my $action     = shift;
+	my $scope      = shift;
+
+	my $data   = $self->profile_param_data( $profile_obj->id, $filename );
+	my $text   = $self->header_comment( $profile_obj->name );
+	foreach my $parameter ( sort keys %{$data} ) {
+		$text .= $data->{$parameter} . "\n";
+	}
 	return $text;
 }
 

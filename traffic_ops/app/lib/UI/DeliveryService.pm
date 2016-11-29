@@ -591,7 +591,7 @@ sub header_rewrite {
 
 		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
 		if (!defined($scope_id) ) {
-			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $scope = $self->API::Configs::ApacheTrafficServer::get_scope($fname);
 			my $insert = $self->db->resultset('Parameter')->create(
 				{
 					config_file => $fname,
@@ -685,7 +685,7 @@ sub regex_remap {
 
 		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
 		if (!defined($scope_id) ) {
-			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $scope = $self->API::Configs::ApacheTrafficServer::get_scope($fname);
 			my $insert = $self->db->resultset('Parameter')->create(
 				{
 					config_file => $fname,
@@ -755,7 +755,7 @@ sub cacheurl {
 
 		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
 		if (!defined($scope_id) ) {
-			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $scope = $self->API::Configs::ApacheTrafficServer::get_scope($fname);
 			my $insert = $self->db->resultset('Parameter')->create(
 				{
 					config_file => $fname,
@@ -823,7 +823,7 @@ sub url_sig {
 
 		my $scope_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('id')->single();
 		if (!defined($scope_id) ) {
-			my $scope = API::Configs::ApacheTrafficServer::get_scope($fname);
+			my $scope = $self->API::Configs::ApacheTrafficServer::get_scope($fname);
 			my $insert = $self->db->resultset('Parameter')->create(
 				{
 					config_file => $fname,
