@@ -62,9 +62,9 @@ function initBuildArea() {
 	tm_dest=$(createSourceDir traffic_monitor)
 
 	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
-    export MVN_CMD="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
-    echo $MVN_CMD
-    $MVN_CMD
+	local mvn_cmd="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
+	echo $mvn_cmd
+	(cd "$TM_DIR"; $mvn_cmd)
 	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 	cp  "$TM_DIR"/pom.xml "$tm_dest" || { echo "Could not copy to $tm_dest: $?"; exit 1; }
 
