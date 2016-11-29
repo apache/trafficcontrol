@@ -466,6 +466,9 @@ sub param_data {
 		if ( $row->parameter->name eq "location" ) {
 			next;
 		}
+		if ( $row->parameter->name eq "scope" ) {
+			next;
+		}
 		my $value = $row->parameter->value;
 
 		# some files have multiple lines with the same key... handle that with param id.
@@ -491,6 +494,9 @@ sub profile_param_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	while ( my $row = $rs->next ) {
 		if ( $row->parameter->name eq "location" ) {
+			next;
+		}
+		if ( $row->parameter->name eq "scope" ) {
 			next;
 		}
 		my $value = $row->parameter->value;
