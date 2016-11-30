@@ -52,7 +52,7 @@ func TestProfile(t *testing.T) {
 
 	for _, p := range profiles {
 		if p.ID != 1 {
-			testHelper.Error(t, "Should get back 1 for \"ID\", got: %s", p.Name)
+			testHelper.Error(t, "Should get back 1 for \"ID\", got: %d", p.ID)
 		} else {
 			testHelper.Success(t, "Should get back 1 for \"ID\"")
 		}
