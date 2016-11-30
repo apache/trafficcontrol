@@ -158,14 +158,14 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 	var req *http.Request
 	var err error
 
-	if body != nil && method != "GET" {
+	if body != nil {
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 		if err != nil {
 			return nil, err
 		}
 		req.Header.Set("Content-Type", "application/json")
 	} else {
-		req, err = http.NewRequest("GET", url, nil)
+		req, err = http.NewRequest(method, url, nil)
 		if err != nil {
 			return nil, err
 		}
