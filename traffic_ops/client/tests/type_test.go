@@ -45,6 +45,12 @@ func TestTypes(t *testing.T) {
 	}
 
 	for _, n := range types {
+		if n.ID != 1 {
+			testHelper.Error(t, "Should get back 1 for \"ID\", got %d", n.ID)
+		} else {
+			testHelper.Success(t, "Should get back 1 for \"ID\"")
+		}
+
 		if n.Name != "EDGE" {
 			testHelper.Error(t, "Should get back \"EDGE\" for \"Name\", got %s", n.Name)
 		} else {
@@ -55,6 +61,12 @@ func TestTypes(t *testing.T) {
 			testHelper.Error(t, "Should get back \"edge cache\" for \"Description\", got %s", n.Description)
 		} else {
 			testHelper.Success(t, "Should get back \"edge cache\" for \"Description\"")
+		}
+
+		if n.UseInTable != "server" {
+			testHelper.Error(t, "Should get back \"server\" for \"UseInTable\", got %s", n.UseInTable)
+		} else {
+			testHelper.Success(t, "Should get back \"server\" for \"UseInTable\"")
 		}
 	}
 }
