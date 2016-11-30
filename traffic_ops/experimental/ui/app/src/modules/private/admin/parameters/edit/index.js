@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.parameters.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.parameters.edit', {
-                url: '/{parameterId}/edit',
+                url: '/{parameterId}',
                 views: {
                     parametersContent: {
                         templateUrl: 'common/modules/form/parameter/form.parameter.tpl.html',

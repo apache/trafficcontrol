@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.types.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.types.edit', {
-                url: '/{typeId}/edit',
+                url: '/{typeId}',
                 views: {
                     typesContent: {
                         templateUrl: 'common/modules/form/type/form.type.tpl.html',

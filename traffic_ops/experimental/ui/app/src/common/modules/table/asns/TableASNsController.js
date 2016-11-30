@@ -22,7 +22,7 @@ var TableASNsController = function(asns, $scope, locationUtils) {
     $scope.asns = asns;
 
     $scope.editASN = function(id) {
-        locationUtils.navigateToPath('/admin/asns/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/asns/' + id);
     };
 
     $scope.createASN = function() {

@@ -22,7 +22,7 @@ var TableCDNsController = function(cdns, $scope, locationUtils) {
     $scope.cdns = cdns;
 
     $scope.editCDN = function(id) {
-        locationUtils.navigateToPath('/admin/cdns/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/cdns/' + id);
     };
 
     $scope.createCDN = function() {

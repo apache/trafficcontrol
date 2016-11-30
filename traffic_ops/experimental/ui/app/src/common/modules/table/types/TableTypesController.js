@@ -22,7 +22,7 @@ var TableTypesController = function(types, $scope, locationUtils) {
     $scope.types = types;
 
     $scope.editType = function(id) {
-        locationUtils.navigateToPath('/admin/types/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/types/' + id);
     };
 
     $scope.createType = function() {

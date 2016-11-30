@@ -22,7 +22,7 @@ var TableRegionsController = function(regions, $scope, locationUtils) {
     $scope.regions = regions;
 
     $scope.editRegion = function(id) {
-        locationUtils.navigateToPath('/admin/regions/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/regions/' + id);
     };
 
     $scope.createRegion = function() {

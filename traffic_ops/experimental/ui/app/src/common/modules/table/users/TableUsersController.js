@@ -22,7 +22,7 @@ var TableUsersController = function(users, $scope, locationUtils) {
     $scope.users = users;
 
     $scope.editUser = function(id) {
-        locationUtils.navigateToPath('/admin/users/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/users/' + id);
     };
 
     $scope.createUser = function() {

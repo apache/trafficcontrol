@@ -22,7 +22,7 @@ var TableLocationsController = function(locations, $scope, locationUtils) {
     $scope.locations = locations;
 
     $scope.editLocation = function(id) {
-        locationUtils.navigateToPath('/admin/locations/' + id + '/edit')
+        locationUtils.navigateToPath('/admin/locations/' + id)
     };
 
     $scope.createLocation = function() {

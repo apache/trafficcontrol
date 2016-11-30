@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.asns.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.asns.edit', {
-                url: '/{asnId}/edit',
+                url: '/{asnId}',
                 views: {
                     asnsContent: {
                         templateUrl: 'common/modules/form/asn/form.asn.tpl.html',
