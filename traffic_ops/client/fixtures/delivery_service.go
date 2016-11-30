@@ -76,6 +76,14 @@ func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
 	}
 }
 
+// UpdateDeliveryService returns a default UpdateDeliveryServiceResponse to be used for testing.
+func UpdateDeliveryService() *client.UpdateDeliveryServiceResponse {
+	return &client.UpdateDeliveryServiceResponse{
+		Response: DeliveryServices().Response,
+		Alerts:   alerts(),
+	}
+}
+
 // DeleteDeliveryService returns a default DeleteDeliveryServiceResponse to be used for testing.
 func DeleteDeliveryService() *client.DeleteDeliveryServiceResponse {
 	return &client.DeleteDeliveryServiceResponse{
