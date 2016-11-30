@@ -32,7 +32,7 @@ var FormEditServerController = function(server, $scope, $controller, $uibModal, 
     $scope.serverName = angular.copy(server.hostName);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

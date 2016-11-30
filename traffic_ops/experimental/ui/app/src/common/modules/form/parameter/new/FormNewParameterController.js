@@ -25,7 +25,7 @@ var FormNewParameterController = function(parameter, $scope, $controller, parame
     $scope.parameterName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

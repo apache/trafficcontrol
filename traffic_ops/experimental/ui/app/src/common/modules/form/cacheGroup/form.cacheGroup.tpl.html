@@ -19,10 +19,11 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/cache-groups')">Cache Groups</a></li>
             <li class="active">{{cacheGroupName}}</li>
         </ol>
+        <button class="btn btn-warning pull-right" ng-show="!settings.isNew" ng-click="queueUpdates()">Queue Server Updates</button>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -91,7 +92,7 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(cacheGroup)">Delete</button>
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cacheGroup)">Delete</button>
                 <button type="button" class="btn btn-primary" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>
             </div>
         </form>

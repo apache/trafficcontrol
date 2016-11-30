@@ -25,7 +25,7 @@ var FormNewUserController = function(user, $scope, $controller, userService) {
     $scope.userName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

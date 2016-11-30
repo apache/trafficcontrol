@@ -25,7 +25,7 @@ var FormNewTenantController = function(tenant, $scope, $controller, locationUtil
     $scope.tenantName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

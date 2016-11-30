@@ -25,7 +25,7 @@ var FormNewLocationController = function(location, $scope, $controller, location
     $scope.locationName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

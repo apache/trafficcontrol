@@ -32,7 +32,7 @@ var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, 
     $scope.tenantName = angular.copy(tenant.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

@@ -32,7 +32,7 @@ var FormEditASNController = function(asn, $scope, $controller, $uibModal, $ancho
     $scope.asnName = angular.copy(asn.asn);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

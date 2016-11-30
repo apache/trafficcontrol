@@ -25,7 +25,7 @@ var FormNewCDNController = function(cdn, $scope, $controller, cdnService) {
     $scope.cdnName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

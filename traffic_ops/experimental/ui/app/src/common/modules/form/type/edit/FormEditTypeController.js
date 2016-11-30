@@ -32,7 +32,7 @@ var FormEditTypeController = function(type, $scope, $controller, $uibModal, $anc
     $scope.typeName = angular.copy(type.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

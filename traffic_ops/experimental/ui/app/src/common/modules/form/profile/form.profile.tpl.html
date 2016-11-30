@@ -44,7 +44,7 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(profile)">Delete</button>
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(profile)">Delete</button>
                 <button type="button" class="btn btn-primary" ng-disabled="profileForm.$pristine || profileForm.$invalid" ng-click="save(profile)">{{settings.saveLabel}}</button>
             </div>
         </form>

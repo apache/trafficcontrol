@@ -25,7 +25,7 @@ var FormNewRegionController = function(region, $scope, $controller, locationUtil
     $scope.regionName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

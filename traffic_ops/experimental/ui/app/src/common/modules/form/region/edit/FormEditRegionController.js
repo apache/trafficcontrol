@@ -32,7 +32,7 @@ var FormEditRegionController = function(region, $scope, $controller, $uibModal, 
     $scope.regionName = angular.copy(region.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

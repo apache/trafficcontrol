@@ -25,7 +25,7 @@ var FormNewDivisionController = function(division, $scope, $controller, division
     $scope.divisionName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 
