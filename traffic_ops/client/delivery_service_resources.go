@@ -54,10 +54,13 @@ type DeliveryService struct {
 	DNSBypassCname       string                 `json:"dnsBypassCname"`
 	DNSBypassTTL         int                    `json:"dnsBypassTtl"`
 	OrgServerFQDN        string                 `json:"orgServerFqdn"`
+	TypeID               int                    `json:"typeId"`
 	Type                 string                 `json:"type"`
+	ProfileID            int                    `json:"profileId"`
 	ProfileName          string                 `json:"profileName"`
 	ProfileDesc          string                 `json:"profileDescription"`
 	CDNName              string                 `json:"cdnName"`
+	CDNID                int                    `json:"cdnId"`
 	CCRDNSTTL            int                    `json:"ccrDnsTtl"`
 	GlobalMaxMBPS        int                    `json:"globalMaxMbps"`
 	GlobalMaxTPS         int                    `json:"globalMaxTps"`
