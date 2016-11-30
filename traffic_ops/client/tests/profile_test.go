@@ -51,6 +51,12 @@ func TestProfile(t *testing.T) {
 	}
 
 	for _, p := range profiles {
+		if p.ID != 1 {
+			testHelper.Error(t, "Should get back 1 for \"ID\", got: %s", p.Name)
+		} else {
+			testHelper.Success(t, "Should get back 1 for \"ID\"")
+		}
+
 		if p.Name != "TR_CDN2" {
 			testHelper.Error(t, "Should get back \"TR_CDN2\" for \"Name\", got: %s", p.Name)
 		} else {
