@@ -25,7 +25,7 @@ var FormNewASNController = function(asn, $scope, $controller, asnService) {
     $scope.asnName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

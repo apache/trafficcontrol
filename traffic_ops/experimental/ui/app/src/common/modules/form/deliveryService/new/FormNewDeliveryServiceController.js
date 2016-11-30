@@ -25,7 +25,7 @@ var FormNewDeliveryServiceController = function(deliveryService, $scope, $contro
     $scope.deliveryServiceName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

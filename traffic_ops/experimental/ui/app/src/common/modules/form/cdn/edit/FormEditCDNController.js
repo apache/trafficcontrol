@@ -32,7 +32,7 @@ var FormEditCDNController = function(cdn, $scope, $controller, $uibModal, $ancho
     $scope.cdnName = angular.copy(cdn.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

@@ -48,7 +48,7 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(asn)">Delete</button>
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(asn)">Delete</button>
                 <button type="button" class="btn btn-primary" ng-disabled="asnForm.$pristine || asnForm.$invalid" ng-click="save(asn)">{{settings.saveLabel}}</button>
             </div>
         </form>

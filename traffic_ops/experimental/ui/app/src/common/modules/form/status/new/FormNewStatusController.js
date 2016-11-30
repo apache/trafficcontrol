@@ -25,7 +25,7 @@ var FormNewStatusController = function(status, $scope, $controller, statusServic
     $scope.statusName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

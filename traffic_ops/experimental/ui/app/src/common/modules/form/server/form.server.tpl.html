@@ -19,10 +19,11 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
             <li class="active">{{serverName}}</li>
         </ol>
+        <button class="btn btn-warning pull-right" ng-show="!settings.isNew" ng-click="queueUpdates()">Queue Server Updates</button>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -101,7 +102,7 @@ under the License.
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="settings.showDelete" ng-click="confirmDelete(server)">Delete</button>
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(server)">Delete</button>
                 <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
             </div>
         </form>

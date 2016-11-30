@@ -25,7 +25,7 @@ var FormNewCacheGroupController = function(cacheGroup, $scope, $controller, cach
     $scope.cacheGroupName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

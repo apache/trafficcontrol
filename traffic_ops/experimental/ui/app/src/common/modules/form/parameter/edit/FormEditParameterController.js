@@ -32,7 +32,7 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
     $scope.parameterName = angular.copy(parameter.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

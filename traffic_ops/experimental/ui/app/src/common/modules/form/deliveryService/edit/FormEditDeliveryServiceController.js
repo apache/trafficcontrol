@@ -32,7 +32,7 @@ var FormEditDeliveryServiceController = function(deliveryService, $scope, $contr
     $scope.deliveryServiceName = angular.copy(deliveryService.displayName);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

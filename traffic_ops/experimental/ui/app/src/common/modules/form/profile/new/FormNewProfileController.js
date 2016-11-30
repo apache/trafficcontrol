@@ -25,7 +25,7 @@ var FormNewProfileController = function(profile, $scope, $controller, profileSer
     $scope.profileName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

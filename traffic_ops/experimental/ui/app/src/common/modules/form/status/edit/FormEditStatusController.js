@@ -32,7 +32,7 @@ var FormEditStatusController = function(status, $scope, $controller, $uibModal, 
     $scope.statusName = angular.copy(status.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

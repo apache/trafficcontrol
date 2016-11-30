@@ -101,6 +101,10 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
         { value: true, label: 'true' }
     ];
 
+    $scope.queueUpdates = function() {
+        alert('not implemented: queuing updates for server');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

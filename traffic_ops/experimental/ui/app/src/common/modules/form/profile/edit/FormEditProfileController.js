@@ -32,7 +32,7 @@ var FormEditProfileController = function(profile, $scope, $controller, $uibModal
     $scope.profileName = angular.copy(profile.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

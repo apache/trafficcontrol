@@ -32,6 +32,10 @@ var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUt
         { value: true, label: 'true' }
     ];
 
+    $scope.queueUpdates = function() {
+        alert('not implemented: queuing updates for all cdn servers');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

@@ -32,7 +32,7 @@ var FormEditDivisionController = function(division, $scope, $controller, $uibMod
     $scope.divisionName = angular.copy(division.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

@@ -32,7 +32,7 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
     $scope.cacheGroupName = angular.copy(cacheGroup.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

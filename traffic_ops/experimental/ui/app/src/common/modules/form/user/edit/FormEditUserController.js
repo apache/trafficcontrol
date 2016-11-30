@@ -40,7 +40,7 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
     $scope.userName = angular.copy(user.username);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

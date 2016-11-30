@@ -25,7 +25,7 @@ var FormNewServerController = function(server, $scope, $controller, serverServic
     $scope.serverName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 

@@ -32,7 +32,7 @@ var FormEditLocationController = function(location, $scope, $controller, $uibMod
     $scope.locationName = angular.copy(location.name);
 
     $scope.settings = {
-        showDelete: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

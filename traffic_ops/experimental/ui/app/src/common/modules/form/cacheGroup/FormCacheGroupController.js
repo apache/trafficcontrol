@@ -35,6 +35,10 @@ var FormCacheGroupController = function(cacheGroup, $scope, formUtils, locationU
 
     $scope.cacheGroup = cacheGroup;
 
+    $scope.queueUpdates = function() {
+        alert('not implemented: queuing updates for all cachegroup servers');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

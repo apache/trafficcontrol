@@ -25,7 +25,7 @@ var FormNewTypeController = function(type, $scope, $controller, typeService) {
     $scope.typeName = 'New';
 
     $scope.settings = {
-        showDelete: false,
+        isNew: true,
         saveLabel: 'Create'
     };
 
