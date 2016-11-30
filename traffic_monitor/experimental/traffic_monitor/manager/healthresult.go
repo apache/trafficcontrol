@@ -29,6 +29,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
@@ -79,18 +80,18 @@ func StartHealthResultManager(
 	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
-	statHistory ResultHistoryThreadsafe,
+	statHistory threadsafe.ResultHistory,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	fetchCount UintThreadsafe,
-	errorCount UintThreadsafe,
+	fetchCount threadsafe.Uint,
+	errorCount threadsafe.Uint,
 	cfg config.Config,
-) (DurationMapThreadsafe, EventsThreadsafe, CacheAvailableStatusThreadsafe, ResultHistoryThreadsafe) {
+) (DurationMapThreadsafe, threadsafe.Events, threadsafe.CacheAvailableStatus, threadsafe.ResultHistory) {
 	lastHealthDurations := NewDurationMapThreadsafe()
-	events := NewEventsThreadsafe(cfg.MaxEvents)
-	localCacheStatus := NewCacheAvailableStatusThreadsafe()
-	healthHistory := NewResultHistoryThreadsafe()
+	events := threadsafe.NewEvents(cfg.MaxEvents)
+	localCacheStatus := threadsafe.NewCacheAvailableStatus()
+	healthHistory := threadsafe.NewResultHistory()
 	go healthResultManagerListen(
 		cacheHealthChan,
 		toData,
@@ -115,15 +116,15 @@ func healthResultManagerListen(
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	lastHealthDurations DurationMapThreadsafe,
-	statHistory ResultHistoryThreadsafe,
-	healthHistory ResultHistoryThreadsafe,
+	statHistory threadsafe.ResultHistory,
+	healthHistory threadsafe.ResultHistory,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	fetchCount UintThreadsafe,
-	errorCount UintThreadsafe,
-	events EventsThreadsafe,
-	localCacheStatus CacheAvailableStatusThreadsafe,
+	fetchCount threadsafe.Uint,
+	errorCount threadsafe.Uint,
+	events threadsafe.Events,
+	localCacheStatus threadsafe.CacheAvailableStatus,
 	cfg config.Config,
 ) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
@@ -192,16 +193,16 @@ func processHealthResult(
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	lastHealthDurationsThreadsafe DurationMapThreadsafe,
-	statHistory ResultHistoryThreadsafe,
+	statHistory threadsafe.ResultHistory,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	fetchCount UintThreadsafe,
-	errorCount UintThreadsafe,
-	events EventsThreadsafe,
-	localCacheStatusThreadsafe CacheAvailableStatusThreadsafe,
+	fetchCount threadsafe.Uint,
+	errorCount threadsafe.Uint,
+	events threadsafe.Events,
+	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	lastHealthEndTimes map[enum.CacheName]time.Time,
-	healthHistory ResultHistoryThreadsafe,
+	healthHistory threadsafe.ResultHistory,
 	results []cache.Result,
 	cfg config.Config,
 ) {
@@ -231,10 +232,10 @@ func processHealthResult(
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if available, ok := localStates.GetCache(healthResult.ID); !ok || available.IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
+			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
 
-		localCacheStatus[healthResult.ID] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
+		localCacheStatus[healthResult.ID] = cache.AvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
 		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
 	}
 	calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)

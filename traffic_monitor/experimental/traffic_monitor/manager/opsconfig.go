@@ -30,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -72,19 +73,19 @@ func StartOpsConfigManager(
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	statHistory ResultHistoryThreadsafe,
-	healthHistory ResultHistoryThreadsafe,
-	lastStats LastStatsThreadsafe,
-	dsStats DSStatsReader,
-	events EventsThreadsafe,
+	statHistory threadsafe.ResultHistory,
+	healthHistory threadsafe.ResultHistory,
+	lastStats threadsafe.LastStats,
+	dsStats threadsafe.DSStatsReader,
+	events threadsafe.Events,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
 	lastHealthDurations DurationMapThreadsafe,
-	fetchCount UintThreadsafe,
-	healthIteration UintThreadsafe,
-	errorCount UintThreadsafe,
-	localCacheStatus CacheAvailableStatusThreadsafe,
-	unpolledCaches UnpolledCachesThreadsafe,
+	fetchCount threadsafe.Uint,
+	healthIteration threadsafe.Uint,
+	errorCount threadsafe.Uint,
+	localCacheStatus threadsafe.CacheAvailableStatus,
+	unpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	cfg config.Config,
 ) OpsConfigThreadsafe {

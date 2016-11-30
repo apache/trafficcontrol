@@ -28,6 +28,7 @@ import (
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
@@ -62,16 +63,16 @@ func StartStatHistoryManager(
 	combinedStates peer.CRStatesThreadsafe,
 	toData todata.TODataThreadsafe,
 	cachesChanged <-chan struct{},
-	errorCount UintThreadsafe,
+	errorCount threadsafe.Uint,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) (ResultHistoryThreadsafe, DurationMapThreadsafe, LastStatsThreadsafe, DSStatsReader, UnpolledCachesThreadsafe) {
-	statHistory := NewResultHistoryThreadsafe()
+) (threadsafe.ResultHistory, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches) {
+	statHistory := threadsafe.NewResultHistory()
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
-	lastStats := NewLastStatsThreadsafe()
-	dsStats := NewDSStatsThreadsafe()
-	unpolledCaches := NewUnpolledCachesThreadsafe()
+	lastStats := threadsafe.NewLastStats()
+	dsStats := threadsafe.NewDSStats()
+	unpolledCaches := threadsafe.NewUnpolledCaches()
 	tickInterval := cfg.StatFlushInterval
 	go func() {
 
@@ -109,15 +110,15 @@ func StartStatHistoryManager(
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
 func processStatResults(
 	results []cache.Result,
-	statHistoryThreadsafe ResultHistoryThreadsafe,
+	statHistoryThreadsafe threadsafe.ResultHistory,
 	combinedStates peer.Crstates,
-	lastStats LastStatsThreadsafe,
+	lastStats threadsafe.LastStats,
 	toData todata.TOData,
-	errorCount UintThreadsafe,
-	dsStats DSStatsThreadsafe,
+	errorCount threadsafe.Uint,
+	dsStats threadsafe.DSStats,
 	lastStatEndTimes map[enum.CacheName]time.Time,
 	lastStatDurationsThreadsafe DurationMapThreadsafe,
-	unpolledCaches UnpolledCachesThreadsafe,
+	unpolledCaches threadsafe.UnpolledCaches,
 	mc to.TrafficMonitorConfigMap,
 ) {
 	statHistory := statHistoryThreadsafe.Get().Copy()
@@ -159,5 +160,5 @@ func processStatResults(
 		result.PollFinished <- result.PollID
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
-	unpolledCaches.SetPolled(results, lastStats)
+	unpolledCaches.SetPolled(results, lastStats.Get())
 }

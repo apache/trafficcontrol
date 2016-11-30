@@ -30,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	//	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -66,9 +67,9 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	localStates := peer.NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
 	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
-	fetchCount := NewUintThreadsafe()               // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
-	healthIteration := NewUintThreadsafe()
-	errorCount := NewUintThreadsafe()
+	fetchCount := threadsafe.NewUint()              // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
+	healthIteration := threadsafe.NewUint()
+	errorCount := threadsafe.NewUint()
 
 	toData := todata.NewThreadsafe()
 
@@ -158,7 +159,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 }
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
-func healthTickListener(cacheHealthTick <-chan uint64, healthIteration UintThreadsafe) {
+func healthTickListener(cacheHealthTick <-chan uint64, healthIteration threadsafe.Uint) {
 	for i := range cacheHealthTick {
 		healthIteration.Set(i)
 	}
