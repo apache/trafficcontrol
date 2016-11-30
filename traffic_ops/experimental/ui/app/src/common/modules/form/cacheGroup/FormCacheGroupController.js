@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormCacheGroupController = function(cacheGroup, $scope, formUtils, locationUtils, cacheGroupService, typeService) {
+var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils, locationUtils, cacheGroupService, typeService) {
 
     var getCacheGroups = function() {
         cacheGroupService.getCacheGroups()
@@ -39,6 +39,10 @@ var FormCacheGroupController = function(cacheGroup, $scope, formUtils, locationU
         alert('not implemented: queuing updates for all cachegroup servers');
     };
 
+    $scope.viewParams = function() {
+        $location.path($location.path() + '/parameters');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -53,5 +57,5 @@ var FormCacheGroupController = function(cacheGroup, $scope, formUtils, locationU
 
 };
 
-FormCacheGroupController.$inject = ['cacheGroup', '$scope', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
+FormCacheGroupController.$inject = ['cacheGroup', '$scope', '$location', 'formUtils', 'locationUtils', 'cacheGroupService', 'typeService'];
 module.exports = FormCacheGroupController;

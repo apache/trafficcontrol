@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.profiles.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.profiles.edit', {
-                url: '/{profileId}/edit',
+                url: '/{profileId}',
                 views: {
                     profilesContent: {
                         templateUrl: 'common/modules/form/profile/form.profile.tpl.html',

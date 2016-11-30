@@ -23,6 +23,7 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/cache-groups')">Cache Groups</a></li>
             <li class="active">{{cacheGroupName}}</li>
         </ol>
+        <button class="btn btn-default pull-right" ng-show="!settings.isNew" ng-click="viewParams()">View Params</button>
         <button class="btn btn-warning pull-right" ng-show="!settings.isNew" ng-click="queueUpdates()">Queue Server Updates</button>
         <div class="clearfix"></div>
     </div>

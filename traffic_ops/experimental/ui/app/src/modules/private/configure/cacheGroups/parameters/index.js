@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,26 +17,23 @@
  * under the License.
  */
 
-var TableProfilesController = function(profiles, $scope, locationUtils) {
-
-    $scope.profiles = profiles;
-
-    $scope.editProfile = function(id) {
-        locationUtils.navigateToPath('/admin/profiles/' + id);
-    };
-
-    $scope.createProfile = function() {
-        locationUtils.navigateToPath('/admin/profiles/new');
-    };
-
-    angular.element(document).ready(function () {
-        $('#profilesTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": -1
-        });
-    });
-
-};
-
-TableProfilesController.$inject = ['profiles', '$scope', 'locationUtils'];
-module.exports = TableProfilesController;
+module.exports = angular.module('trafficOps.private.configure.cacheGroups.parameters', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficOps.private.configure.cacheGroups.parameters', {
+				url: '/{cacheGroupId}/parameters',
+				views: {
+					cacheGroupsContent: {
+						templateUrl: 'common/modules/table/parameters/table.parameters.tpl.html',
+						controller: 'TableParametersController',
+						resolve: {
+							parameters: function(parameterService) {
+								return parameterService.getParameters();
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

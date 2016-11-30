@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormProfileController = function(profile, $scope, formUtils, stringUtils, locationUtils) {
+var FormProfileController = function(profile, $scope, $location, formUtils, stringUtils, locationUtils) {
 
     $scope.profile = profile;
 
@@ -27,6 +27,10 @@ var FormProfileController = function(profile, $scope, formUtils, stringUtils, lo
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.viewParams = function() {
+        $location.path($location.path() + '/parameters');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -35,5 +39,5 @@ var FormProfileController = function(profile, $scope, formUtils, stringUtils, lo
 
 };
 
-FormProfileController.$inject = ['profile', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
+FormProfileController.$inject = ['profile', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormProfileController;
