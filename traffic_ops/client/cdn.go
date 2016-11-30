@@ -27,6 +27,7 @@ type CDNResponse struct {
 
 // CDN ...
 type CDN struct {
+	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	LastUpdated string `json:"lastUpdated"`
 }
