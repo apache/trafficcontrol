@@ -19,10 +19,11 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/profiles')">Profiles</a></li>
             <li class="active">{{profileName}}</li>
         </ol>
+        <button class="btn btn-default pull-right" ng-show="!settings.isNew" ng-click="viewParams()">View Params</button>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
