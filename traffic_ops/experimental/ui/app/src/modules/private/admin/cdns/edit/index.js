@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.cdns.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.cdns.edit', {
-                url: '/{cdnId}/edit',
+                url: '/{cdnId}',
                 views: {
                     cdnsContent: {
                         templateUrl: 'common/modules/form/cdn/form.cdn.tpl.html',

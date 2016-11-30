@@ -22,7 +22,7 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, locatio
     $scope.deliveryServices = deliveryServices;
 
     $scope.editDeliveryService = function(id) {
-        locationUtils.navigateToPath('/configure/delivery-services/' + id + '/edit');
+        locationUtils.navigateToPath('/configure/delivery-services/' + id);
     };
 
     $scope.createDeliveryService = function() {

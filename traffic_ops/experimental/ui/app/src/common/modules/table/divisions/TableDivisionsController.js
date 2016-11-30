@@ -22,7 +22,7 @@ var TableDivisionsController = function(divisions, $scope, locationUtils) {
     $scope.divisions = divisions;
 
     $scope.editDivision = function(id) {
-        locationUtils.navigateToPath('/admin/divisions/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/divisions/' + id);
     };
 
     $scope.createDivision = function() {

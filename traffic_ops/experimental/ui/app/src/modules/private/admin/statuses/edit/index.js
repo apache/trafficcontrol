@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.statuses.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.statuses.edit', {
-                url: '/{statusId}/edit',
+                url: '/{statusId}',
                 views: {
                     statusesContent: {
                         templateUrl: 'common/modules/form/status/form.status.tpl.html',

@@ -22,7 +22,7 @@ var TableStatusesController = function(statuses, $scope, locationUtils) {
     $scope.statuses = statuses;
 
     $scope.editStatus = function(id) {
-        locationUtils.navigateToPath('/admin/statuses/' + id + '/edit');
+        locationUtils.navigateToPath('/admin/statuses/' + id);
     };
 
     $scope.createStatus = function() {
