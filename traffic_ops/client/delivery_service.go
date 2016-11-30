@@ -56,8 +56,8 @@ func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliverySe
 
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
-func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*DeliveryServiceResponse, error) {
-	var data DeliveryServiceResponse
+func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*UpdateDeliveryServiceResponse, error) {
+	var data UpdateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err

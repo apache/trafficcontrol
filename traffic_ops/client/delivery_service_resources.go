@@ -27,6 +27,12 @@ type CreateDeliveryServiceResponse struct {
 	Alerts   []DeliveryServiceAlert `json:"alerts"`
 }
 
+// UpdateDeliveryServiceResponse ...
+type UpdateDeliveryServiceResponse struct {
+	Response []DeliveryService      `json:"response"`
+	Alerts   []DeliveryServiceAlert `json:"alerts"`
+}
+
 // DeliveryServiceResponse ...
 type DeliveryServiceResponse struct {
 	Response DeliveryService        `json:"response"`

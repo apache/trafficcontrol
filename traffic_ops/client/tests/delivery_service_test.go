@@ -187,7 +187,7 @@ func TestCreateDeliveryServiceUnauthorized(t *testing.T) {
 }
 
 func TestUpdateDeliveryService(t *testing.T) {
-	resp := fixtures.DeliveryService()
+	resp := fixtures.UpdateDeliveryService()
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
@@ -206,7 +206,7 @@ func TestUpdateDeliveryService(t *testing.T) {
 		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
-	actual := ds.Response.ID
+	actual := ds.Response[0].ID
 	if actual != 001 {
 		testHelper.Error(t, "Should get back \"001\" for \"Response.ID\", got: %s", actual)
 	} else {
