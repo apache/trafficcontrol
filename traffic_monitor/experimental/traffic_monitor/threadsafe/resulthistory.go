@@ -1,4 +1,4 @@
-package manager
+package threadsafe
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,52 +20,34 @@ package manager
  */
 
 import (
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"sync"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 )
 
-// ResultHistory is a map of cache names, to an array of result history from each cache.
-type ResultHistory map[enum.CacheName][]cache.Result
-
-func copyResult(a []cache.Result) []cache.Result {
-	b := make([]cache.Result, len(a), len(a))
-	copy(b, a)
-	return b
-}
-
-// Copy copies returns a deep copy of this ResultHistory
-func (a ResultHistory) Copy() ResultHistory {
-	b := ResultHistory{}
-	for k, v := range a {
-		b[k] = copyResult(v)
-	}
-	return b
-}
-
-// ResultHistoryThreadsafe provides safe access for multiple goroutines readers and a single writer to a stored ResultHistory object.
+// ResultHistory provides safe access for multiple goroutines readers and a single writer to a stored ResultHistory object.
 // This could be made lock-free, if the performance was necessary
 // TODO add separate locks for Caches and Deliveryservice maps?
-type ResultHistoryThreadsafe struct {
-	resultHistory *ResultHistory
+type ResultHistory struct {
+	resultHistory *cache.ResultHistory
 	m             *sync.RWMutex
 }
 
-// NewResultHistoryThreadsafe returns a new ResultHistory safe for multiple readers and a single writer.
-func NewResultHistoryThreadsafe() ResultHistoryThreadsafe {
-	h := ResultHistory{}
-	return ResultHistoryThreadsafe{m: &sync.RWMutex{}, resultHistory: &h}
+// NewResultHistory returns a new ResultHistory safe for multiple readers and a single writer.
+func NewResultHistory() ResultHistory {
+	h := cache.ResultHistory{}
+	return ResultHistory{m: &sync.RWMutex{}, resultHistory: &h}
 }
 
 // Get returns the ResultHistory. Callers MUST NOT modify. If mutation is necessary, call ResultHistory.Copy()
-func (h *ResultHistoryThreadsafe) Get() ResultHistory {
+func (h *ResultHistory) Get() cache.ResultHistory {
 	h.m.RLock()
 	defer h.m.RUnlock()
 	return *h.resultHistory
 }
 
 // Set sets the internal ResultHistory. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (h *ResultHistoryThreadsafe) Set(v ResultHistory) {
+func (h *ResultHistory) Set(v cache.ResultHistory) {
 	h.m.Lock()
 	*h.resultHistory = v
 	h.m.Unlock()
