@@ -100,18 +100,22 @@ sub create {
 		return $self->alert("CDN 'name' is required.");
 	}
 
+	if ( !defined( $params->{dnssecEnabled} ) ) {
+		return $self->alert("dnssecEnabled is required.");
+	}
+
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
 	if ($existing) {
 		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
-	my $value = { name => $params->{name}, };
-	if ( defined( $params->{dnssecEnabled} ) ) {
-		$value->{dnssec_enabled} = lc( $params->{dnssecEnabled} ) ne 'false' ? 1 : 0;
-	}
+	my $values = {
+		name => $params->{name},
+		dnssec_enabled => $params->{dnssecEnabled},
+	};
 
-	my $insert = $self->db->resultset('Cdn')->create($value);
+	my $insert = $self->db->resultset('Cdn')->create($values);
 	$insert->insert();
 
 	my $rs = $self->db->resultset('Cdn')->find( { id => $insert->id } );
