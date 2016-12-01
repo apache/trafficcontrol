@@ -187,9 +187,9 @@ type DeliveryServiceRouting struct {
 // DeliveryServiceServerResponse ...
 type DeliveryServiceServerResponse struct {
 	Response []DeliveryServiceServer `json:"response"`
-	Page     int                     `json:"page"`
+	Size     string                  `json:"size"`
 	OrderBy  string                  `json:"orderby"`
-	Limit    int                     `json:"limit"`
+	Limit    string                  `json:"limit"`
 }
 
 // DeliveryServiceServer ...
