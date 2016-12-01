@@ -159,7 +159,7 @@ function buildRpm () {
 # ---------------------------------------
 function createTarball() {
 	local projDir=$(cd "$1"; pwd)
-	local projName=$(basename $projDir)
+	local projName=incubator-trafficcontrol
 	local version=$(getVersion "$TC_DIR")
 	local buildNum=$(getBuildNumber)
 	local tarball="dist/$projName-$version.$buildNum.tar.gz"
