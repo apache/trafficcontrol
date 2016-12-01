@@ -2,6 +2,7 @@ package integration
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -47,6 +48,30 @@ func GetProfile() (traffic_ops.Profile, error) {
 		return *new(traffic_ops.Profile), err
 	}
 	return profiles[0], nil
+}
+
+//GetType returns a Type Struct
+func GetType(useInTable string) (traffic_ops.Type, error) {
+	types, err := to.Types()
+	if err != nil {
+		return *new(traffic_ops.Type), err
+	}
+	for _, myType := range types {
+		if myType.UseInTable == useInTable {
+			return myType, nil
+		}
+	}
+	nfErr := fmt.Sprintf("No Types found for useInTable %s\n", useInTable)
+	return *new(traffic_ops.Type), errors.New(nfErr)
+}
+
+//GetDeliveryService returns a DeliveryService Struct
+func GetDeliveryService() (traffic_ops.DeliveryService, error) {
+	dss, err := to.DeliveryServices()
+	if err != nil {
+		return *new(traffic_ops.DeliveryService), err
+	}
+	return dss[0], nil
 }
 
 //Request sends a request to TO and returns a response.

@@ -2,14 +2,114 @@ package integration
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/url"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
-// TestDeliveryServices compares the results of the Deliveryservices api and Deliveryservices client
+var (
+	testDs           traffic_ops.DeliveryService
+	testDsID         string
+	existingTestDS   traffic_ops.DeliveryService
+	existingTestDSID string
+	sslDs            traffic_ops.DeliveryService
+)
+
+func init() {
+	cdn, err := GetCdn()
+	if err != nil {
+		fmt.Printf("Deliverservice_test init -- Could not get CDNs from TO...%v\n", err)
+		os.Exit(1)
+	}
+
+	profile, err := GetProfile()
+	if err != nil {
+		fmt.Printf("Deliverservice_test init -- Could not get Profiles from TO...%v\n", err)
+		os.Exit(1)
+	}
+
+	dsType, err := GetType("deliveryservice")
+	if err != nil {
+		fmt.Printf("Deliverservice_test init -- Could not get Types from TO...%v\n", err)
+		os.Exit(1)
+	}
+
+	// existingTestDS, err := GetDeliveryService()
+	// if err != nil {
+	// 	fmt.Printf("Deliverservice_test init -- Could not get Deliveryservices from TO...%v\n", err)
+	// 	os.Exit(1)
+	// }
+	// existingTestDSID = strconv.Itoa(existingTestDS.ID)
+
+	//create DeliveryService object for testing
+	testDs.Active = false
+	testDs.CCRDNSTTL = 30
+	testDs.CDNName = cdn.Name
+	testDs.CDNID = cdn.ID
+	testDs.CacheURL = "cacheURL"
+	testDs.CheckPath = "CheckPath"
+	testDs.DNSBypassCname = "DNSBypassCNAME"
+	testDs.DNSBypassIP = "10.10.10.10"
+	testDs.DNSBypassIP6 = "FF01:0:0:0:0:0:0:FB"
+	testDs.DNSBypassTTL = 30
+	testDs.DSCP = 0
+	testDs.DisplayName = "DisplayName"
+	testDs.EdgeHeaderRewrite = "EdgeHeaderRewrite"
+	testDs.GeoLimit = 5
+	testDs.GeoProvider = 1
+	testDs.GlobalMaxMBPS = 15000
+	testDs.GlobalMaxTPS = 15000
+	testDs.HTTPBypassFQDN = "HTTPBypassFQDN"
+	testDs.IPV6RoutingEnabled = true
+	testDs.InfoURL = "InfoUrl"
+	testDs.InitialDispersion = 5
+	testDs.LongDesc = "LongDesc"
+	testDs.LongDesc1 = "LongDesc1"
+	testDs.LongDesc2 = "LongDesc2"
+	testDs.MaxDNSAnswers = 5
+	testDs.MidHeaderRewrite = "MidHeaderRewrite"
+	testDs.MissLat = 5.555
+	testDs.MissLong = -50.5050
+	testDs.MultiSiteOrigin = true
+	testDs.OrgServerFQDN = "http://OrgServerFQDN"
+	testDs.ProfileDesc = profile.Description
+	testDs.ProfileName = profile.Name
+	testDs.ProfileID = profile.ID
+	testDs.Protocol = 1
+	testDs.QStringIgnore = 1
+	testDs.RangeRequestHandling = 0
+	testDs.RegexRemap = "regexRemap"
+	testDs.RemapText = "remapText"
+	testDs.Signed = false
+	testDs.TRResponseHeaders = "TRResponseHeaders"
+	testDs.Type = dsType.Name
+	testDs.TypeID = dsType.ID
+	testDs.XMLID = "Test-DS-" + strconv.FormatInt(time.Now().Unix(), 10)
+	testDs.RegionalGeoBlocking = false
+	testDs.LogsEnabled = false
+
+	//Create method currently does not support MatchList...
+	// testDsMatch1 := new(traffic_ops.DeliveryServiceMatch)
+	// testDsMatch1.Pattern = "Pattern1"
+	// testDsMatch1.SetNumber = "0"
+	// testDsMatch1.Type = "HOST"
+
+	// testDsMatch2 := new(traffic_ops.DeliveryServiceMatch)
+	// testDsMatch2.Pattern = "Pattern2"
+	// testDsMatch2.SetNumber = "1"
+	// testDsMatch2.Type = "HOST"
+
+	// testDs.MatchList = append(testDs.MatchList, *testDsMatch1)
+	// testDs.MatchList = append(testDs.MatchList, *testDsMatch2)
+
+}
+
 func TestDeliveryServices(t *testing.T) {
 	resp, err := Request(*to, "GET", "/api/1.2/deliveryservices.json", nil)
 	if err != nil {
@@ -34,6 +134,15 @@ func TestDeliveryServices(t *testing.T) {
 
 	matchFound := false
 	for _, apiDs := range apiDss {
+		//set these to use later...this saves time over doing it in the init() method
+		if apiDs.Protocol == 0 && existingTestDS.ID == 0 {
+			existingTestDS = apiDs
+			existingTestDSID = strconv.Itoa(existingTestDS.ID)
+		}
+		if apiDs.Protocol > 0 && strings.Contains(apiDs.Type, "DNS") && sslDs.ID == 0 {
+			sslDs = apiDs
+		}
+
 		for _, clientDs := range clientDss {
 			if clientDs.XMLID != apiDs.XMLID {
 				continue
@@ -47,83 +156,352 @@ func TestDeliveryServices(t *testing.T) {
 	}
 }
 
-var testDsID string
-
 func TestCreateDs(t *testing.T) {
 	//create a DS and validate response
-	cdn, err := GetCdn()
-	if err != nil {
-		t.Errorf("TestCreateDs -- Could not get CDNs from TO...%v\n", err)
-	}
-
-	profile, err := GetProfile()
-	if err != nil {
-		t.Errorf("TestCreateDs -- Could not get Profiles from TO...%v\n", err)
-	}
-
-	newDs := new(traffic_ops.DeliveryService)
-	newDs.Active = false
-	newDs.CCRDNSTTL = 30
-	newDs.CDNName = cdn.Name
-	newDs.CacheURL = "cacheURL"
-	newDs.CheckPath = "CheckPath"
-	newDs.DNSBypassCname = "DNSBypassCNAME"
-	newDs.DNSBypassIP = "10.10.10.10"
-	newDs.DNSBypassIP6 = "FF01:0:0:0:0:0:0:FB"
-	newDs.DNSBypassTTL = 30
-	newDs.DSCP = 0
-	newDs.DisplayName = "DisplayName"
-	newDs.EdgeHeaderRewrite = "EdgeHeaderRewrite"
-	newDs.GeoLimit = 5
-	newDs.GeoProvider = 1
-	newDs.GlobalMaxMBPS = 15000
-	newDs.GlobalMaxTPS = 15000
-	newDs.HTTPBypassFQDN = "HTTPBypassFQDN"
-	newDs.IPV6RoutingEnabled = true
-	newDs.InfoURL = "InfoUrl"
-	newDs.InitialDispersion = 5
-	newDs.LongDesc = "LongDesc"
-	newDs.LongDesc1 = "LongDesc1"
-	newDs.LongDesc2 = "LongDesc2"
-	newDs.MaxDNSAnswers = 5
-	newDs.MidHeaderRewrite = "MidHeaderRewrite"
-	newDs.MissLat = 5.555
-	newDs.MissLong = -50.5050
-	newDs.MultiSiteOrigin = true
-	newDs.OrgServerFQDN = "http://OrgServerFQDN"
-	newDs.ProfileDesc = profile.Description
-	newDs.ProfileName = profile.Name
-	newDs.Protocol = 1
-	newDs.QStringIgnore = 1
-	newDs.RangeRequestHandling = 0
-	newDs.RegexRemap = "regexRemap"
-	newDs.RemapText = "remapText"
-	newDs.Signed = false
-	newDs.TRResponseHeaders = "TRResponseHeaders"
-	newDs.Type = "HTTP"
-	newDs.XMLID = "Test-DS-" + strconv.FormatInt(time.Now().Unix(), 10)
-	newDs.RegionalGeoBlocking = false
-	newDs.LogsEnabled = false
-
-	//Create currently does not write regexes...
-	// newDsMatch1 := new(traffic_ops.DeliveryServiceMatch)
-	// newDsMatch1.Pattern = "Pattern1"
-	// newDsMatch1.SetNumber = "0"
-	// newDsMatch1.Type = "HOST"
-
-	// newDsMatch2 := new(traffic_ops.DeliveryServiceMatch)
-	// newDsMatch2.Pattern = "Pattern2"
-	// newDsMatch2.SetNumber = "1"
-	// newDsMatch2.Type = "HOST"
-
-	// newDs.MatchList = append(newDs.MatchList, *newDsMatch1)
-	// newDs.MatchList = append(newDs.MatchList, *newDsMatch2)
-
-	res, err := to.CreateDeliveryService(newDs)
+	res, err := to.CreateDeliveryService(&testDs)
 	if err != nil {
 		t.Error("Failed to create deliveryservice!  Error is: ", err)
 	} else {
-		compareDs(*newDs, res.Response[0], t)
+		testDs.ID = res.Response[0].ID
+		testDsID = strconv.Itoa(testDs.ID)
+		compareDs(testDs, res.Response[0], t)
+	}
+}
+
+func TestUpdateDs(t *testing.T) {
+	testDs.DisplayName = "New Display Name"
+	testDs.LongDesc += "-- Update"
+	testDs.LongDesc1 += "-- Update"
+	testDs.LongDesc2 += "-- Update"
+	testDs.EdgeHeaderRewrite += "-- Update"
+	res, err := to.UpdateDeliveryService(testDsID, &testDs)
+	if err != nil {
+		t.Error("Failed to update deliveryservice!  Error is: ", err)
+	} else {
+		compareDs(testDs, res.Response[0], t)
+	}
+}
+
+func TestDeliveryService(t *testing.T) {
+	uri := fmt.Sprintf("/api/1.2/deliveryservices/%s.json", testDsID)
+	resp, err := Request(*to, "GET", uri, nil)
+	if err != nil {
+		t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+	}
+
+	defer resp.Body.Close()
+	var apiDsRes traffic_ops.GetDeliveryServiceResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiDsRes); err != nil {
+		t.Errorf("Could not decode Deliveryservice json.  Error is: %v\n", err)
+	}
+
+	clientDss, err := to.DeliveryService(testDsID)
+	if err != nil {
+		t.Errorf("Could not get Deliveryservice from client.  Error is: %v\n", err)
+	}
+
+	compareDs(apiDsRes.Response[0], *clientDss, t)
+}
+
+//Put this Test after anything using the testDS or testDsID variables
+func TestDeleteDeliveryService(t *testing.T) {
+	res, err := to.DeleteDeliveryService(testDsID)
+	if err != nil {
+		t.Errorf("Could not delete Deliveryserivce %s reponse was: %v\n", testDsID, err)
+	}
+	if res.Alerts[0].Level != "success" {
+		t.Errorf("Alert.Level -- Expected \"success\" got %s", res.Alerts[0].Level)
+	}
+	if res.Alerts[0].Text != "Delivery service was deleted." {
+		t.Errorf("Alert.Level -- Expected \"Delivery service was deleted.\" got %s", res.Alerts[0].Text)
+	}
+}
+
+func TestDeliveryServiceState(t *testing.T) {
+	uri := fmt.Sprintf("/api/1.2/deliveryservices/%s/state.json", existingTestDSID)
+	resp, err := Request(*to, "GET", uri, nil)
+	if err != nil {
+		t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+	}
+
+	defer resp.Body.Close()
+	var apiDsStateRes traffic_ops.DeliveryServiceStateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiDsStateRes); err != nil {
+		t.Errorf("Could not decode DeliveryserviceState reponse.  Error is: %v\n", err)
+	}
+
+	apiDsState := apiDsStateRes.Response
+
+	clientDsState, err := to.DeliveryServiceState(existingTestDSID)
+	if err != nil {
+		t.Errorf("Could not get DS State from client for %s reponse was: %v\n", existingTestDSID, err)
+	}
+
+	if apiDsState.Enabled != clientDsState.Enabled {
+		t.Errorf("Enabled -- Expected %v got %v for ID %s", apiDsState.Enabled, clientDsState.Enabled, existingTestDSID)
+	}
+	if apiDsState.Failover.Configured != clientDsState.Failover.Configured {
+		t.Errorf("Failover.Configured -- Expected %v got %v", apiDsState.Failover.Configured, clientDsState.Failover.Configured)
+	}
+	if apiDsState.Failover.Destination.Location != clientDsState.Failover.Destination.Location {
+		t.Errorf("Failover.Destination.Location -- Expected %v got %v", apiDsState.Failover.Destination.Location, clientDsState.Failover.Destination.Location)
+	}
+	if apiDsState.Failover.Destination.Type != clientDsState.Failover.Destination.Type {
+		t.Errorf("Failover.Destination.Type -- Expected %v got %v", apiDsState.Failover.Destination.Type, clientDsState.Failover.Destination.Type)
+	}
+	if apiDsState.Failover.Enabled != clientDsState.Failover.Enabled {
+		t.Errorf("res.Failover.Enabled -- Expected %v got %v", apiDsState.Failover.Enabled, clientDsState.Failover.Enabled)
+	}
+	if len(apiDsState.Failover.Locations) != len(clientDsState.Failover.Locations) {
+		t.Errorf("res.Failover.Locations len -- Expected %v got %v", len(apiDsState.Failover.Locations), len(clientDsState.Failover.Locations))
+	}
+}
+
+func TestDeliveryServiceHealth(t *testing.T) {
+	uri := fmt.Sprintf("/api/1.2/deliveryservices/%s/health.json", existingTestDSID)
+	resp, err := Request(*to, "GET", uri, nil)
+	if err != nil {
+		t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+	}
+
+	defer resp.Body.Close()
+	var apiDsHealthRes traffic_ops.DeliveryServiceHealthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiDsHealthRes); err != nil {
+		t.Errorf("Could not decode DeliveryserviceHealth reponse.  Error is: %v\n", err)
+	}
+
+	apiDsHealth := apiDsHealthRes.Response
+
+	clientDsHealth, err := to.DeliveryServiceHealth(existingTestDSID)
+	if err != nil {
+		t.Errorf("Could not ge Deliveryserivce Health for %s reponse was: %v\n", existingTestDSID, err)
+	}
+
+	if apiDsHealth.TotalOnline != clientDsHealth.TotalOnline {
+		t.Errorf("TotalOnline -- Expected %v got %v", apiDsHealth.TotalOnline, apiDsHealth.TotalOnline)
+	}
+
+	if apiDsHealth.TotalOffline != clientDsHealth.TotalOffline {
+		t.Errorf("TotalOffline -- Expected %v got %v", apiDsHealth.TotalOffline, clientDsHealth.TotalOffline)
+	}
+
+	if len(apiDsHealth.CacheGroups) != len(clientDsHealth.CacheGroups) {
+		t.Errorf("len Cachegroups -- Expected %v got %v", len(apiDsHealth.CacheGroups), len(clientDsHealth.CacheGroups))
+	}
+
+	for _, apiCg := range apiDsHealth.CacheGroups {
+		match := false
+		for _, clientCg := range clientDsHealth.CacheGroups {
+			if apiCg.Name != clientCg.Name {
+				continue
+			}
+			match = true
+			if apiCg.Offline != clientCg.Offline {
+				t.Errorf("Cachegroup.Offline -- Expected %v got %v", apiCg.Offline, clientCg.Offline)
+			}
+			if apiCg.Online != clientCg.Online {
+				t.Errorf("Cachegroup.Online -- Expected %v got %v", apiCg.Online, clientCg.Online)
+			}
+		}
+		if !match {
+			t.Errorf("Cachegroup -- No match from client for api cachgroup %v", apiCg.Name)
+		}
+	}
+}
+
+func TestDeliveryServiceCapacity(t *testing.T) {
+	uri := fmt.Sprintf("/api/1.2/deliveryservices/%s/capacity.json", existingTestDSID)
+	resp, err := Request(*to, "GET", uri, nil)
+	if err != nil {
+		t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+	}
+
+	defer resp.Body.Close()
+	var apiDsCapacityRes traffic_ops.DeliveryServiceCapacityResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiDsCapacityRes); err != nil {
+		t.Errorf("Could not decode DeliveryserviceCapacity reponse.  Error is: %v\n", err)
+	}
+
+	apiDsCapacity := apiDsCapacityRes.Response
+
+	clientDsCapacity, err := to.DeliveryServiceCapacity(existingTestDSID)
+	if err != nil {
+		t.Errorf("Could not ge Deliveryserivce Capacity for %s reponse was: %v\n", existingTestDSID, err)
+	}
+
+	if apiDsCapacity.AvailablePercent != clientDsCapacity.AvailablePercent {
+		t.Errorf("AvailablePercent -- Expected %v got %v", apiDsCapacity.AvailablePercent, clientDsCapacity.AvailablePercent)
+	}
+
+	if fmt.Sprintf("%6.5f", apiDsCapacity.MaintenancePercent) != fmt.Sprintf("%6.5f", clientDsCapacity.MaintenancePercent) {
+		t.Errorf("MaintenenancePercent -- Expected %v got %v", apiDsCapacity.MaintenancePercent, clientDsCapacity.MaintenancePercent)
+	}
+
+	if apiDsCapacity.UnavailablePercent != clientDsCapacity.UnavailablePercent {
+		t.Errorf("UnavailablePercent -- Expected %v got %v", apiDsCapacity.UnavailablePercent, clientDsCapacity.UnavailablePercent)
+	}
+
+	if fmt.Sprintf("%6.5f", apiDsCapacity.UtilizedPercent) != fmt.Sprintf("%6.5f", clientDsCapacity.UtilizedPercent) {
+		t.Errorf("UtilizedPercent -- Expected %v got %v", apiDsCapacity.UtilizedPercent, clientDsCapacity.UtilizedPercent)
+	}
+
+}
+
+func TestDeliveryServiceRouting(t *testing.T) {
+	uri := fmt.Sprintf("/api/1.2/deliveryservices/%s/routing.json", existingTestDSID)
+	resp, err := Request(*to, "GET", uri, nil)
+	if err != nil {
+		t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+	}
+
+	defer resp.Body.Close()
+	var apiDsRoutingRes traffic_ops.DeliveryServiceRoutingResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiDsRoutingRes); err != nil {
+		t.Errorf("Could not decode DeliveryserviceRouting reponse.  Error is: %v\n", err)
+	}
+
+	apiDsRouting := apiDsRoutingRes.Response
+
+	clientDsRouting, err := to.DeliveryServiceRouting(existingTestDSID)
+	if err != nil {
+		t.Errorf("Could not ge Deliveryserivce Routing for %s reponse was: %v\n", existingTestDSID, err)
+	}
+
+	if apiDsRouting.CZ != clientDsRouting.CZ {
+		t.Errorf("CZ -- Expected %v got %v", apiDsRouting.CZ, clientDsRouting.CZ)
+	}
+
+	if apiDsRouting.DSR != clientDsRouting.DSR {
+		t.Errorf("DSR -- Expected %v got %v", apiDsRouting.DSR, clientDsRouting.DSR)
+	}
+
+	if apiDsRouting.Err != clientDsRouting.Err {
+		t.Errorf("Err-- Expected %v got %v", apiDsRouting.Err, clientDsRouting.Err)
+	}
+
+	if apiDsRouting.Fed != clientDsRouting.Fed {
+		t.Errorf("Fed -- Expected %v got %v", apiDsRouting.Fed, clientDsRouting.Fed)
+	}
+
+	if apiDsRouting.Geo != clientDsRouting.Geo {
+		t.Errorf("Geo -- Expected %v got %v", apiDsRouting.Geo, clientDsRouting.Geo)
+	}
+
+	if apiDsRouting.Miss != clientDsRouting.Miss {
+		t.Errorf("Miss -- Expected %v got %v", apiDsRouting.Miss, clientDsRouting.Miss)
+	}
+
+	if apiDsRouting.RegionalAlternate != clientDsRouting.RegionalAlternate {
+		t.Errorf("RegionalAlternate -- Expected %v got %v", apiDsRouting.RegionalAlternate, clientDsRouting.RegionalAlternate)
+	}
+
+	if apiDsRouting.RegionalDenied != clientDsRouting.RegionalDenied {
+		t.Errorf("RegionalDenied -- Expected %v got %v", apiDsRouting.RegionalDenied, clientDsRouting.RegionalDenied)
+	}
+}
+
+func TestDeliveryServiceServer(t *testing.T) {
+	resp, err := Request(*to, "GET", "/api/1.2/deliveryserviceserver.json?page=1&limit=1", nil)
+	if err != nil {
+		t.Errorf("Could not get deliveryserviceserver.json reponse was: %v\n", err)
+	}
+
+	defer resp.Body.Close()
+	var apiDsServerRes traffic_ops.DeliveryServiceServerResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiDsServerRes); err != nil {
+		t.Errorf("Could not decode DeliveryserviceServer reponse.  Error is: %v\n", err)
+	}
+
+	clientDsServerRes, err := to.DeliveryServiceServer("1", "1")
+
+	if err != nil {
+		t.Errorf("Could not get DeliveryserviceServer, reponse was: %v\n", err)
+	}
+
+	for _, apiDss := range apiDsServerRes.Response {
+		match := false
+		for _, clientDss := range clientDsServerRes {
+			if clientDss.DeliveryService != apiDss.DeliveryService {
+				continue
+			}
+			match = true
+			if apiDss.LastUpdated != clientDss.LastUpdated {
+				t.Errorf("LastUpdated -- Expected %v got %v", apiDss.LastUpdated, clientDss.LastUpdated)
+			}
+			if apiDss.Server != clientDss.Server {
+				t.Errorf("Server -- Expected %v got %v", apiDss.Server, clientDss.Server)
+			}
+		}
+		if match != true {
+			t.Errorf("No match found for the Deliveryservice %v in DeliveryserviceServer response: %v\n", apiDss.DeliveryService, err)
+		}
+	}
+
+}
+
+func TestDeliveryServiceSSLKeysByID(t *testing.T) {
+	if sslDs.ID > 0 {
+		uri := fmt.Sprintf("/api/1.2/deliveryservices/xmlId/%s/sslkeys.json", sslDs.XMLID)
+		resp, err := Request(*to, "GET", uri, nil)
+		if err != nil {
+			t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+		}
+
+		defer resp.Body.Close()
+		var apiSslRes traffic_ops.DeliveryServiceSSLKeysResponse
+		if err := json.NewDecoder(resp.Body).Decode(&apiSslRes); err != nil {
+			t.Errorf("Could not decode DeliveryServiceSSLKeysResponse reponse.  Error is: %v\n", err)
+		}
+
+		clientSslRes, err := to.DeliveryServiceSSLKeysByID(sslDs.XMLID)
+
+		if err != nil {
+			t.Errorf("Could not get DeliveryserviceSSLKeys, reponse was: %v\n", err)
+		}
+		compareSSLResponse(apiSslRes.Response, *clientSslRes, t)
+	} else {
+		t.Skip("Skipping TestDeliveryServiceSSLKeysByID because no Deliveryservice was found with SSL enabled")
+	}
+}
+
+func TestDeliveryServiceSSLKeysByHostname(t *testing.T) {
+	if sslDs.ID > 0 {
+		var hostname string
+		for _, exampleURL := range sslDs.ExampleURLs {
+			if strings.Contains(exampleURL, "edge.") {
+				u, err := url.Parse(exampleURL)
+				if err != nil {
+					t.Errorf("could not parse exampleURL %s\n", exampleURL)
+					t.FailNow()
+				}
+				hostname = u.Host
+			}
+		}
+		if hostname == "" {
+			t.Skipf("could not find an example URL from Deliveryservice %s to use for testing\n", sslDs.XMLID)
+			t.SkipNow()
+		}
+
+		uri := fmt.Sprintf("/api/1.2/deliveryservices/hostname/%s/sslkeys.json", hostname)
+		resp, err := Request(*to, "GET", uri, nil)
+		if err != nil {
+			t.Errorf("Could not get %s reponse was: %v\n", uri, err)
+		}
+
+		defer resp.Body.Close()
+		var apiSslRes traffic_ops.DeliveryServiceSSLKeysResponse
+		if err := json.NewDecoder(resp.Body).Decode(&apiSslRes); err != nil {
+			t.Errorf("Could not decode DeliveryServiceSSLKeysResponse reponse.  Error is: %v\n", err)
+		}
+
+		clientSslRes, err := to.DeliveryServiceSSLKeysByHostname(hostname)
+
+		if err != nil {
+			t.Errorf("Could not get DeliveryserviceSSLKeys, reponse was: %v\n", err)
+		}
+		compareSSLResponse(apiSslRes.Response, *clientSslRes, t)
+	} else {
+		t.Skip("Skipping TestDeliveryServiceSSLKeysByID because no Deliveryservice was found with SSL enabled")
 	}
 }
 
@@ -136,6 +514,9 @@ func compareDs(ds1 traffic_ops.DeliveryService, ds2 traffic_ops.DeliveryService,
 	}
 	if ds1.CDNName != ds2.CDNName {
 		t.Errorf("CDNName -- Expected %v, Got %v\n", ds1.CDNName, ds2.CDNName)
+	}
+	if ds1.CDNID != ds2.CDNID {
+		t.Errorf("CDNID -- Expected %v, Got %v\n", ds1.CDNID, ds2.CDNID)
 	}
 	if ds1.CacheURL != ds2.CacheURL {
 		t.Errorf("CacheURL -- Expected %v, Got %v\n", ds1.CacheURL, ds2.CacheURL)
@@ -191,7 +572,7 @@ func compareDs(ds1 traffic_ops.DeliveryService, ds2 traffic_ops.DeliveryService,
 	if ds1.InitialDispersion != ds2.InitialDispersion {
 		t.Errorf("InitialDispersion -- Expected %v, Got %v\n", ds1.InitialDispersion, ds2.InitialDispersion)
 	}
-	if ds1.LastUpdated != ds2.LastUpdated {
+	if ds1.LastUpdated != "" && ds1.LastUpdated != ds2.LastUpdated {
 		t.Errorf("LastUpdated -- Expected %v, Got %v\n", ds1.LastUpdated, ds2.LastUpdated)
 	}
 	if ds1.LongDesc != ds2.LongDesc {
@@ -263,5 +644,45 @@ func compareDs(ds1 traffic_ops.DeliveryService, ds2 traffic_ops.DeliveryService,
 				t.Errorf("Matchlist -- Expected %v, Got %v\n", match, ds2.MatchList[i])
 			}
 		}
+	}
+	if len(ds1.ExampleURLs) > 0 {
+		for i, url := range ds1.ExampleURLs {
+			if url != ds2.ExampleURLs[i] {
+				t.Errorf("ExampleURL -- Expected %v, Got %v\n", url, ds2.ExampleURLs[i])
+			}
+		}
+	}
+}
+
+func compareSSLResponse(apiSslRes traffic_ops.DeliveryServiceSSLKeys, clientSslRes traffic_ops.DeliveryServiceSSLKeys, t *testing.T) {
+	if apiSslRes.BusinessUnit != clientSslRes.BusinessUnit {
+		t.Errorf("BusinessUnit -- Expected %v got %v", apiSslRes.BusinessUnit, clientSslRes.BusinessUnit)
+	}
+	if apiSslRes.CDN != clientSslRes.CDN {
+		t.Errorf("CDN -- Expected %v got %v", apiSslRes.CDN, clientSslRes.CDN)
+	}
+	if apiSslRes.Certificate.CSR != clientSslRes.Certificate.CSR {
+		t.Errorf("CSR -- Expected %v got %v", apiSslRes.Certificate.CSR, clientSslRes.Certificate.CSR)
+	}
+	if apiSslRes.Certificate.Crt != clientSslRes.Certificate.Crt {
+		t.Errorf("CRT -- Expected %v got %v", apiSslRes.Certificate.Crt, clientSslRes.Certificate.Crt)
+	}
+	if apiSslRes.Certificate.Key != clientSslRes.Certificate.Key {
+		t.Errorf("Key -- Expected %v got %v", apiSslRes.Certificate.Key, clientSslRes.Certificate.Key)
+	}
+	if apiSslRes.City != clientSslRes.City {
+		t.Errorf("City -- Expected %v got %v", apiSslRes.City, clientSslRes.City)
+	}
+	if apiSslRes.Country != clientSslRes.Country {
+		t.Errorf("Country -- Expected %v got %v", apiSslRes.Country, clientSslRes.Country)
+	}
+	if apiSslRes.DeliveryService != clientSslRes.DeliveryService {
+		t.Errorf("DeliveryService -- Expected %v got %v", apiSslRes.DeliveryService, clientSslRes.DeliveryService)
+	}
+	if apiSslRes.Hostname != clientSslRes.Hostname {
+		t.Errorf("Hostname -- Expected %v got %v", apiSslRes.Hostname, clientSslRes.Hostname)
+	}
+	if apiSslRes.Organization != clientSslRes.Organization {
+		t.Errorf("Organization -- Expected %v got %v", apiSslRes.Organization, clientSslRes.Organization)
 	}
 }
