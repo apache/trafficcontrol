@@ -94,6 +94,7 @@ type DeliveryService struct {
 	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
 	RegionalGeoBlocking  bool                   `json:"regionalGeoBlocking"`
 	LogsEnabled          bool                   `json:"logsEnabled"`
+	ExampleURLs          []string               `json:"exampleURLs"`
 }
 
 // DeliveryServiceMatch ...
