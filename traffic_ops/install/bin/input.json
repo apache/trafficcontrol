@@ -1,11 +1,11 @@
 {
-	"testdb.conf": [
+	"/opt/traffic_ops/app/conf/production/database.conf": [
 		{
 			"Database type": "mysql",
 			"config_var": "type"
 		},
 		{
-			"Database name": "traffic_ops",
+			"Database name": "traffic_ops_db",
 			"config_var": "dbname"
 		},
 		{
@@ -16,26 +16,28 @@
 			"Database port number": "3306",
 			"config_var": "port"
 		},
-                {
-                        "Root database user": "root",
-                        "config_var": "root_user"
-                },
-                {
-                        "Root database password": "default",
-                        "config_var": "root_passwd"
-                }
+		{
+			"Traffic Ops database user": "traffic_ops",
+			"config_var": "user"
+		},
+		{
+			"Traffic Ops database password": "default",
+			"config_var": "password",
+                        "hidden": "1"
+		}
 	],
-	"testtodb.conf": [
+	"/opt/traffic_ops/app/db/dbconf.yml": [
+		{
+			"Database server root (admin) username": "root",
+			"config_var": "dbAdminUser"
+		},
                 {
-                        "Traffic Ops database user": "root",
-                        "config_var": "dbAdminUser"
-                },
-                {
-                        "Password for Traffic Ops database user": "default",
-                        "config_var": "dbAdminPw"
-                }
+			"Database server admin password": "default",
+			"config_var": "dbAdminPw",
+                        "hidden": "1"
+		}
 	],
-	"testcdn.conf": [
+	"/opt/traffic_ops/app/conf/cdn.conf": [
 		{
 			"Generate a new secret?": "yes",
 			"config_var": "genSecret"
@@ -45,7 +47,7 @@
 			"config_var": "keepSecrets"
 		}
 	],
-	"testldap.conf": [
+	"/opt/traffic_ops/app/conf/ldap.conf": [
 		{
 			"Do you want to set up LDAP?": "no",
 			"config_var": "setupLdap"
@@ -60,23 +62,101 @@
 		},
 		{
 			"LDAP Admin Password": "",
-			"config_var": "password"
+			"config_var": "password",
+                        "hidden": "1"
 		},
 		{
 			"LDAP Search Base": "",
 			"config_var": "search_base"
 		}
 	],
-	"testpost_install.json": [],
-	"testusers.json": [
+	"/opt/traffic_ops/install/data/json/users.json": [
+                {
+                        "Administration username for Traffic Ops": "root",
+                        "config_var": "tmAdminUser"
+                },
+                {
+                        "Password for the admin user": "default",
+                        "config_var": "tmAdminPw",
+                        "hidden": "1"
+                }
+	],
+	"/opt/traffic_ops/install/data/profiles/": [],
+	"/opt/traffic_ops/install/bin/openssl_configuration.json": [
 		{
-			"Administration username for Traffic Ops": "admin",
-			"config_var": "tmAdminUser"
+			"Country Name (2 letter code)": "XX",
+			"config_var": "country"
 		},
 		{
-			"Password for the admin user": "default",
-			"config_var": "tmAdminPw"
-		}
+			"State or Province Name (full name)": "Default State",
+			"config_var": "state"
+		},
+		{
+			"Locality Name (eg, city)": "Default City",
+			"config_var": "locality"
+		},
+		{
+			"Organization Name (eg, company)": "Default Company Ltd",
+			"config_var": "company"
+		},
+		{
+			"Organizational Unit Name (eg, section)": "",
+			"config_var": "org_unit"
+		},
+		{
+			"Common Name (eg, your name or your server's hostname)": "example.com",
+			"config_var": "common_name"
+		},
+                {
+                        "RSA Passphrase": "password",
+                        "config_var": "rsaPassword",
+                        "hidden": "1"
+                }
 	],
-	"testprofiles/": []
+        "/opt/traffic_ops/install/data/json/profiles.json": [
+                {
+			"Traffic Ops url": "https://localhost",
+			"config_var": "tm.url"
+                },
+		{
+			"Human-readable CDN Name.  (No whitespace, please)": "kabletown_cdn",
+			"config_var": "cdn_name"
+		},
+                {
+                        "Health Polling Interval (milliseconds)": "8000",
+                        "config_var": "health_polling_int"
+                },
+                {
+                        "DNS sub-domain for which your CDN is authoritative": "cdn1.kabletown.net",
+                        "config_var": "dns_subdomain"
+                },
+                {
+                        "TLD SOA admin": "traffic_ops",
+                        "config_var": "soa_admin"
+                },
+                {
+                        "TrafficServer Drive Prefix": "/dev/sd",
+                        "config_var": "driver_prefix"
+                },
+                {
+                        "TrafficServer RAM Drive Prefix": "/dev/ram",
+                        "config_var": "ram_drive_prefix"
+                },
+                {
+                        "TrafficServer RAM Drive Letters (comma separated)": "0,1,2,3,4,5,6,7",
+                        "config_var": "ram_drive_letters"
+                },
+                {
+                        "Health Threshold Load Average": "25",
+                        "config_var": "health_thresh_load_avg"
+                },
+                {
+                        "Health Threshold Available Bandwidth in Kbps": "1750000",
+                        "config_var": "health_thresh_kbps"
+                },
+                {
+                        "Traffic Server Health Connection Timeout (milliseconds)": "2000",
+                        "config_var": "health_connect_timeout"
+                }
+        ]
 }
