@@ -39,6 +39,7 @@ sub errorOut {
 }
 
 # outputs logging messages to terminal and log file
+# TODO: move to InstallUtils
 sub logger {
     my $output = shift;
     my $type   = shift;
@@ -247,7 +248,8 @@ sub sanityCheckDefaults {
 # userInput: The entire input config file which is either user input or the defaults
 #
 # Checks the input config file against the default inputs. If there is a question located in the default inputs which
-#  is not located in the input config file it will output a warning message.
+#  is not located in the input config file it will output a warning message. If in auto mode the default answer will be
+#  used. If in interactive mode the user will be prompted with the default question missing from the config file
 #
 # This does not check the other way meaning questions which are present in defaults but not present in the input config
 #  file will not be checked
@@ -259,9 +261,8 @@ sub sanityCheckConfig {
     foreach my $file ( ( keys $::defaultInputs ) ) {
         if ( !defined $userInput->{$file} ) {
             logger( "File \'$file\' found in defaults but not config file", "warn" );
-            next;
-        }
-
+            $userInput->{$file} = [];
+	}
         foreach my $defaultValue ( @{ $::defaultInputs->{$file} } ) {
 
             my $found = 0;
@@ -308,10 +309,6 @@ sub sanityCheckConfig {
     logger( "File sanity check complete - found $diffs difference(s)", "info" ) if ( $diffs > 0 );
 }
 
-sub writeOutputConf {
-    writeJson( $::outputConfigFile, \%::outputConf );
-}
-
 # A function which returns the default inputs data structure. These questions and answers will be used if there is no
 #  user input config file or if there are questions in the input config file which do not have answers
 
@@ -331,7 +328,7 @@ sub getDefaults {
                 "config_var"                          => "hostname",
             },
             {
-                "Database port number" => 3306,
+                "Database port number" => "3306",
                 "config_var"           => "port"
             },
             {
