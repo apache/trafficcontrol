@@ -171,8 +171,8 @@ func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
 func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
 	dss := client.DeliveryServiceServer{
 		LastUpdated:     "lastUpdated",
-		Server:          "someServer",
-		DeliveryService: "someService",
+		Server:          1,
+		DeliveryService: 1,
 	}
 
 	return &client.DeliveryServiceServerResponse{

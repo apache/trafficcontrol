@@ -526,16 +526,16 @@ func TestDeliveryServiceServer(t *testing.T) {
 		testHelper.Success(t, "Should get back \"lastUpdated\" for \"LastUpdated\"")
 	}
 
-	if s[0].Server != "someServer" {
-		testHelper.Error(t, "Should get back \"someServer\" for \"Server\", got: %s", s[0].Server)
+	if s[0].Server != 1 {
+		testHelper.Error(t, "Should get back 1 for \"Server\", got: %s", s[0].Server)
 	} else {
-		testHelper.Success(t, "Should get back \"someServer\" for \"Server\"")
+		testHelper.Success(t, "Should get back 1 for \"Server\"")
 	}
 
-	if s[0].DeliveryService != "someService" {
-		testHelper.Error(t, "Should get back \"someService\" for \"DeliveryService\", got: %s", s[0].DeliveryService)
+	if s[0].DeliveryService != 1 {
+		testHelper.Error(t, "Should get back 1 for \"DeliveryService\", got: %s", s[0].DeliveryService)
 	} else {
-		testHelper.Success(t, "Should get back \"someService\" for \"DeliveryService\"")
+		testHelper.Success(t, "Should get back 1 for \"DeliveryService\"")
 	}
 }
 
