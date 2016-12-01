@@ -1,10 +1,11 @@
 version: '2'
 
 services:
+  # dataimport reads data from an existing traffic_ops server running mysql thru the API
   dataimport:
     build:
-        dockerfile: Dockerfile-traffic_ops-client
         context: .
+        dockerfile: Dockerfile-traffic_ops-client
     restart: "no"
     environment:
       - TO_USER
@@ -14,6 +15,7 @@ services:
     volumes:
       - ./mysql/initdb.d:/docker-entrypoint-initdb.d
 
+  # mysql_host loads mysql data locally and provides direct access for pgloader
   mysql_host:
     image: mysql:5.6
     restart: "no"
@@ -28,10 +30,11 @@ services:
       - ./mysql/conf.d:/etc/mysql/conf.d
       - ./mysql/initdb.d:/docker-entrypoint-initdb.d
 
+  # postgres_host provides a postgres data to import data to
   postgres_host:
     build:
-      dockerfile: pg-migration/Dockerfile-postgres
       context: ..
+      dockerfile: pg-migration/Dockerfile-postgres
     restart: "no"
     environment:
       - POSTGRES_DB=traffic_ops
@@ -42,10 +45,11 @@ services:
     ports:
       - 5432
 
+  # pgloader converts the data from mysql to postgres
   pgloader:
     build:
-      dockerfile: Dockerfile-pgloader
-      context: .
+      context: ..
+      dockerfile: pg-migration/Dockerfile-pgloader
     restart: "no"
     depends_on:
       - mysql_host
@@ -59,3 +63,10 @@ services:
       - POSTGRES_DB=traffic_ops
       - POSTGRES_PASSWORD=twelve
       - POSTGRES_USER=traffic_ops
+
+  # convert runs necessary post-import conversion(s) in postgres
+  convert:
+    build:
+      context: ..
+      dockerfile: pg-migration/Dockerfile-convert
+    restart: "no"
