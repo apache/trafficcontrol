@@ -195,8 +195,8 @@ type DeliveryServiceServerResponse struct {
 // DeliveryServiceServer ...
 type DeliveryServiceServer struct {
 	LastUpdated     string `json:"lastUpdated"`
-	Server          string `json:"server"`
-	DeliveryService string `json:"deliveryService"`
+	Server          int    `json:"server"`
+	DeliveryService int    `json:"deliveryService"`
 }
 
 // DeliveryServiceSSLKeysResponse ...
