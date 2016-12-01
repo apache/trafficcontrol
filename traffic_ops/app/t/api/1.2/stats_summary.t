@@ -52,7 +52,7 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $summary_time = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
                                    $year+1900,$mon+1,$mday,$hour,$min,$sec);
 my $stat_date = sprintf ( "%04d-%02d-%02d",
-                                   $year+1900,$mon+1,$mday-1);
+                                   $year+1900,$mon+1,$mday);
 
 #login
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(200),
