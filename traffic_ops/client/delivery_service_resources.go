@@ -190,7 +190,7 @@ type DeliveryServiceServerResponse struct {
 	Response []DeliveryServiceServer `json:"response"`
 	Size     int                     `json:"size"`
 	OrderBy  string                  `json:"orderby"`
-	Limit    string                  `json:"limit"`
+	Limit    int                     `json:"limit"`
 }
 
 // DeliveryServiceServer ...
