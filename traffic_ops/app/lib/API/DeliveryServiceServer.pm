@@ -40,6 +40,9 @@ sub index {
 			}
 		);
 	}
+	#update to be ints
+	$limit += 0;
+	$page += 0;
 	$self->success( \@data, undef, $orderby, $limit, $page );
 }
 
