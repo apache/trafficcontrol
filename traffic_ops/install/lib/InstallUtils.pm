@@ -39,7 +39,8 @@ sub execCommand {
     my $customLog = "";
 
     # find log file in args and remove if found 
-    # TODO: More documentation here
+    # if there is a string in the list of args which starts with 'pi_custom_log=' then remove it from the parameters and use
+    #  it as the log file for the exec
     foreach my $var (@args) {
         if ( index($var, "pi_custom_log=") != -1 ) {
             $customLog = (split(/=/, $var))[1];
@@ -69,6 +70,7 @@ sub execCommand {
     }
 }
 
+# log the error and then kill the process
 sub errorOut {
     logger( @_, "error" );
     die;
@@ -139,6 +141,7 @@ sub randomWord {
     return $secret;
 }
 
+# deprecated
 sub promptUser {
     my ( $promptString, $defaultValue, $noEcho ) = @_;
 

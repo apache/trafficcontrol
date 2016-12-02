@@ -1,9 +1,9 @@
 {
 	"/opt/traffic_ops/app/conf/production/database.conf": [
-		{
-			"Database type": "mysql",
-			"config_var": "type"
-		},
+               {
+                       "Database type": "mysql",
+                       "config_var": "type"
+               },
 		{
 			"Database name": "traffic_ops_db",
 			"config_var": "dbname"

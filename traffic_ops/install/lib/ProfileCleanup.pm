@@ -145,6 +145,8 @@ sub profiles_exist {
 
     $::parameters->{'tm.url'} = $tmurl;
 
+    logger("Checking profiles at $tmurl using username " . $config->{"username"}, "info");
+
     my $uri = $::parameters->{'tm.url'};
     my $toCookie = get_traffic_ops_cookie( $::parameters->{'tm.url'}, $config->{"username"}, $config->{"password"} );
 
