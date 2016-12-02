@@ -40,13 +40,6 @@ func init() {
 		os.Exit(1)
 	}
 
-	// existingTestDS, err := GetDeliveryService()
-	// if err != nil {
-	// 	fmt.Printf("Deliverservice_test init -- Could not get Deliveryservices from TO...%v\n", err)
-	// 	os.Exit(1)
-	// }
-	// existingTestDSID = strconv.Itoa(existingTestDS.ID)
-
 	//create DeliveryService object for testing
 	testDs.Active = false
 	testDs.CCRDNSTTL = 30
@@ -329,7 +322,7 @@ func TestDeliveryServiceCapacity(t *testing.T) {
 		t.Errorf("Could not ge Deliveryserivce Capacity for %s reponse was: %v\n", existingTestDSID, err)
 	}
 
-	if apiDsCapacity.AvailablePercent != clientDsCapacity.AvailablePercent {
+	if fmt.Sprintf("%6.5f", apiDsCapacity.AvailablePercent) != fmt.Sprintf("%6.5f", clientDsCapacity.AvailablePercent) {
 		t.Errorf("AvailablePercent -- Expected %v got %v", apiDsCapacity.AvailablePercent, clientDsCapacity.AvailablePercent)
 	}
 
@@ -337,7 +330,7 @@ func TestDeliveryServiceCapacity(t *testing.T) {
 		t.Errorf("MaintenenancePercent -- Expected %v got %v", apiDsCapacity.MaintenancePercent, clientDsCapacity.MaintenancePercent)
 	}
 
-	if apiDsCapacity.UnavailablePercent != clientDsCapacity.UnavailablePercent {
+	if fmt.Sprintf("%6.5f", apiDsCapacity.UnavailablePercent) != fmt.Sprintf("%6.5f", clientDsCapacity.UnavailablePercent) {
 		t.Errorf("UnavailablePercent -- Expected %v got %v", apiDsCapacity.UnavailablePercent, clientDsCapacity.UnavailablePercent)
 	}
 
