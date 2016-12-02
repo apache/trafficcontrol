@@ -1,7 +1,6 @@
 package integration
 
 import (
-	// "encoding/json"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -32,7 +31,7 @@ func TestParameters(t *testing.T) {
 
 	clientParams, err := to.Parameters(profile.Name)
 	if err != nil {
-		t.Errorf("Could not get Hardware from client.  Error is: %v\n", err)
+		t.Errorf("Could not get parameters from client.  Error is: %v\n", err)
 		t.FailNow()
 	}
 

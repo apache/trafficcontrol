@@ -1,7 +1,6 @@
 package integration
 
 import (
-	// "encoding/json"
 	"encoding/json"
 	"testing"
 
