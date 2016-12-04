@@ -1,5 +1,8 @@
 version: '2'
 
+volumes:
+  sync:
+
 services:
   # dataimport reads data from an existing traffic_ops server running mysql thru the API
   dataimport:
@@ -41,7 +44,7 @@ services:
       - POSTGRES_PASSWORD=twelve
       - POSTGRES_USER=traffic_ops
     volumes:
-      - /var/lib/postgresql/data:/var/lib/postgresql/data
+      - /opt/traffic_ops-db:/var/lib/postgresql/data
     ports:
       - 5432
 
@@ -63,6 +66,8 @@ services:
       - POSTGRES_DB=traffic_ops
       - POSTGRES_PASSWORD=twelve
       - POSTGRES_USER=traffic_ops
+    volumes:
+      - sync:/sync
 
   # convert runs necessary post-import conversion(s) in postgres
   convert:
@@ -70,3 +75,12 @@ services:
       context: ..
       dockerfile: pg-migration/Dockerfile-convert
     restart: "no"
+    depends_on:
+      - postgres_host
+    environment:
+      - POSTGRES_HOST=postgres_host
+      - POSTGRES_DB=traffic_ops
+      - POSTGRES_PASSWORD=twelve
+      - POSTGRES_USER=traffic_ops
+    volumes:
+      - sync:/sync
