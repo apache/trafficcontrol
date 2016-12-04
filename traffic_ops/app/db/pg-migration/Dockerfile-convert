@@ -2,6 +2,8 @@ FROM postgres:9.6
 
 MAINTAINER Dan Kirkwood
 
+RUN apt-get update && apt-get -y install netcat
+ADD pg-migration/runconvert.sh .
 ADD convert_bools.sql .
 
-CMD psql postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB < ./convert_bools.sql
+CMD ./runconvert.sh
