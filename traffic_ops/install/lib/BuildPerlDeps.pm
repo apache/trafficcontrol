@@ -56,7 +56,7 @@ EOF
         }
 
         logger( "Installing dependencies", "info" );
-        $result = execCommand( "/usr/bin/yum", "install", @dependencies );
+        $result = execCommand( "/usr/bin/yum", "-y", "install", @dependencies );
         if ( $result != 0 ) {
             errorOut("Dependency installation failed, look through the output and correct the problem");
         }
