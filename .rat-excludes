@@ -13,7 +13,6 @@ profiles
 .*.json
 .*.cfg
 .*.conf
-.*.sql
 .*.js
 jquery.*
 jMenu.*
