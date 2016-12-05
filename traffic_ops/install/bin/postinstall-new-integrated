@@ -18,7 +18,6 @@ use ProfileCleanup qw { :all };
 use Digest::SHA1 qw(sha1_hex);
 use Data::Dumper qw(Dumper);
 use Scalar::Util qw(looks_like_number);
-
 use Getopt::Long;
 
 # paths of the output configuration files
@@ -50,7 +49,7 @@ my $dumpDefaults;
 # log file for the installer
 our $logFile = "/var/log/traffic_ops/postinstall.log";
 
-# maximum size the log file should be before rotating it - rotating it copies the current log
+# maximum size the uncompressed log file should be before rotating it - rotating it copies the current log
 #  file to the same name appended with .bkp replacing the old backup if any is there
 my $maxLogSize = 1000000;    #bytes
 
