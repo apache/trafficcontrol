@@ -189,6 +189,8 @@ sub ui_routes {
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
 	$r->get("/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
 	$r->get("/federation/users")->to( 'Federation#users', namespace => $namespace );
+	$r->get( "/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	$r->get( "/federation/users")->to( 'Federation#users',     namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
@@ -739,7 +741,7 @@ sub api_routes {
 	# TM Status in use JvD
 	$r->get("/api/$version/traffic_monitor/stats")->over( authenticated => 1 )->to( 'TrafficMonitor#get_host_stats', namespace => $namespace );
 
-	# API HEALTH CHECK
+	# -- Ping API
 	$r->get(
 		"/api/$version/ping" => sub {
 			my $self = shift;

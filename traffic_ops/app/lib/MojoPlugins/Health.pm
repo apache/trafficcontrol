@@ -42,12 +42,16 @@ sub register {
 
 			my $rs_pp = $self->db->resultset('Server')->search(
 				{ 'cdn.name' => $cdn_name },
-				{   prefetch => ['cdn', 'profile', 'type'],
+				{
+					prefetch => [ 'cdn', 'profile', 'type' ],
 					select   => 'me.profile',
-					distinct => 1
+					group_by => [qw/cdn.id profile.id me.profile type.id/],
 				}
 			);
+
 			while ( my $row = $rs_pp->next ) {
+			    my $profile_name = $row->profile->name;
+				$self->app->log->debug("profile_name #-> " . Dumper($profile_name));
 				if ( $row->profile->name =~ m/^RASCAL/ ) {
 					$rascal_profile = $row->profile->name;
 				}
@@ -59,7 +63,7 @@ sub register {
 				}
 				elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 					push( @cache_profiles, $row->profile->name );
-					$profile_to_type->{$row->profile->name}->{$row->type->name} = $row->type->name;
+					$profile_to_type->{ $row->profile->name }->{ $row->type->name } = $row->type->name;
 				}
 			}
 			my %condition = ( 'parameter.config_file' => 'rascal-config.txt', 'profile.name' => $rascal_profile );
@@ -72,8 +76,8 @@ sub register {
 			%condition = ( 'parameter.config_file' => 'rascal.properties', 'profile.name' => { -in => \@cache_profiles } );
 			$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 			while ( my $row = $rs_pp->next ) {
-				if ( exists($profile_to_type->{$row->profile->name}) ) {
-					for my $profile_type ( keys(%{$profile_to_type->{$row->profile->name}}) ) {
+				if ( exists( $profile_to_type->{ $row->profile->name } ) ) {
+					for my $profile_type ( keys( %{ $profile_to_type->{ $row->profile->name } } ) ) {
 						$data_obj->{'profiles'}->{$profile_type}->{ $row->profile->name }->{ $row->parameter->name } = $row->parameter->value;
 					}
 				}
@@ -123,7 +127,7 @@ sub register {
 			while ( my $row = $rs_data->next ) {
 				my $this_cdn_name = $row->cdn->name;
 
-				if (!defined($this_cdn_name)) {
+				if ( !defined($this_cdn_name) ) {
 					print "cdn name not defined\n";
 				}
 

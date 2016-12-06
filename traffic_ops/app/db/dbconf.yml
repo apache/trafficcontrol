@@ -1,10 +1,11 @@
+#!/usr/bin/env perl 
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,17 +18,18 @@ version: "1.0"
 name: dbconf.yml
 
 development:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_development/to_user/twelve
+  driver: postgres
+  open: host=127.0.0.1 port=5432 user=to_development password=twelve dbname=to_development sslmode=disable
 
 test:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_test/to_user/twelve
-
-production:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_production/to_user/twelve
+  driver: postgres
+  open: host=127.0.0.1 port=5432 user=to_test password=twelve dbname=to_test sslmode=disable
 
 integration:
-        driver: mymysql
-        open: tcp:127.0.0.1:3306*to_integration/to_user/twelve
+  driver: postgres
+  open: host=127.0.0.1 port=5432 user=to_integration password=twelve dbname=to_integration sslmode=disable
+
+production:
+  driver: postgres
+  open: host=127.0.0.1 port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable
+

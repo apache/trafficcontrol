@@ -106,10 +106,33 @@ sub teardown {
 	$schema->resultset($table_name)->delete_all;
 }
 
+## For PSQL sequence to work correctly we cannot hard code
+## the id number for an entry in the DB.  So we need to
+## reset all primary keys (id) to 1 for consistency in the
+## test cases.
+sub reset_sequence_id {
+	my $self   = shift;
+	my $dbh    = Schema->database_handle;
+
+	my $p = $dbh->prepare( "SELECT * FROM pg_class WHERE relkind = 'S';" );
+	$p->execute();
+	my $foo = $p->fetchall_arrayref( {} );
+	$p->finish();
+
+
+	for my $table ( @$foo ) {
+		my $x = $dbh->prepare("ALTER SEQUENCE " . $table->{'relname'} . " RESTART WITH 1");
+		$x->execute();
+	}
+}
+
 sub load_core_data {
 	my $self          = shift;
 	my $schema        = shift;
 	my $schema_values = { schema => $schema, no_transactions => 1 };
+
+	$self->reset_sequence_id();
+
 	diag "Initializing DB:";
 	$self->load_all_fixtures( Fixtures::Integration::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Type->new($schema_values) );
@@ -134,18 +157,16 @@ sub load_core_data {
 	diag "Done!";
 }
 
+# Tearing down the Cachegroup table requires deleting them in a specific order, because
+# of the 'parent_cachegroup_id' and nested references.
 sub delete_cachegroups {
 	my $self   = shift;
-	my $schema = shift;
 
-	#	my $sql     = 'IS NOT NULL AND type != 7';
-	#	my $parents = $schema->resultset('Cachegroup')->search( { parent_cachegroup_id => \$sql } );
-	#	$parents->delete;
-	my $orgs = $schema->resultset('Cachegroup')->search( { type => 6 } );
-	$orgs->delete;
-	$orgs = $schema->resultset('Cachegroup')->search( { type => 7 } );
-	$orgs->delete;
-	$schema->resultset('Cachegroup')->delete_all;
+	my $dbh    = Schema->database_handle;
+	my $cg = $dbh->prepare("TRUNCATE TABLE cachegroup CASCADE;");
+	$cg->execute();
+	$cg->finish();
+	$dbh->disconnect;
 }
 
 sub unload_core_data {

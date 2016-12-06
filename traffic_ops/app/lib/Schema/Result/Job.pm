@@ -25,86 +25,79 @@ __PACKAGE__->table("job");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'job_id_seq'
 
 =head2 agent
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 1
 
 =head2 object_type
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 48
 
 =head2 object_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 keyword
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 parameters
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 asset_url
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 512
 
 =head2 asset_type
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 48
 
 =head2 status
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 start_time
 
-  data_type: 'datetime'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   is_nullable: 0
 
 =head2 entered_time
 
-  data_type: 'datetime'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   is_nullable: 0
 
 =head2 job_user
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =head2 job_deliveryservice
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 1
 
@@ -112,46 +105,43 @@ __PACKAGE__->table("job");
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "job_id_seq",
+  },
   "agent",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "object_type",
-  { data_type => "varchar", is_nullable => 1, size => 48 },
+  { data_type => "text", is_nullable => 1 },
   "object_name",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "keyword",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "parameters",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "asset_url",
-  { data_type => "varchar", is_nullable => 0, size => 512 },
+  { data_type => "text", is_nullable => 0 },
   "asset_type",
-  { data_type => "varchar", is_nullable => 0, size => 48 },
+  { data_type => "text", is_nullable => 0 },
   "status",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "start_time",
-  {
-    data_type => "datetime",
-    datetime_undef_if_invalid => 1,
-    is_nullable => 0,
-  },
+  { data_type => "timestamp with time zone", is_nullable => 0 },
   "entered_time",
-  {
-    data_type => "datetime",
-    datetime_undef_if_invalid => 1,
-    is_nullable => 0,
-  },
+  { data_type => "timestamp with time zone", is_nullable => 0 },
   "job_user",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
   "job_deliveryservice",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 1 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -181,7 +171,7 @@ __PACKAGE__->belongs_to(
   "Schema::Result::JobAgent",
   { id => "agent" },
   {
-    is_deferrable => 1,
+    is_deferrable => 0,
     join_type     => "LEFT",
     on_delete     => "CASCADE",
     on_update     => "NO ACTION",
@@ -201,7 +191,7 @@ __PACKAGE__->belongs_to(
   "Schema::Result::Deliveryservice",
   { id => "job_deliveryservice" },
   {
-    is_deferrable => 1,
+    is_deferrable => 0,
     join_type     => "LEFT",
     on_delete     => "NO ACTION",
     on_update     => "NO ACTION",
@@ -235,7 +225,7 @@ __PACKAGE__->belongs_to(
   "job_user",
   "Schema::Result::TmUser",
   { id => "job_user" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 status
@@ -250,12 +240,12 @@ __PACKAGE__->belongs_to(
   "status",
   "Schema::Result::JobStatus",
   { id => "status" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AOQJIKcfi/ADgnVuB7U+rg
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:LSEFwyL7MpMXHLbKDM288A
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

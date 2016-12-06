@@ -21,64 +21,71 @@ my %definition_for = (
 	test_ds1_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 1,
+			deliveryservice => 100,
+			server          => 100,
 		},
 	},
 	test_ds1_server_edge13 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 13,
+			deliveryservice => 100,
+			server          => 1300,
 		},
 	},
 	test_ds1_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 1,
-			server          => 2,
+			deliveryservice => 100,
+			server          => 300,
 		},
 	},
 	test_ds2_server_edge1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 2,
-			server          => 7,
+			deliveryservice => 200,
+			server          => 700,
 		},
 	},
 	test_ds2_server_mid1 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 2,
-			server          => 8,
+			deliveryservice => 200,
+			server          => 800,
 		},
 	},
 	test_ds5_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 5,
-			server          => 14,
+			deliveryservice => 500,
+			server          => 1400,
 		},
 	},
 	test_ds5_server_edge15 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 5,
-			server          => 15,
+			deliveryservice => 500,
+			server          => 1500,
 		},
 	},
 	test_ds6_server_edge14 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 6,
-			server          => 14,
+			deliveryservice => 600,
+			server          => 1400,
 		},
 	},
 	test_ds6_server_edge15 => {
 		new   => 'DeliveryserviceServer',
 		using => {
-			deliveryservice => 6,
-			server          => 15,
+			deliveryservice => 600,
+			server          => 1500,
+		},
+	},
+	test_steering_ds1 => {
+		new   => 'DeliveryserviceServer',
+		using => {
+			deliveryservice => 700,
+			server          => 900,
 		},
 	},
 );
@@ -89,7 +96,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{deliveryservice} cmp $definition_for{$b}{using}{deliveryservice} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

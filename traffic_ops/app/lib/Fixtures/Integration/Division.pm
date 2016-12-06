@@ -26,21 +26,36 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-'0' => { new => 'Division', => using => { id => '1', last_updated => '2015-12-10 15:43:45', name => 'East', }, }, 
-'1' => { new => 'Division', => using => { last_updated => '2015-12-10 15:43:45', name => 'West', id => '2', }, }, 
-); 
+	## id => 1
+	'0' => {
+		new => 'Division',
+		using => {
+			name => 'East',
+			last_updated => '2015-12-10 15:43:45',
+		},
+	},
+	## id => 2
+	'1' => {
+		new => 'Division',
+		using => {
+			name => 'West',
+			last_updated => '2015-12-10 15:43:45',
+		},
+	},
+);
 
 sub name {
 		return "Division";
 }
 
-sub get_definition { 
+sub get_definition {
 		my ( $self, $name ) = @_;
 		return $definition_for{$name};
 }
 
 sub all_fixture_names {
-		return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{name} cmp $definition_for{$b}{using}{name} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

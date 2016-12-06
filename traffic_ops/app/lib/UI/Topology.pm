@@ -68,10 +68,11 @@ sub gen_crconfig_json {
     my $rs_cdn_profiles = $self->db->resultset('Server')->search(
         { 'cdn.name' => $cdn_name },
         {
-            select => [ 'cdn.id', 'me.profile', 'me.type' ],
+            select => [ 'cdn.id', 'me.profile', 'me.type', 'profile.id', 'type.id' ],
             join   => 'cdn',
             prefetch => [ 'profile', 'type' ],
-            distinct => 1
+            distinct => 1,
+            group_by => [ 'type.name', 'cdn.id', 'me.profile', 'me.type', 'profile.id', 'type.id'],
         }
     );
 
@@ -505,10 +506,10 @@ sub gen_crconfig_json {
         }
 
         if ( defined( $row->miss_lat ) && $row->miss_lat ne "" ) {
-            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat;
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'lat'} = $row->miss_lat + 0;
         }
         if ( defined( $row->miss_long ) && $row->miss_long ne "" ) {
-            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'long'} = $row->miss_long;
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'long'} = $row->miss_long + 0;
         }
 
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttls'} = {

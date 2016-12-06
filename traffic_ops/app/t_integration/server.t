@@ -1,4 +1,18 @@
 package main;
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
@@ -74,7 +88,7 @@ foreach my $server ( @{ $servers->{response} } ) {
 
 	if ( !$type_done{ $server->{type} } ) {
 
-		# diag Dumper($server);
+		#diag Dumper($server);
 		diag "Testing type " . $server->{type} . " with " . $server->{hostName};
 
 		# these are optional, show up as undef in json and '' in html
@@ -113,7 +127,7 @@ foreach my $server ( @{ $servers->{response} } ) {
 			->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 		$server->{router_host_name} = "UPDATED";
-		diag '/server/' . $server->{id};
+		#diag '/server/' . $server->{id};
 		$t->post_ok(
 			      '/server/'
 				. $server->{id}
@@ -141,12 +155,81 @@ foreach my $server ( @{ $servers->{response} } ) {
 				ilo_password     => $server->{iloPassword},
 				router_host_name => $server->{routerHostName},
 				router_port_name => $server->{routerPortName},
+				https_port       => $server->{httpsPort},
+				status           => $server->{status},
 				}
 		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 		$type_done{ $server->{type} } = 1;
 	}
 }
+
+sub build_tmpfile {
+	my ($contents) = @_;
+	unlink TEST_FILE;
+	write_file( TEST_FILE, $contents );
+}
+
+# Header
+my $header =
+	"host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason";
+
+#----------------------------
+# Good Test
+my $content = join( "\n",
+	$header,
+	"good-host,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
+);
+
+&build_tmpfile($content);
+my $asset = Mojo::Asset::File->new( path => TEST_FILE );
+
+$t->post_ok(
+	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#----------------------------
+# Bad 'Type' look for -BAD
+$content = join( "\n",
+	$header,
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+);
+
+&build_tmpfile($content);
+$t->post_ok(
+	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#----------------------------
+# Bad 'Profile' look for -BAD
+$content = join( "\n",
+	$header,
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago,plocation-chi-1,rack33,EDGE,1-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+);
+
+&build_tmpfile($content);
+$t->post_ok(
+	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#----------------------------
+# Bad 'Cache Group' look for -BAD
+$content = join( "\n",
+	$header,
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+);
+
+#----------------------------
+# Bad 'Physical Location' look for -BAD
+$content = join( "\n",
+	$header,
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+);
+
+&build_tmpfile($content);
+$t->post_ok(
+	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 done_testing();

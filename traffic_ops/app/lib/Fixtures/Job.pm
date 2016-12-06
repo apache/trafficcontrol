@@ -30,8 +30,8 @@ my %definition_for = (
 			asset_type          => 'file',
 			status              => 1,
 			start_time          => $now,
-			job_user            => 1,
-			job_deliveryservice => 2,
+			job_user            => 100,
+			job_deliveryservice => 100,
 			entered_time        => $now
 		},
 	},
@@ -43,7 +43,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

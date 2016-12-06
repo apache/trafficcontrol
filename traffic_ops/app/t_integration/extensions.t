@@ -1,4 +1,18 @@
 package main;
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
@@ -22,11 +36,9 @@ my $json = JSON->new->allow_nonref;
 
 my @etypes = ( "CHECK_EXTENSION_BOOL", "CHECK_EXTENSION_NUM" );
 foreach my $num ( 1 .. 36 ) {
-
 	$t->get_ok('/api/1.1/to_extensions.json')->status_is(200);
 	my $extlist = $json->decode( $t->tx->res->content->asset->{content} );
 
-	# diag "length is " . scalar( @{ $extlist->{response} } );
 	if ( scalar( @{ $extlist->{response} } ) < 31 ) {
 		$t->post_ok(
 			'/api/1.1/to_extensions' => json => {
@@ -68,9 +80,9 @@ $t->get_ok('/server_check')->status_is(200)->text_is( 'th#col1' => 'Hostname' )-
 	->text_is( 'th#col8' => 'DSCP' )->text_is( 'th#col9' => 'X1' )->text_is( 'th#col10' => 'X2' )->text_is( 'th#col11' => '10G6' )
 	->text_is( 'th#col12' => 'X3' )->text_is( 'th#col13' => 'STAT' )->text_is( 'th#col14' => 'X4' )->text_is( 'th#col15' => 'MTU' )
 	->text_is( 'th#col16' => 'TRTR' )->text_is( 'th#col17' => 'TRMO' )->text_is( 'th#col18' => 'CHR' )->text_is( 'th#col19' => 'CDU' )
-	->text_is( 'th#col20' => 'ORT' )->text_is( 'th#col21' => 'X5' )->text_is( 'th#col22' => 'X6' )->text_is( 'th#col23' => 'X8' )
-	->text_is( 'th#col24' => 'X9' )->text_is( 'th#col25' => 'X10' )->text_is( 'th#col26' => 'X11' )->text_is( 'th#col27' => 'X12' )
-	->text_is( 'th#col28' => 'X13' )->text_is( 'th#col29' => 'X14' )->text_is( 'th#col30' => 'X15' );
+	->text_is( 'th#col20' => 'ORT' )->text_is( 'th#col21' => 'X5' )->text_is( 'th#col22' => 'X6' )->text_is( 'th#col23' => 'X7' )
+	->text_is( 'th#col24' => 'X8' )->text_is( 'th#col25' => 'X9' )->text_is( 'th#col26' => 'X10' )->text_is( 'th#col27' => 'X11' )
+	->text_is( 'th#col28' => 'X12' )->text_is( 'th#col29' => 'X13' )->text_is( 'th#col30' => 'X14' );
 
 # post stome status
 my $test_server_id = "23";

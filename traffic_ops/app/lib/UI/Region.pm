@@ -92,7 +92,7 @@ sub is_valid {
 		my $region_rs = $self->db->resultset('Region');
 		my $orig_name = $region_rs->search( { id => $id } )->get_column('name')->single();
 		if ( $name ne $orig_name ) {
-			my $regions = $region_rs->search( { id => { -not_like => $id } } )->get_column('name');
+			my $regions = $region_rs->search( { id => { '!=' => $id } } )->get_column('name');
 			while ( my $db_name = $regions->next ) {
 				if ( $db_name eq $name ) {
 					$self->field('region.name')->is_equal( "", "Region with name \"$name\" already exists." );
