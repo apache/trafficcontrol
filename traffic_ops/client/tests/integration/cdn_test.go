@@ -32,8 +32,8 @@ func TestCDNs(t *testing.T) {
 		t.Errorf("Array lengths from client and API are different...API = %s, Client = %s\n", apiCDNs, clientCDNs)
 	}
 
-	matchFound := false
 	for _, apiCDN := range apiCDNs {
+		matchFound := false
 		for _, clientCDN := range clientCDNs {
 			if clientCDN.Name != apiCDN.Name {
 				continue
