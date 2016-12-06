@@ -31,8 +31,8 @@ func TestCachegroups(t *testing.T) {
 		t.Errorf("Array lengths from client and API are different...API = %d, Client = %d\n", len(apiCgs), len(clientCgs))
 	}
 
-	matchFound := false
 	for _, apiCg := range apiCgs {
+		matchFound := false
 		for _, clientCg := range clientCgs {
 			if clientCg.Name != apiCg.Name {
 				continue
