@@ -320,8 +320,8 @@ sub sanityCheckConfig {
 
                 # in automatic mode add the missing question with default answer
                 if ($::automatic) {
-                    logger( "Adding question '$question' with default answer " . ( $defaultValue->{"hidden"} ? "" : "'$defaultValue->{$question}'" ), "info" );
                     $answer = $defaultValue->{$question};
+                    logger( "Adding question '$question' with default answer " . ( $hidden ? "" : "'$answer'" ), "info" );
                 }
 
                 # in interactive mode prompt the user for answer to missing question

@@ -1,11 +1,13 @@
 #!/usr/bin/perl
 #
+# Copyright 2015 Comcast Cable Communications Management, LLC
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 # http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,22 +15,16 @@
 # limitations under the License.
 #
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
-$ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
-$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
-
 use strict;
 use warnings;
 use Getopt::Std;
-use InstallUtils;
 
 our ($opt_i);
 
-my @dependencies = (
-	"expat-devel",   "mod_ssl",      "mkisofs",     "libpcap",  "libpcap-devel", "libcurl",
-	"libcurl-devel", "mysql-server", "mysql-devel", "openssl",  "cpan",          "gcc",
-	"make",          "pkgconfig",    "automake",    "autoconf", "libtool",       "gettext"
-);
+my @dependencies = ("expat-devel","mod_ssl","mkisofs","libpcap","libpcap-devel",
+		"libcurl","libcurl-devel","mysql-server","mysql-devel",
+		"openssl","openssl-devel","cpan","gcc","make","pkgconfig","automake","autoconf",
+		"libtool","gettext","libidn-devel");
 my $msg = << 'EOF';
 
 This script will build and package the required Traffic Ops perl modules.
@@ -36,6 +32,57 @@ In order to complete this operation, Development tools such as the gcc
 compiler will be installed on this machine.
 
 EOF
+
+sub execCommand {
+	my ($command, @args) = @_;
+	my $pid = fork ();
+	my $result = 0;
+
+	if ($pid == 0) {
+		exec ($command, @args);
+		exit 0;
+	}
+	else {
+		wait;
+		$result = $?;
+		if ($result != 0) {
+			print "ERROR executing: $command,  args: " . join (' ', @args) . "\n";
+		}
+	}
+	return $result;
+}
+
+sub promptUser {
+    my ($promptString, $defaultValue, $noEcho) = @_;
+
+    if ($defaultValue) {
+        print $promptString, " [", $defaultValue, "]:  ";
+    }
+    else {
+        print $promptString, ":  ";
+    }
+
+    if (defined $noEcho && $noEcho)  {
+        my $response = read_password('');
+        if ((!defined $response || $response eq '') && (defined $defaultValue && $defaultValue ne '')) {
+            $response = $defaultValue;
+        }
+        return $response
+    }
+    else {
+        $| = 1;
+        $_ = <STDIN>;
+        chomp;
+
+        if ("$defaultValue") {
+            return $_ ? $_ : $defaultValue;
+        }
+        else {
+            return $_;
+        }
+        return $_;
+    }
+}
 
 sub trim {
 	my $str = shift;
@@ -52,67 +99,69 @@ my $result;
 ##		MAIN           ##
 #################################
 
-$ENV{PERL_MM_USE_DEFAULT}    = 1;
-$ENV{PERL_MM_NONINTERACTIVE} = 1;
-$ENV{AUTOMATED_TESTING}      = 1;
+$ENV{PERL_MM_USE_DEFAULT}=1;
+$ENV{PERL_MM_NONINTERACTIVE}=1;
+$ENV{AUTOMATED_TESTING}=1;
 
-getopts('i');
+getopts ('i');
 
-InstallUtils::execCommand( "/usr/bin/tput", "clear" );
+execCommand ("/usr/bin/tput","clear");
 
-if ( $ENV{USER} ne "root" ) {
+if ($ENV{USER} ne "root") {
 	print "WARNING:  You must run this script as the root user.\n";
 	exit 0;
 }
 
 print $msg;
 
-chdir("/opt/traffic_ops/app");
+promptUser ("Hit ENTER to continue","");
 
-if ( defined $opt_i && $opt_i == 1 ) {
-	if ( !-x "/usr/bin/yum" ) {
+chdir ("/opt/traffic_ops/app");
+
+if (defined $opt_i && $opt_i == 1) {
+	if (! -x "/usr/bin/yum") {
 		print "WARNING:  You must install 'yum'.\n";
 		exit 0;
 	}
 
 	print "\nInstalling dependencies.\n";
-	$result = InstallUtils::execCommand( "/usr/bin/yum", "install", @dependencies );
-	if ( $result != 0 ) {
+	$result = execCommand ("/usr/bin/yum", "install", @dependencies);
+	if ($result != 0) {
 		print "WARNING: dependency installation failed, look through the output and correct the problem.\n";
 		exit 0;
 	}
 	print "\nBuilding perl modules\n";
 
-	$result = InstallUtils::execCommand( "/usr/bin/cpan", "-if", "YAML" );
-	if ( $result != 0 ) {
+	$result = execCommand ("/opt/traffic_ops/install/bin/cpan.sh", "/opt/traffic_ops/install/bin/yaml.txt");
+	if ($result != 0) {
 		print "WARNING: Failed to install YAML, look through the output and correct the problem.\n";
 		exit 0;
 	}
 
-	$result = InstallUtils::execCommand( "/usr/bin/cpan", "-if", "MIYAGAWA/Carton-v1.0.15.tar.gz" );
-	if ( $result != 0 ) {
+	$result = execCommand ("/opt/traffic_ops/install/bin/cpan.sh", "/opt/traffic_ops/install/bin/carton.txt");
+	if ($result != 0) {
 		print "WARNING: Failed to install Carton, look through the output and correct the problem.\n";
 		exit 0;
 	}
 }
 
-$result = InstallUtils::execCommand( "/usr/local/bin/carton", "install" );
-if ( $result != 0 ) {
+$result = execCommand ("/usr/local/bin/carton","install","--deployment","--cached");
+if ($result != 0) {
 	print "WARNING: Failure to build required perl modules, check the output and correct the problem.\n";
 	exit 0;
 }
 
-if ( !-s "/opt/traffic_ops/lib/perl5" ) {
-	print "Linking perl libraries...\n";
-	if ( !-d "/opt/traffic_ops/lib" ) {
-		mkdir("/opt/traffic_ops/lib");
-	}
-	symlink( "/opt/traffic_ops/app/local/lib/perl5", "/opt/traffic_ops/lib/perl5" );
-	InstallUtils::execCommand( "/bin/chown", "-R", "trafops:trafops", "/opt/traffic_ops/lib" );
+if (! -s "/opt/traffic_ops/lib/perl5") {
+  print "Linking perl libraries...\n";
+  if (! -d "/opt/traffic_ops/lib") {
+     mkdir ("/opt/traffic_ops/lib");
+  }
+  symlink ("/opt/traffic_ops/app/local/lib/perl5","/opt/traffic_ops/lib/perl5");
+  execCommand ("/bin/chown","-R","trafops:trafops","/opt/traffic_ops/lib");
 }
 print "Installing perl scripts\n";
-chdir("/opt/traffic_ops/app/local/bin");
-my $rc = InstallUtils::execCommand( "/bin/cp", "-R", ".", "/opt/traffic_ops/app/bin" );
-if ( $rc != 0 ) {
-	print "WARNING: Failed to copy perl scripts to /opt/traffic_ops/app/bin.\n";
+chdir ("/opt/traffic_ops/app/local/bin");
+my $rc = execCommand ("/bin/cp","-R",".","/opt/traffic_ops/app/bin");
+if ($rc != 0) {
+  print "WARNING: Failed to copy perl scripts to /opt/traffic_ops/app/bin.\n";
 }

@@ -38,7 +38,7 @@ sub execCommand {
         if ( index($var, "pi_custom_log=") != -1 ) {
             $customLog = (split(/=/, $var))[1];
             splice(@args, index($var, "pi_custom_log="), 1);
-            logger("Using custom log \'$customLog\'", "info");
+            logger("Using custom log '$customLog'", "info");
         }
     }
     
@@ -75,7 +75,7 @@ sub rotateLog {
     my $logFileName = shift;
     
     if ( !-f $logFileName ) {
-        logger("Log file \'$logFileName\' does not exist - not rotating log", "error");
+        logger("Log file '$logFileName' does not exist - not rotating log", "error");
         return;
     }
 
@@ -106,12 +106,12 @@ sub logger {
     my $fh;
     my $result = 0;
     if ( defined $customLogFile && $customLogFile ne "" ) {
-        open $fh, '>>', $customLogFile or die("Couldn't open log file \'$::customLogFile\'");     
+        open $fh, '>>', $customLogFile or die("Couldn't open log file '$::customLogFile'");     
         $result = 1;
     }
     else {
         if ($::logFile) {
-            open $fh, '>>', $::logFile or die("Couldn't open log file \'$::logFile\'");
+            open $fh, '>>', $::logFile or die("Couldn't open log file '$::logFile'");
             $result = 1;
         }
     }
