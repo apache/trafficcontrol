@@ -179,7 +179,7 @@ func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
 		Response: []client.DeliveryServiceServer{dss},
 		Size:     1,
 		OrderBy:  "foo",
-		Limit:    "1",
+		Limit:    1,
 	}
 }
 
