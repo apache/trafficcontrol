@@ -62,18 +62,18 @@ EOF
         }
         logger( "Building perl modules", "info" );
 
-        $result = execCommand( "/opt/traffic_ops/install/bin/cpan.sh", "pi_custom_log=" . $::cpanLogFile, "/opt/traffic_ops/install/bin/yaml.txt" );
+        $result = execCommand( "/usr/bin/cpan", "pi_custom_log=" . $::cpanLogFile, "-if", "YAML" );
         if ( $result != 0 ) {
             errorOut("Failed to install YAML, look through the output and correct the problem");
         }
 
-        $result = execCommand( "/opt/traffic_ops/install/bin/cpan.sh", "pi_custom_log=" . $::cpanLogFile, "/opt/traffic_ops/install/bin/carton.txt" );
+        $result = execCommand( "/usr/bin/cpan", "pi_custom_log=" . $::cpanLogFile, "-if", "MIYAGAWA/Carton-v1.0.15.tar.gz" );
         if ( $result != 0 ) {
             errorOut("Failed to install Carton, look through the output and correct the problem");
         }
     }
 
-    $result = execCommand( "/usr/local/bin/carton", "install", "--deployment", "--cached" );
+    $result = execCommand( "/usr/local/bin/carton", "install" );
     if ( $result != 0 ) {
         errorOut("Failure to build required perl modules, check the output and correct the problem");
     }
