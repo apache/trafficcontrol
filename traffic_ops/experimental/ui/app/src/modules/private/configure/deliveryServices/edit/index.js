@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.configure.deliveryServices.e
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.configure.deliveryServices.edit', {
-                url: '/{deliveryServiceId}',
+                url: '/{deliveryServiceId:[0-9]{1,8}}',
                 views: {
                     deliveryServicesContent: {
                         templateUrl: 'common/modules/form/deliveryService/form.deliveryService.tpl.html',

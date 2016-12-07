@@ -1,0 +1,76 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
+            <li><a ng-click="navigateToPath('/configure/servers/' + server.id)">{{server.hostName}}</a></li>
+            <li class="active">Delivery Services</li>
+        </ol>
+        <button class="btn btn-primary pull-right" ng-click="addDeliveryService()">Add</button>
+        <button class="btn btn-default pull-right" ng-click="cloneDsAssignments()">Clone Assignments</button>
+
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>xmlId</th>
+                <th>orgServerFqdn</th>
+                <th>cdn</th>
+                <th>profile</th>
+                <th>ccrDnsTtl</th>
+                <th>active</th>
+                <th>type</th>
+                <th>dscp</th>
+                <th>signed</th>
+                <th>qstringIgnore</th>
+                <th>geoLimit</th>
+                <th>protocol</th>
+                <th>ipv6RoutingEnabled</th>
+                <th>rangeRequestHandling</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="deliveryService in serverDeliveryServices">
+                <td>{{deliveryService.xmlId}}</td>
+                <td>{{deliveryService.orgServerFqdn}}</td>
+                <td>{{deliveryService.cdnName}}</td>
+                <td>{{deliveryService.profileName}}</td>
+                <td>{{deliveryService.ccrDnsTtl}}</td>
+                <td>{{deliveryService.active}}</td>
+                <td>{{deliveryService.type}}</td>
+                <td>{{deliveryService.dscp}}</td>
+                <td>{{deliveryService.signed}}</td>
+                <td>{{deliveryService.qstringIgnore}}</td>
+                <td>{{deliveryService.geoLimit}}</td>
+                <td>{{deliveryService.protocol}}</td>
+                <td>{{deliveryService.ipv6RoutingEnabled}}</td>
+                <td>{{deliveryService.rangeRequestHandling}}</td>
+                <td><button type="button" class="btn btn-link" title="Remove from Server" ng-click="removeDeliveryService()"><i class="fa fa-trash-o"></i></button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

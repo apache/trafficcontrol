@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.tenants.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.tenants.edit', {
-                url: '/{tenantId}',
+                url: '/{tenantId:[0-9]{1,8}}',
                 views: {
                     tenantsContent: {
                         templateUrl: 'common/modules/form/tenant/form.tenant.tpl.html',

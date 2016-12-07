@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, statusService, typeService) {
+var FormServerController = function(server, $scope, $location, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, statusService, typeService) {
 
     var getLocations = function() {
         locationService.getLocations()
@@ -76,8 +76,8 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
         { name: 'ipAddress', type: 'text', required: true, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
         { name: 'ipNetmask', type: 'text', required: true, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
         { name: 'ipGateway', type: 'text', required: true, maxLength: 45, pattern: ipRegex, invalidMsg: 'Invalid' },
-        { name: 'ip6Address', type: 'text', required: false, maxLength: 50, pattern: ipRegex, invalidMsg: 'Invalid' },
-        { name: 'ip6Gateway', type: 'text', required: false, maxLength: 50, pattern: ipRegex, invalidMsg: 'Invalid' },
+        { name: 'ip6Address', type: 'text', required: false, maxLength: 50 },
+        { name: 'ip6Gateway', type: 'text', required: false, maxLength: 50 },
         { name: 'interfaceMtu', type: 'text', required: true, maxLength: 11, pattern: new RegExp(/(^1500$|^9000$)/), invalidMsg: '1500 or 9000' },
         { name: 'rack', type: 'text', required: false, maxLength: 64 },
         { name: 'offlineReason', type: 'text', required: false, maxLength: 256 },
@@ -102,7 +102,27 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
     ];
 
     $scope.queueUpdates = function() {
-        alert('not implemented: queuing updates for server');
+        alert('not hooked up yet: queuing updates for server');
+    };
+
+    $scope.dequeueUpdates = function() {
+        alert('not hooked up yet: dequeuing updates for server');
+    };
+
+    $scope.viewConfig = function() {
+        alert('not hooked up yet: view config files for server');
+    };
+
+    $scope.offlineServer = function() {
+        alert('not hooked up yet: offlineServer for server');
+    };
+
+    $scope.onlineServer = function() {
+        alert('not hooked up yet: onlineServer for server');
+    };
+
+    $scope.viewDeliveryServices = function() {
+        $location.path($location.path() + '/delivery-services');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
@@ -123,5 +143,5 @@ var FormServerController = function(server, $scope, formUtils, stringUtils, loca
 
 };
 
-FormServerController.$inject = ['server', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'statusService', 'typeService'];
 module.exports = FormServerController;

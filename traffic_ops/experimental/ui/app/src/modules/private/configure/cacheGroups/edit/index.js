@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.configure.cacheGroups.edit',
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.configure.cacheGroups.edit', {
-                url: '/{cacheGroupId}',
+                url: '/{cacheGroupId:[0-9]{1,8}}',
                 views: {
                     cacheGroupsContent: {
                         templateUrl: 'common/modules/form/cacheGroup/form.cacheGroup.tpl.html',

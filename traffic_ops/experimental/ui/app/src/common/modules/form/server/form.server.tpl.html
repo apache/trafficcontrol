@@ -23,7 +23,23 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
             <li class="active">{{serverName}}</li>
         </ol>
-        <button class="btn btn-warning pull-right" ng-show="!settings.isNew" ng-click="queueUpdates()">Queue Server Updates</button>
+        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-show="server.status == 'REPORTED'" ng-click="offlineServer()">Offline Server</button>
+            <button class="btn btn-default" ng-show="server.status != 'REPORTED'" ng-click="onlineServer()">Online Server</button>
+            <button class="btn btn-default" ng-show="!server.updPending" ng-click="queueUpdates()">Queue Updates</button>
+            <button class="btn btn-default" ng-show="server.updPending" ng-click="dequeueUpdates()">Dequeue Updates</button>
+
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li><a ng-click="viewConfig()">View Server Config Files</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

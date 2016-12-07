@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormUserController = function(user, $scope, formUtils, stringUtils, locationUtils, roleService) {
+var FormUserController = function(user, $scope, $location, formUtils, stringUtils, locationUtils, roleService) {
 
     var getRoles = function() {
         roleService.getRoles()
@@ -29,6 +29,10 @@ var FormUserController = function(user, $scope, formUtils, stringUtils, location
     $scope.user = user;
 
     $scope.labelize = stringUtils.labelize;
+
+    $scope.viewDeliveryServices = function() {
+        $location.path($location.path() + '/delivery-services');
+    };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -43,5 +47,5 @@ var FormUserController = function(user, $scope, formUtils, stringUtils, location
 
 };
 
-FormUserController.$inject = ['user', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'roleService'];
+FormUserController.$inject = ['user', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'roleService'];
 module.exports = FormUserController;

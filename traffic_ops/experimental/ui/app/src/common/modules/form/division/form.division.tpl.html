@@ -23,6 +23,9 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/divisions')">Divisions</a></li>
             <li class="active">{{divisionName}}</li>
         </ol>
+        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="viewRegions()">Regions</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

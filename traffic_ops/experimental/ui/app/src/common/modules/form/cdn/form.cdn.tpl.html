@@ -23,7 +23,25 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/cdns')">CDNs</a></li>
             <li class="active">{{cdnName}}</li>
         </ol>
-        <button class="btn btn-warning pull-right" ng-show="!settings.isNew" ng-click="queueUpdates()">Queue Server Updates</button>
+        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="manageSnapshots()">Snapshot</button>
+
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageSSL()">Manage SSL Keys</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="queueUpdates()">Queue Server Updates</a></li>
+                    <li role="menuitem"><a ng-click="dequeueUpdates()">Dequeue Server Updates</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="cachegroupHealth()">View Cachegroup Health</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
