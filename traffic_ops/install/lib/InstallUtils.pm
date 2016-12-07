@@ -24,42 +24,43 @@ our @EXPORT_OK = qw{ execCommand randomWord promptUser promptRequired promptPass
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 sub execCommand {
-    my ( $command, @args ) = @_; 
+    my ( $command, @args ) = @_;
 
     my $pipe = IO::Pipe->new;
     my $pid;
-    my $result = 0;
+    my $result    = 0;
     my $customLog = "";
 
-    # find log file in args and remove if found 
+    # find log file in args and remove if found
     # if there is a string in the list of args which starts with 'pi_custom_log=' then remove it from the parameters and use
     #  it as the log file for the exec
     foreach my $var (@args) {
-        if ( index($var, "pi_custom_log=") != -1 ) {
-            $customLog = (split(/=/, $var))[1];
-            splice(@args, index($var, "pi_custom_log="), 1);
-            logger("Using custom log '$customLog'", "info");
+        if ( index( $var, "pi_custom_log=" ) != -1 ) {
+            $customLog = ( split( /=/, $var ) )[1];
+            splice( @args, index( $var, "pi_custom_log=" ), 1 );
+            logger( "Using custom log '$customLog'", "info" );
         }
     }
-    
+
     # create pipe between child and parent and redirect output from child to parent for logging
     my $child = open READER, '-|';
     defined $child or die "pipe/fork: $!\n";
-    if ($child) { #parent
+    if ($child) {    #parent
         while ( $line = <READER> ) {
+
             # log all output from child pipe
-            if ($customLog ne "") {
-                logger($line, "info", $customLog);
+            if ( $customLog ne "" ) {
+                logger( $line, "info", $customLog );
             }
             else {
-                logger($line, "info");
+                logger( $line, "info" );
             }
         }
     }
-    else { #child
-        # redirect stderr to stdout so parent can read
+    else {           #child
+                     # redirect stderr to stdout so parent can read
         open STDERR, '>&STDOUT';
-        exec($command, @args) or exit(1);
+        exec( $command, @args ) or exit(1);
     }
 }
 
@@ -73,27 +74,27 @@ sub errorOut {
 # This function is intended to keep log file sizes low and is called from postinstall
 sub rotateLog {
     my $logFileName = shift;
-    
+
     if ( !-f $logFileName ) {
-        logger("Log file '$logFileName' does not exist - not rotating log", "error");
+        logger( "Log file '$logFileName' does not exist - not rotating log", "error" );
         return;
     }
 
-    execCommand('/bin/mv', '-f', $logFileName, $logFileName . '.bkp');
-    logger("Rotated log $logFileName", "info");
+    execCommand( '/bin/mv', '-f', $logFileName, $logFileName . '.bkp' );
+    logger( "Rotated log $logFileName", "info" );
 }
 
 # outputs logging messages to terminal and log file
 sub logger {
     my $output = shift;
     my $type   = shift;
-   
+
     # optional custom log file to use instead of main log file used by postinstall
     # cpan uses a custom log file because of its size
     my $customLogFile = shift;
 
     my $message = $output;
-    if (index($message, "\n") == -1) {
+    if ( index( $message, "\n" ) == -1 ) {
         $message = $message . "\n";
     }
 
@@ -106,7 +107,7 @@ sub logger {
     my $fh;
     my $result = 0;
     if ( defined $customLogFile && $customLogFile ne "" ) {
-        open $fh, '>>', $customLogFile or die("Couldn't open log file '$::customLogFile'");     
+        open $fh, '>>', $customLogFile or die("Couldn't open log file '$::customLogFile'");
         $result = 1;
     }
     else {
@@ -115,8 +116,8 @@ sub logger {
             $result = 1;
         }
     }
-    
-    if ( $result ) {
+
+    if ($result) {
         print $fh localtime . ": " . uc($type) . ' ' . $message;
         close $fh;
     }
@@ -134,7 +135,6 @@ sub randomWord {
     return $secret;
 }
 
-# deprecated
 sub promptUser {
     my ( $promptString, $defaultValue, $noEcho ) = @_;
 
