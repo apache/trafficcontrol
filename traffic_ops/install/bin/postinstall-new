@@ -669,11 +669,6 @@ sub main {
 
     logger( "Postinstall " . ( defined $reconfigure ? "in" : "not" ) . " in reconfigure mode", "info" );
 
-    # check if the user has root access
-    if ( $ENV{USER} ne "root" ) {
-        errorOut("You must run this script as the root user");
-    }
-
     rotateLog($cpanLogFile);
 
     if ( -s $::logFile > $maxLogSize ) {
