@@ -1041,6 +1041,46 @@
             "value": "/etc/udev/rules.d/"
         },
         {
+            "config_file": "hosting.config",
+            "name": "scope",
+            "value": "server"
+        },
+        {
+            "config_file": "parent.config",
+            "name": "scope",
+            "value": "server"
+        },
+        {
+            "config_file": "plugin.config",
+            "name": "scope",
+            "value": "profile"
+        },
+        {
+            "config_file": "records.config",
+            "name": "scope",
+            "value": "server"
+        },
+        {
+            "config_file": "remap.config",
+            "name": "scope",
+            "value": "server"
+        },
+        {
+            "config_file": "storage.config",
+            "name": "scope",
+            "value": "profile"
+        },
+        {
+            "config_file": "volume.config",
+            "name": "scope",
+            "value": "profile"
+        },
+        {
+            "config_file": "50-ats.rules",
+            "name": "scope",
+            "value": "profile"
+        },
+        {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.http.parent_proxy.file",
             "value": "STRING parent.config"
@@ -1054,6 +1094,11 @@
             "config_file": "ip_allow.config",
             "name": "location",
             "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "ip_allow.config",
+            "name": "scope",
+            "value": "server"
         },
         {
             "config_file": "records.config",
@@ -1104,6 +1149,11 @@
             "config_file": "logs_xml.config",
             "name": "location",
             "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "logs_xml.config",
+            "name": "scope",
+            "value": "profile"
         },
         {
             "config_file": "records.config",
@@ -1161,6 +1211,11 @@
             "value": "/opt/ort"
         },
         {
+            "config_file": "12M_facts",
+            "name": "scope",
+            "value": "server"
+        },
+        {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.http.cache.ignore_accept_encoding_mismatch",
             "value": "INT 1"
@@ -1211,6 +1266,11 @@
             "value": "/opt/trafficserver/etc/trafficserver"
         },
         {
+            "config_file": "regex_revalidate.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
             "config_file": "plugin.config",
             "name": "remap_stats.so",
             "value": ""
@@ -1224,6 +1284,11 @@
             "config_file": "drop_qstring.config",
             "name": "location",
             "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "drop_qstring.config",
+            "name": "scope",
+            "value": "profile"
         },
         {
             "config_file": "records.config",
@@ -1314,6 +1379,11 @@
             "config_file": "astats.config",
             "name": "location",
             "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "astats.config",
+            "name": "scope",
+            "value": "profile"
         },
         {
             "config_file": "astats.config",
@@ -1544,6 +1614,116 @@
             "config_file": "bg_fetch.config",
             "name": "location",
             "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "set_dscp_0.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_10.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_12.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_14.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_18.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_20.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_22.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_26.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_28.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_30.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_34.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_36.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_38.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_8.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_16.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_24.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_32.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_40.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_48.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "set_dscp_56.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "ssl_multicert.config",
+            "name": "scope",
+            "value": "cdn"
+        },
+        {
+            "config_file": "bg_fetch.config",
+            "name": "scope",
+            "value": "cdn"
         },
         {
             "config_file": "parent.config",
