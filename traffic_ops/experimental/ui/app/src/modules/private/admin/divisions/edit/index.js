@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.divisions.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.divisions.edit', {
-                url: '/{divisionId}',
+                url: '/{divisionId:[0-9]{1,8}}',
                 views: {
                     divisionsContent: {
                         templateUrl: 'common/modules/form/division/form.division.tpl.html',

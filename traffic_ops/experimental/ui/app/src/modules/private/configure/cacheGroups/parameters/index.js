@@ -24,9 +24,12 @@ module.exports = angular.module('trafficOps.private.configure.cacheGroups.parame
 				url: '/{cacheGroupId}/parameters',
 				views: {
 					cacheGroupsContent: {
-						templateUrl: 'common/modules/table/parameters/table.parameters.tpl.html',
-						controller: 'TableParametersController',
+						templateUrl: 'common/modules/table/cacheGroupParameters/table.cacheGroupParameters.tpl.html',
+						controller: 'TableCacheGroupParametersController',
 						resolve: {
+							cacheGroup: function($stateParams, cacheGroupService) {
+								return cacheGroupService.getCacheGroup($stateParams.cacheGroupId);
+							},
 							parameters: function(parameterService) {
 								return parameterService.getParameters();
 							}

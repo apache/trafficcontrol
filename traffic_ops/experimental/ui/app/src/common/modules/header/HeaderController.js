@@ -36,6 +36,10 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
         authService.logout();
     };
 
+    $scope.downloadDB = function() {
+        alert('not hooked up yet: downloadDB');
+    };
+
     var scrollToTop = function() {
         $anchorScroll(); // hacky?
     };

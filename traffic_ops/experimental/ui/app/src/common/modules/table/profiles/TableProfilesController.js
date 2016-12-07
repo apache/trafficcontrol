@@ -29,6 +29,14 @@ var TableProfilesController = function(profiles, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/profiles/new');
     };
 
+    $scope.importProfile = function() {
+        alert('not hooked up yet: importProfile');
+    };
+
+    $scope.compareProfiles = function() {
+        alert('not hooked up yet: compareProfiles');
+    };
+
     angular.element(document).ready(function () {
         $('#profilesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],

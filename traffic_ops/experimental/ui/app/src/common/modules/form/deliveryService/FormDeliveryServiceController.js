@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, $scope, formUtils, locationUtils, cdnService, profileService, typeService) {
+var FormDeliveryServiceController = function(deliveryService, $scope, $location, formUtils, locationUtils, cdnService, profileService, typeService) {
 
     var getTypes = function() {
         typeService.getTypes('deliveryservice')
@@ -122,6 +122,26 @@ var FormDeliveryServiceController = function(deliveryService, $scope, formUtils,
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
+    $scope.assignServers = function() {
+        $location.path($location.path() + '/servers');
+    };
+
+    $scope.cachegroupHealth = function() {
+        alert('not hooked up yet: cachegroupHealth for DS');
+    };
+
+    $scope.invalidateContent = function() {
+        alert('not hooked up yet: invalidateContent for DS');
+    };
+
+    $scope.manageSslKeys = function() {
+        alert('not hooked up yet: manageSslKeys for DS');
+    };
+
+    $scope.manageUrlSigKeys = function() {
+        alert('not hooked up yet: manageUrlSigKeys for DS');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -137,5 +157,5 @@ var FormDeliveryServiceController = function(deliveryService, $scope, formUtils,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'typeService'];
+FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'typeService'];
 module.exports = FormDeliveryServiceController;

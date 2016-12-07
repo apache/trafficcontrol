@@ -32,8 +32,28 @@ var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUt
         { value: true, label: 'true' }
     ];
 
+    $scope.manageDNSSEC = function() {
+        alert('not hooked up yet: manageDNSSEC for CDN');
+    };
+
+    $scope.manageSSL = function() {
+        alert('not hooked up yet: manageSSL for cdn');
+    };
+
+    $scope.cachegroupHealth = function() {
+        alert('not hooked up yet: cachegroupHealth for CDN');
+    };
+
     $scope.queueUpdates = function() {
-        alert('not implemented: queuing updates for all cdn servers');
+        alert('not hooked up yet: queuing updates for all cdn servers');
+    };
+
+    $scope.dequeueUpdates = function() {
+        alert('not hooked up yet: dequeuing updates for all cdn servers');
+    };
+
+    $scope.manageSnapshots = function() {
+        alert('not hooked up yet: manageSnapshots for CDN');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;

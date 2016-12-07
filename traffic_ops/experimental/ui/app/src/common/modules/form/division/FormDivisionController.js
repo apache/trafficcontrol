@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDivisionController = function(division, $scope, formUtils, stringUtils, locationUtils) {
+var FormDivisionController = function(division, $scope, $location, formUtils, stringUtils, locationUtils) {
 
     $scope.division = division;
 
@@ -27,6 +27,10 @@ var FormDivisionController = function(division, $scope, formUtils, stringUtils, 
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.viewRegions = function() {
+        $location.path($location.path() + '/regions');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -35,5 +39,5 @@ var FormDivisionController = function(division, $scope, formUtils, stringUtils, 
 
 };
 
-FormDivisionController.$inject = ['division', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
+FormDivisionController.$inject = ['division', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormDivisionController;

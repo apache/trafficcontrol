@@ -19,10 +19,28 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
+        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="assignServers()">Servers</button>
+
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="invalidateContent()">Invalidate Content</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="cachegroupHealth()">View Cachegroup Health</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

@@ -31,6 +31,14 @@ var FormProfileController = function(profile, $scope, $location, formUtils, stri
         $location.path($location.path() + '/parameters');
     };
 
+    $scope.cloneProfile = function() {
+        alert('not hooked up yet: cloneProfile');
+    };
+
+    $scope.exportProfile = function() {
+        alert('not hooked up yet: exportProfile');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

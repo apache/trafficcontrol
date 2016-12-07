@@ -21,7 +21,7 @@ module.exports = angular.module('trafficOps.private.admin.locations.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficOps.private.admin.locations.edit', {
-                url: '/{locationId}',
+                url: '/{locationId:[0-9]{1,8}}',
                 views: {
                     locationsContent: {
                         templateUrl: 'common/modules/form/location/form.location.tpl.html',

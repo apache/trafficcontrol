@@ -29,6 +29,10 @@ var TableServersController = function(servers, $scope, locationUtils) {
         locationUtils.navigateToPath('/configure/servers/new');
     };
 
+    $scope.uploadServerCSV = function() {
+        alert('not hooked up yet: uploadServerCSV');
+    };
+
     angular.element(document).ready(function () {
         $('#serversTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],

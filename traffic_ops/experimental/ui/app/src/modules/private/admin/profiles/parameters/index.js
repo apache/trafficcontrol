@@ -24,11 +24,14 @@ module.exports = angular.module('trafficOps.private.admin.profiles.parameters', 
 				url: '/{profileId}/parameters',
 				views: {
 					profilesContent: {
-						templateUrl: 'common/modules/table/parameters/table.parameters.tpl.html',
-						controller: 'TableParametersController',
+						templateUrl: 'common/modules/table/profileParameters/table.profileParameters.tpl.html',
+						controller: 'TableProfileParametersController',
 						resolve: {
-							parameters: function(parameterService) {
-								return parameterService.getParameters();
+							profile: function($stateParams, profileService) {
+								return profileService.getProfile($stateParams.profileId);
+							},
+							profileParameters: function($stateParams, profileParameterService) {
+								return profileParameterService.getProfileParameters($stateParams.profileId);
 							}
 						}
 					}

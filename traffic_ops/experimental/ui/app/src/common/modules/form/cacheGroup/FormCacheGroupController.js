@@ -36,11 +36,19 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
     $scope.cacheGroup = cacheGroup;
 
     $scope.queueUpdates = function() {
-        alert('not implemented: queuing updates for all cachegroup servers');
+        alert('not hooked up yet: queuing updates for all cachegroup servers');
+    };
+
+    $scope.dequeueUpdates = function() {
+        alert('not hooked up yet: dequeuing updates for all cachegroup servers');
     };
 
     $scope.viewParams = function() {
         $location.path($location.path() + '/parameters');
+    };
+
+    $scope.viewServers = function() {
+        $location.path($location.path() + '/servers');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;

@@ -90,6 +90,11 @@ body.nav-sm .container.body .main-content {
   }
 }
 
+.dropdown-menu-right {
+  left: auto !important; // Reset the default from `.dropdown-menu`
+  right: 0 !important;
+}
+
 .input-error {
   color: #a94442;
   font-weight: bold;
@@ -6058,4 +6063,3 @@ ul.notifications {
 }
 
 // end loading bar css
-
