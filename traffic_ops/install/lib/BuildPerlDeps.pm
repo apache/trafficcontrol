@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +13,9 @@
 # limitations under the License.
 #
 
-package BuildPerlDeps;
-
 use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_ops/app/lib);
+
+package BuildPerlDeps;
 
 use InstallUtils qw{ :all };
 

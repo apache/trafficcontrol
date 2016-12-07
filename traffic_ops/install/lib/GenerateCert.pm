@@ -54,7 +54,6 @@ sub writeCdn_conf {
         $cdnh->{hypnotoad}{listen} = [$listen_str];
     }
     else {
-
         # add the whole hypnotoad config without affecting anything else in the config
         $cdnh->{hypnotoad} = {
             listen   => [$listen_str],
