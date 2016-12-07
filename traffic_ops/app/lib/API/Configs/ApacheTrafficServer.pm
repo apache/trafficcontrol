@@ -18,7 +18,6 @@ package API::Configs::ApacheTrafficServer;
 #
 #
 use UI::Utils;
-use Switch;
 use Mojo::Base 'Mojolicious::Controller';
 use Date::Manip;
 use NetAddr::IP;
@@ -146,27 +145,25 @@ sub get_server_config {
 		}
 	}
 
-	switch ($filename) {
-		case "12M_facts" { $file_contents = $self->facts( $server_obj, $filename, $action, $scope ); }
-		case "ip_allow.config" { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $action, $scope ); }
-		case "parent.config" { $file_contents = $self->parent_dot_config( $server_obj, $filename, $action, $scope ); }
-		case "records.config" { $file_contents = $self->generic_server_config( $server_obj, $filename, $action, $scope ); }
-		case "remap.config" { $file_contents = $self->remap_dot_config( $server_obj, $filename, $action, $scope ); }
-		case /to_ext_.*\.config/ { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $action, $scope ); }
-		case "hosting.config" { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $action, $scope ); }
-		case "cache.config" { $file_contents = $self->cache_dot_config( $server_obj, $filename, $action, $scope ); }
-		case "packages" {
-			$file_contents = $self->get_package_versions( $server_obj, $filename, $action, $scope );
-			$file_contents = encode_json($file_contents);
+	if ( $filename eq "12M_facts") { $file_contents = $self->facts( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "ip_allow.config") { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "parent.config") { $file_contents = $self->parent_dot_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "records.config") { $file_contents = $self->generic_server_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "remap.config") { $file_contents = $self->remap_dot_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "hosting.config") { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "cache.config") { $file_contents = $self->cache_dot_config( $server_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "packages") {
+		$file_contents = $self->get_package_versions( $server_obj, $filename, $action, $scope );
+		$file_contents = encode_json($file_contents);
+	}
+	elsif ( $filename eq "chkconfig") { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents = encode_json($file_contents); }
+	else { 
+		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
+		if (!defined($file_param) ) {
+			return $self->not_found();
 		}
-		case "chkconfig" { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents = encode_json($file_contents); }
-		else { 
-			my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
-			if (!defined($file_param) ) {
-				return $self->not_found();
-			}
-			$file_contents = $self->take_and_bake_server( $server_obj, $filename, $action, $scope );
-		 }
+		$file_contents = $self->take_and_bake_server( $server_obj, $filename, $action, $scope );
 	}
 
 	#if we get an empty file, just send back an error.
@@ -226,23 +223,20 @@ sub get_cdn_config {
 		}
 	}
 
-	switch ($filename) {
-		case "bg_fetch.config" { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case /cacheurl.*\.config/ { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case /hdr_rw_.*\.config/ { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case /regex_remap_.*\.config/ { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case "regex_revalidate.config" { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case /set_dscp_.*\.config/ { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case "ssl_multicert.config" { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $action, $scope ); }
-		case /url_sig_.*\.config/ {
-
-			if ( $action eq "publish" ) {
-				return $self->forbidden();
-			}
-			$file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $action, $scope );
+	if ( $filename eq "bg_fetch.config" ) { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename =~ /cacheurl.*\.config/ ) { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename =~ /hdr_rw_.*\.config/ ) { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename =~ /regex_remap_.*\.config/ ) { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $action, $scope ); }
+	elsif ( $filename =~ /url_sig_.*\.config/ ) {
+		if ( $action eq "publish" ) {
+			return $self->forbidden();
 		}
-		else { return $self->not_found(); }
+		$file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $action, $scope );
 	}
+	else { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
@@ -293,23 +287,21 @@ sub get_profile_config {
 		}
 	}
 
-	switch ($filename) {
-		case "50-ats.rules" { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $action, $scope ); }
-		case "astats.config" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
-		case "drop_qstring.config" { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $action, $scope ); }
-		case "logs_xml.config" { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename, $action, $scope ); }
-		case "plugin.config" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
-		case "storage.config" { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $action, $scope ); }
-		case "sysctl.conf" { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
-		case "volume.config" { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $action, $scope ); }
-		else { 
-			my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
-			if (!defined($file_param) ) {
-				return $self->not_found();
-			}
-			$file_contents = $self->take_and_bake_profile( $profile_obj, $filename, $action, $scope );
-		 }		
-	}
+	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
+	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $action, $scope ); }
+	else { 
+		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
+		if (!defined($file_param) ) {
+			return $self->not_found();
+		}
+		$file_contents = $self->take_and_bake_profile( $profile_obj, $filename, $action, $scope );
+	 }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
@@ -376,40 +368,40 @@ sub get_scope {
 	my $fname      = shift;
 	my $scope;
 
-	switch ($fname) {
-		case "12M_facts" { $scope = 'server' }
-		case "ip_allow.config" { $scope = 'server' }
-		case "parent.config" { $scope = 'server' }
-		case "records.config" { $scope = 'server' }
-		case "remap.config" { $scope = 'server' }
-		case /to_ext_.*\.config/ { $scope = 'server' }
-		case "hosting.config" { $scope = 'server' }
-		case "cache.config" { $scope = 'server' }
-		case "packages" { $scope = 'server' }
-		case "chkconfig" { $scope = 'server' }
-		case "50-ats.rules" { $scope = 'profile' }
-		case "astats.config" { $scope = 'profile' }
-		case "drop_qstring.config" { $scope = 'profile' }
-		case "logs_xml.config" { $scope = 'profile' }
-		case "plugin.config" { $scope = 'profile' }
-		case "storage.config" { $scope = 'profile' }
-		case "sysctl.conf" { $scope = 'profile' }
-		case "volume.config" { $scope = 'profile' }
-		case "bg_fetch.config" { $scope = 'cdn' }
-		case /cacheurl.*\.config/ { $scope = 'cdn' }
-		case /hdr_rw_.*\.config/ { $scope = 'cdn' }
-		case /regex_remap_.*\.config/ { $scope = 'cdn' }
-		case "regex_revalidate.config" { $scope = 'cdn' }
-		case /set_dscp_.*\.config/ { $scope = 'cdn' }
-		case "ssl_multicert.config" { $scope = 'cdn' }
-		case /url_sig_.*\.config/ { $scope = 'cdn' }
-		else {  
-			$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->single();
-			if (!defined($scope) ) {
-				$scope = 'server';
-			}
+	if ( $fname eq "12M_facts" ) { $scope = 'server' }
+	elsif ( $fname eq "ip_allow.config" ) { $scope = 'server' }
+	elsif ( $fname eq "parent.config" ) { $scope = 'server' }
+	elsif ( $fname eq "records.config" ) { $scope = 'server' }
+	elsif ( $fname eq "remap.config" ) { $scope = 'server' }
+	elsif ( $fname =~ /to_ext_.*\.config/ ) { $scope = 'server' }
+	elsif ( $fname eq "hosting.config" ) { $scope = 'server' }
+	elsif ( $fname eq "cache.config" ) { $scope = 'server' }
+	elsif ( $fname eq "packages" ) { $scope = 'server' }
+	elsif ( $fname eq "chkconfig" ) { $scope = 'server' }
+	elsif ( $fname eq "50-ats.rules" ) { $scope = 'profile' }
+	elsif ( $fname eq "astats.config" ) { $scope = 'profile' }
+	elsif ( $fname eq "drop_qstring.config" ) { $scope = 'profile' }
+	elsif ( $fname eq "logs_xml.config" ) { $scope = 'profile' }
+	elsif ( $fname eq "plugin.config" ) { $scope = 'profile' }
+	elsif ( $fname eq "storage.config" ) { $scope = 'profile' }
+	elsif ( $fname eq "sysctl.conf" ) { $scope = 'profile' }
+	elsif ( $fname eq "volume.config" ) { $scope = 'profile' }
+	elsif ( $fname eq "bg_fetch.config" ) { $scope = 'cdn' }
+	elsif ( $fname =~ /cacheurl.*\.config/ ) { $scope = 'cdn' }
+	elsif ( $fname =~ /hdr_rw_.*\.config/ ) { $scope = 'cdn' }
+	elsif ( $fname =~ /regex_remap_.*\.config/ ) { $scope = 'cdn' }
+	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdn' }
+	elsif ( $fname =~ /set_dscp_.*\.config/ ) { $scope = 'cdn' }
+	elsif ( $fname eq "ssl_multicert.config" ) { $scope = 'cdn' }
+	elsif ( $fname =~ /url_sig_.*\.config/ ) { $scope = 'cdn' }
+	else {  
+		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
+		if (!defined($scope) ) {
+			$self->app->log->error( "Filename not found.  Setting Server scope." );
+			$scope = 'server';
 		}
 	}
+
 	return $scope;
 }
 
@@ -522,7 +514,7 @@ sub profile_param_value {
 	my $param =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ profile => $pid, 'parameter.config_file' => $file, 'parameter.name' => $param_name ] },
-		{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		{ prefetch => [ 'parameter', 'profile' ] } )->first();
 
 	return ( defined $param ? $param->parameter->value : $default );
 }
@@ -1011,7 +1003,6 @@ sub to_ext_dot_config {
 	my $subroutine = $self->profile_param_value( $server_obj->profile->id, $filename, 'SubRoutine', undef );
 	$self->app->log->error( "ToExtDotConfigFile == " . $subroutine );
 
-	# TODO: previous code didn't check for undef -- what to do here?
 	if ( defined $subroutine ) {
 		my $package;
 		( $package = $subroutine ) =~ s/(.*)(::)(.*)/$1/;
@@ -1020,9 +1011,11 @@ sub to_ext_dot_config {
 		# And call it - the below calls the subroutine in the var $subroutine.
 		no strict 'refs';
 		$text .= $subroutine->( $self, $server_obj->host_name, $filename );
+		return $text;
 	}
-
-	return $text;
+	else {
+		return;
+	}
 }
 
 sub get_num_volumes {
@@ -1100,13 +1093,13 @@ sub header_rewrite_dot_config {
 	my $ds_xml_id = undef;
 	if ( $filename =~ /^hdr_rw_mid_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
 		my $actions = $ds->mid_header_rewrite;
 		$text .= $actions . "\n";
 	}
 	elsif ( $filename =~ /^hdr_rw_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
 		my $actions = $ds->edge_header_rewrite;
 		$text .= $actions . "\n";
 	}
@@ -1133,7 +1126,7 @@ sub cacheurl_dot_config {
 	elsif ( $filename =~ /cacheurl_(.*).config/ )
 	{    # Yes, it's possibe to have the same plugin invoked multiple times on the same remap line, this is from the remap entry
 		my $ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
 		if ($ds) {
 			$text .= $ds->cacheurl . "\n";
 		}
@@ -1165,7 +1158,7 @@ sub regex_remap_dot_config {
 
 	if ( $filename =~ /^regex_remap_(.*)\.config$/ ) {
 		my $ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
 		$text .= $ds->regex_remap . "\n";
 	}
 
@@ -1186,10 +1179,7 @@ sub regex_revalidate_dot_config {
 	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
 		->single;
-	my $interval = "> now() - interval '$max_days day'";    # postgres
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$interval = "> now() - interval $max_days day";
-	}
+	my $interval = "> now() - interval '$max_days day'";
 
 	my %regex_time;
 	$max_days =
@@ -2030,7 +2020,7 @@ sub __get_json_parameter_list_by_host {
 	my $key_value = shift || "value";
 	my $data_obj  = [];
 
-	my $profile_id = $self->db->resultset('Server')->search( { host_name => $host } )->get_column('profile')->single();
+	my $profile_id = $self->db->resultset('Server')->search( { host_name => $host } )->get_column('profile')->first();
 
 	my %condition = ( 'profile_parameters.profile' => $profile_id, config_file => $value );
 	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
