@@ -25,6 +25,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -192,6 +193,15 @@ func (p HttpPoller) SleepPoll() {
 	}
 }
 
+func mustDie(die <-chan struct{}) bool {
+	select {
+	case <-die:
+		return true
+	default:
+	}
+	return false
+}
+
 // TODO iterationCount and/or p.TickChan?
 func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
 	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
@@ -200,10 +210,8 @@ func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.
 	lastTime := time.Now()
 	for {
 		select {
-		case now := <-tick.C:
-			tick.Stop()                     // old ticker MUST call Stop() to release resources. Else, memory leak.
-			tick = time.NewTicker(interval) // recreate timer, to avoid Go's "smoothing" nonsense
-			realInterval := now.Sub(lastTime)
+		case <-tick.C:
+			realInterval := time.Now().Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
 				instr.TimerFail.Inc()
 				log.Infof("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
@@ -259,6 +267,7 @@ func (p HttpPoller) InsomniacPoll() {
 }
 
 func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetcher.HttpFetcher, die <-chan struct{}) {
+	runtime.LockOSThread()
 	fmt.Printf("httpPoll %v called\n", pollerId)
 	heap := Heap{PollerID: pollerId}
 	start := time.Now()
@@ -277,14 +286,6 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 		fetchers[p.ID] = fetcher
 	}
 	fmt.Printf("httpPoll %v added to heap\n", pollerId)
-	mustDie := func() bool {
-		select {
-		case <-die:
-			return true
-		default:
-		}
-		return false
-	}
 
 	timeMax := func(a time.Time, b time.Time) time.Time {
 		if a.After(b) {
@@ -311,21 +312,21 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 
 	fmt.Printf("httpPoll %v starting main loop\n", pollerId)
 	for {
-		if mustDie() {
+		if mustDie(die) {
 			fmt.Printf("httpPoll %v dying\n", pollerId)
 			return
 		}
 		p, ok := heap.Pop()
 		if !ok {
-			fmt.Printf("httpPoll %v empty heap, busylooping\n", pollerId)
-			continue //busywait because we fear to sleep. TODO sleep?
+			ThreadSleep(0)
+			continue
 		}
 		if p.Info.ID == "odol-atsec-jac-04" {
 			fmt.Printf("httpPoll %v popped id %v p.Next %v now %v\n", pollerId, p.Info.ID, p.Next, time.Now())
 		}
-		for p.Next.After(time.Now()) {
-			// busywait, because sleeping gets progressively slower for unknown reasons.
-		}
+
+		ThreadSleep(p.Next.Sub(time.Now()))
+
 		if p.Info.ID == "odol-atsec-jac-04" {
 			fmt.Printf("httpPoll %v polling %v next %v now %v\n", pollerId, p.Info.ID, p.Next, time.Now())
 		}
