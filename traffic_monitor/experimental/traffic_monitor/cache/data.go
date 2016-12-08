@@ -1,9 +1,5 @@
 package cache
 
-import (
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,6 +18,10 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+)
 
 // CacheAvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
 // TODO put somewhere more generic
