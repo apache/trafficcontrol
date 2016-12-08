@@ -25,14 +25,6 @@ import (
 	"time"
 )
 
-// type HTTPPollInfo struct {
-// 	Interval time.Duration
-// 	Timeout  time.Duration
-// 	ID       string
-// 	URL      string
-// 	Handler  handler.Handler
-// }
-
 type HeapPollInfo struct {
 	Info HTTPPollInfo
 	Next time.Time
@@ -110,7 +102,6 @@ func (h *Heap) Pop() (HeapPollInfo, bool) {
 }
 
 // Pop gets the latest time from the heap. Implements Algorithms MAX-HEAP-INSERT.
-// TODO make threadsafe
 func (h *Heap) Push(key HeapPollInfo) {
 	h.m.Lock()
 	defer h.m.Unlock()
@@ -119,13 +110,4 @@ func (h *Heap) Push(key HeapPollInfo) {
 	}
 	h.info = append(h.info, HeapPollInfo{Next: time.Unix(1<<63-1, 0)})
 	h.increaseKey(len(h.info)-1, key)
-}
-
-// debug
-func (h *Heap) Sprint() string {
-	s := ""
-	for i, info := range h.info {
-		s += fmt.Sprintf("%v %v|", i, info.Next)
-	}
-	return s
 }
