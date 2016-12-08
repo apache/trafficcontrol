@@ -24,7 +24,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -230,6 +229,8 @@ func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.
 	}
 }
 
+const InsomniacPollerEmptySleepDuration = time.Millisecond * time.Duration(100)
+
 // InsomniacPoll polls using a single thread, which never sleeps. This exists to work around a bug observed in OpenStack CentOS 6.5 kernel 2.6.32 wherin sleep gets progressively slower. This should be removed and Poll() changed to call SleepPoll() when the bug is tracked down and fixed for production.
 func (p HttpPoller) InsomniacPoll() {
 	// iterationCount := uint64(0)
@@ -253,7 +254,7 @@ func (p HttpPoller) InsomniacPoll() {
 		polls := []HTTPPollInfo{}
 		for id, pollCfg := range newCfg.Urls {
 			polls = append(polls, HTTPPollInfo{
-				Interval: newCfg.Interval,
+				Interval: newCfg.Interval - InsomniacPollerEmptySleepDuration,
 				ID:       id,
 				URL:      pollCfg.URL,
 				Timeout:  pollCfg.Timeout,
@@ -265,7 +266,6 @@ func (p HttpPoller) InsomniacPoll() {
 }
 
 func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetcher.HttpFetcher, die <-chan struct{}) {
-	runtime.LockOSThread()
 	heap := Heap{PollerID: pollerId}
 	start := time.Now()
 	fetchers := map[string]fetcher.Fetcher{}
@@ -303,13 +303,13 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 	}
 
 	for {
-		if mustDie(die) {
-			return
-		}
 		p, ok := heap.Pop()
 		if !ok {
-			ThreadSleep(0)
+			ThreadSleep(InsomniacPollerEmptySleepDuration)
 			continue
+		}
+		if mustDie(die) {
+			return
 		}
 		ThreadSleep(p.Next.Sub(time.Now()))
 		go poll(p)
