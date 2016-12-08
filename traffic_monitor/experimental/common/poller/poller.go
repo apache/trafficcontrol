@@ -244,14 +244,12 @@ func (p HttpPoller) InsomniacPoll() {
 			continue
 		}
 
-		fmt.Printf("HttpPoller.InsomniacPoll got newCfg\n")
 		if pollRunning {
 			killChan <- struct{}{}
 		}
 		pollRunning = true
 
 		polls := []HTTPPollInfo{}
-		fmt.Printf("HttpPoller.InsomniacPoll creating polls\n")
 		for id, pollCfg := range newCfg.Urls {
 			polls = append(polls, HTTPPollInfo{
 				Interval: newCfg.Interval,
@@ -260,7 +258,6 @@ func (p HttpPoller) InsomniacPoll() {
 				Timeout:  pollCfg.Timeout,
 			})
 		}
-		fmt.Printf("HttpPoller.InsomniacPoll created polls, going httpPoll\n")
 		go insomniacPoller(pollerId, polls, p.FetcherTemplate, killChan)
 		p.Config = newCfg
 	}
@@ -268,11 +265,9 @@ func (p HttpPoller) InsomniacPoll() {
 
 func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetcher.HttpFetcher, die <-chan struct{}) {
 	runtime.LockOSThread()
-	fmt.Printf("httpPoll %v called\n", pollerId)
 	heap := Heap{PollerID: pollerId}
 	start := time.Now()
 	fetchers := map[string]fetcher.Fetcher{}
-	fmt.Printf("httpPoll %v adding to heap\n", pollerId)
 	for _, p := range polls {
 		spread := time.Duration(rand.Float64()*float64(p.Interval/time.Nanosecond)) * time.Nanosecond
 		heap.Push(HeapPollInfo{Info: p, Next: start.Add(spread)})
@@ -285,7 +280,6 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 		}
 		fetchers[p.ID] = fetcher
 	}
-	fmt.Printf("httpPoll %v added to heap\n", pollerId)
 
 	timeMax := func(a time.Time, b time.Time) time.Time {
 		if a.After(b) {
@@ -304,16 +298,11 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 		<-pollFinishedChan
 		now := time.Now()
 		p.Next = timeMax(start.Add(p.Info.Interval), now)
-		if p.Info.ID == "odol-atsec-jac-04" {
-			fmt.Printf("httpPoll %v heaping id %v next %v start %v interval %v now %v add %v\n", pollerId, p.Info.ID, p.Next, start, p.Info.Interval, now, start.Add(p.Info.Interval))
-		}
 		heap.Push(p)
 	}
 
-	fmt.Printf("httpPoll %v starting main loop\n", pollerId)
 	for {
 		if mustDie(die) {
-			fmt.Printf("httpPoll %v dying\n", pollerId)
 			return
 		}
 		p, ok := heap.Pop()
@@ -321,15 +310,7 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 			ThreadSleep(0)
 			continue
 		}
-		if p.Info.ID == "odol-atsec-jac-04" {
-			fmt.Printf("httpPoll %v popped id %v p.Next %v now %v\n", pollerId, p.Info.ID, p.Next, time.Now())
-		}
-
 		ThreadSleep(p.Next.Sub(time.Now()))
-
-		if p.Info.ID == "odol-atsec-jac-04" {
-			fmt.Printf("httpPoll %v polling %v next %v now %v\n", pollerId, p.Info.ID, p.Next, time.Now())
-		}
 		go poll(p)
 	}
 }
