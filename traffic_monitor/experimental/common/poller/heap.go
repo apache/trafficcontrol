@@ -95,9 +95,6 @@ func (h *Heap) Pop() (HeapPollInfo, bool) {
 	h.info[0] = h.info[len(h.info)-1]
 	h.info = h.info[:len(h.info)-1]
 	h.heapify(0)
-	if max.Info.ID == "odol-atsec-jac-04" {
-		fmt.Printf("httpPoll %v Heap.Pop id %v next %v\n", h.PollerID, max.Info.ID, max.Next)
-	}
 	return max, true
 }
 
@@ -105,9 +102,6 @@ func (h *Heap) Pop() (HeapPollInfo, bool) {
 func (h *Heap) Push(key HeapPollInfo) {
 	h.m.Lock()
 	defer h.m.Unlock()
-	if key.Info.ID == "odol-atsec-jac-04" {
-		fmt.Printf("httpPoll %v Heap.Push id %v next %v\n", h.PollerID, key.Info.ID, key.Next)
-	}
 	h.info = append(h.info, HeapPollInfo{Next: time.Unix(1<<63-1, 0)})
 	h.increaseKey(len(h.info)-1, key)
 }
