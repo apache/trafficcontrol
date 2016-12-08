@@ -102,12 +102,6 @@ sub ui_routes {
 
 	# -- Configfiles
 	$r->route('/genfiles/:mode/:id/#filename')->via('GET')->over( authenticated => 1 )->to( 'ConfigFiles#genfiles', namespace => $namespace );
-	$r->route('/genfiles/:mode/byprofile/:profile/CRConfig.xml')->via('GET')->over( authenticated => 1 )
-		->to( 'ConfigFiles#genfiles_crconfig_profile', namespace => $namespace );
-	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig.xml')->via('GET')->over( authenticated => 1 )
-		->to( 'ConfigFiles#genfiles_crconfig_cdnname', namespace => $namespace );
-	$r->route('/snapshot_crconfig')->via( 'GET', 'POST' )->over( authenticated => 1 )->to( 'ConfigFiles#snapshot_crconfig', namespace => $namespace );
-	$r->post('/upload_ccr_compare')->over( authenticated => 1 )->to( 'ConfigFiles#diff_ccr_xml_file', namespace => $namespace );
 
 	# -- Asn
 	$r->get('/asns')->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
