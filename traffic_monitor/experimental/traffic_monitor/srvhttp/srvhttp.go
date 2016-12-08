@@ -134,9 +134,11 @@ func ParametersStr(params url.Values) string {
 	return pp
 }
 
+const CommonAPIDataDateFormat = "Mon Jan 02 15:04:05 UTC 2006"
+
 // DateStr returns the given time in the format expected by Traffic Monitor 1.0 API users
 func DateStr(t time.Time) string {
-	return t.UTC().Format("Mon Jan 02 15:04:05 UTC 2006")
+	return t.UTC().Format(CommonAPIDataDateFormat)
 }
 
 func (s Server) handleRootFunc() (http.HandlerFunc, error) {
