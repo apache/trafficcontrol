@@ -115,11 +115,8 @@ func getLogWriters(errLoc, warnLoc, infoLoc, debugLoc string) (io.Writer, io.Wri
 	return errW, warnW, infoW, debugW, nil
 }
 
-// NumLockedThreads is the number of threads which will be locked to a single goroutine. Ideally this would be computed, but there's no easy way to do that, and it isn't critical. This only protects against the case where a user has a single core, or manually changes GOMAXPROCS to a small number.
-const NumLockedThreads = 3
-
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()*3 + NumLockedThreads)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	staticData, err := getStaticAppData()
 	if err != nil {
