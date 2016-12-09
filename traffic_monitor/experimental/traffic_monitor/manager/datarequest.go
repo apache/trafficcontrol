@@ -979,23 +979,23 @@ func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, f
 
 // Stats contains statistics data about this running app. Designed to be returned via an API endpoint.
 type Stats struct {
-	MaxMemoryMB         uint64 `json:"Max Memory (MB)"`
+	MaxMemoryMB         uint64 `json:"Max Memory (MB),string"`
 	GitRevision         string `json:"git-revision"`
-	ErrorCount          uint64 `json:"Error Count"`
-	Uptime              uint64 `json:"uptime"`
-	FreeMemoryMB        uint64 `json:"Free Memory (MB)"`
-	TotalMemoryMB       uint64 `json:"Total Memory (MB)"`
+	ErrorCount          uint64 `json:"Error Count,string"`
+	Uptime              uint64 `json:"uptime,string"`
+	FreeMemoryMB        uint64 `json:"Free Memory (MB),string"`
+	TotalMemoryMB       uint64 `json:"Total Memory (MB),string"`
 	Version             string `json:"version"`
 	DeployDir           string `json:"deploy-dir"`
-	FetchCount          uint64 `json:"Fetch Count"`
-	QueryIntervalDelta  int    `json:"Query Interval Delta"`
-	IterationCount      uint64 `json:"Iteration Count"`
+	FetchCount          uint64 `json:"Fetch Count,string"`
+	QueryIntervalDelta  int    `json:"Query Interval Delta,string"`
+	IterationCount      uint64 `json:"Iteration Count,string"`
 	Name                string `json:"name"`
 	BuildTimestamp      string `json:"buildTimestamp"`
-	QueryIntervalTarget int    `json:"Query Interval Target"`
-	QueryIntervalActual int    `json:"Query Interval Actual"`
+	QueryIntervalTarget int    `json:"Query Interval Target,string"`
+	QueryIntervalActual int    `json:"Query Interval Actual,string"`
 	SlowestCache        string `json:"Slowest Cache"`
-	LastQueryInterval   int    `json:"Last Query Interval"`
+	LastQueryInterval   int    `json:"Last Query Interval,string"`
 	Microthreads        int    `json:"Goroutines"`
 	LastGC              string `json:"Last Garbage Collection"`
 	MemAllocBytes       uint64 `json:"Memory Bytes Allocated"`
