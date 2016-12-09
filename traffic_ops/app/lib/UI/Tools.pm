@@ -113,7 +113,7 @@ sub write_crconfig {
         $self->flash( alertmsg => $error );
     }
     else {
-        UI::Topology::write_crconfig_json( $self, $cdn_name, $json );
+        UI::Topology::write_crconfig_json_to_db( $self, $cdn_name, $json );
         &log( $self, "Snapshot CRConfig created.", "OPER" );
         $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
     }
