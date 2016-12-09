@@ -127,6 +127,11 @@ func processStatResults(
 	statHistory := statHistoryThreadsafe.Get().Copy()
 	for _, result := range results {
 		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
+		if maxStats < 1 {
+			log.Warnf("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
+			maxStats = 1
+		}
+
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
 		statHistory[result.ID] = pruneHistory(append([]cache.Result{result}, statHistory[result.ID]...), maxStats)
 	}
