@@ -231,6 +231,11 @@ func processHealthResult(
 		}
 
 		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
+		if maxHistory < 1 {
+			log.Warnf("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
+			maxHistory = 1
+		}
+
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
