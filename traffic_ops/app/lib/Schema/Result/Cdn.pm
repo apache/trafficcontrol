@@ -129,9 +129,24 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 snapshot
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YT90F9iN3AECS+hDmj/hwQ
+Type: might_have
+
+Related object: L<Schema::Result::Snapshot>
+
+=cut
+
+__PACKAGE__->might_have(
+  "snapshot",
+  "Schema::Result::Snapshot",
+  { "foreign.cdn" => "self.name" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-12-09 09:10:09
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yBLkvGMimI0emk0nO5/CAA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
