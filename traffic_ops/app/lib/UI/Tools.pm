@@ -113,9 +113,13 @@ sub write_crconfig {
         $self->flash( alertmsg => $error );
     }
     else {
-        UI::Topology::write_crconfig_json_to_db( $self, $cdn_name, $json );
-        &log( $self, "Snapshot CRConfig created.", "OPER" );
-        $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+        if ( !&is_oper($self) ) {
+            $self->flash( alertmsg => "No can do. Get more privs." );
+        } else {
+            UI::Topology::write_crconfig_json_to_db( $self, $cdn_name, $json );
+            &log( $self, "Snapshot CRConfig created.", "OPER" );
+            $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+        }
     }
     return $self->redirect_to('/utils/close_fancybox');
 }
