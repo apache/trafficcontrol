@@ -8,9 +8,9 @@ package fetcher
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package fetcher
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"fmt"
@@ -83,7 +82,7 @@ func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedCha
 		err = fmt.Errorf("bad status: %v", response.StatusCode)
 	}
 	if err != nil {
-		err = fmt.Errorf("fetch error: %v", err)
+		err = fmt.Errorf("id %v url %v fetch error: %v", id, url, err)
 	}
 
 	if err == nil && response != nil {
