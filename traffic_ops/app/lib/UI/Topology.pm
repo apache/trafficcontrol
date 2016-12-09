@@ -554,43 +554,20 @@ sub gen_crconfig_json {
     return ($data_obj);
 }
 
-sub read_crconfig_json {
-    my $cdn_name      = shift;
-    my $crconfig_file = "public/CRConfig-Snapshots/$cdn_name/CRConfig.json";
-
-    open my $fh, '<', $crconfig_file;
-    if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-        my $e = Mojo::Exception->throw("$! when opening $crconfig_file");
-    }
-    my $crconfig_disk = do { local $/; <$fh> };
-    close($fh);
-    my $crconfig_scalar = decode_json($crconfig_disk);
-    return $crconfig_scalar;
-}
-
-sub write_crconfig_json {
+sub write_crconfig_json_to_db {
     my $self          = shift;
     my $cdn_name      = shift;
     my $crconfig_db   = shift;
     my $crconfig_json = encode_json($crconfig_db);
-    my $crconfig_file = "public/CRConfig-Snapshots/$cdn_name/CRConfig.json";
-    my $dir           = dirname($crconfig_file);
 
-    if ( !-d $dir ) {
-        print "$dir does not exist; attempting to create\n";
-        mkpath($dir);
+    my $snapshot = $self->db->resultset('Snapshot')->find( { cdn => $cdn_name } );
+    if ( defined($snapshot) ) {
+        $snapshot->update({ content => $crconfig_json });
+    } else {
+        my $insert = $self->db->resultset('Snapshot')->create( { cdn => $cdn_name, content => $crconfig_json } );
+        $insert->insert();
     }
 
-    open my $fh, '>', $crconfig_file;
-    if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-        my $e = Mojo::Exception->throw("$! when opening $crconfig_file");
-    }
-    print $fh $crconfig_json;
-    close($fh);
-    return;
-
-    #$self->flash( alertmsg => "Success!" );
-    #return $self->redirect_to($self->tx->req->content->headers->{'headers'}->{'referer'}->[0]->[0]);
 }
 
 sub diff_crconfig_json {
@@ -598,8 +575,9 @@ sub diff_crconfig_json {
     my $json     = shift;
     my $cdn_name = shift;
 
-    if ( !-f "public/CRConfig-Snapshots/$cdn_name/CRConfig.json"
-        && &is_admin($self) )
+    my $current_snapshot = $self->db->resultset('Snapshot')->search( { cdn => $cdn_name } )->get_column('content')->single();
+
+    if ( !defined($current_snapshot) )
     {
         my @err = ();
         $err[0] = "There is no existing CRConfig for " . $cdn_name . " to diff against... Is this the first snapshot???";
@@ -611,25 +589,24 @@ sub diff_crconfig_json {
         return ( \@err, \@dummy, \@caution, \@dummy, \@dummy, \@proceed, \@dummy );
     }
 
-    # my $db_config = &gen_crconfig_json( $self, $cdn_name );
-    my $disk_config = &read_crconfig_json($cdn_name);
+    $current_snapshot = decode_json($current_snapshot);
 
     (
-        my $disk_ds_strings,
-        my $disk_loc_strings,
-        my $disk_cs_strings,
-        my $disk_csds_strings,
-        my $disk_rascal_strings,
-        my $disk_ccr_strings,
-        my $disk_cfg_strings
-    ) = &crconfig_strings($disk_config);
-    my @disk_ds_strings     = @$disk_ds_strings;
-    my @disk_loc_strings    = @$disk_loc_strings;
-    my @disk_cs_strings     = @$disk_cs_strings;
-    my @disk_csds_strings   = @$disk_csds_strings;
-    my @disk_rascal_strings = @$disk_rascal_strings;
-    my @disk_ccr_strings    = @$disk_ccr_strings;
-    my @disk_cfg_strings    = @$disk_cfg_strings;
+        my $ds_strings,
+        my $loc_strings,
+        my $cs_strings,
+        my $csds_strings,
+        my $rascal_strings,
+        my $ccr_strings,
+        my $cfg_strings
+    ) = &crconfig_strings($current_snapshot);
+    my @ds_strings     = @$ds_strings;
+    my @loc_strings    = @$loc_strings;
+    my @cs_strings     = @$cs_strings;
+    my @csds_strings   = @$csds_strings;
+    my @rascal_strings = @$rascal_strings;
+    my @ccr_strings    = @$ccr_strings;
+    my @cfg_strings    = @$cfg_strings;
 
     ( my $db_ds_strings, my $db_loc_strings, my $db_cs_strings, my $db_csds_strings, my $db_rascal_strings, my $db_ccr_strings, my $db_cfg_strings ) =
         &crconfig_strings($json);
@@ -641,13 +618,13 @@ sub diff_crconfig_json {
     my @db_ccr_strings    = @$db_ccr_strings;
     my @db_cfg_strings    = @$db_cfg_strings;
 
-    my @ds_text     = &compare_lists( \@db_ds_strings,     \@disk_ds_strings,     "Section: Delivery Services" );
-    my @loc_text    = &compare_lists( \@db_loc_strings,    \@disk_loc_strings,    "Section: Edge Cachegroups" );
-    my @cs_text     = &compare_lists( \@db_cs_strings,     \@disk_cs_strings,     "Section: Traffic Servers" );
-    my @csds_text   = &compare_lists( \@db_csds_strings,   \@disk_csds_strings,   "Section: Traffic Server - Delivery Services" );
-    my @rascal_text = &compare_lists( \@db_rascal_strings, \@disk_rascal_strings, "Section: Traffic Monitors" );
-    my @ccr_text    = &compare_lists( \@db_ccr_strings,    \@disk_ccr_strings,    "Section: Traffic Routers" );
-    my @cfg_text    = &compare_lists( \@db_cfg_strings,    \@disk_cfg_strings,    "Section: CDN Configs" );
+    my @ds_text     = &compare_lists( \@db_ds_strings,     \@ds_strings,     "Section: Delivery Services" );
+    my @loc_text    = &compare_lists( \@db_loc_strings,    \@loc_strings,    "Section: Edge Cachegroups" );
+    my @cs_text     = &compare_lists( \@db_cs_strings,     \@cs_strings,     "Section: Traffic Servers" );
+    my @csds_text   = &compare_lists( \@db_csds_strings,   \@csds_strings,   "Section: Traffic Server - Delivery Services" );
+    my @rascal_text = &compare_lists( \@db_rascal_strings, \@rascal_strings, "Section: Traffic Monitors" );
+    my @ccr_text    = &compare_lists( \@db_ccr_strings,    \@ccr_strings,    "Section: Traffic Routers" );
+    my @cfg_text    = &compare_lists( \@db_cfg_strings,    \@cfg_strings,    "Section: CDN Configs" );
 
     return ( \@ds_text, \@loc_text, \@cs_text, \@csds_text, \@rascal_text, \@ccr_text, \@cfg_text );
 }

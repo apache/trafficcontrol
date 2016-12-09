@@ -331,6 +331,7 @@ sub ui_routes {
 
 	# -- Topology - CCR Config, rewrote in json
 	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig')->via('GET')->over( authenticated => 1 )->to( 'Topology#ccr_config', namespace => $namespace );
+	$r->get('/CRConfig-Snapshots/:cdn_name/CRConfig.json')->over( authenticated => 1 )->to( 'Snapshot#get_cdn_snapshot', namespace => $namespace );
 
 	$r->get('/types')->over( authenticated => 1 )->to( 'Types#index', namespace => $namespace );
 	$r->route('/types/add')->via('GET')->over( authenticated => 1 )->to( 'Types#add', namespace => $namespace );
