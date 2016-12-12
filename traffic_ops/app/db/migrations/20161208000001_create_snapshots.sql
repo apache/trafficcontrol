@@ -27,3 +27,6 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON snapshot FOR EACH RO
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
+DROP TRIGGER on_update_current_timestamp ON snapshot;
+
+DROP TABLE snapshot;
