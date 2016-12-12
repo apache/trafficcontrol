@@ -68,6 +68,22 @@ func DeliveryService() *client.DeliveryServiceResponse {
 	}
 }
 
+// CreateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
+func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
+	return &client.CreateDeliveryServiceResponse{
+		Response: DeliveryServices().Response,
+		Alerts:   alerts(),
+	}
+}
+
+// UpdateDeliveryService returns a default UpdateDeliveryServiceResponse to be used for testing.
+func UpdateDeliveryService() *client.UpdateDeliveryServiceResponse {
+	return &client.UpdateDeliveryServiceResponse{
+		Response: DeliveryServices().Response,
+		Alerts:   alerts(),
+	}
+}
+
 // DeleteDeliveryService returns a default DeleteDeliveryServiceResponse to be used for testing.
 func DeleteDeliveryService() *client.DeleteDeliveryServiceResponse {
 	return &client.DeleteDeliveryServiceResponse{
@@ -155,13 +171,13 @@ func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
 func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
 	dss := client.DeliveryServiceServer{
 		LastUpdated:     "lastUpdated",
-		Server:          "someServer",
-		DeliveryService: "someService",
+		Server:          1,
+		DeliveryService: 1,
 	}
 
 	return &client.DeliveryServiceServerResponse{
 		Response: []client.DeliveryServiceServer{dss},
-		Page:     1,
+		Size:     1,
 		OrderBy:  "foo",
 		Limit:    1,
 	}

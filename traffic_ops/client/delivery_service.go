@@ -40,8 +40,8 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 }
 
 // CreateDeliveryService creates the DeliveryService it's passed
-func (to *Session) CreateDeliveryService(ds *DeliveryService) (*DeliveryServiceResponse, error) {
-	var data DeliveryServiceResponse
+func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliveryServiceResponse, error) {
+	var data CreateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
@@ -56,8 +56,8 @@ func (to *Session) CreateDeliveryService(ds *DeliveryService) (*DeliveryServiceR
 
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
-func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*DeliveryServiceResponse, error) {
-	var data DeliveryServiceResponse
+func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*UpdateDeliveryServiceResponse, error) {
+	var data UpdateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err

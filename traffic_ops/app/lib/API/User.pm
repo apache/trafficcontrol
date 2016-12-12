@@ -101,7 +101,7 @@ sub index {
 			}
 		);
 	}
-	$self->render( json => \@data );
+	$self->success( \@data );
 }
 
 sub show {

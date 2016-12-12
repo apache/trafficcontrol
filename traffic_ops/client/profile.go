@@ -24,6 +24,7 @@ type ProfileResponse struct {
 
 // Profile ...
 type Profile struct {
+	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	LastUpdated string `json:"lastUpdated"`

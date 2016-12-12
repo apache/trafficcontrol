@@ -21,6 +21,18 @@ type GetDeliveryServiceResponse struct {
 	Response []DeliveryService `json:"response"`
 }
 
+// CreateDeliveryServiceResponse ...
+type CreateDeliveryServiceResponse struct {
+	Response []DeliveryService      `json:"response"`
+	Alerts   []DeliveryServiceAlert `json:"alerts"`
+}
+
+// UpdateDeliveryServiceResponse ...
+type UpdateDeliveryServiceResponse struct {
+	Response []DeliveryService      `json:"response"`
+	Alerts   []DeliveryServiceAlert `json:"alerts"`
+}
+
 // DeliveryServiceResponse ...
 type DeliveryServiceResponse struct {
 	Response DeliveryService        `json:"response"`
@@ -48,10 +60,13 @@ type DeliveryService struct {
 	DNSBypassCname       string                 `json:"dnsBypassCname"`
 	DNSBypassTTL         int                    `json:"dnsBypassTtl"`
 	OrgServerFQDN        string                 `json:"orgServerFqdn"`
+	TypeID               int                    `json:"typeId"`
 	Type                 string                 `json:"type"`
+	ProfileID            int                    `json:"profileId"`
 	ProfileName          string                 `json:"profileName"`
 	ProfileDesc          string                 `json:"profileDescription"`
 	CDNName              string                 `json:"cdnName"`
+	CDNID                int                    `json:"cdnId"`
 	CCRDNSTTL            int                    `json:"ccrDnsTtl"`
 	GlobalMaxMBPS        int                    `json:"globalMaxMbps"`
 	GlobalMaxTPS         int                    `json:"globalMaxTps"`
@@ -67,7 +82,6 @@ type DeliveryService struct {
 	Protocol             int                    `json:"protocol"`
 	IPV6RoutingEnabled   bool                   `json:"ipv6RoutingEnabled"`
 	RangeRequestHandling int                    `json:"rangeRequestHandling"`
-	HeaderRewrite        string                 `json:"headerRewrite"`
 	EdgeHeaderRewrite    string                 `json:"edgeHeaderRewrite"`
 	MidHeaderRewrite     string                 `json:"midHeaderRewrite"`
 	TRResponseHeaders    string                 `json:"trResponseHeaders"`
@@ -78,6 +92,9 @@ type DeliveryService struct {
 	DisplayName          string                 `json:"displayName"`
 	InitialDispersion    int                    `json:"initialDispersion"`
 	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
+	RegionalGeoBlocking  bool                   `json:"regionalGeoBlocking"`
+	LogsEnabled          bool                   `json:"logsEnabled"`
+	ExampleURLs          []string               `json:"exampleURLs"`
 }
 
 // DeliveryServiceMatch ...
@@ -171,7 +188,7 @@ type DeliveryServiceRouting struct {
 // DeliveryServiceServerResponse ...
 type DeliveryServiceServerResponse struct {
 	Response []DeliveryServiceServer `json:"response"`
-	Page     int                     `json:"page"`
+	Size     int                     `json:"size"`
 	OrderBy  string                  `json:"orderby"`
 	Limit    int                     `json:"limit"`
 }
@@ -179,8 +196,8 @@ type DeliveryServiceServerResponse struct {
 // DeliveryServiceServer ...
 type DeliveryServiceServer struct {
 	LastUpdated     string `json:"lastUpdated"`
-	Server          string `json:"server"`
-	DeliveryService string `json:"deliveryService"`
+	Server          int    `json:"server"`
+	DeliveryService int    `json:"deliveryService"`
 }
 
 // DeliveryServiceSSLKeysResponse ...
