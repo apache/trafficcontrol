@@ -7,10 +7,6 @@ Once your issue has been approved and you're ready to start slinging code, we ha
 
 Remember, your code doesn't have to be perfect. Hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
 
-CONTRIBUTORS.md
------------------------------
-Please take the opportunity of submitting your first PR to additionally include your name alphabetically in CONTRIBUTORS.md.
-
 Making a pull request
 ---------------------
 If you've never made a pull request, it's super-easy. Github has a great tutorial [here](https://help.github.com/articles/using-pull-requests/). In a nutshell, you click the _fork_ button to make a fork, clone it and make your change, then click the green _New pull request_ button on your repository's Github page and follow the instructions. That's it! We'll look at it and get back to you.
