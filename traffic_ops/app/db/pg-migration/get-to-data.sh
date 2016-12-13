@@ -26,3 +26,13 @@ CREDS
 
 curl -k -H "Accept: application/json" --cookie "$cookiejar" --cookie-jar "$cookiejar" -X POST --data @"$cred" "$TO_SERVER/api/1.2/user/login"
 curl $output -k -s --cookie "$cookiejar" -X GET "$TO_SERVER/dbdump"
+
+waiting=/sync/waiting-for-dataimport
+while [[ ! -f $waiting ]]; do
+    # wait for signal that other container is waiting
+    echo "Data import finished.."
+    sleep 3
+done
+
+# signal to waiting container that we're finished
+rm $waiting
