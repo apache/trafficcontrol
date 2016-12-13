@@ -23,9 +23,8 @@ services:
       service: dataimport
       file: dataimport.yml
     volumes:
-      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
-    volumes:
       - sync:/sync
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
 
   # mysql_host loads mysql data locally and provides direct access for pgloader
   mysql:
@@ -51,11 +50,10 @@ services:
     depends_on:
       - mysql
     volumes:
-      - /opt/traffic_ops-db:/var/lib/postgresql/data
+      - sync:/sync
+      - ./db:/var/lib/postgresql/data
     ports:
       - 5432
-    volumes:
-      - sync:/sync
 
   # pgloader converts the data from mysql to postgres
   pgloader:

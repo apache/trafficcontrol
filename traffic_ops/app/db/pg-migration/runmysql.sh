@@ -1,3 +1,4 @@
+#!/bin/bash -x
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -11,12 +12,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-version: '2'
 
-services:
-  mysql_host:
-    build:
-      context: .
-      dockerfile: Dockerfile-mysql
-    env_file:
-      - mysql.env
+waiting=/sync/waiting-for-dataimport
+touch $waiting
+
+# Wait for pgloader to finish
+while [[ -f $waiting ]]; do
+    ls -l $waiting
+    sleep 3
+done
+
+echo "Looks like dataimport is finished..  Starting mysql..."
+
+docker-entrypoint.sh mysqld
