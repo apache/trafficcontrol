@@ -36,7 +36,7 @@ The following are requirements to ensure an accurate set up:
 1. If no suitable profile exists, create a new profile for Traffic Router.
 
 2. Enter the Traffic Router server into Traffic Ops, assign it to a Traffic Router profile, and ensure that its status is set to ``ONLINE``.
-3. Ensure the FQDN of the Traffic Monitor is resolvable in DNS. This FQDN must be resolvable by the clients expected to use this CDN.
+3. Ensure the FQDN of the Traffic Router is resolvable in DNS. This FQDN must be resolvable by the clients expected to use this CDN.
 4. Install a traffic router: ``sudo yum install traffic_router``.
 5. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and specify the correct online Traffic Monitor(s) for your CDN. See :ref:`rl-tr-config-files`
 	# traffic_monitor.properties: url that should normally point to this file
