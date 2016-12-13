@@ -44,9 +44,6 @@ our $profilesConfFile = "/opt/traffic_ops/install/data/profiles/";
 our $opensslConfFile  = "/opt/traffic_ops/install/bin/openssl_configuration.json";
 our $paramConfFile    = "/opt/traffic_ops/install/data/json/profiles.json";
 
-our $profile_dir      = "/opt/traffic_ops/install/data/profiles/";
-our $post_install_cfg = "/opt/traffic_ops/install/data/json/post_install.json";
-
 our $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
 
 our $parameters;
@@ -278,6 +275,7 @@ sub generateParamConf {
     my $fileName  = shift;
 
     my %config = getConfig( $userInput, $fileName );
+    writeJson( $fileName, \%config );
     return \%config;
 }
 
@@ -300,9 +298,6 @@ sub sanityCheckDefaults {
 #
 # Checks the input config file against the default inputs. If there is a question located in the default inputs which
 #  is not located in the input config file it will output a warning message.
-#
-# This does not check the other way meaning questions which are present in defaults but not present in the input config
-#  file will not be checked
 
 sub sanityCheckConfig {
     my $userInput = shift;
@@ -458,6 +453,10 @@ sub getDefaults {
         $::profilesConfFile => [],
         $::opensslConfFile  => [
             {
+                "Do you want to generate a certificate?" => "yes",
+                "config_var"                             => "genCert"
+            },
+            {
                 "Country Name (2 letter code)" => "XX",
                 "config_var"                   => "country"
             },
@@ -478,7 +477,7 @@ sub getDefaults {
                 "config_var"                             => "org_unit"
             },
             {
-                "Common Name (eg, your name or your server's hostname)" => "cisco.com",
+                "Common Name (eg, your name or your server's hostname)" => "example.com",
                 "config_var"                                            => "common_name"
             },
             {
@@ -584,23 +583,27 @@ sub setupDatabase {
         logger( "Failed to copy coverage zone file", "error" );
     }
 
-    if ( -x "/usr/bin/openssl" ) {
-        logger( "Installing SSL Certificates", "info" );
-        $result = GenerateCert::createCert($opensslconf);
+    if ( lc $opensslconf->{genCert} =~ /^y(?:es)?/ ) {
+        if ( -x "/usr/bin/openssl" ) {
+            logger( "Installing SSL Certificates", "info" );
+            $result = GenerateCert::createCert($opensslconf);
 
-        if ( $result != 0 ) {
-            errorOut("SSL Certificate Installation failed");
+            if ( $result != 0 ) {
+                errorOut("SSL Certificate Installation failed");
+            }
+            else {
+                logger( "SSL Certificates have been installed", "info" );
+            }
         }
         else {
-            logger( "SSL Certificates have been installed", "info" );
+            logger( "Unable to install SSL certificates as openssl is not installed",                                     "error" );
+            logger( "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates", "error" );
+            exit 4;
         }
     }
     else {
-        logger( "Unable to install SSL certificates as openssl is not installed",                                     "error" );
-        logger( "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates", "error" );
-        exit 4;
+        logger("Not generating openssl certification", "info");
     }
-
 }
 
 # -cfile     - Input File:       The input config file used to ask and answer questions
