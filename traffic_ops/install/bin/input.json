@@ -85,6 +85,10 @@
 
   ],
   "/opt/traffic_ops/install/bin/openssl_configuration.json":[  
+    {
+      "Do you want to generate a certificate?": "yes",
+      "config_var": "genCert"
+    },
     {  
       "Country Name (2 letter code)":"XX",
       "config_var":"country"
