@@ -20,9 +20,12 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb">
-            <li><a ng-click="navigateToPath('/admin/locations')">Locations</a></li>
+            <li><a ng-click="navigateToPath('/admin/locations')">Physical Locations</a></li>
             <li class="active">{{locationName}}</li>
         </ol>
+        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="viewServers()">Servers</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

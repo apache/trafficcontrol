@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormLocationController = function(location, $scope, formUtils, stringUtils, locationUtils, regionService) {
+var FormLocationController = function(location, $scope, $location, formUtils, stringUtils, locationUtils, regionService) {
 
     var getRegions = function() {
         regionService.getRegions()
@@ -42,6 +42,10 @@ var FormLocationController = function(location, $scope, formUtils, stringUtils, 
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.viewServers = function() {
+        $location.path($location.path() + '/servers');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -55,5 +59,5 @@ var FormLocationController = function(location, $scope, formUtils, stringUtils, 
 
 };
 
-FormLocationController.$inject = ['location', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'regionService'];
+FormLocationController.$inject = ['location', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'regionService'];
 module.exports = FormLocationController;
