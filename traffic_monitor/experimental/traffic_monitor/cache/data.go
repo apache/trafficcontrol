@@ -1,4 +1,4 @@
-package manager
+package cache
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,12 +19,31 @@ package manager
  * under the License.
  */
 
-
 import (
-	"sync"
-
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 )
+
+// CacheAvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
+// TODO put somewhere more generic
+const AvailableStatusReported = "REPORTED"
+
+// CacheAvailableStatus is the available status of the given cache. It includes a boolean available/unavailable flag, and a descriptive string.
+type AvailableStatus struct {
+	Available bool
+	Status    string
+}
+
+// CacheAvailableStatuses is the available status of each cache.
+type AvailableStatuses map[enum.CacheName]AvailableStatus
+
+// Copy copies this CacheAvailableStatuses. It does not modify, and thus is safe for multiple reader goroutines.
+func (a AvailableStatuses) Copy() AvailableStatuses {
+	b := AvailableStatuses(map[enum.CacheName]AvailableStatus{})
+	for k, v := range a {
+		b[k] = v
+	}
+	return b
+}
 
 // Event represents an event change in aggregated data. For example, a cache being marked as unavailable.
 type Event struct {
@@ -37,43 +56,20 @@ type Event struct {
 	Available   bool           `json:"isAvailable"`
 }
 
-// EventsThreadsafe provides safe access for multiple goroutines readers and a single writer to a stored Events slice.
-type EventsThreadsafe struct {
-	events    *[]Event
-	m         *sync.RWMutex
-	nextIndex *uint64
-	max       uint64
-}
+// ResultHistory is a map of cache names, to an array of result history from each cache.
+type ResultHistory map[enum.CacheName][]Result
 
-func copyEvents(a []Event) []Event {
-	b := make([]Event, len(a), len(a))
+func copyResult(a []Result) []Result {
+	b := make([]Result, len(a), len(a))
 	copy(b, a)
 	return b
 }
 
-// NewEventsThreadsafe creates a new single-writer-multiple-reader Threadsafe object
-func NewEventsThreadsafe(maxEvents uint64) EventsThreadsafe {
-	i := uint64(0)
-	return EventsThreadsafe{m: &sync.RWMutex{}, events: &[]Event{}, nextIndex: &i, max: maxEvents}
-}
-
-// Get returns the internal slice of Events for reading. This MUST NOT be modified. If modification is necessary, copy the slice.
-func (o *EventsThreadsafe) Get() []Event {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return *o.events
-}
-
-// Add adds the given event. This is threadsafe for one writer, multiple readers. This MUST NOT be called by multiple threads, as it non-atomically fetches and adds.
-func (o *EventsThreadsafe) Add(e Event) {
-	events := copyEvents(*o.events)
-	e.Index = *o.nextIndex
-	events = append([]Event{e}, events...)
-	if len(events) > int(o.max) {
-		events = (events)[:o.max-1]
+// Copy copies returns a deep copy of this ResultHistory
+func (a ResultHistory) Copy() ResultHistory {
+	b := ResultHistory{}
+	for k, v := range a {
+		b[k] = copyResult(v)
 	}
-	o.m.Lock()
-	*o.events = events
-	*o.nextIndex++
-	o.m.Unlock()
+	return b
 }

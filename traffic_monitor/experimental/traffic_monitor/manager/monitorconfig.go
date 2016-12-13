@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"fmt"
@@ -219,7 +218,7 @@ func monitorConfigListen(
 				continue
 			}
 			// seed states with available = false until our polling cycle picks up a result
-			if _, exists := localStates.Get().Caches[cacheName]; !exists {
+			if _, exists := localStates.GetCache(cacheName); !exists {
 				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
 			}
 
@@ -267,11 +266,11 @@ func monitorConfigListen(
 		// TODO because there are multiple writers to localStates.DeliveryService, there is a race condition, where MonitorConfig (this func) and HealthResultManager could write at the same time, and the HealthResultManager could overwrite a delivery service addition or deletion here. Probably the simplest and most performant fix would be a lock-free algorithm using atomic compare-and-swaps.
 		for _, ds := range monitorConfig.DeliveryService {
 			// since caches default to unavailable, also default DS false
-			if _, exists := localStates.Get().Deliveryservice[enum.DeliveryServiceName(ds.XMLID)]; !exists {
+			if _, exists := localStates.GetDeliveryService(enum.DeliveryServiceName(ds.XMLID)); !exists {
 				localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
 			}
 		}
-		for ds := range localStates.Get().Deliveryservice {
+		for ds := range localStates.GetDeliveryServices() {
 			if _, exists := monitorConfig.DeliveryService[string(ds)]; !exists {
 				localStates.DeleteDeliveryService(ds)
 			}

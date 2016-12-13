@@ -17,7 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import org.apache.coyote.http11.Http11Protocol;
 
-public class LanguidProtocol extends Http11Protocol {
+public class LanguidProtocol extends Http11Protocol implements RouterProtocolHandler {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
 	private boolean ready = false;
 	private boolean initialized = false;

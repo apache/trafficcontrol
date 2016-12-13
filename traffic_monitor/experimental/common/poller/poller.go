@@ -20,10 +20,12 @@ package poller
  */
 
 import (
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -57,11 +59,20 @@ type PollConfig struct {
 type HttpPollerConfig struct {
 	Urls     map[string]PollConfig
 	Interval time.Duration
+	// noSleep indicates to use the InsomniacPoller. Note this is only used with the initial Poll call, which decides which Poller mechanism to use. After that, this is ignored when the HttpPollerConfig is passed over the ConfigChannel.
+	noSleep bool
 }
 
 // Creates and returns a new HttpPoller.
-// If tick is false, HttpPoller.TickChan() will return nil
-func NewHTTP(interval time.Duration, tick bool, httpClient *http.Client, counters fetcher.Counters, fetchHandler handler.Handler) HttpPoller {
+// If tick is false, HttpPoller.TickChan() will return nil. If noSleep is true, the poller will busywait instead of sleeping, and use a single goroutine which dispatches polls instead of a goroutine per poll.
+func NewHTTP(
+	interval time.Duration,
+	tick bool,
+	httpClient *http.Client,
+	counters fetcher.Counters,
+	fetchHandler handler.Handler,
+	noSleep bool,
+) HttpPoller {
 	var tickChan chan uint64
 	if tick {
 		tickChan = make(chan uint64)
@@ -71,6 +82,7 @@ func NewHTTP(interval time.Duration, tick bool, httpClient *http.Client, counter
 		ConfigChannel: make(chan HttpPollerConfig),
 		Config: HttpPollerConfig{
 			Interval: interval,
+			noSleep:  noSleep,
 		},
 		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:  fetchHandler,
@@ -135,7 +147,25 @@ func (p MonitorConfigPoller) Poll() {
 
 var debugPollNum uint64
 
+type HTTPPollInfo struct {
+	Interval time.Duration
+	Timeout  time.Duration
+	ID       string
+	URL      string
+	Handler  handler.Handler
+}
+
 func (p HttpPoller) Poll() {
+	if p.Config.noSleep {
+		log.Infof("HttpPoller using InsomniacPoll\n")
+		p.InsomniacPoll()
+	} else {
+		log.Infof("HttpPoller using SleepPoll\n")
+		p.SleepPoll()
+	}
+}
+
+func (p HttpPoller) SleepPoll() {
 	// iterationCount := uint64(0)
 	// iterationCount++ // on tick<:
 	// case p.TickChan <- iterationCount:
@@ -157,18 +187,164 @@ func (p HttpPoller) Poll() {
 				fetcher.Client = &c // copy the client, so we don't change other fetchers.
 				fetcher.Client.Timeout = info.Timeout
 			}
-			go pollHttp(info.Interval, info.ID, info.URL, fetcher, kill)
+			go sleepPoller(info.Interval, info.ID, info.URL, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
 }
 
-type HTTPPollInfo struct {
-	Interval time.Duration
-	Timeout  time.Duration
-	ID       string
-	URL      string
-	Handler  handler.Handler
+func mustDie(die <-chan struct{}) bool {
+	select {
+	case <-die:
+		return true
+	default:
+	}
+	return false
+}
+
+// TODO iterationCount and/or p.TickChan?
+func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
+	time.Sleep(pollSpread)
+	tick := time.NewTicker(interval)
+	lastTime := time.Now()
+	for {
+		select {
+		case <-tick.C:
+			realInterval := time.Now().Sub(lastTime)
+			if realInterval > interval+(time.Millisecond*100) {
+				instr.TimerFail.Inc()
+				log.Infof("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
+			}
+			lastTime = time.Now()
+
+			pollId := atomic.AddUint64(&debugPollNum, 1)
+			pollFinishedChan := make(chan uint64)
+			log.Debugf("poll %v %v start\n", pollId, time.Now())
+			go fetcher.Fetch(id, url, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			<-pollFinishedChan
+		case <-die:
+			return
+		}
+	}
+}
+
+// InsomniacPoll polls using a single thread, which never sleeps. This exists to work around a bug observed in OpenStack CentOS 6.5 kernel 2.6.32 wherin sleep gets progressively slower. This should be removed and Poll() changed to call SleepPoll() when the bug is tracked down and fixed for production.
+func (p HttpPoller) InsomniacPoll() {
+	// iterationCount := uint64(0)
+	// iterationCount++ // on tick<:
+	// case p.TickChan <- iterationCount:
+	killChan := make(chan struct{})
+	pollRunning := false // TODO find less awkward way to not kill the first loop
+	pollerId := rand.Int63()
+	for newCfg := range p.ConfigChannel {
+		// TODO add a more efficient function than diffConfigs for this func, since we only need to know whether anything changed
+		deletions, additions := diffConfigs(p.Config, newCfg)
+		if len(deletions) == 0 && len(additions) == 0 {
+			continue
+		}
+
+		if pollRunning {
+			killChan <- struct{}{}
+		}
+		pollRunning = true
+
+		polls := []HTTPPollInfo{}
+		for id, pollCfg := range newCfg.Urls {
+			polls = append(polls, HTTPPollInfo{
+				Interval: newCfg.Interval,
+				ID:       id,
+				URL:      pollCfg.URL,
+				Timeout:  pollCfg.Timeout,
+			})
+		}
+		go insomniacPoller(pollerId, polls, p.FetcherTemplate, killChan)
+		p.Config = newCfg
+	}
+}
+
+func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetcher.HttpFetcher, die <-chan struct{}) {
+	runtime.LockOSThread()
+	heap := Heap{PollerID: pollerId}
+	start := time.Now()
+	fetchers := map[string]fetcher.Fetcher{}
+	for _, p := range polls {
+		spread := time.Duration(rand.Float64()*float64(p.Interval/time.Nanosecond)) * time.Nanosecond
+		heap.Push(HeapPollInfo{Info: p, Next: start.Add(spread)})
+
+		fetcher := fetcherTemplate
+		if p.Timeout != 0 { // if the timeout isn't explicitly set, use the template value.
+			c := *fetcher.Client
+			fetcher.Client = &c // copy the client, so we don't change other fetchers.
+			fetcher.Client.Timeout = p.Timeout
+		}
+		fetchers[p.ID] = fetcher
+	}
+
+	timeMax := func(a time.Time, b time.Time) time.Time {
+		if a.After(b) {
+			return a
+		}
+		return b
+	}
+
+	poll := func(p HeapPollInfo) {
+		start := time.Now()
+		pollId := atomic.AddUint64(&debugPollNum, 1)
+		// TODO change pollFinishedChan to callback, for performance
+		pollFinishedChan := make(chan uint64)
+
+		go fetchers[p.Info.ID].Fetch(p.Info.ID, p.Info.URL, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+		<-pollFinishedChan
+		now := time.Now()
+		p.Next = timeMax(start.Add(p.Info.Interval), now)
+		heap.Push(p)
+	}
+
+	for {
+		if mustDie(die) {
+			return
+		}
+		p, ok := heap.Pop()
+		if !ok {
+			ThreadSleep(0)
+			continue
+		}
+		ThreadSleep(p.Next.Sub(time.Now()))
+		go poll(p)
+	}
+}
+
+func (p FilePoller) Poll() {
+	// initial read before watching for changes
+	contents, err := ioutil.ReadFile(p.File)
+
+	if err != nil {
+		log.Errorf("reading %s: %s\n", p.File, err)
+		os.Exit(1) // TODO: this is a little drastic -jse
+	} else {
+		p.ResultChannel <- contents
+	}
+
+	watcher, _ := fsnotify.NewWatcher()
+	watcher.Add(p.File)
+
+	for {
+		select {
+		case event := <-watcher.Events:
+			if event.Op&fsnotify.Write == fsnotify.Write {
+				contents, err := ioutil.ReadFile(p.File)
+
+				if err != nil {
+					log.Errorf("opening %s: %s\n", p.File, err)
+				} else {
+					p.ResultChannel <- contents
+				}
+			}
+		case err := <-watcher.Errors:
+			log.Errorln(time.Now(), "error:", err)
+		}
+	}
 }
 
 // diffConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
@@ -219,65 +395,4 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 	}
 
 	return deletions, additions
-}
-
-func (p FilePoller) Poll() {
-	// initial read before watching for changes
-	contents, err := ioutil.ReadFile(p.File)
-
-	if err != nil {
-		log.Errorf("reading %s: %s\n", p.File, err)
-		os.Exit(1) // TODO: this is a little drastic -jse
-	} else {
-		p.ResultChannel <- contents
-	}
-
-	watcher, _ := fsnotify.NewWatcher()
-	watcher.Add(p.File)
-
-	for {
-		select {
-		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				contents, err := ioutil.ReadFile(p.File)
-
-				if err != nil {
-					log.Errorf("opening %s: %s\n", p.File, err)
-				} else {
-					p.ResultChannel <- contents
-				}
-			}
-		case err := <-watcher.Errors:
-			log.Errorln(time.Now(), "error:", err)
-		}
-	}
-}
-
-// TODO iterationCount and/or p.TickChan?
-func pollHttp(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
-	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
-	time.Sleep(pollSpread)
-	tick := time.NewTicker(interval)
-	lastTime := time.Now()
-	for {
-		select {
-		case now := <-tick.C:
-			tick.Stop()                     // old ticker MUST call Stop() to release resources. Else, memory leak.
-			tick = time.NewTicker(interval) // recreate timer, to avoid Go's "smoothing" nonsense
-			realInterval := now.Sub(lastTime)
-			if realInterval > interval+(time.Millisecond*100) {
-				instr.TimerFail.Inc()
-				log.Infof("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
-			}
-			lastTime = time.Now()
-
-			pollId := atomic.AddUint64(&debugPollNum, 1)
-			pollFinishedChan := make(chan uint64)
-			log.Debugf("poll %v %v start\n", pollId, time.Now())
-			go fetcher.Fetch(id, url, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
-			<-pollFinishedChan
-		case <-die:
-			return
-		}
-	}
 }

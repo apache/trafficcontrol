@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"fmt"
@@ -31,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -73,18 +73,19 @@ func StartOpsConfigManager(
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	statHistory StatHistoryThreadsafe,
-	lastStats LastStatsThreadsafe,
-	dsStats DSStatsReader,
-	events EventsThreadsafe,
+	statHistory threadsafe.ResultHistory,
+	healthHistory threadsafe.ResultHistory,
+	lastStats threadsafe.LastStats,
+	dsStats threadsafe.DSStatsReader,
+	events threadsafe.Events,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
 	lastHealthDurations DurationMapThreadsafe,
-	fetchCount UintThreadsafe,
-	healthIteration UintThreadsafe,
-	errorCount UintThreadsafe,
-	localCacheStatus CacheAvailableStatusThreadsafe,
-	unpolledCaches UnpolledCachesThreadsafe,
+	fetchCount threadsafe.Uint,
+	healthIteration threadsafe.Uint,
+	errorCount threadsafe.Uint,
+	localCacheStatus threadsafe.CacheAvailableStatus,
+	unpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	cfg config.Config,
 ) OpsConfigThreadsafe {
@@ -132,6 +133,7 @@ func StartOpsConfigManager(
 				peerStates,
 				combinedStates,
 				statHistory,
+				healthHistory,
 				dsStats,
 				events,
 				staticAppData,

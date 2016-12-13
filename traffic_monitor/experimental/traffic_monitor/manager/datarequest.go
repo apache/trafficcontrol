@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"encoding/json"
@@ -38,6 +37,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -45,7 +45,7 @@ import (
 
 // JSONEvents represents the structure we wish to serialize to JSON, for Events.
 type JSONEvents struct {
-	Events []Event `json:"events"`
+	Events []cache.Event `json:"events"`
 }
 
 // CacheState represents the available state of a cache.
@@ -62,12 +62,21 @@ type APIPeerStates struct {
 // CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
-	Type                  *string  `json:"type,omitempty"`
-	Status                *string  `json:"status,omitempty"`
-	LoadAverage           *float64 `json:"load_average,omitempty"`
-	QueryTimeMilliseconds *int64   `json:"query_time_ms,omitempty"`
-	BandwidthKbps         *float64 `json:"bandwidth_kbps,omitempty"`
-	ConnectionCount       *int64   `json:"connection_count,omitempty"`
+	Type        *string  `json:"type,omitempty"`
+	Status      *string  `json:"status,omitempty"`
+	LoadAverage *float64 `json:"load_average,omitempty"`
+	// QueryTimeMilliseconds is the time it took this app to perform a complete query and process the data, end-to-end, for the latest health query.
+	QueryTimeMilliseconds *int64 `json:"query_time_ms,omitempty"`
+	// HealthTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest health query.
+	HealthTimeMilliseconds *int64 `json:"health_time_ms,omitempty"`
+	// StatTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest stat query.
+	StatTimeMilliseconds *int64 `json:"stat_time_ms,omitempty"`
+	// StatSpanMilliseconds is the length of time between completing the most recent two stat queries. This can be used as a rough gauge of the end-to-end query processing time.
+	StatSpanMilliseconds *int64 `json:"stat_span_ms,omitempty"`
+	// HealthSpanMilliseconds is the length of time between completing the most recent two health queries. This can be used as a rough gauge of the end-to-end query processing time.
+	HealthSpanMilliseconds *int64   `json:"health_span_ms,omitempty"`
+	BandwidthKbps          *float64 `json:"bandwidth_kbps,omitempty"`
+	ConnectionCount        *int64   `json:"connection_count,omitempty"`
 }
 
 // CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.
@@ -433,7 +442,7 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 }
 
 // HandleErr takes an error, and the request type it came from, and logs. It is ok to call with a nil error, in which case this is a no-op.
-func HandleErr(errorCount UintThreadsafe, reqPath string, err error) {
+func HandleErr(errorCount threadsafe.Uint, reqPath string, err error) {
 	if err == nil {
 		return
 	}
@@ -442,7 +451,7 @@ func HandleErr(errorCount UintThreadsafe, reqPath string, err error) {
 }
 
 // WrapErrCode takes the body, err, and log context (errorCount, reqPath). It logs and deals with any error, and returns the appropriate bytes and response code for the `srvhttp`. It notably returns InternalServerError status on any error, for security reasons.
-func WrapErrCode(errorCount UintThreadsafe, reqPath string, body []byte, err error) ([]byte, int) {
+func WrapErrCode(errorCount threadsafe.Uint, reqPath string, body []byte, err error) ([]byte, int) {
 	if err == nil {
 		return body, http.StatusOK
 	}
@@ -458,7 +467,7 @@ func WrapBytes(f func() []byte) http.HandlerFunc {
 }
 
 // WrapErr takes a function which returns bytes and an error, and wraps it as a http.HandlerFunc. If the error is nil, the bytes are written with Status OK. Else, the error is logged, and InternalServerError is returned as the response code. If you need to return a different response code (for example, StatusBadRequest), call wrapRespCode.
-func WrapErr(errorCount UintThreadsafe, f func() ([]byte, error)) http.HandlerFunc {
+func WrapErr(errorCount threadsafe.Uint, f func() ([]byte, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bytes, err := f()
 		_, code := WrapErrCode(errorCount, r.URL.EscapedPath(), bytes, err)
@@ -501,13 +510,13 @@ func srvTRConfig(opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSess
 	return toSession.CRConfigRaw(cdnName)
 }
 
-func makeWrapAll(errorCount UintThreadsafe, unpolledCaches UnpolledCachesThreadsafe) func(http.HandlerFunc) http.HandlerFunc {
+func makeWrapAll(errorCount threadsafe.Uint, unpolledCaches threadsafe.UnpolledCaches) func(http.HandlerFunc) http.HandlerFunc {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return wrapUnpolledCheck(unpolledCaches, errorCount, f)
 	}
 }
 
-func makeCrConfigHandler(wrapper func(http.HandlerFunc) http.HandlerFunc, errorCount UintThreadsafe, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) http.HandlerFunc {
+func makeCrConfigHandler(wrapper func(http.HandlerFunc) http.HandlerFunc, errorCount threadsafe.Uint, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) http.HandlerFunc {
 	return wrapper(WrapErr(errorCount, func() ([]byte, error) {
 		return srvTRConfig(opsConfig, toSession)
 	}))
@@ -529,7 +538,7 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 }
 
 // TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
-func srvCacheStats(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, statHistory StatHistoryThreadsafe) ([]byte, int) {
+func srvCacheStats(params url.Values, errorCount threadsafe.Uint, errContext string, toData todata.TODataThreadsafe, statHistory threadsafe.ResultHistory) ([]byte, int) {
 	filter, err := NewCacheStatFilter(params, toData.Get().ServerTypes)
 	if err != nil {
 		HandleErr(errorCount, errContext, err)
@@ -539,7 +548,7 @@ func srvCacheStats(params url.Values, errorCount UintThreadsafe, errContext stri
 	return WrapErrCode(errorCount, errContext, bytes, err)
 }
 
-func srvDSStats(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, dsStats DSStatsReader) ([]byte, int) {
+func srvDSStats(params url.Values, errorCount threadsafe.Uint, errContext string, toData todata.TODataThreadsafe, dsStats threadsafe.DSStatsReader) ([]byte, int) {
 	filter, err := NewDSStatFilter(params, toData.Get().DeliveryServiceTypes)
 	if err != nil {
 		HandleErr(errorCount, errContext, err)
@@ -549,11 +558,11 @@ func srvDSStats(params url.Values, errorCount UintThreadsafe, errContext string,
 	return WrapErrCode(errorCount, errContext, bytes, err)
 }
 
-func srvEventLog(events EventsThreadsafe) ([]byte, error) {
+func srvEventLog(events threadsafe.Events) ([]byte, error) {
 	return json.Marshal(JSONEvents{Events: events.Get()})
 }
 
-func srvPeerStates(params url.Values, errorCount UintThreadsafe, errContext string, toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int) {
+func srvPeerStates(params url.Values, errorCount threadsafe.Uint, errContext string, toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int) {
 	filter, err := NewPeerStateFilter(params, toData.Get().ServerTypes)
 	if err != nil {
 		HandleErr(errorCount, errContext, err)
@@ -567,7 +576,7 @@ func srvStatSummary() ([]byte, int) {
 	return nil, http.StatusNotImplemented
 }
 
-func srvStats(staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount UintThreadsafe, healthIteration UintThreadsafe, errorCount UintThreadsafe) ([]byte, error) {
+func srvStats(staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount threadsafe.Uint, healthIteration threadsafe.Uint, errorCount threadsafe.Uint) ([]byte, error) {
 	return getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
 }
 
@@ -606,36 +615,32 @@ func srvAPIVersion(staticAppData StaticAppData) []byte {
 func srvAPITrafficOpsURI(opsConfig OpsConfigThreadsafe) []byte {
 	return []byte(opsConfig.Get().Url)
 }
-func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory StatHistoryThreadsafe, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats LastStatsThreadsafe, localCacheStatus CacheAvailableStatusThreadsafe) ([]byte, error) {
-	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
+func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory threadsafe.ResultHistory, healthHistory threadsafe.ResultHistory, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats threadsafe.LastStats, localCacheStatus threadsafe.CacheAvailableStatus) ([]byte, error) {
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 }
 
-func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats LastStatsThreadsafe) []byte {
-	serverTypes := toData.Get().ServerTypes
+func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats threadsafe.LastStats) []byte {
 	kbpsStats := lastStats.Get()
 	sum := float64(0.0)
-	for cache, data := range kbpsStats.Caches {
-		if serverTypes[cache] != enum.CacheTypeEdge {
-			continue
-		}
+	for _, data := range kbpsStats.Caches {
 		sum += data.Bytes.PerSec / ds.BytesPerKilobit
 	}
 	return []byte(fmt.Sprintf("%f", sum))
 }
-func srvAPIBandwidthCapacityKbps(statHistoryThs StatHistoryThreadsafe) []byte {
+func srvAPIBandwidthCapacityKbps(statHistoryThs threadsafe.ResultHistory) []byte {
 	statHistory := statHistoryThs.Get()
 	cap := int64(0)
 	for _, results := range statHistory {
 		if len(results) == 0 {
 			continue
 		}
-		cap += results[0].MaxKbps
+		cap += results[0].PrecomputedData.MaxKbps
 	}
 	return []byte(fmt.Sprintf("%d", cap))
 }
 
 // WrapUnpolledCheck wraps an http.HandlerFunc, returning ServiceUnavailable if any caches are unpolled; else, calling the wrapped func.
-func wrapUnpolledCheck(unpolledCaches UnpolledCachesThreadsafe, errorCount UintThreadsafe, f http.HandlerFunc) http.HandlerFunc {
+func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount threadsafe.Uint, f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if unpolledCaches.Any() {
 			HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled"))
@@ -654,19 +659,20 @@ func MakeDispatchMap(
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	statHistory StatHistoryThreadsafe,
-	dsStats DSStatsReader,
-	events EventsThreadsafe,
+	statHistory threadsafe.ResultHistory,
+	healthHistory threadsafe.ResultHistory,
+	dsStats threadsafe.DSStatsReader,
+	events threadsafe.Events,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
 	lastHealthDurations DurationMapThreadsafe,
-	fetchCount UintThreadsafe,
-	healthIteration UintThreadsafe,
-	errorCount UintThreadsafe,
+	fetchCount threadsafe.Uint,
+	healthIteration threadsafe.Uint,
+	errorCount threadsafe.Uint,
 	toData todata.TODataThreadsafe,
-	localCacheStatus CacheAvailableStatusThreadsafe,
-	lastStats LastStatsThreadsafe,
-	unpolledCaches UnpolledCachesThreadsafe,
+	localCacheStatus threadsafe.CacheAvailableStatus,
+	lastStats threadsafe.LastStats,
+	unpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 ) map[string]http.HandlerFunc {
 
@@ -720,7 +726,7 @@ func MakeDispatchMap(
 			return srvAPITrafficOpsURI(opsConfig)
 		})),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
-			return srvAPICacheStates(toData, statHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
+			return srvAPICacheStates(toData, statHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
 		})),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)
@@ -731,13 +737,65 @@ func MakeDispatchMap(
 	}
 }
 
+// latestResultTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result.
+func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+	results, ok := history[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v has no history", cacheName)
+	}
+	if len(results) == 0 {
+		return 0, fmt.Errorf("cache %v history empty", cacheName)
+	}
+	result := cache.Result{}
+	foundResult := false
+	for _, r := range results {
+		if r.Error == nil {
+			result = r
+			foundResult = true
+			break
+		}
+	}
+	if !foundResult {
+		return 0, fmt.Errorf("cache %v No unerrored result", cacheName)
+	}
+	return int64(result.RequestTime / time.Millisecond), nil
+}
+
+func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheName]time.Duration) (int64, error) {
+	queryTime, ok := lastDurations[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v not in last durations\n", cacheName)
+	}
+	return int64(queryTime / time.Millisecond), nil
+}
+
+// resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
+func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+	results, ok := history[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v has no history", cacheName)
+	}
+	if len(results) == 0 {
+		return 0, fmt.Errorf("cache %v history empty", cacheName)
+	}
+	if len(results) < 2 {
+		return 0, fmt.Errorf("cache %v history only has one result, can't compute span between results", cacheName)
+	}
+
+	latestResult := results[0]
+	penultimateResult := results[1]
+	span := latestResult.Time.Sub(penultimateResult.Time)
+	return int64(span / time.Millisecond), nil
+}
+
 func createCacheStatuses(
 	cacheTypes map[enum.CacheName]enum.CacheType,
 	statHistory map[enum.CacheName][]cache.Result,
+	healthHistory map[enum.CacheName][]cache.Result,
 	lastHealthDurations map[enum.CacheName]time.Duration,
 	cacheStates map[enum.CacheName]peer.IsAvailable,
 	lastStats ds.LastStats,
-	localCacheStatusThreadsafe CacheAvailableStatusThreadsafe,
+	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 ) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statHistory)
 	statii := map[enum.CacheName]CacheStatus{}
@@ -773,13 +831,29 @@ func createCacheStatuses(
 			}
 		}
 
-		var queryTime *int64
-		queryTimeVal, ok := lastHealthDurations[cacheName]
-		if !ok {
-			log.Warnf("cache not in last health durations cache %s\n", cacheName)
-		} else {
-			queryTimeInt := int64(queryTimeVal / time.Millisecond)
-			queryTime = &queryTimeInt
+		healthQueryTime, err := latestQueryTimeMS(cacheName, lastHealthDurations)
+		if err != nil {
+			log.Warnf("Error getting cache %v health query time: %v\n", cacheName, err)
+		}
+
+		statTime, err := latestResultTimeMS(cacheName, statHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v stat result time: %v\n", cacheName, err)
+		}
+
+		healthTime, err := latestResultTimeMS(cacheName, healthHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v health result time: %v\n", cacheName, err)
+		}
+
+		statSpan, err := resultSpanMS(cacheName, statHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v stat span: %v\n", cacheName, err)
+		}
+
+		healthSpan, err := resultSpanMS(cacheName, healthHistory)
+		if err != nil {
+			log.Warnf("Error getting cache %v health span: %v\n", cacheName, err)
 		}
 
 		var kbps *float64
@@ -814,7 +888,18 @@ func createCacheStatuses(
 		}
 
 		cacheTypeStr := string(cacheType)
-		statii[cacheName] = CacheStatus{Type: &cacheTypeStr, LoadAverage: loadAverage, QueryTimeMilliseconds: queryTime, BandwidthKbps: kbps, ConnectionCount: connections, Status: status}
+		statii[cacheName] = CacheStatus{
+			Type:                   &cacheTypeStr,
+			LoadAverage:            loadAverage,
+			QueryTimeMilliseconds:  &healthQueryTime,
+			StatTimeMilliseconds:   &statTime,
+			HealthTimeMilliseconds: &healthTime,
+			StatSpanMilliseconds:   &statSpan,
+			HealthSpanMilliseconds: &healthSpan,
+			BandwidthKbps:          kbps,
+			ConnectionCount:        connections,
+			Status:                 status,
+		}
 	}
 	return statii
 }

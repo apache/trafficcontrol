@@ -159,14 +159,13 @@ function buildRpm () {
 # ---------------------------------------
 function createTarball() {
 	local projDir=$(cd "$1"; pwd)
-	local projName=$(basename $projDir)
+	local projName=incubator-trafficcontrol
 	local version=$(getVersion "$TC_DIR")
-	local buildNum=$(getBuildNumber)
-	local tarball="dist/$projName-$version.$buildNum.tar.gz"
+	local tarball="dist/$projName-$version.tar.gz"
 
 	# Create a BULDNUMBER file and add to tarball
 	local bndir=$(mktemp -d)
-        echo "$buildNum" >"$bndir/BUILD_NUMBER"
+        getBuildNumber >"$bndir/BUILD_NUMBER"
 
         # create the tarball only from files in repo and BUILD_NUMBER
         tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$projName/@" $(git ls-files)

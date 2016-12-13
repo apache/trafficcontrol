@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"crypto/tls"
@@ -31,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	//	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -67,19 +67,19 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	localStates := peer.NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
 	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
-	fetchCount := NewUintThreadsafe()               // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
-	healthIteration := NewUintThreadsafe()
-	errorCount := NewUintThreadsafe()
+	fetchCount := threadsafe.NewUint()              // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
+	healthIteration := threadsafe.NewUint()
+	errorCount := threadsafe.NewUint()
 
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates) // TODO figure out if this is necessary, with the CacheHealthPoller
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -116,7 +116,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		monitorConfig,
 	)
 
-	lastHealthDurations, events, localCacheStatus := StartHealthResultManager(
+	lastHealthDurations, events, localCacheStatus, healthHistory := StartHealthResultManager(
 		cacheHealthHandler.ResultChannel,
 		toData,
 		localStates,
@@ -139,6 +139,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		peerStates,
 		combinedStates,
 		statHistory,
+		healthHistory,
 		lastKbpsStats,
 		dsStats,
 		events,
@@ -158,7 +159,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 }
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
-func healthTickListener(cacheHealthTick <-chan uint64, healthIteration UintThreadsafe) {
+func healthTickListener(cacheHealthTick <-chan uint64, healthIteration threadsafe.Uint) {
 	for i := range cacheHealthTick {
 		healthIteration.Set(i)
 	}

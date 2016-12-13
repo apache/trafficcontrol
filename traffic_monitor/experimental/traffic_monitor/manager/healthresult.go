@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package manager
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"sync"
@@ -30,6 +29,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
@@ -75,28 +75,30 @@ func (o *DurationMapThreadsafe) Set(d DurationMap) {
 // Note this polls the brief stat endpoint from ATS Astats, not the full stats.
 // This poll should be quicker and less computationally expensive for ATS, but
 // doesn't include all stat data needed for e.g. delivery service calculations.4
-// Returns the last health durations, events, and the local cache statuses.
+// Returns the last health durations, events, the local cache statuses, and the health result history.
 func StartHealthResultManager(
 	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
-	statHistory StatHistoryThreadsafe,
+	statHistory threadsafe.ResultHistory,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	fetchCount UintThreadsafe,
-	errorCount UintThreadsafe,
+	fetchCount threadsafe.Uint,
+	errorCount threadsafe.Uint,
 	cfg config.Config,
-) (DurationMapThreadsafe, EventsThreadsafe, CacheAvailableStatusThreadsafe) {
+) (DurationMapThreadsafe, threadsafe.Events, threadsafe.CacheAvailableStatus, threadsafe.ResultHistory) {
 	lastHealthDurations := NewDurationMapThreadsafe()
-	events := NewEventsThreadsafe(cfg.MaxEvents)
-	localCacheStatus := NewCacheAvailableStatusThreadsafe()
+	events := threadsafe.NewEvents(cfg.MaxEvents)
+	localCacheStatus := threadsafe.NewCacheAvailableStatus()
+	healthHistory := threadsafe.NewResultHistory()
 	go healthResultManagerListen(
 		cacheHealthChan,
 		toData,
 		localStates,
 		lastHealthDurations,
 		statHistory,
+		healthHistory,
 		monitorConfig,
 		peerStates,
 		combinedStates,
@@ -106,7 +108,7 @@ func StartHealthResultManager(
 		localCacheStatus,
 		cfg,
 	)
-	return lastHealthDurations, events, localCacheStatus
+	return lastHealthDurations, events, localCacheStatus, healthHistory
 }
 
 func healthResultManagerListen(
@@ -114,18 +116,18 @@ func healthResultManagerListen(
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	lastHealthDurations DurationMapThreadsafe,
-	statHistory StatHistoryThreadsafe,
+	statHistory threadsafe.ResultHistory,
+	healthHistory threadsafe.ResultHistory,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	fetchCount UintThreadsafe,
-	errorCount UintThreadsafe,
-	events EventsThreadsafe,
-	localCacheStatus CacheAvailableStatusThreadsafe,
+	fetchCount threadsafe.Uint,
+	errorCount threadsafe.Uint,
+	events threadsafe.Events,
+	localCacheStatus threadsafe.CacheAvailableStatus,
 	cfg config.Config,
 ) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
-	healthHistory := map[enum.CacheName][]cache.Result{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	for {
 		var results []cache.Result
@@ -191,16 +193,16 @@ func processHealthResult(
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	lastHealthDurationsThreadsafe DurationMapThreadsafe,
-	statHistory StatHistoryThreadsafe,
+	statHistory threadsafe.ResultHistory,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	fetchCount UintThreadsafe,
-	errorCount UintThreadsafe,
-	events EventsThreadsafe,
-	localCacheStatusThreadsafe CacheAvailableStatusThreadsafe,
+	fetchCount threadsafe.Uint,
+	errorCount threadsafe.Uint,
+	events threadsafe.Events,
+	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	lastHealthEndTimes map[enum.CacheName]time.Time,
-	healthHistory map[enum.CacheName][]cache.Result,
+	healthHistory threadsafe.ResultHistory,
 	results []cache.Result,
 	cfg config.Config,
 ) {
@@ -210,11 +212,12 @@ func processHealthResult(
 	toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy()
 	monitorConfigCopy := monitorConfig.Get()
+	healthHistoryCopy := healthHistory.Get().Copy()
 	for _, healthResult := range results {
 		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
-		healthResultHistory := healthHistory[healthResult.ID]
+		healthResultHistory := healthHistoryCopy[healthResult.ID]
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -224,20 +227,19 @@ func processHealthResult(
 		}
 
 		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
-		healthHistory[healthResult.ID] = pruneHistory(append(healthHistory[healthResult.ID], healthResult), maxHistory)
+		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
-		if localStates.Get().Caches[healthResult.ID].IsAvailable != isAvailable {
+		if available, ok := localStates.GetCache(healthResult.ID); !ok || available.IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
+			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
 
-		localCacheStatus[healthResult.ID] = CacheAvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
+		localCacheStatus[healthResult.ID] = cache.AvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
 		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
-		log.Debugf("poll %v %v calculateDeliveryServiceState start\n", healthResult.PollID, time.Now())
-		calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
-		log.Debugf("poll %v %v calculateDeliveryServiceState end\n", healthResult.PollID, time.Now())
 	}
+	calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
+	healthHistory.Set(healthHistoryCopy)
 	localCacheStatusThreadsafe.Set(localCacheStatus)
 	// TODO determine if we should combineCrStates() here
 
@@ -266,13 +268,12 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 		deliveryServiceState.IsAvailable = false
 		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 		for _, server := range deliveryServiceServers[deliveryServiceName] {
-			if states.GetCache(server).IsAvailable {
+			if available, _ := states.GetCache(server); available.IsAvailable {
 				deliveryServiceState.IsAvailable = true
 			} else {
 				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
 			}
 		}
-		deliveryServices[deliveryServiceName] = deliveryServiceState
+		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
 	}
-	states.SetDeliveryServices(deliveryServices)
 }

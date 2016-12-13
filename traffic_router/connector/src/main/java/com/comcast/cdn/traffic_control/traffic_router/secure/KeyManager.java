@@ -17,7 +17,9 @@ package com.comcast.cdn.traffic_control.traffic_router.secure;
 
 import javax.net.ssl.ExtendedSSLSession;
 import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.X509ExtendedKeyManager;
 import javax.net.ssl.X509KeyManager;
 import java.net.Socket;
 import java.security.Principal;
@@ -29,7 +31,7 @@ import java.util.Optional;
 // Uses the in memory CertificateRegistry to provide dynamic key and certificate management for the router
 // The provided default implementation does not allow for the key store to change state
 // once the JVM loads the default classes.
-public class KeyManager implements X509KeyManager {
+public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager {
 	private final static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyManager.class);
 	private final CertificateRegistry certificateRegistry = CertificateRegistry.getInstance();
 
@@ -52,6 +54,16 @@ public class KeyManager implements X509KeyManager {
 	}
 
 	@Override
+	public String chooseEngineServerAlias(final String keyType, final Principal[] issuers, final SSLEngine engine) {
+		if (keyType == null) {
+			return null;
+		}
+
+		final ExtendedSSLSession sslSession = (ExtendedSSLSession) engine.getHandshakeSession();
+		return chooseServerAlias(sslSession);
+	}
+
+	@Override
 	public String chooseServerAlias(final String keyType, final Principal[] principals, final Socket socket) {
 		if (keyType == null) {
 			return null;
@@ -59,6 +71,10 @@ public class KeyManager implements X509KeyManager {
 
 		final SSLSocket sslSocket = (SSLSocket) socket;
 		final ExtendedSSLSession sslSession = (ExtendedSSLSession) sslSocket.getHandshakeSession();
+		return chooseServerAlias(sslSession);
+	}
+
+	private String chooseServerAlias(final ExtendedSSLSession sslSession) {
 		final List<SNIServerName> requestedNames = sslSession.getRequestedServerNames();
 
 		final StringBuilder stringBuilder = new StringBuilder();
@@ -79,15 +95,16 @@ public class KeyManager implements X509KeyManager {
 		if (stringBuilder.length() > 0) {
 			log.warn("No certificate registry aliases matching " + stringBuilder.toString());
 		} else {
-			log.warn("Client " + sslSocket.getRemoteSocketAddress() + " did not send any Server Name Indicators");
+			log.warn("Client " + sslSession.getPeerHost() + " did not send any Server Name Indicators");
 		}
 		return null;
 	}
 
 	@Override
 	public X509Certificate[] getCertificateChain(final String alias) {
-		if (certificateRegistry.getAliases().contains(alias)) {
-			return certificateRegistry.getHandshakeData(alias).getCertificateChain();
+		final HandshakeData handshakeData = certificateRegistry.getHandshakeData(alias);
+		if (handshakeData != null) {
+			return handshakeData.getCertificateChain();
 		}
 
 		log.error("No certificate chain for alias " + alias);
@@ -96,11 +113,13 @@ public class KeyManager implements X509KeyManager {
 
 	@Override
 	public PrivateKey getPrivateKey(final String alias) {
-		if (certificateRegistry.getAliases().contains(alias)) {
-			return certificateRegistry.getHandshakeData(alias).getPrivateKey();
+		final HandshakeData handshakeData = certificateRegistry.getHandshakeData(alias);
+		if (handshakeData != null) {
+			return handshakeData.getPrivateKey();
 		}
 
 		log.error("No private key for alias " + alias);
 		return null;
 	}
+
 }

@@ -19,18 +19,29 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.KeySpec;
 
 @SuppressWarnings("PMD.AbstractNaming")
 public abstract class Pkcs {
 	private final String data;
 	private final PrivateKey privateKey;
+	private PublicKey publicKey;
 	private KeySpec keySpec;
+	private KeySpec publicKeySpec;
 
 	public Pkcs(final String data) throws IOException, GeneralSecurityException {
 		this.data = data;
 		keySpec = toKeySpec(data);
 		privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+	}
+
+	public Pkcs(final String privateData, final String publicData) throws IOException, GeneralSecurityException {
+		this.data = privateData;
+		keySpec = toKeySpec(data);
+		privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+		publicKeySpec = toKeySpec(publicData);
+		publicKey = KeyFactory.getInstance("RSA").generatePublic(publicKeySpec);
 	}
 
 	public String getData() {
@@ -41,12 +52,20 @@ public abstract class Pkcs {
 		return keySpec;
 	}
 
+	public KeySpec getPublicKeySpec() {
+		return publicKeySpec;
+	}
+
 	public void setKeySpec(final KeySpec keySpec) {
 		this.keySpec = keySpec;
 	}
 
 	public PrivateKey getPrivateKey() {
 		return privateKey;
+	}
+
+	public PublicKey getPublicKey() {
+		return publicKey;
 	}
 
 	public abstract String getHeader();

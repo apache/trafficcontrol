@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -17,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<!DOCTYPE html>
+
 <html>
 	<head>
 		<!-- <script src="sorttable.js"></script> -->
@@ -261,8 +263,12 @@ under the License.
 						 row.insertCell(2).id = row.id + "-status";
 						 row.insertCell(3).id = row.id + "-load-average";
 						 row.insertCell(4).id = row.id + "-query-time";
-						 row.insertCell(5).id = row.id + "-bandwidth";
-						 row.insertCell(6).id = row.id + "-connection-count";
+						 row.insertCell(5).id = row.id + "-health-time";
+						 row.insertCell(6).id = row.id + "-stat-time";
+						 row.insertCell(7).id = row.id + "-health-span";
+						 row.insertCell(8).id = row.id + "-stat-span";
+						 row.insertCell(9).id = row.id + "-bandwidth";
+						 row.insertCell(10).id = row.id + "-connection-count";
 						 document.getElementById(row.id + "-server").textContent = server;
 					 }
 
@@ -292,6 +298,18 @@ under the License.
 					 }
 					 if (jdata[server].hasOwnProperty("query_time_ms")) {
 						 document.getElementById("cache-states-" + server + "-query-time").textContent = jdata[server].query_time_ms;
+					 }
+					 if (jdata[server].hasOwnProperty("health_time_ms")) {
+						 document.getElementById("cache-states-" + server + "-health-time").textContent = jdata[server].health_time_ms;
+					 }
+					 if (jdata[server].hasOwnProperty("stat_time_ms")) {
+						 document.getElementById("cache-states-" + server + "-stat-time").textContent = jdata[server].stat_time_ms;
+					 }
+					 if (jdata[server].hasOwnProperty("health_span_ms")) {
+						 document.getElementById("cache-states-" + server + "-health-span").textContent = jdata[server].health_span_ms;
+					 }
+					 if (jdata[server].hasOwnProperty("stat_span_ms")) {
+						 document.getElementById("cache-states-" + server + "-stat-span").textContent = jdata[server].stat_span_ms;
 					 }
 					 if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
 						 document.getElementById("cache-states-" + server + "-bandwidth").textContent = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
@@ -454,6 +472,10 @@ under the License.
 					<th>Status</th>
 					<th>Load Average</th>
 					<th>Query Time (ms)</th>
+					<th>Health Time (ms)</th>
+					<th>Stat Time (ms)</th>
+					<th>Health Span (ms)</th>
+					<th>Stat Span (ms)</th>
 					<th>Bandwidth (mbps)</th>
 					<th>Connection Count</th>
 				</tr>

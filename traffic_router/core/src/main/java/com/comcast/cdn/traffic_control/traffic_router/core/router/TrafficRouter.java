@@ -90,13 +90,14 @@ public class TrafficRouter {
 			final GeolocationService geolocationService6, 
 			final StatTracker statTracker,
 			final TrafficOpsUtils trafficOpsUtils,
-			final FederationRegistry federationRegistry) throws IOException, JSONException {
+			final FederationRegistry federationRegistry,
+			final TrafficRouterManager trafficRouterManager) throws IOException, JSONException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = cr.getConfig().optBoolean("consistent.dns.routing", false); // previous/default behavior
-		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils);
+		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 	}
 
 	public ZoneManager getZoneManager() {

@@ -31,12 +31,12 @@ import static org.hamcrest.Matchers.instanceOf;
 @PrepareForTest({RouterSslImplementation.class, JSSEFactory.class})
 public class RouterSslImplementationTest {
 	@Test
-	public void itReturnsItsName() {
+	public void itReturnsItsName() throws Exception {
 		assertThat(new RouterSslImplementation().getImplementationName(), equalTo("RouterSslImplementation"));
 	}
 
 	@Test
-	public void itReturnsRouterSslServerSocketFactory() {
+	public void itReturnsRouterSslServerSocketFactory() throws Exception {
 		assertThat(new RouterSslImplementation().getServerSocketFactory(), instanceOf(RouterSslServerSocketFactory.class));
 	}
 }

@@ -8,9 +8,9 @@ package main
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package main
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"bytes"
@@ -116,8 +115,11 @@ func getLogWriters(errLoc, warnLoc, infoLoc, debugLoc string) (io.Writer, io.Wri
 	return errW, warnW, infoW, debugW, nil
 }
 
+// NumLockedThreads is the number of threads which will be locked to a single goroutine. Ideally this would be computed, but there's no easy way to do that, and it isn't critical. This only protects against the case where a user has a single core, or manually changes GOMAXPROCS to a small number.
+const NumLockedThreads = 3
+
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU()*3 + NumLockedThreads)
 
 	staticData, err := getStaticAppData()
 	if err != nil {

@@ -1,4 +1,4 @@
-package manager
+package threadsafe
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package manager
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,27 +19,28 @@ package manager
  * under the License.
  */
 
-
 import (
+	"sync"
+
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"sync"
 )
 
-// UnpolledCachesThreadsafe is a structure containing a map of caches which have yet to be polled, which is threadsafe for multiple readers and one writer.
+// UnpolledCaches is a structure containing a map of caches which have yet to be polled, which is threadsafe for multiple readers and one writer.
 // This could be made lock-free, if the performance was necessary
-type UnpolledCachesThreadsafe struct {
+type UnpolledCaches struct {
 	unpolledCaches *map[enum.CacheName]struct{}
 	allCaches      *map[enum.CacheName]struct{}
 	initialized    *bool
 	m              *sync.RWMutex
 }
 
-// NewUnpolledCachesThreadsafe returns a new UnpolledCachesThreadsafe object.
-func NewUnpolledCachesThreadsafe() UnpolledCachesThreadsafe {
+// NewUnpolledCaches returns a new UnpolledCaches object.
+func NewUnpolledCaches() UnpolledCaches {
 	b := false
-	return UnpolledCachesThreadsafe{
+	return UnpolledCaches{
 		m:              &sync.RWMutex{},
 		unpolledCaches: &map[enum.CacheName]struct{}{},
 		allCaches:      &map[enum.CacheName]struct{}{},
@@ -48,14 +49,14 @@ func NewUnpolledCachesThreadsafe() UnpolledCachesThreadsafe {
 }
 
 // UnpolledCaches returns a map of caches not yet polled. Callers MUST NOT modify. If mutation is necessary, copy the map
-func (t *UnpolledCachesThreadsafe) UnpolledCaches() map[enum.CacheName]struct{} {
+func (t *UnpolledCaches) UnpolledCaches() map[enum.CacheName]struct{} {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return *t.unpolledCaches
 }
 
 // setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
-func (t *UnpolledCachesThreadsafe) setUnpolledCaches(v map[enum.CacheName]struct{}) {
+func (t *UnpolledCaches) setUnpolledCaches(v map[enum.CacheName]struct{}) {
 	t.m.Lock()
 	*t.initialized = true
 	*t.unpolledCaches = v
@@ -63,7 +64,7 @@ func (t *UnpolledCachesThreadsafe) setUnpolledCaches(v map[enum.CacheName]struct
 }
 
 // SetNewCaches takes a list of new caches, which may overlap with the existing caches, diffs them, removes any `unpolledCaches` which aren't in the new list, and sets the list of `polledCaches` (which is only used by this func) to the `newCaches`. This is threadsafe with one writer, along with `setUnpolledCaches`.
-func (t *UnpolledCachesThreadsafe) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
+func (t *UnpolledCaches) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	allCaches := copyCaches(*t.allCaches) // not necessary to lock `allCaches`, as the single-writer is the only thing that accesses it.
 	for cache := range unpolledCaches {
@@ -87,7 +88,7 @@ func (t *UnpolledCachesThreadsafe) SetNewCaches(newCaches map[enum.CacheName]str
 }
 
 // Any returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
-func (t *UnpolledCachesThreadsafe) Any() bool {
+func (t *UnpolledCaches) Any() bool {
 	t.m.Lock()
 	defer t.m.Unlock()
 	return !(*t.initialized) || len(*t.unpolledCaches) > 0
@@ -105,20 +106,20 @@ func copyCaches(a map[enum.CacheName]struct{}) map[enum.CacheName]struct{} {
 // SetPolled sets cache which have been polled. This is used to determine when the app has fully started up, and we can start serving. Serving Traffic Router with caches as 'down' which simply haven't been polled yet would be bad. Therefore, a cache is set as 'polled' if it has received different bandwidths from two different ATS ticks, OR if the cache is marked as down (and thus we won't get a bandwidth).
 // This is threadsafe for one writer, along with `Set`.
 // This is fast if there are no unpolled caches. Moreover, its speed is a function of the number of unpolled caches, not the number of caches total.
-func (t *UnpolledCachesThreadsafe) SetPolled(results []cache.Result, lastStatsThreadsafe LastStatsThreadsafe) {
+func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats ds.LastStats) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	numUnpolledCaches := len(unpolledCaches)
 	if numUnpolledCaches == 0 {
 		return
 	}
-	lastStats := lastStatsThreadsafe.Get()
 	for cache := range unpolledCaches {
 	innerLoop:
 		for _, result := range results {
 			if result.ID != cache {
 				continue
 			}
-			if !result.Available || len(result.Errors) > 0 {
+
+			if !result.Available || result.Error != nil {
 				log.Infof("polled %v\n", cache)
 				delete(unpolledCaches, cache)
 				break innerLoop
