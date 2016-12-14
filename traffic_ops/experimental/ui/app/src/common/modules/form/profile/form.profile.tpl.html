@@ -24,6 +24,7 @@ under the License.
             <li class="active">{{profileName}}</li>
         </ol>
         <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="viewServers()">Servers</button>
             <button class="btn btn-default" ng-click="viewParams()">Parameters</button>
 
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">

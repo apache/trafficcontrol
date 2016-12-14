@@ -126,6 +126,10 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
         $location.path($location.path() + '/servers');
     };
 
+    $scope.viewRegexes = function() {
+        $location.path($location.path() + '/regexes');
+    };
+
     $scope.cachegroupHealth = function() {
         alert('not hooked up yet: cachegroupHealth for DS');
     };

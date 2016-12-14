@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormRegionController = function(region, $scope, formUtils, stringUtils, locationUtils, divisionService) {
+var FormRegionController = function(region, $scope, $location, formUtils, stringUtils, locationUtils, divisionService) {
 
     var getDivisions = function() {
         divisionService.getDivisions()
@@ -34,6 +34,10 @@ var FormRegionController = function(region, $scope, formUtils, stringUtils, loca
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.viewPhysLocations = function() {
+        $location.path($location.path() + '/phys-locations');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -47,5 +51,5 @@ var FormRegionController = function(region, $scope, formUtils, stringUtils, loca
 
 };
 
-FormRegionController.$inject = ['region', '$scope', 'formUtils', 'stringUtils', 'locationUtils', 'divisionService'];
+FormRegionController.$inject = ['region', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'divisionService'];
 module.exports = FormRegionController;
