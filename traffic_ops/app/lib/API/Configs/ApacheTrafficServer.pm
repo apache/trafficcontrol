@@ -31,15 +31,9 @@ use File::Path;
 
 sub ort {
 	my $self     = shift;
-	my $action   = $self->param('action');
 	my $id       = $self->param('id');
 	my $filename = 'ort';
 	my $scope    = 'server';
-
-	if ( !defined($action) ) { $action = "fetch"; }
-	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
-		return $self->alert("Invalid action.");
-	}
 
 	##check user access
 	if ( !&is_oper($self) ) {
@@ -54,16 +48,6 @@ sub ort {
 
 	my $data_obj;
 	my $host_name = $server_obj->host_name;
-
-	if ( $action eq "fetch" ) {
-		my $file_contents = get_file( $scope, $host_name, $filename );
-		if ( !defined($file_contents) ) {
-			$action = 'db';
-		}
-		else {
-			return $self->render( text => $file_contents, format => 'txt' );
-		}
-	}
 
 	my %condition = ( 'me.host_name' => $host_name );
 	my $rs_profile = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
@@ -95,26 +79,14 @@ sub ort {
 
 	my $file_contents = encode_json($data_obj);
 
-	if ( $action eq "publish" ) {
-		my $result = publish_file( $scope, $host_name, $filename, $file_contents );
-		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
-		return $self->alert("Error - Unable to publish $filename.");
-	}
 	return $self->render( text => $file_contents, format => 'txt' );
 }
 
 sub get_server_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
-	my $action   = $self->param('action');
 	my $id       = $self->param('id');
 	my $scope    = $self->get_scope($filename);
-
-	## fetch is the default action. ?action=db and ?action=publish can also be used.
-	if ( !defined($action) ) { $action = "fetch"; }
-	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
-		return $self->alert("Invalid action.");
-	}
 
 	##check user access
 	if ( !&is_oper($self) ) {
@@ -134,49 +106,30 @@ sub get_server_config {
 
 	my $file_contents;
 
-	#If we're fetching and the file exists, return it from disk.  If not, switch action to DB mode and return it live from the DB.
-	if ( $action eq "fetch" ) {
-		$file_contents = get_file( $scope, $server_obj->host_name, $filename );
-		if ( !defined($file_contents) ) {
-			$action = 'db';
-		}
-		else {
-			return $self->render( text => $file_contents, format => 'txt' );
-		}
-	}
-
-	if ( $filename eq "12M_facts") { $file_contents = $self->facts( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "ip_allow.config") { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "parent.config") { $file_contents = $self->parent_dot_config( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "records.config") { $file_contents = $self->generic_server_config( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "remap.config") { $file_contents = $self->remap_dot_config( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "hosting.config") { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "cache.config") { $file_contents = $self->cache_dot_config( $server_obj, $filename, $action, $scope ); }
+	if ( $filename eq "12M_facts") { $file_contents = $self->facts( $server_obj, $filename, $scope ); }
+	elsif ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "ip_allow.config") { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "parent.config") { $file_contents = $self->parent_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "records.config") { $file_contents = $self->generic_server_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "remap.config") { $file_contents = $self->remap_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "hosting.config") { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "cache.config") { $file_contents = $self->cache_dot_config( $server_obj, $filename, $scope ); }
 	elsif ( $filename eq "packages") {
-		$file_contents = $self->get_package_versions( $server_obj, $filename, $action, $scope );
+		$file_contents = $self->get_package_versions( $server_obj, $filename, $scope );
 		$file_contents = encode_json($file_contents);
 	}
-	elsif ( $filename eq "chkconfig") { $file_contents = $self->get_chkconfig( $server_obj, $filename, $action, $scope ); $file_contents = encode_json($file_contents); }
+	elsif ( $filename eq "chkconfig") { $file_contents = $self->get_chkconfig( $server_obj, $filename, $scope ); $file_contents = encode_json($file_contents); }
 	else { 
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
 		if (!defined($file_param) ) {
 			return $self->not_found();
 		}
-		$file_contents = $self->take_and_bake_server( $server_obj, $filename, $action, $scope );
+		$file_contents = $self->take_and_bake_server( $server_obj, $filename, $scope );
 	}
 
 	#if we get an empty file, just send back an error.
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
-	}
-
-	#if the action was publish, attempt to write the file and return the success or failure.
-	my $result;
-	if ( $action eq "publish" ) {
-		$result = publish_file( $scope, $server_obj->host_name, $filename, $file_contents );
-		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
-		return $self->alert("Error - Unable to publish $filename.");
 	}
 
 	#return the file contents for fetch and db actions.
@@ -186,20 +139,14 @@ sub get_server_config {
 sub get_cdn_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
-	my $action   = $self->param('action');
 	my $id       = $self->param('id');
 	my $scope    = $self->get_scope($filename);
-
-	if ( !defined($action) ) { $action = "fetch"; }
-	if ( ( $action ne "fetch" ) && ( $action ne "db" ) && ( $action ne "publish" ) ) {
-		return $self->alert("Invalid action.");
-	}
 
 	##check user access
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
-
+print STDERR "well i'm here anyway.";
 	##check the scope - is this the correct route?
 	if ( $scope ne 'cdn' ) {
 		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
@@ -210,54 +157,31 @@ sub get_cdn_config {
 	if ( !defined($cdn_obj) ) {
 		return $self->not_found();
 	}
-
+	
 	my $file_contents;
 
-	if ( $action eq "fetch" ) {
-		$file_contents = get_file( $scope, $cdn_obj->name, $filename );
-		if ( !defined($file_contents) ) {
-			$action = 'db';
-		}
-		else {
-			return $self->render( text => $file_contents, format => 'txt' );
-		}
-	}
-
-	if ( $filename eq "bg_fetch.config" ) { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename =~ /cacheurl.*\.config/ ) { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename =~ /hdr_rw_.*\.config/ ) { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename =~ /regex_remap_.*\.config/ ) { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $action, $scope ); }
-	elsif ( $filename =~ /url_sig_.*\.config/ ) {
-		if ( $action eq "publish" ) {
-			return $self->forbidden();
-		}
-		$file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $action, $scope );
-	}
+	if ( $filename eq "bg_fetch.config" ) { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename =~ /cacheurl.*\.config/ ) { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename =~ /hdr_rw_.*\.config/ ) { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename =~ /regex_remap_.*\.config/ ) { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $scope ); }
+	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $scope ); }
 	else { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
 	}
 
-	if ( $action eq "publish" ) {
-		my $result = publish_file( $scope, $cdn_obj->name, $filename, $file_contents );
-		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
-		return $self->alert("Error - Unable to publish $filename.");
-	}
 	return $self->render( text => $file_contents, format => 'txt' );
 }
 
 sub get_profile_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
-	my $action   = $self->param('action');
 	my $id       = $self->param('id');
 	my $scope    = $self->get_scope($filename);
-
-	if ( !defined($action) ) { $action = "fetch"; }
 
 	##check user access
 	if ( !&is_oper($self) ) {
@@ -277,82 +201,27 @@ sub get_profile_config {
 
 	my $file_contents;
 
-	if ( $action eq "fetch" ) {
-		$file_contents = get_file( $scope, $profile_obj->name, $filename );
-		if ( !defined($file_contents) ) {
-			$action = 'db';
-		}
-		else {
-			return $self->render( text => $file_contents, format => 'txt' );
-		}
-	}
-
-	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $action, $scope ); }
-	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $action, $scope ); }
+	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $scope ); }
 	else { 
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
 		if (!defined($file_param) ) {
 			return $self->not_found();
 		}
-		$file_contents = $self->take_and_bake_profile( $profile_obj, $filename, $action, $scope );
+		$file_contents = $self->take_and_bake_profile( $profile_obj, $filename, $scope );
 	 }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
 	}
 
-	if ( $action eq "publish" ) {
-		my $result = publish_file( $scope, $profile_obj->name, $filename, $file_contents );
-		if ( !defined($result) ) { return $self->success("Success! $filename has been published."); }
-		return $self->alert("Error - Unable to publish $filename.");
-	}
 	return $self->render( text => $file_contents, format => 'txt' );
-}
-
-sub get_file {
-	my $scope    = shift;
-	my $name     = shift;
-	my $filename = shift;
-	my $path     = "public/ATS-Config-Snapshots/$scope/$name/$filename";
-
-	open my $fh, '<', $path;
-	if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-		return;
-	}
-	my $file_contents = do { local $/; <$fh> };
-	return $file_contents;
-}
-
-sub publish_file {
-	my $scope         = shift;
-	my $name          = shift;
-	my $filename      = shift;
-	my $file_contents = shift;
-
-	my $path = "public/ATS-Config-Snapshots/$scope/$name/$filename";
-	my $dir  = dirname($path);
-
-	if ( !-d $dir ) {
-		print "$dir does not exist; attempting to create\n";
-		mkpath($dir);
-	}
-
-	open my $fh, '>', $path;
-	if ( $! && $! !~ m/Inappropriate ioctl for device/ ) {
-		return 1;
-	}
-
-	print $fh $file_contents;
-	close($fh);
-	return;
-
-	#return $path . " has been published.";
 }
 
 my $separator ||= {
@@ -522,7 +391,6 @@ sub profile_param_value {
 sub cdn_data {
 	my $self = shift;
 	my $id   = shift;
-
 	my $cdn_obj;
 
 	#DG# CODE NEEDED: will resultset('Profile') work like i think it will here?
@@ -539,7 +407,6 @@ sub cdn_data {
 sub cdn_ds_data {
 	my $self = shift;
 	my $id   = shift;
-
 	my $dsinfo;
 
 	my $rs;
@@ -654,7 +521,6 @@ sub cdn_ds_data {
 sub ds_data {
 	my $self       = shift;
 	my $server_obj = shift;
-
 	my $dsinfo;
 
 	$dsinfo->{host_name}   = $server_obj->host_name;
@@ -783,9 +649,7 @@ sub facts {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
-
 	my $text = $self->header_comment( $server_obj->host_name );
 	$text .= "profile:" . $server_obj->profile->name . "\n";
 
@@ -796,7 +660,6 @@ sub take_and_bake_server {
 	my $self = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $data   = $self->param_data( $server_obj, $filename );
@@ -811,7 +674,6 @@ sub take_and_bake_profile {
 	my $self = shift;
 	my $profile_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $data   = $self->profile_param_data( $profile_obj->id, $filename );
@@ -826,7 +688,6 @@ sub generic_profile_config {
 	my $self        = shift;
 	my $profile_obj = shift;
 	my $filename    = shift;
-	my $action      = shift;
 	my $scope       = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
@@ -846,7 +707,6 @@ sub generic_server_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
@@ -866,7 +726,6 @@ sub ats_dot_rules {
 	my $self        = shift;
 	my $profile_obj = shift;
 	my $filename    = shift;
-	my $action      = shift;
 	my $scope       = shift;
 
 	my $text = $self->header_comment( $profile_obj->name );
@@ -894,7 +753,6 @@ sub drop_qstring_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
 	my $filename    = shift;
-	my $action      = shift;
 	my $scope       = shift;
 
 	my $text = $self->header_comment( $profile_obj->name );
@@ -915,7 +773,6 @@ sub logs_xml_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
 	my $filename    = shift;
-	my $action      = shift;
 	my $scope       = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
@@ -965,7 +822,6 @@ sub storage_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
 	my $filename    = shift;
-	my $action      = shift;
 	my $scope       = shift;
 
 	my $text = $self->header_comment( $profile_obj->name );
@@ -994,7 +850,6 @@ sub to_ext_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $text = $self->header_comment( $server_obj->host_name );
@@ -1042,7 +897,6 @@ sub volume_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
 	my $filename    = shift;
-	my $action      = shift;
 	my $scope       = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "storage.config" );
@@ -1073,7 +927,6 @@ sub bg_fetch_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
@@ -1086,7 +939,6 @@ sub header_rewrite_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text      = $self->header_comment( $cdn_obj->name );
@@ -1113,7 +965,6 @@ sub cacheurl_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
@@ -1151,7 +1002,6 @@ sub regex_remap_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
@@ -1171,7 +1021,6 @@ sub regex_revalidate_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text = "# DO NOT EDIT - Generated for CDN " . $cdn_obj->name . " by " . &name_version_string($self) . " on " . `date`;
@@ -1247,7 +1096,6 @@ sub set_dscp_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
@@ -1267,7 +1115,6 @@ sub ssl_multicert_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
@@ -1302,7 +1149,6 @@ sub url_sig_dot_config {
 	my $self     = shift;
 	my $cdn_obj  = shift;
 	my $filename = shift;
-	my $action   = shift;
 	my $scope    = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
@@ -1335,7 +1181,6 @@ sub cache_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $text = $self->header_comment( $server_obj->host_name );
@@ -1356,7 +1201,6 @@ sub hosting_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $storage_data = $self->param_data( $server_obj, "storage.config" );
@@ -1541,7 +1385,6 @@ sub ip_allow_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $text = $self->header_comment( $server_obj->host_name );
@@ -1688,7 +1531,6 @@ sub parent_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $data;
@@ -1890,7 +1732,6 @@ sub remap_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 	my $data;
 
@@ -2068,7 +1909,6 @@ sub get_package_versions {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $host_name = $server_obj->host_name;
@@ -2081,7 +1921,6 @@ sub get_chkconfig {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	my $action     = shift;
 	my $scope      = shift;
 
 	my $host_name = $server_obj->host_name;
