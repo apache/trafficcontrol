@@ -19,8 +19,8 @@
 
 var ServerService = function(Restangular, locationUtils, messageModel) {
 
-    this.getServers = function(dsId) {
-        return Restangular.all('servers').getList({ dsId: dsId });
+    this.getServers = function(dsId, profileId) {
+        return Restangular.all('servers').getList({ dsId: dsId, profileId: profileId });
     };
 
     this.getServer = function(id) {

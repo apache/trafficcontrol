@@ -17,12 +17,12 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, locationService, profileService, statusService, typeService) {
+var FormServerController = function(server, $scope, $location, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
 
-    var getLocations = function() {
-        locationService.getLocations()
+    var getPhysLocations = function() {
+        physLocationService.getPhysLocations()
             .then(function(result) {
-                $scope.locations = result;
+                $scope.physLocations = result;
             });
     };
 
@@ -132,7 +132,7 @@ var FormServerController = function(server, $scope, $location, formUtils, string
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
     var init = function () {
-        getLocations();
+        getPhysLocations();
         getCacheGroups();
         getTypes();
         getCDNs();
@@ -143,5 +143,5 @@ var FormServerController = function(server, $scope, $location, formUtils, string
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'locationService', 'profileService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
 module.exports = FormServerController;

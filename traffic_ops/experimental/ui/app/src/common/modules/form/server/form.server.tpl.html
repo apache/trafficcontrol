@@ -64,13 +64,13 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(serverForm.cdn, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm.location), 'has-feedback': hasError(serverForm.location)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Location *</label>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.physLocation), 'has-feedback': hasError(serverForm.physLocation)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Phys Location *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="location" name="location" class="form-control" ng-model="server.physLocationId" ng-options="location.id as location.name for location in locations" required>
+                    <select id="physLocation" name="physLocation" class="form-control" ng-model="server.physLocationId" ng-options="physLocation.id as physLocation.name for physLocation in physLocations" required>
                         <option value="">Select...</option>
                     </select>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.location, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.physLocation, 'required')">Required</small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.cachegroup), 'has-feedback': hasError(serverForm.cachegroup)}">

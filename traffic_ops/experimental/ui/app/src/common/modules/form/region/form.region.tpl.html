@@ -23,6 +23,9 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/regions')">Regions</a></li>
             <li class="active">{{regionName}}</li>
         </ol>
+        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="viewPhysLocations()">Phys Locations</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
