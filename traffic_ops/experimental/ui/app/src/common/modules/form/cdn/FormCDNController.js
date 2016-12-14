@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUtils) {
+var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils, locationUtils) {
 
     $scope.cdn = cdn;
 
@@ -56,6 +56,14 @@ var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUt
         alert('not hooked up yet: manageSnapshots for CDN');
     };
 
+    $scope.viewServers = function() {
+        $location.path($location.path() + '/servers');
+    };
+
+    $scope.viewDeliveryServices = function() {
+        $location.path($location.path() + '/delivery-services');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -64,5 +72,5 @@ var FormCDNController = function(cdn, $scope, formUtils, stringUtils, locationUt
 
 };
 
-FormCDNController.$inject = ['cdn', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
+FormCDNController.$inject = ['cdn', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormCDNController;
