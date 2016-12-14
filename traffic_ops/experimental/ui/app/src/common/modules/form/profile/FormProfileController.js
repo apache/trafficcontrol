@@ -31,6 +31,10 @@ var FormProfileController = function(profile, $scope, $location, formUtils, stri
         $location.path($location.path() + '/parameters');
     };
 
+    $scope.viewServers = function() {
+        $location.path($location.path() + '/servers');
+    };
+
     $scope.cloneProfile = function() {
         alert('not hooked up yet: cloneProfile');
     };
