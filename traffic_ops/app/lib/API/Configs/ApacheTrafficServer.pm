@@ -29,6 +29,7 @@ use URI;
 use File::Basename;
 use File::Path;
 
+#Sub to generate ORT json
 sub ort {
 	my $self     = shift;
 	my $id       = $self->param('id');
@@ -82,6 +83,7 @@ sub ort {
 	return $self->render( text => $file_contents, format => 'txt' );
 }
 
+#entry point for server scope api route.
 sub get_server_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
@@ -104,8 +106,8 @@ sub get_server_config {
 		return $self->not_found();
 	}
 
+	#generate the config file using the appropriate function
 	my $file_contents;
-
 	if ( $filename eq "12M_facts") { $file_contents = $self->facts( $server_obj, $filename, $scope ); }
 	elsif ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $scope ); }
 	elsif ( $filename eq "ip_allow.config") { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $scope ); }
@@ -136,6 +138,7 @@ sub get_server_config {
 	return $self->render( text => $file_contents, format => 'txt' );
 }
 
+#entry point for cdn scope api route.
 sub get_cdn_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
@@ -157,9 +160,9 @@ print STDERR "well i'm here anyway.";
 	if ( !defined($cdn_obj) ) {
 		return $self->not_found();
 	}
-	
-	my $file_contents;
 
+	#generate the config file using the appropriate function
+	my $file_contents;
 	if ( $filename eq "bg_fetch.config" ) { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename, $scope ); }
 	elsif ( $filename =~ /cacheurl.*\.config/ ) { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename, $scope ); }
 	elsif ( $filename =~ /hdr_rw_.*\.config/ ) { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename, $scope ); }
@@ -167,7 +170,6 @@ print STDERR "well i'm here anyway.";
 	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $scope ); }
 	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $scope ); }
 	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $scope ); }
-	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $cdn_obj, $filename, $scope ); }
 	else { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
@@ -177,6 +179,7 @@ print STDERR "well i'm here anyway.";
 	return $self->render( text => $file_contents, format => 'txt' );
 }
 
+#entry point for profile scope api route.
 sub get_profile_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
@@ -199,8 +202,8 @@ sub get_profile_config {
 		return $self->not_found();
 	}
 
+	#generate the config file using the appropriate function
 	my $file_contents;
-
 	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename, $scope ); }
 	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename, $scope ); }
@@ -208,6 +211,7 @@ sub get_profile_config {
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename, $scope ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
+	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename, $scope ); }
 	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $scope ); }
 	else { 
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
@@ -232,6 +236,8 @@ my $separator ||= {
 	"astats.config"   => "=",
 };
 
+#identify the correct scope for each filename.  if not found, returns server scope as any 
+#undefined parameter based configs are designed with server scope using the take-and-bake sub.
 sub get_scope {
 	my $self       = shift;
 	my $fname      = shift;
@@ -254,6 +260,7 @@ sub get_scope {
 	elsif ( $fname eq "plugin.config" ) { $scope = 'profile' }
 	elsif ( $fname eq "storage.config" ) { $scope = 'profile' }
 	elsif ( $fname eq "sysctl.conf" ) { $scope = 'profile' }
+	elsif ( $fname =~ /url_sig_.*\.config/ ) { $scope = 'profile' }
 	elsif ( $fname eq "volume.config" ) { $scope = 'profile' }
 	elsif ( $fname eq "bg_fetch.config" ) { $scope = 'cdn' }
 	elsif ( $fname =~ /cacheurl.*\.config/ ) { $scope = 'cdn' }
@@ -262,7 +269,6 @@ sub get_scope {
 	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdn' }
 	elsif ( $fname =~ /set_dscp_.*\.config/ ) { $scope = 'cdn' }
 	elsif ( $fname eq "ssl_multicert.config" ) { $scope = 'cdn' }
-	elsif ( $fname =~ /url_sig_.*\.config/ ) { $scope = 'cdn' }
 	else {  
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
 		if (!defined($scope) ) {
@@ -274,6 +280,7 @@ sub get_scope {
 	return $scope;
 }
 
+#takes the server name or ID and turns it into a server object that can reference either, making either work for the request.
 sub server_data {
 	my $self = shift;
 	my $id   = shift;
@@ -291,6 +298,7 @@ sub server_data {
 	return $server_obj;
 }
 
+#takes the profile name or ID and turns it into a server object that can reference either, making either work for the request.
 sub profile_data {
 	my $self = shift;
 	my $id   = shift;
@@ -307,6 +315,23 @@ sub profile_data {
 	return $profile_obj;
 }
 
+#takes the server name or ID and turns it into a server object that can reference either, making either work for the request.
+sub cdn_data {
+	my $self = shift;
+	my $id   = shift;
+	my $cdn_obj;
+
+	if ( $id =~ /^\d+$/ ) {
+		$cdn_obj = $self->db->resultset('Cdn')->search( { id => $id } )->single;
+	}
+	else {
+		$cdn_obj = $self->db->resultset('Cdn')->search( { name => $id } )->single;
+	}
+
+	return $cdn_obj;
+}
+
+#generates the comment at the top of config files.
 sub header_comment {
 	my $self = shift;
 	my $name = shift;
@@ -315,6 +340,7 @@ sub header_comment {
 	return $text;
 }
 
+#retrieves parameter data for a specific server by searching by the server's assigned profile.
 sub param_data {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -345,6 +371,7 @@ sub param_data {
 	return $data;
 }
 
+#retrieves parameter data for a specific profile by searching by the profile id.
 sub profile_param_data {
 	my $self     = shift;
 	my $profile  = shift;
@@ -372,6 +399,7 @@ sub profile_param_data {
 	return $data;
 }
 
+#searches for the a specific parameter by name in a specific profile by profile ID and returns the data.
 sub profile_param_value {
 	my $self       = shift;
 	my $pid        = shift;
@@ -388,22 +416,7 @@ sub profile_param_value {
 	return ( defined $param ? $param->parameter->value : $default );
 }
 
-sub cdn_data {
-	my $self = shift;
-	my $id   = shift;
-	my $cdn_obj;
-
-	#DG# CODE NEEDED: will resultset('Profile') work like i think it will here?
-	if ( $id =~ /^\d+$/ ) {
-		$cdn_obj = $self->db->resultset('Cdn')->search( { id => $id } )->single;
-	}
-	else {
-		$cdn_obj = $self->db->resultset('Cdn')->search( { name => $id } )->single;
-	}
-
-	return $cdn_obj;
-}
-
+#gets the delivery service data for an entire CDN.
 sub cdn_ds_data {
 	my $self = shift;
 	my $id   = shift;
@@ -518,6 +531,7 @@ sub cdn_ds_data {
 	return $dsinfo;
 }
 
+#gets the delivery service data for a specific server.
 sub ds_data {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -645,6 +659,7 @@ sub ds_data {
 	return $dsinfo;
 }
 
+#generates the 12m_facts file
 sub facts {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -656,6 +671,7 @@ sub facts {
 	return $text;
 }
 
+#generates a generic config file based on a server and parameters which match the supplied filename.
 sub take_and_bake_server {
 	my $self = shift;
 	my $server_obj = shift;
@@ -670,6 +686,7 @@ sub take_and_bake_server {
 	return $text;
 }
 
+#generates a generic config file based on a profile and parameters which match the supplied filename.
 sub take_and_bake_profile {
 	my $self = shift;
 	my $profile_obj = shift;
@@ -684,6 +701,8 @@ sub take_and_bake_profile {
 	return $text;
 }
 
+#generates a generic config file based on a profile and parameters which match the supplied filename.
+#differs from take and bake in that it uses predefined separators.
 sub generic_profile_config {
 	my $self        = shift;
 	my $profile_obj = shift;
@@ -703,6 +722,8 @@ sub generic_profile_config {
 	return $text;
 }
 
+#generates a generic config file based on a server and parameters which match the supplied filename.
+#differs from take and bake in that it uses predefined separators.
 sub generic_server_config {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -721,6 +742,7 @@ sub generic_server_config {
 
 	return $text;
 }
+
 
 sub ats_dot_rules {
 	my $self        = shift;
@@ -1147,13 +1169,13 @@ sub ssl_multicert_dot_config {
 
 sub url_sig_dot_config {
 	my $self     = shift;
-	my $cdn_obj  = shift;
+	my $profile_obj  = shift;
 	my $filename = shift;
 	my $scope    = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
-	my $data = $self->profile_param_data( $cdn_obj, $filename );
-	my $text = $self->header_comment( $cdn_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, $filename );
+	my $text = $self->header_comment( $profile_obj->name );
 
 	my $response_container = $self->riak_get( URL_SIG_KEYS_BUCKET, $filename );
 	my $response = $response_container->{response};
