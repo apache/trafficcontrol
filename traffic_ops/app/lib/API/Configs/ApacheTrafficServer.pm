@@ -97,7 +97,7 @@ sub get_server_config {
 
 	##check the scope - is this the correct route?
 	if ( $scope ne 'server' ) {
-		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
+		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
 	##verify that a valid server ID has been used
@@ -108,22 +108,25 @@ sub get_server_config {
 
 	#generate the config file using the appropriate function
 	my $file_contents;
-	if ( $filename eq "12M_facts") { $file_contents = $self->facts( $server_obj, $filename, $scope ); }
+	if ( $filename eq "12M_facts" ) { $file_contents = $self->facts( $server_obj, $filename, $scope ); }
 	elsif ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "ip_allow.config") { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "parent.config") { $file_contents = $self->parent_dot_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "records.config") { $file_contents = $self->generic_server_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "remap.config") { $file_contents = $self->remap_dot_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "hosting.config") { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "cache.config") { $file_contents = $self->cache_dot_config( $server_obj, $filename, $scope ); }
-	elsif ( $filename eq "packages") {
+	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_server_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "cache.config" ) { $file_contents = $self->cache_dot_config( $server_obj, $filename, $scope ); }
+	elsif ( $filename eq "packages" ) {
 		$file_contents = $self->get_package_versions( $server_obj, $filename, $scope );
 		$file_contents = encode_json($file_contents);
 	}
-	elsif ( $filename eq "chkconfig") { $file_contents = $self->get_chkconfig( $server_obj, $filename, $scope ); $file_contents = encode_json($file_contents); }
-	else { 
+	elsif ( $filename eq "chkconfig" ) {
+		$file_contents = $self->get_chkconfig( $server_obj, $filename, $scope );
+		$file_contents = encode_json($file_contents);
+	}
+	else {
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
-		if (!defined($file_param) ) {
+		if ( !defined($file_param) ) {
 			return $self->not_found();
 		}
 		$file_contents = $self->take_and_bake_server( $server_obj, $filename, $scope );
@@ -149,10 +152,10 @@ sub get_cdn_config {
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
-print STDERR "well i'm here anyway.";
+	print STDERR "well i'm here anyway.";
 	##check the scope - is this the correct route?
 	if ( $scope ne 'cdn' ) {
-		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
+		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
 	##verify that a valid cdn ID has been used
@@ -170,7 +173,7 @@ print STDERR "well i'm here anyway.";
 	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename, $scope ); }
 	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename, $scope ); }
 	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename, $scope ); }
-	else { return $self->not_found(); }
+	else                                          { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
@@ -193,7 +196,7 @@ sub get_profile_config {
 
 	##check the scope - is this the correct route?
 	if ( $scope ne 'profile' ) {
-		return $self->alert("Error - incorrect file scope for route used.  Please use the " . $scope . " route.");
+		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
 	##verify that a valid profile ID has been used
@@ -213,13 +216,13 @@ sub get_profile_config {
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename, $scope ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename, $scope ); }
 	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename, $scope ); }
-	else { 
+	else {
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
-		if (!defined($file_param) ) {
+		if ( !defined($file_param) ) {
 			return $self->not_found();
 		}
 		$file_contents = $self->take_and_bake_profile( $profile_obj, $filename, $scope );
-	 }
+	}
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
@@ -236,43 +239,43 @@ my $separator ||= {
 	"astats.config"   => "=",
 };
 
-#identify the correct scope for each filename.  if not found, returns server scope as any 
+#identify the correct scope for each filename.  if not found, returns server scope as any
 #undefined parameter based configs are designed with server scope using the take-and-bake sub.
 sub get_scope {
-	my $self       = shift;
-	my $fname      = shift;
+	my $self  = shift;
+	my $fname = shift;
 	my $scope;
 
-	if ( $fname eq "12M_facts" ) { $scope = 'server' }
-	elsif ( $fname eq "ip_allow.config" ) { $scope = 'server' }
-	elsif ( $fname eq "parent.config" ) { $scope = 'server' }
-	elsif ( $fname eq "records.config" ) { $scope = 'server' }
-	elsif ( $fname eq "remap.config" ) { $scope = 'server' }
-	elsif ( $fname =~ /to_ext_.*\.config/ ) { $scope = 'server' }
-	elsif ( $fname eq "hosting.config" ) { $scope = 'server' }
-	elsif ( $fname eq "cache.config" ) { $scope = 'server' }
-	elsif ( $fname eq "packages" ) { $scope = 'server' }
-	elsif ( $fname eq "chkconfig" ) { $scope = 'server' }
-	elsif ( $fname eq "50-ats.rules" ) { $scope = 'profile' }
-	elsif ( $fname eq "astats.config" ) { $scope = 'profile' }
-	elsif ( $fname eq "drop_qstring.config" ) { $scope = 'profile' }
-	elsif ( $fname eq "logs_xml.config" ) { $scope = 'profile' }
-	elsif ( $fname eq "plugin.config" ) { $scope = 'profile' }
-	elsif ( $fname eq "storage.config" ) { $scope = 'profile' }
-	elsif ( $fname eq "sysctl.conf" ) { $scope = 'profile' }
-	elsif ( $fname =~ /url_sig_.*\.config/ ) { $scope = 'profile' }
-	elsif ( $fname eq "volume.config" ) { $scope = 'profile' }
-	elsif ( $fname eq "bg_fetch.config" ) { $scope = 'cdn' }
-	elsif ( $fname =~ /cacheurl.*\.config/ ) { $scope = 'cdn' }
-	elsif ( $fname =~ /hdr_rw_.*\.config/ ) { $scope = 'cdn' }
-	elsif ( $fname =~ /regex_remap_.*\.config/ ) { $scope = 'cdn' }
+	if    ( $fname eq "12M_facts" )               { $scope = 'server' }
+	elsif ( $fname eq "ip_allow.config" )         { $scope = 'server' }
+	elsif ( $fname eq "parent.config" )           { $scope = 'server' }
+	elsif ( $fname eq "records.config" )          { $scope = 'server' }
+	elsif ( $fname eq "remap.config" )            { $scope = 'server' }
+	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'server' }
+	elsif ( $fname eq "hosting.config" )          { $scope = 'server' }
+	elsif ( $fname eq "cache.config" )            { $scope = 'server' }
+	elsif ( $fname eq "packages" )                { $scope = 'server' }
+	elsif ( $fname eq "chkconfig" )               { $scope = 'server' }
+	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profile' }
+	elsif ( $fname eq "astats.config" )           { $scope = 'profile' }
+	elsif ( $fname eq "drop_qstring.config" )     { $scope = 'profile' }
+	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profile' }
+	elsif ( $fname eq "plugin.config" )           { $scope = 'profile' }
+	elsif ( $fname eq "storage.config" )          { $scope = 'profile' }
+	elsif ( $fname eq "sysctl.conf" )             { $scope = 'profile' }
+	elsif ( $fname =~ /url_sig_.*\.config/ )      { $scope = 'profile' }
+	elsif ( $fname eq "volume.config" )           { $scope = 'profile' }
+	elsif ( $fname eq "bg_fetch.config" )         { $scope = 'cdn' }
+	elsif ( $fname =~ /cacheurl.*\.config/ )      { $scope = 'cdn' }
+	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'cdn' }
+	elsif ( $fname =~ /regex_remap_.*\.config/ )  { $scope = 'cdn' }
 	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdn' }
-	elsif ( $fname =~ /set_dscp_.*\.config/ ) { $scope = 'cdn' }
-	elsif ( $fname eq "ssl_multicert.config" ) { $scope = 'cdn' }
-	else {  
+	elsif ( $fname =~ /set_dscp_.*\.config/ )     { $scope = 'cdn' }
+	elsif ( $fname eq "ssl_multicert.config" )    { $scope = 'cdn' }
+	else {
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
-		if (!defined($scope) ) {
-			$self->app->log->error( "Filename not found.  Setting Server scope." );
+		if ( !defined($scope) ) {
+			$self->app->log->error("Filename not found.  Setting Server scope.");
 			$scope = 'server';
 		}
 	}
@@ -665,7 +668,7 @@ sub facts {
 	my $server_obj = shift;
 	my $filename   = shift;
 	my $scope      = shift;
-	my $text = $self->header_comment( $server_obj->host_name );
+	my $text       = $self->header_comment( $server_obj->host_name );
 	$text .= "profile:" . $server_obj->profile->name . "\n";
 
 	return $text;
@@ -673,13 +676,13 @@ sub facts {
 
 #generates a generic config file based on a server and parameters which match the supplied filename.
 sub take_and_bake_server {
-	my $self = shift;
+	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
 	my $scope      = shift;
 
-	my $data   = $self->param_data( $server_obj, $filename );
-	my $text   = $self->header_comment( $server_obj->host_name );
+	my $data = $self->param_data( $server_obj, $filename );
+	my $text = $self->header_comment( $server_obj->host_name );
 	foreach my $parameter ( sort keys %{$data} ) {
 		$text .= $data->{$parameter} . "\n";
 	}
@@ -688,13 +691,13 @@ sub take_and_bake_server {
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
 sub take_and_bake_profile {
-	my $self = shift;
+	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename   = shift;
-	my $scope      = shift;
+	my $filename    = shift;
+	my $scope       = shift;
 
-	my $data   = $self->profile_param_data( $profile_obj->id, $filename );
-	my $text   = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_param_data( $profile_obj->id, $filename );
+	my $text = $self->header_comment( $profile_obj->name );
 	foreach my $parameter ( sort keys %{$data} ) {
 		$text .= $data->{$parameter} . "\n";
 	}
@@ -742,7 +745,6 @@ sub generic_server_config {
 
 	return $text;
 }
-
 
 sub ats_dot_rules {
 	my $self        = shift;
@@ -1168,10 +1170,10 @@ sub ssl_multicert_dot_config {
 }
 
 sub url_sig_dot_config {
-	my $self     = shift;
-	my $profile_obj  = shift;
-	my $filename = shift;
-	my $scope    = shift;
+	my $self        = shift;
+	my $profile_obj = shift;
+	my $filename    = shift;
+	my $scope       = shift;
 
 	my $sep = defined( $separator->{$filename} ) ? $separator->{$filename} : " = ";
 	my $data = $self->profile_param_data( $profile_obj->id, $filename );
