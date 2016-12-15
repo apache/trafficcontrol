@@ -41,8 +41,11 @@ our $cdnConfFile      = "/opt/traffic_ops/app/conf/cdn.conf";
 our $ldapConfFile     = "/opt/traffic_ops/app/conf/ldap.conf";
 our $usersConfFile    = "/opt/traffic_ops/install/data/json/users.json";
 our $profilesConfFile = "/opt/traffic_ops/install/data/profiles/";
-our $opensslConfFile  = "/opt/traffic_ops/install/bin/openssl_configuration.json";
+our $opensslConfFile  = "/opt/traffic_ops/install/data/json/openssl_configuration.json";
 our $paramConfFile    = "/opt/traffic_ops/install/data/json/profiles.json";
+
+our $profile_dir       = "/opt/traffic_ops/install/data/profiles/";
+our $post_install_cfg = "/opt/traffic_ops/install/data/json/post_install.json";
 
 our $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
 
@@ -219,9 +222,8 @@ sub generateLdapConf {
 
     my $useLdap = $userInput->{$fileName}[0]->{"Do you want to set up LDAP?"};
 
-    if ( $useLdap eq "no" || $useLdap eq "n" ) {
+    if ( !lc $useLdap =~ /^y(?:es)?/ ) {
         logger( "Not setting up ldap", "info" );
-
         return;
     }
 
@@ -268,6 +270,7 @@ sub generateOpenSSLConf {
     my %config = getConfig( $userInput, $fileName );
 
     writeJson( $fileName, \%config );
+    return \%config;
 }
 
 sub generateParamConf {
@@ -544,6 +547,7 @@ sub getDefaults {
 sub setupDatabase {
     my $todbconf    = shift;
     my $opensslconf = shift;
+    my $genCert     = shift;
 
     #
     # Call mysql initialization script.
@@ -583,7 +587,7 @@ sub setupDatabase {
         logger( "Failed to copy coverage zone file", "error" );
     }
 
-    if ( lc $opensslconf->{genCert} =~ /^y(?:es)?/ ) {
+    if ( lc $genCert =~ /^y(?:es)?/ ) {
         if ( -x "/usr/bin/openssl" ) {
             logger( "Installing SSL Certificates", "info" );
             $result = GenerateCert::createCert($opensslconf);
@@ -735,16 +739,16 @@ sub main {
     generateLdapConf( $userInput, $::ldapConfFile );
     my $adminconf = generateUsersConf( $userInput, $::usersConfFile );
     generateProfilesDir( $userInput, $::profilesConfFile );
-    generateOpenSSLConf( $userInput, $::opensslConfFile );
+    my $opensslconf = generateOpenSSLConf( $userInput, $::opensslConfFile );
     my $paramconf = generateParamConf( $userInput, $::paramConfFile );
 
     # if the reconfigure file exists or the reconfigure command line arg is set then setup the database
     if ( -f $reconfigure_file || $reconfigure ) {
         if ($::automatic) {
-            setupDatabase( $todbconf, $::opensslConfFile );
+            setupDatabase( $todbconf, $::opensslConfFile, $opensslconf->{genCert} );
         }
         else {
-            setupDatabase( $todbconf, 0 );
+            setupDatabase( $todbconf, 0, $opensslconf->{genCert} );
         }
     }
 

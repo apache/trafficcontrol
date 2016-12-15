@@ -84,10 +84,10 @@
   "/opt/traffic_ops/install/data/profiles/":[  
 
   ],
-  "/opt/traffic_ops/install/bin/openssl_configuration.json":[  
-    {
-      "Do you want to generate a certificate?": "yes",
-      "config_var": "genCert"
+  "/opt/traffic_ops/install/data/json/openssl_configuration.json":[  
+    {  
+      "Do you want to generate a certificate?":"yes",
+      "config_var":"genCert"
     },
     {  
       "Country Name (2 letter code)":"XX",
@@ -157,7 +157,7 @@
       "config_var":"health_thresh_load_avg"
     },
     {  
-      "Health Threshold Available Bandwidth in Kbps":"1750000",
+      "Health Threshold Available Bandwidth in Kbps":">1750000",
       "config_var":"health_thresh_kbps"
     },
     {  
@@ -166,3 +166,4 @@
     }
   ]
 }
+
