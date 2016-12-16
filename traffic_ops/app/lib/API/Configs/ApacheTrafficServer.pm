@@ -76,6 +76,12 @@ sub ort {
 		}
 	}
 
+	foreach my $file ( keys %$data_obj->{'config_files'} ) {
+		if ( !defined( $data_obj->{'config_files'}->{$file}->{'scope'} ) ) {
+			$data_obj->{'config_files'}->{$file}->{'scope'} = $self->get_scope($file);
+		}
+	}
+
 	#print STDERR Dumper($data_obj);
 
 	my $file_contents = encode_json($data_obj);
