@@ -1,7 +1,6 @@
 package API::Configs::ApacheTrafficServer;
 
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -81,8 +80,6 @@ sub ort {
 			$data_obj->{'config_files'}->{$file}->{'scope'} = $self->get_scope($file);
 		}
 	}
-
-	#print STDERR Dumper($data_obj);
 
 	my $file_contents = encode_json($data_obj);
 
