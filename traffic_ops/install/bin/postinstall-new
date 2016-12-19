@@ -162,7 +162,7 @@ sub generateDbConf {
     my $toDBFileName = shift;
 
     my %dbconf = getConfig( $userInput, $dbFileName );
-
+    $dbconf{"description"} = "$dbconf{type} database on $dbconf{hostname}:$dbconf{port}";
     make_path( dirname($dbFileName), { mode => 0755 } );
     writeJson( $dbFileName, \%dbconf );
     logger( "Database configuration has been saved", "info" );

@@ -27,6 +27,7 @@ our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 sub profile_replace {
     my ($profile) = @_;
     my $profile_bak = $profile . ".bak";
+    logger("Replacing parameters in profile: $profile", "info");
     rename( $profile, $profile_bak ) or die("rename(): $!");
     open( my $fh,  '<', $profile_bak ) or die("open(): $!");
     open( my $ofh, '>', $profile )     or die("open(): $!");
