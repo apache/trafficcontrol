@@ -172,11 +172,9 @@ sub generateDbConf {
 
     # No YAML library installed, but this is a simple file..
     open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
-    print $fh "version: 1.0\n";
-    print $fh "name: dbconf.yml\n\n";
     print $fh "production:\n";
-    print $fh "        driver: ", getDbDriver() . "\n";
-    print $fh "        open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
+    print $fh "    driver: ", getDbDriver() . "\n";
+    print $fh "    open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
     close $fh;
 
     return \%todbconf;
