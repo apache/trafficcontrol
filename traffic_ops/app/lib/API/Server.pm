@@ -36,8 +36,8 @@ sub index {
 	my $type         = $self->param('type');
 	my $status       = $self->param('status');
 	my $profile_id   = $self->param('profileId');
-	my $cdn_id	     = $self->param('cdnId');
-	my $cg_id	     = $self->param('cachegroupId');
+	my $cdn_id       = $self->param('cdnId');
+	my $cg_id        = $self->param('cachegroupId');
 
 	my $servers;
 	my $forbidden;
@@ -48,16 +48,16 @@ sub index {
 		$servers = $self->get_servers_by_type( $current_user, $type, $status );
 	}
 	elsif ( defined $profile_id ) {
-		( $forbidden, $servers ) = $self->get_servers_by_profile_id( $profile_id );
+		( $forbidden, $servers ) = $self->get_servers_by_profile_id($profile_id);
 	}
 	elsif ( defined $profile_id ) {
-		( $forbidden, $servers ) = $self->get_servers_by_profile_id( $profile_id );
+		( $forbidden, $servers ) = $self->get_servers_by_profile_id($profile_id);
 	}
 	elsif ( defined $cdn_id ) {
-		( $forbidden, $servers ) = $self->get_servers_by_cdn( $cdn_id );
+		( $forbidden, $servers ) = $self->get_servers_by_cdn($cdn_id);
 	}
 	elsif ( defined $cg_id ) {
-		( $forbidden, $servers ) = $self->get_servers_by_cachegroup( $cg_id );
+		( $forbidden, $servers ) = $self->get_servers_by_cachegroup($cg_id);
 	}
 	else {
 		$servers = $self->get_servers_by_status( $current_user, $status );
@@ -98,7 +98,7 @@ sub index {
 					"mgmtIpAddress"  => $row->mgmt_ip_address,
 					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
-					"offlineReason" => $row->offline_reason,
+					"offlineReason"  => $row->offline_reason,
 					"physLocation"   => $row->phys_location->name,
 					"physLocationId" => $row->phys_location->id,
 					"profile"        => $row->profile->name,
@@ -198,36 +198,36 @@ sub update {
 	}
 
 	my $values = {
-		cachegroup               	=> $params->{cachegroupId},
-		cdn_id                     	=> $params->{cdnId},
-		domain_name               	=> $params->{domainName},
-		host_name                   => $params->{hostName},
-		https_port           		=> $params->{httpsPort},
-		ilo_ip_address 				=> $params->{iloIpAddress},
-		ilo_ip_netmask         		=> $params->{iloIpNetmask},
-		ilo_ip_gateway            	=> $params->{iloIpGateway},
-		ilo_username            	=> $params->{iloUsername},
-		ilo_password          		=> $params->{iloPassword},
-		interface_mtu           	=> $params->{interfaceMtu},
-		interface_name            	=> $params->{interfaceName},
-		ip6_address              	=> $params->{ip6Address},
-		ip6_gateway              	=> $params->{ip6Gateway},
-		ip_address             		=> $params->{ipAddress},
-		ip_netmask             		=> $params->{ipNetmask},
-		ip_gateway                	=> $params->{ipGateway},
-		mgmt_ip_address           	=> $params->{mgmtIpAddress},
-		mgmt_ip_netmask          	=> $params->{mgmtIpNetmask},
-		mgmt_ip_gateway           	=> $params->{mgmtIpGateway},
-		offline_reason            	=> $params->{offlineReason},
-		phys_location            	=> $params->{physLocationId},
-		profile             		=> $params->{profileId},
-		rack                     	=> $params->{rack},
-		router_host_name       		=> $params->{routerHostName},
-		router_port_name          	=> $params->{routerPortName},
-		status                   	=> $params->{statusId},
-		tcp_port                 	=> $params->{tcpPort},
-		type                     	=> $params->{typeId},
-		upd_pending               	=> $params->{updPending}
+		cachegroup       => $params->{cachegroupId},
+		cdn_id           => $params->{cdnId},
+		domain_name      => $params->{domainName},
+		host_name        => $params->{hostName},
+		https_port       => $params->{httpsPort},
+		ilo_ip_address   => $params->{iloIpAddress},
+		ilo_ip_netmask   => $params->{iloIpNetmask},
+		ilo_ip_gateway   => $params->{iloIpGateway},
+		ilo_username     => $params->{iloUsername},
+		ilo_password     => $params->{iloPassword},
+		interface_mtu    => $params->{interfaceMtu},
+		interface_name   => $params->{interfaceName},
+		ip6_address      => $params->{ip6Address},
+		ip6_gateway      => $params->{ip6Gateway},
+		ip_address       => $params->{ipAddress},
+		ip_netmask       => $params->{ipNetmask},
+		ip_gateway       => $params->{ipGateway},
+		mgmt_ip_address  => $params->{mgmtIpAddress},
+		mgmt_ip_netmask  => $params->{mgmtIpNetmask},
+		mgmt_ip_gateway  => $params->{mgmtIpGateway},
+		offline_reason   => $params->{offlineReason},
+		phys_location    => $params->{physLocationId},
+		profile          => $params->{profileId},
+		rack             => $params->{rack},
+		router_host_name => $params->{routerHostName},
+		router_port_name => $params->{routerPortName},
+		status           => $params->{statusId},
+		tcp_port         => $params->{tcpPort},
+		type             => $params->{typeId},
+		upd_pending      => $params->{updPending}
 	};
 
 	my $rs = $server->update($values);
@@ -302,40 +302,40 @@ sub create {
 	}
 
 	my $values = {
-		cachegroup               	=> $params->{cachegroupId},
-		cdn_id                     	=> $params->{cdnId},
-		domain_name               	=> $params->{domainName},
-		host_name                   => $params->{hostName},
-		https_port           		=> $params->{httpsPort},
-		ilo_ip_address 				=> $params->{iloIpAddress},
-		ilo_ip_netmask         		=> $params->{iloIpNetmask},
-		ilo_ip_gateway            	=> $params->{iloIpGateway},
-		ilo_username            	=> $params->{iloUsername},
-		ilo_password          		=> $params->{iloPassword},
-		interface_mtu           	=> $params->{interfaceMtu},
-		interface_name            	=> $params->{interfaceName},
-		ip6_address              	=> $params->{ip6Address},
-		ip6_gateway              	=> $params->{ip6Gateway},
-		ip_address             		=> $params->{ipAddress},
-		ip_netmask             		=> $params->{ipNetmask},
-		ip_gateway                	=> $params->{ipGateway},
-		mgmt_ip_address           	=> $params->{mgmtIpAddress},
-		mgmt_ip_netmask          	=> $params->{mgmtIpNetmask},
-		mgmt_ip_gateway           	=> $params->{mgmtIpGateway},
-		offline_reason            	=> $params->{offlineReason},
-		phys_location            	=> $params->{physLocationId},
-		profile             		=> $params->{profileId},
-		rack                     	=> $params->{rack},
-		router_host_name       		=> $params->{routerHostName},
-		router_port_name          	=> $params->{routerPortName},
-		status                   	=> $params->{statusId},
-		tcp_port                 	=> $params->{tcpPort},
-		type                     	=> $params->{typeId},
-		upd_pending               	=> $params->{updPending}
+		cachegroup       => $params->{cachegroupId},
+		cdn_id           => $params->{cdnId},
+		domain_name      => $params->{domainName},
+		host_name        => $params->{hostName},
+		https_port       => $params->{httpsPort},
+		ilo_ip_address   => $params->{iloIpAddress},
+		ilo_ip_netmask   => $params->{iloIpNetmask},
+		ilo_ip_gateway   => $params->{iloIpGateway},
+		ilo_username     => $params->{iloUsername},
+		ilo_password     => $params->{iloPassword},
+		interface_mtu    => $params->{interfaceMtu},
+		interface_name   => $params->{interfaceName},
+		ip6_address      => $params->{ip6Address},
+		ip6_gateway      => $params->{ip6Gateway},
+		ip_address       => $params->{ipAddress},
+		ip_netmask       => $params->{ipNetmask},
+		ip_gateway       => $params->{ipGateway},
+		mgmt_ip_address  => $params->{mgmtIpAddress},
+		mgmt_ip_netmask  => $params->{mgmtIpNetmask},
+		mgmt_ip_gateway  => $params->{mgmtIpGateway},
+		offline_reason   => $params->{offlineReason},
+		phys_location    => $params->{physLocationId},
+		profile          => $params->{profileId},
+		rack             => $params->{rack},
+		router_host_name => $params->{routerHostName},
+		router_port_name => $params->{routerPortName},
+		status           => $params->{statusId},
+		tcp_port         => $params->{tcpPort},
+		type             => $params->{typeId},
+		upd_pending      => $params->{updPending}
 	};
 
 	my $insert = $self->db->resultset('Server')->create($values);
-	my $rs = $insert->insert();
+	my $rs     = $insert->insert();
 	if ($rs) {
 		my @response;
 		push(
@@ -391,8 +391,6 @@ sub create {
 		return $self->alert("Server creation failed.");
 	}
 }
-
-
 
 sub get_servers_by_status {
 	my $self              = shift;
@@ -752,8 +750,8 @@ sub postupdatequeue {
 }
 
 sub get_servers_by_profile_id {
-	my $self              = shift;
-	my $profile_id        = shift;
+	my $self       = shift;
+	my $profile_id = shift;
 
 	my $forbidden;
 	my $servers;
@@ -767,8 +765,8 @@ sub get_servers_by_profile_id {
 }
 
 sub get_servers_by_cdn {
-	my $self              = shift;
-	my $cdn_id            = shift;
+	my $self   = shift;
+	my $cdn_id = shift;
 
 	my $forbidden;
 	my $servers;
@@ -782,8 +780,8 @@ sub get_servers_by_cdn {
 }
 
 sub get_servers_by_cachegroup {
-	my $self              = shift;
-	my $cg_id             = shift;
+	my $self  = shift;
+	my $cg_id = shift;
 
 	my $forbidden;
 	my $servers;
@@ -800,29 +798,31 @@ sub is_server_valid {
 	my $self   = shift;
 	my $params = shift;
 
-	if (!$self->is_valid_server_type($params->{typeId})) {
+	if ( !$self->is_valid_server_type( $params->{typeId} ) ) {
 		return ( 0, "Invalid server type" );
 	}
 
 	my $rules = {
-		fields => [ qw/cachegroupId cdnId domainName hostName httpsPort iloIpAddress iloIpNetmask iloIpGateway iloUsername iloPassword interfaceMtu interfaceName ip6Address ip6Gateway ipAddress ipNetmask ipGateway mgmtIpAddress mgmtIpNetmask mgmtIpGateway offlineReason physLocationId profileId rack routerHostName routerPortName statusId tcpPort typeId updPending/ ],
+		fields => [
+			qw/cachegroupId cdnId domainName hostName httpsPort iloIpAddress iloIpNetmask iloIpGateway iloUsername iloPassword interfaceMtu interfaceName ip6Address ip6Gateway ipAddress ipNetmask ipGateway mgmtIpAddress mgmtIpNetmask mgmtIpGateway offlineReason physLocationId profileId rack routerHostName routerPortName statusId tcpPort typeId updPending/
+		],
 
 		# Validation checks to perform
 		checks => [
-			cachegroupId => [ is_required("is required") ],
-			cdnId => [ is_required("is required") ],
-			domainName => [ is_required("is required") ],
-			hostName => [ is_required("is required") ],
-			interfaceMtu => [ is_required("is required") ],
-			interfaceName => [ is_required("is required") ],
-			ipAddress => [ is_required("is required") ],
-			ipNetmask => [ is_required("is required") ],
-			ipGateway => [ is_required("is required") ],
+			cachegroupId   => [ is_required("is required") ],
+			cdnId          => [ is_required("is required") ],
+			domainName     => [ is_required("is required") ],
+			hostName       => [ is_required("is required") ],
+			interfaceMtu   => [ is_required("is required") ],
+			interfaceName  => [ is_required("is required") ],
+			ipAddress      => [ is_required("is required") ],
+			ipNetmask      => [ is_required("is required") ],
+			ipGateway      => [ is_required("is required") ],
 			physLocationId => [ is_required("is required") ],
-			profileId => [ is_required("is required") ],
-			statusId => [ is_required("is required") ],
-			typeId => [ is_required("is required") ],
-			updPending => [ is_required("is required") ]
+			profileId      => [ is_required("is required") ],
+			statusId       => [ is_required("is required") ],
+			typeId         => [ is_required("is required") ],
+			updPending     => [ is_required("is required") ]
 		]
 	};
 
@@ -838,7 +838,7 @@ sub is_server_valid {
 }
 
 sub is_valid_server_type {
-	my $self     = shift;
+	my $self    = shift;
 	my $type_id = shift;
 
 	my $rs = $self->db->resultset("Type")->find( { id => $type_id } );
