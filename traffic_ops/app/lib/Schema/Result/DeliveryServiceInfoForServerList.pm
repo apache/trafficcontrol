@@ -38,7 +38,7 @@ __PACKAGE__->table("DeliveryServiceInfoForServerList:");
 __PACKAGE__->result_source_instance->is_virtual(1);
 
 __PACKAGE__->result_source_instance->view_definition( "
-SELECT DISTINCT
+SELECT
     deliveryservice.xml_id AS xml_id,
     deliveryservice.id AS ds_id,
     deliveryservice.dscp AS dscp,
@@ -69,8 +69,7 @@ FROM
         JOIN profile_parameter ON deliveryservice.profile = profile_parameter.profile
         JOIN parameter ON parameter.id = profile_parameter.parameter
         JOIN deliveryservice_server ON deliveryservice_server.deliveryservice = deliveryservice.id
-        JOIN server ON deliveryservice_server.server = server.id
-WHERE parameter.name = 'domain_name' AND server.id IN (?)
+WHERE parameter.name = 'domain_name' AND deliveryservice_server.server = ?
 ORDER BY ds_id, re_type , deliveryservice_regex.set_number
 "
 );
