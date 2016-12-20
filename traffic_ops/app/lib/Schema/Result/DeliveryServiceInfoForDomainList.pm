@@ -38,41 +38,48 @@ __PACKAGE__->table("DeliveryServiceInfoForDomainList:");
 __PACKAGE__->result_source_instance->is_virtual(1);
 
 __PACKAGE__->result_source_instance->view_definition( "
-SELECT DISTINCT
-    deliveryservice.xml_id AS xml_id,
+SELECT
+    deliveryservice.xml_id,
     deliveryservice.id AS ds_id,
-    deliveryservice.dscp AS dscp,
-    deliveryservice.signed AS signed,
-    deliveryservice.qstring_ignore AS qstring_ignore,
-    deliveryservice.org_server_fqdn as org_server_fqdn,
-    deliveryservice.multi_site_origin as multi_site_origin,
-    deliveryservice.multi_site_origin_algorithm as multi_site_origin_algorithm,
-    deliveryservice.range_request_handling as range_request_handling,
-    deliveryservice.origin_shield as origin_shield,
-    regex.pattern AS pattern,
+    deliveryservice.dscp,
+    deliveryservice.signed,
+    deliveryservice.qstring_ignore,
+    deliveryservice.org_server_fqdn,
+    deliveryservice.multi_site_origin,
+    deliveryservice.multi_site_origin_algorithm,
+    deliveryservice.range_request_handling,
+    deliveryservice.origin_shield,
+    regex.pattern,
     retype.name AS re_type,
     dstype.name AS ds_type,
     parameter.value AS domain_name,
-    deliveryservice_regex.set_number AS set_number,
-    deliveryservice.edge_header_rewrite as edge_header_rewrite,
-    deliveryservice.mid_header_rewrite as mid_header_rewrite,
-    deliveryservice.regex_remap as regex_remap,
-    deliveryservice.cacheurl as cacheurl,
-    deliveryservice.remap_text as remap_text,
-    deliveryservice.protocol as protocol
+    deliveryservice_regex.set_number,
+    deliveryservice.edge_header_rewrite,
+    deliveryservice.mid_header_rewrite,
+    deliveryservice.regex_remap,
+    deliveryservice.cacheurl,
+    deliveryservice.remap_text,
+    deliveryservice.protocol
 FROM
     deliveryservice
-        JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
-        JOIN regex ON deliveryservice_regex.regex = regex.id
-        JOIN type as retype ON regex.type = retype.id
-        JOIN type as dstype ON deliveryservice.type = dstype.id
-        JOIN profile_parameter ON deliveryservice.profile = profile_parameter.profile
-        JOIN parameter ON parameter.id = profile_parameter.parameter
-        JOIN deliveryservice_server ON deliveryservice_server.deliveryservice = deliveryservice.id
-        JOIN server ON deliveryservice_server.server = server.id
-WHERE parameter.name = 'domain_name' AND parameter.value = ?
-ORDER BY ds_id, re_type , deliveryservice_regex.set_number
-"
+    JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
+    JOIN regex ON deliveryservice_regex.regex = regex.id
+    JOIN type as retype ON regex.type = retype.id
+    JOIN type as dstype ON deliveryservice.type = dstype.id
+    JOIN profile_parameter ON deliveryservice.profile = profile_parameter.profile
+    JOIN parameter ON parameter.id = profile_parameter.parameter
+WHERE
+    parameter.name = 'domain_name'
+    AND parameter.value = ?
+    AND deliveryservice.id in (
+        SELECT
+            deliveryservice_server.deliveryservice
+        FROM
+            deliveryservice_server)
+ORDER BY
+    ds_id,
+    re_type,
+    set_number"
 );
 
 __PACKAGE__->add_columns(
