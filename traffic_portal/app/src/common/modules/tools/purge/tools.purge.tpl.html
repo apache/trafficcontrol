@@ -37,7 +37,7 @@ limitations under the License.
             <li class="list-group-item" ng-repeat="purgeJob in purgeJobs">
                 <span>{{purgeJob.assetUrl}}</span>
                 <br>
-                <span class="purge-job-start">{{dateFormat(purgeJob.startTime, "mmm d yyyy h:MM TT (Z)")}}</span>
+                <span class="purge-job-start">{{dateFormat(toDate(purgeJob.startTime), "mmm d yyyy h:MM TT (Z)")}}</span>
             </li>
         </div>
         <div class="no-picks-alert alert alert-info" ng-show="purgeJobs.length == 0">
