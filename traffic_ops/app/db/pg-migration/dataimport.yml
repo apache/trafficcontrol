@@ -20,7 +20,5 @@ services:
         context: .
         dockerfile: Dockerfile-traffic_ops-client
     restart: "no"
-    environment:
-      - TO_USER
-      - TO_PASSWORD
-      - TO_SERVER
+    env_file:
+      - dataimport.env
