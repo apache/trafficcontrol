@@ -43,10 +43,6 @@ services:
     extends:
       service: postgres_host
       file: postgres_host.yml
-    environment:
-      - POSTGRES_DB=traffic_ops
-      - POSTGRES_PASSWORD=twelve
-      - POSTGRES_USER=traffic_ops
     depends_on:
       - mysql
     volumes:
