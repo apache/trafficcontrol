@@ -293,31 +293,34 @@ Parameter
   +-----------------+---------+--------------------------------------------------------------------------------------+
 
   
-  **Request Example** ::
+  **Request Example** 
 
-  1. single parameter format exampe:
-    {
-        "name":"param1",
-        "configFile":"configFile1"
-        "value":"value1",
-        "secure":0,
-    }
+  1. single parameter format example: ::
 
-  2. array format example:
-    [
-        {
-            "name":"param1",
-            "configFile":"configFile1"
-            "value":"value1",
-            "secure":0,
-        }, 
-        {
-            "name":"param2",
-            "configFile":"configFile2"
-            "value":"value2",
-            "secure":1,
-        }
-    ]
+      {
+          "name":"param1",
+          "configFile":"configFile1",
+          "value":"value1",
+          "secure":0
+      }
+
+  2. array format example: ::
+
+      [
+          {
+              "name":"param1",
+              "configFile":"configFile1",
+              "value":"value1",
+              "secure":0
+          }, 
+          {
+              "name":"param2",
+              "configFile":"configFile2",
+              "value":"value2",
+              "secure":1
+          }
+      ]
+
 
   **Response Example** ::
 
@@ -391,7 +394,7 @@ Parameter
 
     {
         "name":"param1",
-        "configFile":"configFile1"
+        "configFile":"configFile1",
         "value":"value1",
         "secure":"0",
     }
@@ -443,8 +446,6 @@ Parameter
 
   **Response Example** ::
 
-    Response Example:
-
     {
       "alerts":
         [
@@ -452,7 +453,7 @@ Parameter
             "level": "success",
             "text": "Parameter was successfully deleted."
           }
-        ],
+        ]
     }
 
 |
@@ -496,8 +497,8 @@ Parameter
 
     {
         "name":"param1",
-        "configFile":"configFile1"
-        "value":"value1",
+        "configFile":"configFile1",
+        "value":"value1"
     }
 
   **Response Example** ::

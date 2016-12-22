@@ -172,7 +172,7 @@ Regions
 			"divisionName": "mydivision1"
 		}
 	}
-|
+
 
 **POST /api/1.1/divisions/:division_name/regions**
   Create Region

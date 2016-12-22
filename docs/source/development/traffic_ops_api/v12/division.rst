@@ -21,7 +21,7 @@ Divisions
 .. _to-api-v12-division-route:
 
 /api/1.2/divisions
-++++++++++++++++
+++++++++++++++++++
 
 **GET /api/1.2/divisions**
   Get all divisions.
@@ -154,6 +154,7 @@ Divisions
 			"name": "mydivision1"
 		}
 	}
+  
 |
 
 
