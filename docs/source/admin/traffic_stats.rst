@@ -37,7 +37,7 @@ Installation
 
 **Installing Grafana:**
 
-	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and can be accessed by Traffic Ops.  Documentation on installing Grafana can be found on the `Grafana website <http://docs.grafana.org/installation/>`_.
+	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and can be accessed by Traffic Ops.  Documentation on installing Grafana can be found on the `Grafana website <http://docs.grafana.org/installation/>`__.
 
 Configuration
 =========================
