@@ -1,4 +1,3 @@
-
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +16,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	configfiles "github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/ats_config/config_files"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -70,7 +72,7 @@ func printUsage() {
 // route routes HTTP requests to /traffic-server-host/config-file.config
 // This should be registered with http.HandleFunc at "/"
 // This could be changed to serve at an arbitrary endpoint, by removing the ^ in the regex
-func route(trafficOpsUri string, trafficOpsCookie string, w http.ResponseWriter, r *http.Request) {
+func route(toClient towrap.ITrafficOpsSession, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	hostnameRegex := `((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*(?:[A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))`
@@ -89,21 +91,28 @@ func route(trafficOpsUri string, trafficOpsCookie string, w http.ResponseWriter,
 	server := match[1]
 	configFile := match[2]
 
-	profile, err := GetServerProfileName(trafficOpsUri, trafficOpsCookie, server)
+	profile, err := configfiles.GetServerProfileName(toClient, server)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error getting profile for server '%s': '%v'", server, err)
 		return
 	}
 
-	params, err := GetParameters(trafficOpsUri, trafficOpsCookie, profile) // \todo fix magic profile
+	params, err := toClient.Parameters(profile)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error getting parameters for server '%s' profile '%s': '%v'", server, profile, err)
 		return
 	}
 
-	config, err := GetConfig(configFile, trafficOpsUri, server, params)
+	toUrl, err := toClient.URL()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Error getting config for server '%s' profile '%s': '%v'", server, profile, err)
+		return
+	}
+
+	config, err := configfiles.GetConfig(configFile, toUrl, server, params)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error getting config for server '%s' profile '%s': '%v'", server, profile, err)
@@ -122,14 +131,18 @@ func main() {
 		return
 	}
 
-	trafficOpsCookie, err := GetTrafficOpsCookie(args.TrafficOpsUri, args.TrafficOpsUser, args.TrafficOpsPass)
+	// TODO extract method
+	insecure := true
+	realToClient, err := to.Login(args.TrafficOpsUri, args.TrafficOpsUser, args.TrafficOpsPass, insecure)
 	if err != nil {
 		fmt.Println(err)
+		printUsage()
 		return
 	}
+	toClient := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(realToClient))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		route(args.TrafficOpsUri, trafficOpsCookie, w, r)
+		route(toClient, w, r)
 	})
 
 	err = http.ListenAndServe(":"+strconv.Itoa(args.Port), nil)

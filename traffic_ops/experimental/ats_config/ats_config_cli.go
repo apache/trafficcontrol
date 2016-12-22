@@ -1,4 +1,3 @@
-
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,8 +16,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	configfiles "github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/ats_config/config_files"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/ats_config/traffic_ops"
 )
 
 // Args encapsulates the command line arguments
@@ -77,13 +77,16 @@ func main() {
 		return
 	}
 
-	trafficOpsCookie, err := traffic_ops.GetCookie(args.TrafficOpsUri, args.TrafficOpsUser, args.TrafficOpsPass)
+	insecure := true
+	realToClient, err := to.Login(args.TrafficOpsUri, args.TrafficOpsUser, args.TrafficOpsPass, insecure)
 	if err != nil {
 		fmt.Println(err)
+		printUsage()
 		return
 	}
+	toClient := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(realToClient))
 
-	config, err := configfiles.Get(args.TrafficOpsUri, trafficOpsCookie, args.ConfigFileServer, args.ConfigFile)
+	config, err := configfiles.Get(toClient, args.ConfigFileServer, args.ConfigFile)
 	if err != nil {
 		fmt.Println(err)
 		return
