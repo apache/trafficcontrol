@@ -70,6 +70,8 @@ func GetConfig(configFileName string, trafficOpsHost string, trafficServerHost s
 	switch configFileName {
 	case "storage.config":
 		return createStorageDotConfig(trafficOpsHost, trafficServerHost, params)
+	case "volume.config":
+		return createVolumeDotConfig(trafficOpsHost, trafficServerHost, params)
 	default:
 		return "", fmt.Errorf("Config file '%s' not valid", configFileName)
 	}
