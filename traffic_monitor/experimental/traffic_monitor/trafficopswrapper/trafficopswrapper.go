@@ -8,9 +8,9 @@ package trafficopswrapper
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package trafficopswrapper
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"fmt"
@@ -32,6 +31,32 @@ type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
 	TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error)
 	Set(session *to.Session)
+	URL() (string, error)
+	User() (string, error)
+	Servers() ([]to.Server, error)
+	Parameters(profileName string) ([]to.Parameter, error)
+}
+
+var ErrNilSession = fmt.Errorf("nil session")
+
+func (s TrafficOpsSessionThreadsafe) URL() (string, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.session == nil || *s.session == nil {
+		return "", ErrNilSession
+	}
+	url := (*s.session).URL
+	return url, nil
+}
+
+func (s TrafficOpsSessionThreadsafe) User() (string, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.session == nil || *s.session == nil {
+		return "", ErrNilSession
+	}
+	user := (*s.session).UserName
+	return user, nil
 }
 
 // TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
@@ -48,28 +73,46 @@ func NewTrafficOpsSessionThreadsafe(s *to.Session) TrafficOpsSessionThreadsafe {
 // CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	s.m.Lock()
+	defer s.m.Unlock()
 	if s.session == nil || *s.session == nil {
-		return nil, fmt.Errorf("nil session")
+		return nil, ErrNilSession
 	}
 	b, _, e := (*s.session).GetCRConfig(cdn)
-	s.m.Unlock()
 	return b, e
 }
 
 // TrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error) {
 	s.m.Lock()
+	defer s.m.Unlock()
 	if s.session == nil || *s.session == nil {
-		return nil, fmt.Errorf("nil session")
+		return nil, ErrNilSession
 	}
 	d, e := (*s.session).TrafficMonitorConfigMap(cdn)
-	s.m.Unlock()
 	return d, e
 }
 
 // Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
 func (s TrafficOpsSessionThreadsafe) Set(session *to.Session) {
 	s.m.Lock()
+	defer s.m.Unlock()
 	*s.session = session
-	s.m.Unlock()
+}
+
+func (s TrafficOpsSessionThreadsafe) Servers() ([]to.Server, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.session == nil || *s.session == nil {
+		return nil, ErrNilSession
+	}
+	return (*s.session).Servers()
+}
+
+func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]to.Parameter, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.session == nil || *s.session == nil {
+		return nil, ErrNilSession
+	}
+	return (*s.session).Parameters(profileName)
 }
