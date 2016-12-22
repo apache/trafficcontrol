@@ -29,8 +29,12 @@
     overflow: visible !important;
 }
 
+.wy-side-nav-search {
+  background-color: #000000;
+}
+
 .wy-side-nav-search img {
-	width: 63% !important;
+	width: 33% !important;
 }
 
 .section {
