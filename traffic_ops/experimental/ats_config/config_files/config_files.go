@@ -72,6 +72,8 @@ func GetConfig(configFileName string, trafficOpsHost string, trafficServerHost s
 		return createStorageDotConfig(trafficOpsHost, trafficServerHost, params)
 	case "volume.config":
 		return createVolumeDotConfig(trafficOpsHost, trafficServerHost, params)
+	case "logs_xml.config":
+		return createLogsXmlDotConfig(trafficOpsHost, trafficServerHost, params)
 	default:
 		return "", fmt.Errorf("Config file '%s' not valid", configFileName)
 	}
