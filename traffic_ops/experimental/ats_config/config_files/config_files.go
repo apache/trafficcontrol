@@ -22,6 +22,7 @@ import (
 	"fmt"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -45,7 +46,7 @@ func Get(toClient towrap.ITrafficOpsSession, serverHostname string, configFileNa
 		return "", fmt.Errorf("Error getting Traffic Ops parameters: %v", err)
 	}
 
-	return GetConfig(configFileName, toURL, serverHostname, params)
+	return GetConfig(toClient, configFileName, toURL, serverHostname, params)
 }
 
 // GetServerProfileName returns the name of the given server's profile in Traffic Ops.
@@ -64,19 +65,31 @@ func GetServerProfileName(toClient towrap.ITrafficOpsSession, serverHostname str
 	return "", ErrServerNotFound
 }
 
+type ConfigFileCreatorFunc func(toClient towrap.ITrafficOpsSession, filename string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error)
+
+// ConfigFileFuncMap returns the dispatch map, of regular expressions to config file creator functions
+// TODO change apps to cache this, namely for the long-running service to only compile the regexes once. Or, put in init()?
+func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
+	return map[*regexp.Regexp]ConfigFileCreatorFunc{
+		regexp.MustCompile(`^storage\.config$`):          createStorageDotConfig,
+		regexp.MustCompile(`^volume\.config$`):           createVolumeDotConfig,
+		regexp.MustCompile(`^logs_xml\.config$`):         createLogsXmlDotConfig,
+		regexp.MustCompile(`^cacheurl\.config$`):         createCacheurlDotConfig,
+		regexp.MustCompile(`^cacheurl_qstring\.config$`): createCacheurlQstringDotConfig,
+		regexp.MustCompile(`^cacheurl_(.*)\.config$`):    createCacheurlStarDotConfig,
+	}
+}
+
 // GetConfig takes the name of the config file, and the Traffic Ops parameters for a server,
 // and returns the text of that config file for that server.
-func GetConfig(configFileName string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
-	switch configFileName {
-	case "storage.config":
-		return createStorageDotConfig(trafficOpsHost, trafficServerHost, params)
-	case "volume.config":
-		return createVolumeDotConfig(trafficOpsHost, trafficServerHost, params)
-	case "logs_xml.config":
-		return createLogsXmlDotConfig(trafficOpsHost, trafficServerHost, params)
-	default:
-		return "", fmt.Errorf("Config file '%s' not valid", configFileName)
+func GetConfig(toClient towrap.ITrafficOpsSession, configFileName string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
+	fileFuncs := ConfigFileFuncMap()
+	for r, f := range fileFuncs {
+		if r.MatchString(configFileName) {
+			return f(toClient, configFileName, trafficOpsHost, trafficServerHost, params)
+		}
 	}
+	return "", fmt.Errorf("Config file '%s' not valid", configFileName)
 }
 
 // createParamsMap returns a map[ConfigFile]map[ParameterName]ParameterValue.
@@ -92,7 +105,8 @@ func createParamsMap(params []to.Parameter) map[string]map[string]string {
 	return m
 }
 
-func createStorageDotConfig(trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
+// TODO move to its own file
+func createStorageDotConfig(toClient towrap.ITrafficOpsSession, filename string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
 	// # DO NOT EDIT - Generated for my-edge-0 by Traffic Ops (https://localhost) on Fri Feb 19 22:16:34 UTC 2016
 	// /dev/ram0 volume=1
 	// /dev/ram1 volume=2
