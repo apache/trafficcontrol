@@ -35,6 +35,7 @@ type ITrafficOpsSession interface {
 	User() (string, error)
 	Servers() ([]to.Server, error)
 	Parameters(profileName string) ([]to.Parameter, error)
+	DeliveryServices() ([]to.DeliveryService, error)
 }
 
 var ErrNilSession = fmt.Errorf("nil session")
@@ -115,4 +116,13 @@ func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]to.Parame
 		return nil, ErrNilSession
 	}
 	return (*s.session).Parameters(profileName)
+}
+
+func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]to.DeliveryService, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.session == nil || *s.session == nil {
+		return nil, ErrNilSession
+	}
+	return (*s.session).DeliveryServices()
 }
