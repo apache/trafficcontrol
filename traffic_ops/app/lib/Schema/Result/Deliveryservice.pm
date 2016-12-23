@@ -288,6 +288,12 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'text'
   is_nullable: 1
 
+=head2 mso_profile
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -399,6 +405,8 @@ __PACKAGE__->add_columns(
   { data_type => "smallint", is_nullable => 1 },
   "geolimit_redirect_url",
   { data_type => "text", is_nullable => 1 },
+  "mso_profile",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -417,7 +425,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54278_ds_id_unique>
+=head2 C<idx_18221_ds_id_unique>
 
 =over 4
 
@@ -427,9 +435,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54278_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_18221_ds_id_unique", ["id"]);
 
-=head2 C<idx_54278_ds_name_unique>
+=head2 C<idx_18221_ds_name_unique>
 
 =over 4
 
@@ -439,7 +447,7 @@ __PACKAGE__->add_unique_constraint("idx_54278_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54278_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_18221_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -533,6 +541,26 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 mso_profile
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Profile>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "mso_profile",
+  "Schema::Result::Profile",
+  { id => "mso_profile" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
+
 =head2 profile
 
 Type: belongs_to
@@ -609,8 +637,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OGL35PLFXtZ8BuzgP7IHzQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-23 15:30:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aULX21NuOuu6Ow8dfmQ9Ig
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

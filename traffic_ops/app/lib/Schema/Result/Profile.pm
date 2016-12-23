@@ -84,7 +84,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54441_name_unique>
+=head2 C<idx_18384_name_unique>
 
 =over 4
 
@@ -94,9 +94,24 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54441_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_18384_name_unique", ["name"]);
 
 =head1 RELATIONS
+
+=head2 deliveryservice_mso_profiles
+
+Type: has_many
+
+Related object: L<Schema::Result::Deliveryservice>
+
+=cut
+
+__PACKAGE__->has_many(
+  "deliveryservice_mso_profiles",
+  "Schema::Result::Deliveryservice",
+  { "foreign.mso_profile" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
 
 =head2 deliveryservices
 
@@ -144,8 +159,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:tmTPl52VUdJsn+y6JuSLlw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-23 15:30:11
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:w9Yffpzp/V9wfVSGxX8kaw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
