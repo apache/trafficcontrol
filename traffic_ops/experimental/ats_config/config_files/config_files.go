@@ -68,6 +68,9 @@ type ConfigFileCreatorFunc func(toClient towrap.ITrafficOpsSession, filename str
 // ConfigFileFuncMap returns the dispatch map, of regular expressions to config file creator functions
 // TODO change apps to cache this, namely for the long-running service to only compile the regexes once. Or, put in init()?
 func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
+	spaceCreateConfig := createGenericDotConfigFunc(" ")
+	spacedEqualsCreateConfig := createGenericDotConfigFunc(" = ")
+	equalsCreateConfig := createGenericDotConfigFunc("=")
 	return map[*regexp.Regexp]ConfigFileCreatorFunc{
 		regexp.MustCompile(`^storage\.config$`):          createStorageDotConfig,
 		regexp.MustCompile(`^volume\.config$`):           createVolumeDotConfig,
@@ -75,6 +78,11 @@ func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
 		regexp.MustCompile(`^cacheurl\.config$`):         createCacheurlDotConfig,
 		regexp.MustCompile(`^cacheurl_qstring\.config$`): createCacheurlQstringDotConfig,
 		regexp.MustCompile(`^cacheurl_(.*)\.config$`):    createCacheurlStarDotConfig,
+		regexp.MustCompile(`^records\.config$`):          spaceCreateConfig,
+		regexp.MustCompile(`^plugin\.config$`):           spaceCreateConfig,
+		regexp.MustCompile(`^astats\.config$`):           equalsCreateConfig,
+		regexp.MustCompile(`^sysctl\.config$`):           spacedEqualsCreateConfig,
+		regexp.MustCompile(`^hosting\.config$`):          createHostingDotConfig,
 	}
 }
 

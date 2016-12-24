@@ -11,6 +11,7 @@ import (
 // stripProtocol takes a URL, e.g. `http://foo.example.com/bar/` and removes the protocol and any trailing slash, e.g. `foo.example.com/bar`
 // TODO test
 func stripProtocol(url string) string {
+	// TODO move to generic file, since it's used by other configs
 	// this could be made more efficient with regexp, if necessary
 	url = strings.Replace(url, "http://", "", 1)
 	url = strings.Replace(url, "https://", "", 1)
