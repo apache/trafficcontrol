@@ -121,6 +121,21 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 profiles
+
+Type: has_many
+
+Related object: L<Schema::Result::Profile>
+
+=cut
+
+__PACKAGE__->has_many(
+  "profiles",
+  "Schema::Result::Profile",
+  { "foreign.cdn" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 servers
 
 Type: has_many
@@ -152,8 +167,8 @@ __PACKAGE__->might_have(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 10:44:56
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AQZpzzOuEpgmacUrJGl+LQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 14:46:31
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QlfY6K6vVxW5C9vsHc4YqA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
