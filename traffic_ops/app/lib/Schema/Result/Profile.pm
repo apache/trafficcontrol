@@ -47,6 +47,12 @@ __PACKAGE__->table("profile");
   is_nullable: 1
   original: {default_value => \"now()"}
 
+=head2 cdn
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -68,6 +74,8 @@ __PACKAGE__->add_columns(
     is_nullable   => 1,
     original      => { default_value => \"now()" },
   },
+  "cdn",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -97,6 +105,26 @@ __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("idx_18384_name_unique", ["name"]);
 
 =head1 RELATIONS
+
+=head2 cdn
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Cdn>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "cdn",
+  "Schema::Result::Cdn",
+  { id => "cdn" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "RESTRICT",
+    on_update     => "RESTRICT",
+  },
+);
 
 =head2 deliveryservices
 
@@ -144,8 +172,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 10:44:56
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lLgKBTaWgSw4T1NXk7jh/g
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 14:46:31
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:osx+OzuftRlkWwKwb1N+hg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
