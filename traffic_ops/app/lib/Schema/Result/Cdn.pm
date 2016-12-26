@@ -48,6 +48,11 @@ __PACKAGE__->table("cdn");
   default_value: false
   is_nullable: 0
 
+=head2 domain_name
+
+  data_type: 'text'
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -69,6 +74,8 @@ __PACKAGE__->add_columns(
   },
   "dnssec_enabled",
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
+  "domain_name",
+  { data_type => "text", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -85,7 +92,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_24701_cdn_cdn_unique>
+=head2 C<idx_18210_cdn_cdn_unique>
 
 =over 4
 
@@ -95,7 +102,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_24701_cdn_cdn_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_18210_cdn_cdn_unique", ["name"]);
 
 =head1 RELATIONS
 
@@ -145,8 +152,8 @@ __PACKAGE__->might_have(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-12-09 09:10:09
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yBLkvGMimI0emk0nO5/CAA
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 10:44:56
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AQZpzzOuEpgmacUrJGl+LQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
