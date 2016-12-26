@@ -23,7 +23,6 @@ func getServerTypeStr(toClient towrap.ITrafficOpsSession, serverToFind string) (
 	return "", fmt.Errorf("not found")
 }
 
-// func (to *Session) ServersByType(qparams url.Values) ([]Server, error) {
 func createHostingDotConfig(toClient towrap.ITrafficOpsSession, filename string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
 
 	// TODO put in common func, remove duplicates

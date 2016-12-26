@@ -85,6 +85,7 @@ func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
 		regexp.MustCompile(`^hosting\.config$`):          createHostingDotConfig,
 		regexp.MustCompile(`^50-ats\.rules$`):            createAtsDotRules,
 		regexp.MustCompile(`^cache\.config$`):            createCacheDotConfig,
+		regexp.MustCompile(`^remap\.config$`):            createRemapDotConfig,
 	}
 }
 
