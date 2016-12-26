@@ -288,12 +288,6 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'text'
   is_nullable: 1
 
-=head2 mso_profile
-
-  data_type: 'bigint'
-  is_foreign_key: 1
-  is_nullable: 1
-
 =cut
 
 __PACKAGE__->add_columns(
@@ -405,8 +399,6 @@ __PACKAGE__->add_columns(
   { data_type => "smallint", is_nullable => 1 },
   "geolimit_redirect_url",
   { data_type => "text", is_nullable => 1 },
-  "mso_profile",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -541,26 +533,6 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 mso_profile
-
-Type: belongs_to
-
-Related object: L<Schema::Result::Profile>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "mso_profile",
-  "Schema::Result::Profile",
-  { id => "mso_profile" },
-  {
-    is_deferrable => 0,
-    join_type     => "LEFT",
-    on_delete     => "NO ACTION",
-    on_update     => "NO ACTION",
-  },
-);
-
 =head2 profile
 
 Type: belongs_to
@@ -637,8 +609,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-23 15:30:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:aULX21NuOuu6Ow8dfmQ9Ig
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 10:44:56
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:+HFlbMehDLwkF/hmfifkjw
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
