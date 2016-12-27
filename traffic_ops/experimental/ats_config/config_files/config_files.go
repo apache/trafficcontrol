@@ -88,6 +88,8 @@ func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
 		regexp.MustCompile(`^remap\.config$`):            createRemapDotConfig,
 		regexp.MustCompile(`^parent\.config$`):           createParentDotConfig,
 		regexp.MustCompile(`^12M_facts$`):                createFacts,
+		regexp.MustCompile(`^regex_revalidate\.config$`): createRegexRevalidateDotConfig,
+		regexp.MustCompile(`^drop_qstring\.config$`):     createDropQstringDotConfig,
 	}
 }
 
