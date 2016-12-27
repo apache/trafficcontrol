@@ -87,6 +87,7 @@ func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
 		regexp.MustCompile(`^cache\.config$`):            createCacheDotConfig,
 		regexp.MustCompile(`^remap\.config$`):            createRemapDotConfig,
 		regexp.MustCompile(`^parent\.config$`):           createParentDotConfig,
+		regexp.MustCompile(`^ip_allow\.config$`):         createIpallowDotConfig,
 	}
 }
 
