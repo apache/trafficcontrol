@@ -35,6 +35,11 @@ To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used)
 * MySQL 5.1.52
 * `Goose <https://bitbucket.org/liamstask/goose/>`_
 
+Addionally, the installation of the following RPMs (or equivalent) is required:
+
+* All RPMs listed in :ref:`rl-ps`
+* mysql-test
+
 Traffic Ops Project Tree Overview
 =======================================
 
