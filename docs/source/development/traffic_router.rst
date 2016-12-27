@@ -120,7 +120,7 @@ To install the Traffic Router Developer environment:
 
 		..  Note:: If an error is displayed in the Console, run ``mvn clean verify`` from the ``traffic_router`` directory
 
-7. Traffic Router Core should now be running; the HTTP routing interface is available on http://localhost:8081, while the DNS server and routing interface is available on localhost:1053 via TCP and UDP.
+7. Traffic Router Core should now be running; the HTTP routing interface is available on http://localhost:8081, while HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:1053 via TCP and UDP.
 
 Test Cases
 ==========
