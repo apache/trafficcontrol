@@ -94,6 +94,7 @@ func ConfigFileFuncMap(riakUser, riakPass string) map[*regexp.Regexp]ConfigFileC
 		regexp.MustCompile(`^bg_fetch\.config$`):         createBgFetchDotConfig,
 		regexp.MustCompile(`^url_sig_(.+)\.config$`):     createUrlSigDotConfig,
 		regexp.MustCompile(`^hdr_rw_(.+)\.config$`):      createHeaderRewriteDotConfig,
+		regexp.MustCompile(`^set_dscp_(\d+)\.config$`):   createSetDscpDotConfig,
 	}
 }
 
