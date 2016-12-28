@@ -93,6 +93,7 @@ func ConfigFileFuncMap(riakUser, riakPass string) map[*regexp.Regexp]ConfigFileC
 		regexp.MustCompile(`^drop_qstring\.config$`):     createDropQstringDotConfig,
 		regexp.MustCompile(`^bg_fetch\.config$`):         createBgFetchDotConfig,
 		regexp.MustCompile(`^url_sig_(.+)\.config$`):     createUrlSigDotConfig,
+		regexp.MustCompile(`^hdr_rw_(.+)\.config$`):      createHeaderRewriteDotConfig,
 	}
 }
 
