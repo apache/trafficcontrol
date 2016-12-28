@@ -225,7 +225,7 @@ sub update {
 	}
 
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
-
+	print ">>>> " . $is_valid . " > < " . $result . "\n";
 	if ( !$is_valid ) {
 		return $self->alert($result);
 	}

@@ -25,6 +25,7 @@ my %definition_for = (
 		using => {
 			id          => 100,
 			name        => 'cdn1',
+			domain_name => 'cdn1.kabletown.net',
 		},
 	},
 	## id => 2
@@ -33,6 +34,7 @@ my %definition_for = (
 		using => {
 			id          => 200,
 			name        => 'cdn2',
+			domain_name => 'cdn2.kabletown.net',
 		},
 	},
 );

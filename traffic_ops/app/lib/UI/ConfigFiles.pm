@@ -186,7 +186,7 @@ sub ds_data {
 	if ( $server->type->name =~ m/^MID/ ) {
 
 		# the mids will do all deliveryservices in this CDN
-		my $domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name', '' );
+		my $domain = $self->get_cdn_domain_by_profile_id( $server->profile->id );
 		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
 	}
 	else {
@@ -370,7 +370,7 @@ sub parent_data {
 	}
 
 	# get the server's cdn domain
-	my $server_domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name' );
+	my $server_domain = $self->get_cdn_domain_by_profile_id( $server->profile->id ); 
 
 	my %profile_cache;
 	my %deliveryservices;
@@ -388,6 +388,7 @@ sub parent_data {
 			my $rank           = $profile_cache{$pid}->{rank};
 			my $primary_parent         = $server->cachegroup->parent_cachegroup_id // -1;
 			my $secondary_parent      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
+			print "ds_domain:" . $ds_domain . " server_domain: ". $server_domain . "\n";
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 				my %p = (
 					host_name      => $row->host_name,
@@ -424,7 +425,7 @@ sub cachegroup_profiles {
 		cachegroup => { -in => $ids }
 	);
 
-	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
+	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile', 'cdn' ] } );
 
 	while ( my $row = $rs_parent->next ) {
 
@@ -447,7 +448,7 @@ sub cachegroup_profiles {
 
 			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
 			$profile_cache->{$pid} = {
-				domain_name    => $self->profile_param_value( $pid, 'CRConfig.json', 'domain_name',    undef ),
+				domain_name    => $row->cdn->domain_name,
 				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' ),
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port',           undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
@@ -1505,13 +1506,13 @@ sub ssl_multicert_dot_config {
 	# get a list of delivery services for the server
 	my $protocol_search = '> 0';
 	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ 'server.id' => $server->id, 'me.protocol' => \$protocol_search ] },
-		{ join => { deliveryservice_servers => { server => undef } }, } );
+		{ prefetch => ['cdn'], join => { deliveryservice_servers => { server => undef } }, } );
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
 		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
 		my $data         = $rs_ds->single;
-		my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+		my $domain_name  = $ds->cdn->domain_name;
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
 

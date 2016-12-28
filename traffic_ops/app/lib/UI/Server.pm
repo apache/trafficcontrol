@@ -449,6 +449,12 @@ sub check_server_input {
 	if ( defined( $paramHashRef->{'csv_line_number'} ) && length($err) > 0 ) {
 		$err = '</li><li>' . $errorCSVLineDelim . '[LINE #:' . $paramHashRef->{'csv_line_number'} . ']:  ' . $err . '\n';
 	}
+
+	my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $paramHashRef->{'profile'}}, { prefetch => ['cdn'] } )->single();
+	my $cdn = $self->db->resultset('Cdn')->search( { 'me.id' => $paramHashRef->{'cdn'} } )->single();
+	if ( $profile->cdn->id != $cdn->id ) {
+		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the  " . $paramHashRef->{'cdn'} . " CDN." . $sep;
+	}
 	return $err;
 }
 

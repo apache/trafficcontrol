@@ -158,15 +158,9 @@ sub view_by_hostname {
 		my @ds_ids_regex = $self->db->resultset('Deliveryservice')
 			->search( { 'regex.pattern' => "$host_regex" }, { join => { deliveryservice_regexes => { regex => undef } } } )->get_column('id')->all();
 
-		my @domain_profiles = $self->db->resultset('Profile')->search(
-			{
-				'parameter.value'       => "$domain_name",
-				'parameter.config_file' => 'CRConfig.json',
-				'parameter.name'        => 'domain_name'
-			}, {
-				join => { 'profile_parameters' => { parameter => undef } }
-			}
-		)->get_column('id')->all();
+		# TODO JvD - test this with online riak servers!
+		my $cdn_id = $self->db->resultset('Cdn')->search( { domain_name => $domain_name } )->get_column('id');
+		my@domain_profiles = $self->db->resultset('Profile')->search( { cdn => $cdn_id } )->get_column('id')->all();
 
 		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'profile' => { -in => \@domain_profiles } }, {} );
 

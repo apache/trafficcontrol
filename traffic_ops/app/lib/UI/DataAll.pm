@@ -99,23 +99,20 @@ sub data_server {
 }
 
 # deprecated @see API/ProfileParameters#domains
+# TODO JvD - this is the 3rd copy of the exact same function!
 sub data_domains {
 	my $self = shift;
 	my @data;
 
-	my @ccrprofs = $self->db->resultset('Profile')->search( { name => { -like => 'CCR%' } } )->get_column('id')->all();
-	my $rs_pp =
-		$self->db->resultset('ProfileParameter')
-		->search( { profile => { -in => \@ccrprofs }, 'parameter.name' => 'domain_name', 'parameter.config_file' => 'CRConfig.json' },
-		{ prefetch => [ 'parameter', 'profile' ] } );
-	while ( my $row = $rs_pp->next ) {
+	my $rs = $self->db->resultset('Profile')->search( { 'me.name' => { -like => 'CCR%' } }, { prefetch => ['cdn'] } );
+	while ( my $row = $rs->next ) {
 		push(
 			@data, {
-				"domain_name"         => $row->parameter->value,
-				"parameter_id"        => $row->parameter->id,
-				"profile_id"          => $row->profile->id,
-				"profile_name"        => $row->profile->name,
-				"profile_description" => $row->profile->description,
+				"domainName"         => $row->cdn->domain_name,
+				"parameterId"        => -1,  # it's not a parameter anymore
+				"profileId"          => $row->id,
+				"profileName"        => $row->name,
+				"profileDescription" => $row->description,
 			}
 		);
 
