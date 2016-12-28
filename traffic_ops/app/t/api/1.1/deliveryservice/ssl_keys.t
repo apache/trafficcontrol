@@ -146,7 +146,7 @@ ok $t->get_ok("/api/1.1/deliveryservices/xmlId/foo.bar/sslkeys.json")->json_has(
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #get key by hostname
-my $gen_hostname = "edge.foo.top.kabletown.com";
+my $gen_hostname = "edge.foo.top.kabletown.net";
 ok $t->get_ok("/api/1.1/deliveryservices/hostname/$gen_hostname/sslkeys.json")->json_has("/response")->json_has("/response/certificate/csr")
 	->json_has("/response/certificate/key")->json_has("/response/certificate/crt")->json_is( "/response/organization" => $org )
 	->json_is( "/response/state" => $state )->json_is( "/response/city" => $city )->json_is( "/response/businessUnit" => $unit )

@@ -52,7 +52,7 @@ SELECT
     regex.pattern AS pattern,
     retype.name AS re_type,
     dstype.name AS ds_type,
-    parameter.value AS domain_name,
+    cdn.domain_name AS domain_name,
     deliveryservice_regex.set_number AS set_number,
     deliveryservice.edge_header_rewrite as edge_header_rewrite,
     deliveryservice.regex_remap as regex_remap,
@@ -66,10 +66,9 @@ FROM
         JOIN regex ON deliveryservice_regex.regex = regex.id
         JOIN type as retype ON regex.type = retype.id
         JOIN type as dstype ON deliveryservice.type = dstype.id
-        JOIN profile_parameter ON deliveryservice.profile = profile_parameter.profile
-        JOIN parameter ON parameter.id = profile_parameter.parameter
+        JOIN cdn ON cdn.id = deliveryservice.cdn_id
         JOIN deliveryservice_server ON deliveryservice_server.deliveryservice = deliveryservice.id
-WHERE parameter.name = 'domain_name' AND deliveryservice_server.server = ?
+WHERE deliveryservice_server.server = ?
 ORDER BY ds_id, re_type , deliveryservice_regex.set_number
 "
 );

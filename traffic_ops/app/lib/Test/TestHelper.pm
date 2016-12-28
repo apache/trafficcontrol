@@ -151,7 +151,7 @@ sub unload_core_data {
 	$self->teardown($schema, 'ProfileParameter');
 	$self->teardown($schema, 'Type');
 	$self->teardown($schema, 'Status');
-	$self->teardown( $schema, 'Snapshot' );
+	$self->teardown($schema, 'Snapshot');
 	$self->teardown($schema, 'Cdn');
 }
 

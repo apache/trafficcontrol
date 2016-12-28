@@ -71,14 +71,8 @@ sub edit {
 sub get_cdn_domain {
 	my $self       = shift;
 	my $id         = shift;
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{
-			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-			distinct => 1
-		}
-	)->get_column('value')->single();
-	return $cdn_domain;
+
+	return $self->db->resultset('Deliveryservice')->search( { id => $id }, { prefetch => ['cdn']} )->get_column('domain_name')->single();
 }
 
 sub get_example_urls {

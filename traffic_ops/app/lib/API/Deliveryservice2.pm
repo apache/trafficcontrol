@@ -419,25 +419,20 @@ sub _check_params {
 		return (undef, "protocol must be 0|1|2|3." );
 	}
 
+
 	if ( defined($params->{profileName}) ) {
-		my $ccr_profiles;
-		my @ccrprofs = $self->db->resultset('Profile')->search( { name => { -like => 'CCR%' } } )->get_column('id')->all();
-		my $rs = $self->db->resultset('ProfileParameter')->search(
-				{ profile => { -in => \@ccrprofs }, 'parameter.name' => 'domain_name', 'parameter.config_file' => 'CRConfig.json' },
-				{ prefetch => [ 'parameter', 'profile' ] }
-		);
-		while ( my $row = $rs->next ) {
-			$ccr_profiles->{ $row->profile->name } = $row->profile->id;
-		}
-		if ( !exists $ccr_profiles->{ $params->{profileName} } ) {
-			return (undef, "profileName (" . $params->{profileName} . ") must be CCR profiles." );
+		my $pname = $params->{profileName};
+		my $profile =  $self->db->resultset('Profile')->search( { 'me.name' => $pname }, { prefetch => ['cdn'] } )->single();
+		if ( !defined($profile) || $profile->cdn->name ne  $params->{cdnName} ) {
+			return (undef, "profileName (" . $params->{profileName} . ") does not exist, or is not on the same CDN as " . $params->{cdnName} );
 		}
 		else {
-			$transformed_params->{ profile_id } = $ccr_profiles->{ $params->{profileName} };
+			$transformed_params->{ profile_id } = $profile->id;
 		}
 	} else {
 		return (undef, "parameter profileName is must." );
 	}
+
 
 	my $cdn_id = undef;
 	if ( defined($params->{cdnName}) ) {

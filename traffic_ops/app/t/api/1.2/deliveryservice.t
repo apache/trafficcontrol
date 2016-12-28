@@ -145,7 +145,7 @@ ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/jso
         "protocol" => "1",
         "orgServerFqdn" => "http://10.75.168.91",
         "cdnName" => "cdn2",
-        "profileName" => "CCR1",
+        "profileName" => "CCR2",
         "type" => "HTTP",
         "multiSiteOrigin" => "0",
         "regionalGeoBlocking" => "1",
@@ -167,7 +167,7 @@ ok $t->post_ok('/api/1.2/deliveryservices/create' => {Accept => 'application/jso
     ->json_is( "/response/displayName" => "ds_displayname_1")
     ->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
     ->json_is( "/response/cdnName" => "cdn2")
-    ->json_is( "/response/profileName" => "CCR1")
+    ->json_is( "/response/profileName" => "CCR2")
     ->json_is( "/response/protocol" => "1")
     ->json_is( "/response/type" => "HTTP")
     ->json_is( "/response/multiSiteOrigin" => "0")
@@ -228,7 +228,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . '/update' => {Accept => 'a
 		"protocol" => "1",
 		"orgServerFqdn" => "http://10.75.168.91",
 		"cdnName" => "cdn2",
-		"profileName" => "CCR1",
+		"profileName" => "CCR2",
 		"type" => "HTTP",
 		"multiSiteOrigin" => "0",
 		"regionalGeoBlocking" => "1",
@@ -251,7 +251,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id . '/update' => {Accept => 'a
 		->json_is( "/response/displayName" => "ds_displayname_1")
 		->json_is( "/response/orgServerFqdn" => "http://10.75.168.91")
 		->json_is( "/response/cdnName" => "cdn2")
-		->json_is( "/response/profileName" => "CCR1")
+		->json_is( "/response/profileName" => "CCR2")
 		->json_is( "/response/protocol" => "1")
 		->json_is( "/response/type" => "HTTP")
 		->json_is( "/response/multiSiteOrigin" => "0")

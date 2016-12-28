@@ -46,23 +46,21 @@ sub index {
 	$self->success( \@data, undef, $orderby, $limit, $page );
 }
 
+
+# why is this here and in API/Cdn.pm?
 sub domains {
 	my $self = shift;
 	my @data;
 
-	my @ccrprofs = $self->db->resultset('Profile')->search( { name => { -like => 'CCR%' } } )->get_column('id')->all();
-	my $rs_pp =
-		$self->db->resultset('ProfileParameter')
-		->search( { profile => { -in => \@ccrprofs }, 'parameter.name' => 'domain_name', 'parameter.config_file' => 'CRConfig.json' },
-		{ prefetch => [ 'parameter', 'profile' ] } );
-	while ( my $row = $rs_pp->next ) {
+	my $rs = $self->db->resultset('Profile')->search( { 'me.name' => { -like => 'CCR%' } }, { prefetch => ['cdn'] } );
+	while ( my $row = $rs->next ) {
 		push(
 			@data, {
-				"domainName"         => $row->parameter->value,
-				"parameterId"        => $row->parameter->id,
-				"profileId"          => $row->profile->id,
-				"profileName"        => $row->profile->name,
-				"profileDescription" => $row->profile->description,
+				"domainName"         => $row->cdn->domain_name,
+				"parameterId"        => -1,  # it's not a parameter anymore
+				"profileId"          => $row->id,
+				"profileName"        => $row->name,
+				"profileDescription" => $row->description,
 			}
 		);
 
