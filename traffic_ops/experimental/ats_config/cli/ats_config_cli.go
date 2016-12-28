@@ -28,6 +28,8 @@ type Args struct {
 	TrafficOpsUri    string
 	TrafficOpsUser   string
 	TrafficOpsPass   string
+	RiakUser         string
+	RiakPass         string
 }
 
 // getFlags parses and returns the command line arguments. The returned error
@@ -44,6 +46,8 @@ func getFlags() (Args, error) {
 	flag.StringVar(&args.TrafficOpsUser, "U", "", "the Traffic Ops username (shorthand)")
 	flag.StringVar(&args.TrafficOpsPass, "Pass", "", "the Traffic Ops password")
 	flag.StringVar(&args.TrafficOpsPass, "P", "", "the Traffic Ops password (shorthand)")
+	flag.StringVar(&args.RiakUser, "riakuser", "", "the Riak user")
+	flag.StringVar(&args.RiakPass, "riakpass", "", "the Riak password")
 	flag.Parse()
 	if args.ConfigFile == "" {
 		return args, errors.New("Missing config file")
@@ -66,7 +70,7 @@ func getFlags() (Args, error) {
 func printUsage() {
 	fmt.Println("Usage:")
 	flag.PrintDefaults()
-	fmt.Println("Example: ats-config -uri http://my-traffic-ops.mycdn -user bill -pass thelizard -configfile storage.config -configfilehost c2-atsec-01")
+	fmt.Println("Example: ats-config -uri http://my-traffic-ops.mycdn -user bill -pass thelizard -riakuser walrus -riakpass carpenter -configfile storage.config -configfilehost c2-atsec-01")
 }
 
 func main() {
@@ -86,7 +90,7 @@ func main() {
 	}
 	toClient := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(realToClient))
 
-	config, err := configfiles.Get(toClient, args.ConfigFileServer, args.ConfigFile)
+	config, err := configfiles.Get(toClient, args.ConfigFileServer, args.ConfigFile, args.RiakUser, args.RiakPass)
 	if err != nil {
 		fmt.Println(err)
 		return

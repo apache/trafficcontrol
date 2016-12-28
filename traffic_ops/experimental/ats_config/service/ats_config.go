@@ -30,6 +30,8 @@ type Args struct {
 	TrafficOpsUri  string
 	TrafficOpsUser string
 	TrafficOpsPass string
+	RiakUser       string
+	RiakPass       string
 }
 
 // getFlags parses and returns the command line arguments. The returned error
@@ -44,6 +46,8 @@ func getFlags() (Args, error) {
 	flag.StringVar(&args.TrafficOpsUser, "U", "", "the Traffic Ops username (shorthand)")
 	flag.StringVar(&args.TrafficOpsPass, "Pass", "", "the Traffic Ops password")
 	flag.StringVar(&args.TrafficOpsPass, "P", "", "the Traffic Ops password (shorthand)")
+	flag.StringVar(&args.RiakUser, "riakuser", "", "the Riak user")
+	flag.StringVar(&args.RiakPass, "riakpass", "", "the Riak password")
 	flag.Parse()
 	if args.Port == -1 {
 		return args, errors.New("Missing port")
@@ -66,17 +70,17 @@ func getFlags() (Args, error) {
 func printUsage() {
 	fmt.Println("Usage:")
 	flag.PrintDefaults()
-	fmt.Println("Example: ats-config -port 3001 -uri http://my-traffic-ops.mycdn -user bill -pass thelizard")
+	fmt.Println("Example: ats-config -port 3001 -uri http://my-traffic-ops.mycdn -user bill -pass thelizard -riakuser walrus -riakpass carpenter")
 }
 
 // route routes HTTP requests to /traffic-server-host/config-file.config
 // This should be registered with http.HandleFunc at "/"
 // This could be changed to serve at an arbitrary endpoint, by removing the ^ in the regex
-func route(toClient towrap.ITrafficOpsSession, w http.ResponseWriter, r *http.Request) {
+func route(toClient towrap.ITrafficOpsSession, riakUser string, riakPass string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	hostnameRegex := `((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*(?:[A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))`
-	configfileRegex := `([a-zA-z]*\.config)`
+	configfileRegex := `(.+\.config)`
 	// \todo precompile
 	re := regexp.MustCompile(`^` + `/` + hostnameRegex + `/` + configfileRegex + `$`)
 
@@ -112,7 +116,7 @@ func route(toClient towrap.ITrafficOpsSession, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	config, err := configfiles.GetConfig(configFile, toUrl, server, params)
+	config, err := configfiles.GetConfig(toClient, configFile, toUrl, server, riakUser, riakPass, params)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error getting config for server '%s' profile '%s': '%v'", server, profile, err)
@@ -142,7 +146,7 @@ func main() {
 	toClient := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(realToClient))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		route(toClient, w, r)
+		route(toClient, args.RiakUser, args.RiakPass, w, r)
 	})
 
 	err = http.ListenAndServe(":"+strconv.Itoa(args.Port), nil)

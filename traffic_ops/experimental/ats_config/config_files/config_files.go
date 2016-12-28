@@ -28,7 +28,7 @@ import (
 var ErrServerNotFound = fmt.Errorf("Server not found")
 
 // Get returns the requested config for the requested server. This is a convenience function equivalent to GetConfig(cfgFile, toClient.URL(), server, toClient.Parameters)
-func Get(toClient towrap.ITrafficOpsSession, serverHostname string, configFileName string) (string, error) {
+func Get(toClient towrap.ITrafficOpsSession, serverHostname string, configFileName string, riakUser string, riakPass string) (string, error) {
 	profile, err := GetServerProfileName(toClient, serverHostname)
 	if err != nil {
 		return "", fmt.Errorf("Error getting server profile name: %v", err)
@@ -44,7 +44,7 @@ func Get(toClient towrap.ITrafficOpsSession, serverHostname string, configFileNa
 		return "", fmt.Errorf("Error getting Traffic Ops parameters: %v", err)
 	}
 
-	return GetConfig(toClient, configFileName, toURL, serverHostname, params)
+	return GetConfig(toClient, configFileName, toURL, serverHostname, riakUser, riakPass, params)
 }
 
 // GetServerProfileName returns the name of the given server's profile in Traffic Ops.
@@ -67,10 +67,11 @@ type ConfigFileCreatorFunc func(toClient towrap.ITrafficOpsSession, filename str
 
 // ConfigFileFuncMap returns the dispatch map, of regular expressions to config file creator functions
 // TODO change apps to cache this, namely for the long-running service to only compile the regexes once. Or, put in init()?
-func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
+func ConfigFileFuncMap(riakUser, riakPass string) map[*regexp.Regexp]ConfigFileCreatorFunc {
 	spaceCreateConfig := createGenericDotConfigFunc(" ")
 	spacedEqualsCreateConfig := createGenericDotConfigFunc(" = ")
 	equalsCreateConfig := createGenericDotConfigFunc("=")
+	createUrlSigDotConfig := createUrlSigDotConfigFunc(riakUser, riakPass)
 	return map[*regexp.Regexp]ConfigFileCreatorFunc{
 		regexp.MustCompile(`^storage\.config$`):          createStorageDotConfig,
 		regexp.MustCompile(`^volume\.config$`):           createVolumeDotConfig,
@@ -91,13 +92,14 @@ func ConfigFileFuncMap() map[*regexp.Regexp]ConfigFileCreatorFunc {
 		regexp.MustCompile(`^regex_revalidate\.config$`): createRegexRevalidateDotConfig,
 		regexp.MustCompile(`^drop_qstring\.config$`):     createDropQstringDotConfig,
 		regexp.MustCompile(`^bg_fetch\.config$`):         createBgFetchDotConfig,
+		regexp.MustCompile(`^url_sig_(.+)\.config$`):     createUrlSigDotConfig,
 	}
 }
 
 // GetConfig takes the name of the config file, and the Traffic Ops parameters for a server,
 // and returns the text of that config file for that server.
-func GetConfig(toClient towrap.ITrafficOpsSession, configFileName string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
-	fileFuncs := ConfigFileFuncMap()
+func GetConfig(toClient towrap.ITrafficOpsSession, configFileName string, trafficOpsHost string, trafficServerHost string, riakUser string, riakPass string, params []to.Parameter) (string, error) {
+	fileFuncs := ConfigFileFuncMap(riakUser, riakPass)
 	for r, f := range fileFuncs {
 		if r.MatchString(configFileName) {
 			return f(toClient, configFileName, trafficOpsHost, trafficServerHost, params)
