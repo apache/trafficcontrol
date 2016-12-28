@@ -81,6 +81,36 @@ sub get_profile_params {
 	$self->success( \@data );
 }
 
+sub get_cachegroup_params {
+	my $self         = shift;
+	my $cg_id   = $self->param('id');
+
+	my %criteria;
+	if ( defined $cg_id ) {
+		$criteria{'cachegroup.id'} = $cg_id;
+	} else {
+        return $self->alert("Cache Group ID is required");
+    }
+
+	my $rs_data = $self->db->resultset("CachegroupParameter")->search( \%criteria, { prefetch => [ 'cachegroup', 'parameter' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		my $value = $row->parameter->value;
+		&UI::Parameter::conceal_secure_parameter_value( $self, $row->parameter->secure, \$value );
+		push(
+			@data, {
+				"name"        => $row->parameter->name,
+				"id"          => $row->parameter->id,
+				"configFile"  => $row->parameter->config_file,
+				"value"       => $value,
+				"secure"      => \$row->parameter->secure,
+				"lastUpdated" => $row->parameter->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub create {
     my $self = shift;
     my $params = $self->req->json;
