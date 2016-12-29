@@ -117,7 +117,7 @@ sub create {
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
-	my $existing = $self->db->resultset('Cdn')->search( { domain_name => $params->{domainName} } )->single();
+	$existing = $self->db->resultset('Cdn')->search( { domain_name => $params->{domainName} } )->single();
 	if ($existing) {
 		$self->app->log->error( "a cdn with domain name '" . $params->{domainName} . "' already exists." );
 		return $self->alert( "a cdn with domain " . $params->{domainName} . " already exists." );
