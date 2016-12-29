@@ -32,11 +32,15 @@ use Validate::Tiny ':all';
 sub index {
 	my $self         = shift;
 	my $orderby      = $self->param('orderby') || "xml_id";
+	my $cdn_id		 = $self->param('cdn');
 	my $logs_enabled = $self->param('logsEnabled');
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
 	my %criteria;
+	if ( defined $cdn_id ) {
+		$criteria{'cdn_id'} = $cdn_id;
+	}
 	if ( defined $logs_enabled ) {
 		$criteria{'logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
 	}
