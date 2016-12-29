@@ -191,6 +191,7 @@ sub unload_core_data {
 	$self->teardown( $schema, 'PhysLocation' );
 	$self->teardown( $schema, 'Region' );
 	$self->teardown( $schema, 'Division' );
+	$self->teardown( $schema, 'Snapshot' );
 	$self->teardown( $schema, 'Cdn' );
 }
 
