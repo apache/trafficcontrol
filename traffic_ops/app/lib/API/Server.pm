@@ -38,6 +38,7 @@ sub index {
 	my $profile_id   = $self->param('profileId');
 	my $cdn_id       = $self->param('cdnId');
 	my $cg_id        = $self->param('cachegroupId');
+	my $phys_loc_id	 = $self->param('physLocation');
 
 	my $servers;
 	my $forbidden;
@@ -58,6 +59,9 @@ sub index {
 	}
 	elsif ( defined $cg_id ) {
 		( $forbidden, $servers ) = $self->get_servers_by_cachegroup($cg_id);
+	}
+	elsif ( defined $phys_loc_id ) {
+		( $forbidden, $servers ) = $self->get_servers_by_phys_loc($phys_loc_id);
 	}
 	else {
 		$servers = $self->get_servers_by_status( $current_user, $status );
@@ -776,6 +780,21 @@ sub get_servers_by_cdn {
 	}
 
 	my $servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
+	return ( $forbidden, $servers );
+}
+
+sub get_servers_by_phys_loc {
+	my $self   			= shift;
+	my $phys_loc_id 	= shift;
+
+	my $forbidden;
+	my $servers;
+	if ( !&is_oper($self) ) {
+		$forbidden = "Forbidden. You must have the operations role to perform this operation.";
+		return ( $forbidden, $servers );
+	}
+
+	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id } );
 	return ( $forbidden, $servers );
 }
 
