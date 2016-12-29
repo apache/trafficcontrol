@@ -36,8 +36,8 @@ sub index {
 	my $type         = $self->param('type');
 	my $status       = $self->param('status');
 	my $profile_id   = $self->param('profileId');
-	my $cdn_id       = $self->param('cdnId');
-	my $cg_id        = $self->param('cachegroupId');
+	my $cdn_id       = $self->param('cdn');
+	my $cg_id        = $self->param('cachegroup');
 
 	my $servers;
 	my $forbidden;

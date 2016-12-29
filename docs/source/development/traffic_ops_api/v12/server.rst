@@ -42,11 +42,11 @@ Server
   +--------------------+----------+---------------------------------------------+
   | ``type``           | no       | Used to filter servers by type.             |
   +--------------------+----------+---------------------------------------------+
-  | ``profileId``      | no       | Used to filter servers by profile.          |
+  | ``profileId``      | no       | Used to filter servers by profile ID.       |
   +--------------------+----------+---------------------------------------------+
-  | ``cdnId``          | no       | Used to filter servers by CDN.              |
+  | ``cdn``            | no       | Used to filter servers by CDN ID.           |
   +--------------------+----------+---------------------------------------------+
-  | ``cachegroupId``   | no       | Used to filter servers by cache group.      |
+  | ``cachegroup``     | no       | Used to filter servers by cache group ID.   |
   +--------------------+----------+---------------------------------------------+
 
   **Response Properties**

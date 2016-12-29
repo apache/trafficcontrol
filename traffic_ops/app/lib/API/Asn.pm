@@ -25,7 +25,7 @@ use Data::Dumper;
 # Index
 sub index {
 	my $self    = shift;
-	my $cg_id   = $self->param('cachegroupId');
+	my $cg_id   = $self->param('cachegroup');
 
 	my %criteria;
 	if ( defined $cg_id ) {
