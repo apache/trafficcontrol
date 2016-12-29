@@ -551,10 +551,6 @@ sub get_deliveryservices_by_serverId {
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
-			my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
-			my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
-			my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
-
 			push(
 				@data, {
 					"active"                   => \$row->active,
@@ -570,7 +566,6 @@ sub get_deliveryservices_by_serverId {
 					"dnsBypassTtl"             => $row->dns_bypass_ttl,
 					"dscp"                     => $row->dscp,
 					"edgeHeaderRewrite"        => $row->edge_header_rewrite,
-					"exampleURLs"              => \@example_urls,
 					"geoLimitRedirectURL"      => $row->geolimit_redirect_url,
 					"geoLimit"                 => $row->geo_limit,
 					"geoLimitCountries"        => $row->geo_limit_countries,
