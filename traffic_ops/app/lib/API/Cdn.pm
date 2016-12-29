@@ -39,7 +39,8 @@ sub index {
 				"id"            => $row->id,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated" 	=> $row->last_updated,
-				"name"          => $row->name
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name
 			}
 		);
 	}
@@ -58,7 +59,8 @@ sub show {
 				"id"            => $row->id,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated" 	=> $row->last_updated,
-				"name"          => $row->name
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name
 			}
 		);
 	}
@@ -77,7 +79,8 @@ sub name {
 				"id"            => $row->id,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated"   => $row->last_updated,
-				"name"          => $row->name
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name
 			}
 		);
 	}
@@ -104,15 +107,26 @@ sub create {
 		return $self->alert("dnssecEnabled is required.");
 	}
 
+	if ( !defined( $params->{domainName} ) ) {
+		return $self->alert("Domain Name is required.");
+	}
+
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
 	if ($existing) {
 		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
+	my $existing = $self->db->resultset('Cdn')->search( { domain_name => $params->{domainName} } )->single();
+	if ($existing) {
+		$self->app->log->error( "a cdn with domain name '" . $params->{domainName} . "' already exists." );
+		return $self->alert( "a cdn with domain " . $params->{domainName} . " already exists." );
+	}
+
 	my $values = {
 		name => $params->{name},
 		dnssec_enabled => $params->{dnssecEnabled},
+		domain_name => $params->{domainName},
 	};
 
 	my $insert = $self->db->resultset('Cdn')->create($values);
@@ -123,6 +137,7 @@ sub create {
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
+		$response->{domainName}    = $rs->domain_name;
 		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
 		return $self->success( $response, "cdn was created." );

@@ -45,7 +45,7 @@ $t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 
     ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
-        "name" => "cdn_test", "dnssecEnabled" => "true" })
+        "name" => "cdn_test", "dnssecEnabled" => "true", "domainName" => "testcdn.kabletown.net" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test" )
     ->json_is( "/alerts/0/level" => "success" )
