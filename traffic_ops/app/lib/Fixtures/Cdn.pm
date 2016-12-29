@@ -19,7 +19,6 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	## id => 1
 	cdn1_cdn_name => {
 		new   => 'Cdn',
 		using => {
@@ -28,7 +27,6 @@ my %definition_for = (
 			domain_name => 'cdn1.kabletown.net',
 		},
 	},
-	## id => 2
 	cdn2_cdn_name => {
 		new   => 'Cdn',
 		using => {
