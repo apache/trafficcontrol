@@ -704,7 +704,10 @@ sub api_routes {
 	$r->get( "/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'User#show', namespace => $namespace );
 	$r->put("/api/$version/users/:id")->over( authenticated => 1 )->to( 'User#update', namespace => $namespace );
 
-	# -- USERS: CURRENT USER
+    # get all deliveryservices assigned to a user (from deliveryservice_tmuser table)
+    $r->get( "/api/$version/users/:id/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );
+
+    # -- USERS: CURRENT USER
 	$r->get("/api/$version/user/current")->over( authenticated => 1 )->to( 'User#current', namespace => $namespace );
 	$r->post("/api/$version/user/current/update")->over( authenticated => 1 )->to( 'User#update_current', namespace => $namespace );
 

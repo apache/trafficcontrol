@@ -613,6 +613,81 @@ sub get_deliveryservices_by_serverId {
 
 	return $self->success( \@data );
 }
+sub get_deliveryservices_by_userId {
+	my $self    	= shift;
+	my $user_id   	= $self->param('id');
+
+	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
+
+	my $deliveryservices = $self->db->resultset('Deliveryservice')->search(
+		{ 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }
+	);
+
+	my @data;
+	if ( defined($deliveryservices) ) {
+		while ( my $row = $deliveryservices->next ) {
+			push(
+				@data, {
+					"active"                   => \$row->active,
+					"cacheurl"                 => $row->cacheurl,
+					"ccrDnsTtl"                => $row->ccr_dns_ttl,
+					"cdnId"                    => $row->cdn->id,
+					"cdnName"                  => $row->cdn->name,
+					"checkPath"                => $row->check_path,
+					"displayName"              => $row->display_name,
+					"dnsBypassCname"           => $row->dns_bypass_cname,
+					"dnsBypassIp"              => $row->dns_bypass_ip,
+					"dnsBypassIp6"             => $row->dns_bypass_ip6,
+					"dnsBypassTtl"             => $row->dns_bypass_ttl,
+					"dscp"                     => $row->dscp,
+					"edgeHeaderRewrite"        => $row->edge_header_rewrite,
+					"geoLimitRedirectURL"      => $row->geolimit_redirect_url,
+					"geoLimit"                 => $row->geo_limit,
+					"geoLimitCountries"        => $row->geo_limit_countries,
+					"geoProvider"              => $row->geo_provider,
+					"globalMaxMbps"            => $row->global_max_mbps,
+					"globalMaxTps"             => $row->global_max_tps,
+					"httpBypassFqdn"           => $row->http_bypass_fqdn,
+					"id"                       => $row->id,
+					"infoUrl"                  => $row->info_url,
+					"initialDispersion"        => $row->initial_dispersion,
+					"ipv6RoutingEnabled"       => \$row->ipv6_routing_enabled,
+					"lastUpdated"              => $row->last_updated,
+					"logsEnabled"              => \$row->logs_enabled,
+					"longDesc"                 => $row->long_desc,
+					"longDesc1"                => $row->long_desc_1,
+					"longDesc2"                => $row->long_desc_2,
+					"maxDnsAnswers"            => $row->max_dns_answers,
+					"midHeaderRewrite"         => $row->mid_header_rewrite,
+					"missLat"                  => $row->miss_lat,
+					"missLong"                 => $row->miss_long,
+					"multiSiteOrigin"          => \$row->multi_site_origin,
+					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
+					"orgServerFqdn"            => $row->org_server_fqdn,
+					"originShield"             => $row->origin_shield,
+					"profileId"                => $row->profile->id,
+					"profileName"              => $row->profile->name,
+					"profileDescription"       => $row->profile->description,
+					"protocol"                 => $row->protocol,
+					"qstringIgnore"            => $row->qstring_ignore,
+					"rangeRequestHandling"     => $row->range_request_handling,
+					"regexRemap"               => $row->regex_remap,
+					"regionalGeoBlocking"      => \$row->regional_geo_blocking,
+					"remapText"                => $row->remap_text,
+					"signed"                   => \$row->signed,
+					"sslKeyVersion"            => $row->ssl_key_version,
+					"trRequestHeaders"         => $row->tr_request_headers,
+					"trResponseHeaders"        => $row->tr_response_headers,
+					"type"                     => $row->type->name,
+					"typeId"                   => $row->type->id,
+					"xmlId"                    => $row->xml_id
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
 
 sub routing {
 	my $self = shift;
