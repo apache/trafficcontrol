@@ -482,6 +482,9 @@ sub api_routes {
 	$r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'Deliveryservice#update', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'Deliveryservice#delete', namespace => $namespace );
 
+	# get all edge servers associated with a delivery service (from deliveryservice_server table)
+	$r->get( "/api/$version/deliveryservices/:id/servers")->over( authenticated => 1 )->to( 'Server#get_edge_servers_by_dsid', namespace => $namespace );
+
 	# alternate deliveryservice routes
 	$r->get("/api/$version/deliveryservices/list")->over( authenticated => 1 )->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id/get" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
