@@ -114,6 +114,52 @@ Parameter
 
 |
 
+**GET /api/1.2/parameters/:id/profiles**
+
+    Retrieves all profiles assigned to the parameter.
+
+	Authentication Required: Yes
+
+	Role(s) Required: None
+
+	**Request Route Parameters**
+
+	+---------------+----------+----------------------------------------------------+
+	|    Name       | Required |                    Description                     |
+	+===============+==========+====================================================+
+	| ``id``        |   yes    | Parameter ID.                                      |
+	+---------------+----------+----------------------------------------------------+
+
+	**Response Properties**
+
+	+-----------------+--------+----------------------------------------------------+
+	|    Parameter    |  Type  |                    Description                     |
+	+=================+========+====================================================+
+	| ``lastUpdated`` | array  | The Time / Date this server entry was last updated |
+	+-----------------+--------+----------------------------------------------------+
+	| ``name``        | string | The name for the profile                           |
+	+-----------------+--------+----------------------------------------------------+
+	| ``id``          | string | Primary key                                        |
+	+-----------------+--------+----------------------------------------------------+
+	| ``description`` | string | The description for the profile                    |
+	+-----------------+--------+----------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+            "lastUpdated": "2012-10-08 19:34:45",
+            "name": "CCR_TOP",
+            "id": "8",
+            "description": "Content Router for top.foobar.net"
+        }
+     ]
+    }
+
+|
+
+
 **GET /api/1.2/profiles/:id/parameters**
 
   Authentication Required: Yes

@@ -579,6 +579,9 @@ sub api_routes {
 	$r->delete("/api/$version/parameters/:id")->over( authenticated => 1 )->to( 'Parameter#delete', namespace => $namespace );
 	$r->post("/api/$version/parameters/validate")->over( authenticated => 1 )->to( 'Parameter#validate', namespace => $namespace );
 
+	# get all profiles associated with a parameter (from profile_parameter table)
+	$r->get( "/api/$version/parameters/:id/profiles")->over( authenticated => 1 )->to( 'Profile#get_profiles_by_paramId', namespace => $namespace );
+
 	# parameters for a profile
 	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
 	$r->get("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
