@@ -29,7 +29,7 @@ sub index {
 
 	my %criteria;
 	if ( defined $cg_id ) {
-		$criteria{'cachegroup.id'} = $cg_id;
+		$criteria{'cachegroup'} = $cg_id;
 	}
 
 	my @data;
