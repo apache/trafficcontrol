@@ -18,8 +18,8 @@ package Fixtures::Integration::Parameter;
 # under the License.
 
 
-# Do not edit! Generated code.
-# See https://github.com/Comcast/traffic_control/wiki/The%20Kabletown%20example
+# Note - removing the NODNAME parameter wreaks all kinds of havoc because of ordering / id problems, so I renamed
+# it to NODNAME - JvD
 
 use Moose;
 extends 'DBIx::Class::EasyFixture';
@@ -2931,7 +2931,7 @@ use namespace::autoclean;
 	'290' => {
 		new => 'Parameter',
 		using => {
-			name => 'domain_name',
+			name => 'NODNAME',
 			config_file => 'CRConfig.xml',
 			last_updated => '2015-12-10 15:43:46',
 			value => 'cdn1.kabletown.net',
@@ -2941,7 +2941,7 @@ use namespace::autoclean;
 	'291' => {
 		new => 'Parameter',
 		using => {
-			name => 'domain_name',
+			name => 'NODNAME',
 			config_file => 'CRConfig.xml',
 			last_updated => '2015-12-10 15:43:46',
 			value => 'cdn2.kabletown.net',
@@ -2951,7 +2951,7 @@ use namespace::autoclean;
 	'292' => {
 		new => 'Parameter',
 		using => {
-			name => 'domain_name',
+			name => 'NODNAME',
 			last_updated => '2015-12-10 15:43:47',
 			value => 'cdn1.kabletown.net',
 			config_file => 'CRConfig.json',
@@ -2961,7 +2961,7 @@ use namespace::autoclean;
 	'293' => {
 		new => 'Parameter',
 		using => {
-			name => 'domain_name',
+			name => 'NODNAME',
 			value => 'cdn2.kabletown.net',
 			config_file => 'CRConfig.json',
 			last_updated => '2015-12-10 15:43:47',
