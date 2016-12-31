@@ -98,7 +98,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'bigint'
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 cdn_id
 
@@ -323,7 +323,7 @@ __PACKAGE__->add_columns(
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "profile",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "cdn_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "ccr_dns_ttl",
@@ -417,7 +417,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_18221_ds_id_unique>
+=head2 C<idx_90606_ds_id_unique>
 
 =over 4
 
@@ -427,9 +427,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_18221_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_90606_ds_id_unique", ["id"]);
 
-=head2 C<idx_18221_ds_name_unique>
+=head2 C<idx_90606_ds_name_unique>
 
 =over 4
 
@@ -439,7 +439,7 @@ __PACKAGE__->add_unique_constraint("idx_18221_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_18221_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_90606_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -545,7 +545,12 @@ __PACKAGE__->belongs_to(
   "profile",
   "Schema::Result::Profile",
   { id => "profile" },
-  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
 );
 
 =head2 staticdnsentries
@@ -609,8 +614,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-26 10:44:56
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:+HFlbMehDLwkF/hmfifkjw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-31 13:55:06
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:+2cW0kP4B6YbySGBBtDp0Q
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

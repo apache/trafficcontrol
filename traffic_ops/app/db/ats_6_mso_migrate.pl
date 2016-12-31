@@ -64,7 +64,7 @@ while ( my @data = $sth->fetchrow_array() ) {
 				my ( $name, $value ) = split( /\s+/, $setting );
 				# print $name . " -> " . $value . "\n";
 				my $insh = $dbh->prepare('INSERT INTO PARAMETER ("name", "config_file", "value") VALUES (?, ?, ?);');
-				$insh->bind_param( 1, $name );
+				$insh->bind_param( 1, 'mso.'.$name );
 				$insh->bind_param( 2, 'parent.config' );
 				$insh->bind_param( 3, $value );
 				$insh->execute();
