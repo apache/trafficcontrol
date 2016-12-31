@@ -19,15 +19,15 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	domain_name => {
-		new   => 'Parameter',
-		using => {
-			id          => 3,
-			name        => 'domain_name',
-			value       => 'foo.com',
-			config_file => 'CRConfig.json',
-		},
-	},
+	# domain_name => {
+	# 	new   => 'Parameter',
+	# 	using => {
+	# 		id          => 3,
+	# 		name        => 'domain_name',
+	# 		value       => 'foo.com',
+	# 		config_file => 'CRConfig.json',
+	# 	},
+	# },
 	health_threadhold_loadavg => {
 		new   => 'Parameter',
 		using => {
