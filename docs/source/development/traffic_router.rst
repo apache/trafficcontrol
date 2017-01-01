@@ -86,8 +86,9 @@ To install the Traffic Router Developer environment:
 
 1. Clone the traffic_control repository using Git.
 2. Change directories into ``traffic_control/traffic_router``.
-3. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests
-4. Additional configuration is set using the below files: 
+3. Follow the instructions in "README.DNSSEC" for DNSSEC support.
+4. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests
+5. Additional configuration is set using the below files: 
 	* core/src/test/resources no longer exists
 	* core/src/test/conf/traffic_ops.properties file holds the credentials for accessing Traffic Ops.
 	* Default configuration values now reside in core/src/main/webapp/WEB-INF/applicationContext.xml
@@ -100,7 +101,7 @@ To install the Traffic Router Developer environment:
 	  | ``traffic_monitor.bootstrap.hosts`` | FQDN and port of the Traffic Monitor instance(s), separated by semicolons as necessary (do not include http://). |
 	  +-------------------------------------+------------------------------------------------------------------------------------------------------------------+
 
-5. Import the existing git repo into Eclipse:
+6. Import the existing git repo into Eclipse:
 
 	a. File -> Import -> Git -> Projects from Git; Next
 	b. Existing local repository; Next
@@ -110,9 +111,9 @@ To install the Traffic Router Developer environment:
 	f. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` are checked; Finish (this step can take several minutes to complete)
 	g. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` have been opened by Eclipse after importing
 
-6. From the terminal, run ``mvn clean verify`` from the ``traffic_router`` directory
+7. From the terminal, run ``mvn clean verify`` from the ``traffic_router`` directory
 
-7. Start the embedded Jetty instance for Core from within Eclipse
+8. Start the embedded Jetty instance for Core from within Eclipse
 
 	a. In the package explorer, expand ``traffic_router_core``
 	b. Expand ``src/test/java``
@@ -121,7 +122,7 @@ To install the Traffic Router Developer environment:
 
 		..  Note:: If an error is displayed in the Console, run ``mvn clean verify`` from the ``traffic_router`` directory
 
-8. Traffic Router Core should now be running; the HTTP routing interface is available on http://localhost:8081, while HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:1053 via TCP and UDP.
+9. Traffic Router Core should now be running; the HTTP routing interface is available on http://localhost:8081, while HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:1053 via TCP and UDP.
 
 Test Cases
 ==========
