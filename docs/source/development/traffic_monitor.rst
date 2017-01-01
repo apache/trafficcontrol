@@ -61,18 +61,20 @@ To install the Traffic Monitor Developer environment:
 2. Change directories into ``traffic_control/traffic_monitor``.
 3. Edit the following parameters in src/test/resources/conf/traffic_monitor_config.js:
 
-+-----------------+------------------------------------------------------------+
-|    Parameter    |                           Value                            |
-+=================+============================================================+
-| ``tm.hostname`` | FQDN of the Traffic Ops instance (do not include http://). |
-+-----------------+------------------------------------------------------------+
-| ``tm.username`` | Admin username for Traffic Ops                             |
-+-----------------+------------------------------------------------------------+
-| ``tm.password`` | Password for admin user                                    |
-+-----------------+------------------------------------------------------------+
-| ``cdnName``     | Name of the CDN this Traffic Monitor will monitor          |
-+-----------------+------------------------------------------------------------+
+  +-----------------+------------------------------------------------------------+
+  |    Parameter    |                           Value                            |
+  +=================+============================================================+
+  | ``tm.hostname`` | FQDN of the Traffic Ops instance (do not include http://). |
+  +-----------------+------------------------------------------------------------+
+  | ``tm.username`` | Admin username for Traffic Ops                             |
+  +-----------------+------------------------------------------------------------+
+  | ``tm.password`` | Password for admin user                                    |
+  +-----------------+------------------------------------------------------------+
+  | ``cdnName``     | Name of the CDN this Traffic Monitor will monitor          |
+  +-----------------+------------------------------------------------------------+
 
+  Note: any change done later in the configuration file requires a mvn build in order to be applied.
+ 
 4. Import the existing git repo into Eclipse:
 
 	a. File -> Import -> Git -> Projects from Git; Next
