@@ -37,7 +37,7 @@ Installation
 
 **Installing Grafana:**
 
-	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and can be accessed by Traffic Ops.  Documentation on installing Grafana can be found on the `Grafana website <http://docs.grafana.org/installation/>`_.
+	Grafana is used to display Traffic Stats/InfluxDB data in Traffic Ops.  Grafana is typically run on the same server as Traffic Stats but this is not a requirement.  Grafana can be installed on any server that can access InfluxDB and can be accessed by Traffic Ops.  Documentation on installing Grafana can be found on the `Grafana website <http://docs.grafana.org/installation/>`__.
 
 Configuration
 =========================
@@ -147,11 +147,11 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 		3. Run it:
 			- ./create_ts_databases -help
 			- optional flags:
-				- influxUrl -  The influxdb url and port
+				- url -  The influxdb url and port
 				- replication -  The number of nodes in the cluster
 				- user - The user to use
 				- password - The password to use
-			- example: ./create_ts_databases -influxUrl=localhost:8086 -replication=3 -user=joe -password=mysecret
+			- example: ./create_ts_databases -url=localhost:8086 -replication=3 -user=joe -password=mysecret
 
 **sync_ts_databases**
 	This script is used to sync one influxdb environment to another.  Only data from continuous queries is synced as it is downsampled data and much smaller in size than syncing raw data.  Possible use cases are syncing from Production to Development or Syncing a new cluster once brought online.

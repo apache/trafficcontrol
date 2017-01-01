@@ -316,7 +316,7 @@ The fields in the Delivery Service view are:
 |                                                  | - CZF only - If the requesting IP is not in the Coverage Zone File, do not serve the request.                                                                                                                       |
 |                                                  | - CZF + US - If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.                                                                                           |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Limit Redirect URL                           | (for HTTP routed delivery services only) This is the URL Traffic Router will redirect to when Geo Limit Failure. See :ref:`geolimit-failure-redirect-feature`                                                       |
+| Geo Limit Redirect URL                           | (for HTTP routed delivery services only) This is the URL Traffic Router will redirect to when Geo Limit Failure. See :ref:`rl-tr-ngb`                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Bypass FQDN                                      | (for HTTP routed delivery services only) This is the FQDN Traffic Router will redirect to (with the same path) when the max Bps or Max Tps for this deliveryservice are exceeded.                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -352,7 +352,7 @@ The fields in the Delivery Service view are:
 | Maximum Transactions per Second allowed globally | The maximum transactions per se this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used |
 |                                                  | (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.                                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Miss Default Latitude                        | Default Latitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this lat.                                           |
+| Geo Miss Default Latitude                        | Default Latitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, this the client will be routed as if it was at this lat.                                          |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Miss Default Longitude                       | Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this long.                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -420,10 +420,10 @@ One of the most important settings when creating the delivery service is the sel
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                                                                                                                                                                                   |
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE_NATNL  | DNS Content routing, ut where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                       |
+| DNS_LIVE_NATNL  | DNS Content routing, but where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                      |
 |                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                                                                                                                                                                                        |
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATIONAL, but the MID tier is bypassed.                                                                                                                                                                                                                                                |
+| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATNL, but the MID tier is bypassed.                                                                                                                                                                                                                                                   |
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.                                                                                                                                                                  |
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -505,7 +505,7 @@ Parts
                 0110: use part1 and part 2 of path only
                 01: use everything except the fqdn
 
-        ``P=<parts string (0's and 1's>``
+        ``P=<parts string (0's and 1's)>``
 
 Signature
         The signature over the parts + the query string up to and
@@ -598,7 +598,7 @@ Multi Site Origin
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions.
 
-With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is ""
+With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is ""
 
 
 Parameters in the Origin profile that influence this feature:

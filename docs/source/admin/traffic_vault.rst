@@ -20,7 +20,7 @@ Installing Traffic Vault
 ========================
 In order to successfully store private keys you will need to install Riak.
 The latest version of Riak can be downloaded on the Riak `website <http://docs.basho.com/riak/latest/downloads/>`_.
-The installation instructions for Riak can be found `here <http://docs.basho.com/riak/latest/ops/building/installing/>`_.
+The installation instructions for Riak can be found `here <http://docs.basho.com/riak/latest/ops/building/installing/>`__.
 
 Production is currently running version 2.0.5 of Riak, but the latest version should suffice.
 

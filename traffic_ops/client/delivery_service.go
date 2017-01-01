@@ -179,6 +179,7 @@ func makeReq(to *Session, method, endpoint string, body []byte, respStruct inter
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
 		return err
