@@ -31,40 +31,6 @@ sub index {
 	$self->stash( profile => {} );
 }
 
-# stash the cdn array for a form select.. optional second arg is the one that is selected.
-sub stash_cdn_selector {
-	my $self = shift;
-	my $selected = shift || -1;
-
-	my $rs = $self->db->resultset('Cdn')->search(undef);
-	my @cdns;
-    while ( my $row = $rs->next ) {
-    	if ($row->id == $selected) {
-			push(@cdns, [ $row->name => $row->id, selected => 'true' ] );
-    	} else {
-			push(@cdns, [ $row->name => $row->id ] );
-    	}
-	}
-	$self->stash( cdns => \@cdns );
-}
-
-# stash the profile_type array for a form select. optional second arg is the one that is selected.
-sub stash_profile_type_selector {
-	my $self = shift;
-	my $selected = shift || -1;
-
-	my $enum_possible = $self->enum_values("profile_type");
-	my @types;
-    foreach my $val ( @{$enum_possible} ) {
-    	if ($val eq $selected) {
-			push(@types, [ $val => $val , selected => 'true' ] );
-    	} else {
-			push(@types, [ $val => $val ] );
-    	}
-	}
-	$self->stash( profile_types  => \@types );
-}
-
 # for the fancybox view
 sub add {
 	my $self     = shift;
