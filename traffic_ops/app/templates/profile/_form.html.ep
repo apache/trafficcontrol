@@ -40,5 +40,5 @@
         <span class="field-with-error"><%= field('profile.type')->error %></span>
     <% } %>
     %= label_for 'profile.type' => '* Profile Type', class => 'label'
-    %= field('profile.type')->select( \@{$profile_type_possible} )
+    %= field('profile.type')->select( \@{$profile_types} )
 </div>
