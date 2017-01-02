@@ -50,7 +50,7 @@ __PACKAGE__->table("profile");
 =head2 type
 
   data_type: 'enum'
-  extra: {custom_type_name => "profile_type",list => ["SERVER_PROFILE","DS_PROFILE"]}
+  extra: {custom_type_name => "profile_type",list => ["ATS_PROFILE","TR_PROFILE","TM_PROFILE","TS_PROFILE","TP_PROFILE","INFLUXDB_PROFILE","RIAK_PROFILE","SPLUNK_PROFILE","DS_PROFILE","ORG_PROFILE","KAFKA_PROFILE","LOGSTASH_PROFILE","ES_PROFILE","UNK_PROFILE"]}
   is_nullable: 0
 
 =head2 cdn
@@ -85,7 +85,22 @@ __PACKAGE__->add_columns(
     data_type => "enum",
     extra => {
       custom_type_name => "profile_type",
-      list => ["SERVER_PROFILE", "DS_PROFILE"],
+      list => [
+        "ATS_PROFILE",
+        "TR_PROFILE",
+        "TM_PROFILE",
+        "TS_PROFILE",
+        "TP_PROFILE",
+        "INFLUXDB_PROFILE",
+        "RIAK_PROFILE",
+        "SPLUNK_PROFILE",
+        "DS_PROFILE",
+        "ORG_PROFILE",
+        "KAFKA_PROFILE",
+        "LOGSTASH_PROFILE",
+        "ES_PROFILE",
+        "UNK_PROFILE",
+      ],
     },
     is_nullable => 0,
   },
@@ -107,7 +122,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_90769_name_unique>
+=head2 C<idx_101371_name_unique>
 
 =over 4
 
@@ -117,7 +132,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_90769_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_101371_name_unique", ["name"]);
 
 =head1 RELATIONS
 
@@ -187,8 +202,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-31 13:55:06
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NyNmb9qs7HXNZ13aV1VvuQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-01-02 16:07:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:1LR3Lov3kmopJD1mJF08EQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

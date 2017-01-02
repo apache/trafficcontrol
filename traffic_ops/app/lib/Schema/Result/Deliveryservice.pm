@@ -278,11 +278,6 @@ __PACKAGE__->table("deliveryservice");
   default_value: false
   is_nullable: 1
 
-=head2 multi_site_origin_algorithm
-
-  data_type: 'smallint'
-  is_nullable: 1
-
 =head2 geolimit_redirect_url
 
   data_type: 'text'
@@ -395,8 +390,6 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "logs_enabled",
   { data_type => "boolean", default_value => \"false", is_nullable => 1 },
-  "multi_site_origin_algorithm",
-  { data_type => "smallint", is_nullable => 1 },
   "geolimit_redirect_url",
   { data_type => "text", is_nullable => 1 },
 );
@@ -417,7 +410,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_90606_ds_id_unique>
+=head2 C<idx_101208_ds_id_unique>
 
 =over 4
 
@@ -427,9 +420,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_90606_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_101208_ds_id_unique", ["id"]);
 
-=head2 C<idx_90606_ds_name_unique>
+=head2 C<idx_101208_ds_name_unique>
 
 =over 4
 
@@ -439,7 +432,7 @@ __PACKAGE__->add_unique_constraint("idx_90606_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_90606_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_101208_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -614,8 +607,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-12-31 13:55:06
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:+2cW0kP4B6YbySGBBtDp0Q
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-01-02 16:07:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qCU9AxWN09+5k2ETT6tqSQ
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

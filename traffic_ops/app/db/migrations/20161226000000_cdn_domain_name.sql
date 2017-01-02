@@ -67,6 +67,8 @@ WHERE id = domainlist.profile_id;
 
 ALTER TABLE deliveryservice ALTER profile DROP NOT NULL;
 
+ALTER TABLE deliveryservice DROP COLUMN multi_site_origin_algorithm;
+
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
