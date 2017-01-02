@@ -31,10 +31,46 @@ sub index {
 	$self->stash( profile => {} );
 }
 
+sub stash_cdn_selector {
+	my $self = shift;
+	my $selected = shift || -1;
+
+	my $rs = $self->db->resultset('Cdn')->search(undef);
+	my @cdns;
+    while ( my $row = $rs->next ) {
+    	if ($row->id == $selected) {
+			push(@cdns, [ $row->name => $row->id, selected => 'true' ] );
+    	} else {
+			push(@cdns, [ $row->name => $row->id ] );
+    	}
+	}
+	$self->stash( cdns => \@cdns );
+}
+
+sub stash_profile_type_selector {
+	my $self = shift;
+	my $selected = shift || -1;
+
+	my $enum_possible = $self->enum_values("profile_type");
+	my @possible;
+    foreach my $val ( @{$enum_possible} ) {
+    	if ($val eq $selected) {
+			push(@possible, [ $val => $val , selected => 'true' ] );
+    	} else {
+			push(@possible, [ $val => $val ] );
+    	}
+	}
+	$self->stash( profile_type_possible  => \@possible );
+}
+
 # for the fancybox view
 sub add {
 	my $self     = shift;
 	my %profiles = get_profiles($self);
+
+	$self->stash_cdn_selector();
+	$self->stash_profile_type_selector();
+
 	$self->stash( profile => {}, profiles => \%profiles, fbox_layout => 1 );
 }
 
@@ -43,6 +79,10 @@ sub edit {
 	my $id     = $self->param('id');
 	my $cursor = $self->db->resultset('Profile')->search( { id => $id } );
 	my $data   = $cursor->single;
+
+	$self->stash_cdn_selector($data->cdn->id);
+	$self->stash_profile_type_selector($data->type);
+
 	&stash_role($self);
 	$self->stash( profile => $data, id => $data->id, fbox_layout => 1 );
 	return $self->render('profile/edit');
@@ -62,10 +102,9 @@ sub view {
 	my $id = $self->param('id');
 
 	my $rs_param = $self->db->resultset('Profile')->search( { id => $id } );
+	my $data = $rs_param->single;
 	my $param_count = $self->db->resultset('ProfileParameter')->search( { profile => $id } )->count();
 
-	# if ( $mode eq "view" ) {
-	my $data = $rs_param->single;
 	$self->stash( profile     => $data );
 	$self->stash( param_count => $param_count );
 
@@ -73,7 +112,6 @@ sub view {
 
 	$self->stash( fbox_layout => 1 );
 
-	# }
 }
 
 # Read
@@ -82,12 +120,14 @@ sub readprofile {
 	my @data;
 	my $orderby = "name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Profile")->search( undef, { prefetch => ['cdn'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
+				"type"         => $row->type,
+				"cdn"          => $row->cdn->name,
 				"description"  => $row->description,
 				"last_updated" => $row->last_updated,
 			}
@@ -194,12 +234,16 @@ sub update {
 	my $id          = $self->param('id');
 	my $name        = $self->param('profile.name');
 	my $description = $self->param('profile.description');
+	my $cdn         = $self->param('profile.cdn');
+	my $type        = $self->param('profile.type');
 
 	if ( $self->check_profile_input("edit") ) {
 
 		my $update = $self->db->resultset('Profile')->find( { id => $id } );
 		$update->name($name);
 		$update->description($description);
+		$update->cdn($cdn);
+		$update->type($type);
 		$update->update();
 
 		# if the update has failed, we don't even get here, we go to the exception page.
@@ -221,6 +265,9 @@ sub create {
 	my $new_id = -1;
 	my $p_name = $self->param('profile.name');
 	my $p_desc = $self->param('profile.description');
+	my $p_cdn         = $self->param('profile.cdn');
+	my $p_type        = $self->param('profile.type');
+
 	if ( !&is_admin($self) ) {
 		my $err = "You must be an ADMIN to perform this operation!" . "__NEWLINE__";
 		return $self->flash( message => $err );
@@ -230,6 +277,8 @@ sub create {
 			{
 				name        => $p_name,
 				description => $p_desc,
+				cdn         => $p_cdn,
+				type        => $p_type,
 			}
 		);
 		$insert->insert();

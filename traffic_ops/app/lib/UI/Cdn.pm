@@ -693,11 +693,11 @@ sub aprofile {
     my $self = shift;
     my %data = ( "aaData" => [] );
 
-    my $rs = $self->db->resultset('Profile')->search(undef);
+    my $rs = $self->db->resultset('Profile')->search(undef, { prefetch => ['cdn'] } );
 
     while ( my $row = $rs->next ) {
-
-        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->last_updated ];
+        my $ctext = defined( $row->cdn ) ? $row->cdn->name : "-";
+        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );
