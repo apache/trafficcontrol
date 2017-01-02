@@ -45,9 +45,12 @@ sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_ds =
-		$self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', { 'type' => undef }, { 'profile' => undef } ] } );
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type', 'profile' ] } );
 	my $data = $rs_ds->single;
+	print Dumper($data);
+	if (!defined($data->profile)) {
+		$data->profile(-1);
+	}
 	my $action;
 	my $regexp_set   = &get_regexp_set( $self, $id );
 	my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);

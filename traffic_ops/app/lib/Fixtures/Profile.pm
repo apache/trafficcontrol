@@ -25,6 +25,7 @@ my %definition_for = (
 			name        => 'EDGE1',
 			description => 'edge description',
 			cdn         => 1,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	MID1 => {
@@ -34,6 +35,7 @@ my %definition_for = (
 			name        => 'MID1',
 			description => 'mid description',
 			cdn         => 1,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	CCR1 => {
@@ -43,6 +45,7 @@ my %definition_for = (
 			name        => 'CCR1',
 			description => 'ccr description',
 			cdn         => 1,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	CCR2 => {
@@ -52,6 +55,7 @@ my %definition_for = (
 			name        => 'CCR2',
 			description => 'ccr description',
 			cdn         => 2,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	RIAK1 => {
@@ -61,6 +65,7 @@ my %definition_for = (
 			name        => 'RIAK1',
 			description => 'riak description',
 			cdn         => 1,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	RASCAL1 => {
@@ -70,6 +75,7 @@ my %definition_for = (
 			name        => 'RASCAL1',
 			description => 'rascal description',
 			cdn         => 1,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	RASCAL2 => {
@@ -79,6 +85,7 @@ my %definition_for = (
 			name        => 'RASCAL2',
 			description => 'rascal2 description',
 			cdn         => 2,
+			type        => 'SERVER_PROFILE',
 		},
 	},
 	MISC => {

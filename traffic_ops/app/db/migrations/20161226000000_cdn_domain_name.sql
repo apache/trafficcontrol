@@ -16,13 +16,23 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 
--- INSERT INTO TYPE (name, description, use_in_table) VALUES ('SERVER_PROFILE', 'Profile to be assigned to server', 'profile');
--- INSERT INTO TYPE (name, description, use_in_table) VALUES ('DS_PROFILE', 'Profile to be assigned to deliveryservice', 'profile');
--- better to use ENUMs, I think
-
-CREATE TYPE profile_type AS ENUM ('SERVER_PROFILE', 'DS_PROFILE');
+CREATE TYPE profile_type AS ENUM ('ATS_PROFILE', 'TR_PROFILE', 'TM_PROFILE', 'TS_PROFILE', 'TP_PROFILE', 'INFLUXDB_PROFILE', 
+  'RIAK_PROFILE', 'SPLUNK_PROFILE', 'DS_PROFILE', 'ORG_PROFILE', 'KAFKA_PROFILE', 'LOGSTASH_PROFILE', 'ES_PROFILE', 'UNK_PROFILE');
 ALTER TABLE public.profile ADD COLUMN type profile_type;
-UPDATE public.profile SET type='SERVER_PROFILE';
+UPDATE public.profile SET type='UNK_PROFILE'; -- So we don't get any NULL, these should be checked.
+UPDATE public.profile SET type='TR_PROFILE' WHERE name like 'CCR_%' OR name like 'TR_%';
+UPDATE public.profile SET type='TM_PROFILE' WHERE name like 'RASCAL_%' OR name like 'TM_%';
+UPDATE public.profile SET type='TS_PROFILE' WHERE name like 'TRAFFIC_STATS%';
+UPDATE public.profile SET type='TP_PROFILE' WHERE name like 'TRAFFIC_PORTAL%';
+UPDATE public.profile SET type='INFLUXDB_PROFILE' WHERE name like 'INFLUXDB%';
+UPDATE public.profile SET type='RIAK_PROFILE' WHERE name like 'RIAK%';
+UPDATE public.profile SET type='SPLUNK_PROFILE' WHERE name like 'SPLUNK%';
+UPDATE public.profile SET type='ORG_PROFILE' WHERE name like '%ORG%' or name like 'MSO%' or name like '%ORIGIN%';
+UPDATE public.profile SET type='KAFKA_PROFILE' WHERE name like 'KAFKA%';
+UPDATE public.profile SET type='LOGSTASH_PROFILE' WHERE name like 'LOGSTASH_%';
+UPDATE public.profile SET type='ES_PROFILE' WHERE name like 'ELASTICSEARCH%';
+UPDATE public.profile SET type='ATS_PROFILE' WHERE name like 'EDGE%' or name like 'MID%';
+
 ALTER TABLE public.profile ALTER type SET NOT NULL;
 
 ALTER TABLE public.cdn ADD COLUMN domain_name text;

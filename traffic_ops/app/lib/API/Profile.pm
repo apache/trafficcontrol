@@ -37,6 +37,8 @@ sub index {
 					"id" => $row->profile->id,
 					"name" => $row->profile->name,
 					"description" => $row->profile->description,
+					"cdn" => $row->profile->cdn,
+					"type" => $row->profile->type,
 					"lastUpdated" => $row->profile->last_updated
 				}
 			);
@@ -49,6 +51,8 @@ sub index {
 					"id"          => $row->id,
 					"name"        => $row->name,
 					"description" => $row->description,
+					"cdn"         => defined($row->cdn) ? $row->cdn->name : "-",
+					"type"        => $row->type,
 					"lastUpdated" => $row->last_updated
 				}
 			);
