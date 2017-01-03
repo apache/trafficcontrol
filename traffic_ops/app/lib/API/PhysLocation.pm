@@ -27,10 +27,17 @@ use Validate::Tiny ':all';
 my $finfo = __FILE__ . ":";
 
 sub index {
-	my $self = shift;
+	my $self 		= shift;
+	my $region		= $self->param('region');
+
+	my %criteria;
+	if ( defined $region ) {
+		$criteria{'region.id'} = $region;
+	}
+
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { prefetch => ['region'], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("PhysLocation")->search( \%criteria, { prefetch => ['region'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 
 		next if $row->short_name eq 'UNDEF';

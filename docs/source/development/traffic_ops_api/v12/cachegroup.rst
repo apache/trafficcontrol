@@ -192,6 +192,47 @@ Cache Group
 
 |
 
+**GET /api/1.2/cachegroups/:id/parameters**
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | Parameter                         | Type   | Description                                                              |
+  +===================================+========+==========================================================================+
+  | ``id``                            |   int  | Local unique identifier for the parameter                                |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``name``                          | string | Name of the parameter                                                    |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``value``                         | string | Value of the parameter                                                   |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``configFile``                    | string | Config file associated with the parameter                                |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``secure``                        |  bool  | Is the parameter value only visible to admin users                       |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``lastUpdated``                   | string | The Time / Date this entry was last updated                              |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+            "id": "1100",
+            "name": "cgw.originUrl",
+            "value": "http://to-short.g.foo.net/data/",
+            "configFile": "foo.config",
+            "secure": false,
+            "lastUpdated": "2015-08-27 15:11:49"
+        },
+        { ... }
+     ]
+    }
+
+|
 
 **GET /api/1.2/cachegroup/:parameter_id/parameter**
 
