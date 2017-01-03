@@ -212,7 +212,7 @@ sub ds_data {
 		my $cacheurl                    = $row->cacheurl;
 		my $remap_text                  = $row->remap_text;
 		my $multi_site_origin           = $row->multi_site_origin;
-		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
+		my $multi_site_origin_algorithm = 0; #TODO JvD -- may not need this here, the other params are needed somewhere else as well
 
 		if ( $re_type eq 'HOST_REGEXP' && $ds_type ne 'ANY_MAP' ) {
 			my $host_re = $row->pattern;

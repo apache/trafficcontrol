@@ -52,7 +52,9 @@ $t->get_ok('/dataprofile')->status_is(200)->json_has('/0/name')->json_has('/0/de
 $t->post_ok(
 	'/profile/create' => form => {
 		'profile.name'        => 'JLP_Test',
-		'profile.description' => 'JLP Test Host'
+		'profile.description' => 'JLP Test Host',
+		'profile.cdn'         => 1,
+		'profile.type'        => 'ATS_PROFILE'
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -71,7 +73,9 @@ sub upd_and_del() {
 		$t->post_ok(
 			"/profile/$id/update" => form => {
 				'profile.name'        => 'JLP_Test',
-				'profile.description' => 'JLP Test Host Updated'
+				'profile.description' => 'JLP Test Host Updated',
+				'profile.cdn'         => 1,
+				'profile.type'        => 'ATS_PROFILE'
 			}
 		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 		$t->get_ok("/profile/$id/delete")->status_is(302);

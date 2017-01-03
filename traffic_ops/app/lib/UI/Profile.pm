@@ -236,6 +236,7 @@ sub create {
 	my $p_cdn         = $self->param('profile.cdn');
 	my $p_type        = $self->param('profile.type');
 
+	print ">>> cdn: $p_cdn t: $p_type \n";
 	if ( !&is_admin($self) ) {
 		my $err = "You must be an ADMIN to perform this operation!" . "__NEWLINE__";
 		return $self->flash( message => $err );
