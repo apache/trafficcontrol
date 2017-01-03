@@ -403,6 +403,8 @@ sub api_routes {
 	$r->put("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#update', namespace => $namespace );
 	$r->delete("/api/$version/cachegroups/:id")->over( authenticated => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 
+	$r->get( "/api/$version/cachegroups/:id/parameters")->over( authenticated => 1 )->to( 'Parameter#get_cachegroup_params', namespace => $namespace );
+
 	# alternate cachegroup routes
 	$r->get("/api/$version/cachegroups/list")->over( authenticated => 1 )->to( 'Cachegroup2#index', namespace => $namespace );
 	$r->post("/api/$version/cachegroups/create")->over( authenticated => 1 )->to( 'Cachegroup2#create', namespace => $namespace );

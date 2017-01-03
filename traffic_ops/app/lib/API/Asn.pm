@@ -24,10 +24,17 @@ use Data::Dumper;
 
 # Index
 sub index {
-	my $self = shift;
+	my $self    = shift;
+	my $cg_id   = $self->param('cachegroup');
+
+	my %criteria;
+	if ( defined $cg_id ) {
+		$criteria{'cachegroup'} = $cg_id;
+	}
+
 	my @data;
 	my $orderby = $self->param('orderby') || "asn";
-	my $rs_data = $self->db->resultset("Asn")->search( undef, { prefetch => [ { 'cachegroup' => undef } ], order_by => "me." . $orderby } );
+	my $rs_data = $self->db->resultset("Asn")->search( \%criteria, { prefetch => [ { 'cachegroup' => undef } ], order_by => "me." . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
