@@ -958,6 +958,7 @@ sub create {
 	}
 
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
+		print "CDN:$cdn_id\n";
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
@@ -1059,7 +1060,6 @@ sub create {
 			);
 			$insert->insert();
 			my $new_re_id = $insert->id;
-
 			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
 				{
 					regex           => $new_re_id,
@@ -1080,6 +1080,7 @@ sub create {
 		my $cdn_rs = $self->db->resultset('Cdn')->search( { id => $cdn_id } )->single();
 		my $dnssec_enabled = $cdn_rs->dnssec_enabled;
 
+
 		if ( $dnssec_enabled == 1 ) {
 			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
 			$self->create_dnssec_keys( $cdn_rs->name, $self->param('ds.xml_id'), $new_id );
@@ -1090,7 +1091,7 @@ sub create {
 	else {
 		my $selected_type    = $self->param('ds.type');
 		my $selected_profile = $self->param('ds.profile');
-		my $selected_cdn     = $self->param('ds.cdn');
+		my $selected_cdn     = $self->param('ds.cdn_id');
 		&stash_role($self);
 		$self->stash(
 			ds               => {},
@@ -1188,7 +1189,8 @@ sub get_key_ttl {
 sub add {
 	my $self = shift;
 
-	$self->stash_profile_selector();
+	$self->stash_profile_selector('DS_PROFILE');
+	$self->stash_cdn_selector();
 	&stash_role($self);
 	$self->stash(
 		fbox_layout      => 1,

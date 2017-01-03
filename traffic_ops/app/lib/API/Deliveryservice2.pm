@@ -116,7 +116,7 @@ sub delivery_services {
 					"missLat"                  => $row->miss_lat,
 					"missLong"                 => $row->miss_long,
 					"multiSiteOrigin"          => \$row->multi_site_origin,
-					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
+					# "multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 					"orgServerFqdn"            => $row->org_server_fqdn,
 					"originShield"             => $row->origin_shield,
 					"profileId"                => $row->profile->id,
