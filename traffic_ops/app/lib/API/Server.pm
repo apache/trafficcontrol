@@ -38,6 +38,7 @@ sub index {
 	my $profile_id   = $self->param('profileId');
 	my $cdn_id       = $self->param('cdn');
 	my $cg_id        = $self->param('cachegroup');
+	my $phys_loc_id	 = $self->param('physLocation');
 
 	my $servers;
 	my $forbidden;
@@ -58,6 +59,9 @@ sub index {
 	}
 	elsif ( defined $cg_id ) {
 		( $forbidden, $servers ) = $self->get_servers_by_cachegroup($cg_id);
+	}
+	elsif ( defined $phys_loc_id ) {
+		( $forbidden, $servers ) = $self->get_servers_by_phys_loc($phys_loc_id);
 	}
 	else {
 		$servers = $self->get_servers_by_status( $current_user, $status );
@@ -484,6 +488,77 @@ sub get_servers_by_dsid {
 	return ( $forbidden, $servers );
 }
 
+sub get_edge_servers_by_dsid {
+	my $self    = shift;
+	my $ds_id   = $self->param('id');
+
+	my $ds_servers;
+	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+		$ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
+	}
+	else {
+		return $self->alert("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my $servers = $self->db->resultset('Server')->search(
+		{ 'me.id' => { -in => $ds_servers->get_column('server')->as_query } },
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
+	);
+
+	my @data;
+	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
+		while ( my $row = $servers->next ) {
+			push(
+				@data, {
+					"cachegroup"     => $row->cachegroup->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
+					"guid"           => $row->guid,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => \$row->upd_pending
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
+
 sub get_servers_by_type {
 	my $self              = shift;
 	my $current_user      = shift;
@@ -776,6 +851,21 @@ sub get_servers_by_cdn {
 	}
 
 	my $servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
+	return ( $forbidden, $servers );
+}
+
+sub get_servers_by_phys_loc {
+	my $self   			= shift;
+	my $phys_loc_id 	= shift;
+
+	my $forbidden;
+	my $servers;
+	if ( !&is_oper($self) ) {
+		$forbidden = "Forbidden. You must have the operations role to perform this operation.";
+		return ( $forbidden, $servers );
+	}
+
+	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id } );
 	return ( $forbidden, $servers );
 }
 
