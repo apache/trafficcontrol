@@ -56,13 +56,13 @@ ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->t
   ->json_is( "/response/0/type", "MID" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/servers?cdnId=1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->get_ok('/api/1.2/servers?cdn=1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-edge-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
   ->json_is( "/response/0/cdnId", 1 )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/servers?cachegroupId=2')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->get_ok('/api/1.2/servers?cachegroup=2')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-02" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
   ->json_is( "/response/0/cachegroupId", 2 )

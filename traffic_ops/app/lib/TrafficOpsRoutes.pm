@@ -484,6 +484,9 @@ sub api_routes {
 	$r->put("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'Deliveryservice#update', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservices/:id")->over( authenticated => 1 )->to( 'Deliveryservice#delete', namespace => $namespace );
 
+	# get all edge servers associated with a delivery service (from deliveryservice_server table)
+	$r->get( "/api/$version/deliveryservices/:id/servers")->over( authenticated => 1 )->to( 'Server#get_edge_servers_by_dsid', namespace => $namespace );
+
 	# alternate deliveryservice routes
 	$r->get("/api/$version/deliveryservices/list")->over( authenticated => 1 )->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id/get" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
@@ -578,6 +581,9 @@ sub api_routes {
 	$r->delete("/api/$version/parameters/:id")->over( authenticated => 1 )->to( 'Parameter#delete', namespace => $namespace );
 	$r->post("/api/$version/parameters/validate")->over( authenticated => 1 )->to( 'Parameter#validate', namespace => $namespace );
 
+	# get all profiles associated with a parameter (from profile_parameter table)
+	$r->get( "/api/$version/parameters/:id/profiles")->over( authenticated => 1 )->to( 'Profile#get_profiles_by_paramId', namespace => $namespace );
+
 	# parameters for a profile
 	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
 	$r->get("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
@@ -646,6 +652,9 @@ sub api_routes {
 	$r->put("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#update', namespace => $namespace );
 	$r->delete("/api/$version/servers/:id")->over( authenticated => 1 )->to( 'Server#delete', namespace => $namespace );
 
+	# get all delivery services associated with a server (from deliveryservice_server table)
+	$r->get( "/api/$version/servers/:id/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#get_deliveryservices_by_serverId', namespace => $namespace );
+
 	# alernate server routes
 	$r->post("/api/$version/servers/create")->over( authenticated => 1 )->to( 'Server2#create', namespace => $namespace );
 	$r->put("/api/$version/servers/:id/update")->over( authenticated => 1 )->to( 'Server2#update', namespace => $namespace );
@@ -697,7 +706,10 @@ sub api_routes {
 	$r->get( "/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'User#show', namespace => $namespace );
 	$r->put("/api/$version/users/:id")->over( authenticated => 1 )->to( 'User#update', namespace => $namespace );
 
-	# -- USERS: CURRENT USER
+    # get all deliveryservices assigned to a user (from deliveryservice_tmuser table)
+    $r->get( "/api/$version/users/:id/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );
+
+    # -- USERS: CURRENT USER
 	$r->get("/api/$version/user/current")->over( authenticated => 1 )->to( 'User#current', namespace => $namespace );
 	$r->post("/api/$version/user/current/update")->over( authenticated => 1 )->to( 'User#update_current', namespace => $namespace );
 
