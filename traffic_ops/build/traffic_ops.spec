@@ -101,6 +101,11 @@ Built: %(date) by %{getenv: USER}
 %post
     # Install Perl modules required for postinstall to run
     cpanm -n Term::ReadPassword JSON
+
+    # Install goose for db migrations
+    export GOPATH="/opt/traffic_ops/install"
+    go get bitbucket.org/liamstask/goose/cmd/goose
+
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
