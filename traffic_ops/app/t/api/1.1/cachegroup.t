@@ -43,12 +43,12 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.1/cachegroups.json?orderby=name")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/typeName", "EDGE_LOC" );
+	->json_is( "/response/0/type/name", "EDGE_LOC" );
 $t->get_ok("/api/1.1/cachegroups/trimmed.json")->status_is(200)->json_is( "/response/0/name", "edge_atl_group" )
 	->json_is( "/response/1/name", "edge_cg4" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.1/cachegroups.json?orderby=name")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/typeId", "5" );
+	->json_is( "/response/0/type/id", "5" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

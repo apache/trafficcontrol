@@ -53,7 +53,7 @@ ok $t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(400)-
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/type", "MID" )
+  ->json_is( "/response/0/type/name", "MID" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?cdn=1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -71,8 +71,8 @@ ok $t->get_ok('/api/1.2/servers?cachegroup=2')->status_is(200)->or( sub { diag $
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/type", "MID" )
-  ->json_is( "/response/0/status", "ONLINE" )
+  ->json_is( "/response/0/type/name", "MID" )
+  ->json_is( "/response/0/status/name", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
