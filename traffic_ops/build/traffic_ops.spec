@@ -32,7 +32,7 @@ URL:	          https://github.com/Comcast/traffic_control/
 Vendor:	          Comcast
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl, cpanminus, go
+Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl, cpanminus, git, go
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
