@@ -99,7 +99,8 @@ Built: %(date) by %{getenv: USER}
     fi
 
 %post
-    cpanm Term::ReadPassword JSON
+    # Install Perl modules required for postinstall to run
+    cpanm -n Term::ReadPassword JSON
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
