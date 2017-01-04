@@ -95,7 +95,7 @@ sub readprofile {
 				"id"           => $row->id,
 				"name"         => $row->name,
 				"type"         => $row->type,
-				"cdn"          => $row->cdn->name,
+				"cdn"          => defined($row->cdn) ? $row->cdn->name : undef,
 				"description"  => $row->description,
 				"last_updated" => $row->last_updated,
 			}

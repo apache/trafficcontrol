@@ -24072,6 +24072,22 @@ my %definition_for = (
 			parameter => '37',
  		},
 	},
+	'3013-1' => { # JvD - added by hand, not sure how LogFormat.Format could be missing from an ATS profile
+ 		new => 'ProfileParameter',
+ 		using => {
+			last_updated => '2015-12-10 15:44:35',
+			parameter => '379',
+			profile => '15',
+ 		},
+	},
+	'3013-2' => { # JvD - added by hand, not sure how Drive_Prefix could be missing from an ATS profile
+ 		new => 'ProfileParameter',
+ 		using => {
+			last_updated => '2015-12-10 15:44:35',
+			parameter => '295',
+			profile => '15',
+ 		},
+	},
 ########
 	'3014' => {
  		new => 'ProfileParameter',
@@ -26398,6 +26414,22 @@ my %definition_for = (
  		using => {
 			last_updated => '2015-12-10 15:44:34',
 			parameter => '370',
+			profile => '13',
+ 		},
+	},
+	'3305-1' => { # JvD - added by hand, not sure how LogFormat.Format could be missing from an ATS profile
+ 		new => 'ProfileParameter',
+ 		using => {
+			last_updated => '2015-12-10 15:44:35',
+			parameter => '379',
+			profile => '13',
+ 		},
+	},
+	'3305-2' => { # JvD - added by hand, not sure how Drive_Prefix could be missing from an ATS profile
+ 		new => 'ProfileParameter',
+ 		using => {
+			last_updated => '2015-12-10 15:44:35',
+			parameter => '295',
 			profile => '13',
  		},
 	},
@@ -31489,6 +31521,22 @@ my %definition_for = (
  		using => {
 			last_updated => '2015-12-10 15:44:35',
 			parameter => '260',
+			profile => '5',
+ 		},
+	},
+	'3943-1' => { # JvD - added by hand, not sure how LogFormat.Format could be missing from an ATS profile
+ 		new => 'ProfileParameter',
+ 		using => {
+			last_updated => '2015-12-10 15:44:35',
+			parameter => '379',
+			profile => '5',
+ 		},
+	},
+ 	'3943-2' => { # JvD - added by hand, not sure how Drive_Prefix could be missing from an ATS profile
+ 		new => 'ProfileParameter',
+ 		using => {
+			last_updated => '2015-12-10 15:44:35',
+			parameter => '295',
 			profile => '5',
  		},
 	},
