@@ -32,7 +32,7 @@ URL:	          https://github.com/Comcast/traffic_control/
 Vendor:	          Comcast
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl
+Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl, cpanminus
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
@@ -99,7 +99,7 @@ Built: %(date) by %{getenv: USER}
     fi
 
 %post
-
+    cpanm Term::ReadPassword JSON
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
