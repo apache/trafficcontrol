@@ -40,19 +40,19 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/asns")->status_is(200)->json_is( "/response/0/id", "1" )->json_is( "/response/0/cachegroup", "mid-northwest-group" )
+$t->get_ok("/api/1.2/asns")->status_is(200)->json_is( "/response/0/id", 1 )->json_is( "/response/0/cachegroup", "mid-northeast-group" )
   ->json_is( "/response/0/asn", "9939" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.2/asns?orderby=id")->status_is(200)->json_is( "/response/0/id", "1" )
-  ->json_is( "/response/0/cachegroup", "mid-northwest-group" )->json_is( "/response/0/asn", "9939" )
+  ->json_is( "/response/0/cachegroup", "mid-northeast-group" )->json_is( "/response/0/asn", "9939" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/asns?orderby=cachegroup")->status_is(200)->json_is( "/response/0/id", "2" )
-  ->json_is( "/response/0/cachegroup", "mid-northeast-group" )->json_is( "/response/0/asn", "9940" )
+$t->get_ok("/api/1.2/asns?orderby=cachegroup")->status_is(200)->json_is( "/response/0/id", "1" )
+  ->json_is( "/response/0/cachegroup", "mid-northeast-group" )->json_is( "/response/0/asn", "9939" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.2/asns/2")->status_is(200)->json_is( "/response/0/id", "2" )
-  ->json_is( "/response/0/cachegroup", "mid-northeast-group" )->json_is( "/response/0/asn", "9940" )
+  ->json_is( "/response/0/cachegroup", "mid-northwest-group" )->json_is( "/response/0/asn", "9940" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {

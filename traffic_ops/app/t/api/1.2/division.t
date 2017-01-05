@@ -38,13 +38,44 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
+$t->get_ok("/api/1.2/divisions")->status_is(200)->json_is( "/response/0/id", 1 )
+	->json_is( "/response/0/name", "mountain" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/divisions/1")->status_is(200)->json_is( "/response/0/id", 1 )
+	->json_is( "/response/0/name", "mountain" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->post_ok('/api/1.2/divisions' => {Accept => 'application/json'} => json => {
         "name" => "divion1" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "divion1" )
             , 'Does the divion details return?';
+
 ok $t->post_ok('/api/1.2/divisions' => {Accept => 'application/json'} => json => {
         "name" => "divion1" })->status_is(400);
+
+my $division_id = &get_division_id('divion1');
+
+ok $t->put_ok('/api/1.2/divisions/' . $division_id  => {Accept => 'application/json'} => json => {
+			"name" => "division2"
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "division2" )
+		->json_is( "/alerts/0/level" => "success" )
+	, 'Does the division2 details return?';
+
+ok $t->delete_ok('/api/1.2/divisions/' . $division_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
+sub get_division_id {
+	my $name = shift;
+	my $q    = "select id from division where name = \'$name\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}
+

@@ -113,6 +113,11 @@ ok $t->get_ok('/api/1.2/profiles?param=9' => {Accept => 'application/json'})->st
 	->json_is( "/response/1/description" => "mid description" )
 		, 'Does the profile details return?';
 
+$t->get_ok("/api/1.2/profiles/8")->status_is(200)->json_is( "/response/0/id", 8 )
+	->json_is( "/response/0/name", "MISC" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->delete_ok('/api/1.2/profiles/8')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/api/1.2/profiles/parameter/1' => {Accept => 'application/json'})->status_is(404);
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );

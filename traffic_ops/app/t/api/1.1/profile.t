@@ -41,9 +41,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => 
 
 $t->get_ok("/api/1.1/profiles.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/0/name", "CCR1" )
 	->json_is( "/response/0/description", "ccr description" )->json_is( "/response/1/name", "EDGE1" )
-	->json_is( "/response/1/description", "edge description" )->json_is( "/response/2/name", "MID1" )
-	->json_is( "/response/2/description", "mid description" )->json_is( "/response/3/name", "RASCAL1" )
-	->json_is( "/response/3/description", "rascal description" );
+	->json_is( "/response/1/description", "edge description" )->json_is( "/response/2/name", "MID1" );
 
 $t->get_ok("/api/1.1/profiles/trimmed.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
