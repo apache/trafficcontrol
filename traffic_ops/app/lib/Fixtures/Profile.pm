@@ -66,6 +66,14 @@ my %definition_for = (
 			description => 'rascal2 description',
 		},
 	},
+	MISC => {
+		new   => 'Profile',
+		using => {
+			id          => 8,
+			name        => 'MISC',
+			description => 'misc profile description',
+		},
+	},
 );
 
 sub get_definition {

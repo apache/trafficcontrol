@@ -23,7 +23,7 @@ my %definition_for = (
 		using => {
 			id         => 1,
 			asn        => 9939,
-			cachegroup => 2,
+			cachegroup => 1,
 		},
 	},
 	test_cran_2 => {
@@ -31,7 +31,7 @@ my %definition_for = (
 		using => {
 			id         => 2,
 			asn        => 9940,
-			cachegroup => 1,
+			cachegroup => 2,
 		},
 	},
 );

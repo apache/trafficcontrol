@@ -49,6 +49,57 @@ ok $t->post_ok('/api/1.2/regions/non_region/phys_locations' => {Accept => 'appli
         "name" => "physical location1",
         "shortName" => "mountain"})->status_is(400);
 
+$t->get_ok("/api/1.2/phys_locations")->status_is(200)->json_is( "/response/0/id", 2 )
+	->json_is( "/response/0/name", "Boulder" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/phys_locations/1")->status_is(200)->json_is( "/response/0/id", 1 )
+	->json_is( "/response/0/name", "Denver" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok('/api/1.2/phys_locations' => {Accept => 'application/json'} => json => {
+			"name" => "phys1",
+			"shortName" => "phys1",
+			"address" => "address",
+			"city" => "city",
+			"state" => "state",
+			"zip" => "zip",
+			"regionId" => 1,
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "phys1" )
+		->json_is( "/alerts/0/level" => "success" )
+		->json_is( "/alerts/0/text" => "Phys location creation was successful." )
+	, 'Does the phys location details return?';
+
+my $phys_loc_id = &get_phys_location_id('phys1');
+
+ok $t->put_ok('/api/1.2/phys_locations/' . $phys_loc_id  => {Accept => 'application/json'} => json => {
+			"name" => "phys2",
+			"shortName" => "phys2",
+			"address" => "address",
+			"city" => "city",
+			"state" => "state",
+			"zip" => "zip",
+			"regionId" => 1,
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "phys2" )
+		->json_is( "/alerts/0/level" => "success" )
+	, 'Does the phys location details return?';
+
+ok $t->delete_ok('/api/1.2/phys_locations/' . $phys_loc_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
+sub get_phys_location_id {
+	my $name = shift;
+	my $q    = "select id from phys_location where name = \'$name\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}
+
