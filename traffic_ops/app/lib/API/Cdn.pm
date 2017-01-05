@@ -250,21 +250,29 @@ sub get_traffic_monitor_config {
 	my @ccr_profiles;
 	my $ccr_profile_id;
 	my $data_obj;
+	my $profile_to_type;
 
-	my @profile_ids = $self->db->resultset('Server')->search( { 'cdn.name' => $cdn_name }, { prefetch => ['cdn'] } )->get_column('profile')->all();
-	my $rs_pp = $self->db->resultset('Profile')->search( { id => { -in => \@profile_ids } } );
-	while ( my $row = $rs_pp->next ) {
-		if ( $row->name =~ m/^RASCAL/ ) {
-			$rascal_profile = $row->name;
+	my $rs_pp = $self->db->resultset('Server')->search(
+		{ 'cdn.name' => $cdn_name },
+		{   prefetch => ['cdn', 'profile', 'type'],
+			select   => 'me.profile',
+			distinct => 1
 		}
-		elsif ( $row->name =~ m/^CCR/ ) {
-			push( @ccr_profiles, $row->name );
+	);
+
+	while ( my $row = $rs_pp->next ) {
+		if ( $row->type->name =~ m/^RASCAL/ ) {
+			$rascal_profile = $row->profile->name;
+		}
+		elsif ( $row->type->name =~ m/^CCR/ ) {
+			push( @ccr_profiles, $row->profile->name );
 
 			# TODO MAT: support multiple CCR profiles
-			$ccr_profile_id = $row->id;
+			$ccr_profile_id = $row->profile->id;
 		}
-		elsif ( $row->name =~ m/^EDGE/ || $row->name =~ m/^MID/ ) {
-			push( @cache_profiles, $row->name );
+		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
+			push( @cache_profiles, $row->profile->name );
+			$profile_to_type->{$row->profile->name}->{$row->type->name} = $row->type->name;
 		}
 	}
 
@@ -272,10 +280,14 @@ sub get_traffic_monitor_config {
 		'parameter.config_file' => 'rascal-config.txt',
 		'profile.name'          => $rascal_profile
 	);
+
 	$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
+
 	while ( my $row = $rs_pp->next ) {
 		my $parameter;
+
 		if ( $row->parameter->name =~ m/location/ ) { next; }
+
 		if ( $row->parameter->value =~ m/^\d+$/ ) {
 			$data_obj->{'config'}->{ $row->parameter->name } =
 				int( $row->parameter->value );
@@ -289,35 +301,36 @@ sub get_traffic_monitor_config {
 		'parameter.config_file' => 'rascal.properties',
 		'profile.name'          => { -in => \@cache_profiles }
 	);
+
 	$rs_pp = $self->db->resultset('ProfileParameter')->search( \%condition, { prefetch => [ { 'parameter' => undef }, { 'profile' => undef } ] } );
 
 	if ( !exists( $data_obj->{'profiles'} ) ) {
 		$data_obj->{'profiles'} = undef;
 	}
+
 	my $profile_tracker;
 
 	while ( my $row = $rs_pp->next ) {
+		if ( exists($profile_to_type->{$row->profile->name}) ) {
+			for my $profile_type ( keys(%{$profile_to_type->{$row->profile->name}}) ) {
+				$profile_tracker->{ $profile_type }->{ $row->profile->name }->{'type'} = $profile_type;
+				$profile_tracker->{ $profile_type }->{ $row->profile->name }->{'name'} = $row->profile->name;
 
-		my $type;
-		if ( $row->profile->name =~ m/^EDGE/ ) {
-			$type = "EDGE";
-		}
-		elsif ( $row->profile->name =~ m/^MID/ ) {
-			$type = "MID";
-		}
-		$profile_tracker->{ $row->profile->name }->{'type'} = $type;
-		$profile_tracker->{ $row->profile->name }->{'name'} = $row->profile->name;
+				if ( $row->parameter->value =~ m/^\d+$/ ) {
+					$profile_tracker->{ $profile_type }->{ $row->profile->name }->{'parameters'}->{ $row->parameter->name } = int( $row->parameter->value );
+				}
 
-		if ( $row->parameter->value =~ m/^\d+$/ ) {
-			$profile_tracker->{ $row->profile->name }->{'parameters'}->{ $row->parameter->name } = int( $row->parameter->value );
-		}
-		else {
-			$profile_tracker->{ $row->profile->name }->{'parameters'}->{ $row->parameter->name } = $row->parameter->value;
+				else {
+					$profile_tracker->{ $profile_type }->{ $row->profile->name }->{'parameters'}->{ $row->parameter->name } = $row->parameter->value;
+				}
+			}
 		}
 	}
 
-	foreach my $profile ( keys %{$profile_tracker} ) {
-		push( @{ $data_obj->{'profiles'} }, $profile_tracker->{$profile} );
+	foreach my $type ( keys %{$profile_tracker}) {
+		foreach my $profile ( keys %{$profile_tracker->{$type}} ) {
+			push( @{ $data_obj->{'profiles'} }, $profile_tracker->{$type}->{$profile} );
+		}
 	}
 
 	foreach my $ccr_profile (@ccr_profiles) {
@@ -329,6 +342,7 @@ sub get_traffic_monitor_config {
 	}
 
 	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ccr_profile_id, 'active' => 1 }, {} );
+
 	while ( my $row = $rs_ds->next ) {
 		my $delivery_service;
 
@@ -340,6 +354,7 @@ sub get_traffic_monitor_config {
 		$delivery_service->{'totalTpsThreshold'} = int( $row->global_max_tps || 0 );
 		push( @{ $data_obj->{'deliveryServices'} }, $delivery_service );
 	}
+
 	my $rs_caches = $self->db->resultset('Server')->search(
 		{ 'cdn.name' => $cdn_name },
 		{
@@ -347,6 +362,7 @@ sub get_traffic_monitor_config {
 			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
 		}
 	);
+
 	while ( my $row = $rs_caches->next ) {
 		if ( $row->type->name eq "RASCAL" ) {
 			my $traffic_monitor;
@@ -387,6 +403,7 @@ sub get_traffic_monitor_config {
 			distinct => 1
 		}
 	);
+
 	while ( my $row = $rs_loc->next ) {
 		my $cache_group;
 		my $latitude  = $row->cachegroup->latitude + 0;
@@ -396,6 +413,7 @@ sub get_traffic_monitor_config {
 		$cache_group->{'name'}                       = $row->cachegroup->name;
 		push( @{ $data_obj->{'cacheGroups'} }, $cache_group );
 	}
+
 	return ($data_obj);
 }
 
