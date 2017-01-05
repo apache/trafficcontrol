@@ -32,7 +32,7 @@ URL:	          https://github.com/Comcast/traffic_control/
 Vendor:	          Comcast
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl, cpanminus, git, go
+Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl, golang
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
@@ -59,7 +59,7 @@ Built: %(date) by %{getenv: USER}
 
     echo "Compiling go executables"
     for d in install/go/src/comcast.com/*; do
-	(cd "$d" && go get -ldflags "-B 0x%{commit}" -v ) || \
+	(cd "$d" && go install -ldflags "-B 0x%{commit}" -v ) || \
 	    { echo "Could not compile $d"; exit 1; }
     done
 
@@ -100,11 +100,13 @@ Built: %(date) by %{getenv: USER}
 
 %post
     # Install Perl modules required for postinstall to run
-    cpanm -n Term::ReadPassword JSON
+    curl -L http://cpanmin.us | perl - App::cpanminus
+    /usr/local/bin/cpanm -n Term::ReadPassword JSON
 
     # Install goose for db migrations
-    export GOPATH="/opt/traffic_ops/install"
-    go get bitbucket.org/liamstask/goose/cmd/goose
+    export GOPATH="/opt/traffic_ops/install/go"
+    export GOBIN="/opt/traffic_ops/install/bin"
+    ( cd /opt/traffic_ops/install/go/src/bitbucket.org/liamstask/goose/cmd/goose && go install )
 
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
@@ -173,6 +175,5 @@ fi
 %{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install
-%exclude %{PACKAGEDIR}/install/go
 %{PACKAGEDIR}/etc
 %doc %{PACKAGEDIR}/doc
