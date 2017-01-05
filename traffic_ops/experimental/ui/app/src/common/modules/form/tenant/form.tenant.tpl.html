@@ -39,7 +39,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(tenant)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="tenantForm.$pristine || tenantForm.$invalid" ng-click="save(tenant)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="tenantForm.$pristine || tenantForm.$invalid" ng-click="save(tenant)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

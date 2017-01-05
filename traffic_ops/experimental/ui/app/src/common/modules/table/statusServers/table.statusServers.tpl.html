@@ -1,0 +1,69 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/admin/statuses')">Statuses</a></li>
+            <li><a ng-click="navigateToPath('/admin/statuses/' + status.id)">{{status.name}}</a></li>
+            <li class="active">Servers</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="serversTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>Update?</th>
+                <th>hostName</th>
+                <th>domainName</th>
+                <th>cdn</th>
+                <th>cachegroup</th>
+                <th>type</th>
+                <th>location</th>
+                <th>ipAddress</th>
+                <th>ip6Address</th>
+                <th>status</th>
+                <th>profile</th>
+                <th>iloIpAddress</th>
+                <th>iloIpGateway</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editServer(server.id)" ng-repeat="server in servers" ng-class="{'active': server.updPending}">
+                <td>{{server.updPending}}</td>
+                <td>{{server.hostName}}</td>
+                <td>{{server.domainName}}</td>
+                <td>{{server.cdnName}}</td>
+                <td>{{server.cachegroup}}</td>
+                <td>{{server.type}}</td>
+                <td>{{server.physLocation}}</td>
+                <td>{{server.ipAddress}}</td>
+                <td>{{server.ip6Address}}</td>
+                <td>{{server.status}}</td>
+                <td>{{server.profile}}</td>
+                <td>{{server.iloIpAddress}}</td>
+                <td>{{server.iloIpGateway}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

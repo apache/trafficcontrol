@@ -30,8 +30,8 @@ module.exports = angular.module('trafficOps.private.admin.profiles.parameters', 
 							profile: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profileId);
 							},
-							profileParameters: function($stateParams, profileParameterService) {
-								return profileParameterService.getProfileParameters($stateParams.profileId);
+							profileParameters: function($stateParams, parameterService) {
+								return parameterService.getProfileParameters($stateParams.profileId);
 							}
 						}
 					}
