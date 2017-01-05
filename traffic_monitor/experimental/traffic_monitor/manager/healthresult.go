@@ -244,7 +244,11 @@ func processHealthResult(
 			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
 
-		localCacheStatus[healthResult.ID] = cache.AvailableStatus{Available: isAvailable, Status: monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status} // TODO move within localStates?
+		localCacheStatus[healthResult.ID] = cache.AvailableStatus{
+			Available: isAvailable,
+			Status:    monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status,
+			Why:       whyAvailable,
+		} // TODO move within localStates?
 		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
 	}
 	calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
