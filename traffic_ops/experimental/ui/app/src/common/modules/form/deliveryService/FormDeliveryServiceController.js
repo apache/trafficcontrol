@@ -20,7 +20,7 @@
 var FormDeliveryServiceController = function(deliveryService, $scope, $location, formUtils, locationUtils, cdnService, profileService, typeService) {
 
     var getTypes = function() {
-        typeService.getTypes('deliveryservice')
+        typeService.getTypes({ useInTable: 'deliveryservice' })
             .then(function(result) {
                 $scope.types = result;
             });

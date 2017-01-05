@@ -30,8 +30,8 @@ module.exports = angular.module('trafficOps.private.admin.cdns.deliveryServices'
 							cdn: function($stateParams, cdnService) {
 								return cdnService.getCDN($stateParams.cdnId);
 							},
-							deliveryServices: function(deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices();
+							deliveryServices: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServices({ cdn: $stateParams.cdnId });
 							}
 						}
 					}

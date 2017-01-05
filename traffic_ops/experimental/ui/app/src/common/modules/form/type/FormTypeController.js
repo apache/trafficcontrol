@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormTypeController = function(type, $scope, formUtils, stringUtils, locationUtils) {
+var FormTypeController = function(type, $scope, $location, formUtils, stringUtils, locationUtils) {
 
     $scope.type = type;
 
@@ -28,6 +28,18 @@ var FormTypeController = function(type, $scope, formUtils, stringUtils, location
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.viewServers = function() {
+        $location.path($location.path() + '/servers');
+    };
+
+    $scope.viewDeliveryServices = function() {
+        $location.path($location.path() + '/delivery-services');
+    };
+
+    $scope.viewCacheGroups = function() {
+        $location.path($location.path() + '/cache-groups');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -36,5 +48,5 @@ var FormTypeController = function(type, $scope, formUtils, stringUtils, location
 
 };
 
-FormTypeController.$inject = ['type', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
+FormTypeController.$inject = ['type', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormTypeController;

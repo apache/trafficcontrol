@@ -23,11 +23,11 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
             <li class="active">{{serverName}}</li>
         </ol>
-        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-default" ng-show="server.status == 'REPORTED'" ng-click="offlineServer()">Offline Server</button>
-            <button class="btn btn-default" ng-show="server.status != 'REPORTED'" ng-click="onlineServer()">Online Server</button>
-            <button class="btn btn-default" ng-show="!server.updPending" ng-click="queueUpdates()">Queue Updates</button>
-            <button class="btn btn-default" ng-show="server.updPending" ng-click="dequeueUpdates()">Dequeue Updates</button>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-danger" ng-click="offlineServer()">Offline Server</button>
+            <button class="btn btn-success" ng-click="onlineServer()">Online Server</button>
+            <button class="btn btn-primary" ng-show="!server.updPending" ng-click="queueUpdates()">Queue Update &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
+            <button class="btn btn-primary" ng-show="server.updPending" ng-click="dequeueUpdates()">Dequeue Update &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
 
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
@@ -119,7 +119,7 @@ under the License.
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(server)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

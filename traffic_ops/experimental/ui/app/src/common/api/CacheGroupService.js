@@ -19,8 +19,8 @@
 
 var CacheGroupService = function(Restangular, locationUtils, messageModel) {
 
-    this.getCacheGroups = function() {
-        return Restangular.all('cachegroups').getList();
+    this.getCacheGroups = function(queryParams) {
+        return Restangular.all('cachegroups').getList(queryParams);
     };
 
     this.getCacheGroup = function(id) {

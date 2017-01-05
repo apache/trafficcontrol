@@ -30,8 +30,8 @@ module.exports = angular.module('trafficOps.private.admin.users.deliveryServices
 							user: function($stateParams, userService) {
 								return userService.getUser($stateParams.userId);
 							},
-							userDeliveryServices: function(deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices();
+							userDeliveryServices: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getUserDeliveryServices($stateParams.userId);
 							}
 						}
 					}

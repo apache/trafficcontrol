@@ -21,7 +21,7 @@ var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $
 
 	$scope.deliveryService = deliveryService;
 
-	$scope.regexes = regexes[0].regexes;
+	$scope.regexes = _.find(regexes, function(dsRegexes) { return dsRegexes.dsName == deliveryService.xmlId; });
 
 	$scope.addRegex = function() {
 		alert('not hooked up yet: addRegex to ds');

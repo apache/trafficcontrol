@@ -19,8 +19,8 @@
 
 var TypeService = function(Restangular, locationUtils, messageModel) {
 
-    this.getTypes = function(useInTable) {
-        return Restangular.all('types').getList({ useInTable: useInTable });
+    this.getTypes = function(queryParams) {
+        return Restangular.all('types').getList(queryParams);
     };
 
     this.getType = function(id) {
@@ -43,12 +43,12 @@ var TypeService = function(Restangular, locationUtils, messageModel) {
     this.updateType = function(type) {
         return type.put()
             .then(
-            function() {
-                messageModel.setMessages([ { level: 'success', text: 'Type updated' } ], false);
-            },
-            function(fault) {
-                messageModel.setMessages(fault.data.alerts, false);
-            }
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Type updated' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
         );
     };
 

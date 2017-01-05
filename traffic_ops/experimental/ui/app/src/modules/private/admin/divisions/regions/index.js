@@ -31,7 +31,7 @@ module.exports = angular.module('trafficOps.private.admin.divisions.regions', []
 								return divisionService.getDivision($stateParams.divisionId);
 							},
 							divisionRegions: function($stateParams, regionService) {
-								return regionService.getRegions();
+								return regionService.getRegions({ division: $stateParams.divisionId });
 							}
 						}
 					}

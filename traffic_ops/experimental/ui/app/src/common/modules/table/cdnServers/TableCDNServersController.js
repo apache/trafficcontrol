@@ -27,6 +27,10 @@ var TableCDNServersController = function(cdn, servers, $scope, locationUtils) {
 		locationUtils.navigateToPath('/configure/servers/' + id);
 	};
 
+	$scope.queueUpdates = function() {
+		alert('not hooked up yet: queuing updates for all cdn servers');
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {

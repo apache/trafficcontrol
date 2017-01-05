@@ -30,8 +30,8 @@ module.exports = angular.module('trafficOps.private.configure.cacheGroups.server
 							cacheGroup: function($stateParams, cacheGroupService) {
 								return cacheGroupService.getCacheGroup($stateParams.cacheGroupId);
 							},
-							servers: function(serverService) {
-								return serverService.getServers();
+							servers: function($stateParams, serverService) {
+								return serverService.getServers({ cachegroup: $stateParams.cacheGroupId });
 							}
 						}
 					}

@@ -19,8 +19,8 @@
 
 var PhysLocationService = function(Restangular, locationUtils, messageModel) {
 
-    this.getPhysLocations = function() {
-        return Restangular.all('phys_locations').getList();
+    this.getPhysLocations = function(queryParams) {
+        return Restangular.all('phys_locations').getList(queryParams);
     };
 
     this.getPhysLocation = function(id) {
