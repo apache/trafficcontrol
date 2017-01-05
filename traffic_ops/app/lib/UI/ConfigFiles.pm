@@ -20,6 +20,7 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use Data::Validate::IP;
 use Date::Manip;
 use NetAddr::IP;
 use UI::DeliveryService;
@@ -937,7 +938,13 @@ sub cache_dot_config {
 		if ( $remap->{type} eq "HTTP_NO_CACHE" ) {
 			my $org_fqdn = $remap->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			my $dest_name;
+			if ( Data::Validate::IP->new->is_ip($org_fqdn) ) {
+				$dest_name = "dest_ip";
+			} else {
+				$dest_name = "dest_domain";
+			}
+			$text .= $dest_name . "=" . $org_fqdn . " scheme=http action=never-cache\n";
 		}
 	}
 	return $text;
@@ -1133,16 +1140,22 @@ sub parent_dot_config {
 			next if ( grep( /^$org_uri$/, @unique_origin ) );
 			push @unique_origin, $org_uri;
 
+			my $dest_name;
+			if ( Data::Validate::IP->new->is_ip($org_uri->host) ) {
+				$dest_name = "dest_ip";
+			} else {
+				$dest_name = "dest_domain";
+			}
 			if ( defined($os) ) {
 				my $pselect_alg = $self->profile_param_value( $server->profile->id, 'parent.config', 'algorithm', undef );
 				my $algorithm = "";
 				if ( defined($pselect_alg) ) {
 					$algorithm = "round_robin=$pselect_alg";
 				}
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " parent=$os $algorithm go_direct=true\n";
+				$text .= $dest_name . "=" . $org_uri->host . " port=" . $org_uri->port . " parent=$os $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " ";
+				$text .= $dest_name . "=" . $org_uri->host . " port=" . $org_uri->port . " ";
 
 				# If we have multi-site origin, get parent_data once
 				if ( not defined($pinfo) ) {
@@ -1211,8 +1224,14 @@ sub parent_dot_config {
 			next if !defined $org || $org eq "";
 			next if $done{$org};
 			my $org_uri = URI->new($org);
+			my $dest_name;
+			if ( Data::Validate::IP->new->is_ip($org_uri->host) ) {
+				$dest_name = "dest_ip";
+			} else {
+				$dest_name = "dest_domain";
+			}
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
+				$text .= $dest_name . "=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
 				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
@@ -1255,12 +1274,7 @@ sub parent_dot_config {
 				}
 				my $round_robin = 'round_robin=consistent_hash';
 				my $go_direct   = 'go_direct=false';
-				$text
-					.= "dest_domain="
-					. $org_uri->host
-					. " port="
-					. $org_uri->port
-					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
+				$text .= $dest_name . "=" . $org_uri->host . " port=" . $org_uri->port . " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 			}
 			$done{$org} = 1;
 		}
