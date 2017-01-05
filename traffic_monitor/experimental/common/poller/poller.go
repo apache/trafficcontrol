@@ -20,7 +20,6 @@ package poller
  */
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -120,6 +119,7 @@ func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 
 func (p MonitorConfigPoller) Poll() {
 	tick := time.NewTicker(p.Interval)
+	defer tick.Stop()
 	for {
 		select {
 		case opsConfig := <-p.OpsConfigChannel:
@@ -224,6 +224,7 @@ func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.
 			go fetcher.Fetch(id, url, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 			<-pollFinishedChan
 		case <-die:
+			tick.Stop()
 			return
 		}
 	}

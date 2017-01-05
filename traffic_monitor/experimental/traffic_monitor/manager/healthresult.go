@@ -129,14 +129,18 @@ func healthResultManagerListen(
 ) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
+	var ticker *time.Ticker
 	for {
 		var results []cache.Result
 		results = append(results, <-cacheHealthChan)
-		tick := time.Tick(cfg.HealthFlushInterval)
+		if ticker != nil {
+			ticker.Stop()
+		}
+		ticker = time.NewTicker(cfg.HealthFlushInterval)
 	innerLoop:
 		for {
 			select {
-			case <-tick:
+			case <-ticker.C:
 				log.Warnf("Health Result Manager flushing queued results\n")
 				processHealthResult(
 					cacheHealthChan,
