@@ -24,9 +24,18 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/servers/' + server.id)">{{server.hostName}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="addDeliveryService()">Add</button>
-        <button class="btn btn-default pull-right" ng-click="cloneDsAssignments()">Clone Assignments</button>
-
+        <div class="pull-right" role="group">
+            <button class="btn btn-primary" ng-click="addDeliveryService()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Delivery Service To Server</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li><a ng-click="cloneDsAssignments()">Clone Assignments</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

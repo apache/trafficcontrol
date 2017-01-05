@@ -19,10 +19,15 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/types')">Types</a></li>
             <li class="active">{{typeName}}</li>
         </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" ng-show="type.useInTable == 'server'" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+            <button class="btn btn-primary" ng-show="type.useInTable == 'deliveryservice'" ng-click="viewDeliveryServices()">View Delivery Services &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+            <button class="btn btn-primary" ng-show="type.useInTable == 'cachegroup'" ng-click="viewCacheGroups()">View Cache Groups &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -45,7 +50,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(type)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="typeForm.$pristine || typeForm.$invalid" ng-click="save(type)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="typeForm.$pristine || typeForm.$invalid" ng-click="save(type)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

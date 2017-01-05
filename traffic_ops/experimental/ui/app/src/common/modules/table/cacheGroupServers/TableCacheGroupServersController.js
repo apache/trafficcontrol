@@ -23,12 +23,12 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, lo
 
 	$scope.servers = servers;
 
-	$scope.addServer = function() {
-		alert('not hooked up yet: addServer to cg');
+	$scope.editServer = function(id) {
+		locationUtils.navigateToPath('/configure/servers/' + id);
 	};
 
-	$scope.removeServer = function() {
-		alert('not hooked up yet: removeServer from cg');
+	$scope.queueUpdates = function() {
+		alert('not hooked up yet: queuing updates for all cdn servers');
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;

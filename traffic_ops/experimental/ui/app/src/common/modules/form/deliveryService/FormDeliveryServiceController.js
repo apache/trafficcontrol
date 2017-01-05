@@ -20,7 +20,7 @@
 var FormDeliveryServiceController = function(deliveryService, $scope, $location, formUtils, locationUtils, cdnService, profileService, typeService) {
 
     var getTypes = function() {
-        typeService.getTypes('deliveryservice')
+        typeService.getTypes({ useInTable: 'deliveryservice' })
             .then(function(result) {
                 $scope.types = result;
             });
@@ -124,6 +124,10 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
 
     $scope.assignServers = function() {
         $location.path($location.path() + '/servers');
+    };
+
+    $scope.viewRegexes = function() {
+        $location.path($location.path() + '/regexes');
     };
 
     $scope.cachegroupHealth = function() {

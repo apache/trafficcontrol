@@ -19,8 +19,8 @@
 
 var ParameterService = function(Restangular, locationUtils, messageModel) {
 
-    this.getParameters = function() {
-        return Restangular.all('parameters').getList();
+    this.getParameters = function(queryParams) {
+        return Restangular.all('parameters').getList(queryParams);
     };
 
     this.getParameter = function(id) {
@@ -62,6 +62,10 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
                 messageModel.setMessages(fault.data.alerts, true);
             }
         );
+    };
+
+    this.getProfileParameters = function(profileId) {
+        return Restangular.one('profiles', profileId).getList('parameters');
     };
 
 };

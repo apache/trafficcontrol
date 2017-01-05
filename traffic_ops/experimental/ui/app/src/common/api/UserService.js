@@ -61,8 +61,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
             );
     };
 
-    this.getUsers = function() {
-        return Restangular.all('users').getList();
+    this.getUsers = function(queryParams) {
+        return Restangular.all('users').getList(queryParams);
     };
 
     this.getUser = function(id) {

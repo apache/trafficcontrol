@@ -17,13 +17,17 @@
  * under the License.
  */
 
-var FormStatusController = function(status, $scope, formUtils, stringUtils, locationUtils) {
+var FormStatusController = function(status, $scope, $location, formUtils, stringUtils, locationUtils) {
 
     $scope.status = status;
 
     $scope.props = [
         { name: 'name', type: 'text', required: true, maxLength: 45 }
     ];
+
+    $scope.viewServers = function() {
+        $location.path($location.path() + '/servers');
+    };
 
     $scope.labelize = stringUtils.labelize;
 
@@ -35,5 +39,5 @@ var FormStatusController = function(status, $scope, formUtils, stringUtils, loca
 
 };
 
-FormStatusController.$inject = ['status', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
+FormStatusController.$inject = ['status', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
 module.exports = FormStatusController;

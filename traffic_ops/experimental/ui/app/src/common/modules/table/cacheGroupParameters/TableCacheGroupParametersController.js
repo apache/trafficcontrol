@@ -17,11 +17,11 @@
  * under the License.
  */
 
-var TableCacheGroupParametersController = function(cacheGroup, parameters, $scope, locationUtils) {
+var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParameters, $scope, locationUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
-	$scope.parameters = parameters;
+	$scope.cacheGroupParameters = cacheGroupParameters;
 
 	$scope.addParameter = function() {
 		alert('not hooked up yet: add parameter to cache group');
@@ -42,5 +42,5 @@ var TableCacheGroupParametersController = function(cacheGroup, parameters, $scop
 
 };
 
-TableCacheGroupParametersController.$inject = ['cacheGroup', 'parameters', '$scope', 'locationUtils'];
+TableCacheGroupParametersController.$inject = ['cacheGroup', 'cacheGroupParameters', '$scope', 'locationUtils'];
 module.exports = TableCacheGroupParametersController;

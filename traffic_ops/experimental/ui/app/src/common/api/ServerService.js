@@ -19,8 +19,8 @@
 
 var ServerService = function(Restangular, locationUtils, messageModel) {
 
-    this.getServers = function(dsId) {
-        return Restangular.all('servers').getList({ dsId: dsId });
+    this.getServers = function(queryParams) {
+        return Restangular.all('servers').getList(queryParams);
     };
 
     this.getServer = function(id) {
@@ -63,6 +63,11 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
                 }
             );
     };
+
+    this.getDeliveryServiceServers = function(dsId) {
+        return Restangular.one('deliveryservices', dsId).getList('servers');
+    };
+
 
 };
 

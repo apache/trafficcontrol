@@ -19,8 +19,8 @@
 
 var DivisionService = function(Restangular, locationUtils, messageModel) {
 
-    this.getDivisions = function() {
-        return Restangular.all('divisions').getList();
+    this.getDivisions = function(queryParams) {
+        return Restangular.all('divisions').getList(queryParams);
     };
 
     this.getDivision = function(id) {

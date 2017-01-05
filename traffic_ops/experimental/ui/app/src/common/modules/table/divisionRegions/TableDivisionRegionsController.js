@@ -23,12 +23,8 @@ var TableDivisionRegionsController = function(division, divisionRegions, $scope,
 
 	$scope.divisionRegions = divisionRegions;
 
-	$scope.addRegion = function() {
-		alert('not hooked up yet: addRegion to div');
-	};
-
-	$scope.removeRegion = function() {
-		alert('not hooked up yet: removeRegion from div');
+	$scope.editRegion = function(id) {
+		locationUtils.navigateToPath('/admin/regions/' + id);
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;

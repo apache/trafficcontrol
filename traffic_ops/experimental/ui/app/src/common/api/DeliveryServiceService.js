@@ -19,8 +19,8 @@
 
 var DeliveryServiceService = function(Restangular, locationUtils, messageModel) {
 
-    this.getDeliveryServices = function() {
-        return Restangular.all('deliveryservices').getList();
+    this.getDeliveryServices = function(queryParams) {
+        return Restangular.all('deliveryservices').getList(queryParams);
     };
 
     this.getDeliveryService = function(id) {
@@ -62,6 +62,14 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
                     messageModel.setMessages(fault.data.alerts, true);
                 }
             );
+    };
+
+    this.getServerDeliveryServices = function(serverId) {
+        return Restangular.one('servers', serverId).getList('deliveryservices');
+    };
+
+    this.getUserDeliveryServices = function(userId) {
+        return Restangular.one('users', userId).getList('deliveryservices');
     };
 
 };

@@ -44,7 +44,7 @@ $fa-font-path: "../assets/fonts";
 // admin
 @import "../modules/private/admin/admin";
 @import "../modules/private/admin/divisions/divisions";
-@import "../modules/private/admin/locations/locations";
+@import "../modules/private/admin/physLocations/physLocations";
 @import "../modules/private/admin/regions/regions";
 @import "../modules/private/admin/tenants/tenants";
 @import "../modules/private/admin/users/users";
@@ -682,6 +682,11 @@ h2 {
   button {
     margin: 8px 6px 4px 0;
   }
+
+  .btn-group {
+    margin-top: -4px;
+  }
+
 }
 
 .x_title .filter {
