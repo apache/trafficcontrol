@@ -19,8 +19,8 @@
 
 var ASNService = function(Restangular, locationUtils, messageModel) {
 
-    this.getASNs = function() {
-        return Restangular.all('asns').getList();
+    this.getASNs = function(queryParams) {
+        return Restangular.all('asns').getList(queryParams);
     };
 
     this.getASN = function(id) {

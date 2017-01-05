@@ -30,8 +30,8 @@ module.exports = angular.module('trafficOps.private.admin.physLocations.servers'
 							physLocation: function($stateParams, physLocationService) {
 								return physLocationService.getPhysLocation($stateParams.physLocationId);
 							},
-							servers: function(serverService) {
-								return serverService.getServers();
+							servers: function($stateParams, serverService) {
+								return serverService.getServers({ physLocation: $stateParams.physLocationId });
 							}
 						}
 					}

@@ -31,7 +31,7 @@ module.exports = angular.module('trafficOps.private.admin.profiles.servers', [])
 								return profileService.getProfile($stateParams.profileId);
 							},
 							servers: function($stateParams, serverService) {
-								return serverService.getServers(null, $stateParams.profileId);
+								return serverService.getServers({ profileId: $stateParams.profileId });
 							}
 						}
 					}

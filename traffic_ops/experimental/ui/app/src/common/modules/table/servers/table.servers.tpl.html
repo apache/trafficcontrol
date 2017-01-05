@@ -22,8 +22,18 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li class="active">Servers</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="createServer()">New</button>
-        <button class="btn btn-default pull-right" ng-click="uploadServerCSV()">Upload CSV</button>
+        <div class="pull-right">
+            <button class="btn btn-primary" ng-click="createServer()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Server</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="uploadServerCSV()">Upload Bulk CSV</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
