@@ -19,10 +19,13 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/parameters')">Parameters</a></li>
             <li class="active">{{parameterName}}</li>
         </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" ng-click="viewProfiles()">View Profiles &nbsp;&nbsp;<i class="fa fa-sticky-note"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -39,7 +42,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(parameter)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="parameterForm.$pristine || parameterForm.$invalid" ng-click="save(parameter)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="parameterForm.$pristine || parameterForm.$invalid" ng-click="save(parameter)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

@@ -19,8 +19,8 @@
 
 var StatusService = function(Restangular, locationUtils, messageModel) {
 
-    this.getStatuses = function() {
-        return Restangular.all('statuses').getList();
+    this.getStatuses = function(queryParams) {
+        return Restangular.all('statuses').getList(queryParams);
     };
 
     this.getStatus = function(id) {

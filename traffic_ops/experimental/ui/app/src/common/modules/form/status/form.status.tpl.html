@@ -19,10 +19,13 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/statuses')">Statuses</a></li>
             <li class="active">{{statusName}}</li>
         </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -45,7 +48,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(status)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="statusForm.$pristine || statusForm.$invalid" ng-click="save(status)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="statusForm.$pristine || statusForm.$invalid" ng-click="save(status)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

@@ -31,7 +31,7 @@ module.exports = angular.module('trafficOps.private.configure.servers.deliverySe
 								return serverService.getServer($stateParams.serverId);
 							},
 							serverDeliveryServices: function(deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices();
+								return deliveryServiceService.getServerDeliveryServices();
 							}
 						}
 					}

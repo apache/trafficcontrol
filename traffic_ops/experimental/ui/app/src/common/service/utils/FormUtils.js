@@ -20,11 +20,11 @@
 var FormUtils = function() {
 
     this.hasError = function(input) {
-        return !input.$focused && input.$dirty && input.$invalid;
+        return input && !input.$focused && input.$dirty && input.$invalid;
     };
 
     this.hasPropertyError = function(input, property) {
-        return !input.$focused && input.$dirty && input.$error[property];
+        return input && !input.$focused && input.$dirty && input.$error[property];
     };
 
 };

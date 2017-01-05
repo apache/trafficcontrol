@@ -19,8 +19,8 @@
 
 var CDNService = function(Restangular, locationUtils, messageModel) {
 
-    this.getCDNs = function() {
-        return Restangular.all('cdns').getList();
+    this.getCDNs = function(queryParams) {
+        return Restangular.all('cdns').getList(queryParams);
     };
 
     this.getCDN = function(id) {

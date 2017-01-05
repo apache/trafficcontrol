@@ -23,9 +23,8 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/cdns')">CDNs</a></li>
             <li class="active">{{cdnName}}</li>
         </ol>
-        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-default" ng-click="manageSnapshots()">Snapshot</button>
-
+        <div class="pull-right" ng-show="!settings.isNew">
+            <button class="btn btn-primary" ng-click="manageSnapshots()">Snapshot CDN Config &nbsp;&nbsp;<i class="fa fa-camera"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
@@ -67,7 +66,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cdn)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="cdnForm.$pristine || cdnForm.$invalid" ng-click="save(cdn)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="cdnForm.$pristine || cdnForm.$invalid" ng-click="save(cdn)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

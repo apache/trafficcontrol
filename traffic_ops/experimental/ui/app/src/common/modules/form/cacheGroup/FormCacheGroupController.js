@@ -27,7 +27,7 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
     };
 
     var getTypes = function() {
-        typeService.getTypes('cachegroup')
+        typeService.getTypes({ useInTable: 'cachegroup' })
             .then(function(result) {
                 $scope.types = result;
             });
@@ -41,6 +41,10 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
 
     $scope.dequeueUpdates = function() {
         alert('not hooked up yet: dequeuing updates for all cachegroup servers');
+    };
+
+    $scope.viewAsns = function() {
+        $location.path($location.path() + '/asns');
     };
 
     $scope.viewParams = function() {

@@ -19,12 +19,20 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/phys-locations')">Physical Locations</a></li>
             <li class="active">{{physLocationName}}</li>
         </ol>
-        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-default" ng-click="viewServers()">Servers</button>
+        <div class="pull-right" ng-show="!settings.isNew">
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -57,7 +65,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(physLocation)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="physLocationForm.$pristine || physLocationForm.$invalid" ng-click="save(physLocation)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="physLocationForm.$pristine || physLocationForm.$invalid" ng-click="save(physLocation)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

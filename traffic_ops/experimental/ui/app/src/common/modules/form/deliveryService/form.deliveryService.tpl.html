@@ -23,10 +23,9 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
-        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-default" ng-click="assignServers()">Servers</button>
-            <button class="btn btn-default" ng-click="viewRegexes()">Regexes</button>
-
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" ng-click="assignServers()">Assign Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+            <button class="btn btn-primary" ng-click="viewRegexes()">Edit Regexes &nbsp;&nbsp;<i class="fa fa-edit"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
@@ -473,7 +472,7 @@ under the License.
             
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(deliveryService)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

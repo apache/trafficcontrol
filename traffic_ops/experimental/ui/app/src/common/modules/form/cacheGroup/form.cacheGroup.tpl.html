@@ -23,10 +23,7 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/cache-groups')">Cache Groups</a></li>
             <li class="active">{{cacheGroupName}}</li>
         </ol>
-        <div class="btn-group pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-default" ng-click="viewServers()">Servers</button>
-            <button class="btn btn-default" ng-click="viewParams()">Parameters</button>
-
+        <div class="pull-right" ng-show="!settings.isNew">
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
@@ -35,6 +32,10 @@ under the License.
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="queueUpdates()">Queue Server Updates</a></li>
                     <li role="menuitem"><a ng-click="dequeueUpdates()">Dequeue Server Updates</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="viewAsns()">View ASNs</a></li>
+                    <li role="menuitem"><a ng-click="viewParams()">View Parameters</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
                 </ul>
             </div>
         </div>
@@ -107,7 +108,7 @@ under the License.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cacheGroup)">Delete</button>
-                <button type="button" class="btn btn-primary" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

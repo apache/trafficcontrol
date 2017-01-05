@@ -30,8 +30,8 @@ module.exports = angular.module('trafficOps.private.admin.regions.physLocations'
 							region: function($stateParams, regionService) {
 								return regionService.getRegion($stateParams.regionId);
 							},
-							physLocations: function(physLocationService) {
-								return physLocationService.getPhysLocations();
+							physLocations: function($stateParams, physLocationService) {
+								return physLocationService.getPhysLocations({ region: $stateParams.regionId });
 							}
 						}
 					}

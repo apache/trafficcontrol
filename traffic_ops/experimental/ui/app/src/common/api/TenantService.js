@@ -19,8 +19,8 @@
 
 var TenantService = function(Restangular, messageModel) {
 
-    this.getTenants = function() {
-        return Restangular.all('tenant').getList();
+    this.getTenants = function(queryParams) {
+        return Restangular.all('tenant').getList(queryParams);
     };
 
     this.getTenant = function(id) {

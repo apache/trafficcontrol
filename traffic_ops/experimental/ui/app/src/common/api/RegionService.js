@@ -19,8 +19,8 @@
 
 var RegionService = function(Restangular, messageModel) {
 
-    this.getRegions = function() {
-        return Restangular.all('regions').getList();
+    this.getRegions = function(queryParams) {
+        return Restangular.all('regions').getList(queryParams);
     };
 
     this.getRegion = function(id) {

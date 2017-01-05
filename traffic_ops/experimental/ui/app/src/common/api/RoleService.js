@@ -19,8 +19,8 @@
 
 var RoleService = function(Restangular, messageModel) {
 
-    this.getRoles = function() {
-        return Restangular.all('roles').getList();
+    this.getRoles = function(queryParams) {
+        return Restangular.all('roles').getList(queryParams);
     };
 
     this.getRole = function(id) {
