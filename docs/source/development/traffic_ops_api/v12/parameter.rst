@@ -114,6 +114,52 @@ Parameter
 
 |
 
+**GET /api/1.2/parameters/:id/profiles**
+
+    Retrieves all profiles assigned to the parameter.
+
+	Authentication Required: Yes
+
+	Role(s) Required: None
+
+	**Request Route Parameters**
+
+	+---------------+----------+----------------------------------------------------+
+	|    Name       | Required |                    Description                     |
+	+===============+==========+====================================================+
+	| ``id``        |   yes    | Parameter ID.                                      |
+	+---------------+----------+----------------------------------------------------+
+
+	**Response Properties**
+
+	+-----------------+--------+----------------------------------------------------+
+	|    Parameter    |  Type  |                    Description                     |
+	+=================+========+====================================================+
+	| ``lastUpdated`` | array  | The Time / Date this server entry was last updated |
+	+-----------------+--------+----------------------------------------------------+
+	| ``name``        | string | The name for the profile                           |
+	+-----------------+--------+----------------------------------------------------+
+	| ``id``          | string | Primary key                                        |
+	+-----------------+--------+----------------------------------------------------+
+	| ``description`` | string | The description for the profile                    |
+	+-----------------+--------+----------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+            "lastUpdated": "2012-10-08 19:34:45",
+            "name": "CCR_TOP",
+            "id": "8",
+            "description": "Content Router for top.foobar.net"
+        }
+     ]
+    }
+
+|
+
+
 **GET /api/1.2/profiles/:id/parameters**
 
   Authentication Required: Yes
@@ -293,31 +339,34 @@ Parameter
   +-----------------+---------+--------------------------------------------------------------------------------------+
 
   
-  **Request Example** ::
+  **Request Example** 
 
-  1. single parameter format exampe:
-    {
-        "name":"param1",
-        "configFile":"configFile1"
-        "value":"value1",
-        "secure":0,
-    }
+  1. single parameter format example: ::
 
-  2. array format example:
-    [
-        {
-            "name":"param1",
-            "configFile":"configFile1"
-            "value":"value1",
-            "secure":0,
-        }, 
-        {
-            "name":"param2",
-            "configFile":"configFile2"
-            "value":"value2",
-            "secure":1,
-        }
-    ]
+      {
+          "name":"param1",
+          "configFile":"configFile1",
+          "value":"value1",
+          "secure":0
+      }
+
+  2. array format example: ::
+
+      [
+          {
+              "name":"param1",
+              "configFile":"configFile1",
+              "value":"value1",
+              "secure":0
+          }, 
+          {
+              "name":"param2",
+              "configFile":"configFile2",
+              "value":"value2",
+              "secure":1
+          }
+      ]
+
 
   **Response Example** ::
 
@@ -391,7 +440,7 @@ Parameter
 
     {
         "name":"param1",
-        "configFile":"configFile1"
+        "configFile":"configFile1",
         "value":"value1",
         "secure":"0",
     }
@@ -443,8 +492,6 @@ Parameter
 
   **Response Example** ::
 
-    Response Example:
-
     {
       "alerts":
         [
@@ -452,7 +499,7 @@ Parameter
             "level": "success",
             "text": "Parameter was successfully deleted."
           }
-        ],
+        ]
     }
 
 |
@@ -496,8 +543,8 @@ Parameter
 
     {
         "name":"param1",
-        "configFile":"configFile1"
-        "value":"value1",
+        "configFile":"configFile1",
+        "value":"value1"
     }
 
   **Response Example** ::

@@ -26,10 +26,17 @@ use MojoPlugins::Response;
 my $finfo = __FILE__ . ":";
 
 sub index {
-	my $self = shift;
+	my $self 			= shift;
+	my $division_id		= $self->param('division');
+
+	my %criteria;
+	if ( defined $division_id ) {
+		$criteria{'division'} = $division_id;
+	}
+
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("Region")->search( undef, { prefetch => ['division'], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Region")->search( \%criteria, { prefetch => ['division'], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

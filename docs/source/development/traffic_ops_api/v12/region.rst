@@ -29,6 +29,14 @@ Regions
 
   Role(s) Required: None
 
+  **Request Route Parameters**
+
+  +---------------+----------+---------------------------------------------+
+  |   Name        | Required |                Description                  |
+  +===============+==========+=============================================+
+  |  ``division`` |    no    | Filter regions by Division ID.              |
+  +---------------+----------+---------------------------------------------+
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -172,6 +180,7 @@ Regions
 			"divisionName": "mydivision1"
 		}
 	}
+  
 |
 
 **POST /api/1.2/divisions/:division_name/regions**

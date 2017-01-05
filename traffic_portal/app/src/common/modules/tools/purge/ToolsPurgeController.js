@@ -74,6 +74,10 @@ var ToolsPurgeController = function($scope, $uibModal, $stateParams, messageMode
             });
     };
 
+    $scope.toDate = function(date) {
+        return moment(date).toDate(); // hack for https://issues.apache.org/jira/browse/TC-78
+    };
+
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;

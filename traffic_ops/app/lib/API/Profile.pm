@@ -72,6 +72,33 @@ sub index_trimmed {
 	$self->render( json => \@data );
 }
 
+sub get_profiles_by_paramId {
+	my $self    	= shift;
+	my $param_id	= $self->param('id');
+
+	my $param_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $param_id } );
+
+	my $profiles = $self->db->resultset('Profile')->search(
+		{ 'me.id' => { -in => $param_profiles->get_column('profile')->as_query } }
+	);
+
+	my @data;
+	if ( defined($profiles) ) {
+		while ( my $row = $profiles->next ) {
+			push(
+				@data, {
+					"id"          => $row->id,
+					"name"        => $row->name,
+					"description" => $row->description,
+					"lastUpdated" => $row->last_updated
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
+
 sub show {
 	my $self = shift;
 	my $id   = $self->param('id');

@@ -33,13 +33,19 @@ sub index {
 	my @data;
 	my %idnames;
 	my $orderby = $self->param('orderby') || "name";
+	my $type_id = $self->param('type');
 
 	my $rs_idnames = $self->db->resultset("Cachegroup")->search( undef, { columns => [qw/id name/] } );
 	while ( my $row = $rs_idnames->next ) {
 		$idnames{ $row->id } = $row->name;
 	}
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
+	my %criteria;
+	if ( defined $type_id ) {
+		$criteria{'type'} = $type_id;
+	}
+
+	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

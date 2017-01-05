@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/cookiejar"
 	"strings"
 	"time"
 
+	"github.com/juju/persistent-cookiejar"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -92,6 +92,40 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 	return js, nil
 }
 
+func ResumeSession(toURL string, insecure bool) (*Session, error) {
+	options := cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	}
+
+	jar, err := cookiejar.New(&options)
+
+	if err != nil {
+		return nil, err
+	}
+
+	to := Session{
+		UserAgent: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			},
+			Jar: jar,
+		},
+		URL:   toURL,
+		Cache: make(map[string]CacheEntry),
+	}
+
+	resp, err := to.request("GET", "/api/1.2/user/current.json", nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	jar.Save()
+	fmt.Printf("Traffic Ops Session Resumed (%s)\n", resp.Status)
+
+	return &to, nil
+}
+
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
 //     to := traffic_ops.Login("user", "passwd", true)
@@ -148,6 +182,8 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 		err := fmt.Errorf("Login failed, result string: %+v", result)
 		return nil, err
 	}
+
+	jar.Save()
 
 	return &to, nil
 }
