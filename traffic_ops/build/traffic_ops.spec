@@ -32,7 +32,7 @@ URL:	          https://github.com/Comcast/traffic_control/
 Vendor:	          Comcast
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl, cpanminus, git, go
+Requires:         expat-devel, mod_ssl, mkisofs, libpcap-devel, mysql, openssl, perl-core, perl-DBI, perl-DBD-MySQL, perl-Digest-SHA1, perl-WWW-Curl, perl-libwww-perl
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
@@ -99,13 +99,6 @@ Built: %(date) by %{getenv: USER}
     fi
 
 %post
-    # Install Perl modules required for postinstall to run
-    cpanm -n Term::ReadPassword JSON
-
-    # Install goose for db migrations
-    export GOPATH="/opt/traffic_ops/install"
-    go get bitbucket.org/liamstask/goose/cmd/goose
-
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
      %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
