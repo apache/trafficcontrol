@@ -879,10 +879,10 @@ func createCacheStatuses(
 			log.Warnf("cache not in statuses %s\n", cacheName)
 		} else {
 			statusString := statusVal.Status + " - "
-			if localCacheStatus[cacheName].Available {
+			if statusVal.Available {
 				statusString += "available"
 			} else {
-				statusString += "unavailable"
+				statusString += fmt.Sprintf("unavailable (%s)", statusVal.Why)
 			}
 			status = &statusString
 		}

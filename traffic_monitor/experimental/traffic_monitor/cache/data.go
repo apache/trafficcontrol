@@ -31,6 +31,7 @@ const AvailableStatusReported = "REPORTED"
 type AvailableStatus struct {
 	Available bool
 	Status    string
+	Why       string
 }
 
 // CacheAvailableStatuses is the available status of each cache.
