@@ -75,20 +75,23 @@ func StartStatHistoryManager(
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	tickInterval := cfg.StatFlushInterval
 	go func() {
-
+		var ticker *time.Ticker
 		<-cachesChanged // wait for the signal that localStates have been set
 		unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 
 		for {
 			var results []cache.Result
 			results = append(results, <-cacheStatChan)
-			tick := time.Tick(tickInterval)
+			if ticker != nil {
+				ticker.Stop()
+			}
+			ticker = time.NewTicker(tickInterval)
 		innerLoop:
 			for {
 				select {
 				case <-cachesChanged:
 					unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
-				case <-tick:
+				case <-ticker.C:
 					log.Warnf("StatHistoryManager flushing queued results\n")
 					processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get())
 					break innerLoop

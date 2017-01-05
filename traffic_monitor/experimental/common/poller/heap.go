@@ -20,7 +20,6 @@ package poller
  */
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
