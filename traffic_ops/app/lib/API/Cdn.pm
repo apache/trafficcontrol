@@ -327,7 +327,7 @@ sub get_traffic_monitor_config {
 		}
 	}
 
-	foreach my $type ( keys %{$profile_tracker}) {
+	foreach my $type ( keys %{$profile_tracker} ) {
 		foreach my $profile ( keys %{$profile_tracker->{$type}} ) {
 			push( @{ $data_obj->{'profiles'} }, $profile_tracker->{$type}->{$profile} );
 		}
