@@ -29,13 +29,11 @@ sub register {
 			my $self = shift;
 			my $enum_name = shift;
 
-			my @possible;
-			my $dbh    = Schema->database_handle;
-			my $h = $dbh->prepare('SELECT unnest(enum_range(NULL:: ' . $enum_name . ' )) as value ORDER BY value');
-			$h->execute || print "ERR";
-			while ( my @data = $h->fetchrow_array() ) {
-				push(@possible, $data[0]);
-			}
+			print ">>> " . $enum_name . "\n";
+			my %views = (  # to add more enums, just add the key, val pair here.
+				'profile_type', 'ProfileTypeValue'
+			 ); 
+			my @possible = $self->db->resultset( $views{$enum_name })->search(undef)->get_column('value')->all();
 			return \@possible;
 		}
 	);
