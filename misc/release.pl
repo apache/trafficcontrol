@@ -18,7 +18,6 @@ use warnings;
 use English;
 use Getopt::Long;
 use FileHandle;
-use DBI;
 use Cwd;
 use Data::Dumper;
 use File::Find::Rule;
