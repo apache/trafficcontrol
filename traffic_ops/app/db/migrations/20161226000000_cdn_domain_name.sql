@@ -18,6 +18,9 @@
 
 CREATE TYPE profile_type AS ENUM ('ATS_PROFILE', 'TR_PROFILE', 'TM_PROFILE', 'TS_PROFILE', 'TP_PROFILE', 'INFLUXDB_PROFILE', 
   'RIAK_PROFILE', 'SPLUNK_PROFILE', 'DS_PROFILE', 'ORG_PROFILE', 'KAFKA_PROFILE', 'LOGSTASH_PROFILE', 'ES_PROFILE', 'UNK_PROFILE');
+
+CREATE OR REPLACE VIEW "profile_type_values" AS SELECT unnest(enum_range(NULL::profile_type )) AS value ORDER BY value;
+  
 ALTER TABLE public.profile ADD COLUMN type profile_type;
 UPDATE public.profile SET type='UNK_PROFILE'; -- So we don't get any NULL, these should be checked.
 UPDATE public.profile SET type='TR_PROFILE' WHERE name like 'CCR_%' OR name like 'TR_%';
