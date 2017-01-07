@@ -27,22 +27,11 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "influx-tools"
+	app.Name = "sync_ts_databases"
 	app.Version = "0.1.0"
-	app.Usage = "influx-tools provides cli methods for creating and syncing the requisite influxdb databases"
-	app.Commands = []cli.Command{
-		cli.Command{
-			Name:   "create",
-			Usage:  "create the influxDB tables",
-			Action: create,
-			Flags:  createFlags(),
-		},
-		cli.Command{
-			Name:   "sync",
-			Usage:  "sync the influxDB tables",
-			Action: sync,
-			Flags:  syncFlags(),
-		},
-	}
+	app.Usage = "sync_ts_databases provides a cli tool syncing the requisite influxdb databases"
+	app.Flags = syncFlags()
+	app.Action = sync
+
 	app.Run(os.Args)
 }
