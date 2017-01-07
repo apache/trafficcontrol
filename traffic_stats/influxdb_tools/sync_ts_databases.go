@@ -29,6 +29,12 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
+const (
+	cache           = "cache_stats"
+	deliveryService = "deliveryservice_stats"
+	daily           = "daily_stats"
+)
+
 type cacheStats struct {
 	t         string //time
 	value     float64
@@ -108,11 +114,11 @@ func main() {
 		go syncDailyDb(ch, sourceClient, targetClient, *days)
 		go syncCsDb(ch, sourceClient, targetClient, *days)
 		go syncDsDb(ch, sourceClient, targetClient, *days)
-	case "cache_stats":
+	case cache:
 		go syncCsDb(ch, sourceClient, targetClient, *days)
-	case "deliveryservice_stats":
+	case deliveryService:
 		go syncDsDb(ch, sourceClient, targetClient, *days)
-	case "daily_stats":
+	case daily:
 		go syncDailyDb(ch, sourceClient, targetClient, *days)
 	}
 
@@ -129,7 +135,7 @@ func main() {
 }
 
 func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Client, days int) {
-	db := "cache_stats"
+	db := cache
 	fmt.Printf("Syncing %s database...\n", db)
 	stats := [...]string{
 		"bandwidth.cdn.1min",
@@ -150,7 +156,7 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 }
 
 func syncDsDb(ch chan string, sourceClient influx.Client, targetClient influx.Client, days int) {
-	db := "deliveryservice_stats"
+	db := deliveryService
 	fmt.Printf("Syncing %s database...\n", db)
 	stats := [...]string{
 		"kbps.ds.1min",
@@ -170,7 +176,7 @@ func syncDsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 }
 
 func syncDailyDb(ch chan string, sourceClient influx.Client, targetClient influx.Client, days int) {
-	db := "daily_stats"
+	db := daily
 	fmt.Printf("Syncing %s database...\n", db)
 	stats := [...]string{
 		"daily_bytesserved",
@@ -201,7 +207,7 @@ func queryDB(client influx.Client, cmd string, db string) (res []influx.Result, 
 
 func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 	//get records from source DB
-	db := "cache_stats"
+	db := cache
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
@@ -210,7 +216,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 
 	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"monthly\".\"%s\"", statName)
 	if days > 0 {
-		queryString += fmt.Sprintf(" where time > now() - %dd", days)
+		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
@@ -264,7 +270,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 
 func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 
-	db := "deliveryservice_stats"
+	db := deliveryService
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
@@ -273,7 +279,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 
 	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"monthly\".\"%s\"", statName)
 	if days > 0 {
-		queryString += fmt.Sprintf(" where time > now() - %dd", days)
+		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
@@ -322,9 +328,10 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 	}
 	targetClient.Write(bps)
 }
+
 func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 
-	db := "daily_stats"
+	db := daily
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:  db,
 		Precision: "s",
@@ -332,7 +339,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	//get records from source DB
 	queryString := fmt.Sprintf("select time, cdn, deliveryservice, value from \"%s\"", statName)
 	if days > 0 {
-		queryString += fmt.Sprintf(" where time > now() - %dd", days)
+		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
