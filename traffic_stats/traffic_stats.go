@@ -44,9 +44,9 @@ const (
 	// FATAL will exit after printing error
 	FATAL = iota
 	// ERROR will just keep going, print error
-	ERROR = iota
+	ERROR
 	// WARN will keep going and print a warning
-	WARN = iota
+	WARN
 )
 
 const (

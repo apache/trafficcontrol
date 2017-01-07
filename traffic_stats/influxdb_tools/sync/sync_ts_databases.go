@@ -50,6 +50,7 @@ type deliveryServiceStats struct {
 	deliveryService string
 	cacheGroup      string
 }
+
 type dailyStats struct {
 	t               string //time
 	cdn             string
