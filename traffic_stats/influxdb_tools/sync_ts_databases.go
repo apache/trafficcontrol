@@ -21,12 +21,12 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
-	"os"
 	"time"
 
 	influx "github.com/influxdata/influxdb/client/v2"
+	"github.com/pkg/errors"
+	"github.com/urfave/cli"
 )
 
 const (
@@ -58,80 +58,116 @@ type dailyStats struct {
 
 var errorMessage string
 
-func main() {
+func syncFlags() []cli.Flag {
+	return []cli.Flag{
+		cli.StringFlag{
+			Name:  "sourceUrl",
+			Usage: "The source influxdb url and port",
+			Value: "http://server1.kabletown.net:8086",
+		},
+		cli.StringFlag{
+			Name:  "targetUrl",
+			Usage: "The target influxdb url and port",
+			Value: "http://server2.kabletown.net:8086",
+		},
+		cli.StringFlag{
+			Name:  "database",
+			Usage: "Sync a specific database",
+			Value: "all",
+		},
+		cli.IntFlag{
+			Name:  "days",
+			Usage: "Number of days in the past to sync (today - x days), 0 is all",
+			Value: 0,
+		},
+		cli.StringFlag{
+			Name:  "sourceUser",
+			Usage: "The source influxdb username",
+			Value: "",
+		},
+		cli.StringFlag{
+			Name:  "sourcePass",
+			Usage: "The source influxdb password",
+			Value: "",
+		},
+		cli.StringFlag{
+			Name:  "targetUser",
+			Usage: "The target influxdb username",
+			Value: "",
+		},
+		cli.StringFlag{
+			Name:  "targetPass",
+			Usage: "The target influxdb password",
+			Value: "",
+		},
+	}
+}
 
-	sourceURL := flag.String("sourceUrl", "http://server1.kabletown.net:8086", "The influxdb url and port")
-	targetURL := flag.String("targetUrl", "http://server2.kabletown.net:8086", "The influxdb url and port")
-	database := flag.String("database", "all", "Sync a specific database")
-	days := flag.Int("days", 0, "Number of days in the past to sync (today - x days), 0 is all")
-	sourceUser := flag.String("sourceUser", "", "The source influxdb username")
-	sourcePass := flag.String("sourcePass", "", "The source influxdb password")
-	targetUser := flag.String("targetUser", "", "The target influxdb username")
-	targetPass := flag.String("targetPass", "", "The target influxdb password")
-	flag.Parse()
-	fmt.Printf("syncing %v to %v for %v database(s) for the past %v day(s)\n", *sourceURL, *targetURL, *database, *days)
+func sync(c *cli.Context) error {
+
+	sourceURL := c.String("sourceUrl")
+	targetURL := c.String("targetUrl")
+	database := c.String("database")
+	days := c.Int("days")
+	sourceUser := c.String("sourceUser")
+	sourcePass := c.String("sourcePass")
+	targetUser := c.String("targetUser")
+	targetPass := c.String("targetPass")
+	fmt.Printf("syncing %s to %s for %s database(s) for the past %d day(s)\n", sourceURL, targetURL, database, days)
 	sourceClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     *sourceURL,
-		Username: *sourceUser,
-		Password: *sourcePass,
+		Addr:     sourceURL,
+		Username: sourceUser,
+		Password: sourcePass,
 	})
 	if err != nil {
-		errorMessage = fmt.Sprintf("Error creating influx sourceClient: %v\n", err)
-		fmt.Println(errorMessage)
-		os.Exit(1)
+		return errors.Wrap(err, "Error creating influx sourceClient")
 	}
-	_, _, err = sourceClient.Ping(10)
-	if err != nil {
-		errorMessage = fmt.Sprintf("Error creating influx sourceClient: %v\n", err)
-		fmt.Println(errorMessage)
-		os.Exit(1)
+
+	if _, _, err = sourceClient.Ping(10); err != nil {
+		return errors.Wrap(err, "Error creating influx sourceClient")
 	}
+
 	targetClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     *targetURL,
-		Username: *targetUser,
-		Password: *targetPass,
+		Addr:     targetURL,
+		Username: targetUser,
+		Password: targetPass,
 	})
 	if err != nil {
-		errorMessage = fmt.Sprintf("Error creating influx targetClient: %v\n", err)
-		fmt.Println(errorMessage)
-		os.Exit(1)
+		return errors.Wrap(err, "Error creating influx targetClient")
 	}
-	_, _, err = targetClient.Ping(10)
-	if err != nil {
-		errorMessage = fmt.Sprintf("Error creating influx targetClient: %v\n", err)
-		fmt.Println(errorMessage)
-		os.Exit(1)
+
+	if _, _, err = targetClient.Ping(10); err != nil {
+		return errors.Wrap(err, "Error creating influx targetClient")
 	}
+
 	chSize := 1
-	if *database == "all" {
+	if database == "all" {
 		chSize = 3
 	}
 
 	ch := make(chan string)
 
-	switch *database {
+	switch database {
 	case "all":
-		go syncDailyDb(ch, sourceClient, targetClient, *days)
-		go syncCsDb(ch, sourceClient, targetClient, *days)
-		go syncDsDb(ch, sourceClient, targetClient, *days)
+		go syncDailyDb(ch, sourceClient, targetClient, days)
+		go syncCsDb(ch, sourceClient, targetClient, days)
+		go syncDsDb(ch, sourceClient, targetClient, days)
 	case cache:
-		go syncCsDb(ch, sourceClient, targetClient, *days)
+		go syncCsDb(ch, sourceClient, targetClient, days)
 	case deliveryService:
-		go syncDsDb(ch, sourceClient, targetClient, *days)
+		go syncDsDb(ch, sourceClient, targetClient, days)
 	case daily:
-		go syncDailyDb(ch, sourceClient, targetClient, *days)
+		go syncDailyDb(ch, sourceClient, targetClient, days)
+	default:
+		return errors.New("No database selected")
 	}
 
 	for i := 1; i <= chSize; i++ {
 		fmt.Println(<-ch)
 	}
 
-	if errorMessage != "" {
-		fmt.Println(errorMessage)
-		return
-	}
-
-	fmt.Println("Traffic Stats has been synced!")
+	fmt.Println("Traffic Stats have been synced!")
+	return nil
 }
 
 func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Client, days int) {
@@ -191,7 +227,7 @@ func syncDailyDb(ch chan string, sourceClient influx.Client, targetClient influx
 
 }
 
-func queryDB(client influx.Client, cmd string, db string) (res []influx.Result, err error) {
+func queryDb2(client influx.Client, cmd string, db string) (res []influx.Result, err error) {
 	q := influx.Query{
 		Command:  cmd,
 		Database: db,
@@ -219,7 +255,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	fmt.Println("queryString ", queryString)
-	res, err := queryDB(sourceClient, queryString, db)
+	res, err := queryDb2(sourceClient, queryString, db)
 	if err != nil {
 		fmt.Printf("An error occured getting %s records from sourceDb\n", statName)
 		return
@@ -227,7 +263,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	sourceStats := getCacheStats(res)
 
 	//get values from target DB
-	targetRes, err := queryDB(targetClient, queryString, db)
+	targetRes, err := queryDb2(targetClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -282,7 +318,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	fmt.Println("queryString ", queryString)
-	res, err := queryDB(sourceClient, queryString, db)
+	res, err := queryDb2(sourceClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s records from sourceDb: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -290,7 +326,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 	}
 	sourceStats := getDeliveryServiceStats(res)
 	// get value from target DB
-	targetRes, err := queryDB(targetClient, queryString, db)
+	targetRes, err := queryDb2(targetClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -341,7 +377,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
-	res, err := queryDB(sourceClient, queryString, db)
+	res, err := queryDb2(sourceClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s records from sourceDb: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -349,7 +385,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	}
 	sourceStats := getDailyStats(res)
 	// get value from target DB
-	targetRes, err := queryDB(targetClient, queryString, db)
+	targetRes, err := queryDb2(targetClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
 		fmt.Println(errorMessage)
