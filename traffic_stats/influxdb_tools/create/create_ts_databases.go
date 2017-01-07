@@ -27,6 +27,12 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	cache           = "cache_stats"
+	deliveryService = "deliveryservice_stats"
+	daily           = "daily_stats"
+)
+
 func createFlags() []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{

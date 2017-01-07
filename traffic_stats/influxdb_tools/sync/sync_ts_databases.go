@@ -42,6 +42,7 @@ type cacheStats struct {
 	hostname  string
 	cacheType string
 }
+
 type deliveryServiceStats struct {
 	t               string //time
 	value           float64
@@ -404,8 +405,11 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 
 func getCacheStats(res []influx.Result) map[string]cacheStats {
 	response := make(map[string]cacheStats)
-	if res != nil && len(res[0].Series) > 0 {
-		for _, row := range res[0].Series {
+	if len(res) == 0 {
+		return response
+	}
+	for i := range res {
+		for _, row := range res[i].Series {
 			for _, record := range row.Values {
 				data := new(cacheStats)
 				t := record[0].(string)
@@ -433,8 +437,12 @@ func getCacheStats(res []influx.Result) map[string]cacheStats {
 
 func getDeliveryServiceStats(res []influx.Result) map[string]deliveryServiceStats {
 	response := make(map[string]deliveryServiceStats)
-	if len(res[0].Series) > 0 {
-		for _, row := range res[0].Series {
+	// if the slice is empty, just return
+	if len(res) == 0 {
+		return response
+	}
+	for i := range res {
+		for _, row := range res[i].Series {
 			for _, record := range row.Values {
 				data := new(deliveryServiceStats)
 				data.t = record[0].(string)
@@ -461,8 +469,12 @@ func getDeliveryServiceStats(res []influx.Result) map[string]deliveryServiceStat
 
 func getDailyStats(res []influx.Result) map[string]dailyStats {
 	response := make(map[string]dailyStats)
-	if len(res) > 0 && len(res[0].Series) > 0 {
-		for _, row := range res[0].Series {
+	// if the slice is empty, just return
+	if len(res) == 0 {
+		return response
+	}
+	for i := range res {
+		for _, row := range res[i].Series {
 			for _, record := range row.Values {
 				data := new(dailyStats)
 				data.t = record[0].(string)
@@ -480,4 +492,25 @@ func getDailyStats(res []influx.Result) map[string]dailyStats {
 		}
 	}
 	return response
+}
+
+// queryDB takes a variadic argument for the target database so as to make
+// passing the variable optional, however, if passed, only the first db passed
+// in will be used
+func queryDB(client influx.Client, cmd string, dbs ...string) (res []influx.Result, err error) {
+	db := ""
+	if len(dbs) > 0 {
+		db = dbs[0]
+	}
+	q := influx.Query{
+		Command:  cmd,
+		Database: db,
+	}
+	if response, err := client.Query(q); err == nil {
+		if response.Error() != nil {
+			return res, response.Error()
+		}
+		res = response.Results
+	}
+	return res, nil
 }
