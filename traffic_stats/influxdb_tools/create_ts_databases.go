@@ -20,45 +20,75 @@ under the License.
 package main
 
 import (
-	"flag"
 	"fmt"
-	"os"
 
 	influx "github.com/influxdata/influxdb/client/v2"
+	"github.com/pkg/errors"
+	"github.com/urfave/cli"
 )
 
-func main() {
+func createFlags() []cli.Flag {
+	return []cli.Flag{
+		cli.StringFlag{
+			Name:  "url",
+			Usage: "The influxdb url and port",
+			Value: "http://localhost:8086",
+		},
+		cli.IntFlag{
+			Name:  "replication",
+			Usage: "The number of nodes in the cluster",
+			Value: 3,
+		},
+		cli.StringFlag{
+			Name:  "user",
+			Usage: "The influxdb username used to create DBs",
+			Value: "",
+		},
+		cli.StringFlag{
+			Name:  "password",
+			Usage: "The influxdb password used to create DBs",
+			Value: "",
+		},
+	}
+}
 
-	influxURL := flag.String("url", "http://localhost:8086", "The influxdb url and port")
-	replication := flag.String("replication", "3", "The number of nodes in the cluster")
-	user := flag.String("user", "", "The influxdb username used to create DBs")
-	password := flag.String("password", "", "The influxdb password used to create DBs")
-	flag.Parse()
-	fmt.Printf("creating datbases for influxUrl: %v with a replication of %v using user %s\n", *influxURL, *replication, *user)
+func create(c *cli.Context) error {
+	influxURL := c.String("url")
+	replication := c.Int("replication")
+	user := c.String("user")
+	password := c.String("password")
+
+	fmt.Printf("creating datbases for influxUrl: %s with a replication of %d using user %s\n", influxURL, replication, user)
 	client, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     *influxURL,
-		Username: *user,
-		Password: *password,
+		Addr:     influxURL,
+		Username: user,
+		Password: password,
 	})
 	if err != nil {
-		fmt.Printf("Error creating influx client: %v\n", err)
-		os.Exit(1)
+		return errors.Wrap(err, "Error creating influx client")
 	}
 	_, _, err = client.Ping(10)
 	if err != nil {
-		fmt.Printf("Error creating influx client: %v\n", err)
-		os.Exit(1)
+		return errors.Wrap(err, "Error creating influx client")
 	}
 
 	createCacheStats(client, replication)
 	createDailyStats(client, replication)
 	createDeliveryServiceStats(client, replication)
+	return nil
 }
 
-func queryDB(client influx.Client, cmd string) (res []influx.Result, err error) {
+// queryDB takes a variadic argument for the target database so as to make
+// passing the variable optional, however, if passed, only the first db passed
+// in will be used
+func queryDB(client influx.Client, cmd string, dbs ...string) (res []influx.Result, err error) {
+	db := ""
+	if len(dbs) > 0 {
+		db = dbs[0]
+	}
 	q := influx.Query{
 		Command:  cmd,
-		Database: "",
+		Database: db,
 	}
 	if response, err := client.Query(q); err == nil {
 		if response.Error() != nil {
@@ -69,8 +99,8 @@ func queryDB(client influx.Client, cmd string) (res []influx.Result, err error) 
 	return res, nil
 }
 
-func createCacheStats(client influx.Client, replication *string) {
-	db := "cache_stats"
+func createCacheStats(client influx.Client, replication int) {
+	db := cache
 	createDatabase(client, db)
 	createRetentionPolicy(client, db, "daily", "26h", replication, true)
 	createRetentionPolicy(client, db, "monthly", "30d", replication, false)
@@ -87,8 +117,8 @@ func createCacheStats(client influx.Client, replication *string) {
 	createContinuousQuery(client, "wrap_count_vol2_1m", `CREATE CONTINUOUS QUERY wrap_count_vol2_1m ON cache_stats RESAMPLE FOR 2m BEGIN SELECT mean(value) AS vol2_wrap_count INTO cache_stats.monthly."wrap_count.1min" FROM cache_stats.daily."ats.proxy.process.cache.volume_2.wrap_count" GROUP BY time(1m), * END`)
 }
 
-func createDeliveryServiceStats(client influx.Client, replication *string) {
-	db := "deliveryservice_stats"
+func createDeliveryServiceStats(client influx.Client, replication int) {
+	db := deliveryService
 	createDatabase(client, db)
 	createRetentionPolicy(client, db, "daily", "26h", replication, true)
 	createRetentionPolicy(client, db, "monthly", "30d", replication, false)
@@ -103,8 +133,8 @@ func createDeliveryServiceStats(client influx.Client, replication *string) {
 	createContinuousQuery(client, "max_kbps_ds_1day", `CREATE CONTINUOUS QUERY max_kbps_ds_1day ON deliveryservice_stats RESAMPLE FOR 2d BEGIN SELECT max(value) AS "value" INTO "deliveryservice_stats"."indefinite"."max.kbps.ds.1day" FROM "deliveryservice_stats"."monthly"."kbps.ds.1min" GROUP BY time(1d), deliveryservice, cdn END`)
 }
 
-func createDailyStats(client influx.Client, replication *string) {
-	db := "daily_stats"
+func createDailyStats(client influx.Client, replication int) {
+	db := daily
 	createDatabase(client, db)
 	createRetentionPolicy(client, db, "indefinite", "INF", replication, true)
 }
@@ -118,8 +148,8 @@ func createDatabase(client influx.Client, db string) {
 	fmt.Println("Successfully created database: ", db)
 }
 
-func createRetentionPolicy(client influx.Client, db string, name string, duration string, replication *string, isDefault bool) {
-	qString := fmt.Sprintf("CREATE RETENTION POLICY %s ON %s DURATION %s REPLICATION %s", name, db, duration, *replication)
+func createRetentionPolicy(client influx.Client, db string, name string, duration string, replication int, isDefault bool) {
+	qString := fmt.Sprintf("CREATE RETENTION POLICY %s ON %s DURATION %s REPLICATION %d", name, db, duration, replication)
 	if isDefault {
 		qString += " DEFAULT"
 	}
