@@ -227,20 +227,6 @@ func syncDailyDb(ch chan string, sourceClient influx.Client, targetClient influx
 
 }
 
-func queryDb2(client influx.Client, cmd string, db string) (res []influx.Result, err error) {
-	q := influx.Query{
-		Command:  cmd,
-		Database: db,
-	}
-	if response, err := client.Query(q); err == nil {
-		if response.Error() != nil {
-			return res, response.Error()
-		}
-		res = response.Results
-	}
-	return res, nil
-}
-
 func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 	//get records from source DB
 	db := cache
@@ -255,7 +241,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	fmt.Println("queryString ", queryString)
-	res, err := queryDb2(sourceClient, queryString, db)
+	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
 		fmt.Printf("An error occured getting %s records from sourceDb\n", statName)
 		return
@@ -263,7 +249,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	sourceStats := getCacheStats(res)
 
 	//get values from target DB
-	targetRes, err := queryDb2(targetClient, queryString, db)
+	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -318,7 +304,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
 	fmt.Println("queryString ", queryString)
-	res, err := queryDb2(sourceClient, queryString, db)
+	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s records from sourceDb: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -326,7 +312,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 	}
 	sourceStats := getDeliveryServiceStats(res)
 	// get value from target DB
-	targetRes, err := queryDb2(targetClient, queryString, db)
+	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -377,7 +363,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
-	res, err := queryDb2(sourceClient, queryString, db)
+	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s records from sourceDb: %v\n", statName, err)
 		fmt.Println(errorMessage)
@@ -385,7 +371,7 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 	}
 	sourceStats := getDailyStats(res)
 	// get value from target DB
-	targetRes, err := queryDb2(targetClient, queryString, db)
+	targetRes, err := queryDB(targetClient, queryString, db)
 	if err != nil {
 		errorMessage = fmt.Sprintf("An error occured getting %s record from target db: %v\n", statName, err)
 		fmt.Println(errorMessage)
