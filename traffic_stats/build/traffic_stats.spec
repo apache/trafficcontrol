@@ -75,8 +75,8 @@ godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb_tool
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
-  go build sync_ts_databases.go
-  go build create_ts_databases.go
+  go build sync/sync_ts_databases.go sync/main.go
+  go build create/create_ts_databases.go create/main.go
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
@@ -182,4 +182,3 @@ if [ -e /etc/init.d/ts_daily_summary ]; then
 	/etc/init.d/ts_daily_summary stop
 	/sbin/chkconfig --del ts_daily_summary
 fi
-
