@@ -40,12 +40,6 @@ Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-$t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 1 )
-    ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-$t->get_ok("/api/1.2/cdns/1")->status_is(200)->json_is( "/response/0/id", 1 )
-    ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
 ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
         "name" => "cdn_test", "dnssecEnabled" => "true" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -53,9 +47,6 @@ ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
     ->json_is( "/alerts/0/level" => "success" )
     ->json_is( "/alerts/0/text" => "cdn was created." )
             , 'Does the cdn details return?';
-
-$t->get_ok("/api/1.2/cdns/capacity.json")->status_is(200)->json_is( "/response/unavailablePercent", "0" )->json_is( "/response/availablePercent", "0" )
-	->json_is( "/response/utilizedPercent", "0" )->json_is( "/response/maintenancePercent", "0" )
 
 my $cdn_id = &get_cdn_id('cdn_test');
 
