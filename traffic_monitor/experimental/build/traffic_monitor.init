@@ -46,7 +46,7 @@ runpath=var/run
 name=traffic_monitor
 prog=$basepath/$binpath/$name
 lockfile=$basepath/$runpath/$name
-options="--opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg --config opt/traffic_monitor/conf/traffic_monitor.cfg"
+options="--opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg --config /opt/traffic_monitor/conf/traffic_monitor.cfg"
 
 start() {
         [ "$NETWORKING" = "no" ] && exit 1

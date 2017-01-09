@@ -21,6 +21,7 @@
 # make sure we start out in traffic_control dir
 topscript=$(readlink -f $0)
 export TC_DIR=$(dirname $(dirname "$topscript"))
+echo $TC_DIR
 [[ -n $TC_DIR ]] && cd "$TC_DIR" || { echo "Could not cd $TC_DIR"; exit 1; }
 
 . build/functions.sh
@@ -46,8 +47,8 @@ fi
 declare -a badproj
 declare -a goodproj
 for p in "${projects[@]}"; do
-	# strip from first /
-	p=${p%%/*}
+	# strip trailing /
+	p=${p%/}
 	bldscript="$p/build/build_rpm.sh"
 	if [[ ! -x $bldscript ]]; then
 		echo "$bldscript not found"

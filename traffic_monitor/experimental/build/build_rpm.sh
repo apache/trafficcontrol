@@ -18,7 +18,8 @@
 function importFunctions() {
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
-	export TM_DIR=$(dirname "$scriptdir")
+	export goTM_DIR=$(dirname "$scriptdir")
+	export TM_DIR=$(dirname "$goTM_DIR")
 	export TC_DIR=$(dirname "$TM_DIR")
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
@@ -35,17 +36,17 @@ function initBuildArea() {
 
 	# tar/gzip the source
 	local tm_dest=$(createSourceDir traffic_monitor)
-	cd "$TM_DIR" || \
-		 { echo "Could not cd to $TM_DIR: $?"; exit 1; }
+	cd "$goTM_DIR" || \
+		 { echo "Could not cd to $goTM_DIR: $?"; exit 1; }
 	rsync -av ./ "$tm_dest"/ || \
 		 { echo "Could not copy to $tm_dest: $?"; exit 1; }
-	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
+	cp "$goTM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
 
-	cp -r "$TM_DIR"/ "$tm_dest" || { echo "Could not copy $TM_DIR to $tm_dest: $?"; exit 1; }
+	cp -r "$goTM_DIR"/ "$tm_dest" || { echo "Could not copy $goTM_DIR to $tm_dest: $?"; exit 1; }
 
 	tar -czvf "$tm_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $tm_dest) || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
-	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }
+	cp "$goTM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
