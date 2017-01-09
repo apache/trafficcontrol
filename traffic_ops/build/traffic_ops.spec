@@ -122,7 +122,6 @@ Built: %(date) by %{getenv: USER}
     # install
     if [ "$1" = "1" ]; then
       # see postinstall, the .reconfigure file triggers init().
-      #/bin/touch %{PACKAGEDIR}/.reconfigure
     	echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the install.\n"
     fi
 
