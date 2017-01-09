@@ -69,7 +69,7 @@ $t->post_ok(
 		'location.poc'        => 'Jan van Doorn',
 		'location.email'      => 'jvd@comcast.com',
 		'location.comments'   => 'boo',
-		'location.region'     => '1',
+		'location.region'     => '100',
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -86,7 +86,7 @@ $t->post_ok(
 		'location.poc'        => 'Bubba',
 		'location.email'      => 'Louie was here',
 		'location.comments'   => 'boo',
-		'location.region'     => '1',
+		'location.region'     => '100',
 	}
 )->status_is(200)->message( 'invalid email' );
 
@@ -115,7 +115,7 @@ sub upd_and_del() {
 				'location.phone'      => '800-334-5545',
 				'location.email'      => 'jvd@comcast.com',
 				'location.comments'   => 'boo',
-				'location.region'     => '1',
+				'location.region'     => '100',
 				}
 		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 		$t->get_ok( "/phys_location/$id/delete" )->status_is(302);

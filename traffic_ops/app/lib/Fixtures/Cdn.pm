@@ -23,7 +23,7 @@ my %definition_for = (
 	cdn1_cdn_name => {
 		new   => 'Cdn',
 		using => {
-			id          => 1,
+			id          => 100,
 			name        => 'cdn1',
 		},
 	},
@@ -31,7 +31,7 @@ my %definition_for = (
 	cdn2_cdn_name => {
 		new   => 'Cdn',
 		using => {
-			id          => 2,
+			id          => 200,
 			name        => 'cdn2',
 		},
 	},

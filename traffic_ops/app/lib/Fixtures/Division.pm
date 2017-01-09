@@ -22,7 +22,7 @@ my %definition_for = (
 	mountain => {
 		new   => 'Division',
 		using => {
-			id         => 1,
+			id         => 100,
 			name       => 'mountain',
 		},
 	},

@@ -49,10 +49,10 @@ ok $t->post_ok('/api/1.2/regions/non_region/phys_locations' => {Accept => 'appli
         "name" => "physical location1",
         "shortName" => "mountain"})->status_is(400);
 
-$t->get_ok("/api/1.2/phys_locations")->status_is(200)->json_is( "/response/0/id", 2 )
+$t->get_ok("/api/1.2/phys_locations")->status_is(200)->json_is( "/response/0/id", 200 )
 	->json_is( "/response/0/name", "Boulder" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/phys_locations/1")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/phys_locations/100")->status_is(200)->json_is( "/response/0/id", 100 )
 	->json_is( "/response/0/name", "Denver" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/phys_locations' => {Accept => 'application/json'} => json => {
@@ -62,7 +62,7 @@ ok $t->post_ok('/api/1.2/phys_locations' => {Accept => 'application/json'} => js
 			"city" => "city",
 			"state" => "state",
 			"zip" => "zip",
-			"regionId" => 1,
+			"regionId" => 100,
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "phys1" )
@@ -79,7 +79,7 @@ ok $t->put_ok('/api/1.2/phys_locations/' . $phys_loc_id  => {Accept => 'applicat
 			"city" => "city",
 			"state" => "state",
 			"zip" => "zip",
-			"regionId" => 1,
+			"regionId" => 100,
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "phys2" )

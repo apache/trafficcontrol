@@ -26,7 +26,7 @@ my %definition_for = (
 			address         => '127.0.0.1',
 			type            => 21,
 			deliveryservice => 100,
-			cachegroup      => 1,
+			cachegroup      => 100,
 		},
 	},
 	aaaa_record_host => {
@@ -36,7 +36,7 @@ my %definition_for = (
 			host            => 'AAAA_RECORD_HOST',
 			address         => '127.0.0.1',
 			deliveryservice => 100,
-			cachegroup      => 1,
+			cachegroup      => 100,
 			type            => 22,
 		},
 	},
@@ -48,7 +48,7 @@ my %definition_for = (
 			address         => '127.0.0.1',
 			deliveryservice => 200,
 			type            => 23,
-			cachegroup      => 2,
+			cachegroup      => 200,
 		},
 	},
 );
