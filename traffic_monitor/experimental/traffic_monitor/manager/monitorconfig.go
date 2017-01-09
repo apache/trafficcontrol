@@ -223,6 +223,10 @@ func monitorConfigListen(
 			}
 
 			url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
+			if url == "" {
+				log.Errorf("monitor config server %v profile %v has no polling URL; can't poll", srv.HostName, srv.Profile)
+				continue
+			}
 			r := strings.NewReplacer(
 				"${hostname}", srv.IP,
 				"${interface_name}", srv.InterfaceName,
