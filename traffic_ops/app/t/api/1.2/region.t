@@ -29,14 +29,11 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
-my $schema_values = { schema => $schema, no_transactions => 1 };
+my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Division->new($schema_values) );
+Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
@@ -46,22 +43,23 @@ ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/
 	->json_is( "/response/name" => "region1" )
 	->json_is( "/response/divisionName" => "mountain" )
             , 'Does the region details return?';
+
 ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
         "name" => "region1"})->status_is(400);
 
-$t->get_ok("/api/1.2/regions")->status_is(200)->json_is( "/response/0/id", 2 )
+$t->get_ok("/api/1.2/regions")->status_is(200)->json_is( "/response/0/id", 200 )
 	->json_is( "/response/0/name", "Boulder Region" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/regions/1")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/regions/100")->status_is(200)->json_is( "/response/0/id", 100 )
 	->json_is( "/response/0/name", "Denver Region" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/regions' => {Accept => 'application/json'} => json => {
 			"name" => "reg1",
-			"division" => 1
+			"division" => 100
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "reg1" )
-		->json_is( "/response/division" => 1 )
+		->json_is( "/response/division" => 100 )
 		->json_is( "/alerts/0/level" => "success" )
 		->json_is( "/alerts/0/text" => "Region create was successful." )
 	, 'Do the region details return?';
@@ -70,11 +68,11 @@ my $region_id = &get_reg_id('reg1');
 
 ok $t->put_ok('/api/1.2/regions/' . $region_id  => {Accept => 'application/json'} => json => {
 			"name" => "reg2",
-			"division" => 1
+			"division" => 100
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "reg2" )
-		->json_is( "/response/division" => 1 )
+		->json_is( "/response/division" => 100 )
 		->json_is( "/alerts/0/level" => "success" )
 	, 'Do the regions details return?';
 

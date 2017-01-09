@@ -31,23 +31,11 @@ use Data::Dumper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
-my $schema_values = { schema => $schema, no_transactions => 1 };
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Status->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Parameter->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Profile->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::ProfileParameter->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Division->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Region->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::PhysLocation->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Type->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::Deliveryservice->new($schema_values) );
+Test::TestHelper->load_core_data($schema);
 
 sub get_svr_id {
     my $host_name = shift;
@@ -81,14 +69,14 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
             , 'Does the cache group details return?';
 
 ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
-        "name" => "mid-northeast-group",
+        "name" => "cg-mid-northeast",
         "shortName" => "mneg",
         "latitude" => "10",
         "longitude" => "40",
         "parentCachegroup" => "",
         "secondaryParentCachegroup" => "",
         "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "mid-northeast-group" )
+	->json_is( "/response/name" => "cg-mid-northeast" )
     ->json_is( "/response/shortName" => "mneg")
     ->json_is( "/response/latitude" => "10")
     ->json_is( "/response/longitude" => "40")
@@ -96,22 +84,25 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
 
+
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
   ->json_is( "/response/0/type", "MID" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/servers?cdn=1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+
+
+ok $t->get_ok('/api/1.2/servers?cdn=100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-edge-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/cdnId", 1 )
+  ->json_is( "/response/0/cdnId", 100 )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/api/1.2/servers?cachegroup=2')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->get_ok('/api/1.2/servers?cachegroup=200')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-02" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/cachegroupId", 2 )
+  ->json_is( "/response/0/cachegroupId", 200 )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -121,21 +112,25 @@ ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( su
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+
+
 ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
-        "name" => "edge_atl_group",
-        "shortName" => "eag",
+        "name" => "edge_atl_group1",
+        "shortName" => "eag1",
         "latitude" => "22",
         "longitude" => "55",
         "parentCachegroup" => "",
         "secondaryParentCachegroup" => "",
         "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "edge_atl_group" )
-    ->json_is( "/response/shortName" => "eag")
+	->json_is( "/response/name" => "edge_atl_group1" )
+    ->json_is( "/response/shortName" => "eag1")
     ->json_is( "/response/latitude" => "22")
     ->json_is( "/response/longitude" => "55")
     ->json_is( "/response/parentCachegroup" => "")
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
+
+
 
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server1",
@@ -152,6 +147,7 @@ ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => js
 			"profile" => "EDGE1" })
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Is a server created when all required fields are provided?';
+
 
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server2",
@@ -313,18 +309,12 @@ ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => js
     ->json_is( "/response/profile" => "MID1")
             , 'Does the server details return?';
 
-
-
 ok $t->post_ok('/api/1.2/deliveryservices/test-ds1/servers' => {Accept => 'application/json'} => json => { "serverNames" => [ 'server1', 'server3' ]})
      ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
      , 'Assign the server to the delivery service?';
 
-
 ok $t->get_ok('/api/1.2/servers/details.json?hostName=server1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/ipGateway", "10.74.27.194" )->json_is( "/response/0/deliveryservices/0", "100" ), 'Does the hostname details return?';
-
-ok $t->get_ok('/api/1.2/servers/details.json?physLocationID=100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/ipGateway", "10.74.27.194" )->json_is( "/response/0/deliveryservices/0", "100" ), 'Does the physLocationID details return?';
 
 ok $t->get_ok('/api/1.2/servers/details')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the validation error occur?';
@@ -332,8 +322,6 @@ ok $t->get_ok('/api/1.2/servers/details.json?orderby=hostName')->status_is(400)-
 	'Does the orderby work?';
 
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "tc1_ats1" )
-  ->json_is( "/response/0/domainName", "northbound.com" )
   ->json_is( "/response/0/type", "MID" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -352,8 +340,6 @@ ok $t->post_ok('/api/1.2/deliveryservices/test-ds4/servers' => {Accept => 'appli
 
 
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "tc1_ats1" )
-  ->json_is( "/response/0/domainName", "northbound.com" )
   ->json_is( "/response/0/type", "MID" )
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -445,18 +431,8 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'applicat
         "physLocation" => "HotAtlanta" })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$svr_id1 = &get_svr_id('server1');
-my $svr_id2 = &get_svr_id('server3');
-my $svr_id3 = &get_svr_id('tc1_ats1');
-my $svr_id4 = &get_svr_id('tc1_ats2');
-ok $t->get_ok('/api/1.2/servers?profileId=100&orderby=id' => {Accept => 'application/json'})->status_is(200)
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/0/id", $svr_id1 )
-    ->json_is( "/response/1/id", $svr_id2 )
-    ->json_is( "/response/2/id", $svr_id3 )
-    ->json_is( "/response/3/id", $svr_id4 )
-            , "Does the server ids return?";
-
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
+

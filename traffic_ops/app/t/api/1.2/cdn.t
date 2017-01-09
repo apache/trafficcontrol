@@ -29,16 +29,20 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
-my $schema_values = { schema => $schema, no_transactions => 1 };
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
-Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
+Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+
+$t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 100 )
+    ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 )
+    ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
         "name" => "cdn_test", "dnssecEnabled" => "true" })

@@ -32,7 +32,7 @@ my %definition_for = (
 			phone      => '303-111-1111',
 			email      => undef,
 			comments   => undef,
-			region     => 1,
+			region     => 100,
 		},
 	},
 	boulder => {
@@ -49,7 +49,7 @@ my %definition_for = (
 			phone      => '303-222-2222',
 			email      => undef,
 			comments   => undef,
-			region     => 1,
+			region     => 100,
 		},
 	},
 	atlanta => {
@@ -66,7 +66,7 @@ my %definition_for = (
 			phone      => '404-222-2222',
 			email      => undef,
 			comments   => undef,
-			region     => 1,
+			region     => 100,
 		},
 	},
 );
