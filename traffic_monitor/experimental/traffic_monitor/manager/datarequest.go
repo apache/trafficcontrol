@@ -134,7 +134,7 @@ func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (cache.Filter, error) {
+func NewCacheStatFilter(path string, params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (cache.Filter, error) {
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "hosts": struct{}{}}
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
@@ -181,6 +181,12 @@ func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 			hosts[enum.CacheName(host)] = struct{}{}
 		}
 	}
+
+	pathArgument := getPathArgument(path)
+	if pathArgument != "" {
+		hosts[enum.CacheName(pathArgument)] = struct{}{}
+	}
+
 	// parameters without values are considered hosts, e.g. `?my-cache-0`
 	for maybeHost, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
@@ -196,6 +202,16 @@ func NewCacheStatFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 		hosts:        hosts,
 		cacheTypes:   cacheTypes,
 	}, nil
+}
+
+// This is the "spirit" of how TM1.0 works; hack to extract a path argument to filter data (/publish/SomeEndpoint/:argument).
+func getPathArgument(path string) string {
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) == 4 {
+		return pathParts[3]
+	}
+
+	return ""
 }
 
 // DSStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewDSStatFilter` documentation for details on which query parameters are used to filter.
@@ -253,7 +269,7 @@ func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all types are returned.
-func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enum.DSType) (dsdata.Filter, error) {
+func NewDSStatFilter(path string, params url.Values, dsTypes map[enum.DeliveryServiceName]enum.DSType) (dsdata.Filter, error) {
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "deliveryservices": struct{}{}}
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
@@ -301,6 +317,12 @@ func NewDSStatFilter(params url.Values, dsTypes map[enum.DeliveryServiceName]enu
 			deliveryServices[enum.DeliveryServiceName(name)] = struct{}{}
 		}
 	}
+
+	pathArgument := getPathArgument(path)
+	if pathArgument != "" {
+		deliveryServices[enum.DeliveryServiceName(pathArgument)] = struct{}{}
+	}
+
 	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
 	for maybeName, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
@@ -375,7 +397,7 @@ func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (*PeerStateFilter, error) {
+func NewPeerStateFilter(path string, params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (*PeerStateFilter, error) {
 	// TODO change legacy `stats` and `hosts` to `caches` and `monitors` (or `peers`).
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "peers": struct{}{}}
 	if len(params) > len(validParams) {
@@ -424,6 +446,12 @@ func NewPeerStateFilter(params url.Values, cacheTypes map[enum.CacheName]enum.Ca
 			peersToUse[enum.TrafficMonitorName(name)] = struct{}{}
 		}
 	}
+
+	pathArgument := getPathArgument(path)
+	if pathArgument != "" {
+		peersToUse[enum.TrafficMonitorName(pathArgument)] = struct{}{}
+	}
+
 	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
 	for maybeName, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
@@ -538,38 +566,38 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 }
 
 // TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
-func srvCacheStats(params url.Values, errorCount threadsafe.Uint, errContext string, toData todata.TODataThreadsafe, statHistory threadsafe.ResultHistory) ([]byte, int) {
-	filter, err := NewCacheStatFilter(params, toData.Get().ServerTypes)
+func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statHistory threadsafe.ResultHistory) ([]byte, int) {
+	filter, err := NewCacheStatFilter(path, params, toData.Get().ServerTypes)
 	if err != nil {
-		HandleErr(errorCount, errContext, err)
+		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
 	bytes, err := cache.StatsMarshall(statHistory.Get(), filter, params)
-	return WrapErrCode(errorCount, errContext, bytes, err)
+	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func srvDSStats(params url.Values, errorCount threadsafe.Uint, errContext string, toData todata.TODataThreadsafe, dsStats threadsafe.DSStatsReader) ([]byte, int) {
-	filter, err := NewDSStatFilter(params, toData.Get().DeliveryServiceTypes)
+func srvDSStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, dsStats threadsafe.DSStatsReader) ([]byte, int) {
+	filter, err := NewDSStatFilter(path, params, toData.Get().DeliveryServiceTypes)
 	if err != nil {
-		HandleErr(errorCount, errContext, err)
+		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
 	bytes, err := json.Marshal(dsStats.Get().JSON(filter, params))
-	return WrapErrCode(errorCount, errContext, bytes, err)
+	return WrapErrCode(errorCount, path, bytes, err)
 }
 
 func srvEventLog(events threadsafe.Events) ([]byte, error) {
 	return json.Marshal(JSONEvents{Events: events.Get()})
 }
 
-func srvPeerStates(params url.Values, errorCount threadsafe.Uint, errContext string, toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int) {
-	filter, err := NewPeerStateFilter(params, toData.Get().ServerTypes)
+func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) ([]byte, int) {
+	filter, err := NewPeerStateFilter(path, params, toData.Get().ServerTypes)
 	if err != nil {
-		HandleErr(errorCount, errContext, err)
+		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
 	bytes, err := json.Marshal(createAPIPeerStates(peerStates.Get(), filter, params))
-	return WrapErrCode(errorCount, errContext, bytes, err)
+	return WrapErrCode(errorCount, path, bytes, err)
 }
 
 func srvStatSummary() ([]byte, int) {
@@ -689,10 +717,20 @@ func MakeDispatchMap(
 			bytes, err := srvTRState(params, localStates, combinedStates)
 			return WrapErrCode(errorCount, path, bytes, err)
 		})),
+		"/publish/CrStates/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			bytes, err := srvTRState(params, localStates, combinedStates)
+			return WrapErrCode(errorCount, path, bytes, err)
+		})),
 		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvCacheStats(params, errorCount, path, toData, statHistory)
 		})),
+		"/publish/CacheStats/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvCacheStats(params, errorCount, path, toData, statHistory)
+		})),
 		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvDSStats(params, errorCount, path, toData, dsStats)
+		})),
+		"/publish/DsStats/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvDSStats(params, errorCount, path, toData, dsStats)
 		})),
 		"/publish/EventLog": wrap(WrapErr(errorCount, func() ([]byte, error) {
@@ -701,7 +739,13 @@ func MakeDispatchMap(
 		"/publish/PeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvPeerStates(params, errorCount, path, toData, peerStates)
 		})),
+		"/publish/PeerStates/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvPeerStates(params, errorCount, path, toData, peerStates)
+		})),
 		"/publish/StatSummary": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvStatSummary()
+		})),
+		"/publish/StatSummary/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvStatSummary()
 		})),
 		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
