@@ -207,7 +207,7 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[enum.Cach
 // This is the "spirit" of how TM1.0 works; hack to extract a path argument to filter data (/publish/SomeEndpoint/:argument).
 func getPathArgument(path string) string {
 	pathParts := strings.Split(path, "/")
-	if len(pathParts) == 4 {
+	if len(pathParts) >= 4 {
 		return pathParts[3]
 	}
 
