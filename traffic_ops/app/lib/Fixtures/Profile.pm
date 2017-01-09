@@ -66,12 +66,6 @@ my %definition_for = (
 			description => 'rascal2 description',
 		},
 	},
-	## id => 6
-	RIAK1 => {
-		new   => 'Profile',
-		using => {
-			name        => 'RIAK1',
-			description => 'riak description',
 	MISC => {
 		new   => 'Profile',
 		using => {

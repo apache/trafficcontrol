@@ -22,6 +22,7 @@ my %definition_for = (
 	test_cran_1 => {
 		new   => 'Asn',
 		using => {
+			id         => 1,
 			asn        => 9939,
 			cachegroup => 1,
 		},
