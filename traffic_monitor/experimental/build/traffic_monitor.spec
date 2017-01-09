@@ -73,6 +73,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/backup
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
@@ -80,8 +81,8 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
 src=src/github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental
 cp -p "$src"/traffic_monitor/traffic_monitor     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
-cp  "$src"/traffic_monitor/index.html     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/index.html
-cp  "$src"/traffic_monitor/sorttable.js     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/sorttable.js
+cp  "$src"/traffic_monitor/index.html     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/index.html
+cp  "$src"/traffic_monitor/sorttable.js     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/sorttable.js
 cp "$src"/conf/traffic_ops.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_ops.cfg
 cp "$src"/conf/traffic_monitor.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_monitor.cfg
 cp "$src"/build/traffic_monitor.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_monitor
@@ -125,11 +126,13 @@ fi
 %dir /opt/traffic_monitor/bin
 %dir /opt/traffic_monitor/conf
 %dir /opt/traffic_monitor/backup
+%dir /opt/traffic_monitor/static
 %dir /opt/traffic_monitor/var
 %dir /opt/traffic_monitor/var/log
 %dir /opt/traffic_monitor/var/run
 
 %attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/conf/*
+%attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/static/*
 %attr(755, traffic_monitor, traffic_monitor) /opt/traffic_monitor/bin/*
 %attr(755, traffic_monitor, traffic_monitor) /etc/init.d/traffic_monitor
 
