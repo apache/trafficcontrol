@@ -58,13 +58,14 @@ godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 #build traffic_monitor binary
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor
+godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_monitor/expiremental/* . && \
+  cp -r "$TC_DIR"/traffic_monitor/experimental/* . && \
+  cd traffic_monitor && \
   go get -d -v && \
-  go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`" \
+  go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'`" \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
@@ -77,9 +78,12 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
-src=src/github.com/apache/incubator-trafficcontrol/traffic_monitor/expiremental
-cp -p traffic_monitor/traffic_monitor     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
+src=src/github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental
+cp -p "$src"/traffic_monitor/traffic_monitor     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
+cp  "$src"/traffic_monitor/index.html     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/index.html
+cp  "$src"/traffic_monitor/sorttable.js     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/sorttable.js
 cp "$src"/conf/traffic_ops.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_ops.cfg
+cp "$src"/conf/traffic_monitor.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_monitor.cfg
 cp "$src"/build/traffic_monitor.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_monitor
 cp "$src"/build/traffic_monitor.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_monitor
 
@@ -88,14 +92,14 @@ cp "$src"/build/traffic_monitor.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/t
 
 if [ $? -ne 0 ]; then
 
-	/usr/sbin/groupadd -g 422 traffic_monitor
+	/usr/sbin/groupadd -g 423 traffic_monitor
 fi
 
 /usr/bin/getent passwd traffic_monitor >/dev/null
 
 if [ $? -ne 0 ]; then
 
-	/usr/sbin/useradd -g traffic_monitor -u 422 -d /opt/traffic_monitor -M traffic_monitor
+	/usr/sbin/useradd -g traffic_monitor -u 423 -d /opt/traffic_monitor -M traffic_monitor
 
 fi
 
