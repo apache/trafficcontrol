@@ -30,6 +30,8 @@ BEGIN { $ENV{MOJO_MODE} = "integration" }
 my $t = Test::Mojo->new('TrafficOps');
 no warnings 'once';
 use warnings 'all';
+use constant TEST_FILE => "/tmp/test.csv";
+
 
 my $api_version = '1.1';
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
