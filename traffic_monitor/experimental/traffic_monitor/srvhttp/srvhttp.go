@@ -25,7 +25,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -145,16 +144,10 @@ func DateStr(t time.Time) string {
 }
 
 func (s *Server) handleRootFunc(staticFileDir string) (http.HandlerFunc, error) {
-	if strings.HasSuffix(staticFileDir, "/") {
-		return s.handleFile(staticFileDir + "index.html")
-	}
 	return s.handleFile(staticFileDir + "/index.html")
 }
 
 func (s *Server) handleSortableFunc(staticFileDir string) (http.HandlerFunc, error) {
-	if strings.HasSuffix(staticFileDir, "/") {
-		return s.handleFile(staticFileDir + "sorttable.js")
-	}
 	return s.handleFile(staticFileDir + "/sorttable.js")
 }
 
