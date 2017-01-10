@@ -22,6 +22,7 @@ use warnings;
 no warnings 'once';
 use warnings 'all';
 use Test::TestHelper;
+use JSON;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
 #no_transactions=>0 ==> delete fixtures after every execution
@@ -29,51 +30,20 @@ use Test::TestHelper;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
+my $schema_values = { schema => $schema, no_transactions => 1 };
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
-Test::TestHelper->load_core_data($schema);
+Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Status->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Type->new($schema_values) );
+Test::TestHelper->load_all_fixtures( Fixtures::Profile->new($schema_values) );
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
-
-ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
-	"profileId" => 3, "parameterId" => 4 })->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/profileId" => "3" )
-	->json_is( "/response/0/parameterId" => "4" )
-		, 'Does the profile parameter details return?';
-
-ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => [
-	{ "profileId" => 3, "parameterId" => 5 },
-	{ "profileId" => 3, "parameterId" => 6 }
-	])->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/profileId" => "3" )
-	->json_is( "/response/0/parameterId" => "5" )
-	->json_is( "/response/1/profileId" => "3" )
-	->json_is( "/response/1/parameterId" => "6" )
-		, 'Does the profile parameter details return?';
-
-ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => [])->status_is(400);
-
-ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
-	"profileId" => 3, "parameterId" => 4 })->status_is(400);
-
-ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
-	"profileId" => 3, "parameterId" => 2 })->status_is(400);
-
-ok $t->delete_ok('/api/1.2/profileparameters/3/5' => {Accept => 'application/json'})->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/alerts/0/level", "success" )
-	->json_is( "/alerts/0/text", "Profile parameter association was deleted." );
-
-my @associated_params = &get_parameter_ids(3);
-my @expected = (3,4,6);
-ok( @associated_params ~~ @expected );
-
-ok $t->delete_ok('/api/1.2/profileparameters/3/5' => {Accept => 'application/json'})->status_is(400);
 
 ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
         [
@@ -219,9 +189,35 @@ ok $t->post_ok('/api/1.2/profiles/name/CCR11/parameters' => {Accept => 'applicat
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		, 'Does the profile_parameters create details return?';
 
+
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
+	"profileId" => 300, "parameterId" => 4 })->status_is(400);
+
+ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} => json => {
+	"profileId" => 300, "parameterId" => 2 })->status_is(400);
+
+my $param_id1 = &get_parameter_id("param1");
+ok $t->delete_ok('/api/1.2/profileparameters/300/' . $param_id1 => {Accept => 'application/json'})->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/alerts/0/level", "success" )
+	->json_is( "/alerts/0/text", "Profile parameter association was deleted." );
+
+# Count the 'response number'
+my $count_response = sub {
+    my ( $t, $count ) = @_;
+    my $json = decode_json( $t->tx->res->content->asset->slurp );
+    my $r    = $json->{response};
+    return $t->success( is( scalar(@$r), $count ) );
+};
+
+# this is a dns delivery service with 2 edges and 1 mid and since dns ds's DO employ mids, 3 servers return
+$t->get_ok('/api/1.2/profileparameters?id=300')->status_is(200)->$count_response(5)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
+
 
 sub get_profile_id {
     my $profile_name = shift;
@@ -234,16 +230,13 @@ sub get_profile_id {
     return $id;
 }
 
-sub get_parameter_ids {
-    my $profile_id = shift;
-    my $q      = "select * from profile_parameter where profile = \'$profile_id\'";
+sub get_parameter_id {
+    my $param_name = shift;
+    my $q      = "select * from parameter where name = \'$param_name\'";
     my $get_svr = $dbh->prepare($q);
     $get_svr->execute();
     my $p = $get_svr->fetchall_arrayref( {} );
     $get_svr->finish();
-    my @ids;
-    foreach my $id (@$p) {
-        push(@ids, $id->{parameter});
-    }
-    return @ids;
+    my $id = $p->[0]->{id};
+    return $id;
 }

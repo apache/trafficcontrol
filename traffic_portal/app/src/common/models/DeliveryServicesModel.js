@@ -15,7 +15,7 @@
 
  */
 
-var DeliveryServicesModel = function($location) {
+var DeliveryServicesModel = function() {
 
     var model = this;
 
@@ -26,7 +26,7 @@ var DeliveryServicesModel = function($location) {
     this.loaded = loaded;
 
     this.getDeliveryService = function(dsId) {
-        return _.find(model.deliveryServices, function(ds){ return ds.id === dsId });
+        return _.find(model.deliveryServices, function(ds){ return parseInt(ds.id) == parseInt(dsId) });
     };
 
     this.setDeliveryServices = function(deliveryServicesData) {
@@ -41,5 +41,5 @@ var DeliveryServicesModel = function($location) {
 
 };
 
-DeliveryServicesModel.$inject = ['$location'];
+DeliveryServicesModel.$inject = [];
 module.exports = DeliveryServicesModel;

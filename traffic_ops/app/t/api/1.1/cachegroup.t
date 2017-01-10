@@ -48,7 +48,7 @@ $t->get_ok("/api/1.1/cachegroups/trimmed.json")->status_is(200)->json_is( "/resp
 	->json_is( "/response/1/name", "edge_cg4" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 $t->get_ok("/api/1.1/cachegroups.json?orderby=name")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/typeId", "5" );
+	->json_is( "/response/0/typeName", "EDGE_LOC" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

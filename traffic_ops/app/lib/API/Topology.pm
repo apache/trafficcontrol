@@ -56,7 +56,7 @@ sub SnapshotCRConfig {
     }
 
     my $json = &UI::Topology::gen_crconfig_json($self, $cdn_name);
-    &UI::Topology::write_crconfig_json($self, $cdn_name, $json);
+    &UI::Topology::write_crconfig_json_to_db($self, $cdn_name, $json);
     &UI::Utils::log($self, "Snapshot CRConfig created." , "OPER");
     return $self->success("SUCCESS");
 }

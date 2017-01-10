@@ -21,7 +21,7 @@ my %definition_for = (
 	mid_northeast => {
 		new   => 'Cachegroup',
 		using => {
-			id                   => 1,
+			id                   => 100,
 			name                 => 'mid-northeast-group',
 			short_name           => 'ne',
 			type                 => 2,
@@ -33,19 +33,19 @@ my %definition_for = (
 	mid_northwest => {
 		new   => 'Cachegroup',
 		using => {
-			id                   => 2,
+			id                   => 200,
 			name                 => 'mid-northwest-group',
 			short_name           => 'nw',
 			type                 => 2,
 			latitude             => 100,
 			longitude            => 100,
-			parent_cachegroup_id => 1,
+			parent_cachegroup_id => 100,
 		},
 	},
 	mid_cg3 => {
 		new   => 'Cachegroup',
 		using => {
-			id                   => 8,
+			id                   => 800,
 			name                 => 'mid_cg3',
 			short_name           => 'mid_cg3',
 			type                 => 6,
@@ -57,13 +57,13 @@ my %definition_for = (
 	edge_cg4 => {
 		new   => 'Cachegroup',
 		using => {
-			id                   => 9,
+			id                   => 900,
 			name                 => 'edge_cg4',
 			short_name           => 'edge_cg4',
 			type                 => 5,
 			latitude             => 100,
 			longitude            => 100,
-			parent_cachegroup_id => 8,
+			parent_cachegroup_id => 800,
 		},
 	},
 );
@@ -75,9 +75,13 @@ sub get_definition {
 
 sub all_fixture_names {
 
-	# sort by db id to guarantee insertion order
-	return sort { $definition_for{$a}{using}{id} <=> $definition_for{$b}{using}{id} } keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
+
+# sub all_fixture_names {
+# 	return keys %definition_for;
+# }
 
 __PACKAGE__->meta->make_immutable;
 

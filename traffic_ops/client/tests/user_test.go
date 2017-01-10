@@ -26,7 +26,7 @@ import (
 
 func TestUsers(t *testing.T) {
 	resp := fixtures.Users()
-	server := testHelper.ValidHTTPServer(resp.Response)
+	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
 	var httpClient http.Client
@@ -57,7 +57,7 @@ func TestUsers(t *testing.T) {
 			testHelper.Success(t, "Should get back \"some-ssh-key\" for \"PublicSSHKey\"")
 		}
 
-		if u.Role != "3" {
+		if u.Role != 3 {
 			testHelper.Error(t, "Should get back \"3\" for \"Role\", got %s", u.Role)
 		} else {
 			testHelper.Success(t, "Should get back \"3\" for \"Role\"")

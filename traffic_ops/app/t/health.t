@@ -63,7 +63,7 @@ while ( my @row = $select->fetchrow_array ) {
 	push( @{ $lines->{ $row[0] } }, @row );
 }
 
-$query  = "select xml_id, global_max_mbps, global_max_tps from deliveryservice where active=1";
+$query  = "select xml_id, global_max_mbps, global_max_tps from deliveryservice where active=true";
 $select = $dbh->prepare($query);
 $select->execute();
 my $ds;
@@ -112,6 +112,10 @@ $lines = ();
 while ( my @row = $select->fetchrow_array ) {
 	push( @{ $lines->{ $row[0] } }, @row );
 }
+
+$t->get_ok("/health/cdn2.json")->status_is(200)->json_is( "/profiles/MID/MID1/health.threshold.loadavg", "25.0" )
+	->json_is( "/profiles/MID/MID1/history.count", "30" )->json_is( "/deliveryServices/test-ds5/status", "REPORTED" )
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

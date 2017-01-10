@@ -22,8 +22,10 @@ func Types() *client.TypeResponse {
 	return &client.TypeResponse{
 		Response: []client.Type{
 			client.Type{
+				ID:          1,
 				Name:        "EDGE",
 				Description: "edge cache",
+				UseInTable:  "server",
 			},
 		},
 	}

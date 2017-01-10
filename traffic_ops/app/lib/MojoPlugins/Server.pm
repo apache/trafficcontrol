@@ -45,6 +45,8 @@ sub register {
 			my $method_function    = shift || confess("Supply a Helper class 'method'");
 			my $schema_result_file = shift || confess("Supply a schema result file, ie: 'InfluxDBHostsOnline'");
 
+			$self->app->log->debug("\n\n" . $schema_result_file . "\n\n");
+
 			my $response;
 			my $active_server = $active_server_for{$schema_result_file};
 			my @rs = randomize_online_servers( $self, $schema_result_file );

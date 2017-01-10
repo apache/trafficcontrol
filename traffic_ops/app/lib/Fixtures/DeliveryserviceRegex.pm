@@ -21,16 +21,104 @@ my %definition_for = (
 	regex1 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 1,
-			regex           => 2,
+			deliveryservice => 100,
+			regex           => 200,
 			set_number      => 0,
 		},
 	},
 	regex2 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
-			deliveryservice => 2,
-			regex           => 1,
+			deliveryservice => 200,
+			regex           => 100,
+			set_number      => 0,
+		},
+	},
+	target_r1_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 400,
+			regex           => 100,
+			set_number      => 0,
+		},
+	},
+	target_r2_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 400,
+			regex           => 200,
+			set_number      => 0,
+		},
+	},
+	target_r4_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 700,
+			regex           => 300,
+			set_number      => 0,
+		},
+	},
+	target_r3_filter => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 600,
+			regex           => 400,
+			set_number      => 0,
+		},
+	},
+	new_steering => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 300,
+			regex           => 600,
+			set_number      => 0,
+		},
+	},
+	steering_1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 100,
+			regex           => 800,
+			set_number      => 0,
+		},
+	},
+	steering_2 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 200,
+			regex           => 900,
+			set_number      => 0,
+		},
+	},
+	target_1 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 400,
+			regex           => 1000,
+			set_number      => 0,
+		},
+	},
+	target_2 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 500,
+			regex           => 1100,
+			set_number      => 0,
+		},
+	},
+	target_3 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 600,
+			regex           => 1200,
+			set_number      => 0,
+		},
+	},
+		target_4 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 700,
+			regex           => 1300,
 			set_number      => 0,
 		},
 	},
@@ -42,7 +130,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db regex to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{regex} cmp $definition_for{$b}{using}{regex} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

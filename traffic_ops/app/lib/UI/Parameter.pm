@@ -206,7 +206,7 @@ sub is_valid {
 	my $name        = $self->param('parameter.name');
 	my $config_file = $self->param('parameter.config_file');
 	my $value       = $self->param('parameter.value');
-	my $secure      = defined( $self->param('parameter.secure') ) && $self->param('parameter.secure');
+	my $secure      = defined( $self->param('parameter.secure') ) ? $self->param('parameter.secure') : 0;
 
 	#Check permissions
 	if ( !&is_oper($self) ) {

@@ -25,116 +25,112 @@ __PACKAGE__->table("phys_location");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'phys_location_id_seq'
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 short_name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 12
 
 =head2 address
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 128
 
 =head2 city
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 128
 
 =head2 state
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 2
 
 =head2 zip
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 5
 
 =head2 poc
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 phone
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 email
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 comments
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 256
 
 =head2 region
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "phys_location_id_seq",
+  },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "short_name",
-  { data_type => "varchar", is_nullable => 0, size => 12 },
+  { data_type => "text", is_nullable => 0 },
   "address",
-  { data_type => "varchar", is_nullable => 0, size => 128 },
+  { data_type => "text", is_nullable => 0 },
   "city",
-  { data_type => "varchar", is_nullable => 0, size => 128 },
+  { data_type => "text", is_nullable => 0 },
   "state",
-  { data_type => "varchar", is_nullable => 0, size => 2 },
+  { data_type => "text", is_nullable => 0 },
   "zip",
-  { data_type => "varchar", is_nullable => 0, size => 5 },
+  { data_type => "text", is_nullable => 0 },
   "poc",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "phone",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "email",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "comments",
-  { data_type => "varchar", is_nullable => 1, size => 256 },
+  { data_type => "text", is_nullable => 1 },
   "region",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -152,7 +148,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<name_UNIQUE>
+=head2 C<idx_54431_name_unique>
 
 =over 4
 
@@ -162,9 +158,9 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("name_UNIQUE", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_54431_name_unique", ["name"]);
 
-=head2 C<short_name_UNIQUE>
+=head2 C<idx_54431_short_name_unique>
 
 =over 4
 
@@ -174,7 +170,7 @@ __PACKAGE__->add_unique_constraint("name_UNIQUE", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("short_name_UNIQUE", ["short_name"]);
+__PACKAGE__->add_unique_constraint("idx_54431_short_name_unique", ["short_name"]);
 
 =head1 RELATIONS
 
@@ -190,7 +186,7 @@ __PACKAGE__->belongs_to(
   "region",
   "Schema::Result::Region",
   { id => "region" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 =head2 servers
@@ -209,8 +205,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:P49VpYuUIcx6aOOUORrQyA
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dfZ3YiJtRAHKueGHNdVM5Q
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

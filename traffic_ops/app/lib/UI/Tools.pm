@@ -25,6 +25,7 @@ use Data::Dumper;
 use Mojo::UserAgent;
 use POSIX;
 use HTTP::Cookies;
+use DBI;
 
 sub tools {
     my $self = shift;
@@ -112,9 +113,13 @@ sub write_crconfig {
         $self->flash( alertmsg => $error );
     }
     else {
-        UI::Topology::write_crconfig_json( $self, $cdn_name, $json );
-        &log( $self, "Snapshot CRConfig created.", "OPER" );
-        $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+        if ( !&is_oper($self) ) {
+            $self->flash( alertmsg => "No can do. Get more privs." );
+        } else {
+            UI::Topology::write_crconfig_json_to_db( $self, $cdn_name, $json );
+            &log( $self, "Snapshot CRConfig created.", "OPER" );
+            $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
+        }
     }
     return $self->redirect_to('/utils/close_fancybox');
 }
@@ -147,11 +152,8 @@ sub db_dump {
     $year += 1900;
     my $host = `hostname`;
     chomp($host);
-    my $extension = ".psql";
 
-    if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-        $extension = ".mysql";
-    }
+    my $extension = ".psql";
     my $filename = "to-backup-" . $host . "-" . $year . $month . $day . $hour . $min . $sec . $extension;
     $self->stash( filename => $filename );
     &stash_role($self);

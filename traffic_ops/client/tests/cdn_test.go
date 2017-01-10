@@ -45,6 +45,11 @@ func TestCDNs(t *testing.T) {
 	}
 
 	for _, cdn := range cdns {
+		if cdn.ID != 1 {
+			testHelper.Error(t, "Should get back 1 for \"ID\", got %d", cdn.ID)
+		} else {
+			testHelper.Success(t, "Should get back 1 for \"ID\"")
+		}
 		if cdn.Name != "CDN-1" {
 			testHelper.Error(t, "Should get back \"CDN-1\" for \"name\", got %s", cdn.Name)
 		} else {

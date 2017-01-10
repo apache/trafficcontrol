@@ -213,7 +213,7 @@ ok $t->get_ok("/api/1.1/deliveryservices/hostname/foo.fake-ds.kabletown.com/sslk
 
 # OFFLINE all riak servers
 my $rs = $schema->resultset('Server')->search( { type => 31 } );
-$rs->update_all( { status => 1 } );
+$rs->update_all( { status => 3 } );
 
 ok $t->post_ok(
 	'/api/1.1/deliveryservices/sslkeys/generate',

@@ -21,7 +21,7 @@ my %definition_for = (
 	denver => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 1,
+			id         => 100,
 			name       => 'Denver',
 			short_name => 'denver',
 			address    => '1234 mile high circle',
@@ -32,13 +32,13 @@ my %definition_for = (
 			phone      => '303-111-1111',
 			email      => undef,
 			comments   => undef,
-			region     => 1,
+			region     => 100,
 		},
 	},
 	boulder => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 2,
+			id         => 200,
 			name       => 'Boulder',
 			short_name => 'boulder',
 			address    => '1234 green way',
@@ -49,13 +49,13 @@ my %definition_for = (
 			phone      => '303-222-2222',
 			email      => undef,
 			comments   => undef,
-			region     => 1,
+			region     => 100,
 		},
 	},
 	atlanta => {
 		new   => 'PhysLocation',
 		using => {
-			id         => 3,
+			id         => 300,
 			name       => 'HotAtlanta',
 			short_name => 'atlanta',
 			address    => '1234 southern way',
@@ -66,7 +66,7 @@ my %definition_for = (
 			phone      => '404-222-2222',
 			email      => undef,
 			comments   => undef,
-			region     => 1,
+			region     => 100,
 		},
 	},
 );
@@ -77,7 +77,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db name to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

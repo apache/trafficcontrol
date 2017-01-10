@@ -30,16 +30,12 @@ BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
 my $t      = Test::Mojo->new('TrafficOps');
+
+#unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
 
-my $fixtures = Fixtures::TmUser->new( { schema => $schema, no_transactions => 1 } );
-Test::TestHelper->teardown( $schema, 'Log' );
-Test::TestHelper->teardown( $schema, 'Role' );
-Test::TestHelper->teardown( $schema, 'TmUser' );
-
-Test::TestHelper->load_all_fixtures( Fixtures::Role->new( { schema => $schema, no_transactions => 1 } ) );
-
-ok my $admin_fixture = $fixtures->load('admin'), 'Does the admin user load?';
+#load core test data
+Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -49,12 +45,12 @@ ok $t->post_ok(
 	=> form => {
 		'tm_user.full_name'            => 'fullname',
 		'tm_user.username'             => 'testcase',
-		'tm_user.public_ssh_key'			 => 'ssh-key',
+		'tm_user.public_ssh_key'	   => 'ssh-key',
 		'tm_user.phone_number'         => 'phone_number',
 		'tm_user.email'                => 'email@email.com',
 		'tm_user.local_passwd'         => 'password',
 		'tm_user.confirm_local_passwd' => 'password',
-		'tm_user.role'                 => 4,
+		'tm_user.role'                 => 1,
 		'tm_user.company'              => 'ABC Company',
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a user be created?';

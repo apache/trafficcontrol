@@ -21,37 +21,38 @@ my %definition_for = (
 	a_record_host => {
 		new   => 'Staticdnsentry',
 		using => {
-			id              => 1,
+			id              => 100,
 			host            => 'A_RECORD_HOST',
 			address         => '127.0.0.1',
 			type            => 21,
-			deliveryservice => 1,
-			cachegroup      => 1,
+			deliveryservice => 100,
+			cachegroup      => 100,
 		},
 	},
 	aaaa_record_host => {
 		new   => 'Staticdnsentry',
 		using => {
-			id              => 2,
+			id              => 200,
 			host            => 'AAAA_RECORD_HOST',
 			address         => '127.0.0.1',
-			deliveryservice => 1,
-			cachegroup      => 1,
+			deliveryservice => 100,
+			cachegroup      => 100,
 			type            => 22,
 		},
 	},
 	cname_host => {
 		new   => 'Staticdnsentry',
 		using => {
-			id              => 3,
+			id              => 300,
 			host            => 'CNAME_HOST',
 			address         => '127.0.0.1',
-			deliveryservice => 2,
+			deliveryservice => 200,
 			type            => 23,
-			cachegroup      => 2,
+			cachegroup      => 200,
 		},
 	},
 );
+
 
 sub get_definition {
 	my ( $self, $name ) = @_;
@@ -59,7 +60,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db host to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

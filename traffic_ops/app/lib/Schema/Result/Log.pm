@@ -25,60 +25,63 @@ __PACKAGE__->table("log");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'log_id_seq'
 
 =head2 level
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 45
 
 =head2 message
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 1024
 
 =head2 tm_user
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 0
 
 =head2 ticketnum
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 64
 
 =head2 last_updated
 
-  data_type: 'timestamp'
-  datetime_undef_if_invalid: 1
+  data_type: 'timestamp with time zone'
   default_value: current_timestamp
   is_nullable: 1
+  original: {default_value => \"now()"}
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "log_id_seq",
+  },
   "level",
-  { data_type => "varchar", is_nullable => 1, size => 45 },
+  { data_type => "text", is_nullable => 1 },
   "message",
-  { data_type => "varchar", is_nullable => 0, size => 1024 },
+  { data_type => "text", is_nullable => 0 },
   "tm_user",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "ticketnum",
-  { data_type => "varchar", is_nullable => 1, size => 64 },
+  { data_type => "text", is_nullable => 1 },
   "last_updated",
   {
-    data_type => "timestamp",
-    datetime_undef_if_invalid => 1,
+    data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable => 1,
+    is_nullable   => 1,
+    original      => { default_value => \"now()" },
   },
 );
 
@@ -110,12 +113,12 @@ __PACKAGE__->belongs_to(
   "tm_user",
   "Schema::Result::TmUser",
   { id => "tm_user" },
-  { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07043 @ 2015-05-21 13:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XkJt7i4956YEhggYnKRF3A
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/BiMbdnbr6B/YxMPjExknw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

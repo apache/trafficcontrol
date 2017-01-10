@@ -22,6 +22,7 @@ func Profiles() *client.ProfileResponse {
 	return &client.ProfileResponse{
 		Response: []client.Profile{
 			client.Profile{
+				ID:          1,
 				Name:        "TR_CDN2",
 				Description: "kabletown Content Router",
 				LastUpdated: "2012-10-08 13:34:45",

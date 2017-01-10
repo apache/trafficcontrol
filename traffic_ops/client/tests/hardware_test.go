@@ -17,6 +17,7 @@ package test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -37,34 +38,34 @@ func TestHardware(t *testing.T) {
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for Hardware")
 
-	hardware, err := to.Hardware()
+	hardware, err := to.Hardware(0)
 	if err != nil {
 		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
 	} else {
 		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
-	if len(hardware) != 1 {
-		testHelper.Error(t, "Should get back \"1\" Hardware, got: %d", len(hardware))
+	if len(hardware) != 2 {
+		testHelper.Error(t, "Should get back \"2\" Hardware, got: %d", len(hardware))
 	} else {
-		testHelper.Success(t, "Should get back \"1\" Hardware")
+		testHelper.Success(t, "Should get back \"2\" Hardware")
 	}
 
 	for _, h := range hardware {
-		if h.HostName != "odol-atsmid-cen-09" {
-			testHelper.Error(t, "Should get back \"odol-atsmid-cen-09\" for \"Hostname\", got: %s", h.HostName)
+		if !strings.Contains(h.HostName, "edge-den") {
+			testHelper.Error(t, "Should get back \"edge-den\" in \"Hostname\", got: %s", h.HostName)
 		} else {
-			testHelper.Success(t, "Should get back \"odol-atsmid-cen-09\" for \"Hostname\"")
+			testHelper.Success(t, "Should get back \"edge-den\" in \"Hostname\"")
 		}
 
-		if h.Value != "1.00" {
-			testHelper.Error(t, "Should get back \"1.00\" for \"Value\", got: %s", h.Value)
+		if !strings.Contains(h.Value, "DIS") {
+			testHelper.Error(t, "Should get back \"DIS1\" or \"DIS2\" for \"Value\", got: %s", h.Value)
 		} else {
-			testHelper.Success(t, "Should get back \"1.00\" for \"Value\"")
+			testHelper.Success(t, "Should get back \"DIS1\" or \"DIS2\" for \"Value\"")
 		}
 
-		if h.Description != "BACKPLANE FIRMWARE" {
-			testHelper.Error(t, "Should get back \"BACKPLANE FIRMWARE\" for \"Description\", got: %s", h.Description)
+		if !strings.Contains(h.Description, "Phys") {
+			testHelper.Error(t, "Should get back \"Phys Disk\" or \"Physical Disk\" for \"Description\", got: %s", h.Description)
 		} else {
 			testHelper.Success(t, "Should get back \"BACKPLANE FIRMWARE\" for \"Description\"")
 		}
@@ -83,7 +84,7 @@ func TestHardwareUnauthorized(t *testing.T) {
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for Hardware")
 
-	_, err := to.Hardware()
+	_, err := to.Hardware(0)
 	if err == nil {
 		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {

@@ -150,10 +150,6 @@ sub server_data {
 
 	my $server;
 
-	#	if ( defined( $self->app->session->{server_data} ) ) {
-	#		$server = $self->app->session->{server_data};
-	#		return $server;
-	#	}
 	if ( $id =~ /^\d+$/ ) {
 		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
 	}
@@ -161,7 +157,6 @@ sub server_data {
 		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
 	}
 
-	#	$self->app->session->{server_data} = $server;
 	return $server;
 }
 
@@ -343,7 +338,7 @@ sub profile_param_value {
 	my $param =
 		$self->db->resultset('ProfileParameter')
 		->search( { -and => [ profile => $pid, 'parameter.config_file' => $file, 'parameter.name' => $param_name ] },
-		{ prefetch => [ 'parameter', 'profile' ] } )->single();
+		{ prefetch => [ 'parameter', 'profile' ] } )->first();
 
 	return ( defined $param ? $param->parameter->value : $default );
 }
@@ -1293,14 +1288,12 @@ sub regex_revalidate_dot_config {
 
 	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
-		->single;
+		->first;
 	my $interval = "> now() - interval '$max_days day'";    # postgres
-	if ( $self->db->storage->isa("DBIx::Class::Storage::DBI::mysql") ) {
-		$interval = "> now() - interval $max_days day";
-	}
 
 	my %regex_time;
-	$max_days = $self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+	$max_days =
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 

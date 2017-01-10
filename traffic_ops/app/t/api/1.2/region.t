@@ -43,22 +43,23 @@ ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/
 	->json_is( "/response/name" => "region1" )
 	->json_is( "/response/divisionName" => "mountain" )
             , 'Does the region details return?';
+
 ok $t->post_ok('/api/1.2/divisions/mountain/regions' => {Accept => 'application/json'} => json => {
         "name" => "region1"})->status_is(400);
 
-$t->get_ok("/api/1.2/regions")->status_is(200)->json_is( "/response/0/id", 2 )
+$t->get_ok("/api/1.2/regions")->status_is(200)->json_is( "/response/0/id", 200 )
 	->json_is( "/response/0/name", "Boulder Region" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/regions/1")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/regions/100")->status_is(200)->json_is( "/response/0/id", 100 )
 	->json_is( "/response/0/name", "Denver Region" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/regions' => {Accept => 'application/json'} => json => {
 			"name" => "reg1",
-			"division" => 1
+			"division" => 100
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "reg1" )
-		->json_is( "/response/division" => 1 )
+		->json_is( "/response/division" => 100 )
 		->json_is( "/alerts/0/level" => "success" )
 		->json_is( "/alerts/0/text" => "Region create was successful." )
 	, 'Do the region details return?';
@@ -67,18 +68,17 @@ my $region_id = &get_reg_id('reg1');
 
 ok $t->put_ok('/api/1.2/regions/' . $region_id  => {Accept => 'application/json'} => json => {
 			"name" => "reg2",
-			"division" => 1
+			"division" => 100
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "reg2" )
-		->json_is( "/response/division" => 1 )
+		->json_is( "/response/division" => 100 )
 		->json_is( "/alerts/0/level" => "success" )
 	, 'Do the regions details return?';
 
 ok $t->delete_ok('/api/1.2/regions/' . $region_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-$dbh->disconnect();
 done_testing();
 
 sub get_reg_id {

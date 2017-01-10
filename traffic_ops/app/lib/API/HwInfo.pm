@@ -40,6 +40,7 @@ sub index {
 		);
 	}
 
+	$limit += 0; #converts to int.
 	$self->success( \@data, undef, undef, $limit, undef );
 }
 
