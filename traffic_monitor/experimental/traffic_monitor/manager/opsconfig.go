@@ -148,7 +148,7 @@ func StartOpsConfigManager(
 				unpolledCaches,
 				monitorConfig,
 			)
-			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
+			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
 				continue
