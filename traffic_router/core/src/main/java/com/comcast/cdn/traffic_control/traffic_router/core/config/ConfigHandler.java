@@ -170,15 +170,6 @@ public class ConfigHandler {
 					} catch (InterruptedException e) {
 						LOGGER.warn("Failed to notify certificates publisher we're waiting for certificates", e);
 					}
-
-					while (!cancelled.get() && !publishStatusQueue.isEmpty()) {
-						try {
-							LOGGER.info("Waiting for https certificates to support new config " + String.format("%x", publishStatusQueue.hashCode()));
-							Thread.sleep(1000L);
-						} catch (Throwable t) {
-							LOGGER.warn("Interrupted while waiting for status on publishing ssl certs", t);
-						}
-					}
 				}
 
 				if (cancelled.get()) {
