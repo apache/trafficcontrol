@@ -63,11 +63,11 @@ func (handler Handler) Precompute() bool {
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
-	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat // x
-	OutBytes             int64                                    // x
+	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
+	OutBytes             int64
 	MaxKbps              int64
 	Errors               []error
-	Reporting            bool // x
+	Reporting            bool
 	Time                 time.Time
 }
 
