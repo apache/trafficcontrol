@@ -76,7 +76,7 @@ godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb_tool
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
   go build sync/sync_ts_databases.go sync/main.go
-  go build create/create_ts_databases.go create/main.go
+  go build create/create_ts_databases.go
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
