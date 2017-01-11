@@ -111,6 +111,15 @@ if [ -e /etc/init.d/traffic_monitor ]; then
 	/sbin/service traffic_monitor stop
 fi
 
+#don't install over the top of java TM.  This is a workaround since yum doesn't respect the Conflicts tag.
+if [[ $(rpm -q traffic_monitor --qf "%{VERSION}-%{RELEASE}") < 1.9.0 ]]
+then
+    echo -e "\n****************\n"
+    echo "A java version of traffic_monitor is installed.  Please backup/remove that version before installing the golang version of traffic_monitor."
+    echo -e "\n****************\n"
+    exit 1
+fi
+
 %post
 
 /sbin/chkconfig --add traffic_monitor
