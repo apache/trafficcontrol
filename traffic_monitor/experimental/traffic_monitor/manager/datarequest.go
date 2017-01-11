@@ -488,17 +488,19 @@ func WrapErrCode(errorCount threadsafe.Uint, reqPath string, body []byte, err er
 }
 
 // WrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
-func WrapBytes(f func() []byte) http.HandlerFunc {
+func WrapBytes(f func() []byte, contentType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
 		log.Write(w, f(), r.URL.EscapedPath())
 	}
 }
 
 // WrapErr takes a function which returns bytes and an error, and wraps it as a http.HandlerFunc. If the error is nil, the bytes are written with Status OK. Else, the error is logged, and InternalServerError is returned as the response code. If you need to return a different response code (for example, StatusBadRequest), call wrapRespCode.
-func WrapErr(errorCount threadsafe.Uint, f func() ([]byte, error)) http.HandlerFunc {
+func WrapErr(errorCount threadsafe.Uint, f func() ([]byte, error), contentType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bytes, err := f()
 		_, code := WrapErrCode(errorCount, r.URL.EscapedPath(), bytes, err)
+		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(code)
 		log.Write(w, bytes, r.URL.EscapedPath())
 	}
@@ -510,10 +512,11 @@ func WrapErr(errorCount threadsafe.Uint, f func() ([]byte, error)) http.HandlerF
 type SrvFunc func(params url.Values, path string) ([]byte, int)
 
 // WrapParams takes a SrvFunc and wraps it as an http.HandlerFunc. Note if the SrvFunc returns 0 bytes, an InternalServerError is returned, and the response code is ignored, for security reasons. If an error response code is necessary, return bytes to that effect, for example, "Bad Request". DO NOT return informational messages regarding internal server errors; these should be logged, and only a 500 code returned to the client, for security reasons.
-func WrapParams(f SrvFunc) http.HandlerFunc {
+func WrapParams(f SrvFunc, contentType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bytes, code := f(r.URL.Query(), r.URL.EscapedPath())
 		if len(bytes) > 0 {
+			w.Header().Set("Content-Type", contentType)
 			w.WriteHeader(code)
 			if _, err := w.Write(bytes); err != nil {
 				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
@@ -547,7 +550,7 @@ func makeWrapAll(errorCount threadsafe.Uint, unpolledCaches threadsafe.UnpolledC
 func makeCrConfigHandler(wrapper func(http.HandlerFunc) http.HandlerFunc, errorCount threadsafe.Uint, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) http.HandlerFunc {
 	return wrapper(WrapErr(errorCount, func() ([]byte, error) {
 		return srvTRConfig(opsConfig, toSession)
-	}))
+	}, ContentTypeJSON))
 }
 
 func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
@@ -566,13 +569,13 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 }
 
 // TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
-func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statHistory threadsafe.ResultHistory) ([]byte, int) {
+func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory) ([]byte, int) {
 	filter, err := NewCacheStatFilter(path, params, toData.Get().ServerTypes)
 	if err != nil {
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := cache.StatsMarshall(statHistory.Get(), filter, params)
+	bytes, err := cache.StatsMarshall(statResultHistory.Get(), filter, params)
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
@@ -643,8 +646,8 @@ func srvAPIVersion(staticAppData StaticAppData) []byte {
 func srvAPITrafficOpsURI(opsConfig OpsConfigThreadsafe) []byte {
 	return []byte(opsConfig.Get().Url)
 }
-func srvAPICacheStates(toData todata.TODataThreadsafe, statHistory threadsafe.ResultHistory, healthHistory threadsafe.ResultHistory, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats threadsafe.LastStats, localCacheStatus threadsafe.CacheAvailableStatus) ([]byte, error) {
-	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
+func srvAPICacheStates(toData todata.TODataThreadsafe, statInfoHistory threadsafe.ResultInfoHistory, statResultHistory threadsafe.ResultStatHistory, healthHistory threadsafe.ResultHistory, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats threadsafe.LastStats, localCacheStatus threadsafe.CacheAvailableStatus) ([]byte, error) {
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
 }
 
 func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats threadsafe.LastStats) []byte {
@@ -655,14 +658,11 @@ func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats threadsafe.La
 	}
 	return []byte(fmt.Sprintf("%f", sum))
 }
-func srvAPIBandwidthCapacityKbps(statHistoryThs threadsafe.ResultHistory) []byte {
-	statHistory := statHistoryThs.Get()
+func srvAPIBandwidthCapacityKbps(statMaxKbpses threadsafe.CacheKbpses) []byte {
+	maxKbpses := statMaxKbpses.Get()
 	cap := int64(0)
-	for _, results := range statHistory {
-		if len(results) == 0 {
-			continue
-		}
-		cap += results[0].PrecomputedData.MaxKbps
+	for _, kbps := range maxKbpses {
+		cap += kbps
 	}
 	return []byte(fmt.Sprintf("%d", cap))
 }
@@ -671,13 +671,26 @@ func srvAPIBandwidthCapacityKbps(statHistoryThs threadsafe.ResultHistory) []byte
 func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount threadsafe.Uint, f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if unpolledCaches.Any() {
-			HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled"))
+			HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled."))
 			w.WriteHeader(http.StatusServiceUnavailable)
 			log.Write(w, []byte("Service Unavailable"), r.URL.EscapedPath())
 			return
 		}
 		f(w, r)
 	}
+}
+
+const ContentTypeJSON = "application/json"
+
+// addTrailingEndpoints adds endpoints with trailing slashes to the given dispatch map. Without this, Go will match `route` and `route/` differently.
+func addTrailingSlashEndpoints(dispatchMap map[string]http.HandlerFunc) map[string]http.HandlerFunc {
+	for route, handler := range dispatchMap {
+		if strings.HasSuffix(route, "/") {
+			continue
+		}
+		dispatchMap[route+"/"] = handler
+	}
+	return dispatchMap
 }
 
 // MakeDispatchMap returns the map of paths to http.HandlerFuncs for dispatching.
@@ -687,7 +700,9 @@ func MakeDispatchMap(
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	statHistory threadsafe.ResultHistory,
+	statInfoHistory threadsafe.ResultInfoHistory,
+	statResultHistory threadsafe.ResultStatHistory,
+	statMaxKbpses threadsafe.CacheKbpses,
 	healthHistory threadsafe.ResultHistory,
 	dsStats threadsafe.DSStatsReader,
 	events threadsafe.Events,
@@ -709,80 +724,90 @@ func MakeDispatchMap(
 		return wrapUnpolledCheck(unpolledCaches, errorCount, f)
 	}
 
-	return map[string]http.HandlerFunc{
+	dispatchMap := map[string]http.HandlerFunc{
 		"/publish/CrConfig": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvTRConfig(opsConfig, toSession)
-		})),
+		}, ContentTypeJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			bytes, err := srvTRState(params, localStates, combinedStates)
 			return WrapErrCode(errorCount, path, bytes, err)
-		})),
-		"/publish/CrStates/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			bytes, err := srvTRState(params, localStates, combinedStates)
-			return WrapErrCode(errorCount, path, bytes, err)
-		})),
+		}, ContentTypeJSON)),
 		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvCacheStats(params, errorCount, path, toData, statHistory)
-		})),
-		"/publish/CacheStats/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvCacheStats(params, errorCount, path, toData, statHistory)
-		})),
+			return srvCacheStats(params, errorCount, path, toData, statResultHistory)
+		}, ContentTypeJSON)),
 		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvDSStats(params, errorCount, path, toData, dsStats)
-		})),
-		"/publish/DsStats/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvDSStats(params, errorCount, path, toData, dsStats)
-		})),
+		}, ContentTypeJSON)),
 		"/publish/EventLog": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvEventLog(events)
-		})),
+		}, ContentTypeJSON)),
 		"/publish/PeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvPeerStates(params, errorCount, path, toData, peerStates)
-		})),
-		"/publish/PeerStates/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvPeerStates(params, errorCount, path, toData, peerStates)
-		})),
+		}, ContentTypeJSON)),
 		"/publish/StatSummary": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvStatSummary()
-		})),
-		"/publish/StatSummary/": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvStatSummary()
-		})),
+		}, ContentTypeJSON)),
 		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount)
-		})),
+		}, ContentTypeJSON)),
 		"/publish/ConfigDoc": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvConfigDoc(opsConfig)
-		})),
+		}, ContentTypeJSON)),
 		"/api/cache-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheCount(localStates)
-		})),
+		}, ContentTypeJSON)),
 		"/api/cache-available-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheAvailableCount(localStates)
-		})),
+		}, ContentTypeJSON)),
 		"/api/cache-down-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheDownCount(localStates, monitorConfig)
-		})),
+		}, ContentTypeJSON)),
 		"/api/version": wrap(WrapBytes(func() []byte {
 			return srvAPIVersion(staticAppData)
-		})),
+		}, ContentTypeJSON)),
 		"/api/traffic-ops-uri": wrap(WrapBytes(func() []byte {
 			return srvAPITrafficOpsURI(opsConfig)
-		})),
+		}, ContentTypeJSON)),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
-			return srvAPICacheStates(toData, statHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
-		})),
+			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
+		}, ContentTypeJSON)),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)
-		})),
+		}, ContentTypeJSON)),
 		"/api/bandwidth-capacity-kbps": wrap(WrapBytes(func() []byte {
-			return srvAPIBandwidthCapacityKbps(statHistory)
-		})),
+			return srvAPIBandwidthCapacityKbps(statMaxKbpses)
+		}, ContentTypeJSON)),
 	}
+	return addTrailingSlashEndpoints(dispatchMap)
+}
+
+// latestResultInfoTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result info.
+func latestResultInfoTimeMS(cacheName enum.CacheName, history cache.ResultInfoHistory) (int64, error) {
+	results, ok := history[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v has no history", cacheName)
+	}
+	if len(results) == 0 {
+		return 0, fmt.Errorf("cache %v history empty", cacheName)
+	}
+	result := cache.ResultInfo{}
+	foundResult := false
+	for _, r := range results {
+		if r.Error == nil {
+			result = r
+			foundResult = true
+			break
+		}
+	}
+	if !foundResult {
+		return 0, fmt.Errorf("cache %v No unerrored result", cacheName)
+	}
+	return int64(result.RequestTime / time.Millisecond), nil
 }
 
 // latestResultTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result.
 func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -814,7 +839,28 @@ func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheNam
 }
 
 // resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
+// Note this is unrelated to the Stat Span field.
 func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+	results, ok := history[cacheName]
+	if !ok {
+		return 0, fmt.Errorf("cache %v has no history", cacheName)
+	}
+	if len(results) == 0 {
+		return 0, fmt.Errorf("cache %v history empty", cacheName)
+	}
+	if len(results) < 2 {
+		return 0, fmt.Errorf("cache %v history only has one result, can't compute span between results", cacheName)
+	}
+
+	latestResult := results[0]
+	penultimateResult := results[1]
+	span := latestResult.Time.Sub(penultimateResult.Time)
+	return int64(span / time.Millisecond), nil
+}
+
+// resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
+// Note this is unrelated to the Stat Span field.
+func infoResultSpanMS(cacheName enum.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -834,53 +880,40 @@ func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.R
 
 func createCacheStatuses(
 	cacheTypes map[enum.CacheName]enum.CacheType,
-	statHistory map[enum.CacheName][]cache.Result,
+	statInfoHistory cache.ResultInfoHistory,
+	statResultHistory cache.ResultStatHistory,
 	healthHistory map[enum.CacheName][]cache.Result,
 	lastHealthDurations map[enum.CacheName]time.Duration,
 	cacheStates map[enum.CacheName]peer.IsAvailable,
 	lastStats ds.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 ) map[enum.CacheName]CacheStatus {
-	conns := createCacheConnections(statHistory)
+	conns := createCacheConnections(statResultHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get()
 
 	for cacheName, cacheType := range cacheTypes {
-		cacheStatHistory, ok := statHistory[cacheName]
+		infoHistory, ok := statInfoHistory[cacheName]
 		if !ok {
-			log.Warnf("createCacheStatuses stat history missing cache %s\n", cacheName)
+			log.Warnf("createCacheStatuses stat info history missing cache %s\n", cacheName)
 			continue
 		}
 
-		if len(cacheStatHistory) < 1 {
-			log.Warnf("createCacheStatuses stat history empty for cache %s\n", cacheName)
+		if len(infoHistory) < 1 {
+			log.Warnf("createCacheStatuses stat info history empty for cache %s\n", cacheName)
 			continue
 		}
 
 		log.Debugf("createCacheStatuses NOT empty for cache %s\n", cacheName)
 
-		var loadAverage *float64
-		procLoadAvg := cacheStatHistory[0].Astats.System.ProcLoadavg
-		if procLoadAvg != "" {
-			firstSpace := strings.IndexRune(procLoadAvg, ' ')
-			if firstSpace == -1 {
-				log.Warnf("WARNING unexpected proc.loadavg '%s' for cache %s\n", procLoadAvg, cacheName)
-			} else {
-				loadAverageVal, err := strconv.ParseFloat(procLoadAvg[:firstSpace], 64)
-				if err != nil {
-					log.Warnf("proc.loadavg doesn't contain a float prefix '%s' for cache %s\n", procLoadAvg, cacheName)
-				} else {
-					loadAverage = &loadAverageVal
-				}
-			}
-		}
+		loadAverage := &infoHistory[0].Vitals.LoadAvg
 
 		healthQueryTime, err := latestQueryTimeMS(cacheName, lastHealthDurations)
 		if err != nil {
 			log.Warnf("Error getting cache %v health query time: %v\n", cacheName, err)
 		}
 
-		statTime, err := latestResultTimeMS(cacheName, statHistory)
+		statTime, err := latestResultInfoTimeMS(cacheName, statInfoHistory)
 		if err != nil {
 			log.Warnf("Error getting cache %v stat result time: %v\n", cacheName, err)
 		}
@@ -890,7 +923,7 @@ func createCacheStatuses(
 			log.Warnf("Error getting cache %v health result time: %v\n", cacheName, err)
 		}
 
-		statSpan, err := resultSpanMS(cacheName, statHistory)
+		statSpan, err := infoResultSpanMS(cacheName, statInfoHistory)
 		if err != nil {
 			log.Warnf("Error getting cache %v stat span: %v\n", cacheName, err)
 		}
@@ -948,23 +981,19 @@ func createCacheStatuses(
 	return statii
 }
 
-func createCacheConnections(statHistory map[enum.CacheName][]cache.Result) map[enum.CacheName]int64 {
+func createCacheConnections(statResultHistory cache.ResultStatHistory) map[enum.CacheName]int64 {
 	conns := map[enum.CacheName]int64{}
-	for server, history := range statHistory {
-		for _, result := range history {
-			val, ok := result.Astats.Ats["proxy.process.http.current_client_connections"]
-			if !ok {
-				continue
-			}
-
-			v, ok := val.(float64)
-			if !ok {
-				continue
-			}
-
-			conns[server] = int64(v)
-			break
+	for server, history := range statResultHistory {
+		vals, ok := history["proxy.process.http.current_client_connections"]
+		if !ok || len(vals) < 1 {
+			continue
 		}
+
+		v, ok := vals[0].Val.(float64)
+		if !ok {
+			continue // TODO log warning? error?
+		}
+		conns[server] = int64(v)
 	}
 	return conns
 }
