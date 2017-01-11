@@ -20,11 +20,11 @@ under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb"
 	influx "github.com/influxdata/influxdb/client/v2"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
 )
 
 const (
@@ -33,76 +33,24 @@ const (
 	daily           = "daily_stats"
 )
 
-func createFlags() []cli.Flag {
-	return []cli.Flag{
-		cli.StringFlag{
-			Name:  "url",
-			Usage: "The influxdb url and port",
-			Value: "http://localhost:8086",
-		},
-		cli.IntFlag{
-			Name:  "replication",
-			Usage: "The number of nodes in the cluster",
-			Value: 3,
-		},
-		cli.StringFlag{
-			Name:  "user",
-			Usage: "The influxdb username used to create DBs",
-			Value: "",
-		},
-		cli.StringFlag{
-			Name:  "password",
-			Usage: "The influxdb password used to create DBs",
-			Value: "",
-		},
-	}
-}
+func main() {
+	// get influx db flags
+	config := &influxdb.Config{}
+	config.Flags("")
+	var replication int
+	flag.IntVar(&replication, "replication", 3, "The number of nodes in the cluster")
 
-func create(c *cli.Context) error {
-	influxURL := c.String("url")
-	replication := c.Int("replication")
-	user := c.String("user")
-	password := c.String("password")
-
-	fmt.Printf("creating datbases for influxUrl: %s with a replication of %d using user %s\n", influxURL, replication, user)
-	client, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     influxURL,
-		Username: user,
-		Password: password,
-	})
+	fmt.Printf("creating datbases for influxUrl: %s with a replication of %d using user %s\n", config.URL, replication, config.User)
+	client, err := config.NewHTTPClient()
 	if err != nil {
-		return errors.Wrap(err, "Error creating influx client")
-	}
-	_, _, err = client.Ping(10)
-	if err != nil {
-		return errors.Wrap(err, "Error creating influx client")
+		fmt.Printf("Unable to run create_ts_datases command, failed to get influxdb client: %v\n", err)
+		return
 	}
 
 	createCacheStats(client, replication)
 	createDailyStats(client, replication)
 	createDeliveryServiceStats(client, replication)
-	return nil
-}
 
-// queryDB takes a variadic argument for the target database so as to make
-// passing the variable optional, however, if passed, only the first db passed
-// in will be used
-func queryDB(client influx.Client, cmd string, dbs ...string) (res []influx.Result, err error) {
-	db := ""
-	if len(dbs) > 0 {
-		db = dbs[0]
-	}
-	q := influx.Query{
-		Command:  cmd,
-		Database: db,
-	}
-	if response, err := client.Query(q); err == nil {
-		if response.Error() != nil {
-			return res, response.Error()
-		}
-		res = response.Results
-	}
-	return res, nil
 }
 
 func createCacheStats(client influx.Client, replication int) {
@@ -146,7 +94,7 @@ func createDailyStats(client influx.Client, replication int) {
 }
 
 func createDatabase(client influx.Client, db string) {
-	_, err := queryDB(client, fmt.Sprintf("CREATE DATABASE %s", db))
+	err := influxdb.Create(client, fmt.Sprintf("CREATE DATABASE %s", db))
 	if err != nil {
 		fmt.Printf("An error occured creating the %v database: %v\n", db, err)
 		return
@@ -159,7 +107,7 @@ func createRetentionPolicy(client influx.Client, db string, name string, duratio
 	if isDefault {
 		qString += " DEFAULT"
 	}
-	_, err := queryDB(client, qString)
+	err := influxdb.Create(client, qString)
 	if err != nil {
 		fmt.Printf("An error occured creating the retention policy %s on database: %s:  %v\n", name, db, err)
 		return
@@ -168,7 +116,7 @@ func createRetentionPolicy(client influx.Client, db string, name string, duratio
 }
 
 func createContinuousQuery(client influx.Client, name string, query string) {
-	_, err := queryDB(client, query)
+	err := influxdb.Create(client, query)
 	if err != nil {
 		fmt.Printf("An error occured creating continuous query %s: %v\n", name, err)
 		return
