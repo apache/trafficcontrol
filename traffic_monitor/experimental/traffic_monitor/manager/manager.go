@@ -105,7 +105,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		peerStates,
 	)
 
-	statHistory, _, lastKbpsStats, dsStats, unpolledCaches := StartStatHistoryManager(
+	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches := StartStatHistoryManager(
 		cacheStatHandler.ResultChannel,
 		localStates,
 		combinedStates,
@@ -120,7 +120,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		cacheHealthHandler.ResultChannel,
 		toData,
 		localStates,
-		statHistory,
 		monitorConfig,
 		peerStates,
 		combinedStates,
@@ -138,7 +137,9 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		localStates,
 		peerStates,
 		combinedStates,
-		statHistory,
+		statInfoHistory,
+		statResultHistory,
+		statMaxKbpses,
 		healthHistory,
 		lastKbpsStats,
 		dsStats,
