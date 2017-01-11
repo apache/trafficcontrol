@@ -40,7 +40,12 @@ if [[ $# -gt 0 ]]; then
 	projects=( "$*" )
 else
 	# get all subdirs containing build/build_rpm.sh
-	projects=( */build/build_rpm.sh )
+	projects_to_build=( */build/build_rpm.sh )
+	projects=()
+	for p in "${projects_to_build[@]}"; do
+	  p=${p%%/*}
+	  projects+=($p)
+	done
 fi
 
 declare -a badproj
