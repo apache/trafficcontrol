@@ -13,61 +13,29 @@
 #
 version: '2'
 
-volumes:
-  sync:
-
 services:
-  # dataimport reads data from an existing traffic_ops server running mysql thru the API
-  dataimport:
-    extends:
-      service: dataimport
-      file: dataimport.yml
-    volumes:
-      - sync:/sync
-      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
-
-  # mysql_host loads mysql data locally and provides direct access for pgloader
-  mysql:
-    extends:
-      service: mysql_host
-      file: mysql_host.yml
-    depends_on:
-      - dataimport
-    volumes:
-      - sync:/sync
-      - ./mysql/conf.d:/etc/mysql/conf.d
-      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
-
-  # postgres_host provides a postgres data to import data to
-  postgres:
-    extends:
-      service: postgres_host
-      file: postgres_host.yml
-    depends_on:
-      - mysql
-    volumes:
-      - sync:/sync
-      - ./db:/var/lib/postgresql/data
+  db:
+    build:
+      context: ..
+      dockerfile: pg-migration/Dockerfile-postgres
+    environment:
+      - PGDATA=/opt/postgresql/data
+      - POSTGRES_DB=traffic_ops
+      - POSTGRES_PASSWORD=twelve
+      - POSTGRES_USER=traffic_ops
+    env_file:
+      - postgres.env
     ports:
-      - 5432
-
-  # pgloader converts the data from mysql to postgres
-  pgloader:
-    extends:
-      service: pgloader
-      file: pgloader.yml
-    depends_on:
-      - mysql
-      - postgres
+      - "5432:5432"
     volumes:
-      - sync:/sync
+      - pgdata:/opt/postgresql/data
+    networks:
+      - default
 
-  # convert runs needed post-migration conversions
-  convert:
-    extends:
-      service: convert
-      file: convert.yml
-    depends_on:
-      - postgres
-    volumes:
-      - sync:/sync
+networks:
+  default: 
+     driver: bridge
+
+volumes:
+  pgdata:
+
