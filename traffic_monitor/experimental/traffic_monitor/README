@@ -1,1 +1,0 @@
-To run: go run traffic_monitor.go --opsCfg ../conf/traffic_ops.cfg 

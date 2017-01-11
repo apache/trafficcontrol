@@ -73,7 +73,9 @@ func StartOpsConfigManager(
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
-	statHistory threadsafe.ResultHistory,
+	statInfoHistory threadsafe.ResultInfoHistory,
+	statResultHistory threadsafe.ResultStatHistory,
+	statMaxKbpses threadsafe.CacheKbpses,
 	healthHistory threadsafe.ResultHistory,
 	lastStats threadsafe.LastStats,
 	dsStats threadsafe.DSStatsReader,
@@ -132,7 +134,9 @@ func StartOpsConfigManager(
 				localStates,
 				peerStates,
 				combinedStates,
-				statHistory,
+				statInfoHistory,
+				statResultHistory,
+				statMaxKbpses,
 				healthHistory,
 				dsStats,
 				events,
@@ -148,7 +152,7 @@ func StartOpsConfigManager(
 				unpolledCaches,
 				monitorConfig,
 			)
-			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout)
+			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
 				continue

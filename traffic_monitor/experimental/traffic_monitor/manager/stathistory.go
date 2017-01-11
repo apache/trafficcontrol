@@ -66,14 +66,23 @@ func StartStatHistoryManager(
 	errorCount threadsafe.Uint,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) (threadsafe.ResultHistory, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches) {
-	statHistory := threadsafe.NewResultHistory()
+) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches) {
+	statInfoHistory := threadsafe.NewResultInfoHistory()
+	statResultHistory := threadsafe.NewResultStatHistory()
+	statMaxKbpses := threadsafe.NewCacheKbpses()
 	lastStatDurations := NewDurationMapThreadsafe()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	tickInterval := cfg.StatFlushInterval
+
+	precomputedData := map[enum.CacheName]cache.PrecomputedData{}
+
+	process := func(results []cache.Result) {
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData)
+	}
+
 	go func() {
 		var ticker *time.Ticker
 		<-cachesChanged // wait for the signal that localStates have been set
@@ -93,27 +102,29 @@ func StartStatHistoryManager(
 					unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 				case <-ticker.C:
 					log.Warnf("StatHistoryManager flushing queued results\n")
-					processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get())
+					process(results)
 					break innerLoop
 				default:
 					select {
 					case r := <-cacheStatChan:
 						results = append(results, r)
 					default:
-						processStatResults(results, statHistory, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get())
+						process(results)
 						break innerLoop
 					}
 				}
 			}
 		}
 	}()
-	return statHistory, lastStatDurations, lastStats, &dsStats, unpolledCaches
+	return statInfoHistory, statResultHistory, statMaxKbpses, lastStatDurations, lastStats, &dsStats, unpolledCaches
 }
 
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
 func processStatResults(
 	results []cache.Result,
-	statHistoryThreadsafe threadsafe.ResultHistory,
+	statInfoHistoryThreadsafe threadsafe.ResultInfoHistory,
+	statResultHistoryThreadsafe threadsafe.ResultStatHistory,
+	statMaxKbpsesThreadsafe threadsafe.CacheKbpses,
 	combinedStates peer.Crstates,
 	lastStats threadsafe.LastStats,
 	toData todata.TOData,
@@ -123,25 +134,44 @@ func processStatResults(
 	lastStatDurationsThreadsafe DurationMapThreadsafe,
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc to.TrafficMonitorConfigMap,
+	precomputedData map[enum.CacheName]cache.PrecomputedData,
 ) {
-	statHistory := statHistoryThreadsafe.Get().Copy()
+
+	// setting the statHistory could be put in a goroutine concurrent with `ds.CreateStats`, if it were slow
+	statInfoHistory := statInfoHistoryThreadsafe.Get().Copy()
+	statResultHistory := statResultHistoryThreadsafe.Get().Copy()
+	statMaxKbpses := statMaxKbpsesThreadsafe.Get().Copy()
+
 	for _, result := range results {
 		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
 		if maxStats < 1 {
 			log.Warnf("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
 			maxStats = 1
 		}
-
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		statHistory[result.ID] = pruneHistory(append([]cache.Result{result}, statHistory[result.ID]...), maxStats)
+		statInfoHistory.Add(result, maxStats)
+		statResultHistory.Add(result, maxStats)
+		// Don't add errored maxes or precomputed DSStats
+		if result.Error == nil {
+			// max and precomputed always contain the latest result from each cache
+			statMaxKbpses.AddMax(result)
+			// if we failed to compute the OutBytes, keep the outbytes of the last result.
+			if result.PrecomputedData.OutBytes == 0 {
+				result.PrecomputedData.OutBytes = precomputedData[result.ID].OutBytes
+			}
+			precomputedData[result.ID] = result.PrecomputedData
+
+		}
 	}
-	statHistoryThreadsafe.Set(statHistory)
+	statInfoHistoryThreadsafe.Set(statInfoHistory)
+	statResultHistoryThreadsafe.Set(statResultHistory)
+	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
 	for _, result := range results {
 		log.Debugf("poll %v %v CreateStats start\n", result.PollID, time.Now())
 	}
 
-	newDsStats, newLastStats, err := ds.CreateStats(statHistory, toData, combinedStates, lastStats.Get().Copy(), time.Now())
+	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now())
 
 	for _, result := range results {
 		log.Debugf("poll %v %v CreateStats end\n", result.PollID, time.Now())

@@ -35,6 +35,8 @@ const (
 	LogLocationStderr = "stderr"
 	// LogLocationNull indicates the null IO stream (/dev/null)
 	LogLocationNull = "null"
+	//StaticFileDir is the directory that contains static html and js files.
+	StaticFileDir = "/opt/traffic_monitor/static/"
 )
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
@@ -57,6 +59,7 @@ type Config struct {
 	ServeWriteTimeout            time.Duration `json:"-"`
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
+	StaticFileDir                string        `json:"static_file_dir"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
@@ -79,6 +82,7 @@ var DefaultConfig = Config{
 	ServeWriteTimeout:            10 * time.Second,
 	HealthToStatRatio:            4,
 	HTTPPollNoSleep:              false,
+	StaticFileDir:                StaticFileDir,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
