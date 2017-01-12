@@ -135,7 +135,7 @@ sub profile_import_single {
 }
 
 sub import_profiles {
-    my $toUri = shift;
+    my $toUri      = shift;
     my $adminconf  = shift;
     my $profileDir = shift;
 
@@ -226,25 +226,25 @@ sub profiles_exist {
 
 sub add_custom_profiles {
     my $custom_profile_dir = shift;
-    my $adminconf = shift;
-    my $toUri = shift;
+    my $adminconf          = shift;
+    my $toUri              = shift;
 
-    return if (! -e $custom_profile_dir );
+    return if ( !-e $custom_profile_dir );
 
-    opendir(DH, $custom_profile_dir) || return;
+    opendir( DH, $custom_profile_dir ) || return;
     my @profiles = readdir(DH);
     closedir(DH);
-    @profiles = grep(/^profile\..*\.traffic_ops$/, @profiles);
+    @profiles = grep( /^profile\..*\.traffic_ops$/, @profiles );
 
-    return if (scalar @profiles == 0);
+    return if ( scalar @profiles == 0 );
 
-    my $toUser = $adminconf->{tmAdminUser};
-    my $toPass = $adminconf->{tmAdminPw};
-    my $toCookie = get_traffic_ops_cookie($toUri, $toUser, $toPass);
+    my $toUser   = $adminconf->{tmAdminUser};
+    my $toPass   = $adminconf->{tmAdminPw};
+    my $toCookie = get_traffic_ops_cookie( $toUri, $toUser, $toPass );
 
     foreach my $profile (@profiles) {
-        print "\nimport profile ". $custom_profile_dir . $profile . "\n\n";
-        profile_import_single($custom_profile_dir . $profile, $toUri, $toCookie);
+        print "\nimport profile " . $custom_profile_dir . $profile . "\n\n";
+        profile_import_single( $custom_profile_dir . $profile, $toUri, $toCookie );
     }
 }
 

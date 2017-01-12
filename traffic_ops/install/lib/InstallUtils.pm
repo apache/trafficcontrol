@@ -241,7 +241,7 @@ sub readJson {
 sub writeJson {
     my $file = shift;
     open( my $fh, '>', $file ) or die("open(): $!");
-    logger("Writing json to $file", "info");
+    logger( "Writing json to $file", "info" );
     foreach my $data (@_) {
         my $json_text = JSON->new->utf8->pretty->encode($data);
         print $fh $json_text, "\n";

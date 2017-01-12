@@ -58,7 +58,7 @@ my $post_install_cfg = "/opt/traffic_ops/install/data/json/post_install.json";
 my $logFile = "/var/log/traffic_ops/postinstall.log";
 
 # debug mode
-my $debug   = 0;
+my $debug = 0;
 
 # log file for cpan output
 my $cpanLogFile = "/var/log/traffic_ops/cpan.log";
@@ -721,7 +721,7 @@ sub main {
     chdir("/opt/traffic_ops/install/bin");
 
     # if reconfigure is set then rebuild the perl deps
-    if ( $reconfigure ) {
+    if ($reconfigure) {
         my $rc = BuildPerlDeps::build( 1, $cpanLogFile );
         if ( $rc != 0 ) {
             errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
@@ -756,8 +756,8 @@ sub main {
     InstallUtils::writeJson( $post_install_cfg, $paramconf );
 
     # if reconfigure is set then setup the database
-    if ( $reconfigure ) {
-        if ( $automatic ) {
+    if ($reconfigure) {
+        if ($automatic) {
             setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{genCert} );
         }
         else {
@@ -770,7 +770,7 @@ sub main {
 
     InstallUtils::logger( "Waiting for Traffic Ops to start", "info" );
 
-    if (-f $post_install_cfg) {
+    if ( -f $post_install_cfg ) {
         $parameters = InstallUtils::readJson($post_install_cfg);
     }
 
