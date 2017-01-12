@@ -23,6 +23,14 @@ use base qw{ Exporter };
 our @EXPORT_OK = qw{ execCommand randomWord promptUser promptRequired promptPassword promptPasswordVerify trim readJson writeJson writePerl errorOut logger rotateLog};
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
+my $logFile;
+my $debug;
+
+sub initLogger {
+    $debug   = shift;
+    $logFile = shift;
+}
+
 sub execCommand {
     my ( $command, @args ) = @_;
 
@@ -76,7 +84,7 @@ sub rotateLog {
     my $logFileName = shift;
 
     if ( !-f $logFileName ) {
-        logger( "Log file '$logFileName' does not exist - not rotating log", "error" );
+        logger( "Log file '$logFileName' does not exist - not rotating log", "warn" );
         return;
     }
 
@@ -99,7 +107,7 @@ sub logger {
     }
 
     # if in debug mode or message is more critical than info print to console
-    if ( $::debug || ( defined $type && $type ne "" && $type ne "info" ) ) {
+    if ( $debug || ( defined $type && $type ne "" && $type ne "info" ) ) {
         print($message);
     }
 
@@ -107,12 +115,12 @@ sub logger {
     my $fh;
     my $result = 0;
     if ( defined $customLogFile && $customLogFile ne "" ) {
-        open $fh, '>>', $customLogFile or die("Couldn't open log file '$::customLogFile'");
+        open $fh, '>>', $customLogFile or die("Couldn't open log file '$customLogFile'");
         $result = 1;
     }
     else {
-        if ($::logFile) {
-            open $fh, '>>', $::logFile or die("Couldn't open log file '$::logFile'");
+        if ($logFile) {
+            open( $fh, '>>', $logFile ) or die("Couldn't open log file '$logFile'");
             $result = 1;
         }
     }
@@ -215,6 +223,7 @@ sub readJson {
 sub writeJson {
     my $file = shift;
     open( my $fh, '>', $file ) or die("open(): $!");
+    logger("Writing json to $file", "info");
     foreach my $data (@_) {
         my $json_text = JSON->new->utf8->pretty->encode($data);
         print $fh $json_text, "\n";
@@ -233,3 +242,5 @@ sub writePerl {
     print $fh $dumper->Terse(1)->Dump();
     close $fh;
 }
+
+1;
