@@ -21,12 +21,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb"
 	influx "github.com/influxdata/influxdb/client/v2"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
 )
 
 const (
@@ -58,86 +58,32 @@ type dailyStats struct {
 	value           float64
 }
 
-func syncFlags() []cli.Flag {
-	return []cli.Flag{
-		cli.StringFlag{
-			Name:  "sourceUrl",
-			Usage: "The source influxdb url and port",
-			Value: "http://server1.kabletown.net:8086",
-		},
-		cli.StringFlag{
-			Name:  "targetUrl",
-			Usage: "The target influxdb url and port",
-			Value: "http://server2.kabletown.net:8086",
-		},
-		cli.StringFlag{
-			Name:  "database",
-			Usage: "Sync a specific database",
-			Value: "all",
-		},
-		cli.IntFlag{
-			Name:  "days",
-			Usage: "Number of days in the past to sync (today - x days), 0 is all",
-			Value: 0,
-		},
-		cli.StringFlag{
-			Name:  "sourceUser",
-			Usage: "The source influxdb username",
-			Value: "",
-		},
-		cli.StringFlag{
-			Name:  "sourcePass",
-			Usage: "The source influxdb password",
-			Value: "",
-		},
-		cli.StringFlag{
-			Name:  "targetUser",
-			Usage: "The target influxdb username",
-			Value: "",
-		},
-		cli.StringFlag{
-			Name:  "targetPass",
-			Usage: "The target influxdb password",
-			Value: "",
-		},
-	}
-}
+func main() {
+	// get influx db flags for source influxdb
+	sourceConfig := &influxdb.Config{}
+	sourceConfig.Flags("source")
 
-func sync(c *cli.Context) error {
+	// get influx db flags for source influxdb
+	targetConfig := &influxdb.Config{}
+	targetConfig.Flags("target")
 
-	sourceURL := c.String("sourceUrl")
-	targetURL := c.String("targetUrl")
-	database := c.String("database")
-	days := c.Int("days")
-	sourceUser := c.String("sourceUser")
-	sourcePass := c.String("sourcePass")
-	targetUser := c.String("targetUser")
-	targetPass := c.String("targetPass")
-	fmt.Printf("syncing %s to %s for %s database(s) for the past %d day(s)\n", sourceURL, targetURL, database, days)
-	sourceClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     sourceURL,
-		Username: sourceUser,
-		Password: sourcePass,
-	})
+	var days int
+	var database string
+	flag.IntVar(&days, "days", 0, "Number of days in the past to sync (today - x days), 0 is all")
+	flag.StringVar(&database, "database", "all", "Sync a specific database")
+	flag.Parse()
+
+	fmt.Printf("syncing %s to %s for %s database(s) for the past %d day(s)\n", sourceConfig.URL, targetConfig.URL, database, days)
+	sourceClient, err := sourceConfig.NewHTTPClient()
 	if err != nil {
-		return errors.Wrap(err, "Error creating influx sourceClient")
+		fmt.Printf("Error creating influx sourceClient: %v\n", err)
+		return
 	}
 
-	if _, _, err = sourceClient.Ping(10); err != nil {
-		return errors.Wrap(err, "Error creating influx sourceClient")
-	}
-
-	targetClient, err := influx.NewHTTPClient(influx.HTTPConfig{
-		Addr:     targetURL,
-		Username: targetUser,
-		Password: targetPass,
-	})
+	targetClient, err := targetConfig.NewHTTPClient()
 	if err != nil {
-		return errors.Wrap(err, "Error creating influx targetClient")
-	}
-
-	if _, _, err = targetClient.Ping(10); err != nil {
-		return errors.Wrap(err, "Error creating influx targetClient")
+		fmt.Printf("Error creating influx targetClient: %v\n", err)
+		return
 	}
 
 	chSize := 1
@@ -159,7 +105,7 @@ func sync(c *cli.Context) error {
 	case daily:
 		go syncDailyDb(ch, sourceClient, targetClient, days)
 	default:
-		return errors.New("No database selected")
+		fmt.Println("No database selected")
 	}
 
 	for i := 1; i <= chSize; i++ {
@@ -167,7 +113,7 @@ func sync(c *cli.Context) error {
 	}
 
 	fmt.Println("Traffic Stats have been synced!")
-	return nil
+	return
 }
 
 func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Client, days int) {
