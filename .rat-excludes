@@ -1,62 +1,43 @@
-.*\.cfg
-.*\.conf
-.*\.config.dist
-.*\.crt
-.*\.css
-.*\.csv
-.*\.eot
-.*\.gif
-.*\.ico
-.*\.iml
-.*\.jpg
-.*\.js
-.*\.json
-.*\.jsx
-.*\.key
-.*\.logrotate
-.*\.md
-.*\.otf
-.*\.png
-.*\.prop
-.*\.svg
-.*\.ttf
-.*\.txt
-.*\.woff
-.*\.woff2
-.*\.xml.test
-BUILD_NUMBER
-CHANGELOG
-CrStates
-DISCLAIMER
-GeoLite2-City.mmdb.gz
-LICENSE
-NOTICE
-README.*
-VERSION
-\.bowerrc
-\.classpath
-\.git.*
-\.jshintrc
-\.keep
-\.pmd
-\.project
-\.rat-excludes
-auto-zones
-checks
-docs
-etc
-goose
-jMenu.*
-jquery.*
-keystore
-keystore.jks
-misc
-perl5
-profile\..*
-profiles
-teak_favicon.ico
-testFiles
-tomcat
-traffic_ops/lib/Schema/Results
-traffic_server
-vendor
+.*\.md(?:                            Markdown files aren't usually code. ){0}
+VERSION(?:                           This very short file doesn't support comments and doesn't constitute code. ){0}
+.*\.min\.css(?:                      minified files are generated files, more akin to compiled binaries. Their source bears the license. ){0}
+.*\.min\.js(?:                       minified files ){0}
+.*\.css\.map(?:                      debug files for minified css. License borne by source. ){0}
+\..*(?:                              hidden files ought not to be code. These are generally things like projects, ignore files and such. ){0}
+LICEN[SC]E.*(?:                      Licenses do not usually require meta-licenses. ){0}
+.*\.conf(?:ig)?(?:\.?.*)?(?:         Config files aren't code and don't typically require licenses. ){0}
+.*\.cfg(?:                           config file ){0}
+.*\.logrotate(?:                     config file ){0}
+.*\.example(?:                       example config file ){0}
+etc(?:                               this folder contains only config files ){0}
+conf(?:                              this folder contains only config files ){0}
+.*\.prop(?:                          resource file for configuration ){0}
+.*\.csv(?:                           CSV data files can't handle comments, so their licenses must be documented as part of their project. ){0}
+.*\.json(?:                          json data files can't handle comments, so their licenses must be documented as part of their project. ){0}
+.*\.traffic_ops(?:                   these are also json data files, albeit in a specific format. ){0}
+CrStates(?:                          these are also json data files, albeit in a specific format. ){0}
+testFiles(?:                         test data that is neither code nor capable of bearing a license notice ){0}
+.*\.spec(?:                          Specifies license, among other things. ){0}
+.*\.test(?:                          test data ){0}
+.*\.txt(?:                           text data files can't handle comments, so their licenses must be documented as part of their project ){0}
+ssl\.(?:crt|key)(?:                  demo certificate ){0}
+keystore.*(?:                        keystore ){0}
+README.*(?:                          Readme's don't usually require a separate license. ){0}
+.*\.(?:png|gif|ico|jpe?g)?(?:        Images don't bear their own license information. ){0}
+sphinx_rtd_theme(?:                  MIT. Properly documented in LICENSE ){0}
+selenium(?:                          MIT. Properly documented in LICENSE ){0}
+gmx(?:                               MIT. Properly documented in LICENSE ){0}
+stoppableListener(?:                 MIT. Properly documented in LICENSE ){0}
+fsnotify\.v1(?:                      MIT. Properly documented in LICENSE ){0}
+jwt\-go(?:                           MIT. Properly documented in LICENSE ){0}
+pq(?:                                MIT. Properly documented in LICENSE ){0}
+bootstrap(?:-theme)?\.(?:css|js)(?:  MIT. Properly documented in LICENSE ){0}
+j[mM]enu(?:\.jquery)?\.(?:css|js)(?: MIT. Properly documented in LICENSE ){0}
+.*underscore.*(?:                    MIT. Properly documented in LICENSE ){0}
+NetPacket(?:                         MIT. Properly documented in LICENSE ){0}
+dataTables\.tableTools\.js(?:        MIT. Properly documented in LICENSE ){0}
+handlebars\.js(?:                    MIT. Properly documented in LICENSE ){0}
+.*[fF]ont[aA]wesome.*(?:             SIL OFL. Properly documented in LICENSE ){0}
+01-gofmt(?:                          Go BSD. Properly documented in LICENSE ){0}
+GeoLite2-City\.mmdb\.gz(?:           CC-SA 4.0. Properly documented in LICENSE ){0}
+ssl-bundle\.crt(?:                   MPL. Properly documented in LICENSE ){0}
