@@ -41,8 +41,7 @@ function getCurrentStats() {
           $('#' + cdn_name + '_conn_val').text(connections.replace(/\B(?=(\d{3})+(?!\d))/g, ",")); //toLocaleString doesnt work across browsers, this regex does.
           var capacity = Math.round(item.capacity);
           var percentage = Math.round(bandwidth/capacity * 100);
-          setProgress(cdn_name + "_percent_indicator", percentage);
-          setText(cdn_name + "_percent_indicator", "avail: " + capacity + ", used: " + percentage);
+          $('#' + cdn_name + '_percent_indicator').text("avail: " + capacity + ", used: " + percentage + "%");
         }
         if (item.cdn == "total") {
             var bandwidth = item.bandwidth.toFixed(2);
@@ -59,30 +58,9 @@ function getCurrentStats() {
 setInterval(getCurrentStats, 30000);
 
 </script>
-<script type="text/javascript" src="/js/percentagebar.js"></script>
 
 <style>
 .statistics_section { float:left; width:35%; color:white; font-size:150%; height:400px; width:305px; background-color:#1f1f1f; margin-right:5px; border:solid 1px grey; }
-.ui-progressbar {
-  position: relative;
-}
-.progress-label {
-  /*position: absolute;*/
-  left: 50%;
-  top: 4px;
-  text-shadow: 1px 1px 0 #fff;
-}
-.percent_label {
-  clear:both;
-  float:left;
-  margin-left:10px;
-}
-.progress_bar {
-  float:right;
-  height: 10px;
-  width: 100px;
-  float:right;
-}
 #graph_panel {width: 65%; float: left; border:solid 1px grey;}
 #stat_value, #total_gbps_val, #total_conn_val { font-size: 225%; text-align: right; padding-right: 10px;}
 #stat_label{padding-top: 30px;};
@@ -99,8 +77,7 @@ setInterval(getCurrentStats, 30000);
             <div id="total_gbps_val"></div>
             % foreach my $cdn ( @{ $cdn_names }) {
                 <div id ="stat_label"><%= $cdn %> Gbps: </div>
-                <div><script>percentLabel('<%= $cdn %>_percent_indicator',0);</script></div>
-                <div><script>progressBar('<%= $cdn %>_percent_indicator',0);</script></div>
+                <div id="<%= $cdn %>_percent_indicator"></div>
                 <div id="stat_value">
                     <div id="<%= $cdn %>_gbps_val"></div>
                 </div>
