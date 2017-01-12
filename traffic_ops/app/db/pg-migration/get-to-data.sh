@@ -24,8 +24,8 @@ cat >$cred <<-CREDS
 	{ "u" : "$TO_USER", "p" : "$TO_PASSWORD" }
 CREDS
 
-curl -k -H "Accept: application/json" --cookie "$cookiejar" --cookie-jar "$cookiejar" -X POST --data @"$cred" "$TO_SERVER/api/1.2/user/login"
-curl $output -k -s --cookie "$cookiejar" -X GET "$TO_SERVER/dbdump"
+curl -f -k -H "Accept: application/json" --cookie "$cookiejar" --cookie-jar "$cookiejar" -X POST --data @"$cred" "$TO_SERVER/api/1.2/user/login"  || exit 1
+curl $output -f -k -s --cookie "$cookiejar" -X GET "$TO_SERVER/dbdump"  || exit 1
 
 waiting=/sync/waiting-for-dataimport
 while [[ ! -f $waiting ]]; do
