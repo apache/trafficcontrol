@@ -45,7 +45,7 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 SET search_path = public, pg_catalog;
 
 --
--- Name: on_update_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: traffic_ops
 --
 
 CREATE FUNCTION on_update_current_timestamp_last_updated() RETURNS trigger
@@ -58,14 +58,14 @@ END;
 $$;
 
 
-ALTER FUNCTION public.on_update_current_timestamp_last_updated() OWNER TO to_user;
+ALTER FUNCTION public.on_update_current_timestamp_last_updated() OWNER TO traffic_ops;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: asn; Type: TABLE; Schema: public; Owner: to_user
+-- Name: asn; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE asn (
@@ -76,10 +76,10 @@ CREATE TABLE asn (
 );
 
 
-ALTER TABLE asn OWNER TO to_user;
+ALTER TABLE asn OWNER TO traffic_ops;
 
 --
--- Name: asn_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: asn_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE asn_id_seq
@@ -90,17 +90,17 @@ CREATE SEQUENCE asn_id_seq
     CACHE 1;
 
 
-ALTER TABLE asn_id_seq OWNER TO to_user;
+ALTER TABLE asn_id_seq OWNER TO traffic_ops;
 
 --
--- Name: asn_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: asn_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE asn_id_seq OWNED BY asn.id;
 
 
 --
--- Name: cachegroup; Type: TABLE; Schema: public; Owner: to_user
+-- Name: cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE cachegroup (
@@ -116,10 +116,10 @@ CREATE TABLE cachegroup (
 );
 
 
-ALTER TABLE cachegroup OWNER TO to_user;
+ALTER TABLE cachegroup OWNER TO traffic_ops;
 
 --
--- Name: cachegroup_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: cachegroup_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE cachegroup_id_seq
@@ -130,17 +130,17 @@ CREATE SEQUENCE cachegroup_id_seq
     CACHE 1;
 
 
-ALTER TABLE cachegroup_id_seq OWNER TO to_user;
+ALTER TABLE cachegroup_id_seq OWNER TO traffic_ops;
 
 --
--- Name: cachegroup_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: cachegroup_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE cachegroup_id_seq OWNED BY cachegroup.id;
 
 
 --
--- Name: cachegroup_parameter; Type: TABLE; Schema: public; Owner: to_user
+-- Name: cachegroup_parameter; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE cachegroup_parameter (
@@ -150,10 +150,10 @@ CREATE TABLE cachegroup_parameter (
 );
 
 
-ALTER TABLE cachegroup_parameter OWNER TO to_user;
+ALTER TABLE cachegroup_parameter OWNER TO traffic_ops;
 
 --
--- Name: cdn; Type: TABLE; Schema: public; Owner: to_user
+-- Name: cdn; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE cdn (
@@ -164,10 +164,10 @@ CREATE TABLE cdn (
 );
 
 
-ALTER TABLE cdn OWNER TO to_user;
+ALTER TABLE cdn OWNER TO traffic_ops;
 
 --
--- Name: cdn_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: cdn_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE cdn_id_seq
@@ -178,17 +178,17 @@ CREATE SEQUENCE cdn_id_seq
     CACHE 1;
 
 
-ALTER TABLE cdn_id_seq OWNER TO to_user;
+ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 
 --
--- Name: cdn_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: cdn_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
 
 --
--- Name: deliveryservice; Type: TABLE; Schema: public; Owner: to_user
+-- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE deliveryservice (
@@ -244,10 +244,10 @@ CREATE TABLE deliveryservice (
 );
 
 
-ALTER TABLE deliveryservice OWNER TO to_user;
+ALTER TABLE deliveryservice OWNER TO traffic_ops;
 
 --
--- Name: deliveryservice_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: deliveryservice_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE deliveryservice_id_seq
@@ -258,17 +258,17 @@ CREATE SEQUENCE deliveryservice_id_seq
     CACHE 1;
 
 
-ALTER TABLE deliveryservice_id_seq OWNER TO to_user;
+ALTER TABLE deliveryservice_id_seq OWNER TO traffic_ops;
 
 --
--- Name: deliveryservice_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: deliveryservice_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE deliveryservice_id_seq OWNED BY deliveryservice.id;
 
 
 --
--- Name: deliveryservice_regex; Type: TABLE; Schema: public; Owner: to_user
+-- Name: deliveryservice_regex; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE deliveryservice_regex (
@@ -278,10 +278,10 @@ CREATE TABLE deliveryservice_regex (
 );
 
 
-ALTER TABLE deliveryservice_regex OWNER TO to_user;
+ALTER TABLE deliveryservice_regex OWNER TO traffic_ops;
 
 --
--- Name: deliveryservice_server; Type: TABLE; Schema: public; Owner: to_user
+-- Name: deliveryservice_server; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE deliveryservice_server (
@@ -291,10 +291,10 @@ CREATE TABLE deliveryservice_server (
 );
 
 
-ALTER TABLE deliveryservice_server OWNER TO to_user;
+ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
 
 --
--- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: to_user
+-- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE deliveryservice_tmuser (
@@ -304,10 +304,10 @@ CREATE TABLE deliveryservice_tmuser (
 );
 
 
-ALTER TABLE deliveryservice_tmuser OWNER TO to_user;
+ALTER TABLE deliveryservice_tmuser OWNER TO traffic_ops;
 
 --
--- Name: division; Type: TABLE; Schema: public; Owner: to_user
+-- Name: division; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE division (
@@ -317,10 +317,10 @@ CREATE TABLE division (
 );
 
 
-ALTER TABLE division OWNER TO to_user;
+ALTER TABLE division OWNER TO traffic_ops;
 
 --
--- Name: division_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: division_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE division_id_seq
@@ -331,17 +331,17 @@ CREATE SEQUENCE division_id_seq
     CACHE 1;
 
 
-ALTER TABLE division_id_seq OWNER TO to_user;
+ALTER TABLE division_id_seq OWNER TO traffic_ops;
 
 --
--- Name: division_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: division_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE division_id_seq OWNED BY division.id;
 
 
 --
--- Name: federation; Type: TABLE; Schema: public; Owner: to_user
+-- Name: federation; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE federation (
@@ -353,10 +353,10 @@ CREATE TABLE federation (
 );
 
 
-ALTER TABLE federation OWNER TO to_user;
+ALTER TABLE federation OWNER TO traffic_ops;
 
 --
--- Name: federation_deliveryservice; Type: TABLE; Schema: public; Owner: to_user
+-- Name: federation_deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE federation_deliveryservice (
@@ -366,10 +366,10 @@ CREATE TABLE federation_deliveryservice (
 );
 
 
-ALTER TABLE federation_deliveryservice OWNER TO to_user;
+ALTER TABLE federation_deliveryservice OWNER TO traffic_ops;
 
 --
--- Name: federation_federation_resolver; Type: TABLE; Schema: public; Owner: to_user
+-- Name: federation_federation_resolver; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE federation_federation_resolver (
@@ -379,10 +379,10 @@ CREATE TABLE federation_federation_resolver (
 );
 
 
-ALTER TABLE federation_federation_resolver OWNER TO to_user;
+ALTER TABLE federation_federation_resolver OWNER TO traffic_ops;
 
 --
--- Name: federation_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: federation_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE federation_id_seq
@@ -393,17 +393,17 @@ CREATE SEQUENCE federation_id_seq
     CACHE 1;
 
 
-ALTER TABLE federation_id_seq OWNER TO to_user;
+ALTER TABLE federation_id_seq OWNER TO traffic_ops;
 
 --
--- Name: federation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: federation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE federation_id_seq OWNED BY federation.id;
 
 
 --
--- Name: federation_resolver; Type: TABLE; Schema: public; Owner: to_user
+-- Name: federation_resolver; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE federation_resolver (
@@ -414,10 +414,10 @@ CREATE TABLE federation_resolver (
 );
 
 
-ALTER TABLE federation_resolver OWNER TO to_user;
+ALTER TABLE federation_resolver OWNER TO traffic_ops;
 
 --
--- Name: federation_resolver_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: federation_resolver_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE federation_resolver_id_seq
@@ -428,17 +428,17 @@ CREATE SEQUENCE federation_resolver_id_seq
     CACHE 1;
 
 
-ALTER TABLE federation_resolver_id_seq OWNER TO to_user;
+ALTER TABLE federation_resolver_id_seq OWNER TO traffic_ops;
 
 --
--- Name: federation_resolver_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: federation_resolver_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE federation_resolver_id_seq OWNED BY federation_resolver.id;
 
 
 --
--- Name: federation_tmuser; Type: TABLE; Schema: public; Owner: to_user
+-- Name: federation_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE federation_tmuser (
@@ -449,10 +449,10 @@ CREATE TABLE federation_tmuser (
 );
 
 
-ALTER TABLE federation_tmuser OWNER TO to_user;
+ALTER TABLE federation_tmuser OWNER TO traffic_ops;
 
 --
--- Name: hwinfo; Type: TABLE; Schema: public; Owner: to_user
+-- Name: hwinfo; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE hwinfo (
@@ -464,10 +464,10 @@ CREATE TABLE hwinfo (
 );
 
 
-ALTER TABLE hwinfo OWNER TO to_user;
+ALTER TABLE hwinfo OWNER TO traffic_ops;
 
 --
--- Name: hwinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: hwinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE hwinfo_id_seq
@@ -478,17 +478,17 @@ CREATE SEQUENCE hwinfo_id_seq
     CACHE 1;
 
 
-ALTER TABLE hwinfo_id_seq OWNER TO to_user;
+ALTER TABLE hwinfo_id_seq OWNER TO traffic_ops;
 
 --
--- Name: hwinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: hwinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE hwinfo_id_seq OWNED BY hwinfo.id;
 
 
 --
--- Name: job; Type: TABLE; Schema: public; Owner: to_user
+-- Name: job; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE job (
@@ -509,10 +509,10 @@ CREATE TABLE job (
 );
 
 
-ALTER TABLE job OWNER TO to_user;
+ALTER TABLE job OWNER TO traffic_ops;
 
 --
--- Name: job_agent; Type: TABLE; Schema: public; Owner: to_user
+-- Name: job_agent; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE job_agent (
@@ -524,10 +524,10 @@ CREATE TABLE job_agent (
 );
 
 
-ALTER TABLE job_agent OWNER TO to_user;
+ALTER TABLE job_agent OWNER TO traffic_ops;
 
 --
--- Name: job_agent_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: job_agent_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE job_agent_id_seq
@@ -538,17 +538,17 @@ CREATE SEQUENCE job_agent_id_seq
     CACHE 1;
 
 
-ALTER TABLE job_agent_id_seq OWNER TO to_user;
+ALTER TABLE job_agent_id_seq OWNER TO traffic_ops;
 
 --
--- Name: job_agent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: job_agent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE job_agent_id_seq OWNED BY job_agent.id;
 
 
 --
--- Name: job_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: job_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE job_id_seq
@@ -559,17 +559,17 @@ CREATE SEQUENCE job_id_seq
     CACHE 1;
 
 
-ALTER TABLE job_id_seq OWNER TO to_user;
+ALTER TABLE job_id_seq OWNER TO traffic_ops;
 
 --
--- Name: job_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: job_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE job_id_seq OWNED BY job.id;
 
 
 --
--- Name: job_result; Type: TABLE; Schema: public; Owner: to_user
+-- Name: job_result; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE job_result (
@@ -582,10 +582,10 @@ CREATE TABLE job_result (
 );
 
 
-ALTER TABLE job_result OWNER TO to_user;
+ALTER TABLE job_result OWNER TO traffic_ops;
 
 --
--- Name: job_result_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: job_result_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE job_result_id_seq
@@ -596,17 +596,17 @@ CREATE SEQUENCE job_result_id_seq
     CACHE 1;
 
 
-ALTER TABLE job_result_id_seq OWNER TO to_user;
+ALTER TABLE job_result_id_seq OWNER TO traffic_ops;
 
 --
--- Name: job_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: job_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE job_result_id_seq OWNED BY job_result.id;
 
 
 --
--- Name: job_status; Type: TABLE; Schema: public; Owner: to_user
+-- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE job_status (
@@ -617,10 +617,10 @@ CREATE TABLE job_status (
 );
 
 
-ALTER TABLE job_status OWNER TO to_user;
+ALTER TABLE job_status OWNER TO traffic_ops;
 
 --
--- Name: job_status_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: job_status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE job_status_id_seq
@@ -631,17 +631,17 @@ CREATE SEQUENCE job_status_id_seq
     CACHE 1;
 
 
-ALTER TABLE job_status_id_seq OWNER TO to_user;
+ALTER TABLE job_status_id_seq OWNER TO traffic_ops;
 
 --
--- Name: job_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: job_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE job_status_id_seq OWNED BY job_status.id;
 
 
 --
--- Name: log; Type: TABLE; Schema: public; Owner: to_user
+-- Name: log; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE log (
@@ -654,10 +654,10 @@ CREATE TABLE log (
 );
 
 
-ALTER TABLE log OWNER TO to_user;
+ALTER TABLE log OWNER TO traffic_ops;
 
 --
--- Name: log_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: log_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE log_id_seq
@@ -668,17 +668,17 @@ CREATE SEQUENCE log_id_seq
     CACHE 1;
 
 
-ALTER TABLE log_id_seq OWNER TO to_user;
+ALTER TABLE log_id_seq OWNER TO traffic_ops;
 
 --
--- Name: log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE log_id_seq OWNED BY log.id;
 
 
 --
--- Name: parameter; Type: TABLE; Schema: public; Owner: to_user
+-- Name: parameter; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE parameter (
@@ -691,10 +691,10 @@ CREATE TABLE parameter (
 );
 
 
-ALTER TABLE parameter OWNER TO to_user;
+ALTER TABLE parameter OWNER TO traffic_ops;
 
 --
--- Name: parameter_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: parameter_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE parameter_id_seq
@@ -705,17 +705,17 @@ CREATE SEQUENCE parameter_id_seq
     CACHE 1;
 
 
-ALTER TABLE parameter_id_seq OWNER TO to_user;
+ALTER TABLE parameter_id_seq OWNER TO traffic_ops;
 
 --
--- Name: parameter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: parameter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE parameter_id_seq OWNED BY parameter.id;
 
 
 --
--- Name: phys_location; Type: TABLE; Schema: public; Owner: to_user
+-- Name: phys_location; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE phys_location (
@@ -735,10 +735,10 @@ CREATE TABLE phys_location (
 );
 
 
-ALTER TABLE phys_location OWNER TO to_user;
+ALTER TABLE phys_location OWNER TO traffic_ops;
 
 --
--- Name: phys_location_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: phys_location_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE phys_location_id_seq
@@ -749,17 +749,17 @@ CREATE SEQUENCE phys_location_id_seq
     CACHE 1;
 
 
-ALTER TABLE phys_location_id_seq OWNER TO to_user;
+ALTER TABLE phys_location_id_seq OWNER TO traffic_ops;
 
 --
--- Name: phys_location_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: phys_location_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE phys_location_id_seq OWNED BY phys_location.id;
 
 
 --
--- Name: profile; Type: TABLE; Schema: public; Owner: to_user
+-- Name: profile; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE profile (
@@ -770,10 +770,10 @@ CREATE TABLE profile (
 );
 
 
-ALTER TABLE profile OWNER TO to_user;
+ALTER TABLE profile OWNER TO traffic_ops;
 
 --
--- Name: profile_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: profile_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE profile_id_seq
@@ -784,17 +784,17 @@ CREATE SEQUENCE profile_id_seq
     CACHE 1;
 
 
-ALTER TABLE profile_id_seq OWNER TO to_user;
+ALTER TABLE profile_id_seq OWNER TO traffic_ops;
 
 --
--- Name: profile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: profile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE profile_id_seq OWNED BY profile.id;
 
 
 --
--- Name: profile_parameter; Type: TABLE; Schema: public; Owner: to_user
+-- Name: profile_parameter; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE profile_parameter (
@@ -804,10 +804,10 @@ CREATE TABLE profile_parameter (
 );
 
 
-ALTER TABLE profile_parameter OWNER TO to_user;
+ALTER TABLE profile_parameter OWNER TO traffic_ops;
 
 --
--- Name: regex; Type: TABLE; Schema: public; Owner: to_user
+-- Name: regex; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE regex (
@@ -818,10 +818,10 @@ CREATE TABLE regex (
 );
 
 
-ALTER TABLE regex OWNER TO to_user;
+ALTER TABLE regex OWNER TO traffic_ops;
 
 --
--- Name: regex_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: regex_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE regex_id_seq
@@ -832,17 +832,17 @@ CREATE SEQUENCE regex_id_seq
     CACHE 1;
 
 
-ALTER TABLE regex_id_seq OWNER TO to_user;
+ALTER TABLE regex_id_seq OWNER TO traffic_ops;
 
 --
--- Name: regex_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: regex_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE regex_id_seq OWNED BY regex.id;
 
 
 --
--- Name: region; Type: TABLE; Schema: public; Owner: to_user
+-- Name: region; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE region (
@@ -853,10 +853,10 @@ CREATE TABLE region (
 );
 
 
-ALTER TABLE region OWNER TO to_user;
+ALTER TABLE region OWNER TO traffic_ops;
 
 --
--- Name: region_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: region_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE region_id_seq
@@ -867,17 +867,17 @@ CREATE SEQUENCE region_id_seq
     CACHE 1;
 
 
-ALTER TABLE region_id_seq OWNER TO to_user;
+ALTER TABLE region_id_seq OWNER TO traffic_ops;
 
 --
--- Name: region_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: region_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE region_id_seq OWNED BY region.id;
 
 
 --
--- Name: role; Type: TABLE; Schema: public; Owner: to_user
+-- Name: role; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE role (
@@ -888,10 +888,10 @@ CREATE TABLE role (
 );
 
 
-ALTER TABLE role OWNER TO to_user;
+ALTER TABLE role OWNER TO traffic_ops;
 
 --
--- Name: role_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: role_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE role_id_seq
@@ -902,17 +902,17 @@ CREATE SEQUENCE role_id_seq
     CACHE 1;
 
 
-ALTER TABLE role_id_seq OWNER TO to_user;
+ALTER TABLE role_id_seq OWNER TO traffic_ops;
 
 --
--- Name: role_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: role_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE role_id_seq OWNED BY role.id;
 
 
 --
--- Name: server; Type: TABLE; Schema: public; Owner: to_user
+-- Name: server; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE server (
@@ -954,10 +954,10 @@ CREATE TABLE server (
 );
 
 
-ALTER TABLE server OWNER TO to_user;
+ALTER TABLE server OWNER TO traffic_ops;
 
 --
--- Name: server_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: server_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE server_id_seq
@@ -968,17 +968,17 @@ CREATE SEQUENCE server_id_seq
     CACHE 1;
 
 
-ALTER TABLE server_id_seq OWNER TO to_user;
+ALTER TABLE server_id_seq OWNER TO traffic_ops;
 
 --
--- Name: server_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: server_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE server_id_seq OWNED BY server.id;
 
 
 --
--- Name: servercheck; Type: TABLE; Schema: public; Owner: to_user
+-- Name: servercheck; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE servercheck (
@@ -1019,10 +1019,10 @@ CREATE TABLE servercheck (
 );
 
 
-ALTER TABLE servercheck OWNER TO to_user;
+ALTER TABLE servercheck OWNER TO traffic_ops;
 
 --
--- Name: servercheck_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: servercheck_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE servercheck_id_seq
@@ -1033,17 +1033,17 @@ CREATE SEQUENCE servercheck_id_seq
     CACHE 1;
 
 
-ALTER TABLE servercheck_id_seq OWNER TO to_user;
+ALTER TABLE servercheck_id_seq OWNER TO traffic_ops;
 
 --
--- Name: servercheck_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: servercheck_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 
 
 --
--- Name: staticdnsentry; Type: TABLE; Schema: public; Owner: to_user
+-- Name: staticdnsentry; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE staticdnsentry (
@@ -1058,10 +1058,10 @@ CREATE TABLE staticdnsentry (
 );
 
 
-ALTER TABLE staticdnsentry OWNER TO to_user;
+ALTER TABLE staticdnsentry OWNER TO traffic_ops;
 
 --
--- Name: staticdnsentry_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: staticdnsentry_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE staticdnsentry_id_seq
@@ -1072,17 +1072,17 @@ CREATE SEQUENCE staticdnsentry_id_seq
     CACHE 1;
 
 
-ALTER TABLE staticdnsentry_id_seq OWNER TO to_user;
+ALTER TABLE staticdnsentry_id_seq OWNER TO traffic_ops;
 
 --
--- Name: staticdnsentry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: staticdnsentry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE staticdnsentry_id_seq OWNED BY staticdnsentry.id;
 
 
 --
--- Name: stats_summary; Type: TABLE; Schema: public; Owner: to_user
+-- Name: stats_summary; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE stats_summary (
@@ -1096,10 +1096,10 @@ CREATE TABLE stats_summary (
 );
 
 
-ALTER TABLE stats_summary OWNER TO to_user;
+ALTER TABLE stats_summary OWNER TO traffic_ops;
 
 --
--- Name: stats_summary_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: stats_summary_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE stats_summary_id_seq
@@ -1110,17 +1110,17 @@ CREATE SEQUENCE stats_summary_id_seq
     CACHE 1;
 
 
-ALTER TABLE stats_summary_id_seq OWNER TO to_user;
+ALTER TABLE stats_summary_id_seq OWNER TO traffic_ops;
 
 --
--- Name: stats_summary_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: stats_summary_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE stats_summary_id_seq OWNED BY stats_summary.id;
 
 
 --
--- Name: status; Type: TABLE; Schema: public; Owner: to_user
+-- Name: status; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE status (
@@ -1131,10 +1131,10 @@ CREATE TABLE status (
 );
 
 
-ALTER TABLE status OWNER TO to_user;
+ALTER TABLE status OWNER TO traffic_ops;
 
 --
--- Name: status_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: status_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE status_id_seq
@@ -1145,17 +1145,17 @@ CREATE SEQUENCE status_id_seq
     CACHE 1;
 
 
-ALTER TABLE status_id_seq OWNER TO to_user;
+ALTER TABLE status_id_seq OWNER TO traffic_ops;
 
 --
--- Name: status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE status_id_seq OWNED BY status.id;
 
 
 --
--- Name: steering_target; Type: TABLE; Schema: public; Owner: to_user
+-- Name: steering_target; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE steering_target (
@@ -1166,10 +1166,10 @@ CREATE TABLE steering_target (
 );
 
 
-ALTER TABLE steering_target OWNER TO to_user;
+ALTER TABLE steering_target OWNER TO traffic_ops;
 
 --
--- Name: tm_user; Type: TABLE; Schema: public; Owner: to_user
+-- Name: tm_user; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE tm_user (
@@ -1198,10 +1198,10 @@ CREATE TABLE tm_user (
 );
 
 
-ALTER TABLE tm_user OWNER TO to_user;
+ALTER TABLE tm_user OWNER TO traffic_ops;
 
 --
--- Name: tm_user_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: tm_user_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE tm_user_id_seq
@@ -1212,17 +1212,17 @@ CREATE SEQUENCE tm_user_id_seq
     CACHE 1;
 
 
-ALTER TABLE tm_user_id_seq OWNER TO to_user;
+ALTER TABLE tm_user_id_seq OWNER TO traffic_ops;
 
 --
--- Name: tm_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: tm_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE tm_user_id_seq OWNED BY tm_user.id;
 
 
 --
--- Name: to_extension; Type: TABLE; Schema: public; Owner: to_user
+-- Name: to_extension; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE to_extension (
@@ -1241,10 +1241,10 @@ CREATE TABLE to_extension (
 );
 
 
-ALTER TABLE to_extension OWNER TO to_user;
+ALTER TABLE to_extension OWNER TO traffic_ops;
 
 --
--- Name: to_extension_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: to_extension_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE to_extension_id_seq
@@ -1255,17 +1255,17 @@ CREATE SEQUENCE to_extension_id_seq
     CACHE 1;
 
 
-ALTER TABLE to_extension_id_seq OWNER TO to_user;
+ALTER TABLE to_extension_id_seq OWNER TO traffic_ops;
 
 --
--- Name: to_extension_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: to_extension_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE to_extension_id_seq OWNED BY to_extension.id;
 
 
 --
--- Name: type; Type: TABLE; Schema: public; Owner: to_user
+-- Name: type; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
 CREATE TABLE type (
@@ -1277,10 +1277,10 @@ CREATE TABLE type (
 );
 
 
-ALTER TABLE type OWNER TO to_user;
+ALTER TABLE type OWNER TO traffic_ops;
 
 --
--- Name: type_id_seq; Type: SEQUENCE; Schema: public; Owner: to_user
+-- Name: type_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
 
 CREATE SEQUENCE type_id_seq
@@ -1291,206 +1291,206 @@ CREATE SEQUENCE type_id_seq
     CACHE 1;
 
 
-ALTER TABLE type_id_seq OWNER TO to_user;
+ALTER TABLE type_id_seq OWNER TO traffic_ops;
 
 --
--- Name: type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: to_user
+-- Name: type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
 --
 
 ALTER SEQUENCE type_id_seq OWNED BY type.id;
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY asn ALTER COLUMN id SET DEFAULT nextval('asn_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup ALTER COLUMN id SET DEFAULT nextval('cachegroup_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdn ALTER COLUMN id SET DEFAULT nextval('cdn_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice ALTER COLUMN id SET DEFAULT nextval('deliveryservice_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY division ALTER COLUMN id SET DEFAULT nextval('division_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation ALTER COLUMN id SET DEFAULT nextval('federation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_resolver ALTER COLUMN id SET DEFAULT nextval('federation_resolver_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY hwinfo ALTER COLUMN id SET DEFAULT nextval('hwinfo_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job ALTER COLUMN id SET DEFAULT nextval('job_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_agent ALTER COLUMN id SET DEFAULT nextval('job_agent_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_result ALTER COLUMN id SET DEFAULT nextval('job_result_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_status ALTER COLUMN id SET DEFAULT nextval('job_status_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY log ALTER COLUMN id SET DEFAULT nextval('log_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY parameter ALTER COLUMN id SET DEFAULT nextval('parameter_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY phys_location ALTER COLUMN id SET DEFAULT nextval('phys_location_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY profile ALTER COLUMN id SET DEFAULT nextval('profile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY regex ALTER COLUMN id SET DEFAULT nextval('regex_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY region ALTER COLUMN id SET DEFAULT nextval('region_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY role ALTER COLUMN id SET DEFAULT nextval('role_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server ALTER COLUMN id SET DEFAULT nextval('server_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY servercheck ALTER COLUMN id SET DEFAULT nextval('servercheck_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY staticdnsentry ALTER COLUMN id SET DEFAULT nextval('staticdnsentry_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY stats_summary ALTER COLUMN id SET DEFAULT nextval('stats_summary_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY status ALTER COLUMN id SET DEFAULT nextval('status_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY tm_user ALTER COLUMN id SET DEFAULT nextval('tm_user_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY to_extension ALTER COLUMN id SET DEFAULT nextval('to_extension_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: to_user
+-- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY type ALTER COLUMN id SET DEFAULT nextval('type_id_seq'::regclass);
 
 
 --
--- Name: idx_89468_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89468_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY asn
@@ -1498,7 +1498,7 @@ ALTER TABLE ONLY asn
 
 
 --
--- Name: idx_89476_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89476_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup
@@ -1506,7 +1506,7 @@ ALTER TABLE ONLY cachegroup
 
 
 --
--- Name: idx_89484_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89484_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup_parameter
@@ -1514,7 +1514,7 @@ ALTER TABLE ONLY cachegroup_parameter
 
 
 --
--- Name: idx_89491_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89491_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdn
@@ -1522,7 +1522,7 @@ ALTER TABLE ONLY cdn
 
 
 --
--- Name: idx_89502_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89502_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice
@@ -1530,7 +1530,7 @@ ALTER TABLE ONLY deliveryservice
 
 
 --
--- Name: idx_89517_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89517_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_regex
@@ -1538,7 +1538,7 @@ ALTER TABLE ONLY deliveryservice_regex
 
 
 --
--- Name: idx_89521_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89521_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_server
@@ -1546,7 +1546,7 @@ ALTER TABLE ONLY deliveryservice_server
 
 
 --
--- Name: idx_89525_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89525_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_tmuser
@@ -1554,7 +1554,7 @@ ALTER TABLE ONLY deliveryservice_tmuser
 
 
 --
--- Name: idx_89531_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89531_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY division
@@ -1562,7 +1562,7 @@ ALTER TABLE ONLY division
 
 
 --
--- Name: idx_89541_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89541_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation
@@ -1570,7 +1570,7 @@ ALTER TABLE ONLY federation
 
 
 --
--- Name: idx_89549_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89549_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_deliveryservice
@@ -1578,7 +1578,7 @@ ALTER TABLE ONLY federation_deliveryservice
 
 
 --
--- Name: idx_89553_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89553_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_federation_resolver
@@ -1586,7 +1586,7 @@ ALTER TABLE ONLY federation_federation_resolver
 
 
 --
--- Name: idx_89559_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89559_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_resolver
@@ -1594,7 +1594,7 @@ ALTER TABLE ONLY federation_resolver
 
 
 --
--- Name: idx_89567_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89567_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_tmuser
@@ -1602,7 +1602,7 @@ ALTER TABLE ONLY federation_tmuser
 
 
 --
--- Name: idx_89583_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89583_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY hwinfo
@@ -1610,7 +1610,7 @@ ALTER TABLE ONLY hwinfo
 
 
 --
--- Name: idx_89593_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89593_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job
@@ -1618,7 +1618,7 @@ ALTER TABLE ONLY job
 
 
 --
--- Name: idx_89603_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89603_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_agent
@@ -1626,7 +1626,7 @@ ALTER TABLE ONLY job_agent
 
 
 --
--- Name: idx_89614_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89614_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_result
@@ -1634,7 +1634,7 @@ ALTER TABLE ONLY job_result
 
 
 --
--- Name: idx_89624_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89624_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_status
@@ -1642,7 +1642,7 @@ ALTER TABLE ONLY job_status
 
 
 --
--- Name: idx_89634_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89634_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY log
@@ -1650,7 +1650,7 @@ ALTER TABLE ONLY log
 
 
 --
--- Name: idx_89644_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89644_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY parameter
@@ -1658,7 +1658,7 @@ ALTER TABLE ONLY parameter
 
 
 --
--- Name: idx_89655_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89655_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY phys_location
@@ -1666,7 +1666,7 @@ ALTER TABLE ONLY phys_location
 
 
 --
--- Name: idx_89665_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89665_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY profile
@@ -1674,7 +1674,7 @@ ALTER TABLE ONLY profile
 
 
 --
--- Name: idx_89673_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89673_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY profile_parameter
@@ -1682,7 +1682,7 @@ ALTER TABLE ONLY profile_parameter
 
 
 --
--- Name: idx_89679_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89679_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY regex
@@ -1690,7 +1690,7 @@ ALTER TABLE ONLY regex
 
 
 --
--- Name: idx_89690_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89690_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY region
@@ -1698,7 +1698,7 @@ ALTER TABLE ONLY region
 
 
 --
--- Name: idx_89700_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89700_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY role
@@ -1706,7 +1706,7 @@ ALTER TABLE ONLY role
 
 
 --
--- Name: idx_89709_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89709_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -1714,7 +1714,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: idx_89722_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89722_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY servercheck
@@ -1722,7 +1722,7 @@ ALTER TABLE ONLY servercheck
 
 
 --
--- Name: idx_89729_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89729_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY staticdnsentry
@@ -1730,7 +1730,7 @@ ALTER TABLE ONLY staticdnsentry
 
 
 --
--- Name: idx_89740_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89740_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY stats_summary
@@ -1738,7 +1738,7 @@ ALTER TABLE ONLY stats_summary
 
 
 --
--- Name: idx_89751_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89751_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY status
@@ -1746,7 +1746,7 @@ ALTER TABLE ONLY status
 
 
 --
--- Name: idx_89759_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89759_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY steering_target
@@ -1754,7 +1754,7 @@ ALTER TABLE ONLY steering_target
 
 
 --
--- Name: idx_89765_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89765_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY tm_user
@@ -1762,7 +1762,7 @@ ALTER TABLE ONLY tm_user
 
 
 --
--- Name: idx_89776_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89776_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY to_extension
@@ -1770,7 +1770,7 @@ ALTER TABLE ONLY to_extension
 
 
 --
--- Name: idx_89786_primary; Type: CONSTRAINT; Schema: public; Owner: to_user
+-- Name: idx_89786_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY type
@@ -1778,714 +1778,714 @@ ALTER TABLE ONLY type
 
 
 --
--- Name: idx_89468_cr_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89468_cr_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89468_cr_id_unique ON asn USING btree (id);
 
 
 --
--- Name: idx_89468_fk_cran_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89468_fk_cran_cachegroup1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89468_fk_cran_cachegroup1 ON asn USING btree (cachegroup);
 
 
 --
--- Name: idx_89476_cg_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89476_cg_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89476_cg_name_unique ON cachegroup USING btree (name);
 
 
 --
--- Name: idx_89476_cg_short_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89476_cg_short_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89476_cg_short_unique ON cachegroup USING btree (short_name);
 
 
 --
--- Name: idx_89476_fk_cg_1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89476_fk_cg_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89476_fk_cg_1 ON cachegroup USING btree (parent_cachegroup_id);
 
 
 --
--- Name: idx_89476_fk_cg_secondary; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89476_fk_cg_secondary; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89476_fk_cg_secondary ON cachegroup USING btree (secondary_parent_cachegroup_id);
 
 
 --
--- Name: idx_89476_fk_cg_type1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89476_fk_cg_type1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89476_fk_cg_type1 ON cachegroup USING btree (type);
 
 
 --
--- Name: idx_89476_lo_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89476_lo_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89476_lo_id_unique ON cachegroup USING btree (id);
 
 
 --
--- Name: idx_89484_fk_parameter; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89484_fk_parameter; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89484_fk_parameter ON cachegroup_parameter USING btree (parameter);
 
 
 --
--- Name: idx_89491_cdn_cdn_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89491_cdn_cdn_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89491_cdn_cdn_unique ON cdn USING btree (name);
 
 
 --
--- Name: idx_89502_ds_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89502_ds_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89502_ds_id_unique ON deliveryservice USING btree (id);
 
 
 --
--- Name: idx_89502_ds_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89502_ds_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89502_ds_name_unique ON deliveryservice USING btree (xml_id);
 
 
 --
--- Name: idx_89502_fk_cdn1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89502_fk_cdn1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89502_fk_cdn1 ON deliveryservice USING btree (cdn_id);
 
 
 --
--- Name: idx_89502_fk_deliveryservice_profile1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89502_fk_deliveryservice_profile1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89502_fk_deliveryservice_profile1 ON deliveryservice USING btree (profile);
 
 
 --
--- Name: idx_89502_fk_deliveryservice_type1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89502_fk_deliveryservice_type1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89502_fk_deliveryservice_type1 ON deliveryservice USING btree (type);
 
 
 --
--- Name: idx_89517_fk_ds_to_regex_regex1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89517_fk_ds_to_regex_regex1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89517_fk_ds_to_regex_regex1 ON deliveryservice_regex USING btree (regex);
 
 
 --
--- Name: idx_89521_fk_ds_to_cs_contentserver1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89521_fk_ds_to_cs_contentserver1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89521_fk_ds_to_cs_contentserver1 ON deliveryservice_server USING btree (server);
 
 
 --
--- Name: idx_89525_fk_tm_userid; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89525_fk_tm_userid; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89525_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
 
 
 --
--- Name: idx_89531_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89531_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89531_name_unique ON division USING btree (name);
 
 
 --
--- Name: idx_89549_fk_fed_to_ds1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89549_fk_fed_to_ds1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89549_fk_fed_to_ds1 ON federation_deliveryservice USING btree (deliveryservice);
 
 
 --
--- Name: idx_89553_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89553_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89553_fk_federation_federation_resolver ON federation_federation_resolver USING btree (federation);
 
 
 --
--- Name: idx_89553_fk_federation_resolver_to_fed1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89553_fk_federation_resolver_to_fed1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89553_fk_federation_resolver_to_fed1 ON federation_federation_resolver USING btree (federation_resolver);
 
 
 --
--- Name: idx_89559_federation_resolver_ip_address; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89559_federation_resolver_ip_address; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89559_federation_resolver_ip_address ON federation_resolver USING btree (ip_address);
 
 
 --
--- Name: idx_89559_fk_federation_mapping_type; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89559_fk_federation_mapping_type; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89559_fk_federation_mapping_type ON federation_resolver USING btree (type);
 
 
 --
--- Name: idx_89567_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89567_fk_federation_federation_resolver; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89567_fk_federation_federation_resolver ON federation_tmuser USING btree (federation);
 
 
 --
--- Name: idx_89567_fk_federation_tmuser_role; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89567_fk_federation_tmuser_role; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89567_fk_federation_tmuser_role ON federation_tmuser USING btree (role);
 
 
 --
--- Name: idx_89567_fk_federation_tmuser_tmuser; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89567_fk_federation_tmuser_tmuser; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89567_fk_federation_tmuser_tmuser ON federation_tmuser USING btree (tm_user);
 
 
 --
--- Name: idx_89583_fk_hwinfo1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89583_fk_hwinfo1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89583_fk_hwinfo1 ON hwinfo USING btree (serverid);
 
 
 --
--- Name: idx_89583_serverid; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89583_serverid; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89583_serverid ON hwinfo USING btree (serverid, description);
 
 
 --
--- Name: idx_89593_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89593_fk_job_agent_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89593_fk_job_agent_id1 ON job USING btree (agent);
 
 
 --
--- Name: idx_89593_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89593_fk_job_deliveryservice1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89593_fk_job_deliveryservice1 ON job USING btree (job_deliveryservice);
 
 
 --
--- Name: idx_89593_fk_job_status_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89593_fk_job_status_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89593_fk_job_status_id1 ON job USING btree (status);
 
 
 --
--- Name: idx_89593_fk_job_user_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89593_fk_job_user_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89593_fk_job_user_id1 ON job USING btree (job_user);
 
 
 --
--- Name: idx_89614_fk_agent_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89614_fk_agent_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89614_fk_agent_id1 ON job_result USING btree (agent);
 
 
 --
--- Name: idx_89614_fk_job_id1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89614_fk_job_id1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89614_fk_job_id1 ON job_result USING btree (job);
 
 
 --
--- Name: idx_89634_fk_log_1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89634_fk_log_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89634_fk_log_1 ON log USING btree (tm_user);
 
 
 --
--- Name: idx_89634_idx_last_updated; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89634_idx_last_updated; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89634_idx_last_updated ON log USING btree (last_updated);
 
 
 --
--- Name: idx_89644_parameter_name_value_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89644_parameter_name_value_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89644_parameter_name_value_idx ON parameter USING btree (name, value);
 
 
 --
--- Name: idx_89655_fk_phys_location_region_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89655_fk_phys_location_region_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89655_fk_phys_location_region_idx ON phys_location USING btree (region);
 
 
 --
--- Name: idx_89655_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89655_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89655_name_unique ON phys_location USING btree (name);
 
 
 --
--- Name: idx_89655_short_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89655_short_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89655_short_name_unique ON phys_location USING btree (short_name);
 
 
 --
--- Name: idx_89665_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89665_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89665_name_unique ON profile USING btree (name);
 
 
 --
--- Name: idx_89673_fk_atsprofile_atsparameters_atsparameters1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89673_fk_atsprofile_atsparameters_atsparameters1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89673_fk_atsprofile_atsparameters_atsparameters1 ON profile_parameter USING btree (parameter);
 
 
 --
--- Name: idx_89673_fk_atsprofile_atsparameters_atsprofile1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89673_fk_atsprofile_atsparameters_atsprofile1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89673_fk_atsprofile_atsparameters_atsprofile1 ON profile_parameter USING btree (profile);
 
 
 --
--- Name: idx_89679_fk_regex_type1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89679_fk_regex_type1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89679_fk_regex_type1 ON regex USING btree (type);
 
 
 --
--- Name: idx_89679_re_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89679_re_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89679_re_id_unique ON regex USING btree (id);
 
 
 --
--- Name: idx_89690_fk_region_division1_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89690_fk_region_division1_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89690_fk_region_division1_idx ON region USING btree (division);
 
 
 --
--- Name: idx_89690_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89690_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89690_name_unique ON region USING btree (name);
 
 
 --
--- Name: idx_89709_fk_cdn2; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_fk_cdn2; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89709_fk_cdn2 ON server USING btree (cdn_id);
 
 
 --
--- Name: idx_89709_fk_contentserver_atsprofile1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_fk_contentserver_atsprofile1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89709_fk_contentserver_atsprofile1 ON server USING btree (profile);
 
 
 --
--- Name: idx_89709_fk_contentserver_contentserverstatus1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_fk_contentserver_contentserverstatus1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89709_fk_contentserver_contentserverstatus1 ON server USING btree (status);
 
 
 --
--- Name: idx_89709_fk_contentserver_contentservertype1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_fk_contentserver_contentservertype1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89709_fk_contentserver_contentservertype1 ON server USING btree (type);
 
 
 --
--- Name: idx_89709_fk_contentserver_phys_location1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_fk_contentserver_phys_location1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89709_fk_contentserver_phys_location1 ON server USING btree (phys_location);
 
 
 --
--- Name: idx_89709_fk_server_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_fk_server_cachegroup1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89709_fk_server_cachegroup1 ON server USING btree (cachegroup);
 
 
 --
--- Name: idx_89709_ip6_profile; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_ip6_profile; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89709_ip6_profile ON server USING btree (ip6_address, profile);
 
 
 --
--- Name: idx_89709_ip_profile; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_ip_profile; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89709_ip_profile ON server USING btree (ip_address, profile);
 
 
 --
--- Name: idx_89709_se_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89709_se_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89709_se_id_unique ON server USING btree (id);
 
 
 --
--- Name: idx_89722_fk_serverstatus_server1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89722_fk_serverstatus_server1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89722_fk_serverstatus_server1 ON servercheck USING btree (server);
 
 
 --
--- Name: idx_89722_server; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89722_server; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89722_server ON servercheck USING btree (server);
 
 
 --
--- Name: idx_89722_ses_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89722_ses_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89722_ses_id_unique ON servercheck USING btree (id);
 
 
 --
--- Name: idx_89729_combi_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89729_combi_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89729_combi_unique ON staticdnsentry USING btree (host, address, deliveryservice, cachegroup);
 
 
 --
--- Name: idx_89729_fk_staticdnsentry_cachegroup1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89729_fk_staticdnsentry_cachegroup1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89729_fk_staticdnsentry_cachegroup1 ON staticdnsentry USING btree (cachegroup);
 
 
 --
--- Name: idx_89729_fk_staticdnsentry_ds; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89729_fk_staticdnsentry_ds; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89729_fk_staticdnsentry_ds ON staticdnsentry USING btree (deliveryservice);
 
 
 --
--- Name: idx_89729_fk_staticdnsentry_type; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89729_fk_staticdnsentry_type; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89729_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
 
 
 --
--- Name: idx_89765_fk_user_1; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89765_fk_user_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89765_fk_user_1 ON tm_user USING btree (role);
 
 
 --
--- Name: idx_89765_tmuser_email_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89765_tmuser_email_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89765_tmuser_email_unique ON tm_user USING btree (email);
 
 
 --
--- Name: idx_89765_username_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89765_username_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89765_username_unique ON tm_user USING btree (username);
 
 
 --
--- Name: idx_89776_fk_ext_type_idx; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89776_fk_ext_type_idx; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE INDEX idx_89776_fk_ext_type_idx ON to_extension USING btree (type);
 
 
 --
--- Name: idx_89776_id_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89776_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE UNIQUE INDEX idx_89776_id_unique ON to_extension USING btree (id);
 
 
 --
--- Name: idx_89786_name_unique; Type: INDEX; Schema: public; Owner: to_user
+-- Name: idx_89786_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON asn FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cachegroup_parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_server FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_tmuser FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON division FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_deliveryservice FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_federation_resolver FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_resolver FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON federation_tmuser FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON hwinfo FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_agent FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_result FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_status FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON log FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON phys_location FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON profile FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON profile_parameter FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON regex FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON region FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON server FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON servercheck FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON staticdnsentry FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON status FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON steering_target FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tm_user FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: to_user
+-- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON type FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
--- Name: fk_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_result
@@ -2493,7 +2493,7 @@ ALTER TABLE ONLY job_result
 
 
 --
--- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_atsprofile_atsparameters_atsparameters1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY profile_parameter
@@ -2501,7 +2501,7 @@ ALTER TABLE ONLY profile_parameter
 
 
 --
--- Name: fk_atsprofile_atsparameters_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_atsprofile_atsparameters_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY profile_parameter
@@ -2509,7 +2509,7 @@ ALTER TABLE ONLY profile_parameter
 
 
 --
--- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cdn1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice
@@ -2517,7 +2517,7 @@ ALTER TABLE ONLY deliveryservice
 
 
 --
--- Name: fk_cdn2; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cdn2; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -2525,7 +2525,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: fk_cg_1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cg_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup
@@ -2533,7 +2533,7 @@ ALTER TABLE ONLY cachegroup
 
 
 --
--- Name: fk_cg_param_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cg_param_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup_parameter
@@ -2541,7 +2541,7 @@ ALTER TABLE ONLY cachegroup_parameter
 
 
 --
--- Name: fk_cg_secondary; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cg_secondary; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup
@@ -2549,7 +2549,7 @@ ALTER TABLE ONLY cachegroup
 
 
 --
--- Name: fk_cg_type1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cg_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup
@@ -2557,7 +2557,7 @@ ALTER TABLE ONLY cachegroup
 
 
 --
--- Name: fk_contentserver_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_contentserver_atsprofile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -2565,7 +2565,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: fk_contentserver_contentserverstatus1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_contentserver_contentserverstatus1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -2573,7 +2573,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: fk_contentserver_contentservertype1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_contentserver_contentservertype1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -2581,7 +2581,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: fk_contentserver_phys_location1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_contentserver_phys_location1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -2589,7 +2589,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: fk_cran_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_cran_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY asn
@@ -2597,7 +2597,7 @@ ALTER TABLE ONLY asn
 
 
 --
--- Name: fk_deliveryservice_profile1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_deliveryservice_profile1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice
@@ -2605,7 +2605,7 @@ ALTER TABLE ONLY deliveryservice
 
 
 --
--- Name: fk_deliveryservice_type1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_deliveryservice_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice
@@ -2613,7 +2613,7 @@ ALTER TABLE ONLY deliveryservice
 
 
 --
--- Name: fk_ds_to_cs_contentserver1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_ds_to_cs_contentserver1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_server
@@ -2621,7 +2621,7 @@ ALTER TABLE ONLY deliveryservice_server
 
 
 --
--- Name: fk_ds_to_cs_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_ds_to_cs_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_server
@@ -2629,7 +2629,7 @@ ALTER TABLE ONLY deliveryservice_server
 
 
 --
--- Name: fk_ds_to_regex_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_ds_to_regex_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_regex
@@ -2637,7 +2637,7 @@ ALTER TABLE ONLY deliveryservice_regex
 
 
 --
--- Name: fk_ds_to_regex_regex1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_ds_to_regex_regex1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_regex
@@ -2645,7 +2645,7 @@ ALTER TABLE ONLY deliveryservice_regex
 
 
 --
--- Name: fk_ext_type; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_ext_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY to_extension
@@ -2653,7 +2653,7 @@ ALTER TABLE ONLY to_extension
 
 
 --
--- Name: fk_federation_federation_resolver1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_federation_resolver1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_federation_resolver
@@ -2661,7 +2661,7 @@ ALTER TABLE ONLY federation_federation_resolver
 
 
 --
--- Name: fk_federation_mapping_type; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_mapping_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_resolver
@@ -2669,7 +2669,7 @@ ALTER TABLE ONLY federation_resolver
 
 
 --
--- Name: fk_federation_resolver_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_resolver_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_federation_resolver
@@ -2677,7 +2677,7 @@ ALTER TABLE ONLY federation_federation_resolver
 
 
 --
--- Name: fk_federation_tmuser_federation; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_tmuser_federation; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_tmuser
@@ -2685,7 +2685,7 @@ ALTER TABLE ONLY federation_tmuser
 
 
 --
--- Name: fk_federation_tmuser_role; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_tmuser_role; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_tmuser
@@ -2693,7 +2693,7 @@ ALTER TABLE ONLY federation_tmuser
 
 
 --
--- Name: fk_federation_tmuser_tmuser; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_tmuser_tmuser; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_tmuser
@@ -2701,7 +2701,7 @@ ALTER TABLE ONLY federation_tmuser
 
 
 --
--- Name: fk_federation_to_ds1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_to_ds1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_deliveryservice
@@ -2709,7 +2709,7 @@ ALTER TABLE ONLY federation_deliveryservice
 
 
 --
--- Name: fk_federation_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_federation_to_fed1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY federation_deliveryservice
@@ -2717,7 +2717,7 @@ ALTER TABLE ONLY federation_deliveryservice
 
 
 --
--- Name: fk_hwinfo1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_hwinfo1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY hwinfo
@@ -2725,7 +2725,7 @@ ALTER TABLE ONLY hwinfo
 
 
 --
--- Name: fk_job_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_job_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job
@@ -2733,7 +2733,7 @@ ALTER TABLE ONLY job
 
 
 --
--- Name: fk_job_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_job_deliveryservice1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job
@@ -2741,7 +2741,7 @@ ALTER TABLE ONLY job
 
 
 --
--- Name: fk_job_id1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_job_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job_result
@@ -2749,7 +2749,7 @@ ALTER TABLE ONLY job_result
 
 
 --
--- Name: fk_job_status_id1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_job_status_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job
@@ -2757,7 +2757,7 @@ ALTER TABLE ONLY job
 
 
 --
--- Name: fk_job_user_id1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_job_user_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY job
@@ -2765,7 +2765,7 @@ ALTER TABLE ONLY job
 
 
 --
--- Name: fk_log_1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_log_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY log
@@ -2773,7 +2773,7 @@ ALTER TABLE ONLY log
 
 
 --
--- Name: fk_parameter; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_parameter; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cachegroup_parameter
@@ -2781,7 +2781,7 @@ ALTER TABLE ONLY cachegroup_parameter
 
 
 --
--- Name: fk_phys_location_region; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_phys_location_region; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY phys_location
@@ -2789,7 +2789,7 @@ ALTER TABLE ONLY phys_location
 
 
 --
--- Name: fk_regex_type1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_regex_type1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY regex
@@ -2797,7 +2797,7 @@ ALTER TABLE ONLY regex
 
 
 --
--- Name: fk_region_division1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_region_division1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY region
@@ -2805,7 +2805,7 @@ ALTER TABLE ONLY region
 
 
 --
--- Name: fk_server_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_server_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server
@@ -2813,7 +2813,7 @@ ALTER TABLE ONLY server
 
 
 --
--- Name: fk_serverstatus_server1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_serverstatus_server1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY servercheck
@@ -2821,7 +2821,7 @@ ALTER TABLE ONLY servercheck
 
 
 --
--- Name: fk_staticdnsentry_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_staticdnsentry_cachegroup1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY staticdnsentry
@@ -2829,7 +2829,7 @@ ALTER TABLE ONLY staticdnsentry
 
 
 --
--- Name: fk_staticdnsentry_ds; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_staticdnsentry_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY staticdnsentry
@@ -2837,7 +2837,7 @@ ALTER TABLE ONLY staticdnsentry
 
 
 --
--- Name: fk_staticdnsentry_type; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_staticdnsentry_type; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY staticdnsentry
@@ -2845,7 +2845,7 @@ ALTER TABLE ONLY staticdnsentry
 
 
 --
--- Name: fk_steering_target_delivery_service; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_steering_target_delivery_service; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY steering_target
@@ -2853,7 +2853,7 @@ ALTER TABLE ONLY steering_target
 
 
 --
--- Name: fk_steering_target_target; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_steering_target_target; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY steering_target
@@ -2861,7 +2861,7 @@ ALTER TABLE ONLY steering_target
 
 
 --
--- Name: fk_tm_user_ds; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_tm_user_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_tmuser
@@ -2869,7 +2869,7 @@ ALTER TABLE ONLY deliveryservice_tmuser
 
 
 --
--- Name: fk_tm_user_id; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_tm_user_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY deliveryservice_tmuser
@@ -2877,7 +2877,7 @@ ALTER TABLE ONLY deliveryservice_tmuser
 
 
 --
--- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: to_user
+-- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY tm_user
@@ -2885,12 +2885,12 @@ ALTER TABLE ONLY tm_user
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: to_user
+-- Name: public; Type: ACL; Schema: -; Owner: traffic_ops
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM to_user;
-GRANT ALL ON SCHEMA public TO to_user;
+REVOKE ALL ON SCHEMA public FROM traffic_ops;
+GRANT ALL ON SCHEMA public TO traffic_ops;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
