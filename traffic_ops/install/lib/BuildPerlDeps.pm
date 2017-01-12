@@ -17,6 +17,9 @@ use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_
 
 package BuildPerlDeps;
 
+use strict;
+use warnings;
+
 use InstallUtils qw{ :all };
 
 use base qw{ Exporter };
@@ -24,7 +27,8 @@ our @EXPORT_OK = qw{ build };
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 sub build {
-    my $opt_i = shift;
+    my $opt_i       = shift;
+    my $cpanLogFile = shift;
 
     my @dependencies = ( "expat-devel", "mod_ssl", "mkisofs", "libpcap", "libpcap-devel", "libcurl", "libcurl-devel", "mysql-server", "mysql-devel", "openssl", "openssl-devel", "cpan", "gcc", "make", "pkgconfig", "automake", "autoconf", "libtool", "gettext", "libidn-devel" );
 
@@ -46,7 +50,7 @@ EOF
         errorOut("You must run this script as the root user");
     }
 
-    logger( $msg, "info" );
+    InstallUtils::logger( $msg, "info" );
 
     chdir("/opt/traffic_ops/app");
 
@@ -55,43 +59,45 @@ EOF
             errorOut("You must install 'yum'");
         }
 
-        logger( "Installing dependencies", "info" );
-        $result = execCommand( "/usr/bin/yum", "-y", "install", @dependencies );
+        InstallUtils::logger( "Installing dependencies", "info" );
+        $result = InstallUtils::execCommand( "/usr/bin/yum", "-y", "install", @dependencies );
         if ( $result != 0 ) {
             errorOut("Dependency installation failed, look through the output and correct the problem");
         }
-        logger( "Building perl modules", "info" );
+        InstallUtils::logger( "Building perl modules", "info" );
 
-        $result = execCommand( "/usr/bin/cpan", "pi_custom_log=" . $::cpanLogFile, "-if", "YAML" );
+        $result = InstallUtils::execCommand( "/usr/bin/cpan", "pi_custom_log=" . $cpanLogFile, "-if", "YAML" );
         if ( $result != 0 ) {
             errorOut("Failed to install YAML, look through the output and correct the problem");
         }
 
-        $result = execCommand( "/usr/bin/cpan", "pi_custom_log=" . $::cpanLogFile, "-if", "MIYAGAWA/Carton-v1.0.15.tar.gz" );
+        $result = InstallUtils::execCommand( "/usr/bin/cpan", "pi_custom_log=" . $cpanLogFile, "-if", "MIYAGAWA/Carton-v1.0.15.tar.gz" );
         if ( $result != 0 ) {
             errorOut("Failed to install Carton, look through the output and correct the problem");
         }
     }
 
-    $result = execCommand( "/usr/local/bin/carton", "install" );
+    $result = InstallUtils::execCommand( "/usr/local/bin/carton", "install" );
     if ( $result != 0 ) {
         errorOut("Failure to build required perl modules, check the output and correct the problem");
     }
 
     if ( !-s "/opt/traffic_ops/lib/perl5" ) {
-        logger( "Linking perl libraries...", "info" );
+        InstallUtils::logger( "Linking perl libraries...", "info" );
         if ( !-d "/opt/traffic_ops/lib" ) {
             mkdir("/opt/traffic_ops/lib");
         }
         symlink( "/opt/traffic_ops/app/local/lib/perl5", "/opt/traffic_ops/lib/perl5" );
-        execCommand( "/bin/chown", "-R", "trafops:trafops", "/opt/traffic_ops/lib" );
+        InstallUtils::execCommand( "/bin/chown", "-R", "trafops:trafops", "/opt/traffic_ops/lib" );
     }
-    logger( "Installing perl scripts", "info" );
+    InstallUtils::logger( "Installing perl scripts", "info" );
     chdir("/opt/traffic_ops/app/local/bin");
-    my $rc = execCommand( "/bin/cp", "-R", ".", "/opt/traffic_ops/app/bin" );
+    my $rc = InstallUtils::execCommand( "/bin/cp", "-R", ".", "/opt/traffic_ops/app/bin" );
     if ( $rc != 0 ) {
-        logger( "Failed to copy perl scripts to /opt/traffic_ops/app/bin", "error" );
+        InstallUtils::logger( "Failed to copy perl scripts to /opt/traffic_ops/app/bin", "error" );
     }
 
     return 0;
 }
+
+1;

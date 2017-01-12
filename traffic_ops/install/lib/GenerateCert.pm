@@ -97,7 +97,7 @@ sub writeCdn_conf {
 # Returns the OpenSSL exit code.
 sub execOpenssl {
     my ( $description, @args ) = @_;
-    logger( $description, "info" );
+    InstallUtils::logger( $description, "info" );
     my $result = 1;
     while ( $result != 0 ) {
         $result = InstallUtils::execCommand( "openssl", @args );
@@ -120,12 +120,12 @@ sub createCert {
     my $opensslconf = shift;
 
     if ( !defined $opensslconf ) {
-        logger( "No input file - running openssl configuration in interactive mode", "info" );
+        InstallUtils::logger( "No input file - running openssl configuration in interactive mode", "info" );
     }
 
-    logger( $msg, "info" );
+    InstallUtils::logger( $msg, "info" );
 
-    logger( "Postinstall SSL Certificate Creation", "info" );
+    InstallUtils::logger( "Postinstall SSL Certificate Creation", "info" );
 
     my $params;
     my $passphrase;
@@ -145,7 +145,7 @@ sub createCert {
     if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", "pass:$passphrase", "1024" ) != 0 ) {
         exit 1;
     }
-    logger( "The server key has been generated", "info" );
+    InstallUtils::logger( "The server key has been generated", "info" );
 
     if ($params) {
         if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", "pass:$passphrase", "-subj", $params ) != 0 ) {
@@ -158,21 +158,21 @@ sub createCert {
         }
     }
 
-    logger( "The Certificate Signing Request has been generated", "info" );
+    InstallUtils::logger( "The Certificate Signing Request has been generated", "info" );
 
     InstallUtils::execCommand( "/bin/mv", "server.key", "server.key.orig" );
 
     if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", "pass:$passphrase" ) != 0 ) {
         exit 1;
     }
-    logger( "The pass phrase has been removed from the server key", "info" );
+    InstallUtils::logger( "The pass phrase has been removed from the server key", "info" );
 
     if ( execOpenssl( "Generating a Self-signed certificate", "x509", "-req", "-days", "365", "-in", "server.csr", "-signkey", "server.key", "-out", "server.crt" ) != 0 ) {
         exit 1;
     }
-    logger( "A server key and self signed certificate has been generated", "info" );
+    InstallUtils::logger( "A server key and self signed certificate has been generated", "info" );
 
-    logger( "Installing the server key and server certificate", "info" );
+    InstallUtils::logger( "Installing the server key and server certificate", "info" );
 
     my $result = InstallUtils::execCommand( "/bin/cp", "server.key", "$key" );
     if ( $result != 0 ) {
@@ -185,8 +185,8 @@ sub createCert {
         errorOut("Failed to install the private server key");
     }
 
-    logger( "The private key has been installed",     "info" );
-    logger( "Installing the self signed certificate", "info" );
+    InstallUtils::logger( "The private key has been installed",     "info" );
+    InstallUtils::logger( "Installing the self signed certificate", "info" );
 
     $result = InstallUtils::execCommand( "/bin/cp", "server.crt", "$cert" );
 
@@ -201,7 +201,7 @@ sub createCert {
         errorOut("Failed to install the self signed certificate");
     }
 
-    logger( "Saving the self signed csr", "info" );
+    InstallUtils::logger( "Saving the self signed csr", "info" );
     $result = InstallUtils::execCommand( "/bin/cp", "server.csr", "$csr" );
 
     if ( $result != 0 ) {
@@ -223,7 +223,7 @@ sub createCert {
 
 EOF
 
-    logger( $msg, "info" );
+    InstallUtils::logger( $msg, "info" );
 
     return 0;
 }
