@@ -108,7 +108,7 @@ sub delete {
 	my $key     = shift || confess("Supply a key");
 	my $key_uri = $self->get_key_uri( $bucket, $key );
 	my $key_ctx = $self->get_url($key_uri);
-	return $ua->delete( $self->get_url($key_ctx) );
+	return $ua->delete( $self->$key_ctx );
 }
 
 sub get {
