@@ -19,4 +19,6 @@ MAINTAINER Dan Kirkwood
 # database are possible.
 RUN echo "host all  all    0.0.0.0/0  md5" >> $PGDATA/pg_hba.conf
 RUN echo "listen_addresses='*'" >> $PGDATA/postgresql.conf
+COPY create_tables.sql /docker-entrypoint-initdb.d/.
+
 EXPOSE "5432:5432"
