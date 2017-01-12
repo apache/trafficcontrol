@@ -93,6 +93,7 @@ type ResultStatVal struct {
 }
 
 // TM1Time provides a custom MarshalJSON func to serialise a time.Time into milliseconds since the epoch, as served in Traffic Monitor 1.x APIs
+// TODO move somewhere more generic (enum?)
 type TM1Time time.Time
 
 func (t *TM1Time) MarshalJSON() ([]byte, error) {
