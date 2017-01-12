@@ -39,6 +39,7 @@ func main() {
 	config.Flags("")
 	var replication int
 	flag.IntVar(&replication, "replication", 3, "The number of nodes in the cluster")
+	flag.Parse()
 
 	fmt.Printf("creating datbases for influxUrl: %s with a replication of %d using user %s\n", config.URL, replication, config.User)
 	client, err := config.NewHTTPClient()
