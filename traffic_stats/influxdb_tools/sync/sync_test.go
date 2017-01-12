@@ -24,165 +24,160 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_stats/assert"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/influxdata/influxdb/models"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSync(t *testing.T) {
-	Convey("getDailyStats should work as expected", t, func() {
-		Convey("getDailyStats should work with no results passed", func() {
-			dailyStatsMap := getDailyStats(nil)
-			So(dailyStatsMap, ShouldNotBeNil)
-			So(dailyStatsMap, ShouldBeEmpty)
-		})
-		Convey("getDailyStats should work with empty results passed", func() {
-			results := []influx.Result{}
-			dailyStatsMap := getDailyStats(results)
-			So(dailyStatsMap, ShouldNotBeNil)
-			So(dailyStatsMap, ShouldBeEmpty)
-		})
-		Convey("getDailyStats should work as expected on a slice of results", func() {
-			results := []influx.Result{
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateDailyValues(0),
-						},
-					},
+func TestGetDailyStats(t *testing.T) {
+	// Passing a nil result slice results in an empty, non-nil map
+	dailyStatsMap := getDailyStats(nil)
+	assert.NotNil(t, dailyStatsMap)
+	assert.Empty(t, dailyStatsMap)
+
+	// Passing an empty result slice results in an empty, non-nil map
+	results := []influx.Result{}
+	dailyStatsMap = getDailyStats(results)
+	assert.NotNil(t, dailyStatsMap)
+	assert.Empty(t, dailyStatsMap)
+
+	// Passing a non-empty result slice should behave as expected
+	results = []influx.Result{
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateDailyValues(0),
 				},
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateDailyValues(1),
-						},
-						models.Row{
-							Values: generateDailyValues(2),
-						},
-					},
+			},
+		},
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateDailyValues(1),
 				},
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateDailyValues(3),
-						},
-						models.Row{
-							Values: generateDailyValues(4),
-						},
-						models.Row{
-							Values: generateDailyValues(5),
-						},
-					},
+				models.Row{
+					Values: generateDailyValues(2),
 				},
-			}
-			dailyStatsMap := getDailyStats(results)
-			So(dailyStatsMap, ShouldNotBeNil)
-			So(dailyStatsMap, ShouldNotBeEmpty)
-			So(len(dailyStatsMap), ShouldEqual, 6) // we get one dailyStats object per Values entry
-		})
-	})
-	Convey("getDeliveryServiceStats should work as expected", t, func() {
-		Convey("getDeliveryServiceStats should work with no results passed", func() {
-			getDeliveryServiceStatsMap := getDeliveryServiceStats(nil)
-			So(getDeliveryServiceStatsMap, ShouldNotBeNil)
-			So(getDeliveryServiceStatsMap, ShouldBeEmpty)
-		})
-		Convey("getDeliveryServiceStats should work with empty results passed", func() {
-			results := []influx.Result{}
-			getDeliveryServiceStatsMap := getDeliveryServiceStats(results)
-			So(getDeliveryServiceStatsMap, ShouldNotBeNil)
-			So(getDeliveryServiceStatsMap, ShouldBeEmpty)
-		})
-		Convey("getDeliveryServiceStats should work as expected on a slice of results", func() {
-			results := []influx.Result{
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateDeliveryServiceValues(0),
-						},
-					},
+			},
+		},
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateDailyValues(3),
 				},
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateDeliveryServiceValues(1),
-						},
-						models.Row{
-							Values: generateDeliveryServiceValues(2),
-						},
-					},
+				models.Row{
+					Values: generateDailyValues(4),
 				},
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateDeliveryServiceValues(3),
-						},
-						models.Row{
-							Values: generateDeliveryServiceValues(4),
-						},
-						models.Row{
-							Values: generateDeliveryServiceValues(5),
-						},
-					},
+				models.Row{
+					Values: generateDailyValues(5),
 				},
-			}
-			getDeliveryServiceStatsMap := getDeliveryServiceStats(results)
-			So(getDeliveryServiceStatsMap, ShouldNotBeNil)
-			So(getDeliveryServiceStatsMap, ShouldNotBeEmpty)
-			So(len(getDeliveryServiceStatsMap), ShouldEqual, 6) // we get one dailyStats object per Values entry
-		})
-	})
-	Convey("getCacheStats should work as expected", t, func() {
-		Convey("getCacheStats should work with no results passed", func() {
-			getCacheStatsMap := getCacheStats(nil)
-			So(getCacheStatsMap, ShouldNotBeNil)
-			So(getCacheStatsMap, ShouldBeEmpty)
-		})
-		Convey("getCacheStats should work with empty results passed", func() {
-			results := []influx.Result{}
-			getCacheStatsMap := getCacheStats(results)
-			So(getCacheStatsMap, ShouldNotBeNil)
-			So(getCacheStatsMap, ShouldBeEmpty)
-		})
-		Convey("getCacheStats should work as expected on a slice of results", func() {
-			results := []influx.Result{
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateCacheValues(0),
-						},
-					},
+			},
+		},
+	}
+	dailyStatsMap = getDailyStats(results)
+	assert.NotNil(t, dailyStatsMap)
+	assert.NotEmpty(t, dailyStatsMap)
+	assert.Equal(t, len(dailyStatsMap), 6) // we get one dailyStats object per Values entry
+}
+
+func TestGetDeliveryServicesStats(t *testing.T) {
+	// Passing a nil result slice results in an empty, non-nil map
+	getDeliveryServiceStatsMap := getDeliveryServiceStats(nil)
+	assert.NotNil(t, getDeliveryServiceStatsMap)
+	assert.Empty(t, getDeliveryServiceStatsMap)
+
+	// Passing an empty result slice results in an empty, non-nil map
+	results := []influx.Result{}
+	getDeliveryServiceStatsMap = getDeliveryServiceStats(results)
+	assert.NotNil(t, getDeliveryServiceStatsMap)
+	assert.Empty(t, getDeliveryServiceStatsMap)
+
+	results = []influx.Result{
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateDeliveryServiceValues(0),
 				},
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateCacheValues(1),
-						},
-						models.Row{
-							Values: generateCacheValues(2),
-						},
-					},
+			},
+		},
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateDeliveryServiceValues(1),
 				},
-				influx.Result{
-					Series: []models.Row{
-						models.Row{
-							Values: generateCacheValues(3),
-						},
-						models.Row{
-							Values: generateCacheValues(4),
-						},
-						models.Row{
-							Values: generateCacheValues(5),
-						},
-					},
+				models.Row{
+					Values: generateDeliveryServiceValues(2),
 				},
-			}
-			getCacheStatsMap := getCacheStats(results)
-			So(getCacheStatsMap, ShouldNotBeNil)
-			So(getCacheStatsMap, ShouldNotBeEmpty)
-			So(len(getCacheStatsMap), ShouldEqual, 6) // we get one dailyStats object per Values entry
-		})
-	})
+			},
+		},
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateDeliveryServiceValues(3),
+				},
+				models.Row{
+					Values: generateDeliveryServiceValues(4),
+				},
+				models.Row{
+					Values: generateDeliveryServiceValues(5),
+				},
+			},
+		},
+	}
+	getDeliveryServiceStatsMap = getDeliveryServiceStats(results)
+	assert.NotNil(t, getDeliveryServiceStatsMap)
+	assert.NotEmpty(t, getDeliveryServiceStatsMap)
+	assert.Equal(t, len(getDeliveryServiceStatsMap), 6) // we get one deliveryServiceStats object per Values entry
+}
+
+func TestGetCacheStats(t *testing.T) {
+	// Passing a nil result slice results in an empty, non-nil map
+	getCacheStatsMap := getCacheStats(nil)
+	assert.NotNil(t, getCacheStatsMap)
+	assert.Empty(t, getCacheStatsMap)
+
+	// Passing an empty result slice results in an empty, non-nil map
+	results := []influx.Result{}
+	getCacheStatsMap = getCacheStats(results)
+	assert.NotNil(t, getCacheStatsMap)
+	assert.Empty(t, getCacheStatsMap)
+
+	results = []influx.Result{
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateCacheValues(0),
+				},
+			},
+		},
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateCacheValues(1),
+				},
+				models.Row{
+					Values: generateCacheValues(2),
+				},
+			},
+		},
+		influx.Result{
+			Series: []models.Row{
+				models.Row{
+					Values: generateCacheValues(3),
+				},
+				models.Row{
+					Values: generateCacheValues(4),
+				},
+				models.Row{
+					Values: generateCacheValues(5),
+				},
+			},
+		},
+	}
+	getCacheStatsMap = getCacheStats(results)
+	assert.NotNil(t, getCacheStatsMap)
+	assert.NotEmpty(t, getCacheStatsMap)
+	assert.Equal(t, len(getCacheStatsMap), 6) // we get one cacheStats object per Values entry
 }
 
 func generateDailyValues(i int) [][]interface{} {
