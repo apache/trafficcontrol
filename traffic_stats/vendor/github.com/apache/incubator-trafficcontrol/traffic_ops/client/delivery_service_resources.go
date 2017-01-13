@@ -18,8 +18,19 @@ package client
 
 // GetDeliveryServiceResponse ...
 type GetDeliveryServiceResponse struct {
-	Version  string            `json:"version"`
 	Response []DeliveryService `json:"response"`
+}
+
+// CreateDeliveryServiceResponse ...
+type CreateDeliveryServiceResponse struct {
+	Response []DeliveryService      `json:"response"`
+	Alerts   []DeliveryServiceAlert `json:"alerts"`
+}
+
+// UpdateDeliveryServiceResponse ...
+type UpdateDeliveryServiceResponse struct {
+	Response []DeliveryService      `json:"response"`
+	Alerts   []DeliveryServiceAlert `json:"alerts"`
 }
 
 // DeliveryServiceResponse ...
@@ -35,50 +46,55 @@ type DeleteDeliveryServiceResponse struct {
 
 // DeliveryService ...
 type DeliveryService struct {
-	ID                   string                 `json:"id"`
+	ID                   int                    `json:"id"`
 	XMLID                string                 `json:"xmlId"`
 	Active               bool                   `json:"active"`
-	DSCP                 string                 `json:"dscp"`
+	DSCP                 int                    `json:"dscp"`
 	Signed               bool                   `json:"signed"`
-	QStringIgnore        string                 `json:"qstringIgnore"`
-	GeoLimit             string                 `json:"geoLimit"`
-	GeoProvider          string                 `json:"geoProvider"`
+	QStringIgnore        int                    `json:"qstringIgnore"`
+	GeoLimit             int                    `json:"geoLimit"`
+	GeoProvider          int                    `json:"geoProvider"`
 	HTTPBypassFQDN       string                 `json:"httpBypassFqdn"`
 	DNSBypassIP          string                 `json:"dnsBypassIp"`
 	DNSBypassIP6         string                 `json:"dnsBypassIp6"`
 	DNSBypassCname       string                 `json:"dnsBypassCname"`
-	DNSBypassTTL         string                 `json:"dnsBypassTtl"`
+	DNSBypassTTL         int                    `json:"dnsBypassTtl"`
 	OrgServerFQDN        string                 `json:"orgServerFqdn"`
+	TypeID               int                    `json:"typeId"`
 	Type                 string                 `json:"type"`
+	ProfileID            int                    `json:"profileId"`
 	ProfileName          string                 `json:"profileName"`
 	ProfileDesc          string                 `json:"profileDescription"`
 	CDNName              string                 `json:"cdnName"`
-	CCRDNSTTL            string                 `json:"ccrDnsTtl"`
-	GlobalMaxMBPS        string                 `json:"globalMaxMbps"`
-	GlobalMaxTPS         string                 `json:"globalMaxTps"`
+	CDNID                int                    `json:"cdnId"`
+	CCRDNSTTL            int                    `json:"ccrDnsTtl"`
+	GlobalMaxMBPS        int                    `json:"globalMaxMbps"`
+	GlobalMaxTPS         int                    `json:"globalMaxTps"`
 	LongDesc             string                 `json:"longDesc"`
 	LongDesc1            string                 `json:"longDesc1"`
 	LongDesc2            string                 `json:"longDesc2"`
-	MaxDNSAnswers        string                 `json:"maxDnsAnswers"`
+	MaxDNSAnswers        int                    `json:"maxDnsAnswers"`
 	InfoURL              string                 `json:"infoUrl"`
-	MissLat              string                 `json:"missLat"`
-	MissLong             string                 `json:"missLong"`
+	MissLat              float64                `json:"missLat"`
+	MissLong             float64                `json:"missLong"`
 	CheckPath            string                 `json:"checkPath"`
 	LastUpdated          string                 `json:"lastUpdated"`
-	Protocol             string                 `json:"protocol"`
+	Protocol             int                    `json:"protocol"`
 	IPV6RoutingEnabled   bool                   `json:"ipv6RoutingEnabled"`
-	RangeRequestHandling string                 `json:"rangeRequestHandling"`
-	HeaderRewrite        string                 `json:"headerRewrite"`
+	RangeRequestHandling int                    `json:"rangeRequestHandling"`
 	EdgeHeaderRewrite    string                 `json:"edgeHeaderRewrite"`
 	MidHeaderRewrite     string                 `json:"midHeaderRewrite"`
 	TRResponseHeaders    string                 `json:"trResponseHeaders"`
 	RegexRemap           string                 `json:"regexRemap"`
 	CacheURL             string                 `json:"cacheurl"`
 	RemapText            string                 `json:"remapText"`
-	MultiSiteOrigin      string                 `json:"multiSiteOrigin"`
+	MultiSiteOrigin      bool                   `json:"multiSiteOrigin"`
 	DisplayName          string                 `json:"displayName"`
-	InitialDispersion    string                 `json:"initialDispersion"`
+	InitialDispersion    int                    `json:"initialDispersion"`
 	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
+	RegionalGeoBlocking  bool                   `json:"regionalGeoBlocking"`
+	LogsEnabled          bool                   `json:"logsEnabled"`
+	ExampleURLs          []string               `json:"exampleURLs"`
 }
 
 // DeliveryServiceMatch ...
@@ -172,7 +188,7 @@ type DeliveryServiceRouting struct {
 // DeliveryServiceServerResponse ...
 type DeliveryServiceServerResponse struct {
 	Response []DeliveryServiceServer `json:"response"`
-	Page     int                     `json:"page"`
+	Size     int                     `json:"size"`
 	OrderBy  string                  `json:"orderby"`
 	Limit    int                     `json:"limit"`
 }
@@ -180,8 +196,8 @@ type DeliveryServiceServerResponse struct {
 // DeliveryServiceServer ...
 type DeliveryServiceServer struct {
 	LastUpdated     string `json:"lastUpdated"`
-	Server          string `json:"server"`
-	DeliveryService string `json:"deliveryService"`
+	Server          int    `json:"server"`
+	DeliveryService int    `json:"deliveryService"`
 }
 
 // DeliveryServiceSSLKeysResponse ...

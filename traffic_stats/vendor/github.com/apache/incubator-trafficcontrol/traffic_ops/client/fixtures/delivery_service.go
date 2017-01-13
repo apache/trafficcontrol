@@ -22,30 +22,30 @@ func DeliveryServices() *client.GetDeliveryServiceResponse {
 	return &client.GetDeliveryServiceResponse{
 		Response: []client.DeliveryService{
 			client.DeliveryService{
-				ID:                   "001",
+				ID:                   001,
 				XMLID:                "ds-test",
 				Active:               true,
-				DSCP:                 "40",
+				DSCP:                 40,
 				Signed:               false,
-				QStringIgnore:        "1",
-				GeoLimit:             "0",
-				GeoProvider:          "0",
-				DNSBypassTTL:         "30",
+				QStringIgnore:        1,
+				GeoLimit:             0,
+				GeoProvider:          0,
+				DNSBypassTTL:         30,
 				Type:                 "HTTP",
 				ProfileName:          "ds-123",
 				CDNName:              "test-cdn",
-				CCRDNSTTL:            "3600",
-				GlobalMaxTPS:         "0",
-				MaxDNSAnswers:        "0",
-				MissLat:              "44.654321",
-				MissLong:             "-99.123456",
-				Protocol:             "0",
+				CCRDNSTTL:            3600,
+				GlobalMaxTPS:         0,
+				MaxDNSAnswers:        0,
+				MissLat:              44.654321,
+				MissLong:             -99.123456,
+				Protocol:             0,
 				IPV6RoutingEnabled:   true,
-				RangeRequestHandling: "0",
+				RangeRequestHandling: 0,
 				TRResponseHeaders:    "Access-Control-Allow-Origin: *",
-				MultiSiteOrigin:      "0",
+				MultiSiteOrigin:      false,
 				DisplayName:          "Testing",
-				InitialDispersion:    "1",
+				InitialDispersion:    1,
 			},
 		},
 	}
@@ -64,6 +64,22 @@ func alerts() []client.DeliveryServiceAlert {
 func DeliveryService() *client.DeliveryServiceResponse {
 	return &client.DeliveryServiceResponse{
 		Response: DeliveryServices().Response[0],
+		Alerts:   alerts(),
+	}
+}
+
+// CreateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
+func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
+	return &client.CreateDeliveryServiceResponse{
+		Response: DeliveryServices().Response,
+		Alerts:   alerts(),
+	}
+}
+
+// UpdateDeliveryService returns a default UpdateDeliveryServiceResponse to be used for testing.
+func UpdateDeliveryService() *client.UpdateDeliveryServiceResponse {
+	return &client.UpdateDeliveryServiceResponse{
+		Response: DeliveryServices().Response,
 		Alerts:   alerts(),
 	}
 }
@@ -155,13 +171,13 @@ func DeliveryServiceRouting() *client.DeliveryServiceRoutingResponse {
 func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
 	dss := client.DeliveryServiceServer{
 		LastUpdated:     "lastUpdated",
-		Server:          "someServer",
-		DeliveryService: "someService",
+		Server:          1,
+		DeliveryService: 1,
 	}
 
 	return &client.DeliveryServiceServerResponse{
 		Response: []client.DeliveryServiceServer{dss},
-		Page:     1,
+		Size:     1,
 		OrderBy:  "foo",
 		Limit:    1,
 	}
