@@ -24,7 +24,6 @@ import (
 
 // TMConfigResponse ...
 type TMConfigResponse struct {
-	Version  string               `json:"version"`
 	Response TrafficMonitorConfig `json:"response"`
 }
 

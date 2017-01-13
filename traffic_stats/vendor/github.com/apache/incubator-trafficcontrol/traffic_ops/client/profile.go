@@ -19,12 +19,12 @@ import "encoding/json"
 
 // ProfileResponse ...
 type ProfileResponse struct {
-	Version  string    `json:"version"`
 	Response []Profile `json:"response"`
 }
 
 // Profile ...
 type Profile struct {
+	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	LastUpdated string `json:"lastUpdated"`

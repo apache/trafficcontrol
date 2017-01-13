@@ -22,6 +22,7 @@ func CDNs() *client.CDNResponse {
 	return &client.CDNResponse{
 		Response: []client.CDN{
 			client.CDN{
+				ID:          1,
 				Name:        "CDN-1",
 				LastUpdated: "2016-03-22 17:00:30",
 			},

@@ -19,7 +19,6 @@ import "encoding/json"
 
 // UserResponse ...
 type UserResponse struct {
-	Version  string `json:"version"`
 	Response []User `json:"response"`
 }
 
@@ -27,10 +26,11 @@ type UserResponse struct {
 type User struct {
 	Username     string `json:"username,omitempty"`
 	PublicSSHKey string `json:"publicSshKey,omitempty"`
-	Role         string `json:"role,omitempty"`
+	Role         int    `json:"role,omitempty"`
 	RoleName     string `json:"rolename,omitempty"`
-	UID          string `json:"uid,omitempty"`
-	GID          string `json:"gid,omitempty"`
+	ID           int    `json:"id,omitempty"`
+	UID          int    `json:"uid,omitempty"`
+	GID          int    `json:"gid,omitempty"`
 	Company      string `json:"company,omitempty"`
 	Email        string `json:"email,omitempty"`
 	FullName     string `json:"fullName,omitempty"`
@@ -48,7 +48,7 @@ func (to *Session) Users() ([]User, error) {
 	resp.Body.Close()
 
 	var data UserResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data.Response); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
 
