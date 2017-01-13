@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-FROM dimitri/pgloader:ccl.latest
+FROM dimitri/pgloader:latest
 MAINTAINER Dan Kirkwood <dangogh@apache.org>
 
 # install nc to check that postgres and mysql are ready..

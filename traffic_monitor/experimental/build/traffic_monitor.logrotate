@@ -1,0 +1,9 @@
+/opt/traffic_monitor/var/log/traffic_monitor.log {
+        compress
+        maxage 30
+        missingok
+        nomail
+        size 10M
+        rotate 5
+        copytruncate
+}

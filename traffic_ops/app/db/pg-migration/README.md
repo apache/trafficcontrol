@@ -10,7 +10,9 @@
 
 * Provide URL, username password for existing mysql install of `traffic_ops`:
 
-  * `docker-compose down -v && docker-compose build && TO_SERVER=https://traffic_ops.kabletown.com TO_USER=me TO_PASSWORD='my!passwd' docker-compose up`
+  * `docker-compose -f docker-compose-pgmigration.yml down -v && \
+	 docker-compose -f docker-compose-pgmigration.yml build && \
+	 TO_SERVER=https://traffic_ops.kabletown.com TO_USER=me TO_PASSWORD='my!passwd' docker-compose -f docker-compose-pgmigration.yml up`
 
 * Postgres is still running in a docker container -- dump the database to a file:
   `docker exec -it pgmigration_postgres_host_1 pg_dump -Utraffic_ops >pg.sql`

@@ -5,14 +5,14 @@
 * Download Traffic Control repo
 
     ```
-    $ git clone http://github.com/Comcast/traffic_control.git
+    $ git clone https://github.com/apache/incubator-trafficcontrol.git
     ```
 
 * Build the RPM
 
     ```
     $ cd traffic_control/build
-    $ ./docker-build.sh -r http://github.com/Comcast/traffic_control.git -b master traffic_portal
+    $ ./docker-build.sh -r https://github.com/apache/incubator-trafficcontrol.git -b master traffic_portal
     ```
 
 ### 2. Install
