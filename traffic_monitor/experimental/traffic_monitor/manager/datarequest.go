@@ -582,13 +582,13 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 }
 
 // TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
-func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory) ([]byte, int) {
+func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory, statInfoHistory threadsafe.ResultInfoHistory, monitorConfig TrafficMonitorConfigMapThreadsafe, combinedStates peer.CRStatesThreadsafe, statMaxKbpses threadsafe.CacheKbpses) ([]byte, int) {
 	filter, err := NewCacheStatFilter(path, params, toData.Get().ServerTypes)
 	if err != nil {
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := cache.StatsMarshall(statResultHistory.Get(), filter, params)
+	bytes, err := cache.StatsMarshall(statResultHistory.Get(), statInfoHistory.Get(), combinedStates.Get(), monitorConfig.Get(), statMaxKbpses.Get(), filter, params)
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
@@ -742,7 +742,7 @@ func MakeDispatchMap(
 			return WrapErrCode(errorCount, path, bytes, err)
 		}, ContentTypeJSON)),
 		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvCacheStats(params, errorCount, path, toData, statResultHistory)
+			return srvCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
 		}, ContentTypeJSON)),
 		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvDSStats(params, errorCount, path, toData, dsStats)
