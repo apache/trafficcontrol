@@ -19,17 +19,19 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
+	## id => 1
 	cdn1_cdn_name => {
 		new   => 'Cdn',
 		using => {
-			id          => 1,
+			id          => 100,
 			name        => 'cdn1',
 		},
 	},
+	## id => 2
 	cdn2_cdn_name => {
 		new   => 'Cdn',
 		using => {
-			id          => 2,
+			id          => 200,
 			name        => 'cdn2',
 		},
 	},
@@ -41,7 +43,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db id to guarantee insert order
+	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -25,38 +25,42 @@ __PACKAGE__->table("role");
 
 =head2 id
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_auto_increment: 1
   is_nullable: 0
+  sequence: 'role_id_seq'
 
 =head2 name
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 0
-  size: 45
 
 =head2 description
 
-  data_type: 'varchar'
+  data_type: 'text'
   is_nullable: 1
-  size: 128
 
 =head2 priv_level
 
-  data_type: 'integer'
+  data_type: 'bigint'
   is_nullable: 0
 
 =cut
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "role_id_seq",
+  },
   "name",
-  { data_type => "varchar", is_nullable => 0, size => 45 },
+  { data_type => "text", is_nullable => 0 },
   "description",
-  { data_type => "varchar", is_nullable => 1, size => 128 },
+  { data_type => "text", is_nullable => 1 },
   "priv_level",
-  { data_type => "integer", is_nullable => 0 },
+  { data_type => "bigint", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -104,8 +108,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-06-03 08:58:13
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eNrksFOoJ9HkhtHhBjrWpA
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ajSuzHN4h1M8WtwVQkjT8w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

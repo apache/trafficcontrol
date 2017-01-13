@@ -39,12 +39,6 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-my $q      = 'select * from profile limit 1';
-my $get_ds = $dbh->prepare($q);
-$get_ds->execute();
-my $p = $get_ds->fetchall_arrayref( {} );
-$get_ds->finish();
-
 # the jsons
 # Note the 3 is the index in the array returned, not the id.  It's safe to assume there are at least 3 profiles.
 $t->get_ok('/dataprofile')->status_is(200)->json_has('/0/name')->json_has('/0/description');

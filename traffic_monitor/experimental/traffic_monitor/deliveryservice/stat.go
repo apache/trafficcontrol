@@ -72,7 +72,7 @@ func setStaticData(dsStats Stats, dsServers map[enum.DeliveryServiceName][]enum.
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, statHistory map[enum.CacheName][]cache.Result) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData) (Stats, error) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
@@ -117,16 +117,11 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			}
 
 			// TODO fix nested ifs
-			if results, ok := statHistory[cache]; ok {
-				if len(results) < 1 {
-					log.Warnf("no results %v %v\n", cache, deliveryService)
+			if pc, ok := precomputed[cache]; ok {
+				if pc.Reporting {
+					stat.CommonStats.CachesReporting[cache] = true
 				} else {
-					result := results[0]
-					if result.PrecomputedData.Reporting {
-						stat.CommonStats.CachesReporting[cache] = true
-					} else {
-						log.Debugf("no reporting %v %v\n", cache, deliveryService)
-					}
+					log.Debugf("no reporting %v %v\n", cache, deliveryService)
 				}
 			} else {
 				log.Debugf("no result for %v %v\n", cache, deliveryService)
@@ -353,26 +348,16 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 }
 
 // latestBytes returns the most recent OutBytes from the given cache results, and the time of that result. It assumes zero results are not valid, but nonzero results with errors are valid.
-func latestBytes(results []cache.Result) (int64, time.Time, error) {
-	var result *cache.Result
-	for _, r := range results {
-		// result.Errors can include stat errors where OutBytes was set correctly, so we look for the first non-zero OutBytes rather than the first errorless result
-		// TODO add error classes to PrecomputedData, to distinguish stat errors from HTTP errors?
-		if r.PrecomputedData.OutBytes == 0 {
-			continue
-		}
-		result = &r
-		break
-	}
-	if result == nil {
+func latestBytes(p cache.PrecomputedData) (int64, time.Time, error) {
+	if p.OutBytes == 0 {
 		return 0, time.Time{}, fmt.Errorf("no valid results")
 	}
-	return result.PrecomputedData.OutBytes, result.Time, nil
+	return p.OutBytes, p.Time, nil
 }
 
 // addCachePerSecStats calculates the cache per-second stats, adds them to LastStats, and returns the augmented object.
-func addCachePerSecStats(cacheName enum.CacheName, results []cache.Result, lastStats LastStats) LastStats {
-	outBytes, outBytesTime, err := latestBytes(results) // it's ok if `latestBytes` returns 0s with an error, `addLastStat` will refrain from setting it (unless the previous calculation was nonzero, in which case it will error appropriately).
+func addCachePerSecStats(cacheName enum.CacheName, precomputed cache.PrecomputedData, lastStats LastStats) LastStats {
+	outBytes, outBytesTime, err := latestBytes(precomputed) // it's ok if `latestBytes` returns 0s with an error, `addLastStat` will refrain from setting it (unless the previous calculation was nonzero, in which case it will error appropriately).
 	if err != nil {
 		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
 	}
@@ -394,18 +379,18 @@ func addCachePerSecStats(cacheName enum.CacheName, results []cache.Result, lastS
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addPerSecStats(statHistory map[enum.CacheName][]cache.Result, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats) {
+func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats) {
 	for dsName, stat := range dsStats.DeliveryService {
 		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes)
 	}
-	for cacheName, results := range statHistory {
-		lastStats = addCachePerSecStats(cacheName, results, lastStats)
+	for cacheName, precomputedData := range precomputed {
+		lastStats = addCachePerSecStats(cacheName, precomputedData, lastStats)
 	}
 	return dsStats, lastStats
 }
 
-// CreateStats aggregates and creates statistics from given stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
-func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
+// CreateStats aggregates and creates statistics from given precomputed stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
+func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
 	start := time.Now()
 	dsStats := NewStats()
 	for deliveryService := range toData.DeliveryServiceServers {
@@ -417,15 +402,12 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
-	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, statHistory) // TODO move after stat summarisation
+	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed) // TODO move after stat summarisation
 	if err != nil {
 		return dsStats, lastStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
 
-	for server, history := range statHistory {
-		if len(history) < 1 {
-			continue // TODO warn?
-		}
+	for server, precomputedData := range precomputed {
 		cachegroup, ok := toData.ServerCachegroups[server]
 		if !ok {
 			log.Warnf("server %s has no cachegroup, skipping\n", server)
@@ -436,10 +418,9 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 			log.Warnf("server %s not in CRConfig, skipping\n", server)
 			continue
 		}
-		result := history[0]
 
 		// TODO check result.PrecomputedData.Errors
-		for ds, resultStat := range result.PrecomputedData.DeliveryServiceStats {
+		for ds, resultStat := range precomputedData.DeliveryServiceStats {
 			if ds == "" {
 				log.Errorf("EMPTY precomputed delivery service")
 				continue
@@ -460,7 +441,7 @@ func CreateStats(statHistory map[enum.CacheName][]cache.Result, toData todata.TO
 		}
 	}
 
-	perSecStats, lastStats := addPerSecStats(statHistory, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
+	perSecStats, lastStats := addPerSecStats(precomputed, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	perSecStats.Time = time.Now()
 	return perSecStats, lastStats, nil

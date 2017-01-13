@@ -25,7 +25,7 @@ my %definition_for = (
 	admin => {
 		new   => 'TmUser',
 		using => {
-			id                   => 1,
+			id                   => 100,
 			username             => 'admin',
 			role                 => 4,
 			uid                  => '1',
@@ -49,7 +49,7 @@ my %definition_for = (
 	portal => {
 		new   => 'TmUser',
 		using => {
-			id                   => 2,
+			id                   => 200,
 			username             => 'portal',
 			role                 => 6,
 			uid                  => '1',
@@ -73,7 +73,7 @@ my %definition_for = (
 	codebig => {
 		new   => 'TmUser',
 		using => {
-			id                   => 3,
+			id                   => 300,
 			username             => 'codebig',
 			role                 => 6,
 			uid                  => '1',
@@ -97,7 +97,7 @@ my %definition_for = (
 	migrations => {
 		new   => 'TmUser',
 		using => {
-			id                   => 4,
+			id                   => 400,
 			username             => 'migration',
 			role                 => 5,
 			uid                  => '1',
@@ -121,7 +121,7 @@ my %definition_for = (
 	federation => {
 		new   => 'TmUser',
 		using => {
-			id                   => 5,
+			id                   => 500,
 			username             => 'federation',
 			role                 => 7,
 			uid                  => '1',
@@ -142,6 +142,54 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	steering1 => {
+		new   => 'TmUser',
+		using => {
+			id                   => 600,
+			username             => 'steering1',
+			role                 => 7,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The steering User 1',
+			email                => 'steering1@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line1',
+			address_line2        => 'address_line2',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '333-333-3333',
+			postal_code          => '80123',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+	steering2 => {
+		new   => 'TmUser',
+		using => {
+			id                   => 700,
+			username             => 'steering2',
+			role                 => 7,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The steering User 2',
+			email                => 'steering2@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line1',
+			address_line2        => 'address_line2',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '333-333-3333',
+			postal_code          => '80123',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
 );
 
 sub get_definition {
@@ -150,7 +198,8 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	return keys %definition_for;
+	# sort by db username to guarantee insertion order
+	return (sort { $definition_for{$a}{using}{username} cmp $definition_for{$b}{using}{username} } keys %definition_for);
 }
 
 __PACKAGE__->meta->make_immutable;

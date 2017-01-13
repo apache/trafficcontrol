@@ -40,14 +40,19 @@ if [[ $# -gt 0 ]]; then
 	projects=( "$*" )
 else
 	# get all subdirs containing build/build_rpm.sh
-	projects=( */build/build_rpm.sh )
+	projects_to_build=( */build/build_rpm.sh )
+	projects=()
+	for p in "${projects_to_build[@]}"; do
+	  p=${p%%/*}
+	  projects+=($p)
+	done
 fi
 
 declare -a badproj
 declare -a goodproj
 for p in "${projects[@]}"; do
-	# strip from first /
-	p=${p%%/*}
+	# strip trailing /
+	p=${p%/}
 	bldscript="$p/build/build_rpm.sh"
 	if [[ ! -x $bldscript ]]; then
 		echo "$bldscript not found"

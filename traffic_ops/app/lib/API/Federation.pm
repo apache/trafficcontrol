@@ -368,7 +368,7 @@ sub add_resolvers {
 
 	my @resolver_ips;
 	if ( defined $resolve4 ) {
-		my ( $rc, $response, @ip4 ) = $self->add_federation_resolver( $resolve4, $federation_id, "resolve4" );
+		my ( $rc, $response, @ip4 ) = $self->add_federation_resolver( $resolve4, $federation_id, "RESOLVE4" );
 		if ( $rc == ERROR ) {
 			return ( ERROR, $response );
 		}
@@ -376,7 +376,7 @@ sub add_resolvers {
 	}
 
 	if ( defined $resolve6 ) {
-		my ( $rc, $response, @ip6 ) = $self->add_federation_resolver( $resolve6, $federation_id, "resolve6" );
+		my ( $rc, $response, @ip6 ) = $self->add_federation_resolver( $resolve6, $federation_id, "RESOLVE6" );
 		if ( $rc == ERROR ) {
 			return ( ERROR, $response );
 		}

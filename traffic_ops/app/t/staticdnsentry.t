@@ -39,7 +39,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 ####################### RW testing - careful with these! #####################################################
 
 #these ids are created by fixtures, so we know them.
-my $dsid = 1;
+my $dsid = 100;
 my $atypeid = 20;
 my $locid = 1;
 

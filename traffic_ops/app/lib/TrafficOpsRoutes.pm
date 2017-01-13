@@ -102,12 +102,6 @@ sub ui_routes {
 
 	# -- Configfiles
 	$r->route('/genfiles/:mode/:id/#filename')->via('GET')->over( authenticated => 1 )->to( 'ConfigFiles#genfiles', namespace => $namespace );
-	$r->route('/genfiles/:mode/byprofile/:profile/CRConfig.xml')->via('GET')->over( authenticated => 1 )
-		->to( 'ConfigFiles#genfiles_crconfig_profile', namespace => $namespace );
-	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig.xml')->via('GET')->over( authenticated => 1 )
-		->to( 'ConfigFiles#genfiles_crconfig_cdnname', namespace => $namespace );
-	$r->route('/snapshot_crconfig')->via( 'GET', 'POST' )->over( authenticated => 1 )->to( 'ConfigFiles#snapshot_crconfig', namespace => $namespace );
-	$r->post('/upload_ccr_compare')->over( authenticated => 1 )->to( 'ConfigFiles#diff_ccr_xml_file', namespace => $namespace );
 
 	# -- Asn
 	$r->get('/asns')->over( authenticated => 1 )->to( 'Asn#index', namespace => $namespace );
@@ -189,6 +183,8 @@ sub ui_routes {
 	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
 	$r->get("/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
 	$r->get("/federation/users")->to( 'Federation#users', namespace => $namespace );
+	$r->get( "/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	$r->get( "/federation/users")->to( 'Federation#users',     namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
@@ -335,6 +331,7 @@ sub ui_routes {
 
 	# -- Topology - CCR Config, rewrote in json
 	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig')->via('GET')->over( authenticated => 1 )->to( 'Topology#ccr_config', namespace => $namespace );
+	$r->get('/CRConfig-Snapshots/:cdn_name/CRConfig.json')->over( authenticated => 1 )->to( 'Snapshot#get_cdn_snapshot', namespace => $namespace );
 
 	$r->get('/types')->over( authenticated => 1 )->to( 'Types#index', namespace => $namespace );
 	$r->route('/types/add')->via('GET')->over( authenticated => 1 )->to( 'Types#add', namespace => $namespace );
@@ -753,7 +750,7 @@ sub api_routes {
 	# TM Status in use JvD
 	$r->get("/api/$version/traffic_monitor/stats")->over( authenticated => 1 )->to( 'TrafficMonitor#get_host_stats', namespace => $namespace );
 
-	# API HEALTH CHECK
+	# -- Ping API
 	$r->get(
 		"/api/$version/ping" => sub {
 			my $self = shift;

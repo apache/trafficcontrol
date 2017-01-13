@@ -76,10 +76,33 @@ sub load_all_fixtures {
 	}
 }
 
+## For PSQL sequence to work correctly we cannot hard code
+## the id number for an entry in the DB.  So we need to
+## reset all primary keys (id) to 1 for consistency in the
+## test cases.
+sub reset_sequence_id {
+	my $self   = shift;
+	my $dbh    = Schema->database_handle;
+
+	my $p = $dbh->prepare( "SELECT * FROM pg_class WHERE relkind = 'S';" );
+	$p->execute();
+	my $foo = $p->fetchall_arrayref( {} );
+	$p->finish();
+
+
+	for my $table ( @$foo ) {
+		my $x = $dbh->prepare("ALTER SEQUENCE " . $table->{'relname'} . " RESTART WITH 1");
+		$x->execute();
+	}
+}
+
 sub load_core_data {
 	my $self          = shift;
 	my $schema        = shift;
 	my $schema_values = { schema => $schema, no_transactions => 1 };
+
+	$self->reset_sequence_id();
+
 	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -100,73 +123,56 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::DeliveryserviceRegex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceServer->new($schema_values) );
-
 }
 
 sub unload_core_data {
 	my $self   = shift;
 	my $schema = shift;
-	my $dbh    = Schema->database_handle;
 
-	$self->teardown( $schema, 'ToExtension' );
-	$self->teardown( $schema, 'Staticdnsentry' );
-	$self->teardown( $schema, 'Job' );
-	$self->teardown( $schema, 'Log' );
-	$self->teardown( $schema, 'Asn' );
-	$self->teardown( $schema, 'DeliveryserviceTmuser' );
-	$self->teardown( $schema, 'TmUser' );
-	$self->teardown( $schema, 'Role' );
-	$self->teardown( $schema, 'DeliveryserviceRegex' );
-	$self->teardown( $schema, 'Regex' );
-	$self->teardown( $schema, 'DeliveryserviceServer' );
-	$self->teardown( $schema, 'Deliveryservice' );
-	$self->teardown( $schema, 'Server' );
-	$self->teardown( $schema, 'PhysLocation' );
-	$self->teardown( $schema, 'Region' );
-	$self->teardown( $schema, 'Division' );
-
-	$self->teardown_cachegroup($schema);
-
-	$self->teardown( $schema, 'Profile' );
-	$self->teardown( $schema, 'Parameter' );
-	$self->teardown( $schema, 'ProfileParameter' );
-	$self->teardown( $schema, 'Regex' );
-	$self->teardown( $schema, 'Type' );
-	$self->teardown( $schema, 'Status' );
-	$self->teardown( $schema, 'Cdn' );
+	$self->teardown($schema, 'ToExtension');
+	$self->teardown($schema, 'Staticdnsentry');
+	$self->teardown($schema, 'Job');
+	$self->teardown($schema, 'Log');
+	$self->teardown($schema, 'Asn');
+	$self->teardown($schema, 'DeliveryserviceTmuser');
+	$self->teardown($schema, 'TmUser');
+	$self->teardown($schema, 'Role');
+	$self->teardown($schema, 'DeliveryserviceRegex');
+	$self->teardown($schema, 'Regex');
+	$self->teardown($schema, 'DeliveryserviceServer');
+	$self->teardown($schema, 'Deliveryservice');
+	$self->teardown($schema, 'Server');
+	$self->teardown($schema, 'PhysLocation');
+	$self->teardown($schema, 'Region');
+	$self->teardown($schema, 'Division');
+	$self->teardown_cachegroup();
+	$self->teardown($schema, 'Profile');
+	$self->teardown($schema, 'Parameter');
+	$self->teardown($schema, 'ProfileParameter');
+	$self->teardown($schema, 'Type');
+	$self->teardown($schema, 'Status');
+	$self->teardown( $schema, 'Snapshot' );
+	$self->teardown($schema, 'Cdn');
 }
 
 sub teardown {
 	my $self       = shift;
 	my $schema     = shift;
 	my $table_name = shift;
-	$schema->resultset($table_name)->delete_all;
 
-	#ok $schema->resultset($table_name)->delete_all, 'Does the ' . $table_name . ' teardown?';
+	$schema->resultset($table_name)->delete_all;
 }
 
 # Tearing down the Cachegroup table requires deleting them in a specific order, because
 # of the 'parent_cachegroup_id' and nested references.
 sub teardown_cachegroup {
 	my $self   = shift;
-	my $schema = shift;
 
-	my $cachegroups;
-	do {
-		$cachegroups = $schema->resultset("Cachegroup");
-		while ( my $row = $cachegroups->next ) {
-			if ( $schema->resultset("Cachegroup")->count({parent_cachegroup_id => $row->id}) > 0 ) {
-				next;
-			}
-
-			if ( $schema->resultset("Cachegroup")->count({secondary_parent_cachegroup_id => $row->id}) > 0 ) {
-				next;
-			}
-
-			$row->delete();
-		}
-
-	} while ( $cachegroups->count() > 0 );
+	my $dbh    = Schema->database_handle;
+	my $cg = $dbh->prepare("TRUNCATE TABLE cachegroup CASCADE;");
+	$cg->execute();
+	$cg->finish();
+	$dbh->disconnect;
 }
 
 1;

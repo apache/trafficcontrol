@@ -38,7 +38,7 @@ __PACKAGE__->result_source_instance->view_definition(
       JOIN status st ON st.id = s.status
 WHERE s.type = (SELECT type.id FROM type WHERE name='INFLUXDB')
 AND s.status = (SELECT status.id FROM status WHERE name ='ONLINE')
-GROUP BY s.host_name, s.domain_name, s.tcp_port"
+GROUP BY s.host_name, s.domain_name, s.tcp_port, status_name"
 );
 
 __PACKAGE__->add_columns(

@@ -57,7 +57,7 @@ func TestDeliveryServices(t *testing.T) {
 			testHelper.Success(t, "Should get back \"ds-test\" for \"XMLID\"")
 		}
 
-		if s.MissLong != "-99.123456" {
+		if s.MissLong != -99.123456 {
 			testHelper.Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", s.MissLong)
 		} else {
 			testHelper.Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
@@ -111,7 +111,7 @@ func TestDeliveryService(t *testing.T) {
 		testHelper.Success(t, "Should get back \"ds-test\" for \"XMLID\"")
 	}
 
-	if ds.MissLong != "-99.123456" {
+	if ds.MissLong != -99.123456 {
 		testHelper.Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", ds.MissLong)
 	} else {
 		testHelper.Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
@@ -139,7 +139,7 @@ func TestDeliveryServiceUnauthorized(t *testing.T) {
 }
 
 func TestCreateDeliveryService(t *testing.T) {
-	resp := fixtures.DeliveryService()
+	resp := fixtures.CreateDeliveryService()
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
@@ -158,8 +158,8 @@ func TestCreateDeliveryService(t *testing.T) {
 		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
-	actual := ds.Response.ID
-	if actual != "001" {
+	actual := ds.Response[0].ID
+	if actual != 001 {
 		testHelper.Error(t, "Should get back \"001\" for \"Response.ID\", got: %s", actual)
 	} else {
 		testHelper.Success(t, "Should get back \"0001\" for \"Response.ID\"")
@@ -187,7 +187,7 @@ func TestCreateDeliveryServiceUnauthorized(t *testing.T) {
 }
 
 func TestUpdateDeliveryService(t *testing.T) {
-	resp := fixtures.DeliveryService()
+	resp := fixtures.UpdateDeliveryService()
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
@@ -206,8 +206,8 @@ func TestUpdateDeliveryService(t *testing.T) {
 		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
 	}
 
-	actual := ds.Response.ID
-	if actual != "001" {
+	actual := ds.Response[0].ID
+	if actual != 001 {
 		testHelper.Error(t, "Should get back \"001\" for \"Response.ID\", got: %s", actual)
 	} else {
 		testHelper.Success(t, "Should get back \"0001\" for \"Response.ID\"")
@@ -526,16 +526,16 @@ func TestDeliveryServiceServer(t *testing.T) {
 		testHelper.Success(t, "Should get back \"lastUpdated\" for \"LastUpdated\"")
 	}
 
-	if s[0].Server != "someServer" {
-		testHelper.Error(t, "Should get back \"someServer\" for \"Server\", got: %s", s[0].Server)
+	if s[0].Server != 1 {
+		testHelper.Error(t, "Should get back 1 for \"Server\", got: %s", s[0].Server)
 	} else {
-		testHelper.Success(t, "Should get back \"someServer\" for \"Server\"")
+		testHelper.Success(t, "Should get back 1 for \"Server\"")
 	}
 
-	if s[0].DeliveryService != "someService" {
-		testHelper.Error(t, "Should get back \"someService\" for \"DeliveryService\", got: %s", s[0].DeliveryService)
+	if s[0].DeliveryService != 1 {
+		testHelper.Error(t, "Should get back 1 for \"DeliveryService\", got: %s", s[0].DeliveryService)
 	} else {
-		testHelper.Success(t, "Should get back \"someService\" for \"DeliveryService\"")
+		testHelper.Success(t, "Should get back 1 for \"DeliveryService\"")
 	}
 }
 

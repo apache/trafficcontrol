@@ -30,7 +30,7 @@ sub index {
 	my $parameter_id = $self->param('param');
 
 	if ( defined $parameter_id ) {
-		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id } );
+		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { order_by => $orderby }  );
 		while ( my $row = $rs->next ) {
 			push(
 				@data, {

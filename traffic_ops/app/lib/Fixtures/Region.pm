@@ -21,17 +21,17 @@ my %definition_for = (
 	mile_high => {
 		new   => 'Region',
 		using => {
-			id       => 1,
+			id       => 100,
 			name     => 'Denver Region',
-			division => 1,
+			division => 100,
 		},
 	},
 	boulder => {
 		new   => 'Region',
 		using => {
-			id       => 2,
+			id       => 200,
 			name     => 'Boulder Region',
-			division => 1,
+			division => 100,
 		},
 	},
 );

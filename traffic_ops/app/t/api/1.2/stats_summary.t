@@ -24,6 +24,7 @@ use Test::MockObject;
 use strict;
 use warnings;
 use JSON;
+use Fixtures::StatsSummary;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
@@ -32,9 +33,14 @@ my $t      = Test::Mojo->new('TrafficOps');
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->teardown( $schema, "StatsSummary" );
 
 #load core test data
 Test::TestHelper->load_core_data($schema);
+
+my $schema_values = { schema => $schema, no_transactions => 1 };
+my $stats_summary = Fixtures::StatsSummary->new($schema_values);
+Test::TestHelper->load_all_fixtures($stats_summary);
 
 
 my $cdn      = "test-cdn1";
@@ -46,7 +52,7 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
 my $summary_time = sprintf ( "%04d-%02d-%02d %02d:%02d:%02d",
                                    $year+1900,$mon+1,$mday,$hour,$min,$sec);
 my $stat_date = sprintf ( "%04d-%02d-%02d",
-                                   $year+1900,$mon+1,$mday-1);
+                                   $year+1900,$mon+1,$mday);
 
 #login
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(200),
@@ -58,8 +64,8 @@ ok $t->post_ok(
 	json => {
 		cdnName => $cdn,
 		deliveryServiceName => $deliveryservice,
-		statName => $stat_name, 
-		statValue => $stat_value, 
+		statName => $stat_name,
+		statValue => $stat_value,
 		summaryTime => $summary_time,
 		statDate => $stat_date,
 	}

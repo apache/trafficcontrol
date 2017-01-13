@@ -47,14 +47,14 @@ $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $
 
 	->json_is( "/response/2/status", "ONLINE" )->json_is( "/response/2/ipGateway", "127.0.0.4" )->json_is( "/response/2/ip6Gateway", "2345:1234:12:b::1" )
 	->json_is( "/response/2/tcpPort", "81" )->json_is( "/response/2/cachegroup", "mid-northeast-group" )->json_is( "/response/2/hostName", "rascal01" )
-	->json_is( "/response/2/domainName", "kabletown.net" )->json_is( "/response/2/ipAddress", "127.0.0.4" )->json_is( "/response/2/profile", "RASCAL1" )
-	->json_is( "/response/2/type", "RASCAL" )->json_is( "/response/2/physLocation", "Denver" )->json_is( "/response/2/interfaceName", "bond0" )
+	->json_is( "/response/2/domainName", "kabletown.net" )->json_is( "/response/2/ipAddress", "127.0.0.4" )->json_is( "/response/2/profile", "CCR1" )
+	->json_is( "/response/2/type", "CCR" )->json_is( "/response/2/physLocation", "Denver" )->json_is( "/response/2/interfaceName", "bond0" )
 	->json_is( "/response/2/interfaceMtu", "9000" )
 
 	->json_is( "/response/4/status", "ONLINE" )->json_is( "/response/4/ipGateway", "127.0.0.6" )->json_is( "/response/4/ip6Gateway", "2345:1234:12:c::1" )
 	->json_is( "/response/4/tcpPort", "81" )->json_is( "/response/4/cachegroup", "mid-northeast-group" )->json_is( "/response/4/hostName", "rascal02" )
-	->json_is( "/response/4/domainName", "kabletown.net" )->json_is( "/response/4/ipAddress", "127.0.0.6" )->json_is( "/response/4/profile", "RASCAL2" )
-	->json_is( "/response/4/type", "RASCAL" )->json_is( "/response/4/physLocation", "Denver" )->json_is( "/response/4/interfaceName", "bond0" )
+	->json_is( "/response/4/domainName", "kabletown.net" )->json_is( "/response/4/ipAddress", "127.0.0.6" )->json_is( "/response/4/profile", "CCR1" )
+	->json_is( "/response/4/type", "CCR" )->json_is( "/response/4/physLocation", "Denver" )->json_is( "/response/4/interfaceName", "bond0" )
 	->json_is( "/response/4/interfaceMtu", "9000" )
 
 	->json_is( "/response/7/status", "ONLINE" )->json_is( "/response/7/ipGateway", "127.0.0.9" )->json_is( "/response/7/ip6Gateway", "2345:1234:12:f::1" )
@@ -64,7 +64,7 @@ $t->get_ok('/api/1.1/servers.json?orderby=id')->status_is(200)->or( sub { diag $
 	->json_is( "/response/7/interfaceMtu", "1500" );
 
 $t->get_ok('/api/1.1/servers/hostname/atlanta-edge-01/details.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/ipGateway", "127.0.0.1" )->json_is( "/response/deliveryservices/0", "1" );
+	->json_is( "/response/ipGateway", "127.0.0.1" )->json_is( "/response/deliveryservices/0", "100" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

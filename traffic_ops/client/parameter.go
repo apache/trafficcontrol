@@ -22,7 +22,6 @@ import (
 
 // ParamResponse ...
 type ParamResponse struct {
-	Version  string      `json:"version"`
 	Response []Parameter `json:"response"`
 }
 

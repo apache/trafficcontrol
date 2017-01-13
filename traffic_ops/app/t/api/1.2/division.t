@@ -38,22 +38,21 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-$t->get_ok("/api/1.2/divisions")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/divisions")->status_is(200)->json_is( "/response/0/id", 100 )
 	->json_is( "/response/0/name", "mountain" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/divisions/1")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/divisions/100")->status_is(200)->json_is( "/response/0/id", 100 )
 	->json_is( "/response/0/name", "mountain" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/divisions' => {Accept => 'application/json'} => json => {
-        "name" => "divion1" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "divion1" )
-            , 'Does the divion details return?';
+        "name" => "division1" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/name" => "division1" )
+            , 'Does the division details return?';
 
 ok $t->post_ok('/api/1.2/divisions' => {Accept => 'application/json'} => json => {
-        "name" => "divion1" })->status_is(400);
+        "name" => "division1" })->status_is(400);
 
-my $division_id = &get_division_id('divion1');
-
+my $division_id = &get_division_id('division1');
 ok $t->put_ok('/api/1.2/divisions/' . $division_id  => {Accept => 'application/json'} => json => {
 			"name" => "division2"
 		})

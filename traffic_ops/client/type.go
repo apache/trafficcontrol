@@ -22,12 +22,12 @@ import (
 
 // TypeResponse ...
 type TypeResponse struct {
-	Version  string `json:"version"`
 	Response []Type `json:"response"`
 }
 
 // Type contains information about a given Type in Traffic Ops.
 type Type struct {
+	ID          int    `json:"id"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	UseInTable  string `json:"useInTable,omitempt"`

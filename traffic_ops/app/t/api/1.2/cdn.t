@@ -38,15 +38,14 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-$t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 100 )
     ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/cdns/1")->status_is(200)->json_is( "/response/0/id", 1 )
+$t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 )
     ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
-        "name" => "cdn_test"
-        })
+        "name" => "cdn_test", "dnssecEnabled" => "true" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test" )
     ->json_is( "/alerts/0/level" => "success" )
@@ -56,7 +55,7 @@ ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
 my $cdn_id = &get_cdn_id('cdn_test');
 
 ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => json => {
-        "name" => "cdn_test2"
+        "name" => "cdn_test2", "dnssecEnabled" => "true"
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test2" )
