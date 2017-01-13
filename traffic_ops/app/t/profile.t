@@ -53,7 +53,7 @@ $t->post_ok(
 	'/profile/create' => form => {
 		'profile.name'        => 'JLP_Test',
 		'profile.description' => 'JLP Test Host',
-		'profile.cdn'         => 1,
+		'profile.cdn'         => 100,
 		'profile.type'        => 'ATS_PROFILE'
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -74,7 +74,7 @@ sub upd_and_del() {
 			"/profile/$id/update" => form => {
 				'profile.name'        => 'JLP_Test',
 				'profile.description' => 'JLP Test Host Updated',
-				'profile.cdn'         => 1,
+				'profile.cdn'         => 100,
 				'profile.type'        => 'ATS_PROFILE'
 			}
 		)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );

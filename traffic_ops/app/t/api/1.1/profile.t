@@ -44,7 +44,8 @@ $t->get_ok("/api/1.1/profiles.json")->status_is(200)->or( sub { diag $t->tx->res
 	->json_is( "/response/1/name", "CCR2" )->json_is( "/response/1/description", "ccr description" )
 	->json_is( "/response/2/name", "EDGE1" )->json_is( "/response/2/description", "edge description" )
 	->json_is( "/response/3/name", "MID1" )->json_is( "/response/3/description", "mid description" )
-	->json_is( "/response/4/name", "RASCAL1" )->json_is( "/response/4/description", "rascal description" );
+	->json_is( "/response/4/name", "MISC" )->json_is( "/response/4/description", "misc profile description" )
+	->json_is( "/response/5/name", "RASCAL1" )->json_is( "/response/5/description", "rascal description" );
 
 $t->get_ok("/api/1.1/profiles/trimmed.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
