@@ -180,11 +180,17 @@ sub createdb {
 }
 
 sub createuser {
-	system("createuser -h $host_ip -p $host_port -P -e --superuser $db_username;");
+	my $user_exists = system("psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='USR_NAME'" | grep -q 1 || createuser ...
+
+	system("createuser -U traffic_ops -h $host_ip -p $host_port -P -e --superuser $db_username;");
+	system("createdb -U traffic_ops -h $host_ip -p $host_port -U $db_username -e $db_name;");
+	system("psql -U traffic_ops -h  $host_ip -p $host_port -e -c 'GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_username;'");
+	system("psql $db_name -U traffic_ops -h  $host_ip -p $host_port -e -c 'GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $db_username;'");
+
 }
 
 sub dropuser {
-	system("dropuser -h $host_ip -p $host_port -i -e $db_username;");
+	system("dropuser -U traffic_ops -h $host_ip -p $host_port -i -e $db_username;");
 }
 
 sub showusers {
