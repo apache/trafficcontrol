@@ -224,14 +224,14 @@ func monitorConfigListen(
 			r := strings.NewReplacer(
 				"${hostname}", srv.IP,
 				"${interface_name}", srv.InterfaceName,
-				"application=system", "application=plugin.remap",
-				"application=", "application=plugin.remap",
+				"application=plugin.remap", "application=system",
+				"application=", "application=system",
 			)
 			url = r.Replace(url)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
 			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Timeout: connTimeout}
-			r = strings.NewReplacer("application=plugin.remap", "application=")
+			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Timeout: connTimeout}
 		}
