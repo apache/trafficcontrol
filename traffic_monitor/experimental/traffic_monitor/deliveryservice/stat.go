@@ -21,6 +21,10 @@ package deliveryservice
 
 import (
 	"fmt"
+	"net/url"
+	"strconv"
+	"time"
+
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
@@ -28,9 +32,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
-	"net/url"
-	"strconv"
-	"time"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // TODO remove 'ds' and 'stat' from names
@@ -72,7 +74,7 @@ func setStaticData(dsStats Stats, dsServers map[enum.DeliveryServiceName][]enum.
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData, mc to.TrafficMonitorConfigMap) (Stats, error) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
@@ -103,9 +105,7 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			}
 
 			if available.IsAvailable {
-				stat.CommonStats.IsAvailable.Value = true
-				// TODO fix to be whether the Delivery Service has exceeded max kbps defined in Traffic Ops in `/health/cdn-name`?
-				stat.CommonStats.IsHealthy.Value = true
+				setDsState(deliveryService, &stat, mc)
 				stat.CommonStats.CachesAvailableNum.Value++
 				cacheGroupStats := stat.CacheGroups[cacheGroup]
 				cacheGroupStats.IsAvailable.Value = true
@@ -390,7 +390,8 @@ func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStat
 }
 
 // CreateStats aggregates and creates statistics from given precomputed stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
-func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time) (Stats, LastStats, error) {
+func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time, mc to.TrafficMonitorConfigMap) (Stats, LastStats, error) {
+
 	start := time.Now()
 	dsStats := NewStats()
 	for deliveryService := range toData.DeliveryServiceServers {
@@ -402,7 +403,7 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
-	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed) // TODO move after stat summarisation
+	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed, mc) // TODO move after stat summarisation
 	if err != nil {
 		return dsStats, lastStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
@@ -484,7 +485,7 @@ func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enu
 	}
 	add("caches-configured", strconv.Itoa(int(c.CachesConfiguredNum.Value)))
 	add("caches-reporting", strconv.Itoa(len(c.CachesReporting)))
-	add("error-string", strconv.Itoa(len(c.CachesReporting)))
+	add("error-string", c.ErrorStr.Value)
 	add("status", c.StatusStr.Value)
 	add("isHealthy", fmt.Sprintf("%t", c.IsHealthy.Value))
 	add("isAvailable", fmt.Sprintf("%t", c.IsAvailable.Value))
@@ -516,4 +517,21 @@ func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 		jsonObj = addStatCacheStats(jsonObj, stat.TotalStats, deliveryService, "total.", now, filter)
 	}
 	return *jsonObj
+}
+
+func setDsState(dsName enum.DeliveryServiceName, dsStats *dsdata.Stat, monitorConfig to.TrafficMonitorConfigMap) {
+	dsNameString := fmt.Sprintf("%s", dsName)
+	dsStats.CommonStats.IsAvailable.Value = true
+	dsStats.CommonStats.IsHealthy.Value = true
+
+	if dsStats.Total().TpsTotal.Value > monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold {
+		dsStats.CommonStats.ErrorStr.Value = fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.Total().TpsTotal.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
+		dsStats.CommonStats.IsAvailable.Value = false
+		dsStats.CommonStats.IsHealthy.Value = false
+	}
+	if dsStats.Total().Kbps.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalKbpsThreshold) {
+		dsStats.CommonStats.ErrorStr.Value = fmt.Sprintf("TotalKbps too high (%v > %v)", dsStats.Total().Kbps.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
+		dsStats.CommonStats.IsAvailable.Value = false
+		dsStats.CommonStats.IsHealthy.Value = false
+	}
 }
