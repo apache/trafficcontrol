@@ -1,0 +1,13 @@
+---
+sudo: required
+
+language: c
+
+services:
+  - docker
+
+before_install:
+  - docker-compose -f infrastructure/docker/build/docker-compose.yml up traffic_ops_build traffic_monitor_build traffic_router_build traffic_portal_build traffic_stats_build
+
+script: /bin/true
+

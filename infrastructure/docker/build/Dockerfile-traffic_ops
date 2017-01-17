@@ -18,27 +18,27 @@ FROM centos:7
 
 MAINTAINER Dan Kirkwood
 
-RUN	yum -y install \
-		epel-release \
-		git \
-		rpm-build && \
-	yum -y clean all
+RUN yum -y install \
+        epel-release \
+        git \
+        rpm-build && \
+    yum -y clean all
 
 # install latest git
 RUN yum install -y \
-	expat-devel \
-	gcc \
-	gettext \
-	libcurl-devel \
-	make \
-	openssl-devel \
-	perl-ExtUtils-MakeMaker \
-	tar \
-	tcl && \
-	git clone https://github.com/git/git.git && \
-	cd git && \
-	make prefix=/usr/local all && \
-	make prefix=/usr/local install
+    expat-devel \
+    gcc \
+    gettext \
+    libcurl-devel \
+    make \
+    openssl-devel \
+    perl-ExtUtils-MakeMaker \
+    tar \
+    tcl && \
+    git clone https://github.com/git/git.git && \
+    cd git && \
+    make prefix=/usr/local all && \
+    make prefix=/usr/local install
 
 
 # all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
@@ -48,8 +48,8 @@ ENV BRANCH=master
 WORKDIR /repo
 
 # traffic_ops specific
-RUN	yum -y install \
-		golang
+RUN yum -y install \
+        golang
 ###
 
 VOLUME ./artifacts:/artifacts

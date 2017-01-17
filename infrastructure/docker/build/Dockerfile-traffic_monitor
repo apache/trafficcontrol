@@ -18,11 +18,11 @@ FROM centos:7
 
 MAINTAINER Dan Kirkwood
 
-RUN	yum -y install \
-		epel-release \
-		git \
-		rpm-build && \
-	yum -y clean all
+RUN yum -y install \
+        epel-release \
+        git \
+        rpm-build && \
+    yum -y clean all
 
 ENV GITREPO=https://github.com/apache/incubator-trafficcontrol
 ENV BRANCH=master
@@ -30,9 +30,9 @@ ENV BRANCH=master
 # Above are common for all sub-projects.
 
 ### traffic_monitor specific
-RUN	yum -y install \
-		which && \
-	yum -y clean all
+RUN yum -y install \
+        which && \
+    yum -y clean all
 
 WORKDIR /opt
 RUN curl -L -b "oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u101-b13/jdk-8u101-linux-x64.tar.gz | tar xzf - && \
