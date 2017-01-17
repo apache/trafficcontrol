@@ -179,7 +179,7 @@ func processStatResults(
 		log.Debugf("poll %v %v CreateStats start\n", result.PollID, time.Now())
 	}
 
-	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now())
+	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc)
 
 	for _, result := range results {
 		log.Debugf("poll %v %v CreateStats end\n", result.PollID, time.Now())
