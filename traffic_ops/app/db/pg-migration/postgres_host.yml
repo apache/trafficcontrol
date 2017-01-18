@@ -18,7 +18,9 @@ services:
     build:
       context: ..
       dockerfile: pg-migration/Dockerfile-postgres
-    env_file:
-      - postgres.env
+    environment:
+      - POSTGRES_DB=traffic_ops
+      - POSTGRES_PASSWORD=twelve
+      - POSTGRES_USER=traffic_ops
     ports:
       - 5432

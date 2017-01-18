@@ -33,9 +33,8 @@ services:
       - default
 
 networks:
-  default: 
+  default:
      driver: bridge
 
 volumes:
   pgdata:
-

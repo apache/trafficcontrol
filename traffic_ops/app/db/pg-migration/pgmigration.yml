@@ -1,4 +1,3 @@
-
 # Ansible managed
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +19,7 @@ volumes:
   pgdata:
 
 networks:
-  default: 
+  default:
      driver: bridge
 
 services:
@@ -45,16 +44,6 @@ services:
       - ./mysql/conf.d:/etc/mysql/conf.d
       - ./mysql/initdb.d:/docker-entrypoint-initdb.d
 
-  # db provides a postgres data to import data to
-  postgres:
-    extends:
-      service: db
-      file: docker-compose.yml
-    depends_on:
-      - mysql
-    volumes:
-      - sync:/sync
-
   # pgloader converts the data from mysql to postgres
   pgloader:
     extends:
@@ -62,16 +51,6 @@ services:
       file: pgloader.yml
     depends_on:
       - mysql
-      - postgres
     volumes:
       - sync:/sync
 
-  # convert runs needed post-migration conversions
-  convert:
-    extends:
-      service: convert
-      file: convert.yml
-    depends_on:
-      - postgres
-    volumes:
-      - sync:/sync
