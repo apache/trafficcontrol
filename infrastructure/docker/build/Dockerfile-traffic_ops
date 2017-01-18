@@ -20,26 +20,16 @@ MAINTAINER Dan Kirkwood
 
 RUN	yum -y install \
 		epel-release \
+		expat-devel \
+		gcc \
 		git \
-		rpm-build && \
+		libcurl-devel \
+		make \
+		openssl-devel \
+		perl-ExtUtils-MakeMaker \
+		rpm-build \
+		tar && \
 	yum -y clean all
-
-# install latest git
-RUN yum install -y \
-	expat-devel \
-	gcc \
-	gettext \
-	libcurl-devel \
-	make \
-	openssl-devel \
-	perl-ExtUtils-MakeMaker \
-	tar \
-	tcl && \
-	git clone https://github.com/git/git.git && \
-	cd git && \
-	make prefix=/usr/local all && \
-	make prefix=/usr/local install
-
 
 # all ENV vars can be controlled by, e.g. `docker run -e BRANCH=1.6.x <image>`
 ENV GITREPO=https://github.com/apache/incubator-trafficcontrol

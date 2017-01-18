@@ -263,7 +263,7 @@ sub update {
 		edge_header_rewrite         => $params->{edgeHeaderRewrite},
 		geolimit_redirect_url       => $params->{geoLimitRedirectURL},
 		geo_limit                   => $params->{geoLimit},
-		geo_limit_countries         => $params->{geoLimitCountries},
+		geo_limit_countries         => sanitize_geo_limit_countries($params->{geoLimitCountries}),
 		geo_provider                => $params->{geoProvider},
 		global_max_mbps             => $params->{globalMaxMbps},
 		global_max_tps              => $params->{globalMaxTps},
@@ -300,6 +300,12 @@ sub update {
 
 	my $rs = $ds->update($values);
 	if ($rs) {
+		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
+		&UI::DeliveryService::cacheurl( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
+
 		my @response;
 		push(
 			@response, {
@@ -403,7 +409,7 @@ sub create {
 		edge_header_rewrite         => $params->{edgeHeaderRewrite},
 		geolimit_redirect_url       => $params->{geoLimitRedirectURL},
 		geo_limit                   => $params->{geoLimit},
-		geo_limit_countries         => $params->{geoLimitCountries},
+		geo_limit_countries         => sanitize_geo_limit_countries($params->{geoLimitCountries}),
 		geo_provider                => $params->{geoProvider},
 		global_max_mbps             => $params->{globalMaxMbps},
 		global_max_tps              => $params->{globalMaxTps},
@@ -441,6 +447,18 @@ sub create {
 	my $insert = $self->db->resultset('Deliveryservice')->create($values);
 	my $rs     = $insert->insert();
 	if ($rs) {
+		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
+		&UI::DeliveryService::cacheurl( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
+
+		my $cdn = $self->db->resultset('Cdn')->search( { id => $params->{cdnId} } )->single();
+		my $dnssec_enabled = $cdn->dnssec_enabled;
+		if ( $dnssec_enabled ) {
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $rs->id );
+		}
+
 		my @response;
 		push(
 			@response, {
@@ -1005,6 +1023,18 @@ sub is_valid_long {
 	}
 
 	return undef;
+}
+
+sub sanitize_geo_limit_countries {
+	my $geo_limit_countries = shift;
+
+	if (!defined($geo_limit_countries)) {
+		return "";
+	}
+
+	$geo_limit_countries =~ s/\s+//g;
+	$geo_limit_countries = uc($geo_limit_countries);
+	return $geo_limit_countries;
 }
 
 1;

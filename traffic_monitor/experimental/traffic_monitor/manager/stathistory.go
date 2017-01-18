@@ -27,6 +27,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
@@ -78,9 +79,10 @@ func StartStatHistoryManager(
 	tickInterval := cfg.StatFlushInterval
 
 	precomputedData := map[enum.CacheName]cache.PrecomputedData{}
+	lastResults := map[enum.CacheName]cache.Result{}
 
 	process := func(results []cache.Result) {
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults)
 	}
 
 	go func() {
@@ -135,6 +137,7 @@ func processStatResults(
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc to.TrafficMonitorConfigMap,
 	precomputedData map[enum.CacheName]cache.PrecomputedData,
+	lastResults map[enum.CacheName]cache.Result,
 ) {
 
 	// setting the statHistory could be put in a goroutine concurrent with `ds.CreateStats`, if it were slow
@@ -148,7 +151,11 @@ func processStatResults(
 			log.Warnf("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
 			maxStats = 1
 		}
+
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
+		if lastResult, ok := lastResults[result.ID]; ok {
+			health.GetVitals(&result, &lastResult, &mc) // TODO precompute
+		}
 		statInfoHistory.Add(result, maxStats)
 		statResultHistory.Add(result, maxStats)
 		// Don't add errored maxes or precomputed DSStats
@@ -162,6 +169,7 @@ func processStatResults(
 			precomputedData[result.ID] = result.PrecomputedData
 
 		}
+		lastResults[result.ID] = result
 	}
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
 	statResultHistoryThreadsafe.Set(statResultHistory)

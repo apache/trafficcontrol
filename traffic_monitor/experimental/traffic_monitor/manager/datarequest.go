@@ -135,7 +135,14 @@ func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
 func NewCacheStatFilter(path string, params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (cache.Filter, error) {
-	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "hosts": struct{}{}}
+	validParams := map[string]struct{}{
+		"hc":       struct{}{},
+		"stats":    struct{}{},
+		"wildcard": struct{}{},
+		"type":     struct{}{},
+		"hosts":    struct{}{},
+		"cache":    struct{}{},
+	}
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
 	}
@@ -176,6 +183,12 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[enum.Cach
 
 	hosts := map[enum.CacheName]struct{}{}
 	if paramHosts, exists := params["hosts"]; exists && len(paramHosts) > 0 {
+		commaHosts := strings.Split(paramHosts[0], ",")
+		for _, host := range commaHosts {
+			hosts[enum.CacheName(host)] = struct{}{}
+		}
+	}
+	if paramHosts, exists := params["cache"]; exists && len(paramHosts) > 0 {
 		commaHosts := strings.Split(paramHosts[0], ",")
 		for _, host := range commaHosts {
 			hosts[enum.CacheName(host)] = struct{}{}
@@ -569,13 +582,13 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 }
 
 // TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
-func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory) ([]byte, int) {
+func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory, statInfoHistory threadsafe.ResultInfoHistory, monitorConfig TrafficMonitorConfigMapThreadsafe, combinedStates peer.CRStatesThreadsafe, statMaxKbpses threadsafe.CacheKbpses) ([]byte, int) {
 	filter, err := NewCacheStatFilter(path, params, toData.Get().ServerTypes)
 	if err != nil {
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := cache.StatsMarshall(statResultHistory.Get(), filter, params)
+	bytes, err := cache.StatsMarshall(statResultHistory.Get(), statInfoHistory.Get(), combinedStates.Get(), monitorConfig.Get(), statMaxKbpses.Get(), filter, params)
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
@@ -601,10 +614,6 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 	}
 	bytes, err := json.Marshal(createAPIPeerStates(peerStates.Get(), filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
-}
-
-func srvStatSummary() ([]byte, int) {
-	return nil, http.StatusNotImplemented
 }
 
 func srvStats(staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount threadsafe.Uint, healthIteration threadsafe.Uint, errorCount threadsafe.Uint) ([]byte, error) {
@@ -733,7 +742,7 @@ func MakeDispatchMap(
 			return WrapErrCode(errorCount, path, bytes, err)
 		}, ContentTypeJSON)),
 		"/publish/CacheStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvCacheStats(params, errorCount, path, toData, statResultHistory)
+			return srvCacheStats(params, errorCount, path, toData, statResultHistory, statInfoHistory, monitorConfig, combinedStates, statMaxKbpses)
 		}, ContentTypeJSON)),
 		"/publish/DsStats": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvDSStats(params, errorCount, path, toData, dsStats)
@@ -744,14 +753,14 @@ func MakeDispatchMap(
 		"/publish/PeerStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
 			return srvPeerStates(params, errorCount, path, toData, peerStates)
 		}, ContentTypeJSON)),
-		"/publish/StatSummary": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			return srvStatSummary()
-		}, ContentTypeJSON)),
 		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount)
 		}, ContentTypeJSON)),
 		"/publish/ConfigDoc": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvConfigDoc(opsConfig)
+		}, ContentTypeJSON)),
+		"/publish/StatSummary": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
+			return srvStatSummary(params, errorCount, path, toData, statResultHistory)
 		}, ContentTypeJSON)),
 		"/api/cache-count": wrap(WrapBytes(func() []byte {
 			return srvAPICacheCount(localStates)
@@ -1118,4 +1127,118 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.MemSysBytes = memStats.Sys
 
 	return json.Marshal(s)
+}
+
+type StatSummary struct {
+	Caches map[enum.CacheName]map[string]StatSummaryStat `json:"caches"`
+	srvhttp.CommonAPIData
+}
+
+type StatSummaryStat struct {
+	DataPointCount int64   `json:"dpCount"`
+	Start          float64 `json:"start"`
+	End            float64 `json:"end"`
+	High           float64 `json:"high"`
+	Low            float64 `json:"low"`
+	Average        float64 `json:"average"`
+	StartTime      int64   `json:"startTime"`
+	EndTime        int64   `json:"endTime"`
+}
+
+// toNumeric returns a float for any numeric type, and false if the interface does not hold a numeric type.
+// This allows converting unknown numeric types (for example, from JSON) in a single line
+func toNumeric(v interface{}) (float64, bool) {
+	switch i := v.(type) {
+	case uint8:
+		return float64(i), true
+	case uint16:
+		return float64(i), true
+	case uint32:
+		return float64(i), true
+	case uint64:
+		return float64(i), true
+	case int8:
+		return float64(i), true
+	case int16:
+		return float64(i), true
+	case int32:
+		return float64(i), true
+	case int64:
+		return float64(i), true
+	case float32:
+		return float64(i), true
+	case float64:
+		return float64(i), true
+	case int:
+		return float64(i), true
+	case uint:
+		return float64(i), true
+	default:
+		return 0.0, false
+	}
+}
+
+func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
+	statPrefix := "ats."
+	ss := StatSummary{
+		Caches:        map[enum.CacheName]map[string]StatSummaryStat{},
+		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
+	}
+	for cache, stats := range statResultHistory {
+		if !filter.UseCache(cache) {
+			continue
+		}
+		ssStats := map[string]StatSummaryStat{}
+		for statName, statHistory := range stats {
+			if !filter.UseStat(statName) {
+				continue
+			}
+			if len(statHistory) == 0 {
+				continue
+			}
+			ssStat := StatSummaryStat{}
+			msPerNs := int64(1000000)
+			ssStat.StartTime = time.Time(statHistory[len(statHistory)-1].Time).UnixNano() / msPerNs
+			ssStat.EndTime = time.Time(statHistory[0].Time).UnixNano() / msPerNs
+			oldestVal, isOldestValNumeric := toNumeric(statHistory[len(statHistory)-1].Val)
+			newestVal, isNewestValNumeric := toNumeric(statHistory[0].Val)
+			if !isOldestValNumeric || !isNewestValNumeric {
+				continue // skip non-numeric stats
+			}
+			ssStat.Start = oldestVal
+			ssStat.End = newestVal
+			ssStat.High = newestVal
+			ssStat.Low = newestVal
+			for _, val := range statHistory {
+				fVal, ok := toNumeric(val.Val)
+				if !ok {
+					continue // skip non-numeric stats. TODO warn about stat history containing different types?
+				}
+				for i := uint64(0); i < val.Span; i++ {
+					ssStat.DataPointCount++
+					ssStat.Average -= ssStat.Average / float64(ssStat.DataPointCount)
+					ssStat.Average += fVal / float64(ssStat.DataPointCount)
+				}
+				if fVal < ssStat.Low {
+					ssStat.Low = fVal
+				}
+				if fVal > ssStat.High {
+					ssStat.High = fVal
+				}
+			}
+			ssStats[statPrefix+statName] = ssStat
+		}
+		ss.Caches[cache] = ssStats
+	}
+	return ss
+}
+
+func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory) ([]byte, int) {
+	filter, err := NewCacheStatFilter(path, params, toData.Get().ServerTypes)
+	if err != nil {
+		HandleErr(errorCount, path, err)
+		return []byte(err.Error()), http.StatusBadRequest
+	}
+	bytes, err := json.Marshal(createStatSummary(statResultHistory.Get(), filter, params))
+	return WrapErrCode(errorCount, path, bytes, err)
 }

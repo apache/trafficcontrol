@@ -37,18 +37,6 @@ my $t      = Test::Mojo->new('TrafficOps');
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-sub get_svr_id {
-    my $host_name = shift;
-    my $q      = "select id from server where host_name = \'$host_name\'";
-    my $get_svr = $dbh->prepare($q);
-    $get_svr->execute();
-    my $p = $get_svr->fetchall_arrayref( {} );
-    $get_svr->finish();
-    my $id = $p->[0]->{id};
-    return $id;
-}
-
-
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
@@ -84,14 +72,11 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
 
-
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-mid-01" )
   ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
   ->json_is( "/response/0/type", "MID" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-
 
 ok $t->get_ok('/api/1.2/servers?cdn=100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/hostName", "atlanta-edge-01" )
@@ -112,8 +97,6 @@ ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( su
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-
-
 ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
         "name" => "edge_atl_group1",
         "shortName" => "eag1",
@@ -130,8 +113,6 @@ ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} =
     ->json_is( "/response/secondaryParentCachegroup" => "")
             , 'Does the cache group details return?';
 
-
-
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server1",
 			"domainName" => "example-domain.com",
@@ -147,7 +128,6 @@ ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => js
 			"profile" => "EDGE1" })
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Is a server created when all required fields are provided?';
-
 
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
 			"hostName" => "server2",
@@ -338,7 +318,6 @@ ok $t->post_ok('/api/1.2/deliveryservices/test-ds4/servers' => {Accept => 'appli
      ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
      , 'Assign the server to the delivery service?';
 
-
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( "/response/0/type", "MID" )
   ->json_is( "/response/0/status", "ONLINE" )
@@ -431,8 +410,133 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'applicat
         "physLocation" => "HotAtlanta" })
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "my-server-host",
+			"domainName" => "example-domain.com",
+			"cachegroupId" => 100,
+			"cdnId" => 100,
+			"ipAddress" => "10.74.27.78",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.78",
+			"interfaceMtu" => 1500,
+			"physLocationId" => 100,
+			"typeId" => 1,
+			"statusId" => 1,
+			"updPending" => \0,
+			"profileId" => 100 })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server creation succeed?';
+
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "my-server-host",
+			"domainName" => "example-domain.com",
+			"cachegroupId" => 100,
+			"cdnId" => 100,
+			"ipAddress" => "10.74.27.78",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.78",
+			"interfaceMtu" => 1500,
+			"physLocationId" => 100,
+			"typeId" => 1,
+			"statusId" => 1,
+			"updPending" => \0,
+			"profileId" => 100 })
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server creation fail because ipAddress is already used by the profile?';
+
+my $server_id =&get_svr_id('my-server-host');
+ok $t->put_ok('/api/1.2/servers/' . $server_id => {Accept => 'application/json'} => json => {
+			"hostName" => "my-server-host",
+			"domainName" => "example-domain.com",
+			"cachegroupId" => 200,
+			"cdnId" => 100,
+			"ipAddress" => "10.74.27.78",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.78",
+			"interfaceMtu" => 1500,
+			"physLocationId" => 100,
+			"typeId" => 1,
+			"statusId" => 1,
+			"updPending" => \0,
+			"profileId" => 100 })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server update succeed because ipAddress is already used by the profile but...by this server?';
+
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "my-server-host-ip6",
+			"domainName" => "example-domain.com",
+			"cachegroupId" => 100,
+			"cdnId" => 100,
+			"ipAddress" => "10.74.27.79",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.79",
+			"ip6Address" => "2001:853:fe0f:27::2/64",
+			"ip6Gateway" => "2001:853:fe0f:27::1",
+			"interfaceMtu" => 1500,
+			"physLocationId" => 100,
+			"typeId" => 1,
+			"statusId" => 1,
+			"updPending" => \0,
+			"profileId" => 100 })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server creation succeed?';
+
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"hostName" => "my-server-host-ip6",
+			"domainName" => "example-domain.com",
+			"cachegroupId" => 100,
+			"cdnId" => 100,
+			"ipAddress" => "10.74.27.80",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.80",
+			"ip6Address" => "2001:853:fe0f:27::2/64",
+			"ip6Gateway" => "2001:853:fe0f:27::1",
+			"interfaceMtu" => 1500,
+			"physLocationId" => 100,
+			"typeId" => 1,
+			"statusId" => 1,
+			"updPending" => \0,
+			"profileId" => 100 })
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server creation fail because ip6Address is already used by the profile?';
+
+my $server_id =&get_svr_id('my-server-host-ip6');
+ok $t->put_ok('/api/1.2/servers/' . $server_id => {Accept => 'application/json'} => json => {
+			"hostName" => "my-server-host-ip6",
+			"domainName" => "example-domain.com",
+			"cachegroupId" => 200,
+			"cdnId" => 100,
+			"ipAddress" => "10.74.27.80",
+			"interfaceName" => "bond0",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.80",
+			"ip6Address" => "2001:853:fe0f:27::2/64",
+			"ip6Gateway" => "2001:853:fe0f:27::1",
+			"interfaceMtu" => 1500,
+			"physLocationId" => 100,
+			"typeId" => 1,
+			"statusId" => 1,
+			"updPending" => \0,
+			"profileId" => 100 })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Does the server update succeed because ip6Address is already used by the profile but...by this server?';
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();
 
-
+sub get_svr_id {
+	my $host_name = shift;
+	my $q      = "select id from server where host_name = \'$host_name\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}
