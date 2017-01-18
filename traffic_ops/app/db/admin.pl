@@ -93,6 +93,7 @@ if ( defined($argument) ) {
 		seed();
 	}
 	elsif ( $argument eq 'setup' ) {
+		createuser();
 		dropdb();
 		createdb();
 		load_schema();
@@ -158,43 +159,67 @@ sub migrate {
 	my ($command) = @_;
 
 	print "Migrating database...\n";
-	system( 'goose --env=' . $environment . ' ' . $command );
+	if ( system( "goose --env=$environment $command" ) != 0 ) {
+		die "Can't run goose\n";
+	}
 }
 
 sub seed {
 	print "Seeding database.\n";
-	system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/seeds.sql");
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/seeds.sql") != 0 ) {
+		die "Can't seed database\n";
+	}
 }
 
 sub load_schema {
 	print "Creating database tables.\n";
-	system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql");
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql") != 0 ) {
+		die "Can't create database tables\n";
+	}
 }
 
 sub dropdb {
-	system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;");
+	if ( system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;") != 0 ) {
+		die "Can't drop db $db_name\n";
+	}
 }
 
 sub createdb {
-	system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name;");
+	createuser();
+	my $db_exists = `psql -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
+	if ( $db_exists ) {
+		print "Database $db_name already exists\n";
+		return;
+	}
+
+	if ( system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name;") != 0 ) {
+		die "Can't create db $db_name\n";
+	}
 }
 
 sub createuser {
-	my $user_exists = system("psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='USR_NAME'" | grep -q 1 || createuser ...
+	my $user_exists = `psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
+	if ( $user_exists ) {
+		print "Role $db_username already exists\n";
+		return;
+	}
 
-	system("createuser -U traffic_ops -h $host_ip -p $host_port -P -e --superuser $db_username;");
-	system("createdb -U traffic_ops -h $host_ip -p $host_port -U $db_username -e $db_name;");
-	system("psql -U traffic_ops -h  $host_ip -p $host_port -e -c 'GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_username;'");
-	system("psql $db_name -U traffic_ops -h  $host_ip -p $host_port -e -c 'GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $db_username;'");
-
+	my $cmd = "CREATE USER $db_username WITH SUPERUSER CREATEROLE CREATEDB ENCRYPTED PASSWORD '$db_password'";
+	if ( system( qq{psql -h $host_ip -p $host_port -tAc "$cmd"} ) != 0 ) {
+		die "Can't create user $db_username\n";
+	}
 }
 
 sub dropuser {
-	system("dropuser -U traffic_ops -h $host_ip -p $host_port -i -e $db_username;");
+	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_username;") != 0 ) {
+		die "Can't drop user $db_username\n";
+	}
 }
 
 sub showusers {
-	system("psql postgres -c '\\du';");
+	if ( system("psql postgres -ec '\\du';") != 0 ) {
+		die "Can't show users";
+	}
 }
 
 sub reverse_schema {
