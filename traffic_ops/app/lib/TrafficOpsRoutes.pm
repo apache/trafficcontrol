@@ -240,9 +240,7 @@ sub ui_routes {
 	# -- Ort
 	$r->route('/ort/:hostname/ort1')->via('GET')->over( authenticated => 1 )->to( 'Ort#ort1', namespace => $namespace );
 	$r->route('/ort/:hostname/packages')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_package_versions', namespace => $namespace );
-	$r->route('/ort/:hostname/package/:package')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_package_version', namespace => $namespace );
 	$r->route('/ort/:hostname/chkconfig')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_chkconfig', namespace => $namespace );
-	$r->route('/ort/:hostname/chkconfig/:package')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_package_chkconfig', namespace => $namespace );
 
 	# -- Parameter
 	$r->post('/parameter/create')->over( authenticated => 1 )->to( 'Parameter#create', namespace => $namespace );
