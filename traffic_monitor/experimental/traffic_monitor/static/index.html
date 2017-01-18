@@ -321,7 +321,10 @@ under the License.
 						 document.getElementById("cache-states-" + server + "-stat-span").textContent = jdata[server].stat_span_ms;
 					 }
 					 if (jdata[server].hasOwnProperty("bandwidth_kbps")) {
-						 document.getElementById("cache-states-" + server + "-bandwidth").textContent = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
+						 var kbps = (jdata[server].bandwidth_kbps / kilobitsInMegabit).toFixed(2);
+						 var max = numberStrWithCommas((jdata[server].bandwidth_capacity_kbps / kilobitsInMegabit).toFixed(0));
+						 document.getElementById("cache-states-" + server + "-bandwidth").textContent = '' + kbps + ' / ' + max;
+
 					 } else {
 						 document.getElementById("cache-states-" + server + "-bandwidth").textContent = "N/A";
 					 }

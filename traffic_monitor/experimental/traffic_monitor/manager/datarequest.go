@@ -76,6 +76,7 @@ type CacheStatus struct {
 	// HealthSpanMilliseconds is the length of time between completing the most recent two health queries. This can be used as a rough gauge of the end-to-end query processing time.
 	HealthSpanMilliseconds *int64   `json:"health_span_ms,omitempty"`
 	BandwidthKbps          *float64 `json:"bandwidth_kbps,omitempty"`
+	BandwidthCapacityKbps  *float64 `json:"bandwidth_capacity_kbps,omitempty"`
 	ConnectionCount        *int64   `json:"connection_count,omitempty"`
 }
 
@@ -655,8 +656,8 @@ func srvAPIVersion(staticAppData StaticAppData) []byte {
 func srvAPITrafficOpsURI(opsConfig OpsConfigThreadsafe) []byte {
 	return []byte(opsConfig.Get().Url)
 }
-func srvAPICacheStates(toData todata.TODataThreadsafe, statInfoHistory threadsafe.ResultInfoHistory, statResultHistory threadsafe.ResultStatHistory, healthHistory threadsafe.ResultHistory, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats threadsafe.LastStats, localCacheStatus threadsafe.CacheAvailableStatus) ([]byte, error) {
-	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus))
+func srvAPICacheStates(toData todata.TODataThreadsafe, statInfoHistory threadsafe.ResultInfoHistory, statResultHistory threadsafe.ResultStatHistory, healthHistory threadsafe.ResultHistory, lastHealthDurations DurationMapThreadsafe, localStates peer.CRStatesThreadsafe, lastStats threadsafe.LastStats, localCacheStatus threadsafe.CacheAvailableStatus, statMaxKbpses threadsafe.CacheKbpses) ([]byte, error) {
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus, statMaxKbpses))
 }
 
 func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats threadsafe.LastStats) []byte {
@@ -778,7 +779,7 @@ func MakeDispatchMap(
 			return srvAPITrafficOpsURI(opsConfig)
 		}, ContentTypeJSON)),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
-			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus)
+			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus, statMaxKbpses)
 		}, ContentTypeJSON)),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)
@@ -896,10 +897,12 @@ func createCacheStatuses(
 	cacheStates map[enum.CacheName]peer.IsAvailable,
 	lastStats ds.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
+	statMaxKbpses threadsafe.CacheKbpses,
 ) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get()
+	maxKbpses := statMaxKbpses.Get()
 
 	for cacheName, cacheType := range cacheTypes {
 		infoHistory, ok := statInfoHistory[cacheName]
@@ -943,12 +946,19 @@ func createCacheStatuses(
 		}
 
 		var kbps *float64
-		lastStat, ok := lastStats.Caches[cacheName]
-		if !ok {
+		if lastStat, ok := lastStats.Caches[cacheName]; !ok {
 			log.Warnf("cache not in last kbps cache %s\n", cacheName)
 		} else {
 			kbpsVal := lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
 			kbps = &kbpsVal
+		}
+
+		var maxKbps *float64
+		if v, ok := maxKbpses[cacheName]; !ok {
+			log.Warnf("cache not in max kbps cache %s\n", cacheName)
+		} else {
+			fv := float64(v)
+			maxKbps = &fv
 		}
 
 		var connections *int64
@@ -983,6 +993,7 @@ func createCacheStatuses(
 			StatSpanMilliseconds:   &statSpan,
 			HealthSpanMilliseconds: &healthSpan,
 			BandwidthKbps:          kbps,
+			BandwidthCapacityKbps:  maxKbps,
 			ConnectionCount:        connections,
 			Status:                 status,
 		}
