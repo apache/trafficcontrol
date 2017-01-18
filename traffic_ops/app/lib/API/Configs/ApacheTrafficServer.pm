@@ -452,7 +452,7 @@ sub cdn_ds_data {
 		my $multi_site_origin           = $row->multi_site_origin;
 		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
 
-		if ( $re_type eq 'HOST_REGEXP' && $ds_type ne 'ANY_MAP' ) {
+		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
 			my $map_to  = $org_server . "/";
 			if ( $host_re =~ /\.\*$/ ) {
