@@ -73,47 +73,6 @@ sub __get_json_parameter_list_by_host {
 	return($data_obj);
 }
 
-sub __get_json_parameter_by_host {
-	my $self      = shift;
-	my $host      = shift;
-	my $parameter = shift;
-	my $value     = shift;
-	my $key_name  = shift || "name";
-	my $key_value = shift || "value";
-	my $data_obj;
-
-	my $rs_profile
-		= $self->db->resultset('Server')->search( { 'me.host_name' => $host },
-		{ prefectch => [ 'cdn', 'profile' ] } );
-
-	my $row = $rs_profile->next;
-	my $id  = $row->id;
-	if ( defined($row) && defined( $row->cdn->name ) ) {
-		push(
-			@{$data_obj},
-			{ $key_name => "CDN_Name", $key_value => $row->cdn->name }
-		);
-	}
-
-	my %condition = (
-		'profile_parameters.profile' => $id,
-		'config_file'                => $value,
-		name                         => $parameter
-	);
-	my $rs_config = $self->db->resultset('Parameter')
-		->search( \%condition, { join => 'profile_parameters' } );
-	$row = $rs_config->next;
-
-	if ( defined($row) && defined( $row->name ) && defined( $row->value ) ) {
-		push(
-			@{$data_obj},
-			{ $key_name => $row->name, $key_value => $row->value }
-		);
-	}
-
-	return ($data_obj);
-}
-
 sub get_package_versions {
 	my $self = shift;
 	my $host_name = $self->param("hostname");	
@@ -122,29 +81,11 @@ sub get_package_versions {
 	$self->render( json => $data_obj );
 }
 
-sub get_package_version {
-	my $self = shift;
-	my $host_name = $self->param("hostname");
-	my $package = $self->param("package");
-	my $data_obj = __get_json_parameter_by_host($self, $host_name, $package, "package", "name", "version");
-	    
-	$self->render( json => $data_obj );
-}
-
 sub get_chkconfig {
 	my $self = shift;
 	my $host_name = $self->param("hostname");	
 	my $data_obj = __get_json_parameter_list_by_host($self, $host_name, "chkconfig");
 	
-	$self->render( json => $data_obj );
-}
-
-sub get_package_chkconfig {
-	my $self = shift;
-	my $host_name = $self->param("hostname");
-	my $package = $self->param("package");
-	my $data_obj = __get_json_parameter_by_host($self, $host_name, $package, "chkconfig");
-	    
 	$self->render( json => $data_obj );
 }
 
