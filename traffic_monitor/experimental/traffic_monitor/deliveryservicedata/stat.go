@@ -8,9 +8,9 @@ package deliveryservicedata // TODO rename?
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,13 +19,13 @@ package deliveryservicedata // TODO rename?
  * under the License.
  */
 
-
 import (
 	"errors"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"net/url"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 )
 
 // Filter encapsulates functions to filter a given set of Stats, e.g. from HTTP query parameters.
@@ -191,7 +191,7 @@ type StatCacheStats struct {
 	Tps3xx      StatFloat  `json:"tps_3xx"`
 	Tps2xx      StatFloat  `json:"tps_2xx"`
 	ErrorString StatString `json:"error_string"`
-	TpsTotal    StatInt    `json:"tps_total"`
+	TpsTotal    StatFloat  `json:"tps_total"`
 }
 
 // Sum adds the given cache stats to this cache stats. Numeric values are summed; strings are appended.
@@ -210,7 +210,7 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 		Tps3xx:      StatFloat{Value: a.Tps3xx.Value + b.Tps3xx.Value},
 		Tps2xx:      StatFloat{Value: a.Tps2xx.Value + b.Tps2xx.Value},
 		ErrorString: StatString{Value: a.ErrorString.Value + b.ErrorString.Value},
-		TpsTotal:    StatInt{Value: a.TpsTotal.Value + b.TpsTotal.Value},
+		TpsTotal:    StatFloat{Value: a.TpsTotal.Value + b.TpsTotal.Value},
 	}
 }
 
