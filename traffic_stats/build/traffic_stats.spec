@@ -51,20 +51,12 @@ go_get_version() {
   )
 }
 
-# get traffic_ops client
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
-( mkdir -p "$godir" && \
-  cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_ops/client/* . && \
-  go get -v \
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
-
 #get traffic_stats client
 godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_stats/* . && \
+  cp -L -r "$TC_DIR"/traffic_stats/* . && \
   go get -d -v && \
   go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
