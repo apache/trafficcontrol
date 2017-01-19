@@ -4167,8 +4167,8 @@ use namespace::autoclean;
 			config_file => 'plugin.config',
 		},
 	},
-	## id => 415
-	'414' => {
+	## id => 416
+	'415' => {
 			new => 'Parameter',
 			using => {
 				name => 'tld.soa.admin',
