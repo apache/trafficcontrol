@@ -28,12 +28,25 @@ use URI;
 use File::Basename;
 use File::Path;
 
+use constant {
+	HTTP					=> 0,
+	HTTPS					=> 1,
+	HTTP_AND_HTTPS  		=> 2,
+	HTTP_TO_HTTPS  			=> 3,
+	CONSISTENT_HASH			=> 0,
+	PRIMARY_BACKUP			=> 1,
+	STRICT_ROUND_ROBIN 		=> 2,
+	IP_ROUND_ROBIN			=> 3,
+	LATCH_ON_FAILOVER		=> 4,
+	RRH_DONT_CACHE			=> 0,
+	RRH_BACKGROUND_FETCH	=> 1,
+	RRH_CACHE_RANGE_REQUEST	=> 2,
+};
+
 #Sub to generate config metadata
 sub get_config_metadata {
 	my $self     = shift;
 	my $id       = $self->param('id');
-	my $filename = 'ort';
-	my $scope    = 'server';
 
 	##check user access
 	if ( !&is_oper($self) ) {
@@ -50,31 +63,31 @@ sub get_config_metadata {
 	my $host_name = $server_obj->host_name;
 
 	my %condition = ( 'me.host_name' => $host_name );
-	my $rs_profile = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
+	my $rs_server = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
 
-	my $row = $rs_profile->next;
-	if ($row) {
-		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+	my $server = $rs_server->next;
+	if ($server) {
+		my $cdn_name = $server->cdn->name;
 
-		$data_obj->{'profile'}->{'name'}   = $row->profile->name;
-		$data_obj->{'profile'}->{'id'}     = $row->profile->id;
+		$data_obj->{'profile'}->{'name'}   = $server->profile->name;
+		$data_obj->{'profile'}->{'id'}     = $server->profile->id;
 		$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
 
 		%condition = (
 			'profile_parameters.profile' => $data_obj->{'profile'}->{'id'},
 			-or                          => [ 'name' => 'location', 'name' => 'scope' ]
 		);
-		my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
-		while ( my $row = $rs_config->next ) {
-			if ( $row->name eq 'location' ) {
-				$data_obj->{'config_files'}->{ $row->config_file }->{'location'} = $row->value;
+		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
+		while ( my $param = $rs_param->next ) {
+			if ( $param->name eq 'location' ) {
+				$data_obj->{'config_files'}->{ $param->config_file }->{'location'} = $param->value;
 			}
 		}
 	}
 
-	foreach my $file ( keys $data_obj->{'config_files'} ) {
-		if ( !defined( $data_obj->{'config_files'}->{$file}->{'scope'} ) ) {
-			$data_obj->{'config_files'}->{$file}->{'scope'} = $self->get_scope($file);
+	foreach my $config_file ( keys $data_obj->{'config_files'} ) {
+		if ( !defined( $data_obj->{'config_files'}->{$config_file}->{'scope'} ) ) {
+			$data_obj->{'config_files'}->{$config_file}->{'scope'} = $self->get_scope($config_file);
 		}
 	}
 
@@ -463,14 +476,14 @@ sub cdn_ds_data {
 				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == 0 ) {
+				if ( $protocol == HTTP ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $hname . $re . $ds_domain . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first one with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -482,14 +495,14 @@ sub cdn_ds_data {
 			}
 			else {
 				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == 0 ) {
+				if ( $protocol == HTTP ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -542,47 +555,46 @@ sub cdn_ds_data {
 sub ds_data {
 	my $self       = shift;
 	my $server_obj = shift;
-	my $dsinfo;
+	my $response_obj;
 
-	$dsinfo->{host_name}   = $server_obj->host_name;
-	$dsinfo->{domain_name} = $server_obj->domain_name;
+	$response_obj->{host_name}   = $server_obj->host_name;
+	$response_obj->{domain_name} = $server_obj->domain_name;
 
-	my @server_ids = ();
-	my $rs;
+	my $rs_dsinfo;
 	if ( $server_obj->type->name =~ m/^MID/ ) {
 
 		# the mids will do all deliveryservices in this CDN
 		my $domain = $self->profile_param_value( $server_obj->profile->id, 'CRConfig.json', 'domain_name', '' );
-		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
+		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
 	}
 	else {
-		$rs = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
+		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
 	}
 
 	my $j = 0;
-	while ( my $row = $rs->next ) {
-		my $org_server                  = $row->org_server_fqdn;
-		my $dscp                        = $row->dscp;
-		my $re_type                     = $row->re_type;
-		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
-		my $qstring_ignore              = $row->qstring_ignore;
-		my $ds_xml_id                   = $row->xml_id;
-		my $ds_domain                   = $row->domain_name;
-		my $edge_header_rewrite         = $row->edge_header_rewrite;
-		my $mid_header_rewrite          = $row->mid_header_rewrite;
-		my $regex_remap                 = $row->regex_remap;
-		my $protocol                    = $row->protocol;
-		my $range_request_handling      = $row->range_request_handling;
-		my $origin_shield               = $row->origin_shield;
-		my $cacheurl                    = $row->cacheurl;
-		my $remap_text                  = $row->remap_text;
-		my $multi_site_origin           = $row->multi_site_origin;
-		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
+	while ( my $dsinfo = $rs_dsinfo->next ) {
+		my $org_fqdn                  	= $dsinfo->org_server_fqdn;
+		my $dscp                        = $dsinfo->dscp;
+		my $re_type                     = $dsinfo->re_type;
+		my $ds_type                     = $dsinfo->ds_type;
+		my $signed                      = $dsinfo->signed;
+		my $qstring_ignore              = $dsinfo->qstring_ignore;
+		my $ds_xml_id                   = $dsinfo->xml_id;
+		my $ds_domain                   = $dsinfo->domain_name;
+		my $edge_header_rewrite         = $dsinfo->edge_header_rewrite;
+		my $mid_header_rewrite          = $dsinfo->mid_header_rewrite;
+		my $regex_remap                 = $dsinfo->regex_remap;
+		my $protocol                    = $dsinfo->protocol;
+		my $range_request_handling      = $dsinfo->range_request_handling;
+		my $origin_shield               = $dsinfo->origin_shield;
+		my $cacheurl                    = $dsinfo->cacheurl;
+		my $remap_text                  = $dsinfo->remap_text;
+		my $multi_site_origin           = $dsinfo->multi_site_origin;
+		my $multi_site_origin_algorithm = $dsinfo->multi_site_origin_algorithm;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
-			my $host_re = $row->pattern;
-			my $map_to  = $org_server . "/";
+			my $host_re = $dsinfo->pattern;
+			my $map_to  = $org_fqdn . "/";
 			if ( $host_re =~ /\.\*$/ ) {
 				my $re = $host_re;
 				$re =~ s/\\//g;
@@ -593,77 +605,77 @@ sub ds_data {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == 0 ) {
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+				if ( $protocol == HTTP ) {
+					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $hname . $re . $ds_domain . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first one with http
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 
 					#add the second one for https
 					my $map_from2 = "https://" . $hname . $re . $ds_domain . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
+					$response_obj->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
 				}
 			}
 			else {
 				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == 0 ) {
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+				if ( $protocol == HTTP ) {
+					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $host_re . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first with http
-					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 
 					#add the second with https
 					my $map_from2 = "https://" . $host_re . "/";
-					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
+					$response_obj->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
 				}
 			}
 		}
-		$dsinfo->{dslist}->[$j]->{"dscp"}                        = $dscp;
-		$dsinfo->{dslist}->[$j]->{"org"}                         = $org_server;
-		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
-		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
-		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
-		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
-		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
-		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}          = $mid_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"regex_remap"}                 = $regex_remap;
-		$dsinfo->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
-		$dsinfo->{dslist}->[$j]->{"origin_shield"}               = $origin_shield;
-		$dsinfo->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
-		$dsinfo->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"} = $multi_site_origin_algorithm;
+		$response_obj->{dslist}->[$j]->{"dscp"}                        = $dscp;
+		$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
+		$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
+		$response_obj->{dslist}->[$j]->{"domain"}                      = $ds_domain;
+		$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+		$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+		$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
+		$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
+		$response_obj->{dslist}->[$j]->{"mid_header_rewrite"}          = $mid_header_rewrite;
+		$response_obj->{dslist}->[$j]->{"regex_remap"}                 = $regex_remap;
+		$response_obj->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
+		$response_obj->{dslist}->[$j]->{"origin_shield"}               = $origin_shield;
+		$response_obj->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
+		$response_obj->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
+		$response_obj->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
+		$response_obj->{dslist}->[$j]->{"multi_site_origin_algorithm"} = $multi_site_origin_algorithm;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
-			$dsinfo->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
+			$response_obj->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
 		}
 		if ( defined($mid_header_rewrite) ) {
 			my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
-			$dsinfo->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
+			$response_obj->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
 		}
 		if ( defined($cacheurl) ) {
 			my $fname = "cacheurl_" . $ds_xml_id . ".config";
-			$dsinfo->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+			$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
 		}
 
 		$j++;
 	}
 
-	return $dsinfo;
+	return $response_obj;
 }
 
 #generates the 12m_facts file
@@ -914,7 +926,6 @@ sub volume_dot_config_volume_text {
 sub volume_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
-	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "storage.config" );
 	my $text = $self->header_comment( $profile_obj->name );
@@ -922,7 +933,7 @@ sub volume_dot_config {
 	my $num_volumes = get_num_volumes($data);
 
 	my $next_volume = 1;
-	$text .= "# 12M NOTE: This is running with forced volumes - the size is irrelevant\n";
+	$text .= "# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant\n";
 	if ( defined( $data->{Drive_Prefix} ) ) {
 		$text .= volume_dot_config_volume_text( $next_volume, $num_volumes );
 		$next_volume++;
@@ -1194,9 +1205,9 @@ sub cache_dot_config {
 	my $text = $self->header_comment( $server_obj->host_name );
 	my $data = $self->ds_data($server_obj);
 
-	foreach my $remap ( @{ $data->{dslist} } ) {
-		if ( $remap->{type} eq "HTTP_NO_CACHE" ) {
-			my $org_fqdn = $remap->{org};
+	foreach my $ds ( @{ $data->{dslist} } ) {
+		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
+			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
 			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
 		}
@@ -1208,7 +1219,6 @@ sub cache_dot_config {
 sub hosting_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
-	my $filename   = shift;
 
 	my $storage_data = $self->param_data( $server_obj, "storage.config" );
 	my $text = $self->header_comment( $server_obj->host_name );
@@ -1219,22 +1229,22 @@ sub hosting_dot_config {
 		my $next_volume = 1;
 		if ( defined( $storage_data->{Drive_Prefix} ) ) {
 			my $disk_volume = $next_volume;
-			$text .= "# 12M NOTE: volume " . $disk_volume . " is the Disk volume\n";
+			$text .= "# TRAFFIC OPS NOTE: volume " . $disk_volume . " is the Disk volume\n";
 			$next_volume++;
 		}
 		my $ram_volume = $next_volume;
-		$text .= "# 12M NOTE: volume " . $ram_volume . " is the RAM volume\n";
+		$text .= "# TRAFFIC OPS NOTE: volume " . $ram_volume . " is the RAM volume\n";
 
 		my %listed = ();
-		foreach my $remap ( @{ $data->{dslist} } ) {
-			if (   ( ( $remap->{type} =~ /_LIVE$/ || $remap->{type} =~ /_LIVE_NATNL$/ ) && $server_obj->type->name =~ m/^EDGE/ )
-				|| ( $remap->{type} =~ /_LIVE_NATNL$/ && $server_obj->type->name =~ m/^MID/ ) )
+		foreach my $ds ( @{ $data->{dslist} } ) {
+			if (   ( ( $ds->{type} =~ /_LIVE$/ || $ds->{type} =~ /_LIVE_NATNL$/ ) && $server_obj->type->name =~ m/^EDGE/ )
+				|| ( $ds->{type} =~ /_LIVE_NATNL$/ && $server_obj->type->name =~ m/^MID/ ) )
 			{
-				if ( defined( $listed{ $remap->{org} } ) ) { next; }
-				my $org_fqdn = $remap->{org};
+				if ( defined( $listed{ $ds->{org} } ) ) { next; }
+				my $org_fqdn = $ds->{org};
 				$org_fqdn =~ s/https?:\/\///;
 				$text .= "hostname=" . $org_fqdn . " volume=" . $ram_volume . "\n";
-				$listed{ $remap->{org} } = 1;
+				$listed{ $ds->{org} } = 1;
 			}
 		}
 	}
@@ -1276,44 +1286,44 @@ sub ip_allow_data {
 	}
 
 	if ( $server_obj->type->name =~ m/^MID/ ) {
-		my @edge_locs = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server_obj->cachegroup->id } )->get_column('id')->all();
-		my %allow_locs;
-		foreach my $loc (@edge_locs) {
-			$allow_locs{$loc} = 1;
+		my @edge_cachegroups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server_obj->cachegroup->id } )->get_column('id')->all();
+		my %allow_cachegroups;
+		foreach my $cg (@edge_cachegroups) {
+			$allow_cachegroups{$cg} = 1;
 		}
 
-		# get all the EDGE and RASCAL nets
-		my @allowed_netaddrips;
+		# get all the EDGE and Traffic Monitor (RASCAL) nets
+		my @allowed_ipv4_netaddrips;
 		my @allowed_ipv6_netaddrips;
-		my @types;
-		push( @types, &type_ids( $self, 'EDGE%', 'server' ) );
-		my $rtype = &type_id( $self, 'RASCAL' );
-		push( @types, $rtype );
-		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
+		my @server_types;
+		push( @server_types, &type_ids( $self, 'EDGE%', 'server' ) );
+		my $tm_type = &type_id( $self, 'RASCAL' );
+		push( @server_types, $tm_type );
+		my $rs_allowed_servers = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@server_types } }, { prefetch => [ 'type', 'cachegroup' ] } );
 
-		while ( my $allow_row = $rs_allowed->next ) {
-			if ( $allow_row->type->id == $rtype
-				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
+		while ( my $allowed_server = $rs_allowed_servers->next ) {
+			if ( $allowed_server->type->id == $tm_type
+				|| ( defined( $allow_cachegroups{ $allowed_server->cachegroup->id } ) && $allow_cachegroups{ $allowed_server->cachegroup->id } == 1 ) )
 			{
-				my $ipv4 = NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask );
+				my $ipv4 = NetAddr::IP->new( $allowed_server->ip_address, $allowed_server->ip_netmask );
 
 				if ( defined($ipv4) ) {
-					push( @allowed_netaddrips, $ipv4 );
+					push( @allowed_ipv4_netaddrips, $ipv4 );
 				}
 				else {
 					$self->app->log->error(
-						$allow_row->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server_obj->host_name );
+						$allowed_server->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server_obj->host_name );
 				}
 
-				if ( defined $allow_row->ip6_address ) {
-					my $ipv6 = NetAddr::IP->new( $allow_row->ip6_address );
+				if ( defined $allowed_server->ip6_address ) {
+					my $ipv6 = NetAddr::IP->new( $allowed_server->ip6_address );
 
 					if ( defined($ipv6) ) {
-						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
+						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allowed_server->ip6_address ) );
 					}
 					else {
 						$self->app->log->error(
-							$allow_row->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server_obj->host_name );
+							$allowed_server->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server_obj->host_name );
 					}
 				}
 			}
@@ -1321,9 +1331,9 @@ sub ip_allow_data {
 
 		# compact, coalesce and compact combined list again
 		# if more than 5 servers are in a /24, list that /24 - TODO JvD: parameterize
-		my @compacted_list = NetAddr::IP::Compact(@allowed_netaddrips);
-		my $coalesced_list = NetAddr::IP::Coalesce( 24, 5, @allowed_netaddrips );
-		my @combined_list  = NetAddr::IP::Compact( @allowed_netaddrips, @{$coalesced_list} );
+		my @compacted_list = NetAddr::IP::Compact(@allowed_ipv4_netaddrips);
+		my $coalesced_list = NetAddr::IP::Coalesce( 24, 5, @allowed_ipv4_netaddrips );
+		my @combined_list  = NetAddr::IP::Compact( @allowed_ipv4_netaddrips, @{$coalesced_list} );
 		foreach my $net (@combined_list) {
 			my $range = $net->range();
 			$range =~ s/\s+//g;
@@ -1465,11 +1475,11 @@ sub parent_data {
 
 	my @parent_cachegroup_ids;
 	my @secondary_parent_cachegroup_ids;
-	my $org_loc_type_id = &type_id( $self, "ORG_LOC" );
+	my $org_cachegroup_type_id = &type_id( $self, "ORG_LOC" );
 	if ( $server_obj->type->name =~ m/^MID/ ) {
 
 		# multisite origins take all the org groups in to account
-		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_loc_type_id } )->get_column('id')->all();
+		@parent_cachegroup_ids = $self->db->resultset('Cachegroup')->search( { type => $org_cachegroup_type_id } )->get_column('id')->all();
 	}
 	else {
 		@parent_cachegroup_ids =
@@ -1536,23 +1546,21 @@ sub format_parent_info {
 sub parent_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
-	my $filename   = shift;
 
 	my $data;
 
 	my $server_type = $server_obj->type->name;
 	my $parent_qstring;
-	my $pinfo;
+	my $parent_info;
 	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
 
 	if ( $server_type =~ m/^MID/ ) {
-		my @unique_origin;
+		my @unique_origins;
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id = $ds->{ds_xml_id};
-			my $os     = $ds->{origin_shield};
+			my $origin_shield     = $ds->{origin_shield};
 			$parent_qstring = "ignore";
 			my $multi_site_origin           = defined( $ds->{multi_site_origin} )           ? $ds->{multi_site_origin}           : 0;
 			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
@@ -1560,28 +1568,28 @@ sub parent_dot_config {
 			my $org_uri = URI->new( $ds->{org} );
 
 			# Don't duplicate origin line if multiple seen
-			next if ( grep( /^$org_uri$/, @unique_origin ) );
-			push @unique_origin, $org_uri;
+			next if ( grep( /^$org_uri$/, @unique_origins ) );
+			push @unique_origins, $org_uri;
 
-			if ( defined($os) ) {
-				my $pselect_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
+			if ( defined($origin_shield) ) {
+				my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
 				my $algorithm = "";
-				if ( defined($pselect_alg) ) {
-					$algorithm = "round_robin=$pselect_alg";
+				if ( defined($parent_select_alg) ) {
+					$algorithm = "round_robin=$parent_select_alg";
 				}
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " parent=$os $algorithm go_direct=true\n";
+				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " parent=$origin_shield $algorithm go_direct=true\n";
 			}
 			elsif ($multi_site_origin) {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " ";
 
 				# If we have multi-site origin, get parent_data once
-				if ( not defined($pinfo) ) {
-					$pinfo = $self->parent_data($server_obj);
+				if ( not defined($parent_info) ) {
+					$parent_info = $self->parent_data($server_obj);
 				}
 
 				my @ranked_parents = ();
-				if ( exists( $pinfo->{ $org_uri->host } ) ) {
-					@ranked_parents = sort by_parent_rank @{ $pinfo->{ $org_uri->host } };
+				if ( exists( $parent_info->{ $org_uri->host } ) ) {
+					@ranked_parents = sort by_parent_rank @{ $parent_info->{ $org_uri->host } };
 				}
 				else {
 					$self->app->log->debug( "BUG: Did not match an origin: " . $org_uri );
@@ -1615,22 +1623,22 @@ sub parent_dot_config {
 
 				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
 				my $mso_algorithm = "";
-				if ( $multi_site_origin_algorithm == 0 ) {
+				if ( $multi_site_origin_algorithm == CONSISTENT_HASH ) {
 					$mso_algorithm = "consistent_hash";
 					if ( $ds->{qstring_ignore} == 0 ) {
 						$parent_qstring = "consider";
 					}
 				}
-				elsif ( $multi_site_origin_algorithm == 1 ) {
+				elsif ( $multi_site_origin_algorithm == PRIMARY_BACKUP ) {
 					$mso_algorithm = "false";
 				}
-				elsif ( $multi_site_origin_algorithm == 2 ) {
+				elsif ( $multi_site_origin_algorithm == STRICT_ROUND_ROBIN ) {
 					$mso_algorithm = "strict";
 				}
-				elsif ( $multi_site_origin_algorithm == 3 ) {
+				elsif ( $multi_site_origin_algorithm == IP_ROUND_ROBIN ) {
 					$mso_algorithm = "true";
 				}
-				elsif ( $multi_site_origin_algorithm == 4 ) {
+				elsif ( $multi_site_origin_algorithm == LATCH_ON_FAILOVER ) {
 					$mso_algorithm = "latched";
 				}
 				else {
@@ -1648,27 +1656,27 @@ sub parent_dot_config {
 	else {
 
 		#"True" Parent
-		$pinfo = $self->parent_data($server_obj);
+		$parent_info = $self->parent_data($server_obj);
 
 		my %done = ();
 
-		foreach my $remap ( @{ $data->{dslist} } ) {
-			my $org = $remap->{org};
+		foreach my $ds ( @{ $data->{dslist} } ) {
+			my $org = $ds->{org};
 			$parent_qstring = "ignore";
 			next if !defined $org || $org eq "";
 			next if $done{$org};
 			my $org_uri = URI->new($org);
-			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
+			if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				if ( $remap->{qstring_ignore} == 0 ) {
+				if ( $ds->{qstring_ignore} == 0 ) {
 					$parent_qstring = "consider";
 				}
 
 				my @parent_info;
 				my @secondary_parent_info;
-				foreach my $parent ( @{ $pinfo->{all_parents} } ) {
+				foreach my $parent ( @{ $parent_info->{all_parents} } ) {
 					my $ptxt = format_parent_info($parent);
 					if ( $parent->{primary_parent} ) {
 						push @parent_info, $ptxt;
@@ -1698,10 +1706,10 @@ sub parent_dot_config {
 			$done{$org} = 1;
 		}
 
-		my $pselect_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
-		if ( defined($pselect_alg) && $pselect_alg eq 'consistent_hash' ) {
+		my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
+		if ( defined($parent_select_alg) && $parent_select_alg eq 'consistent_hash' ) {
 			my @parent_info;
-			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
+			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
 				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
 			}
 			my %seen;
@@ -1713,7 +1721,7 @@ sub parent_dot_config {
 		else {    # default to old situation.
 			$text .= "dest_domain=.";
 			my @parent_info;
-			foreach my $parent ( @{ $pinfo->{"all_parents"} } ) {
+			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
 				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
 			}
 			my %seen;
@@ -1736,7 +1744,6 @@ sub parent_dot_config {
 sub remap_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
-	my $filename   = shift;
 	my $data;
 
 	my $pdata = $self->param_data( $server_obj, 'package' );
@@ -1747,25 +1754,25 @@ sub remap_dot_config {
 
 	if ( $server_obj->type->name =~ m/^MID/ ) {
 		my %mid_remap;
-		foreach my $remap ( @{ $data->{dslist} } ) {
-			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
+		foreach my $ds ( @{ $data->{dslist} } ) {
+			if ( $ds->{type} =~ /LIVE/ && $ds->{type} !~ /NATNL/ ) {
 				next;    # Live local delivery services skip mids
 			}
-			if ( defined( $remap->{org} ) && defined( $mid_remap{ $remap->{org} } ) ) {
+			if ( defined( $ds->{org} ) && defined( $mid_remap{ $ds->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
 
-			if ( defined( $remap->{mid_header_rewrite} ) && $remap->{mid_header_rewrite} ne "" ) {
-				$mid_remap{ $remap->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
+			if ( defined( $ds->{mid_header_rewrite} ) && $ds->{mid_header_rewrite} ne "" ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $ds->{mid_hdr_rw_file};
 			}
-			if ( $remap->{qstring_ignore} == 1 ) {
-				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			if ( $ds->{qstring_ignore} == 1 ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
 			}
-			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
-				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
+			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
 			}
-			if ( $remap->{range_request_handling} == 2 ) {
-				$mid_remap{ $remap->{org} } .= " \@plugin=cache_range_requests.so";
+			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";
 			}
 		}
 		foreach my $key ( keys %mid_remap ) {
@@ -1776,14 +1783,14 @@ sub remap_dot_config {
 	}
 
 	# mids don't get here.
-	foreach my $remap ( @{ $data->{dslist} } ) {
-		foreach my $map_from ( keys %{ $remap->{remap_line} } ) {
-			my $map_to = $remap->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $remap, $map_from, $map_to );
+	foreach my $ds ( @{ $data->{dslist} } ) {
+		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
+			my $map_to = $ds->{remap_line}->{$map_from};
+			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
-		foreach my $map_from ( keys %{ $remap->{remap_line2} } ) {
-			my $map_to = $remap->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $remap, $map_from, $map_to );
+		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
+			my $map_to = $ds->{remap_line2}->{$map_from};
+			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 	}
 	return $text;
@@ -1844,10 +1851,10 @@ sub build_remap_line {
 	if ( defined( $remap->{regex_remap} ) && $remap->{regex_remap} ne "" ) {
 		$text .= " \@plugin=regex_remap.so \@pparam=regex_remap_" . $remap->{ds_xml_id} . ".config";
 	}
-	if ( $remap->{range_request_handling} == 1 ) {
+	if ( $remap->{range_request_handling} == RRH_BACKGROUND_FETCH ) {
 		$text .= " \@plugin=background_fetch.so \@pparam=bg_fetch.config";
 	}
-	elsif ( $remap->{range_request_handling} == 2 ) {
+	elsif ( $remap->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
 		$text .= " \@plugin=cache_range_requests.so ";
 	}
 	if ( defined( $remap->{remap_text} ) ) {
