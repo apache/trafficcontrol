@@ -69,9 +69,13 @@ FROM
         JOIN parameter ON parameter.id = profile_parameter.parameter
         JOIN deliveryservice_server ON deliveryservice_server.deliveryservice = deliveryservice.id
         JOIN server ON deliveryservice_server.server = server.id
-WHERE deliveryservice.cdn_id = ? AND parameter.name = 'domain_name'
-ORDER BY ds_id, re_type , deliveryservice_regex.set_number
-"
+WHERE 
+    deliveryservice.cdn_id = ? 
+    AND parameter.name = 'domain_name'
+ORDER BY 
+    ds_id, 
+    re_type , 
+    deliveryservice_regex.set_number"
 );
 
 __PACKAGE__->add_columns(
