@@ -28,8 +28,8 @@ use URI;
 use File::Basename;
 use File::Path;
 
-#Sub to generate ORT json
-sub ort {
+#Sub to generate config metadata
+sub get_config_metadata {
 	my $self     = shift;
 	my $id       = $self->param('id');
 	my $filename = 'ort';
@@ -69,13 +69,10 @@ sub ort {
 			if ( $row->name eq 'location' ) {
 				$data_obj->{'config_files'}->{ $row->config_file }->{'location'} = $row->value;
 			}
-			elsif ( $row->name eq 'scope' ) {
-				$data_obj->{'config_files'}->{ $row->config_file }->{'scope'} = $row->value;
-			}
 		}
 	}
 
-	foreach my $file ( keys %$data_obj->{'config_files'} ) {
+	foreach my $file ( keys $data_obj->{'config_files'} ) {
 		if ( !defined( $data_obj->{'config_files'}->{$file}->{'scope'} ) ) {
 			$data_obj->{'config_files'}->{$file}->{'scope'} = $self->get_scope($file);
 		}
