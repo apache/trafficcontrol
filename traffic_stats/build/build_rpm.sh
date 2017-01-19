@@ -37,12 +37,12 @@ function initBuildArea() {
 	local ts_dest=$(createSourceDir traffic_stats)
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; exit 1; }
-	rsync -av ./ "$ts_dest"/ || \
+	rsync -aLv ./ "$ts_dest"/ || \
 		 { echo "Could not copy to $ts_dest: $?"; exit 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
 
-	cp -r "$TS_DIR"/ "$ts_dest" || { echo "Could not copy $TS_DIR to $ts_dest: $?"; exit 1; }
+	cp -L -r "$TS_DIR"/ "$ts_dest" || { echo "Could not copy $TS_DIR to $ts_dest: $?"; exit 1; }
 
 	tar -czvf "$ts_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $ts_dest) || { echo "Could not create tar archive $ts_dest.tgz: $?"; exit 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }
