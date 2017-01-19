@@ -166,9 +166,7 @@ sub newjob {
 			# my $ds_id =
 			# 	$self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => ['profile'] } )->get_column('id')->single();
 			my $rs       = $self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $ds_xml_id }, { prefetch => 'cdn' } )->single;
-			my $cdn_name = $rs->cdn->name;
 			my $ds_id    = $rs->id;
-			$self->snapshot_regex_revalidate($cdn_name);
 
 			$self->set_update_server_bits($ds_id);
 
