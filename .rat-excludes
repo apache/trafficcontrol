@@ -51,3 +51,4 @@ crossfilter\.js(?:                   Apache 2.0. Properly documented in LICENSE 
 lz-string.*\.js(?:                   WTFPL v2. Properly documented in LICENSE ){0}
 modernizr.*(?:                       MIT. Properly documented in LICENSE ){0}
 prettyprint\.js(?:                   BSD 2-clause. Properly documented in LICENSE ){0}
+seelog(?:                            BSD 3-clause. Properly documented in LICENSE ){0}
