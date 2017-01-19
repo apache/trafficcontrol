@@ -561,7 +561,7 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		}
 		stat.ErrorString.Value += v + ", "
 	case "tps_total":
-		v, ok := val.(int64)
+		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}
