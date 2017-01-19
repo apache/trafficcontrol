@@ -152,7 +152,7 @@ sub get_cdn_config {
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
-	print STDERR "well i'm here anyway.";
+
 	##check the scope - is this the correct route?
 	if ( $scope ne 'cdn' ) {
 		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
