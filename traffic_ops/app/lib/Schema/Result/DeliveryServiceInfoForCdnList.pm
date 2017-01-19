@@ -39,7 +39,7 @@ __PACKAGE__->result_source_instance->is_virtual(1);
 __PACKAGE__->result_source_instance->view_definition( "
 SELECT
     deliveryservice.xml_id,
-    deliveryservice.id,
+    deliveryservice.id AS ds_id,
     deliveryservice.dscp,
     deliveryservice.signed,
     deliveryservice.qstring_ignore,
@@ -49,9 +49,9 @@ SELECT
     deliveryservice.range_request_handling,
     deliveryservice.origin_shield,
     regex.pattern,
-    retype.name,
-    dstype.name,
-    parameter.value,
+    retype.name AS re_type,
+    dstype.name AS ds_type,
+    parameter.value AS domain_name,
     deliveryservice_regex.set_number,
     deliveryservice.edge_header_rewrite,
     deliveryservice.mid_header_rewrite,
