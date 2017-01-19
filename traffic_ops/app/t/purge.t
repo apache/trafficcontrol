@@ -171,7 +171,7 @@ $t->post_ok(
 $t->post_ok(
 	'/job/external/new' => form => {
 		keyword    => 'PURGE',
-		asset_url  => 'http://jvd.comcast.net' . $test_string,
+		asset_url  => 'http://foo.bar.net' . $test_string,
 		asset_type => 'SMOOTH'
 	}
 )->status_is(200)->json_is( '/status' => 'failure' );
@@ -224,22 +224,6 @@ $t->post_ok(
 $t->get_ok( '/job/external/result/view/' . $job_id )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( '/0/agent' => 1 )->json_is( '/0/result' => 'COMPLETED' )->json_is( '/0/description' => 'Test progressed successfully' )
 	->json_is( '/0/job' => $job_id );
-
-diag "checking snapshots...";
-foreach my $cache ( keys %{$slist} ) {
-	note "checking shapshot " . $cache . " for " . $slist->{$cache};
-	my $response = $t->ua->get( '/Trafficserver-Snapshots/' . $slist->{$cache} . '/regex_revalidate.config' );
-	my $content  = $response->res->content->asset->{content};
-	if ( $slist->{$cache} eq $cdn_name ) {
-		ok( $content =~ qr/$test_string/m, $cache . ' snapshot should have test_string in regex_revalidate.config' );
-	}
-	else {
-		# JvD note: there are mutliple delivery services that are in both CDNs but have the same origin.
-		# if ( $ds_name !~ /omg-.*/ ) {    #
-		# 	ok( $content !~ qr/$test_string/m, $cache . ' snapshot should not have test_string in regex_revalidate.config' );
-		# }
-	}
-}
 
 diag "spot checking /genfiles...";
 my $rand = 10 + int( rand(10) );    # only test every x server; there's too many, this gets too slow.
