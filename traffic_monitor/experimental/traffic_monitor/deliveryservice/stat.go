@@ -290,6 +290,7 @@ func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l LastStatsData) dsda
 	s.Tps3xx.Value = l.Status3xx.PerSec
 	s.Tps4xx.Value = l.Status4xx.PerSec
 	s.Tps5xx.Value = l.Status5xx.PerSec
+	s.TpsTotal.Value = s.Tps2xx.Value + s.Tps3xx.Value + s.Tps4xx.Value + s.Tps5xx.Value
 	return s
 }
 
@@ -480,7 +481,7 @@ func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryServ
 	add("tps_3xx", fmt.Sprintf("%f", c.Tps3xx.Value))
 	add("tps_2xx", fmt.Sprintf("%f", c.Tps2xx.Value))
 	add("error-string", c.ErrorString.Value)
-	add("tps_total", strconv.Itoa(int(c.TpsTotal.Value)))
+	add("tps_total", fmt.Sprintf("%f", c.TpsTotal.Value))
 	return s
 }
 
@@ -526,15 +527,18 @@ func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 	return *jsonObj
 }
 
-func getDsErrString(dsName enum.DeliveryServiceName, dsStats dsdata.Stat, monitorConfig to.TrafficMonitorConfigMap) string {
+func getDsErrString(dsName enum.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) string {
 	dsNameString := fmt.Sprintf("%s", dsName)
-
-	if dsStats.Total().TpsTotal.Value > monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold {
-		return fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.Total().TpsTotal.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
-
+	if dsName == "adcolony" {
+		fmt.Printf("Stats 2xx = %v, Tps 2xx = %v, TPS total = %v\n", dsStats.Status2xx.Value, dsStats.Tps2xx.Value, dsStats.TpsTotal.Value)
 	}
-	if dsStats.Total().Kbps.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalKbpsThreshold) {
-		return fmt.Sprintf("TotalKbps too high (%v > %v)", dsStats.Total().Kbps.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
+
+	if dsStats.TpsTotal.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold) {
+		return fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.TpsTotal.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
+	}
+
+	if dsStats.Kbps.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalKbpsThreshold) {
+		return fmt.Sprintf("TotalKbps too high (%v > %v)", dsStats.Kbps.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
 	}
 	return ""
 }
