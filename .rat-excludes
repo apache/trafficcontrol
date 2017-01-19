@@ -47,3 +47,4 @@ ssl-bundle\.crt(?:                   MPL. Properly documented in LICENSE ){0}
 sorttable\.js(?:                     X11. Properly documented in LICENSE ){0}
 select2\..*(?:                       MIT. Properly documented in LICENSE ){0}
 prettyprint\.js(?:                   BSD 2-clause. Properly documented in LICENSE ){0}
+seelog(?:                            BSD 3-clause. Properly documented in LICENSE ){0}
