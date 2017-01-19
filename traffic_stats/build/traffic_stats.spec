@@ -57,7 +57,6 @@ oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -L -r "$TC_DIR"/traffic_stats/* . && \
-  go get -d -v && \
   go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
