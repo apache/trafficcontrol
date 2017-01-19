@@ -14,7 +14,7 @@ Software requirements
 * Ensure that your new Postgres service is running (local or remote)
 
 * Run the Mysql to Postgres Migration Docker flow
-  * `$ docker-compose down -v && docker-compose build && TO_SERVER=https://traffic_ops.kabletown.com TO_USER=me TO_PASSWORD='my!passwd' docker-compose -f pgmigration.yml up`
+  * `$ docker-compose -f pgmigration.yml down -v && docker-compose -f pgmigration.yml build && TO_SERVER=https://traffic_ops.kabletown.com TO_USER=me TO_PASSWORD='my!passwd' docker-compose -f pgmigration.yml up`
 
 * Run the Postgres datatype conversion
   * `$ docker-compose -f convert.yml up` 
