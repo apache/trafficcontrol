@@ -46,6 +46,7 @@ type Config struct {
 	MonitorConfigPollingInterval time.Duration `json:"-"`
 	HTTPTimeout                  time.Duration `json:"-"`
 	PeerPollingInterval          time.Duration `json:"-"`
+	PeerOptimistic               bool          `json:"peer_optimistic"`
 	MaxEvents                    uint64        `json:"max_events"`
 	MaxStatHistory               uint64        `json:"max_stat_history"`
 	MaxHealthHistory             uint64        `json:"max_health_history"`
@@ -55,6 +56,7 @@ type Config struct {
 	LogLocationWarning           string        `json:"log_location_warning"`
 	LogLocationInfo              string        `json:"log_location_info"`
 	LogLocationDebug             string        `json:"log_location_debug"`
+	LogLocationEvent             string        `json:"log_location_event"`
 	ServeReadTimeout             time.Duration `json:"-"`
 	ServeWriteTimeout            time.Duration `json:"-"`
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
@@ -69,6 +71,7 @@ var DefaultConfig = Config{
 	MonitorConfigPollingInterval: 5 * time.Second,
 	HTTPTimeout:                  2 * time.Second,
 	PeerPollingInterval:          5 * time.Second,
+	PeerOptimistic:               true,
 	MaxEvents:                    200,
 	MaxStatHistory:               5,
 	MaxHealthHistory:             5,
@@ -78,6 +81,7 @@ var DefaultConfig = Config{
 	LogLocationWarning:           LogLocationStdout,
 	LogLocationInfo:              LogLocationNull,
 	LogLocationDebug:             LogLocationNull,
+	LogLocationEvent:             LogLocationStdout,
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
 	HealthToStatRatio:            4,
@@ -94,6 +98,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
 		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
+		PeerOptimistic                 bool   `json:"peer_optimistic"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
 		ServeReadTimeoutMs             uint64 `json:"serve_read_timeout_ms"`
@@ -105,6 +110,7 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		MonitorConfigPollingIntervalMs: uint64(c.MonitorConfigPollingInterval / time.Millisecond),
 		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
 		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
+		PeerOptimistic:                 bool(true),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
 		Alias:                          (*Alias)(c),
@@ -120,6 +126,7 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		MonitorConfigPollingIntervalMs *uint64 `json:"monitor_config_polling_interval_ms"`
 		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
 		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
+		PeerOptimistic                 *bool   `json:"peer_optimistic"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		ServeReadTimeoutMs             *uint64 `json:"serve_read_timeout_ms"`
@@ -158,6 +165,9 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	}
 	if aux.ServeWriteTimeoutMs != nil {
 		c.ServeWriteTimeout = time.Duration(*aux.ServeWriteTimeoutMs) * time.Millisecond
+	}
+	if aux.PeerOptimistic != nil {
+		c.PeerOptimistic = *aux.PeerOptimistic
 	}
 	return nil
 }

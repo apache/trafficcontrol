@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
@@ -253,20 +254,6 @@ func addLastStat(lastData LastStatData, newStat int64, newStatTime time.Time) (L
 	return lastData, nil
 }
 
-func combineErrs(errs []error) error {
-	combinedErr := ""
-	for _, err := range errs {
-		if err != nil {
-			combinedErr += err.Error() + ", "
-		}
-	}
-	if len(combinedErr) == 0 {
-		return nil
-	}
-	combinedErr = combinedErr[:len(combinedErr)-2] // strip trailing ', '
-	return fmt.Errorf("%s", combinedErr)
-}
-
 func addLastStats(lastData LastStatsData, newStats dsdata.StatCacheStats, newStatsTime time.Time) (LastStatsData, error) {
 	errs := []error{nil, nil, nil, nil, nil}
 	lastData.Bytes, errs[0] = addLastStat(lastData.Bytes, newStats.OutBytes.Value, newStatsTime)
@@ -274,7 +261,7 @@ func addLastStats(lastData LastStatsData, newStats dsdata.StatCacheStats, newSta
 	lastData.Status3xx, errs[2] = addLastStat(lastData.Status3xx, newStats.Status3xx.Value, newStatsTime)
 	lastData.Status4xx, errs[3] = addLastStat(lastData.Status4xx, newStats.Status4xx.Value, newStatsTime)
 	lastData.Status5xx, errs[4] = addLastStat(lastData.Status5xx, newStats.Status5xx.Value, newStatsTime)
-	return lastData, combineErrs(errs)
+	return lastData, util.JoinErrors(errs)
 }
 
 func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l LastStatsData) dsdata.StatCacheStats {

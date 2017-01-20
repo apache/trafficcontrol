@@ -63,6 +63,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	// TODO investigate whether a unique client per cache to be polled is faster
 	sharedClient := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+		Timeout:   cfg.HTTPTimeout,
 	}
 
 	localStates := peer.NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
@@ -86,6 +87,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
 
+	events := threadsafe.NewEvents(cfg.MaxEvents)
+
 	cachesChanged := make(chan struct{})
 
 	monitorConfig := StartMonitorConfigManager(
@@ -103,6 +106,9 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		peerHandler.ResultChannel,
 		localStates,
 		peerStates,
+		events,
+		cfg.PeerOptimistic,
+		toData,
 	)
 
 	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches := StartStatHistoryManager(
@@ -116,7 +122,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		monitorConfig,
 	)
 
-	lastHealthDurations, events, localCacheStatus, healthHistory := StartHealthResultManager(
+	lastHealthDurations, localCacheStatus, healthHistory := StartHealthResultManager(
 		cacheHealthHandler.ResultChannel,
 		toData,
 		localStates,
@@ -126,6 +132,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		fetchCount,
 		errorCount,
 		cfg,
+		events,
 	)
 
 	StartOpsConfigManager(

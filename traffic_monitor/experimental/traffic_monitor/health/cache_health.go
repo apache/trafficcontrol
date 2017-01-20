@@ -127,30 +127,39 @@ func cacheCapacityKbps(result cache.Result) int64 {
 func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bool, string) {
 	toServer := mc.TrafficServer[string(result.ID)]
 	status := enum.CacheStatusFromString(toServer.Status)
-	if status == enum.CacheStatusInvalid {
-		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, toServer.Status)
-	}
 	params := mc.Profile[toServer.Profile].Parameters
 	kbpsThreshold, hasKbpsThreshold := getKbpsThreshold(params.HealthThresholdAvailableBandwidthInKbps)
 	queryTimeThreshold, hasQueryTimeThreshold := getQueryThreshold(int64(params.HealthThresholdQueryTime))
 
-	switch {
-	case status == enum.CacheStatusAdminDown:
-		return false, "set to " + status.String()
-	case status == enum.CacheStatusOffline:
-		log.Errorf("Cache %v set to offline, but still polled\n", result.ID)
-		return false, "set to " + status.String()
-	case status == enum.CacheStatusOnline:
-		return true, "set to " + status.String()
-	case result.Error != nil:
-		return false, fmt.Sprintf("error: %v", result.Error)
-	case result.Vitals.LoadAvg > params.HealthThresholdLoadAvg && params.HealthThresholdLoadAvg != 0:
-		return false, fmt.Sprintf("load average %f exceeds threshold %f", result.Vitals.LoadAvg, params.HealthThresholdLoadAvg)
-	case hasKbpsThreshold && result.Vitals.KbpsOut > cacheCapacityKbps(result)-kbpsThreshold:
-		return false, fmt.Sprintf("%dkbps exceeds max %dkbps", result.Vitals.KbpsOut, kbpsThreshold)
-	case hasQueryTimeThreshold && result.RequestTime > queryTimeThreshold:
-		return false, fmt.Sprintf("request time %v exceeds max %v", result.RequestTime, queryTimeThreshold)
-	default:
-		return result.Available, "reported"
+	availability := "available"
+	if !result.Available {
+		availability = "unavailable"
 	}
+
+	switch {
+	case status == enum.CacheStatusInvalid:
+		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, toServer.Status)
+		return false, getEventDescription(status, availability+"; invalid status")
+	case status == enum.CacheStatusAdminDown:
+		return false, getEventDescription(status, availability)
+	case status == enum.CacheStatusOffline:
+		log.Errorf("Cache %v set to OFFLINE, but still polled\n", result.ID)
+		return false, getEventDescription(status, availability)
+	case status == enum.CacheStatusOnline:
+		return true, getEventDescription(status, availability)
+	case result.Error != nil:
+		return false, getEventDescription(status, fmt.Sprintf("%v", result.Error))
+	case result.Vitals.LoadAvg > params.HealthThresholdLoadAvg && params.HealthThresholdLoadAvg != 0:
+		return false, getEventDescription(status, fmt.Sprintf("loadavg too high (%.5f > %.5f)", result.Vitals.LoadAvg, params.HealthThresholdLoadAvg))
+	case hasKbpsThreshold && cacheCapacityKbps(result)-result.Vitals.KbpsOut < kbpsThreshold:
+		return false, getEventDescription(status, fmt.Sprintf("availableBandwidthInKbps too low (%d < %d)", cacheCapacityKbps(result)-result.Vitals.KbpsOut, kbpsThreshold))
+	case hasQueryTimeThreshold && result.RequestTime > queryTimeThreshold:
+		return false, getEventDescription(status, fmt.Sprintf("queryTime too high (%.5f > %.5f)", float64(result.RequestTime.Nanoseconds())/1e6, float64(queryTimeThreshold.Nanoseconds())/1e6))
+	default:
+		return result.Available, getEventDescription(status, availability)
+	}
+}
+
+func getEventDescription(status enum.CacheStatus, message string) string {
+	return fmt.Sprintf("%s - %s", status, message)
 }
