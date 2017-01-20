@@ -29,11 +29,4 @@ pgloader -v \
 	--cast 'type double to numeric drop typemod' \
 	mysql://$MYSQL_USER:$MYSQL_PASSWORD@$MYSQL_HOST/traffic_ops_db \
 	postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST/$POSTGRES_DB
-
-waiting=/sync/waiting-for-pgloader
-while [[ ! -f $waiting ]]; do
-	echo "Nothing waiting for pgloader?"
-	sleep 3
-done
-
-rm $waiting
+exit 0

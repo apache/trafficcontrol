@@ -19,7 +19,7 @@ services:
       context: ..
       dockerfile: pg-migration/Dockerfile-postgres
     environment:
-      - PGDATA=/opt/postgresql/data
+      - PGDATA=/opt/postgresql/data/pgdata
       - POSTGRES_DB=traffic_ops
       - POSTGRES_PASSWORD=twelve
       - POSTGRES_USER=traffic_ops
@@ -28,12 +28,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/opt/postgresql/data
+      - /opt/postgresql/data/pgdata:/opt/postgresql/data/pgdata
+      - /var/log/postgresql:/var/log/postgresql
     networks:
       - default
 
 networks:
-  default: 
+  default:
      driver: bridge
 
 volumes:
