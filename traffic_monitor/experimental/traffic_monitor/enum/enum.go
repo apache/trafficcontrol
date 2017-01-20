@@ -49,6 +49,14 @@ const (
 	CacheTypeInvalid = CacheType("")
 )
 
+func (c CacheName) String() string {
+	return string(c)
+}
+
+func (t TrafficMonitorName) String() string {
+	return string(t)
+}
+
 // String returns a string representation of this cache type.
 func (t CacheType) String() string {
 	switch t {

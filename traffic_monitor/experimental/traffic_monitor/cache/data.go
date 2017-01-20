@@ -50,17 +50,6 @@ func (a AvailableStatuses) Copy() AvailableStatuses {
 	return b
 }
 
-// Event represents an event change in aggregated data. For example, a cache being marked as unavailable.
-type Event struct {
-	Index       uint64         `json:"index"`
-	Time        int64          `json:"time"`
-	Description string         `json:"description"`
-	Name        enum.CacheName `json:"name"`
-	Hostname    enum.CacheName `json:"hostname"`
-	Type        string         `json:"type"`
-	Available   bool           `json:"isAvailable"`
-}
-
 // ResultHistory is a map of cache names, to an array of result history from each cache.
 type ResultHistory map[enum.CacheName][]Result
 

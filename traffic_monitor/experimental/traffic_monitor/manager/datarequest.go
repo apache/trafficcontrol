@@ -35,6 +35,7 @@ import (
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
@@ -45,7 +46,7 @@ import (
 
 // JSONEvents represents the structure we wish to serialize to JSON, for Events.
 type JSONEvents struct {
-	Events []cache.Event `json:"events"`
+	Events []health.Event `json:"events"`
 }
 
 // CacheState represents the available state of a cache.
@@ -612,7 +613,7 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := json.Marshal(createAPIPeerStates(peerStates.Get(), filter, params))
+	bytes, err := json.Marshal(createAPIPeerStates(peerStates.GetCrstates(), filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
@@ -965,11 +966,16 @@ func createCacheStatuses(
 			log.Warnf("cache not in statuses %s\n", cacheName)
 		} else {
 			statusString := statusVal.Status + " - "
-			if statusVal.Available {
+
+			// this should match the event string, use as the default if possible
+			if statusVal.Why != "" {
+				statusString = statusVal.Why
+			} else if statusVal.Available {
 				statusString += "available"
 			} else {
 				statusString += fmt.Sprintf("unavailable (%s)", statusVal.Why)
 			}
+
 			status = &statusString
 		}
 

@@ -22,19 +22,20 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 )
 
 // Events provides safe access for multiple goroutines readers and a single writer to a stored Events slice.
 type Events struct {
-	events    *[]cache.Event
+	events    *[]health.Event
 	m         *sync.RWMutex
 	nextIndex *uint64
 	max       uint64
 }
 
-func copyEvents(a []cache.Event) []cache.Event {
-	b := make([]cache.Event, len(a), len(a))
+func copyEvents(a []health.Event) []health.Event {
+	b := make([]health.Event, len(a), len(a))
 	copy(b, a)
 	return b
 }
@@ -42,21 +43,23 @@ func copyEvents(a []cache.Event) []cache.Event {
 // NewEvents creates a new single-writer-multiple-reader Threadsafe object
 func NewEvents(maxEvents uint64) Events {
 	i := uint64(0)
-	return Events{m: &sync.RWMutex{}, events: &[]cache.Event{}, nextIndex: &i, max: maxEvents}
+	return Events{m: &sync.RWMutex{}, events: &[]health.Event{}, nextIndex: &i, max: maxEvents}
 }
 
 // Get returns the internal slice of Events for reading. This MUST NOT be modified. If modification is necessary, copy the slice.
-func (o *Events) Get() []cache.Event {
+func (o *Events) Get() []health.Event {
 	o.m.RLock()
 	defer o.m.RUnlock()
 	return *o.events
 }
 
 // Add adds the given event. This is threadsafe for one writer, multiple readers. This MUST NOT be called by multiple threads, as it non-atomically fetches and adds.
-func (o *Events) Add(e cache.Event) {
+func (o *Events) Add(e health.Event) {
+	// host="hostname", type=EDGE, available=true, msg="REPORTED - available"
+	log.Eventf(e.Time, "host=\"%s\", type=%s, available=%t, msg=\"%s\"", e.Hostname, e.Type, e.Available, e.Description)
 	events := copyEvents(*o.events)
 	e.Index = *o.nextIndex
-	events = append([]cache.Event{e}, events...)
+	events = append([]health.Event{e}, events...)
 	if len(events) > int(o.max) {
 		events = (events)[:o.max-1]
 	}

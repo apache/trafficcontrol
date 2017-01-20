@@ -86,9 +86,9 @@ func StartHealthResultManager(
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	cfg config.Config,
-) (DurationMapThreadsafe, threadsafe.Events, threadsafe.CacheAvailableStatus, threadsafe.ResultHistory) {
+	events threadsafe.Events,
+) (DurationMapThreadsafe, threadsafe.CacheAvailableStatus, threadsafe.ResultHistory) {
 	lastHealthDurations := NewDurationMapThreadsafe()
-	events := threadsafe.NewEvents(cfg.MaxEvents)
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 	healthHistory := threadsafe.NewResultHistory()
 	go healthResultManagerListen(
@@ -106,7 +106,7 @@ func StartHealthResultManager(
 		localCacheStatus,
 		cfg,
 	)
-	return lastHealthDurations, events, localCacheStatus, healthHistory
+	return lastHealthDurations, localCacheStatus, healthHistory
 }
 
 func healthResultManagerListen(
@@ -235,7 +235,7 @@ func processHealthResult(
 		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
 		if available, ok := localStates.GetCache(healthResult.ID); !ok || available.IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable, Name: healthResult.ID, Hostname: healthResult.ID, Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
+			events.Add(health.Event{Time: healthResult.Time, Unix: healthResult.Time.Unix(), Description: whyAvailable, Name: healthResult.ID.String(), Hostname: healthResult.ID.String(), Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
 		}
 
 		localCacheStatus[healthResult.ID] = cache.AvailableStatus{
