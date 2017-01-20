@@ -1,7 +1,7 @@
 {
   "/opt/traffic_ops/app/conf/production/database.conf":[
     {
-      "Database type":"mysql",
+      "Database type":"pg",
       "config_var":"type"
     },
     {
@@ -24,6 +24,10 @@
       "Traffic Ops database password":"default",
       "config_var":"password",
       "hidden":"1"
+    },
+    {
+      "Download Maxmind Database?":"yes",
+      "config_var":"maxmind"
     }
   ],
   "/opt/traffic_ops/app/db/dbconf.yml":[
@@ -82,7 +86,10 @@
     }
   ],
   "/opt/traffic_ops/install/data/profiles/":[
-
+    {
+      "Add custom profiles?":"no",
+      "config_var":"custom_profiles"
+    }
   ],
   "/opt/traffic_ops/install/data/json/openssl_configuration.json":[
     {
