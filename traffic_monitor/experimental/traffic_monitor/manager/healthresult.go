@@ -245,19 +245,6 @@ func processHealthResult(
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
 }
 
-// resultHasStat returns whether the given stat is in the Result.
-// TODO move to cache?
-func resultHasStat(stat string, result cache.Result) bool {
-	computedStats := cache.ComputedStats()
-	if _, ok := computedStats[stat]; ok {
-		return true // health poll has all computed stats
-	}
-	if _, ok := result.Astats.Ats[stat]; ok {
-		return true
-	}
-	return false
-}
-
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
 func CalculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
 	deliveryServices := states.GetDeliveryServices()

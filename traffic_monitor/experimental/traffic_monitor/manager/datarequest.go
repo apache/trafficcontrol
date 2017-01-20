@@ -63,9 +63,10 @@ type APIPeerStates struct {
 // CacheStatus contains summary stat data about the given cache.
 // TODO make fields nullable, so error fields can be omitted, letting API callers still get updates for unerrored fields
 type CacheStatus struct {
-	Type        *string  `json:"type,omitempty"`
-	Status      *string  `json:"status,omitempty"`
-	LoadAverage *float64 `json:"load_average,omitempty"`
+	Type         *string  `json:"type,omitempty"`
+	Status       *string  `json:"status,omitempty"`
+	StatusPoller *string  `json:"status_poller,omitempty"`
+	LoadAverage  *float64 `json:"load_average,omitempty"`
 	// QueryTimeMilliseconds is the time it took this app to perform a complete query and process the data, end-to-end, for the latest health query.
 	QueryTimeMilliseconds *int64 `json:"query_time_ms,omitempty"`
 	// HealthTimeMilliseconds is the time it took to make the HTTP request and get back the full response, for the latest health query.
@@ -971,6 +972,7 @@ func createCacheStatuses(
 		}
 
 		var status *string
+		var statusPoller *string
 		statusVal, ok := localCacheStatus[cacheName]
 		if !ok {
 			log.Warnf("cache not in statuses %s\n", cacheName)
@@ -987,6 +989,7 @@ func createCacheStatuses(
 			}
 
 			status = &statusString
+			statusPoller = &statusVal.Poller
 		}
 
 		cacheTypeStr := string(cacheType)
@@ -1002,6 +1005,7 @@ func createCacheStatuses(
 			BandwidthCapacityKbps:  maxKbps,
 			ConnectionCount:        connections,
 			Status:                 status,
+			StatusPoller:           statusPoller,
 		}
 	}
 	return statii
