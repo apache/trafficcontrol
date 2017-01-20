@@ -36,7 +36,7 @@
         </li>
 	  	<li><a id="nav-p">Parameters</a>
 	  	<ul>
-  			<li><a href="/parameters/profile/global">Global Profile</a></li>
+  			<li><a href="/parameters/profile/GLOBAL">Global Profile</a></li>
   			<li><a href="/parameters/cachegroup/all">All Cache Groups</a></li>
   			<li><a href="/parameters/profile/all">All Profiles</a></li>
   			<li><a href="/profiles">Select Profile</a></li>
