@@ -87,7 +87,7 @@ my $automatic = 0;
 my $defaultInputs;
 
 sub getDbDriver {
-    return "mymysql";
+    return "pg";
 }
 
 sub getInstallPath {
@@ -407,6 +407,10 @@ sub getDefaults {
                 "Password for Traffic Ops database user" => "",
                 "config_var"                             => "password",
                 "hidden"                                 => "true"
+            },
+            {
+                "Download Maxmind Database?" => "yes",
+                "config_var" => "maxmind"
             }
         ],
         $dbConfFile => [
@@ -464,7 +468,12 @@ sub getDefaults {
                 "hidden"                      => "true"
             }
         ],
-        $profilesConfFile => [],
+        $profilesConfFile => [
+            {
+                "Add custom profiles?" =>"no",
+                "config_var" => "custom_profiles"
+            }
+        ],
         $opensslConfFile  => [
             {
                 "Do you want to generate a certificate?" => "yes",
@@ -559,19 +568,11 @@ sub setupDatabase {
     my $todbconf    = shift;
     my $opensslconf = shift;
     my $genCert     = shift;
-
-    #
-    # Call mysql initialization script.
-    #
-    InstallUtils::logger( "Creating database with user: $todbconf->{dbAdminUser}", "info" );
-    my $result = InstallUtils::execCommand( "/opt/traffic_ops/install/bin/create_db", $todbconf->{dbAdminUser}, $todbconf->{dbAdminPw} );
-    if ( $result != 0 ) {
-        errorOut("Failed to create the database");
-    }
+    my $setupMaxmind = shift;
 
     InstallUtils::logger( "Setting up database", "info" );
     chdir("/opt/traffic_ops/app");
-    $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
+    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
 
     if ( $result != 0 ) {
         errorOut("Database initialization failed");
@@ -580,16 +581,16 @@ sub setupDatabase {
         InstallUtils::logger( "Database initialization succeeded", "info" );
     }
 
-    $result = InstallUtils::execCommand( "/opt/traffic_ops/install/bin/dataload", $todbconf->{dbAdminUser}, $todbconf->{dbAdminPw} );
-    if ( $result != 0 ) {
-        InstallUtils::logger( "Failed to load seed data", "error" );
+    if ($setupMaxmind =~ /^y(?:es)?/) {
+        InstallUtils::logger( "Downloading Maxmind data", "info" );
+        chdir("/opt/traffic_ops/app/public/routing");
+        $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+        if ( $result != 0 ) {
+            InstallUtils::logger( "Failed to download MaxMind data", "error" );
+        }
     }
-
-    InstallUtils::logger( "Downloading MaxMind data", "info" );
-    chdir("/opt/traffic_ops/app/public/routing");
-    $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
-    if ( $result != 0 ) {
-        InstallUtils::logger( "Failed to download MaxMind data", "error" );
+    else {
+        InstallUtils::logger("Not downloading Maxmind data");
     }
 
     InstallUtils::logger( "Copying coverage zone file to public dir", "info" );
@@ -758,10 +759,10 @@ sub main {
     # if reconfigure is set then setup the database
     if ($reconfigure) {
         if ($automatic) {
-            setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{genCert} );
+            setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
         }
         else {
-            setupDatabase( $todbconf, 0, $opensslconf->{genCert} );
+            setupDatabase( $todbconf, 0, $opensslconf->{"genCert"} );
         }
     }
 
