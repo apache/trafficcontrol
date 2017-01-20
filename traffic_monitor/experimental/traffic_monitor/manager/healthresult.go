@@ -204,10 +204,9 @@ func processHealthResult(
 	}()
 
 	toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
-	localCacheStatus := localCacheStatusThreadsafe.Get().Copy()
 	monitorConfigCopy := monitorConfig.Get()
 	healthHistoryCopy := healthHistory.Get().Copy()
-	for _, healthResult := range results {
+	for i, healthResult := range results {
 		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
@@ -218,6 +217,7 @@ func processHealthResult(
 
 		if healthResult.Error == nil {
 			health.GetVitals(&healthResult, &prevResult, &monitorConfigCopy)
+			results[i] = healthResult
 		}
 
 		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
@@ -227,33 +227,11 @@ func processHealthResult(
 		}
 
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
-
-		isAvailable, whyAvailable, unavailableStat := health.EvalCache(cache.ToInfo(healthResult), nil, &monitorConfigCopy)
-		whyAvailable += "(healthpoll)" // debug
-		if available, ok := localStates.GetCache(healthResult.ID); !ok || available.IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, available.IsAvailable, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(health.Event{Time: time.Now(), Description: whyAvailable, Name: string(healthResult.ID), Hostname: string(healthResult.ID), Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
-		}
-
-		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
-		if previousStatus, hasPreviousStatus := localCacheStatus[healthResult.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
-			if !resultHasStat(previousStatus.UnavailableStat, healthResult) {
-				// TODO determine if it's ok to add the result data (but not availability). Or will making them not align cause issues?
-				continue
-			}
-		}
-
-		localCacheStatus[healthResult.ID] = cache.AvailableStatus{
-			Available:       isAvailable,
-			Status:          monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status,
-			Why:             whyAvailable,
-			UnavailableStat: unavailableStat,
-		} // TODO move within localStates?
-		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
 	}
-	CalculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
+
+	calcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+
 	healthHistory.Set(healthHistoryCopy)
-	localCacheStatusThreadsafe.Set(localCacheStatus)
 	// TODO determine if we should combineCrStates() here
 
 	lastHealthDurations := lastHealthDurationsThreadsafe.Get().Copy()
