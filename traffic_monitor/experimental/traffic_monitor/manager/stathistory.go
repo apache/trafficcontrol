@@ -67,7 +67,8 @@ func StartStatHistoryManager(
 	errorCount threadsafe.Uint,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches) {
+	events threadsafe.Events,
+) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches, threadsafe.CacheAvailableStatus) {
 	statInfoHistory := threadsafe.NewResultInfoHistory()
 	statResultHistory := threadsafe.NewResultStatHistory()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
@@ -77,12 +78,13 @@ func StartStatHistoryManager(
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	tickInterval := cfg.StatFlushInterval
+	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
 	precomputedData := map[enum.CacheName]cache.PrecomputedData{}
 	lastResults := map[enum.CacheName]cache.Result{}
 
 	process := func(results []cache.Result) {
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus)
 	}
 
 	go func() {
@@ -118,7 +120,7 @@ func StartStatHistoryManager(
 			}
 		}
 	}()
-	return statInfoHistory, statResultHistory, statMaxKbpses, lastStatDurations, lastStats, &dsStats, unpolledCaches
+	return statInfoHistory, statResultHistory, statMaxKbpses, lastStatDurations, lastStats, &dsStats, unpolledCaches, localCacheStatus
 }
 
 // processStatResults processes the given results, creating and setting DSStats, LastStats, and other stats. Note this is NOT threadsafe, and MUST NOT be called from multiple threads.
@@ -138,14 +140,27 @@ func processStatResults(
 	mc to.TrafficMonitorConfigMap,
 	precomputedData map[enum.CacheName]cache.PrecomputedData,
 	lastResults map[enum.CacheName]cache.Result,
+	localStates peer.CRStatesThreadsafe,
+	events threadsafe.Events,
+	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 ) {
+	if len(results) == 0 {
+		return
+	}
+	defer func() {
+		for _, r := range results {
+			// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
+			r.PollFinished <- r.PollID
+		}
+	}()
 
 	// setting the statHistory could be put in a goroutine concurrent with `ds.CreateStats`, if it were slow
 	statInfoHistory := statInfoHistoryThreadsafe.Get().Copy()
 	statResultHistory := statResultHistoryThreadsafe.Get().Copy()
 	statMaxKbpses := statMaxKbpsesThreadsafe.Get().Copy()
+	localCacheStatus := localCacheStatusThreadsafe.Get().Copy()
 
-	for _, result := range results {
+	for i, result := range results {
 		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
 		if maxStats < 1 {
 			log.Warnf("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
@@ -153,8 +168,13 @@ func processStatResults(
 		}
 
 		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		if lastResult, ok := lastResults[result.ID]; ok {
+		if lastResult, ok := lastResults[result.ID]; ok && result.Error == nil {
 			health.GetVitals(&result, &lastResult, &mc) // TODO precompute
+			if result.Error == nil {
+				results[i] = result
+			} else {
+				log.Errorf("stat poll getting vitals for %v: %v\n", result.ID, result.Error)
+			}
 		}
 		statInfoHistory.Add(result, maxStats)
 		statResultHistory.Add(result, maxStats)
@@ -193,6 +213,35 @@ func processStatResults(
 		lastStats.Set(newLastStats)
 	}
 
+	// TODO test
+	// TODO abstract setting availability logic (duplicated in healthresult.go)
+	for _, result := range results {
+		isAvailable, whyAvailable, unavailableStat := health.EvalCache(cache.ToInfo(result), statResultHistory[result.ID], &mc)
+		whyAvailable += "(statpoll)" // debug
+
+		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
+			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, result.Error)
+			events.Add(health.Event{Time: time.Now(), Description: whyAvailable, Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
+		}
+
+		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
+		if previousStatus, hasPreviousStatus := localCacheStatus[result.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
+			if !resultHasStat(previousStatus.UnavailableStat, result) {
+				// TODO determine if it's ok to add the result data (but not availability). Or will making them not align cause issues?
+				continue
+			}
+		}
+		localCacheStatus[result.ID] = cache.AvailableStatus{
+			Available:       isAvailable,
+			Status:          mc.TrafficServer[string(result.ID)].Status,
+			Why:             whyAvailable,
+			UnavailableStat: unavailableStat,
+		} // TODO move within localStates?
+		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
+		CalculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
+		localCacheStatusThreadsafe.Set(localCacheStatus)
+	}
+
 	endTime := time.Now()
 	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
 	for _, result := range results {
@@ -201,9 +250,6 @@ func processStatResults(
 			lastStatDurations[result.ID] = d
 		}
 		lastStatEndTimes[result.ID] = endTime
-
-		// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
-		result.PollFinished <- result.PollID
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
 	unpolledCaches.SetPolled(results, lastStats.Get())

@@ -87,9 +87,9 @@ func StartHealthResultManager(
 	errorCount threadsafe.Uint,
 	cfg config.Config,
 	events threadsafe.Events,
-) (DurationMapThreadsafe, threadsafe.CacheAvailableStatus, threadsafe.ResultHistory) {
+	localCacheStatus threadsafe.CacheAvailableStatus,
+) (DurationMapThreadsafe, threadsafe.ResultHistory) {
 	lastHealthDurations := NewDurationMapThreadsafe()
-	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 	healthHistory := threadsafe.NewResultHistory()
 	go healthResultManagerListen(
 		cacheHealthChan,
@@ -106,7 +106,7 @@ func StartHealthResultManager(
 		localCacheStatus,
 		cfg,
 	)
-	return lastHealthDurations, localCacheStatus, healthHistory
+	return lastHealthDurations, healthHistory
 }
 
 func healthResultManagerListen(
@@ -127,6 +127,27 @@ func healthResultManagerListen(
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	var ticker *time.Ticker
+
+	process := func(results []cache.Result) {
+		processHealthResult(
+			cacheHealthChan,
+			toData,
+			localStates,
+			lastHealthDurations,
+			monitorConfig,
+			peerStates,
+			combinedStates,
+			fetchCount,
+			errorCount,
+			events,
+			localCacheStatus,
+			lastHealthEndTimes,
+			healthHistory,
+			results,
+			cfg,
+		)
+	}
+
 	for {
 		var results []cache.Result
 		results = append(results, <-cacheHealthChan)
@@ -139,46 +160,14 @@ func healthResultManagerListen(
 			select {
 			case <-ticker.C:
 				log.Warnf("Health Result Manager flushing queued results\n")
-				processHealthResult(
-					cacheHealthChan,
-					toData,
-					localStates,
-					lastHealthDurations,
-					monitorConfig,
-					peerStates,
-					combinedStates,
-					fetchCount,
-					errorCount,
-					events,
-					localCacheStatus,
-					lastHealthEndTimes,
-					healthHistory,
-					results,
-					cfg,
-				)
+				process(results)
 				break innerLoop
 			default:
 				select {
 				case r := <-cacheHealthChan:
 					results = append(results, r)
 				default:
-					processHealthResult(
-						cacheHealthChan,
-						toData,
-						localStates,
-						lastHealthDurations,
-						monitorConfig,
-						peerStates,
-						combinedStates,
-						fetchCount,
-						errorCount,
-						events,
-						localCacheStatus,
-						lastHealthEndTimes,
-						healthHistory,
-						results,
-						cfg,
-					)
+					process(results)
 					break innerLoop
 				}
 			}
@@ -207,6 +196,13 @@ func processHealthResult(
 	if len(results) == 0 {
 		return
 	}
+	defer func() {
+		for _, r := range results {
+			log.Debugf("poll %v %v finish\n", r.PollID, time.Now())
+			r.PollFinished <- r.PollID
+		}
+	}()
+
 	toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy()
 	monitorConfigCopy := monitorConfig.Get()
@@ -232,20 +228,30 @@ func processHealthResult(
 
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 
-		isAvailable, whyAvailable := health.EvalCache(healthResult, &monitorConfigCopy)
+		isAvailable, whyAvailable, unavailableStat := health.EvalCache(cache.ToInfo(healthResult), nil, &monitorConfigCopy)
+		whyAvailable += "(healthpoll)" // debug
 		if available, ok := localStates.GetCache(healthResult.ID); !ok || available.IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, prevResult.Available, isAvailable, whyAvailable, healthResult.Error)
-			events.Add(health.Event{Time: healthResult.Time, Unix: healthResult.Time.Unix(), Description: whyAvailable, Name: healthResult.ID.String(), Hostname: healthResult.ID.String(), Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
+			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", healthResult.ID, available.IsAvailable, isAvailable, whyAvailable, healthResult.Error)
+			events.Add(health.Event{Time: time.Now(), Description: whyAvailable, Name: string(healthResult.ID), Hostname: string(healthResult.ID), Type: toDataCopy.ServerTypes[healthResult.ID].String(), Available: isAvailable})
+		}
+
+		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
+		if previousStatus, hasPreviousStatus := localCacheStatus[healthResult.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
+			if !resultHasStat(previousStatus.UnavailableStat, healthResult) {
+				// TODO determine if it's ok to add the result data (but not availability). Or will making them not align cause issues?
+				continue
+			}
 		}
 
 		localCacheStatus[healthResult.ID] = cache.AvailableStatus{
-			Available: isAvailable,
-			Status:    monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status,
-			Why:       whyAvailable,
+			Available:       isAvailable,
+			Status:          monitorConfigCopy.TrafficServer[string(healthResult.ID)].Status,
+			Why:             whyAvailable,
+			UnavailableStat: unavailableStat,
 		} // TODO move within localStates?
 		localStates.SetCache(healthResult.ID, peer.IsAvailable{IsAvailable: isAvailable})
 	}
-	calculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
+	CalculateDeliveryServiceState(toDataCopy.DeliveryServiceServers, localStates)
 	healthHistory.Set(healthHistoryCopy)
 	localCacheStatusThreadsafe.Set(localCacheStatus)
 	// TODO determine if we should combineCrStates() here
@@ -257,15 +263,25 @@ func processHealthResult(
 			lastHealthDurations[healthResult.ID] = d
 		}
 		lastHealthEndTimes[healthResult.ID] = time.Now()
-
-		log.Debugf("poll %v %v finish\n", healthResult.PollID, time.Now())
-		healthResult.PollFinished <- healthResult.PollID
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
 }
 
+// resultHasStat returns whether the given stat is in the Result.
+// TODO move to cache?
+func resultHasStat(stat string, result cache.Result) bool {
+	computedStats := cache.ComputedStats()
+	if _, ok := computedStats[stat]; ok {
+		return true // health poll has all computed stats
+	}
+	if _, ok := result.Astats.Ats[stat]; ok {
+		return true
+	}
+	return false
+}
+
 // calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
+func CalculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
