@@ -57,13 +57,14 @@ func (o *Events) Get() []health.Event {
 func (o *Events) Add(e health.Event) {
 	// host="hostname", type=EDGE, available=true, msg="REPORTED - available"
 	log.Eventf(e.Time, "host=\"%s\", type=%s, available=%t, msg=\"%s\"", e.Hostname, e.Type, e.Available, e.Description)
+	o.m.Lock() // TODO test removing
 	events := copyEvents(*o.events)
 	e.Index = *o.nextIndex
 	events = append([]health.Event{e}, events...)
 	if len(events) > int(o.max) {
 		events = (events)[:o.max-1]
 	}
-	o.m.Lock()
+	// o.m.Lock()
 	*o.events = events
 	*o.nextIndex++
 	o.m.Unlock()

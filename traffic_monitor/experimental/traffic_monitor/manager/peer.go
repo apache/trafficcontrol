@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/util"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
@@ -42,7 +43,8 @@ func StartPeerManager(
 	events threadsafe.Events,
 	peerOptimistic bool,
 	toData todata.TODataThreadsafe,
-) peer.CRStatesThreadsafe {
+	cfg config.Config,
+) (peer.CRStatesThreadsafe, threadsafe.Events) {
 	combinedStates := peer.NewCRStatesThreadsafe()
 	overrideMap := map[enum.CacheName]bool{}
 
@@ -54,7 +56,7 @@ func StartPeerManager(
 			peerResult.PollFinished <- peerResult.PollID
 		}
 	}()
-	return combinedStates
+	return combinedStates, events
 }
 
 func comparePeerState(events threadsafe.Events, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {

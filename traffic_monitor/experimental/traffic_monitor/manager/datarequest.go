@@ -902,7 +902,7 @@ func createCacheStatuses(
 ) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[enum.CacheName]CacheStatus{}
-	localCacheStatus := localCacheStatusThreadsafe.Get()
+	localCacheStatus := localCacheStatusThreadsafe.Get().Copy() // TODO test whether copy is necessary
 	maxKbpses := statMaxKbpses.Get()
 
 	for cacheName, cacheType := range cacheTypes {
@@ -1162,39 +1162,6 @@ type StatSummaryStat struct {
 	EndTime        int64   `json:"endTime"`
 }
 
-// toNumeric returns a float for any numeric type, and false if the interface does not hold a numeric type.
-// This allows converting unknown numeric types (for example, from JSON) in a single line
-func toNumeric(v interface{}) (float64, bool) {
-	switch i := v.(type) {
-	case uint8:
-		return float64(i), true
-	case uint16:
-		return float64(i), true
-	case uint32:
-		return float64(i), true
-	case uint64:
-		return float64(i), true
-	case int8:
-		return float64(i), true
-	case int16:
-		return float64(i), true
-	case int32:
-		return float64(i), true
-	case int64:
-		return float64(i), true
-	case float32:
-		return float64(i), true
-	case float64:
-		return float64(i), true
-	case int:
-		return float64(i), true
-	case uint:
-		return float64(i), true
-	default:
-		return 0.0, false
-	}
-}
-
 func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
 	statPrefix := "ats."
 	ss := StatSummary{
@@ -1217,8 +1184,8 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			msPerNs := int64(1000000)
 			ssStat.StartTime = time.Time(statHistory[len(statHistory)-1].Time).UnixNano() / msPerNs
 			ssStat.EndTime = time.Time(statHistory[0].Time).UnixNano() / msPerNs
-			oldestVal, isOldestValNumeric := toNumeric(statHistory[len(statHistory)-1].Val)
-			newestVal, isNewestValNumeric := toNumeric(statHistory[0].Val)
+			oldestVal, isOldestValNumeric := enum.ToNumeric(statHistory[len(statHistory)-1].Val)
+			newestVal, isNewestValNumeric := enum.ToNumeric(statHistory[0].Val)
 			if !isOldestValNumeric || !isNewestValNumeric {
 				continue // skip non-numeric stats
 			}
@@ -1227,7 +1194,7 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			ssStat.High = newestVal
 			ssStat.Low = newestVal
 			for _, val := range statHistory {
-				fVal, ok := toNumeric(val.Val)
+				fVal, ok := enum.ToNumeric(val.Val)
 				if !ok {
 					continue // skip non-numeric stats. TODO warn about stat history containing different types?
 				}

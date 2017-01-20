@@ -117,12 +117,92 @@ type Filter interface {
 
 const nsPerMs = 1000000
 
+type StatComputeFunc func(resultInfo ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{}
+
+// ComputedStats returns a map of cache stats which are computed by Traffic Monitor (rather than returned literally from ATS), mapped to the func to compute them.
+func ComputedStats() map[string]StatComputeFunc {
+	return map[string]StatComputeFunc{
+		"availableBandwidthInKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut
+		},
+
+		"availableBandwidthInMbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000
+		},
+		"bandwidth": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.KbpsOut
+		},
+		"error-string": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			if info.Error != nil {
+				return info.Error.Error()
+			}
+			return "false"
+		},
+		"isAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return combinedState.IsAvailable // if the cache is missing, default to false
+		},
+		"isHealthy": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			if enum.CacheStatusFromString(serverInfo.Status) == enum.CacheStatusAdminDown {
+				return true
+			}
+			return combinedState.IsAvailable
+		},
+		"kbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.KbpsOut
+		},
+		"loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.LoadAvg
+		},
+		"maxKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.MaxKbpsOut
+		},
+		"queryTime": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.RequestTime.Nanoseconds() / nsPerMs
+		},
+		"stateUrl": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return serverProfile.Parameters.HealthPollingURL
+		},
+		"status": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return serverInfo.Status
+		},
+		"system.astatsLoad": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.AstatsLoad
+		},
+		"system.configReloadRequests": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ConfigLoadRequest
+		},
+		"system.configReloads": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ConfigReloads
+		},
+		"system.inf.name": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.InfName
+		},
+		"system.inf.speed": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.InfSpeed
+		},
+		"system.lastReload": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.LastReload
+		},
+		"system.lastReloadRequest": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.LastReloadRequest
+		},
+		"system.proc.loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ProcLoadavg
+		},
+		"system.proc.net.dev": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ProcNetDev
+		},
+	}
+}
+
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
 func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHistory, combinedStates peer.Crstates, monitorConfig to.TrafficMonitorConfigMap, statMaxKbpses Kbpses, filter Filter, params url.Values) ([]byte, error) {
 	stats := Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 		Caches:        map[enum.CacheName]map[string][]ResultStatVal{},
 	}
+
+	computedStats := ComputedStats()
 
 	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
 
@@ -153,7 +233,18 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 		if !filter.UseCache(id) {
 			continue
 		}
-		for i, info := range infos {
+
+		serverInfo, ok := monitorConfig.TrafficServer[string(id)]
+		if !ok {
+			log.Warnf("cache.StatsMarshall server %s missing from monitorConfig\n", id)
+		}
+
+		serverProfile, ok := monitorConfig.Profile[serverInfo.Profile]
+		if !ok {
+			log.Warnf("cache.StatsMarshall server %s missing profile in monitorConfig\n", id)
+		}
+
+		for i, resultInfo := range infos {
 			if !filter.WithinStatHistoryMax(i + 1) {
 				break
 			}
@@ -161,108 +252,13 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 				stats.Caches[id] = map[string][]ResultStatVal{}
 			}
 
-			t := info.Time
+			t := resultInfo.Time
 
-			if stat := "availableBandwidthInKbps"; filter.UseStat(stat) {
-				v := info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "availableBandwidthInMbps"; filter.UseStat(stat) {
-				v := (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "bandwidth"; filter.UseStat(stat) {
-				v := info.Vitals
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "error-string"; filter.UseStat(stat) {
-				v := ""
-				if info.Error != nil {
-					v = info.Error.Error()
-				} else {
-					v = "false"
+			for stat, statValF := range computedStats {
+				if !filter.UseStat(stat) {
+					continue
 				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "isAvailable"; filter.UseStat(stat) {
-				v := combinedStates.Caches[id].IsAvailable // if the cache is missing, default to false
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "isHealthy"; filter.UseStat(stat) {
-				adminDown := false
-				if srv, ok := monitorConfig.TrafficServer[string(id)]; ok && enum.CacheStatusFromString(srv.Status) == enum.CacheStatusAdminDown {
-					adminDown = true
-				}
-				v := !adminDown && combinedStates.Caches[id].IsAvailable // if the cache is missing, default to false
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "kbps"; filter.UseStat(stat) {
-				v := info.Vitals.KbpsOut
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "loadAvg"; filter.UseStat(stat) {
-				v := info.Vitals.LoadAvg
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "maxKbps"; filter.UseStat(stat) {
-				v := info.Vitals.MaxKbpsOut
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "queryTime"; filter.UseStat(stat) {
-				v := fmt.Sprintf("%d", info.RequestTime.Nanoseconds()/nsPerMs)
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "stateUrl"; filter.UseStat(stat) {
-				v, err := getHealthPollingURL(id, monitorConfig)
-				if err != nil {
-					v = fmt.Sprintf("ERROR: %v", err) // should never happen
-				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "status"; filter.UseStat(stat) {
-				v := ""
-				srv, ok := monitorConfig.TrafficServer[string(id)]
-				if !ok {
-					v = fmt.Sprintf("ERROR: cache not found in monitor config") // should never happen
-				}
-				v = srv.Status
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.astatsLoad"; filter.UseStat(stat) {
-				v := info.System.AstatsLoad
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.configReloadRequests"; filter.UseStat(stat) {
-				v := info.System.ConfigLoadRequest
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.configReloads"; filter.UseStat(stat) {
-				v := info.System.ConfigReloads
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.inf.name"; filter.UseStat(stat) {
-				v := info.System.InfName
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.inf.speed"; filter.UseStat(stat) {
-				v := info.System.InfSpeed
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.lastReload"; filter.UseStat(stat) {
-				v := info.System.LastReload
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.lastReloadRequest"; filter.UseStat(stat) {
-				v := info.System.LastReloadRequest
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.proc.loadavg"; filter.UseStat(stat) {
-				v := info.System.ProcLoadavg
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
-			}
-			if stat := "system.proc.net.dev"; filter.UseStat(stat) {
-				v := info.System.ProcNetDev
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: v, Time: t, Span: 1})
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStates.Caches[id]), Time: t, Span: 1}) // combinedState will default to unavailable
 			}
 		}
 	}

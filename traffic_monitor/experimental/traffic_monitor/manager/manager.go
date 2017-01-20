@@ -102,16 +102,17 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		staticAppData,
 	)
 
-	combinedStates := StartPeerManager(
+	combinedStates, events := StartPeerManager(
 		peerHandler.ResultChannel,
 		localStates,
 		peerStates,
 		events,
-		cfg.PeerOptimistic,
+		cfg.PeerOptimistic, // TODO remove
 		toData,
+		cfg,
 	)
 
-	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches := StartStatHistoryManager(
+	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
 		cacheStatHandler.ResultChannel,
 		localStates,
 		combinedStates,
@@ -120,9 +121,10 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		errorCount,
 		cfg,
 		monitorConfig,
+		events,
 	)
 
-	lastHealthDurations, localCacheStatus, healthHistory := StartHealthResultManager(
+	lastHealthDurations, healthHistory := StartHealthResultManager(
 		cacheHealthHandler.ResultChannel,
 		toData,
 		localStates,
@@ -133,6 +135,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		errorCount,
 		cfg,
 		events,
+		localCacheStatus,
 	)
 
 	StartOpsConfigManager(

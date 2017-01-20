@@ -36,6 +36,8 @@ type AvailableStatus struct {
 	Available bool
 	Status    string
 	Why       string
+	// UnavailableStat is the stat whose threshold made the cache unavailable. If this is the empty string, the cache is unavailable for a non-threshold reason. This exists so a poller (health, stat) won't mark an unavailable cache as available if the stat whose threshold was reached isn't available on that poller.
+	UnavailableStat string
 }
 
 // CacheAvailableStatuses is the available status of each cache.
@@ -161,7 +163,7 @@ type ResultInfo struct {
 	Available   bool
 }
 
-func toInfo(r Result) ResultInfo {
+func ToInfo(r Result) ResultInfo {
 	return ResultInfo{
 		ID:          r.ID,
 		Error:       r.Error,
@@ -177,7 +179,7 @@ func toInfo(r Result) ResultInfo {
 func toInfos(rs []Result) []ResultInfo {
 	infos := make([]ResultInfo, len(rs), len(rs))
 	for i, r := range rs {
-		infos[i] = toInfo(r)
+		infos[i] = ToInfo(r)
 	}
 	return infos
 }
@@ -204,7 +206,7 @@ func pruneInfos(history []ResultInfo, limit uint64) []ResultInfo {
 }
 
 func (a ResultInfoHistory) Add(r Result, limit uint64) {
-	a[r.ID] = pruneInfos(append([]ResultInfo{toInfo(r)}, a[r.ID]...), limit)
+	a[r.ID] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[r.ID]...), limit)
 }
 
 // Kbpses is the kbps values of each cache.
