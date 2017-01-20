@@ -384,7 +384,7 @@ sub getDefaults {
     return {
         $databaseConfFile => [
             {
-                "Database type" => "mysql",
+                "Database type" => "pg",
                 "config_var"    => "type"
             },
             {
@@ -410,7 +410,7 @@ sub getDefaults {
             },
             {
                 "Download Maxmind Database?" => "yes",
-                "config_var" => "maxmind"
+                "config_var"                 => "maxmind"
             }
         ],
         $dbConfFile => [
@@ -470,11 +470,11 @@ sub getDefaults {
         ],
         $profilesConfFile => [
             {
-                "Add custom profiles?" =>"no",
-                "config_var" => "custom_profiles"
+                "Add custom profiles?" => "no",
+                "config_var"           => "custom_profiles"
             }
         ],
-        $opensslConfFile  => [
+        $opensslConfFile => [
             {
                 "Do you want to generate a certificate?" => "yes",
                 "config_var"                             => "genCert"
@@ -565,9 +565,9 @@ sub getDefaults {
 # opensslconf: The openssl configuration if any
 
 sub setupDatabase {
-    my $todbconf    = shift;
-    my $opensslconf = shift;
-    my $genCert     = shift;
+    my $todbconf     = shift;
+    my $opensslconf  = shift;
+    my $genCert      = shift;
     my $setupMaxmind = shift;
 
     InstallUtils::logger( "Setting up database", "info" );
@@ -581,7 +581,7 @@ sub setupDatabase {
         InstallUtils::logger( "Database initialization succeeded", "info" );
     }
 
-    if ($setupMaxmind =~ /^y(?:es)?/) {
+    if ( $setupMaxmind =~ /^y(?:es)?/ ) {
         InstallUtils::logger( "Downloading Maxmind data", "info" );
         chdir("/opt/traffic_ops/app/public/routing");
         $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
