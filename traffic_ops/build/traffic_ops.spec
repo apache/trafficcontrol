@@ -53,18 +53,6 @@ Built: %(date) by %{getenv: USER}
 %build
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
-    # compile go executables used during postinstall
-    # suppress strip of go execs
-    %define debug_package %{nil}
-
-    export GOPATH="$(pwd)/install/go"
-    export GOBIN="$(pwd)/install/bin"
-
-    echo "Compiling go executables"
-    for d in install/go/src/comcast.com/*; do
-	(cd "$d" && go get -ldflags "-B 0x%{commit}" -v ) || \
-	    { echo "Could not compile $d"; exit 1; }
-    done
 
 %install
 
@@ -166,6 +154,5 @@ fi
 %{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install
-%exclude %{PACKAGEDIR}/install/go
 %{PACKAGEDIR}/etc
 %doc %{PACKAGEDIR}/doc
