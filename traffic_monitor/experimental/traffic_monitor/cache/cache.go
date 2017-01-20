@@ -87,6 +87,18 @@ type Result struct {
 	Available       bool
 }
 
+// HasStat returns whether the given stat is in the Result.
+func (result *Result) HasStat(stat string) bool {
+	computedStats := ComputedStats()
+	if _, ok := computedStats[stat]; ok {
+		return true // health poll has all computed stats
+	}
+	if _, ok := result.Astats.Ats[stat]; ok {
+		return true
+	}
+	return false
+}
+
 // Vitals is the vitals data returned from a cache.
 type Vitals struct {
 	LoadAvg    float64

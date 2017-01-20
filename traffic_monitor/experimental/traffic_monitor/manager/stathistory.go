@@ -238,11 +238,10 @@ func calcAvailability(results []cache.Result, pollerName string, statResultHisto
 		}
 
 		isAvailable, whyAvailable, unavailableStat := health.EvalCache(cache.ToInfo(result), statResults, &mc)
-		whyAvailable += " (" + pollerName + ")" // TODO move to field in AvailableStatus
 
 		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
 		if previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
-			if !resultHasStat(previousStatus.UnavailableStat, result) {
+			if !result.HasStat(previousStatus.UnavailableStat) {
 				return
 			}
 		}
@@ -251,11 +250,12 @@ func calcAvailability(results []cache.Result, pollerName string, statResultHisto
 			Status:          mc.TrafficServer[string(result.ID)].Status,
 			Why:             whyAvailable,
 			UnavailableStat: unavailableStat,
+			Poller:          pollerName,
 		} // TODO move within localStates?
 
 		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, result.Error)
-			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable, Name: result.ID, Hostname: result.ID, Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
+			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, pollerName, result.Error)
+			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable + " (" + pollerName + ")", Name: result.ID, Hostname: result.ID, Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
 		}
 
 		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})

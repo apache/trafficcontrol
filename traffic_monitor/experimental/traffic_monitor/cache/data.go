@@ -38,6 +38,8 @@ type AvailableStatus struct {
 	Why       string
 	// UnavailableStat is the stat whose threshold made the cache unavailable. If this is the empty string, the cache is unavailable for a non-threshold reason. This exists so a poller (health, stat) won't mark an unavailable cache as available if the stat whose threshold was reached isn't available on that poller.
 	UnavailableStat string
+	// Poller is the name of the poller which set this available status
+	Poller string
 }
 
 // CacheAvailableStatuses is the available status of each cache.
