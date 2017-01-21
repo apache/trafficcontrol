@@ -107,12 +107,6 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			if available.IsAvailable {
 				stat.CommonStats.IsAvailable.Value = true
 				stat.CommonStats.IsHealthy.Value = true
-				errStr := getDsErrString(deliveryService, stat, mc)
-				if errStr != "" {
-					stat.CommonStats.IsAvailable.Value = false
-					stat.CommonStats.IsHealthy.Value = false
-					stat.CommonStats.ErrorStr.Value = errStr
-				}
 				stat.CommonStats.CachesAvailableNum.Value++
 				cacheGroupStats := stat.CacheGroups[cacheGroup]
 				cacheGroupStats.IsAvailable.Value = true
@@ -324,7 +318,7 @@ func addLastDSStatTotals(lastStat LastDSStat, cachesReporting map[enum.CacheName
 }
 
 // addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures, and returns the augmented structures.
-func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats LastStats, dsStats Stats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats) {
+func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats LastStats, dsStats Stats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap) (Stats, LastStats) {
 	err := error(nil)
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
@@ -351,6 +345,13 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 	}
 	stat.TotalStats = addLastStatsToStatCacheStats(stat.TotalStats, lastStat.Total)
 	lastStats.DeliveryServices[dsName] = lastStat
+	errStr := getDsErrString(dsName, stat.TotalStats, mc)
+	if errStr != "" {
+		stat.CommonStats.IsAvailable.Value = false
+		stat.CommonStats.IsHealthy.Value = false
+		stat.CommonStats.ErrorStr.Value = errStr
+	}
+
 	dsStats.DeliveryService[dsName] = stat
 	return dsStats, lastStats
 }
@@ -387,13 +388,14 @@ func addCachePerSecStats(cacheName enum.CacheName, precomputed cache.Precomputed
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType) (Stats, LastStats) {
+func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap) (Stats, LastStats) {
 	for dsName, stat := range dsStats.DeliveryService {
-		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes)
+		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes, mc)
 	}
 	for cacheName, precomputedData := range precomputed {
 		lastStats = addCachePerSecStats(cacheName, precomputedData, lastStats)
 	}
+
 	return dsStats, lastStats
 }
 
@@ -450,7 +452,7 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 		}
 	}
 
-	perSecStats, lastStats := addPerSecStats(precomputed, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes)
+	perSecStats, lastStats := addPerSecStats(precomputed, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes, mc)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	perSecStats.Time = time.Now()
 	return perSecStats, lastStats, nil
@@ -529,9 +531,6 @@ func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 
 func getDsErrString(dsName enum.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) string {
 	dsNameString := fmt.Sprintf("%s", dsName)
-	if dsName == "adcolony" {
-		fmt.Printf("Stats 2xx = %v, Tps 2xx = %v, TPS total = %v\n", dsStats.Status2xx.Value, dsStats.Tps2xx.Value, dsStats.TpsTotal.Value)
-	}
 
 	if dsStats.TpsTotal.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold) {
 		return fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.TpsTotal.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
