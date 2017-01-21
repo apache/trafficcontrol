@@ -527,17 +527,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-
-For the percentagebar component:
-
-/* WebAppers Progress Bar, version 0.2
-* (c) 2007 Ray Cheung
-*
-* WebAppers Progress Bar is freely distributable under the terms of an Creative Commons license.
-* For details, see the WebAppers web site: http://wwww.Webappers.com/
-*
-/*--------------------------------------------------------------------------*/
-
 For the ng-map component:
 
 /**
