@@ -475,9 +475,14 @@ sub ip_allow_data {
 	$ipallow->[$i]->{action} = 'ip_allow';
 	$ipallow->[$i]->{method} = "ALL";
 	$i++;
+
+	# default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
+	my $coalesce_masklen_v4 = 24;
+	my $coalesce_number_v4 = 5;
+	my $coalesce_masklen_v6 = 24;
+	my $coalesce_number_v6 = 5;
 	my $rs_parameter =
-		$self->db->resultset('ProfileParameter')
-		->search( { profile => $server->profile->id }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
+		$self->db->resultset('ProfileParameter')->search( { profile => $server->profile->id }, { prefetch => [ "parameter", "profile" ] } );
 
 	while ( my $row = $rs_parameter->next ) {
 		if ( $row->parameter->name eq 'purge_allow_ip' && $row->parameter->config_file eq 'ip_allow.config' ) {
@@ -485,6 +490,18 @@ sub ip_allow_data {
 			$ipallow->[$i]->{action} = "ip_allow";
 			$ipallow->[$i]->{method} = "ALL";
 			$i++;
+		}
+		elsif ($row->parameter->name eq 'coalesce_masklen_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_masklen_v4 = $row->parameter->value;
+		}
+		elsif ($row->parameter->name eq 'coalesce_number_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_number_v4 = $row->parameter->value;
+		}
+		elsif ($row->parameter->name eq 'coalesce_masklen_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_masklen_v6 = $row->parameter->value;
+		}
+		elsif ($row->parameter->name eq 'coalesce_number_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_number_v6 = $row->parameter->value;
 		}
 	}
 
@@ -533,9 +550,8 @@ sub ip_allow_data {
 		}
 
 		# compact, coalesce and compact combined list again
-		# if more than 5 servers are in a /24, list that /24 - TODO JvD: parameterize
 		my @compacted_list = NetAddr::IP::Compact(@allowed_netaddrips);
-		my $coalesced_list = NetAddr::IP::Coalesce( 24, 5, @allowed_netaddrips );
+		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4 , $coalesce_masklen_v4, @allowed_netaddrips );
 		my @combined_list  = NetAddr::IP::Compact( @allowed_netaddrips, @{$coalesced_list} );
 		foreach my $net (@combined_list) {
 			my $range = $net->range();
@@ -548,7 +564,7 @@ sub ip_allow_data {
 
 		# now add IPv6. TODO JvD: paremeterize support enabled on/ofd and /48 and number 5
 		my @compacted__ipv6_list = NetAddr::IP::Compact(@allowed_ipv6_netaddrips);
-		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( 48, 5, @allowed_ipv6_netaddrips );
+		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( $coalesce_masklen_v6 , $coalesce_number_v6, @allowed_ipv6_netaddrips );
 		my @combined_ipv6_list   = NetAddr::IP::Compact( @allowed_ipv6_netaddrips, @{$coalesced_ipv6_list} );
 		foreach my $net (@combined_ipv6_list) {
 			my $range = $net->range();
