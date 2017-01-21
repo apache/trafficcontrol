@@ -96,6 +96,14 @@ Below is a list of cache parameters that are likely to need changes from the def
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | purge_allow_ip           | ip_allow.config   | The IP address range that is allowed to execute the PURGE method on the caches (not related to :ref:`rl-purge`)         |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+| coalesce_masklen_v4	   | ip_allow.config   | The masklen to use when coalescing v4 networks into one line using http://search.cpan.org/~miker/NetAddr-IP-4.078/IP.pm |
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+| coalesce_number_v4 	   | ip_allow.config   | The number to use when coalescing v4 networks into one line using http://search.cpan.org/~miker/NetAddr-IP-4.078/IP.pm  |
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+| coalesce_masklen_v6	   | ip_allow.config   | The masklen to use when coalescing v6 networks into one line using http://search.cpan.org/~miker/NetAddr-IP-4.078/IP.pm |
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+| coalesce_masklen_v6	   | ip_allow.config   | The masklen to use when coalescing v6 networks into one line using http://search.cpan.org/~miker/NetAddr-IP-4.078/IP.pm |
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | health.threshold.loadavg | rascal.properties | The Unix load average at which Traffic Router will stop sending traffic to this cache                                   |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | health.threshold.\\      | rascal.properties | The amount of bandwidth that Traffic Router will try to keep available on the cache.                                    |
