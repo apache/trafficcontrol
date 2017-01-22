@@ -43,6 +43,7 @@ public class DsWatcher {
 
 		public void run() { // run the service
 			while(true) {
+				if(!isActive) { return; }
 				try {
 					final long time = System.currentTimeMillis();
 					final RouterConfig crConfig = RouterConfig.getCrConfig();
@@ -71,14 +72,13 @@ public class DsWatcher {
 						Thread.sleep(100);
 					} catch (InterruptedException ex) { }
 				}
-				if(!isActive) { return; }
 			}
 		}
 
 	}
 
 	public void destroy() {
-		LOGGER.warn("CacheWatcher: shutting down ");
+		LOGGER.warn("DsWatcher: shutting down ");
 		isActive  = false;
 		final long time = System.currentTimeMillis();
 		mainThread.interrupt();
