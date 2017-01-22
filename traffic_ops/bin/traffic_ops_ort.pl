@@ -408,11 +408,36 @@ sub process_cfg_file {
 		&adv_processing_ssl( \@db_file_lines );
 	}
 
+	if ( $file !~ m/^\/opt\/trafficserver\// ) {
+		chown 0, 0, "$file";
+	}
+	else {
+		change_ats_config_owner( $file );
+	}
+
 	( $log_level >> $INFO )
 		&& print "INFO: ======== End processing config file: $cfg_file for service: " . $cfg_file_tracker->{$cfg_file}->{'service'} . " ========\n";
 	$cfg_file_tracker->{$cfg_file}->{'audit_complete'}++;
 
 	return $return_code;
+}
+
+sub change_ats_config_owner {
+	my $file = shift;
+	my $ats_uid  = getpwnam("ats");
+	if ( !defined($ats_uid) ) {
+		( $log_level >> $TRACE ) && print "TRACE Change owner to ats but user does not exist!\n";
+		return;
+	}
+
+	# chown to ats.ats for config files except those in ssl
+	if ( $file =~ m/^\/opt\/trafficserver\// && $file !~ m/\.(key|cer)$/ ) {
+		open my $fh, '+<', $file || die "Can't open $file for chowning!\n";
+		chmod oct(644), $fh;
+		chown $ats_uid, $ats_uid, $fh;
+		close $fh;
+		( $log_level >> $TRACE ) && print "TRACE Change owner to ats for $file\n";
+	}
 }
 
 sub systemd_service_set {
