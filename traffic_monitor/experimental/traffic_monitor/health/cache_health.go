@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
@@ -93,35 +92,6 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.Traffic
 	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth) * 1000
 
 	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
-}
-
-// getKbpsThreshold returns the numeric kbps threshold, from the Traffic Ops string value. If there is a parse error, it logs a warning and returns the max floating point number, signifying no limit
-// TODO add float64 to Traffic Ops Client interface
-func getKbpsThreshold(threshStr string) (int64, bool) {
-	if len(threshStr) == 0 {
-		return 0, false
-	}
-	if threshStr[0] == '>' {
-		threshStr = threshStr[1:]
-	}
-	thresh, err := strconv.ParseInt(threshStr, 10, 64)
-	if err != nil {
-		return 0, false
-	}
-	return thresh, true
-}
-
-// TODO add time.Duration to Traffic Ops Client interface
-func getQueryThreshold(threshInt int64) (time.Duration, bool) {
-	if threshInt == 0 {
-		return 0, false
-	}
-	return time.Duration(threshInt) * time.Millisecond, true
-}
-
-func cacheCapacityKbps(result cache.Result) int64 {
-	kbpsInMbps := int64(1000)
-	return int64(result.Astats.System.InfSpeed) * kbpsInMbps
 }
 
 // EvalCache returns whether the given cache should be marked available, a string describing why, and which stat exceeded a threshold. The `stats` may be nil, for pollers which don't poll stats.

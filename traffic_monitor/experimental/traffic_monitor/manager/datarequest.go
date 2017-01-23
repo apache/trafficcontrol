@@ -557,18 +557,6 @@ func srvTRConfig(opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSess
 	return toSession.CRConfigRaw(cdnName)
 }
 
-func makeWrapAll(errorCount threadsafe.Uint, unpolledCaches threadsafe.UnpolledCaches) func(http.HandlerFunc) http.HandlerFunc {
-	return func(f http.HandlerFunc) http.HandlerFunc {
-		return wrapUnpolledCheck(unpolledCaches, errorCount, f)
-	}
-}
-
-func makeCrConfigHandler(wrapper func(http.HandlerFunc) http.HandlerFunc, errorCount threadsafe.Uint, opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) http.HandlerFunc {
-	return wrapper(WrapErr(errorCount, func() ([]byte, error) {
-		return srvTRConfig(opsConfig, toSession)
-	}, ContentTypeJSON))
-}
-
 func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
 	if _, raw := params["raw"]; raw {
 		return srvTRStateSelf(localStates)
