@@ -75,7 +75,7 @@ func setStaticData(dsStats Stats, dsServers map[enum.DeliveryServiceName][]enum.
 	return dsStats
 }
 
-func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData, mc to.TrafficMonitorConfigMap) (Stats, error) {
+func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData) (Stats, error) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
@@ -400,7 +400,7 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
-	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed, mc) // TODO move after stat summarisation
+	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed) // TODO move after stat summarisation
 	if err != nil {
 		return dsStats, lastStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
