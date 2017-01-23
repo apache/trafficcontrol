@@ -472,10 +472,10 @@ sub api_routes {
 	$r->get("/api/$version/logs/newcount")->over( authenticated => 1 )->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
 	# -- CONFIG FILES
-	$r->get("/api/$version/server/:id/configfiles/ats")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_config_metadata', namespace => 'API::Configs' );
-	$r->get("/api/$version/profile/:id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_profile_config', namespace => 'API::Configs' );
-	$r->get("/api/$version/server/:id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_server_config', namespace => 'API::Configs' );
-	$r->get("/api/$version/cdn/:id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_cdn_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/server/#id/configfiles/ats")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_config_metadata', namespace => 'API::Configs' );
+	$r->get("/api/$version/profile/#id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_profile_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/server/#id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_server_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/cdn/#id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_cdn_config', namespace => 'API::Configs' );
 
 	# -- DELIVERYSERVICES
 	# -- DELIVERYSERVICES: CRUD
