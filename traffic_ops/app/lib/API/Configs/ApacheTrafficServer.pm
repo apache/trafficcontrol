@@ -75,7 +75,7 @@ sub get_config_metadata {
 
 		%condition = (
 			'profile_parameters.profile' => $data_obj->{'profile'}->{'id'},
-			-or                          => [ 'name' => 'location', 'name' => 'scope' ]
+			-or                          => [ 'name' => 'location' ]
 		);
 		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 		while ( my $param = $rs_param->next ) {
@@ -86,9 +86,7 @@ sub get_config_metadata {
 	}
 
 	foreach my $config_file ( keys $data_obj->{'config_files'} ) {
-		if ( !defined( $data_obj->{'config_files'}->{$config_file}->{'scope'} ) ) {
-			$data_obj->{'config_files'}->{$config_file}->{'scope'} = $self->get_scope($config_file);
-		}
+		$data_obj->{'config_files'}->{$config_file}->{'scope'} = $self->get_scope($config_file);
 	}
 
 	my $file_contents = encode_json($data_obj);
@@ -369,9 +367,6 @@ sub param_data {
 		if ( $row->parameter->name eq "location" ) {
 			next;
 		}
-		if ( $row->parameter->name eq "scope" ) {
-			next;
-		}
 		my $value = $row->parameter->value;
 
 		# some files have multiple lines with the same key... handle that with param id.
@@ -398,9 +393,6 @@ sub profile_param_data {
 		{ prefetch => [ { parameter => undef }, { profile => undef } ] } );
 	while ( my $row = $rs->next ) {
 		if ( $row->parameter->name eq "location" ) {
-			next;
-		}
-		if ( $row->parameter->name eq "scope" ) {
 			next;
 		}
 		my $value = $row->parameter->value;
