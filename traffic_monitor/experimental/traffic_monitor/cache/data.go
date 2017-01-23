@@ -178,14 +178,6 @@ func ToInfo(r Result) ResultInfo {
 	}
 }
 
-func toInfos(rs []Result) []ResultInfo {
-	infos := make([]ResultInfo, len(rs), len(rs))
-	for i, r := range rs {
-		infos[i] = ToInfo(r)
-	}
-	return infos
-}
-
 func copyResultInfos(a []ResultInfo) []ResultInfo {
 	b := make([]ResultInfo, len(a), len(a))
 	copy(b, a)
