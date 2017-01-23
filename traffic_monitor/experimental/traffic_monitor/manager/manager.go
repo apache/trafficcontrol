@@ -113,7 +113,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	)
 
 	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
-		cacheStatHandler.ResultChannel,
+		cacheStatHandler.ResultChan(),
 		localStates,
 		combinedStates,
 		toData,
@@ -125,7 +125,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	)
 
 	lastHealthDurations, healthHistory := StartHealthResultManager(
-		cacheHealthHandler.ResultChannel,
+		cacheHealthHandler.ResultChan(),
 		toData,
 		localStates,
 		monitorConfig,
