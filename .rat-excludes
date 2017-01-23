@@ -36,8 +36,10 @@ j[mM]enu(?:\.jquery)?\.(?:css|js)(?: MIT. Properly documented in LICENSE ){0}
 .*underscore.*(?:                    MIT. Properly documented in LICENSE ){0}
 NetPacket(?:                         MIT. Properly documented in LICENSE ){0}
 dataTables\.tableTools\.js(?:        MIT. Properly documented in LICENSE ){0}
-handlebars\.js(?:                    MIT. Properly documented in LICENSE ){0}
 .*[fF]ont[aA]wesome.*(?:             SIL OFL. Properly documented in LICENSE ){0}
 01-gofmt(?:                          Go BSD. Properly documented in LICENSE ){0}
 GeoLite2-City\.mmdb\.gz(?:           CC-SA 4.0. Properly documented in LICENSE ){0}
 ssl-bundle\.crt(?:                   MPL. Properly documented in LICENSE ){0}
+sorttable\.js(?:                     X11. Properly documented in LICENSE ){0}
+select2\..*(?:                       MIT. Properly documented in LICENSE ){0}
+prettyprint\.js(?:                   BSD 2-clause. Properly documented in LICENSE ){0}
