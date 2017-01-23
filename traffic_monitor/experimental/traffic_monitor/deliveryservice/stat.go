@@ -531,13 +531,14 @@ func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 
 func getDsErrString(dsName enum.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) string {
 	dsNameString := fmt.Sprintf("%s", dsName)
-
-	if dsStats.TpsTotal.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold) {
-		return fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.TpsTotal.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
+	tpsThreshold := monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold
+	if tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
+		return fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.TpsTotal.Value, tpsThreshold)
 	}
 
-	if dsStats.Kbps.Value > float64(monitorConfig.DeliveryService[dsNameString].TotalKbpsThreshold) {
-		return fmt.Sprintf("TotalKbps too high (%v > %v)", dsStats.Kbps.Value, monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold)
+	kbpsThreshold := monitorConfig.DeliveryService[dsNameString].TotalKbpsThreshold
+	if kbpsThreshold > 0 && dsStats.Kbps.Value > float64(kbpsThreshold) {
+		return fmt.Sprintf("TotalKbps too high (%v > %v)", dsStats.Kbps.Value, kbpsThreshold)
 	}
 	return ""
 }
