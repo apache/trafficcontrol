@@ -28,7 +28,6 @@ import (
 
 // ResultStatHistory provides safe access for multiple goroutines readers and a single writer to a stored HistoryHistory object.
 // This could be made lock-free, if the performance was necessary
-// TODO add separate locks for Caches and Deliveryservice maps?
 type ResultStatHistory struct {
 	history *cache.ResultStatHistory
 	m       *sync.RWMutex
@@ -56,7 +55,6 @@ func (h *ResultStatHistory) Set(v cache.ResultStatHistory) {
 
 // ResultStatHistory provides safe access for multiple goroutines readers and a single writer to a stored HistoryHistory object.
 // This could be made lock-free, if the performance was necessary
-// TODO add separate locks for Caches and Deliveryservice maps?
 type ResultInfoHistory struct {
 	history *cache.ResultInfoHistory
 	m       *sync.RWMutex

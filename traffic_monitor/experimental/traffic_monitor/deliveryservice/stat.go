@@ -39,7 +39,6 @@ import (
 // TODO remove 'ds' and 'stat' from names
 
 // Stats is the JSON-serialisable representation of delivery service Stats. It maps delivery service names to individual stat objects.
-// TODO remove DeliveryService and set type to the map directly, or add other members
 type Stats struct {
 	DeliveryService map[enum.DeliveryServiceName]dsdata.Stat `json:"deliveryService"`
 	Time            time.Time                                `json:"-"`
