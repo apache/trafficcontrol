@@ -280,26 +280,6 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 	return json.Marshal(stats)
 }
 
-func getHealthPollingURL(cache enum.CacheName, monitorConfig to.TrafficMonitorConfigMap) (string, error) {
-	srv, ok := monitorConfig.TrafficServer[string(cache)]
-	if !ok {
-		return "", fmt.Errorf("server not found in monitor config from Traffic Ops")
-	}
-	url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
-	if url == "" {
-		return "", fmt.Errorf("health polling URL not found in monitor config from Traffic Ops")
-	}
-
-	// TODO abstract replacer, remove duplication with manager/monitorconfig.go
-	url = strings.NewReplacer(
-		"${hostname}", srv.IP,
-		"${interface_name}", srv.InterfaceName,
-		"application=system", "application=plugin.remap",
-		"application=", "application=plugin.remap",
-	).Replace(url)
-	return url, nil
-}
-
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
 func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
