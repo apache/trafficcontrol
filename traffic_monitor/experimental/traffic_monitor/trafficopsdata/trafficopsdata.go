@@ -8,9 +8,9 @@ package trafficopsdata
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package trafficopsdata
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"encoding/json"
@@ -134,7 +133,6 @@ type CRConfig struct {
 
 // Fetch gets the CRConfig from Traffic Ops, creates the TOData maps, and atomically sets the TOData.
 // TODO since the session is threadsafe, each TOData get func below could be put in a goroutine, if performance mattered
-// TODO change called funcs to take CRConfigRaw instead of toSession
 func (d TODataThreadsafe) Fetch(to towrap.ITrafficOpsSession, cdn string) error {
 	newTOData := TOData{}
 
