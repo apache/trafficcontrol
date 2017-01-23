@@ -551,7 +551,7 @@ sub ip_allow_data {
 
 		# compact, coalesce and compact combined list again
 		my @compacted_list = NetAddr::IP::Compact(@allowed_netaddrips);
-		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4 , $coalesce_masklen_v4, @allowed_netaddrips );
+		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4 , $coalesce_number_v4, @allowed_netaddrips );
 		my @combined_list  = NetAddr::IP::Compact( @allowed_netaddrips, @{$coalesced_list} );
 		foreach my $net (@combined_list) {
 			my $range = $net->range();
