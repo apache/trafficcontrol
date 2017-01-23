@@ -584,7 +584,6 @@ func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
 	return peer.CrstatesMarshall(localStates.Get())
 }
 
-// TODO remove error params, handle by returning an error? How, since we need to return a non-standard code?
 func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory, statInfoHistory threadsafe.ResultInfoHistory, monitorConfig TrafficMonitorConfigMapThreadsafe, combinedStates peer.CRStatesThreadsafe, statMaxKbpses threadsafe.CacheKbpses) ([]byte, int) {
 	filter, err := NewCacheStatFilter(path, params, toData.Get().ServerTypes)
 	if err != nil {
@@ -1200,7 +1199,8 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			for _, val := range statHistory {
 				fVal, ok := enum.ToNumeric(val.Val)
 				if !ok {
-					continue // skip non-numeric stats. TODO warn about stat history containing different types?
+					log.Warnf("threshold stat %v value %v is not a number, cannot use.", statName, val.Val)
+					continue
 				}
 				for i := uint64(0); i < val.Span; i++ {
 					ssStat.DataPointCount++

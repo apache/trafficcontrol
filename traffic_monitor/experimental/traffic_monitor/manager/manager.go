@@ -60,7 +60,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		Pending: gmx.NewGauge("fetchPending"),
 	}
 
-	// TODO investigate whether a unique client per cache to be polled is faster
 	sharedClient := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 		Timeout:   cfg.HTTPTimeout,
@@ -76,7 +75,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	cacheHealthHandler := cache.NewHandler()
 	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep)
-	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates) // TODO figure out if this is necessary, with the CacheHealthPoller
+	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates)
 	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
