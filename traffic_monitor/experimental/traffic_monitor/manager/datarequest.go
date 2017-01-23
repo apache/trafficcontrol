@@ -1185,8 +1185,8 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			}
 			ssStat := StatSummaryStat{}
 			msPerNs := int64(1000000)
-			ssStat.StartTime = time.Time(statHistory[len(statHistory)-1].Time).UnixNano() / msPerNs
-			ssStat.EndTime = time.Time(statHistory[0].Time).UnixNano() / msPerNs
+			ssStat.StartTime = statHistory[len(statHistory)-1].Time.UnixNano() / msPerNs
+			ssStat.EndTime = statHistory[0].Time.UnixNano() / msPerNs
 			oldestVal, isOldestValNumeric := enum.ToNumeric(statHistory[len(statHistory)-1].Val)
 			newestVal, isNewestValNumeric := enum.ToNumeric(statHistory[0].Val)
 			if !isOldestValNumeric || !isNewestValNumeric {
