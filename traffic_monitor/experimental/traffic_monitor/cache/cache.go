@@ -40,25 +40,28 @@ import (
 
 // Handler is a cache handler, which fulfills the common/handler `Handler` interface.
 type Handler struct {
-	ResultChannel      chan Result
+	resultChan         chan Result
 	Notify             int
 	ToData             *todata.TODataThreadsafe
 	PeerStates         *peer.CRStatesPeersThreadsafe
 	MultipleSpaceRegex *regexp.Regexp
 }
 
-// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
-// TODO change this to take the ResultChan. It doesn't make sense for the Handler to 'own' the Result Chan.
+func (h Handler) ResultChan() <-chan Result {
+	return h.resultChan
+}
+
+// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChan, and Result.Precomputed will be nil
 func NewHandler() Handler {
-	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
+	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
 
-// NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChannel.
+// NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChan.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
-	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
+	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
-// Precompute returns whether this handler precomputes data before passing the result to the ResultChannel
+// Precompute returns whether this handler precomputes data before passing the result to the ResultChan
 func (handler Handler) Precompute() bool {
 	return handler.ToData != nil && handler.PeerStates != nil
 }
@@ -311,14 +314,14 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	if reqErr != nil {
 		log.Errorf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
 		result.Error = reqErr
-		handler.ResultChannel <- result
+		handler.resultChan <- result
 		return
 	}
 
 	if r == nil {
 		log.Errorf("%v handle reader nil\n", id)
 		result.Error = fmt.Errorf("handler got nil reader")
-		handler.ResultChannel <- result
+		handler.resultChan <- result
 		return
 	}
 
@@ -328,7 +331,7 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	if decodeErr := json.NewDecoder(r).Decode(&result.Astats); decodeErr != nil {
 		log.Errorf("%s procnetdev decode error '%v'\n", id, decodeErr)
 		result.Error = decodeErr
-		handler.ResultChannel <- result
+		handler.resultChan <- result
 		return
 	}
 
@@ -355,7 +358,7 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 		log.Debugf("poll %v %v handle precompute end\n", pollID, time.Now())
 	}
 	log.Debugf("poll %v %v handle write start\n", pollID, time.Now())
-	handler.ResultChannel <- result
+	handler.resultChan <- result
 	log.Debugf("poll %v %v handle end\n", pollID, time.Now())
 }
 
@@ -412,7 +415,6 @@ func (handler Handler) precompute(result Result) Result {
 }
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-// TODO fix this being crazy slow. THIS IS THE BOTTLENECK
 func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
