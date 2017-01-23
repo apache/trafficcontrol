@@ -216,7 +216,7 @@ under the License.
 
 		 var lastEvent = 0;
 		 function getEvents() {
-			 /// \todo add /api/events-since/{index} (and change Traffic Monitor to keep latest 
+			 /// \todo add /api/events-since/{index} (and change Traffic Monitor to keep latest
 			 ajax("/publish/EventLog", function(r) {
 				 var jdata = JSON.parse(r);
 				 for (i = jdata.events.length - 1; i >= 0; i--) {
@@ -358,7 +358,9 @@ under the License.
 				 var j = JSON.parse(r);
 				 var jds = j.deliveryService
 				 var deliveryServiceNames = Object.keys(jds); //debug
-				 for (i = 0; i < deliveryServiceNames.length; i++) {
+				 //decrementing for loop so DsNames are alphabetical A-Z
+				 //TODO allow for filtering of columns so this isn't necessary
+					for (var i = deliveryServiceNames.length - 1; i >= 0; i--) {
 					 var deliveryService = deliveryServiceNames[i];
 
 					 if (!document.getElementById("deliveryservice-stats-" + deliveryService)) {
@@ -385,7 +387,7 @@ under the License.
 
 					 // \todo check that array has a member before dereferencing [0]
 					 if (jds[deliveryService].hasOwnProperty("isAvailable")) {
-						 document.getElementById("deliveryservice-stats-" + deliveryService + "-status").textContent = jds[deliveryService]["isAvailable"][0].value ? "available" : "unavailable";
+						 document.getElementById("deliveryservice-stats-" + deliveryService + "-status").textContent = jds[deliveryService]["isAvailable"][0].value == "true" ? " available" : "unavailable - " + jds[deliveryService]["error-string"][0].value;
 					 }
 					 if (jds[deliveryService].hasOwnProperty("caches-reporting") && jds[deliveryService].hasOwnProperty("caches-available") && jds[deliveryService].hasOwnProperty("caches-configured")) {
 						 document.getElementById("deliveryservice-stats-" + deliveryService + "-caches-reporting").textContent = jds[deliveryService]['caches-reporting'][0].value + " / " + jds[deliveryService]['caches-available'][0].value + " / " + jds[deliveryService]['caches-configured'][0].value;
@@ -419,11 +421,11 @@ under the License.
 					 // \todo implement disabled locations
 
 					 var row = document.getElementById("deliveryservice-stats-" + deliveryService);
-					 if (jds[deliveryService]["isAvailable"][0].value) {
+					 if (jds[deliveryService]["isAvailable"][0].value == "true") {
 						 row.classList.add("stripes");
-						 row.classList.remove("unavailable");
+						 row.classList.remove("error");
 					 } else {
-						 row.classList.add("unavailable");
+						 row.classList.add("error");
 						 row.classList.remove("stripes");
 					 }
 				 }
