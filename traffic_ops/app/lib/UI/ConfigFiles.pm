@@ -479,7 +479,7 @@ sub ip_allow_data {
 	# default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
 	my $coalesce_masklen_v4 = 24;
 	my $coalesce_number_v4 = 5;
-	my $coalesce_masklen_v6 = 24;
+	my $coalesce_masklen_v6 = 48;
 	my $coalesce_number_v6 = 5;
 	my $rs_parameter =
 		$self->db->resultset('ProfileParameter')->search( { profile => $server->profile->id }, { prefetch => [ "parameter", "profile" ] } );
