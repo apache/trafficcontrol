@@ -232,6 +232,14 @@ For the fontawesome component:
  *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)
  */
 
+For the Inconsolata and Lato fonts:
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/Inconsolata-Bold.ttf
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/Inconsolata.ttf
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Bold.ttf
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Regular.ttf
+
+Licensed under the SIL Open Font License 1.1: http://scripts.sil.org/OFL_web
+
 For the bootstrap component:
 @misc/traffic-control-cdn/*/bootstrap*
 
