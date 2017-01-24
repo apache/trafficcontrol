@@ -334,6 +334,31 @@ For the ng-map component:
  * Copyright (c) 2014, 2015, 1016 Allen Kim
  */
 
+For the angular-loading-bar component:
+@traffic_ops/experimental/ui/app/src/styles/loading.scss
+@traffic_portal/app/src/styles/loading.scss
+
+/**
+ * angular-loading-bar v0.4.2
+ * https://chieffancypants.github.io/angular-loading-bar
+ * Copyright (c) 2014 Wes Cruver
+ * License: MIT
+ */
+
+https://github.com/chieffancypants/angular-loading-bar/blob/master/LICENSE
+
+For the gentella admin theme:
+@traffic_ops/experimental/ui/app/src/styles/theme.scss
+
+/**
+ * gentelella v1.3.0
+ * https://colorlib.com/polygon/gentelella/index.html
+ * Copyright (c) 2016 Aigars Silkalns & Colorlib
+ * License: MIT
+ */
+
+https://github.com/puikinsh/gentelella/blob/master/LICENSE.txt
+
 For the underscore component:
 @traffic_ops/experimental/ui/app/src/assets/js/underscore-min_1.8.3.js
 
@@ -529,13 +554,3 @@ Several subsections of main.css are under the MIT license, as noted in the file:
     For the bootstrap-progressbar component:
     /*! bootstrap-progressbar v0.8.4 | Copyright (c) 2012-2014 Stephan Groß | MIT license | http://www.minddust.com */
 
-    For the angular-loading-bar component:
-
-    /*!
-     * angular-loading-bar v0.4.2
-     * https://chieffancypants.github.io/angular-loading-bar
-     * Copyright (c) 2014 Wes Cruver
-     * License: MIT
-     */
-
-    https://github.com/chieffancypants/angular-loading-bar/blob/master/LICENSE
