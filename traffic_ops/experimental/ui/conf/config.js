@@ -24,10 +24,10 @@ module.exports = {
     sslPort: 8443,
     proxyPort: 8009,
     ssl: {
-        key:    './ssl/tls/private/ssl.key',
-        cert:   './ssl/tls/certs/ssl.crt',
+        key:    '/path/to/ssl.key',
+        cert:   '/path/to/ssl.crt',
         ca:     [
-            './ssl/tls/certs/ssl-bundle.crt'
+            '/path/to/ssl-bundle.crt'
         ]
     },
     api: {
@@ -40,6 +40,6 @@ module.exports = {
     log: {
         stream: './server/log/access.log'
     },
-    reject_unauthorized: false // false if using self-signed certs, true if trusted certs
+    reject_unauthorized: 0 // 0 if using self-signed certs, 1 if trusted certs
 };
 
