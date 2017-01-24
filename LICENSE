@@ -296,7 +296,6 @@ http://jquery.org/license
 For the jMenu component:
 @traffic_ops/app/public/*/jMenu.*
 @traffic_ops/app/public/*/jmenu.*
-@traffic_ops/app/templates/jmenu.html.ep
 
 /************************************************************************
 *************************************************************************
