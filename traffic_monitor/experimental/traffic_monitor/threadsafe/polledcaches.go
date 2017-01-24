@@ -120,7 +120,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats ds.LastStat
 			}
 
 			if !result.Available || result.Error != nil {
-				log.Infof("polled %v\n", cache)
+				log.Debugf("polled %v\n", cache)
 				delete(unpolledCaches, cache)
 				break innerLoop
 			}
@@ -130,7 +130,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats ds.LastStat
 			continue
 		}
 		if lastStat.Bytes.PerSec != 0 {
-			log.Infof("polled %v\n", cache)
+			log.Debugf("polled %v\n", cache)
 			delete(unpolledCaches, cache)
 		}
 	}

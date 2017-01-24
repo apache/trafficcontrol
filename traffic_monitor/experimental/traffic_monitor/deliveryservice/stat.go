@@ -78,29 +78,29 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
-			log.Warnf("CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
+			log.Infof("CreateStats not adding availability data for '%s': not found in Cachegroups\n", cache)
 			continue
 		}
 		deliveryServices, ok := serverDs[cache]
 		if !ok {
-			log.Warnf("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
+			log.Infof("CreateStats not adding availability data for '%s': not found in DeliveryServices\n", cache)
 			continue
 		}
 		cacheType, ok := serverTypes[cache]
 		if !ok {
-			log.Warnf("CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
+			log.Infof("CreateStats not adding availability data for '%s': not found in Server Types\n", cache)
 			continue
 		}
 
 		for _, deliveryService := range deliveryServices {
 			if deliveryService == "" {
-				log.Errorf("EMPTY addAvailableData DS") // various bugs in other functions can cause this - this will help identify and debug them.
+				log.Errorln("EMPTY addAvailableData DS") // various bugs in other functions can cause this - this will help identify and debug them.
 				continue
 			}
 
 			stat, ok := dsStats.DeliveryService[deliveryService]
 			if !ok {
-				log.Warnf("CreateStats not adding availability data for '%s': not found in Stats\n", cache)
+				log.Infof("CreateStats not adding availability data for '%s': not found in Stats\n", cache)
 				continue // TODO log warning? Error?
 			}
 
@@ -304,13 +304,13 @@ func addLastDSStatTotals(lastStat LastDSStat, cachesReporting map[enum.CacheName
 		if cacheGroup, ok := serverCachegroups[cacheName]; ok {
 			cacheGroups[cacheGroup] = cacheGroups[cacheGroup].Sum(cacheStats)
 		} else {
-			log.Errorf("while computing delivery service data, cache %v not in cachegroups\n", cacheName)
+			log.Warnf("while computing delivery service data, cache %v not in cachegroups\n", cacheName)
 		}
 
 		if cacheType, ok := serverTypes[cacheName]; ok {
 			cacheTypes[cacheType] = cacheTypes[cacheType].Sum(cacheStats)
 		} else {
-			log.Errorf("while computing delivery service data, cache %v not in types\n", cacheName)
+			log.Warnf("while computing delivery service data, cache %v not in types\n", cacheName)
 		}
 		total = total.Sum(cacheStats)
 	}
@@ -331,7 +331,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 	for cacheName, cacheStats := range stat.Caches {
 		lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
 		if err != nil {
-			log.Errorf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
+			log.Warnf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
 			continue
 		}
 		cacheStats.Kbps.Value = lastStat.Caches[cacheName].Bytes.PerSec / BytesPerKilobit
@@ -376,7 +376,7 @@ func addCachePerSecStats(cacheName enum.CacheName, precomputed cache.Precomputed
 	lastStat := lastStats.Caches[cacheName] // if lastStats.Caches[cacheName] doesn't exist, it will be zero-constructed, and `addLastStat` will refrain from setting the PerSec for zero LastStats
 	lastStat.Bytes, err = addLastStat(lastStat.Bytes, outBytes, outBytesTime)
 	if err != nil {
-		log.Errorf("while computing delivery service data for cache %v: %v\n", cacheName, err)
+		log.Warnf("while computing delivery service data for cache %v: %v\n", cacheName, err)
 		return lastStats
 	}
 	lastStats.Caches[cacheName] = lastStat
