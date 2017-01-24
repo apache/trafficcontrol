@@ -592,7 +592,7 @@ func srvDSStats(params url.Values, errorCount threadsafe.Uint, path string, toDa
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func srvEventLog(events threadsafe.Events) ([]byte, error) {
+func srvEventLog(events health.ThreadsafeEvents) ([]byte, error) {
 	return json.Marshal(JSONEvents{Events: events.Get()})
 }
 
@@ -704,7 +704,7 @@ func MakeDispatchMap(
 	statMaxKbpses threadsafe.CacheKbpses,
 	healthHistory threadsafe.ResultHistory,
 	dsStats threadsafe.DSStatsReader,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
 	lastHealthDurations DurationMapThreadsafe,

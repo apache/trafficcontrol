@@ -31,7 +31,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
@@ -40,11 +39,11 @@ func StartPeerManager(
 	peerChan <-chan peer.Result,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	peerOptimistic bool,
 	toData todata.TODataThreadsafe,
 	cfg config.Config,
-) (peer.CRStatesThreadsafe, threadsafe.Events) {
+) (peer.CRStatesThreadsafe, health.ThreadsafeEvents) {
 	combinedStates := peer.NewCRStatesThreadsafe()
 	overrideMap := map[enum.CacheName]bool{}
 
@@ -59,14 +58,14 @@ func StartPeerManager(
 	return combinedStates, events
 }
 
-func comparePeerState(events threadsafe.Events, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {
+func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {
 	if result.Available != peerStates.GetPeerAvailability(result.ID) {
 		events.Add(health.Event{Time: result.Time, Unix: result.Time.Unix(), Description: util.JoinErrorsString(result.Errors), Name: result.ID.String(), Hostname: result.ID.String(), Type: "Peer", Available: result.Available})
 	}
 }
 
 // TODO JvD: add deliveryservice stuff
-func combineCrStates(events threadsafe.Events, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TODataThreadsafe) {
+func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TODataThreadsafe) {
 	toDataCopy := toData.Get()
 
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth

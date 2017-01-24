@@ -86,7 +86,7 @@ func StartHealthResultManager(
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	cfg config.Config,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 ) (DurationMapThreadsafe, threadsafe.ResultHistory) {
 	lastHealthDurations := NewDurationMapThreadsafe()
@@ -120,7 +120,7 @@ func healthResultManagerListen(
 	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	cfg config.Config,
 ) {
@@ -186,7 +186,7 @@ func processHealthResult(
 	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	lastHealthEndTimes map[enum.CacheName]time.Time,
 	healthHistory threadsafe.ResultHistory,
@@ -229,7 +229,7 @@ func processHealthResult(
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 	}
 
-	calcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here
@@ -243,25 +243,4 @@ func processHealthResult(
 		lastHealthEndTimes[healthResult.ID] = time.Now()
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
-}
-
-// calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func CalculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
-	deliveryServices := states.GetDeliveryServices()
-	for deliveryServiceName, deliveryServiceState := range deliveryServices {
-		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
-			// log.Errorf("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
-			continue
-		}
-		deliveryServiceState.IsAvailable = false
-		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
-		for _, server := range deliveryServiceServers[deliveryServiceName] {
-			if available, _ := states.GetCache(server); available.IsAvailable {
-				deliveryServiceState.IsAvailable = true
-			} else {
-				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
-			}
-		}
-		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
-	}
 }

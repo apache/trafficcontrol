@@ -29,6 +29,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
@@ -86,7 +87,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
 
-	events := threadsafe.NewEvents(cfg.MaxEvents)
+	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
 	cachesChanged := make(chan struct{})
 
