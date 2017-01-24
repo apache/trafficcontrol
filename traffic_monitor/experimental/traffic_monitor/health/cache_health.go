@@ -39,7 +39,7 @@ func setError(newResult *cache.Result, err error) {
 // GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
-		log.Errorf("cache_health.GetVitals() called with an errored Result!")
+		log.Errorf("cache_health.GetVitals() called with an errored Result! %v", newResult.Error)
 		return
 	}
 	// proc.loadavg -- we're using the 1 minute average (!?)
@@ -78,8 +78,6 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 		if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
 			elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
 			newResult.Vitals.KbpsOut = int64(float64(((newResult.Vitals.BytesOut - prevResult.Vitals.BytesOut) * 8 / 1000)) / elapsedTimeInSecs)
-		} else {
-			// log.Infoln("prevResult == nil for id " + newResult.Id + ". Hope we're just starting up?")
 		}
 	} else {
 		setError(newResult, fmt.Errorf("Error parsing procnetdev: no fields found"))
@@ -90,8 +88,6 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *traffic_op
 	// TODO JvD: Should we really be running this code every second for every cache polled????? I don't think so.
 	interfaceBandwidth := newResult.Astats.System.InfSpeed
 	newResult.Vitals.MaxKbpsOut = int64(interfaceBandwidth)*1000 - mc.Profile[mc.TrafficServer[string(newResult.ID)].Profile].Parameters.MinFreeKbps
-
-	// log.Infoln(newResult.Id, "BytesOut", newResult.Vitals.BytesOut, "BytesIn", newResult.Vitals.BytesIn, "Kbps", newResult.Vitals.KbpsOut, "max", newResult.Vitals.MaxKbpsOut)
 }
 
 // getKbpsThreshold returns the numeric kbps threshold, from the Traffic Ops string value. If there is a parse error, it logs a warning and returns the max floating point number, signifying no limit
@@ -138,12 +134,12 @@ func EvalCache(result cache.Result, mc *traffic_ops.TrafficMonitorConfigMap) (bo
 
 	switch {
 	case status == enum.CacheStatusInvalid:
-		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, toServer.Status)
+		log.Warnf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, toServer.Status)
 		return false, getEventDescription(status, availability+"; invalid status")
 	case status == enum.CacheStatusAdminDown:
 		return false, getEventDescription(status, availability)
 	case status == enum.CacheStatusOffline:
-		log.Errorf("Cache %v set to OFFLINE, but still polled\n", result.ID)
+		log.Warnf("Cache %v set to OFFLINE, but still polled\n", result.ID)
 		return false, getEventDescription(status, availability)
 	case status == enum.CacheStatusOnline:
 		return true, getEventDescription(status, availability)

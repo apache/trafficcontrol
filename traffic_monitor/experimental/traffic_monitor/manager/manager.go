@@ -33,7 +33,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
-	//	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"github.com/davecheney/gmx"
 )
 

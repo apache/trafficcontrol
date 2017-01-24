@@ -908,12 +908,12 @@ func createCacheStatuses(
 	for cacheName, cacheType := range cacheTypes {
 		infoHistory, ok := statInfoHistory[cacheName]
 		if !ok {
-			log.Warnf("createCacheStatuses stat info history missing cache %s\n", cacheName)
+			log.Infof("createCacheStatuses stat info history missing cache %s\n", cacheName)
 			continue
 		}
 
 		if len(infoHistory) < 1 {
-			log.Warnf("createCacheStatuses stat info history empty for cache %s\n", cacheName)
+			log.Infof("createCacheStatuses stat info history empty for cache %s\n", cacheName)
 			continue
 		}
 
@@ -923,32 +923,32 @@ func createCacheStatuses(
 
 		healthQueryTime, err := latestQueryTimeMS(cacheName, lastHealthDurations)
 		if err != nil {
-			log.Warnf("Error getting cache %v health query time: %v\n", cacheName, err)
+			log.Infof("Error getting cache %v health query time: %v\n", cacheName, err)
 		}
 
 		statTime, err := latestResultInfoTimeMS(cacheName, statInfoHistory)
 		if err != nil {
-			log.Warnf("Error getting cache %v stat result time: %v\n", cacheName, err)
+			log.Infof("Error getting cache %v stat result time: %v\n", cacheName, err)
 		}
 
 		healthTime, err := latestResultTimeMS(cacheName, healthHistory)
 		if err != nil {
-			log.Warnf("Error getting cache %v health result time: %v\n", cacheName, err)
+			log.Infof("Error getting cache %v health result time: %v\n", cacheName, err)
 		}
 
 		statSpan, err := infoResultSpanMS(cacheName, statInfoHistory)
 		if err != nil {
-			log.Warnf("Error getting cache %v stat span: %v\n", cacheName, err)
+			log.Infof("Error getting cache %v stat span: %v\n", cacheName, err)
 		}
 
 		healthSpan, err := resultSpanMS(cacheName, healthHistory)
 		if err != nil {
-			log.Warnf("Error getting cache %v health span: %v\n", cacheName, err)
+			log.Infof("Error getting cache %v health span: %v\n", cacheName, err)
 		}
 
 		var kbps *float64
 		if lastStat, ok := lastStats.Caches[cacheName]; !ok {
-			log.Warnf("cache not in last kbps cache %s\n", cacheName)
+			log.Infof("cache not in last kbps cache %s\n", cacheName)
 		} else {
 			kbpsVal := lastStat.Bytes.PerSec / float64(ds.BytesPerKilobit)
 			kbps = &kbpsVal
@@ -956,7 +956,7 @@ func createCacheStatuses(
 
 		var maxKbps *float64
 		if v, ok := maxKbpses[cacheName]; !ok {
-			log.Warnf("cache not in max kbps cache %s\n", cacheName)
+			log.Infof("cache not in max kbps cache %s\n", cacheName)
 		} else {
 			fv := float64(v)
 			maxKbps = &fv
@@ -965,7 +965,7 @@ func createCacheStatuses(
 		var connections *int64
 		connectionsVal, ok := conns[cacheName]
 		if !ok {
-			log.Warnf("cache not in connections %s\n", cacheName)
+			log.Infof("cache not in connections %s\n", cacheName)
 		} else {
 			connections = &connectionsVal
 		}
@@ -973,7 +973,7 @@ func createCacheStatuses(
 		var status *string
 		statusVal, ok := localCacheStatus[cacheName]
 		if !ok {
-			log.Warnf("cache not in statuses %s\n", cacheName)
+			log.Infof("cache not in statuses %s\n", cacheName)
 		} else {
 			statusString := statusVal.Status + " - "
 

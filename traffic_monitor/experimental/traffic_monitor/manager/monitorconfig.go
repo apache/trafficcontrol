@@ -137,6 +137,8 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 	return time.Duration(t) * time.Millisecond
 }
 
+var healthPollCount int
+
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
 func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config) (time.Duration, time.Duration, time.Duration, error) {
 	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
@@ -162,7 +164,10 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
 	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
 	if !healthPollIntervalExists {
-		log.Warnf("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.\n")
+		if healthPollCount == 0 { //only log this once
+			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
+			healthPollCount++
+		}
 		healthPollIntervalInt = statPollIntervalInt
 	} else if !healthPollIntervalIsInt {
 		log.Warnf("Traffic Ops Monitor config 'heartbeat.polling.interval' value '%v' type %T is not an integer, using health for heartbeat\n", statPollIntervalI, statPollIntervalI)

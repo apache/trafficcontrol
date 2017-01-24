@@ -138,7 +138,7 @@ func healthResultManagerListen(
 		for {
 			select {
 			case <-ticker.C:
-				log.Warnf("Health Result Manager flushing queued results\n")
+				log.Infof("Health Result Manager flushing queued results\n")
 				processHealthResult(
 					cacheHealthChan,
 					toData,
@@ -212,7 +212,6 @@ func processHealthResult(
 	monitorConfigCopy := monitorConfig.Get()
 	healthHistoryCopy := healthHistory.Get().Copy()
 	for _, healthResult := range results {
-		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
 		healthResultHistory := healthHistoryCopy[healthResult.ID]
@@ -226,7 +225,7 @@ func processHealthResult(
 
 		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
 		if maxHistory < 1 {
-			log.Warnf("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
+			log.Infof("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
 			maxHistory = 1
 		}
 
@@ -257,8 +256,6 @@ func processHealthResult(
 			lastHealthDurations[healthResult.ID] = d
 		}
 		lastHealthEndTimes[healthResult.ID] = time.Now()
-
-		log.Debugf("poll %v %v finish\n", healthResult.PollID, time.Now())
 		healthResult.PollFinished <- healthResult.PollID
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
@@ -269,7 +266,6 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
-			// log.Errorf("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
 			continue
 		}
 		deliveryServiceState.IsAvailable = false
