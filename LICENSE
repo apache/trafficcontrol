@@ -558,6 +558,7 @@ Several subsections of main.css are under the MIT license, as noted in the file:
     /*! bootstrap-progressbar v0.8.4 | Copyright (c) 2012-2014 Stephan Groß | MIT license | http://www.minddust.com */
 
 For the seelog component:
+@traffic_stats/vendor/github.com/cihub/seelog/*
 
 Copyright (c) 2012, Cloud Instruments Co., Ltd. <info@cin.io>
 All rights reserved.
