@@ -252,7 +252,7 @@ For the bootstrap component:
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
 
 For the sorttable component:
-@traffic_monitor/experimental/traffic_monitor/static/sorttable.js
+@traffic_monitor/experimental/traffic_monitor/sorttable.js
 
 /*
   SortTable
@@ -430,27 +430,6 @@ Copyright (c) 2011-2013, 'pq' Contributors
 Portions Copyright (C) 2011 Blake Mizerany
 
 ./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/LICENSE.md
-
-For the influxdb component:
-@traffic_stats/vendor/github.com/influxdata/influxdb/*
-
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE
-./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
-
-For the errors component:
-@traffic_stats/vendor/github.com/pkg/errors/*
-
-./traffic_stats/vendor/github.com/pkg/errors/LICENSE
-
-For the x/net component:
-@traffic_stats/vendor/golang.org/x/net/*
-
-./traffic_stats/vendor/golang.org/x/net/LICENSE
-
-For the errgo component:
-@traffic_stats/vendor/gopkg.in/errgo.v1/*
-
-./traffic_stats/vendor/gopkg.in/errgo.v1/LICENSE
 
 For the MaxMind DB GeoLite2 Database:
 @traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
