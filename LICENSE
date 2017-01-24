@@ -292,12 +292,12 @@ For the jMenu component:
 
 /************************************************************************
 *************************************************************************
-@Name    :      jMenu - jQuery Plugin
-@Revison :      2.0
-@Date    :      08/2013
-@Author  :      ALPIXEL - (www.myjqueryplugins.com - www.alpixel.fr)
-@Support :      FF, IE7, IE8, MAC Firefox, MAC Safari
-@License :      Open Source - MIT License : http://www.opensource.org/licenses/mit-license.php
+Name    :      jMenu - jQuery Plugin
+Revison :      2.0
+Date    :      08/2013
+Author  :      ALPIXEL - (www.myjqueryplugins.com - www.alpixel.fr)
+Support :      FF, IE7, IE8, MAC Firefox, MAC Safari
+License :      Open Source - MIT License : http://www.opensource.org/licenses/mit-license.php
 
 **************************************************************************
 *************************************************************************/
@@ -321,6 +321,17 @@ For the DataTables component:
  *   MIT license - http://datatables.net/license
  *
  * For details please refer to: http://www.datatables.net
+ */
+
+For the jquery.tree component:
+@traffic_ops/app/public/*/jquery.tree.min.*
+
+/*
+ * Tree - jQuery Tree Widget
+ * @author Valerio Galano <v.galano@daredevel.com>
+ * @license MIT
+ * @see https://github.com/daredevel/jquery-tree
+ * @version 0.1
  */
 
 For the ng-map component:
@@ -553,4 +564,3 @@ Several subsections of main.css are under the MIT license, as noted in the file:
 
     For the bootstrap-progressbar component:
     /*! bootstrap-progressbar v0.8.4 | Copyright (c) 2012-2014 Stephan Groß | MIT license | http://www.minddust.com */
-
