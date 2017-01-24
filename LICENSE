@@ -222,6 +222,11 @@ For the sphinx_rtd_theme/search.html component:
 :copyright: Copyright 2007-2013 by the Sphinx team, see AUTHORS.
 :license: BSD, see LICENSE for details.
 
+For the modernizr component:
+@docs/source/_themes/sphinx_rtd_theme/static/js/modernizr.min.js
+
+Modernizr 2.6.2 (Custom Build) | MIT & BSD
+
 For the fontawesome component:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/FontAwesome.otf
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/fontawesome-webfont.*
