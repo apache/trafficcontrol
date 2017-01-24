@@ -463,14 +463,6 @@ Copyright (c) 2009 The Go Authors. All rights reserved.
 https://golang.org/LICENSE
 
 
-For the ssl-bundle.crt:
-@traffic_ops/experimental/ui/ssl/tls/certs/ssl-bundle.crt
-
-This is derived from the Mozilla root CA list, which is licensed under
-the MPL, so the ssl-bundle.crt is likewise licensed under the MPL:
-
-Mozilla Public License Version 2.0: https://www.mozilla.org/en-US/MPL/2.0/
-
 For the Select2 component:
 @traffic_ops/app/public/*/select2.*
 
