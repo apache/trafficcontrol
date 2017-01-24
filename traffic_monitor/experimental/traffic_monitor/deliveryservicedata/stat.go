@@ -41,10 +41,10 @@ type StatName string
 
 // StatOld is the old JSON representation of a stat, from Traffic Monitor 1.0.
 type StatOld struct {
-	Time  int64  `json:"time"`
-	Value string `json:"value"`
-	Span  int    `json:"span,omitempty"`  // TODO set? remove?
-	Index int    `json:"index,omitempty"` // TODO set? remove?
+	Time  int64       `json:"time"`
+	Value interface{} `json:"value"`
+	Span  int         `json:"span,omitempty"`  // TODO set? remove?
+	Index int         `json:"index,omitempty"` // TODO set? remove?
 }
 
 // StatsOld is the old JSON representation of stats, from Traffic Monitor 1.0. It is designed to be serialized and returns from an API, and includes stat history for each delivery service, as well as data common to most endpoints.
@@ -118,6 +118,7 @@ type StatCommon struct {
 	IsHealthy           StatBool                `json:"is_healthy"`
 	IsAvailable         StatBool                `json:"is_available"`
 	CachesAvailableNum  StatInt                 `json:"caches_available"`
+	CachesDisabled      []string                `json:"disabled_locations"`
 }
 
 // Copy returns a deep copy of this StatCommon object.
@@ -125,6 +126,10 @@ func (a StatCommon) Copy() StatCommon {
 	b := a
 	for k, v := range a.CachesReporting {
 		b.CachesReporting[k] = v
+	}
+	b.CachesDisabled = make([]string, len(a.CachesDisabled), len(a.CachesDisabled))
+	for i, v := range a.CachesDisabled {
+		b.CachesDisabled[i] = v
 	}
 	return b
 }

@@ -131,6 +131,23 @@ func addAvailableData(dsStats Stats, crStates peer.Crstates, serverCachegroups m
 			dsStats.DeliveryService[deliveryService] = stat // TODO Necessary? Remove?
 		}
 	}
+
+	// TODO move to its own func?
+	for dsName, ds := range crStates.Deliveryservice {
+		stat, ok := dsStats.DeliveryService[dsName]
+		if !ok {
+			log.Warnf("CreateStats not adding disabledLocations for '%s': not found in Stats\n", dsName)
+			continue // TODO log warning? Error?
+		}
+
+		// TODO determine if a deep copy is necessary
+		stat.CommonStats.CachesDisabled = make([]string, len(ds.DisabledLocations), len(ds.DisabledLocations))
+		for i, v := range ds.DisabledLocations {
+			stat.CommonStats.CachesDisabled[i] = string(v)
+		}
+		dsStats.DeliveryService[dsName] = stat // TODO Necessary? Remove?
+	}
+
 	return dsStats, nil
 }
 
@@ -474,18 +491,19 @@ func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryServ
 }
 
 func addCommonData(s *dsdata.StatsOld, c *dsdata.StatCommon, deliveryService enum.DeliveryServiceName, t int64, filter dsdata.Filter) *dsdata.StatsOld {
-	add := func(name, val string) {
+	add := func(name string, val interface{}) {
 		if filter.UseStat(name) {
 			s.DeliveryService[deliveryService][dsdata.StatName(name)] = []dsdata.StatOld{dsdata.StatOld{Time: t, Value: val}}
 		}
 	}
-	add("caches-configured", strconv.Itoa(int(c.CachesConfiguredNum.Value)))
-	add("caches-reporting", strconv.Itoa(len(c.CachesReporting)))
+	add("caches-configured", fmt.Sprintf("%d", c.CachesConfiguredNum.Value))
+	add("caches-reporting", fmt.Sprintf("%d", len(c.CachesReporting)))
 	add("error-string", c.ErrorStr.Value)
 	add("status", c.StatusStr.Value)
 	add("isHealthy", fmt.Sprintf("%t", c.IsHealthy.Value))
 	add("isAvailable", fmt.Sprintf("%t", c.IsAvailable.Value))
-	add("caches-available", strconv.Itoa(int(c.CachesAvailableNum.Value)))
+	add("caches-available", fmt.Sprintf("%d", c.CachesAvailableNum.Value))
+	add("disabledLocations", c.CachesDisabled)
 	return s
 }
 
