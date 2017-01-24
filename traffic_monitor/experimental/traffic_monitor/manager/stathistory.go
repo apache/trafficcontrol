@@ -255,7 +255,7 @@ func calcAvailability(results []cache.Result, pollerName string, statResultHisto
 
 		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, pollerName, result.Error)
-			events.Add(cache.Event{Time: time.Now().Unix(), Description: whyAvailable + " (" + pollerName + ")", Name: result.ID, Hostname: result.ID, Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
+			events.Add(health.Event{Time: time.Now(), Description: whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
 		}
 
 		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
