@@ -292,14 +292,14 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	}
 
 	if reqErr != nil {
-		log.Errorf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
+		log.Warnf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
 		result.Error = reqErr
 		handler.resultChan <- result
 		return
 	}
 
 	if r == nil {
-		log.Errorf("%v handle reader nil\n", id)
+		log.Warnf("%v handle reader nil\n", id)
 		result.Error = fmt.Errorf("handler got nil reader")
 		handler.resultChan <- result
 		return
@@ -309,7 +309,7 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	result.PrecomputedData.Time = result.Time
 
 	if decodeErr := json.NewDecoder(r).Decode(&result.Astats); decodeErr != nil {
-		log.Errorf("%s procnetdev decode error '%v'\n", id, decodeErr)
+		log.Warnf("%s procnetdev decode error '%v'\n", id, decodeErr)
 		result.Error = decodeErr
 		handler.resultChan <- result
 		return
@@ -323,8 +323,6 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 		log.Warnf("addkbps %s inf.speed empty\n", id)
 	}
 
-	log.Debugf("poll %v %v handle decode end\n", pollID, time.Now())
-
 	if reqErr != nil {
 		result.Error = reqErr
 		log.Errorf("addkbps handle %s error '%v'\n", id, reqErr)
@@ -333,13 +331,10 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	}
 
 	if handler.Precompute() {
-		log.Debugf("poll %v %v handle precompute start\n", pollID, time.Now())
 		result = handler.precompute(result)
-		log.Debugf("poll %v %v handle precompute end\n", pollID, time.Now())
 	}
-	log.Debugf("poll %v %v handle write start\n", pollID, time.Now())
+
 	handler.resultChan <- result
-	log.Debugf("poll %v %v handle end\n", pollID, time.Now())
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
@@ -386,7 +381,7 @@ func (handler Handler) precompute(result Result) Result {
 		var err error
 		stats, err = processStat(result.ID, stats, todata, stat, value, result.Time)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			log.Errorf("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
+			log.Infof("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}
@@ -506,7 +501,6 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		}
 		stat.OutBytes.Value += int64(v)
 	case "is_available":
-		log.Debugln("got is_available")
 		v, ok := val.(bool)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)

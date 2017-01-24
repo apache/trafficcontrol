@@ -159,7 +159,7 @@ func healthResultManagerListen(
 		for {
 			select {
 			case <-ticker.C:
-				log.Warnf("Health Result Manager flushing queued results\n")
+				log.Infof("Health Result Manager flushing queued results\n")
 				process(results)
 				break innerLoop
 			default:
@@ -207,7 +207,6 @@ func processHealthResult(
 	monitorConfigCopy := monitorConfig.Get()
 	healthHistoryCopy := healthHistory.Get().Copy()
 	for i, healthResult := range results {
-		log.Debugf("poll %v %v healthresultman start\n", healthResult.PollID, time.Now())
 		fetchCount.Inc()
 		var prevResult cache.Result
 		healthResultHistory := healthHistoryCopy[healthResult.ID]
@@ -222,7 +221,7 @@ func processHealthResult(
 
 		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
 		if maxHistory < 1 {
-			log.Warnf("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
+			log.Infof("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
 			maxHistory = 1
 		}
 
