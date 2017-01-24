@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
@@ -153,7 +154,7 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 			resultStat = resultStatHistory[0].Val
 		}
 
-		resultStatNum, ok := enum.ToNumeric(resultStat)
+		resultStatNum, ok := util.ToNumeric(resultStat)
 		if !ok {
 			log.Errorf("health.EvalCache threshold stat %s was not a number: %v", stat, resultStat)
 			continue

@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
@@ -1175,8 +1176,8 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			msPerNs := int64(1000000)
 			ssStat.StartTime = statHistory[len(statHistory)-1].Time.UnixNano() / msPerNs
 			ssStat.EndTime = statHistory[0].Time.UnixNano() / msPerNs
-			oldestVal, isOldestValNumeric := enum.ToNumeric(statHistory[len(statHistory)-1].Val)
-			newestVal, isNewestValNumeric := enum.ToNumeric(statHistory[0].Val)
+			oldestVal, isOldestValNumeric := util.ToNumeric(statHistory[len(statHistory)-1].Val)
+			newestVal, isNewestValNumeric := util.ToNumeric(statHistory[0].Val)
 			if !isOldestValNumeric || !isNewestValNumeric {
 				continue // skip non-numeric stats
 			}
@@ -1185,7 +1186,7 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 			ssStat.High = newestVal
 			ssStat.Low = newestVal
 			for _, val := range statHistory {
-				fVal, ok := enum.ToNumeric(val.Val)
+				fVal, ok := util.ToNumeric(val.Val)
 				if !ok {
 					log.Warnf("threshold stat %v value %v is not a number, cannot use.", statName, val.Val)
 					continue
