@@ -233,7 +233,7 @@ For the fontawesome component:
  */
 
 For the bootstrap component:
-@misc/traffic-control-cdn/css/bootstrap*
+@misc/traffic-control-cdn/*/bootstrap*
 
 /*!
  * Bootstrap v3.2.0 (http://getbootstrap.com)
