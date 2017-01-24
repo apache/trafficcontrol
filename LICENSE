@@ -225,7 +225,7 @@ For the sphinx_rtd_theme/search.html component:
 For the fontawesome component:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/FontAwesome.otf
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/fontawesome-webfont.*
-
+@traffic_ops/experimental/ui/app/src/assets/fonts/[Ff]ont[Aa]wesome*
 
 /*
  *  Font Awesome 4.2.0 by @davegandy - http://fontawesome.io - @fontawesome
@@ -387,6 +387,27 @@ Portions Copyright (C) 2011 Blake Mizerany
 
 ./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/LICENSE.md
 
+For the influxdb component:
+@traffic_stats/vendor/github.com/influxdata/influxdb/*
+
+./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE
+./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE_OF_DEPENDENCIES.md
+
+For the errors component:
+@traffic_stats/vendor/github.com/pkg/errors/*
+
+./traffic_stats/vendor/github.com/pkg/errors/LICENSE
+
+For the x/net component:
+@traffic_stats/vendor/golang.org/x/net/*
+
+./traffic_stats/vendor/golang.org/x/net/LICENSE
+
+For the errgo component:
+@traffic_stats/vendor/gopkg.in/errgo.v1/*
+
+./traffic_stats/vendor/gopkg.in/errgo.v1/LICENSE
+
 For the MaxMind DB GeoLite2 Database:
 @traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
 
@@ -463,13 +484,58 @@ policies, either expressed or implied, of James Padolsey.
 
 */
 
-For the angular-loading-bar component:
+For the IPv6 Perl Module component:
+@traffic_ops/app/bin/checks/NetPacket/IPv6.pm
 
-/*!
- * angular-loading-bar v0.4.2
- * https://chieffancypants.github.io/angular-loading-bar
- * Copyright (c) 2014 Wes Cruver
- * License: MIT
- */
+Copyright (c) 2003-2009 Joel Knight <knight.joel@gmail.com>
 
-https://github.com/chieffancypants/angular-loading-bar/blob/master/LICENSE
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
+Several subsections of main.css are under the MIT license, as noted in the file:
+@traffic_ops/experimental/ui/app/src/styles/main.scss
+@traffic_portal/app/src/styles/main.scss
+
+    For the bootstrap-vertical-tabs component:
+    /*!
+     * bootstrap-vertical-tabs - v1.2.1
+     * https://dbtek.github.io/bootstrap-vertical-tabs
+     * 2014-11-07
+     * Copyright (c) 2014 İsmail Demirbilek
+     * License: MIT
+     */
+
+    For the cropper component:
+     /*!
+      * Cropper v0.8.0
+      * https://github.com/fengyuanchen/cropper
+      *
+      * Copyright 2014-2015 Fengyuan Chen
+      * Released under the MIT license
+      *
+      * Date: 2015-02-19T06:49:29.144Z
+      */
+
+    For the bootstrap-progressbar component:
+    /*! bootstrap-progressbar v0.8.4 | Copyright (c) 2012-2014 Stephan Groß | MIT license | http://www.minddust.com */
+
+    For the angular-loading-bar component:
+
+    /*!
+     * angular-loading-bar v0.4.2
+     * https://chieffancypants.github.io/angular-loading-bar
+     * Copyright (c) 2014 Wes Cruver
+     * License: MIT
+     */
+
+    https://github.com/chieffancypants/angular-loading-bar/blob/master/LICENSE
