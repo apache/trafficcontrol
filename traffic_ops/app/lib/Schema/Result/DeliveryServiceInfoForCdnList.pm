@@ -37,7 +37,7 @@ __PACKAGE__->table("DeliveryServiceInfoForCdnList:");
 __PACKAGE__->result_source_instance->is_virtual(1);
 
 __PACKAGE__->result_source_instance->view_definition( "
-SELECT
+SELECT DISTINCT
     deliveryservice.xml_id,
     deliveryservice.id AS ds_id,
     deliveryservice.dscp,
