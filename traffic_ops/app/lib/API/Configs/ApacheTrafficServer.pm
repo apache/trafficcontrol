@@ -58,23 +58,32 @@ sub get_config_metadata {
 	if ( !defined($server_obj) ) {
 		return $self->not_found();
 	}
-
 	my $data_obj;
 	my $host_name = $server_obj->host_name;
 
 	my %condition = ( 'me.host_name' => $host_name );
 	my $rs_server = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
-
+	my $tm_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm.url', config_file => 'global' ] } )->get_column('value')->first();
+	my $tm_cache_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm_cache.url', config_file => 'global' ] } )->get_column('value')->first();
+	my $cdn_name = $server_obj->cdn->name;
 	my $server = $rs_server->next;
 	if ($server) {
-		my $cdn_name = $server->cdn->name;
 
-		$data_obj->{'profile'}->{'name'}   = $server->profile->name;
-		$data_obj->{'profile'}->{'id'}     = $server->profile->id;
-		$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
+		$data_obj->{'info'}->{'server_name'}	= $server_obj->host_name;
+		$data_obj->{'info'}->{'server_id'}		= $server_obj->id;
+		$data_obj->{'info'}->{'profile_name'}	= $server->profile->name;
+		$data_obj->{'info'}->{'profile_id'}		= $server->profile->id;
+		$data_obj->{'info'}->{'cdn_name'}		= $cdn_name;
+		$data_obj->{'info'}->{'cdn_id'}			= $server->cdn->id;
+		$data_obj->{'info'}->{'tm_url'}			= $tm_url;
+		$data_obj->{'info'}->{'tm_cache_url'}	= $tm_cache_url;
+
+		#$data_obj->{'profile'}->{'name'}   = $server->profile->name;
+		#$data_obj->{'profile'}->{'id'}     = $server->profile->id;
+		#$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
 
 		%condition = (
-			'profile_parameters.profile' => $data_obj->{'profile'}->{'id'},
+			'profile_parameters.profile' => $server->profile->id,
 			-or                          => [ 'name' => 'location' ]
 		);
 		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
@@ -85,8 +94,23 @@ sub get_config_metadata {
 		}
 	}
 
+
+
 	foreach my $config_file ( keys $data_obj->{'config_files'} ) {
 		$data_obj->{'config_files'}->{$config_file}->{'scope'} = $self->get_scope($config_file);
+		my $scope = $data_obj->{'config_files'}->{$config_file}->{'scope'};
+		my $scope_id;
+		if ( $scope eq 'cdn' ) {
+			$scope_id = $cdn_name;
+		}
+		elsif ( $scope eq 'profile' ) {
+			$scope_id = $server->profile->name;
+		}
+		else {
+			$scope_id = $host_name;
+		}
+		$data_obj->{'config_files'}->{$config_file}->{'API_URI'} = "api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		#$data_obj->{'config_files'}->{$config_file}->{'UI_URL'} = "http://kablelab:3000/genfiles/view/" . $host_name . "/" . $config_file;
 	}
 
 	my $file_contents = encode_json($data_obj);
@@ -432,7 +456,6 @@ sub cdn_ds_data {
 
 	my $rs;
 	$rs = $self->db->resultset('DeliveryServiceInfoForCdnList')->search( {}, { bind => [$id] } );
-
 	my $j = 0;
 	while ( my $row = $rs->next ) {
 		my $org_server                  = $row->org_server_fqdn;
@@ -990,8 +1013,7 @@ sub cacheurl_dot_config {
 	my $filename = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
-	my $data = $self->cdn_ds_data( $cdn_obj->id );
-
+	
 	if ( $filename eq "cacheurl_qstring.config" ) {    # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
 		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
 		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
@@ -1005,6 +1027,7 @@ sub cacheurl_dot_config {
 		}
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
+		my $data = $self->cdn_ds_data( $cdn_obj->id );
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{qstring_ignore} == 1 ) {
 				my $org = $remap->{org};
