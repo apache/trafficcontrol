@@ -214,15 +214,15 @@ func setErr(newResult *cache.Result, err error) {
 func exceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64) string {
 	switch threshold.Comparator {
 	case "=":
-		return fmt.Sprintf("%s not equal (%f != %f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s not equal (%.2f != %.2f)", stat, val, threshold.Val)
 	case ">":
-		return fmt.Sprintf("%s too low (%f < %f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s too low (%.2f < %.2f)", stat, val, threshold.Val)
 	case "<":
-		return fmt.Sprintf("%s too high (%f > %f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s too high (%.2f > %.2f)", stat, val, threshold.Val)
 	case ">=":
-		return fmt.Sprintf("%s too low (%f <= %f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s too low (%.2f <= %.2f)", stat, val, threshold.Val)
 	case "<=":
-		return fmt.Sprintf("%s too high (%f >= %f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s too high (%.2f >= %.2f)", stat, val, threshold.Val)
 	default:
 		return fmt.Sprintf("ERROR: Invalid Threshold: %+v", threshold)
 	}
