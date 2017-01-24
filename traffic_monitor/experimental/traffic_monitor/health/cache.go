@@ -31,7 +31,7 @@ import (
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
-func setError(newResult *cache.Result, err error) {
+func setErr(newResult *cache.Result, err error) {
 	newResult.Error = err
 	newResult.Available = false
 }
@@ -48,12 +48,12 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.Traffic
 	if len(loadAverages) > 0 {
 		oneMinAvg, err := strconv.ParseFloat(loadAverages[0], 64)
 		if err != nil {
-			setError(newResult, fmt.Errorf("Error converting load average string '%s': %v", newResult.Astats.System.ProcLoadavg, err))
+			setErr(newResult, fmt.Errorf("Error converting load average string '%s': %v", newResult.Astats.System.ProcLoadavg, err))
 			return
 		}
 		newResult.Vitals.LoadAvg = oneMinAvg
 	} else {
-		setError(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
+		setErr(newResult, fmt.Errorf("Can't make sense of '%s' as a load average for %s", newResult.Astats.System.ProcLoadavg, newResult.ID))
 		return
 	}
 
@@ -67,12 +67,12 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.Traffic
 		var err error
 		newResult.Vitals.BytesOut, err = strconv.ParseInt(numbers[8], 10, 64)
 		if err != nil {
-			setError(newResult, fmt.Errorf("Error converting BytesOut from procnetdev: %v", err))
+			setErr(newResult, fmt.Errorf("Error converting BytesOut from procnetdev: %v", err))
 			return
 		}
 		newResult.Vitals.BytesIn, err = strconv.ParseInt(numbers[0], 10, 64)
 		if err != nil {
-			setError(newResult, fmt.Errorf("Error converting BytesIn from procnetdev: %v", err))
+			setErr(newResult, fmt.Errorf("Error converting BytesIn from procnetdev: %v", err))
 			return
 		}
 		if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
@@ -82,7 +82,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.Traffic
 			// log.Infoln("prevResult == nil for id " + newResult.Id + ". Hope we're just starting up?")
 		}
 	} else {
-		setError(newResult, fmt.Errorf("Error parsing procnetdev: no fields found"))
+		setErr(newResult, fmt.Errorf("Error parsing procnetdev: no fields found"))
 		return
 	}
 
