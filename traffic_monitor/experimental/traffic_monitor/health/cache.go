@@ -122,16 +122,16 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 	switch {
 	case status == enum.CacheStatusInvalid:
 		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, serverInfo.Status)
-		return false, getEventDescription(status, availability+"; invalid status"), ""
+		return false, eventDesc(status, availability+"; invalid status"), ""
 	case status == enum.CacheStatusAdminDown:
-		return false, getEventDescription(status, availability), ""
+		return false, eventDesc(status, availability), ""
 	case status == enum.CacheStatusOffline:
 		log.Errorf("Cache %v set to offline, but still polled\n", result.ID)
-		return false, getEventDescription(status, availability), ""
+		return false, eventDesc(status, availability), ""
 	case status == enum.CacheStatusOnline:
-		return true, getEventDescription(status, availability), ""
+		return true, eventDesc(status, availability), ""
 	case result.Error != nil:
-		return false, getEventDescription(status, fmt.Sprintf("%v", result.Error)), ""
+		return false, eventDesc(status, fmt.Sprintf("%v", result.Error)), ""
 	}
 
 	computedStats := cache.ComputedStats()
@@ -162,11 +162,11 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 		}
 
 		if !InThreshold(threshold, resultStatNum) {
-			return false, getEventDescription(status, ExceedsThresholdMsg(stat, threshold, resultStatNum)), stat
+			return false, eventDesc(status, ExceedsThresholdMsg(stat, threshold, resultStatNum)), stat
 		}
 	}
 
-	return result.Available, getEventDescription(status, availability), ""
+	return result.Available, eventDesc(status, availability), ""
 }
 
 // ExceedsThresholdMsg returns a human-readable message for why the given value exceeds the threshold. It does NOT check whether the value actually exceeds the threshold; call `InThreshold` to check first.
@@ -205,6 +205,6 @@ func InThreshold(threshold to.HealthThreshold, val float64) bool {
 	}
 }
 
-func getEventDescription(status enum.CacheStatus, message string) string {
+func eventDesc(status enum.CacheStatus, message string) string {
 	return fmt.Sprintf("%s - %s", status, message)
 }
