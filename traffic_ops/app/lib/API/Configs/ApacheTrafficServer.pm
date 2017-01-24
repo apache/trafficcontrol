@@ -136,7 +136,7 @@ sub get_server_config {
 		$file_contents = encode_json($file_contents);
 	}
 	else {
-		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
+		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->first;
 		if ( !defined($file_param) ) {
 			return $self->not_found();
 		}
@@ -228,7 +228,7 @@ sub get_profile_config {
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename ); }
 	else {
-		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->single;
+		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->first;
 		if ( !defined($file_param) ) {
 			return $self->not_found();
 		}
@@ -303,10 +303,10 @@ sub server_data {
 
 	#if an ID is passed, look up by ID.  Otherwise, look up by hostname.
 	if ( $id =~ /^\d+$/ ) {
-		$server_obj = $self->db->resultset('Server')->search( { id => $id } )->single;
+		$server_obj = $self->db->resultset('Server')->search( { id => $id } )->first;
 	}
 	else {
-		$server_obj = $self->db->resultset('Server')->search( { host_name => $id } )->single;
+		$server_obj = $self->db->resultset('Server')->search( { host_name => $id } )->first;
 	}
 
 	return $server_obj;
@@ -320,10 +320,10 @@ sub profile_data {
 	#if an ID is passed, look up by ID.  Otherwise, look up by profile name.
 	my $profile_obj;
 	if ( $id =~ /^\d+$/ ) {
-		$profile_obj = $self->db->resultset('Profile')->search( { id => $id } )->single;
+		$profile_obj = $self->db->resultset('Profile')->search( { id => $id } )->first;
 	}
 	else {
-		$profile_obj = $self->db->resultset('Profile')->search( { name => $id } )->single;
+		$profile_obj = $self->db->resultset('Profile')->search( { name => $id } )->first
 	}
 
 	return $profile_obj;
@@ -336,10 +336,10 @@ sub cdn_data {
 	my $cdn_obj;
 
 	if ( $id =~ /^\d+$/ ) {
-		$cdn_obj = $self->db->resultset('Cdn')->search( { id => $id } )->single;
+		$cdn_obj = $self->db->resultset('Cdn')->search( { id => $id } )->first;
 	}
 	else {
-		$cdn_obj = $self->db->resultset('Cdn')->search( { name => $id } )->single;
+		$cdn_obj = $self->db->resultset('Cdn')->search( { name => $id } )->first;
 	}
 
 	return $cdn_obj;
@@ -800,7 +800,12 @@ sub logs_xml_dot_config {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
-	my $text = $self->header_comment( $profile_obj->name );
+	
+	# This is an XML file, so we need to massage the header a bit for XML commenting.
+	my $text = "<!-- " . $self->header_comment( $profile_obj->name );
+	$text =~ s/# //;
+	$text =~ s/\n//;
+	$text .= " -->\n";
 
 	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
 	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
@@ -1042,7 +1047,7 @@ sub regex_revalidate_dot_config {
 
 	my $max_days =
 		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
-		->single;
+		->first;
 	my $interval = "> now() - interval '$max_days day'";
 
 	my %regex_time;
@@ -1139,7 +1144,7 @@ sub ssl_multicert_dot_config {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
 		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } );
-		my $data         = $rs_ds->single;
+		my $data         = $rs_ds->first;
 		my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
