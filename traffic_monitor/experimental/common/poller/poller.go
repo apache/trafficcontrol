@@ -61,7 +61,7 @@ type HttpPollerConfig struct {
 	noSleep bool
 }
 
-// Creates and returns a new HttpPoller.
+// NewHTTP creates and returns a new HttpPoller.
 // If tick is false, HttpPoller.TickChan() will return nil. If noSleep is true, the poller will busywait instead of sleeping, and use a single goroutine which dispatches polls instead of a goroutine per poll.
 func NewHTTP(
 	interval time.Duration,
@@ -134,7 +134,7 @@ func (p MonitorConfigPoller) Poll() {
 				if err != nil {
 					log.Errorf("MonitorConfigPoller: %s\n %v\n", err, monitorConfig)
 				} else {
-					log.Infoln("MonitorConfigPoller: fetched monitorConfig")
+					log.Debugln("MonitorConfigPoller: fetched monitorConfig")
 					p.ConfigChannel <- *monitorConfig
 				}
 			} else {
@@ -156,10 +156,10 @@ type HTTPPollInfo struct {
 
 func (p HttpPoller) Poll() {
 	if p.Config.noSleep {
-		log.Infof("HttpPoller using InsomniacPoll\n")
+		log.Debugf("HttpPoller using InsomniacPoll\n")
 		p.InsomniacPoll()
 	} else {
-		log.Infof("HttpPoller using SleepPoll\n")
+		log.Debugf("HttpPoller using SleepPoll\n")
 		p.SleepPoll()
 	}
 }
@@ -213,7 +213,7 @@ func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.
 			realInterval := time.Now().Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
 				instr.TimerFail.Inc()
-				log.Infof("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
+				log.Debugf("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
 			}
 			lastTime = time.Now()
 
