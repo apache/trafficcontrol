@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
@@ -79,7 +80,7 @@ func StartOpsConfigManager(
 	healthHistory threadsafe.ResultHistory,
 	lastStats threadsafe.LastStats,
 	dsStats threadsafe.DSStatsReader,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	staticAppData StaticAppData,
 	healthPollInterval time.Duration,
 	lastHealthDurations DurationMapThreadsafe,

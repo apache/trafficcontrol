@@ -67,7 +67,7 @@ func StartStatHistoryManager(
 	errorCount threadsafe.Uint,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 ) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches, threadsafe.CacheAvailableStatus) {
 	statInfoHistory := threadsafe.NewResultInfoHistory()
 	statResultHistory := threadsafe.NewResultStatHistory()
@@ -141,7 +141,7 @@ func processStatResults(
 	precomputedData map[enum.CacheName]cache.PrecomputedData,
 	lastResults map[enum.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,
-	events threadsafe.Events,
+	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 ) {
 	if len(results) == 0 {
@@ -212,7 +212,7 @@ func processStatResults(
 		lastStats.Set(newLastStats)
 	}
 
-	calcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events)
 
 	endTime := time.Now()
 	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
@@ -225,41 +225,4 @@ func processStatResults(
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
 	unpolledCaches.SetPolled(results, lastStats.Get())
-}
-
-// calcAvailability calculates the availability of the cache, from the given result. Availability is stored in `localCacheStatus` and `localStates`, and if the status changed an event is added to `events`. statResultHistory may be nil, for pollers which don't poll stats.
-// TODO add enum for poller names?
-func calcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc to.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events threadsafe.Events) {
-	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
-	for _, result := range results {
-		statResults := cache.ResultStatValHistory(nil)
-		if statResultHistory != nil {
-			statResults = statResultHistory[result.ID]
-		}
-
-		isAvailable, whyAvailable, unavailableStat := health.EvalCache(cache.ToInfo(result), statResults, &mc)
-
-		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
-		if previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
-			if !result.HasStat(previousStatus.UnavailableStat) {
-				return
-			}
-		}
-		localCacheStatuses[result.ID] = cache.AvailableStatus{
-			Available:       isAvailable,
-			Status:          mc.TrafficServer[string(result.ID)].Status,
-			Why:             whyAvailable,
-			UnavailableStat: unavailableStat,
-			Poller:          pollerName,
-		} // TODO move within localStates?
-
-		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
-			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, pollerName, result.Error)
-			events.Add(health.Event{Time: time.Now(), Description: whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
-		}
-
-		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
-	}
-	CalculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
-	localCacheStatusThreadsafe.Set(localCacheStatuses)
 }

@@ -23,18 +23,16 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
-
-func setErr(newResult *cache.Result, err error) {
-	newResult.Error = err
-	newResult.Available = false
-}
 
 // GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.TrafficMonitorConfigMap) {
@@ -161,16 +159,58 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 			continue
 		}
 
-		if !InThreshold(threshold, resultStatNum) {
-			return false, eventDesc(status, ExceedsThresholdMsg(stat, threshold, resultStatNum)), stat
+		if !inThreshold(threshold, resultStatNum) {
+			return false, eventDesc(status, exceedsThresholdMsg(stat, threshold, resultStatNum)), stat
 		}
 	}
 
 	return result.Available, eventDesc(status, availability), ""
 }
 
+// CalcAvailability calculates the availability of the cache, from the given result. Availability is stored in `localCacheStatus` and `localStates`, and if the status changed an event is added to `events`. statResultHistory may be nil, for pollers which don't poll stats.
+// TODO add enum for poller names?
+func CalcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc to.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
+	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
+	for _, result := range results {
+		statResults := cache.ResultStatValHistory(nil)
+		if statResultHistory != nil {
+			statResults = statResultHistory[result.ID]
+		}
+
+		isAvailable, whyAvailable, unavailableStat := EvalCache(cache.ToInfo(result), statResults, &mc)
+
+		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
+		if previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]; isAvailable && hasPreviousStatus && !previousStatus.Available && previousStatus.UnavailableStat != "" {
+			if !result.HasStat(previousStatus.UnavailableStat) {
+				return
+			}
+		}
+		localCacheStatuses[result.ID] = cache.AvailableStatus{
+			Available:       isAvailable,
+			Status:          mc.TrafficServer[string(result.ID)].Status,
+			Why:             whyAvailable,
+			UnavailableStat: unavailableStat,
+			Poller:          pollerName,
+		} // TODO move within localStates?
+
+		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
+			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, pollerName, result.Error)
+			events.Add(Event{Time: time.Now(), Description: whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
+		}
+
+		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
+	}
+	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
+	localCacheStatusThreadsafe.Set(localCacheStatuses)
+}
+
+func setErr(newResult *cache.Result, err error) {
+	newResult.Error = err
+	newResult.Available = false
+}
+
 // ExceedsThresholdMsg returns a human-readable message for why the given value exceeds the threshold. It does NOT check whether the value actually exceeds the threshold; call `InThreshold` to check first.
-func ExceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64) string {
+func exceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64) string {
 	switch threshold.Comparator {
 	case "=":
 		return fmt.Sprintf("%s not equal (%f != %f)", stat, val, threshold.Val)
@@ -187,7 +227,7 @@ func ExceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64)
 	}
 }
 
-func InThreshold(threshold to.HealthThreshold, val float64) bool {
+func inThreshold(threshold to.HealthThreshold, val float64) bool {
 	switch threshold.Comparator {
 	case "=":
 		return val == threshold.Val
@@ -207,4 +247,25 @@ func InThreshold(threshold to.HealthThreshold, val float64) bool {
 
 func eventDesc(status enum.CacheStatus, message string) string {
 	return fmt.Sprintf("%s - %s", status, message)
+}
+
+// calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
+func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
+	deliveryServices := states.GetDeliveryServices()
+	for deliveryServiceName, deliveryServiceState := range deliveryServices {
+		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
+			// log.Errorf("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
+			continue
+		}
+		deliveryServiceState.IsAvailable = false
+		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
+		for _, server := range deliveryServiceServers[deliveryServiceName] {
+			if available, _ := states.GetCache(server); available.IsAvailable {
+				deliveryServiceState.IsAvailable = true
+			} else {
+				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
+			}
+		}
+		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
+	}
 }
