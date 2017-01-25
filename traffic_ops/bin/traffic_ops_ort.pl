@@ -2191,12 +2191,6 @@ sub can_read_write_file {
 	my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
 	( $log_level >> $TRACE ) && print "TRACE User to validate $file against: $username\n";
 
-	if ( -z $file ) {
-		( $log_level >> $ERROR ) && print "ERROR $file has size=0!\n";
-		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
-		return 0;
-	}
-
 	if ( !-R $file ) {
 		( $log_level >> $ERROR ) && print "ERROR $file is not readable by $username!\n";
 		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
