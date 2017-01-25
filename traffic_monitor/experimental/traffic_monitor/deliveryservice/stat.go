@@ -30,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
@@ -321,7 +322,7 @@ func addLastDSStatTotals(lastStat LastDSStat, cachesReporting map[enum.CacheName
 }
 
 // addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures, and returns the augmented structures.
-func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats LastStats, dsStats Stats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap) (Stats, LastStats) {
+func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats LastStats, dsStats Stats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap, events []health.Event) (Stats, LastStats, []health.Event) {
 	err := error(nil)
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
@@ -353,10 +354,11 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 		stat.CommonStats.IsAvailable.Value = false
 		stat.CommonStats.IsHealthy.Value = false
 		stat.CommonStats.ErrorStr.Value = errStr
+		events = append(events, health.Event{Time: time.Now(), Unix: time.Now().Unix(), Description: errStr, Name: dsName.String(), Hostname: dsName.String(), Type: "Delivery Service", Available: stat.CommonStats.IsAvailable.Value})
 	}
 
 	dsStats.DeliveryService[dsName] = stat
-	return dsStats, lastStats
+	return dsStats, lastStats, events
 }
 
 // latestBytes returns the most recent OutBytes from the given cache results, and the time of that result. It assumes zero results are not valid, but nonzero results with errors are valid.
@@ -391,20 +393,20 @@ func addCachePerSecStats(cacheName enum.CacheName, precomputed cache.Precomputed
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap) (Stats, LastStats) {
+func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats Stats, lastStats LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap, events []health.Event) (Stats, LastStats, []health.Event) {
 	for dsName, stat := range dsStats.DeliveryService {
-		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes, mc)
+		dsStats, lastStats, events = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes, mc, events)
 	}
 	for cacheName, precomputedData := range precomputed {
 		lastStats = addCachePerSecStats(cacheName, precomputedData, lastStats)
 	}
 
-	return dsStats, lastStats
+	return dsStats, lastStats, events
 }
 
 // CreateStats aggregates and creates statistics from given precomputed stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
-func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time, mc to.TrafficMonitorConfigMap) (Stats, LastStats, error) {
-
+func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData todata.TOData, crStates peer.Crstates, lastStats LastStats, now time.Time, mc to.TrafficMonitorConfigMap) (Stats, LastStats, []health.Event, error) {
+	var events []health.Event
 	start := time.Now()
 	dsStats := NewStats()
 	for deliveryService := range toData.DeliveryServiceServers {
@@ -418,7 +420,7 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 	var err error
 	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed) // TODO move after stat summarisation
 	if err != nil {
-		return dsStats, lastStats, fmt.Errorf("Error getting Cache availability data: %v", err)
+		return dsStats, lastStats, events, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
 
 	for server, precomputedData := range precomputed {
@@ -455,10 +457,10 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 		}
 	}
 
-	perSecStats, lastStats := addPerSecStats(precomputed, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes, mc)
+	perSecStats, lastStats, events := addPerSecStats(precomputed, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes, mc, events)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	perSecStats.Time = time.Now()
-	return perSecStats, lastStats, nil
+	return perSecStats, lastStats, events, nil
 }
 
 func addStatCacheStats(s *dsdata.StatsOld, c dsdata.StatCacheStats, deliveryService enum.DeliveryServiceName, prefix string, t int64, filter dsdata.Filter) *dsdata.StatsOld {
@@ -534,15 +536,14 @@ func (s Stats) JSON(filter dsdata.Filter, params url.Values) dsdata.StatsOld {
 }
 
 func getDsErrString(dsName enum.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) string {
-	dsNameString := fmt.Sprintf("%s", dsName)
-	tpsThreshold := monitorConfig.DeliveryService[dsNameString].TotalTPSThreshold
+	tpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalTPSThreshold
 	if tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
-		return fmt.Sprintf("TPSTotal too high (%v > %v)", dsStats.TpsTotal.Value, tpsThreshold)
+		return fmt.Sprintf("total.tps_total too high (%v > %v)", dsStats.TpsTotal.Value, tpsThreshold)
 	}
 
-	kbpsThreshold := monitorConfig.DeliveryService[dsNameString].TotalKbpsThreshold
+	kbpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalKbpsThreshold
 	if kbpsThreshold > 0 && dsStats.Kbps.Value > float64(kbpsThreshold) {
-		return fmt.Sprintf("TotalKbps too high (%v > %v)", dsStats.Kbps.Value, kbpsThreshold)
+		return fmt.Sprintf("total.kbps too high (%v > %v)", dsStats.Kbps.Value, kbpsThreshold)
 	}
 	return ""
 }
