@@ -885,7 +885,7 @@ func createCacheStatuses(
 	healthHistory map[enum.CacheName][]cache.Result,
 	lastHealthDurations map[enum.CacheName]time.Duration,
 	cacheStates map[enum.CacheName]peer.IsAvailable,
-	lastStats ds.LastStats,
+	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
 ) map[enum.CacheName]CacheStatus {
