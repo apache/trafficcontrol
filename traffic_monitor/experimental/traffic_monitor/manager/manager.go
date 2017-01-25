@@ -119,6 +119,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		errorCount,
 		cfg,
 		monitorConfig,
+		events,
 	)
 
 	lastHealthDurations, localCacheStatus, healthHistory := StartHealthResultManager(

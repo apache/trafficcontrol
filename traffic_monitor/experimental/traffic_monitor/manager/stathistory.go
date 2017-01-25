@@ -67,6 +67,7 @@ func StartStatHistoryManager(
 	errorCount threadsafe.Uint,
 	cfg config.Config,
 	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	events threadsafe.Events,
 ) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches) {
 	statInfoHistory := threadsafe.NewResultInfoHistory()
 	statResultHistory := threadsafe.NewResultStatHistory()
@@ -82,7 +83,7 @@ func StartStatHistoryManager(
 	lastResults := map[enum.CacheName]cache.Result{}
 
 	process := func(results []cache.Result) {
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, events)
 	}
 
 	go func() {
@@ -138,6 +139,7 @@ func processStatResults(
 	mc to.TrafficMonitorConfigMap,
 	precomputedData map[enum.CacheName]cache.PrecomputedData,
 	lastResults map[enum.CacheName]cache.Result,
+	te threadsafe.Events,
 ) {
 
 	// setting the statHistory could be put in a goroutine concurrent with `ds.CreateStats`, if it were slow
@@ -175,14 +177,18 @@ func processStatResults(
 	statResultHistoryThreadsafe.Set(statResultHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
-	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc)
-
+	newDsStats, newLastStats, events, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc)
 	if err != nil {
 		errorCount.Inc()
 		log.Errorf("getting deliveryservice: %v\n", err)
 	} else {
 		dsStats.Set(newDsStats)
 		lastStats.Set(newLastStats)
+		if len(events) > 0 {
+			for _, event := range events {
+				te.Add(event)
+			}
+		}
 	}
 
 	endTime := time.Now()
