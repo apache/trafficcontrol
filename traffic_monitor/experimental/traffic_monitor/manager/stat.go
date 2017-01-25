@@ -194,14 +194,18 @@ func processStatResults(
 	statResultHistoryThreadsafe.Set(statResultHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
-	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc)
-
+	newDsStats, newLastStats, events, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc)
 	if err != nil {
 		errorCount.Inc()
 		log.Errorf("getting deliveryservice: %v\n", err)
 	} else {
 		dsStats.Set(newDsStats)
 		lastStats.Set(newLastStats)
+		if len(events) > 0 {
+			for _, event := range events {
+				te.Add(event)
+			}
+		}
 	}
 
 	health.CalcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events)
