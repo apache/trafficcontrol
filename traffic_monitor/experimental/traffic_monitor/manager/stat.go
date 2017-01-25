@@ -105,7 +105,7 @@ func StartStatHistoryManager(
 				case <-cachesChanged:
 					unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 				case <-ticker.C:
-					log.Warnf("StatHistoryManager flushing queued results\n")
+					log.Infof("StatHistoryManager flushing queued results\n")
 					process(results)
 					break innerLoop
 				default:
@@ -162,7 +162,7 @@ func processStatResults(
 	for i, result := range results {
 		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
 		if maxStats < 1 {
-			log.Warnf("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
+			log.Infof("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
 			maxStats = 1
 		}
 
@@ -194,16 +194,7 @@ func processStatResults(
 	statResultHistoryThreadsafe.Set(statResultHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
-	for _, result := range results {
-		log.Debugf("poll %v %v CreateStats start\n", result.PollID, time.Now())
-	}
-
-	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc)
-
-	for _, result := range results {
-		log.Debugf("poll %v %v CreateStats end\n", result.PollID, time.Now())
-	}
-
+	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc, events)
 	if err != nil {
 		errorCount.Inc()
 		log.Errorf("getting deliveryservice: %v\n", err)

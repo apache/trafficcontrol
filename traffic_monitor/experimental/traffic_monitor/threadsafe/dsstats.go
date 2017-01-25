@@ -20,14 +20,14 @@ package threadsafe
  */
 
 import (
-	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
-	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"sync"
+
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 )
 
 // DSStats wraps a deliveryservice.Stats object to be safe for multiple reader goroutines and a single writer.
 type DSStats struct {
-	dsStats *ds.Stats
+	dsStats *dsdata.Stats
 	m       *sync.RWMutex
 }
 
@@ -38,7 +38,7 @@ type DSStatsReader interface {
 
 // NewDSStats returns a deliveryservice.Stats object wrapped to be safe for multiple readers and a single writer.
 func NewDSStats() DSStats {
-	s := ds.NewStats()
+	s := dsdata.NewStats()
 	return DSStats{m: &sync.RWMutex{}, dsStats: &s}
 }
 
@@ -50,7 +50,7 @@ func (o *DSStats) Get() dsdata.StatsReadonly {
 }
 
 // Set sets the internal Stats object. This MUST NOT be called by multiple goroutines.
-func (o *DSStats) Set(newDsStats ds.Stats) {
+func (o *DSStats) Set(newDsStats dsdata.Stats) {
 	o.m.Lock()
 	*o.dsStats = newDsStats
 	o.m.Unlock()

@@ -24,7 +24,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
-	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
 )
 
@@ -106,7 +106,7 @@ func copyCaches(a map[enum.CacheName]struct{}) map[enum.CacheName]struct{} {
 // SetPolled sets cache which have been polled. This is used to determine when the app has fully started up, and we can start serving. Serving Traffic Router with caches as 'down' which simply haven't been polled yet would be bad. Therefore, a cache is set as 'polled' if it has received different bandwidths from two different ATS ticks, OR if the cache is marked as down (and thus we won't get a bandwidth).
 // This is threadsafe for one writer, along with `Set`.
 // This is fast if there are no unpolled caches. Moreover, its speed is a function of the number of unpolled caches, not the number of caches total.
-func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats ds.LastStats) {
+func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.LastStats) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	numUnpolledCaches := len(unpolledCaches)
 	if numUnpolledCaches == 0 {
@@ -120,7 +120,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats ds.LastStat
 			}
 
 			if !result.Available || result.Error != nil {
-				log.Infof("polled %v\n", cache)
+				log.Debugf("polled %v\n", cache)
 				delete(unpolledCaches, cache)
 				break innerLoop
 			}
@@ -130,7 +130,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats ds.LastStat
 			continue
 		}
 		if lastStat.Bytes.PerSec != 0 {
-			log.Infof("polled %v\n", cache)
+			log.Debugf("polled %v\n", cache)
 			delete(unpolledCaches, cache)
 		}
 	}
