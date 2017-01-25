@@ -160,6 +160,19 @@ sub server_data {
 	return $server;
 }
 
+sub server_variables{
+	my $self = shift;
+	my $server = shift;
+
+	my $variables;
+	#populating the list of variables for server
+	$variables->{'__CACHE_IPV4__'} = $server->ip_address;
+	$variables->{'__CACHE_IPV6__'} = $server->ip6_address;
+	
+	return $variables;
+}
+
+
 sub header_comment {
 	my $self      = shift;
 	my $host_name = shift;
@@ -752,12 +765,18 @@ sub generic_config {
 	my $sep = defined( $separator->{$file} ) ? $separator->{$file} : " = ";
 
 	my $server = $self->server_data($id);
+	my $variables = $self->server_variables($server);
 	my $data   = $self->param_data( $server, $file );
 	my $text   = $self->header_comment( $server->host_name );
 	foreach my $parameter ( sort keys %{$data} ) {
 		my $p_name = $parameter;
 		$p_name =~ s/__\d+$//;
-		$text .= $p_name . $sep . $data->{$parameter} . "\n";
+		my $value = $data->{$parameter};
+		#substitute variables with server's values
+		foreach my $variable ( sort keys %{$variables} ) {
+			$value =~ s/$variable/$variables->{$variable}/g;
+		}
+		$text .= $p_name . $sep . $value . "\n";
 	}
 	return $text;
 }
