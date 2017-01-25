@@ -17,17 +17,23 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes', [])
-	.controller('DeliveryServiceRegexesController', require('./DeliveryServiceRegexesController'))
+module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes.edit', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.regexes', {
-				url: '/{deliveryServiceId}/regexes',
-				abstract: true,
+			.state('trafficOps.private.configure.deliveryServices.regexes.edit', {
+				url: '/{regexId:[0-9]{1,8}}',
 				views: {
-					deliveryServicesContent: {
-						templateUrl: 'modules/private/configure/deliveryServices/regexes/deliveryServiceRegexes.tpl.html',
-						controller: 'DeliveryServiceRegexesController'
+					deliveryServiceRegexesContent: {
+						templateUrl: 'common/modules/form/deliveryServiceRegex/form.deliveryServiceRegex.tpl.html',
+						controller: 'FormEditDeliveryServiceRegexController',
+						resolve: {
+							deliveryService: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
+							},
+							regex: function($stateParams, deliveryServiceRegexService) {
+								return deliveryServiceRegexService.getDeliveryServiceRegex($stateParams.deliveryServiceId, $stateParams.regexId);
+							}
+						}
 					}
 				}
 			})

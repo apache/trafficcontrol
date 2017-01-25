@@ -17,20 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes', [])
-	.controller('DeliveryServiceRegexesController', require('./DeliveryServiceRegexesController'))
-	.config(function($stateProvider, $urlRouterProvider) {
-		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.regexes', {
-				url: '/{deliveryServiceId}/regexes',
-				abstract: true,
-				views: {
-					deliveryServicesContent: {
-						templateUrl: 'modules/private/configure/deliveryServices/regexes/deliveryServiceRegexes.tpl.html',
-						controller: 'DeliveryServiceRegexesController'
-					}
-				}
-			})
-		;
-		$urlRouterProvider.otherwise('/');
-	});
+module.exports = angular.module('trafficOps.form.deliveryServiceRegex.edit', [])
+	.controller('FormEditDeliveryServiceRegexController', require('./FormEditDeliveryServiceRegexController'));
