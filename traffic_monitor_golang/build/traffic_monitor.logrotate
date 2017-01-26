@@ -24,3 +24,13 @@
         rotate 5
         copytruncate
 }
+
+/opt/traffic_monitor/var/log/event.log {
+        compress
+        maxage 30
+        missingok
+        nomail
+        size 10M
+        rotate 5
+        copytruncate
+}
