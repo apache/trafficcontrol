@@ -7,4 +7,4 @@
 * Ensure that your new Postgres service is running (local or remote)
 
 * Run the Mysql to Postgres Migration Docker flow
-  * `sh migrate.sh
+  * `sh migrate.sh`
