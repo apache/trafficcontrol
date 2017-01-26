@@ -13,9 +13,9 @@
 #  limitations under the License.
 #
 
-: ${TO_SERVER?"Please the TO_SERVER environment variable: ie: https://kabletown.net"}
-: ${TO_USER?"Please the TO_USER environment variable: ie: <your Traffic Ops userid>"}
-: ${TO_PASSWORD?"Please the TO_PASSWORD environment variable: ie: <your Traffic Ops password>"}
+: ${TO_SERVER?"Please set the TO_SERVER environment variable: ie: https://kabletown.net"}
+: ${TO_USER?"Please set the TO_USER environment variable: ie: <your Traffic Ops userid>"}
+: ${TO_PASSWORD?"Please set the TO_PASSWORD environment variable: ie: <your Traffic Ops password>"}
 
 MYSQL_PORT=3306
 POSTGRES_PORT=5432
