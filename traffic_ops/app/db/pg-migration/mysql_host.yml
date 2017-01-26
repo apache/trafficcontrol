@@ -19,4 +19,6 @@ services:
       context: .
       dockerfile: Dockerfile-mysql
     env_file:
-      - mysql.env
+      - mysql-to-postgres.env
+    ports:
+      - "3306:3306"

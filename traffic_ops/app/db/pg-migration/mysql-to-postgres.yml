@@ -15,12 +15,10 @@ version: '2'
 
 services:
   # dataimport reads data from an existing traffic_ops server running mysql thru the API
-  dataimport:
+  mysql-to-postgres:
     build:
         context: .
-        dockerfile: Dockerfile-traffic_ops-client
+        dockerfile: Dockerfile-mysql-to-postgres
     restart: "no"
-    environment:
-      - TO_USER
-      - TO_PASSWORD
-      - TO_SERVER
+    env_file:
+      - mysql-to-postgres.env

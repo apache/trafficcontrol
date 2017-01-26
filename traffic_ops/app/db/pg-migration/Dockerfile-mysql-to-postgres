@@ -11,17 +11,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-FROM debian
+FROM dimitri/pgloader:latest
 MAINTAINER Dan Kirkwood <dangogh@apache.org>
 
-# install nc to check that postgres and mysql are ready..
-RUN apt-get -y update && apt-get -y install curl
-
+# Traffic Ops Access
 ENV TO_SERVER=$TO_SERVER
 ENV TO_USER=$TO_USER
 ENV TO_PASSWORD=$TO_PASSWORD
 
-ADD get-to-data.sh /
+# Mysql Access
+ENV MYSQL_HOST=$MYSQL_HOST
+ENV MYSQL_PORT=$MYSQL_PORT
+ENV MYSQL_PASSWORD=$MYSQL_PASSWORD
+ENV MYSQL_DATABASE=$MYSQL_DATABASE
 
-# get data, trigger mysql startup
-CMD /get-to-data.sh /docker-entrypoint-initdb.d/traffic_ops.sql
+# Postgres Access
+ENV POSTGRES_HOST=$POSTGRES_HOST
+ENV POSTGRES_PORT=$POSTGRES_PORT
+ENV POSTGRES_DATABASE=$POSTGRES_DATABASE
+ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+
+# install the tools for getting data
+RUN apt-get -y update && apt-get -y install curl mysql-client
+
+ADD mysql-to-postgres.sh .
+CMD ./mysql-to-postgres.sh

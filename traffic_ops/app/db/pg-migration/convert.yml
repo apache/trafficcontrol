@@ -20,4 +20,4 @@ services:
       context: ..
       dockerfile: pg-migration/Dockerfile-convert
     env_file:
-      - postgres.env
+      - mysql-to-postgres.env
