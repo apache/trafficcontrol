@@ -13,15 +13,4 @@
 #  limitations under the License.
 #
 
-waiting=/sync/waiting-for-dataimport
-touch $waiting
-
-# Wait for pgloader to finish
-while [[ -f $waiting ]]; do
-    ls -l $waiting
-    sleep 3
-done
-
-echo "Looks like dataimport is finished..  Starting mysql..."
-
 docker-entrypoint.sh mysqld

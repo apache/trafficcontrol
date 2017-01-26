@@ -15,7 +15,13 @@ FROM dewrich/postgres:latest
 
 MAINTAINER Dan Kirkwood
 
-RUN apt-get update && apt-get -y install netcat
+# Postgres Access
+ENV POSTGRES_HOST=$POSTGRES_HOST
+ENV POSTGRES_PORT=$POSTGRES_PORT
+ENV POSTGRES_DATABASE=$POSTGRES_DATABASE
+ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+
+RUN apt-get update 
 ADD pg-migration/runconvert.sh .
 ADD convert_bools.sql .
 
