@@ -37,7 +37,7 @@ RUN	yum -y install \
 
 WORKDIR /trafficcontrol
 CMD mkdir -p dist && \
-	./build/build.sh traffic_ops 2>&1 | \
-	tee ./dist/build-traffic_ops.log
+	./build/build.sh traffic_stats 2>&1 | \
+	tee ./dist/build-traffic_stats.log
 
 # vi:syntax=Dockerfile
