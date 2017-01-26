@@ -15,86 +15,53 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
-
-# Build configuration for trafficcontrol
-# Usage:
-#    GITREPO=...  BRANCH=...  docker-compose up [<service>...]
-#
-# where GITREPO is https path to trafficcontrol clone
-#   (default: https://github.com/apache/incubator-trafficcontrol)
-# and <branch> is name of branch to test
-#   (default: master).
-#
-# [<service>...] (optional) is one or more of the services listed below, e.g.
-# traffic_ops_build.  Default is to build all.
-#
-# All rpms are delivered to ./artifacts.
-#
-version: '2'
+version: '3'
 
 services:
   traffic_monitor_build:
     image: traffic_monitor_builder
     build:
-      dockerfile: Dockerfile-traffic_monitor
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
+      context: ../../..
     volumes:
-      - ./artifacts:/artifacts
+      - ../../..:/trafficcontrol
 
   traffic_monitor_golang_build:
     image: traffic_monitor_golang_builder
     build:
-      dockerfile: Dockerfile-traffic_monitor_golang
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor_golang
+      context: ../../..
     volumes:
-      - ./artifacts:/artifacts
+      - ../../..:/trafficcontrol
 
   traffic_ops_build:
     image: traffic_ops_builder
     build:
-      dockerfile: Dockerfile-traffic_ops
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
+      context: ../../..
     volumes:
-      - ./artifacts:/artifacts
+      - ../../..:/trafficcontrol
 
   traffic_portal_build:
     image: traffic_portal_builder
     build:
-      dockerfile: Dockerfile-traffic_portal
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
+      context: ../../..
     volumes:
-      - ./artifacts:/artifacts
+      - ../../..:/trafficcontrol
 
   traffic_router_build:
     image: traffic_router_builder
     build:
-      dockerfile: Dockerfile-traffic_router
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
+      context: ../../..
     volumes:
-      - ./artifacts:/artifacts
+      - ../../..:/trafficcontrol
 
   traffic_stats_build:
     image: traffic_stats_builder
     build:
-      dockerfile: Dockerfile-traffic_stats
-      context: .
-    environment:
-      - GITREPO
-      - BRANCH
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
+      context: ../../..
     volumes:
-      - ./artifacts:/artifacts
+      - ../../..:/trafficcontrol
