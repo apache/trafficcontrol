@@ -13,21 +13,14 @@
 #  limitations under the License.
 #
 
-<<<<<<< HEAD
 . mysql-to-postgres.env
-=======
-: ${TO_SERVER?"Please set the TO_SERVER environment variable: ie: https://kabletown.net"}
-: ${TO_USER?"Please set the TO_USER environment variable: ie: <your Traffic Ops userid>"}
-: ${TO_PASSWORD?"Please set the TO_PASSWORD environment variable: ie: <your Traffic Ops password>"}
 
 MYSQL_PORT=3306
 POSTGRES_PORT=5432
->>>>>>> master
 
 separator="---------------------------------------"
 
 function shutdown_trafficops_database() {
-<<<<<<< HEAD
   docker-compose -p trafficops -f postgres.yml down
 }
 
@@ -56,53 +49,17 @@ function start_staging_postgres_server() {
   echo $separator
   echo "Postgres started.."
   echo $separator
-=======
-     sudo systemctl stop trafficops-db
 }
-
-function start_staging_mysql_server() {
-      docker-compose -p trafficops -f mysql_host.yml up --build -d
-      while [[ ! `netstat -lnt | grep :$MYSQL_PORT` ]]; do
-	    # wait for signal that other container is waiting
-	    echo "Waiting for Mysql to Start..."
-	    sleep 3
-      done
-      echo $separator
-      echo "Mysql Host is started..."
-      echo $separator
-}
-
-function start_staging_postgres_server() {
-	sudo systemctl start trafficops-db
-	while [[ ! `netstat -lnt | grep :$POSTGRES_PORT` ]]; do
-	    # wait for signal that other container is waiting
-	    echo "Waiting for Postgres to Start..."
-	    sleep 3
-	done
-	echo $separator
-	echo "Postgres started.."
-	echo $separator
->>>>>>> master
-}
-
 
 function run_postgres_datatypes_conversion() {
-<<<<<<< HEAD
-  echo $separator
-  echo "Starting Mysql to Postgres Migration..."
-  echo $separator
-  docker-compose -p trafficops -f convert.yml up --build
-=======
 	echo $separator
 	echo "Starting Mysql to Postgres Migration..."
 	echo $separator
 	docker-compose -p trafficops -f convert.yml up --build
->>>>>>> master
 }
 
 
 function migrate_data_from_mysql_to_postgres() {
-<<<<<<< HEAD
   echo $separator
   echo "Starting Mysql to Postgres Migration..."
   echo $separator
@@ -124,29 +81,6 @@ function clean() {
   docker rmi trafficops_mysql_host
   docker rmi mysql:5.6 
   docker rmi dimitri/pgloader:latest
-=======
-	echo $separator
-	echo "Starting Mysql to Postgres Migration..."
-	echo $separator
-	docker-compose -p trafficops -f mysql-to-postgres.yml up --build
-}
-
-function clean() {
-        echo $separator
-        echo "Cleaning up..."
-        echo $separator
-        docker kill trafficops_mysql_host_1
-        docker-compose -p trafficops -f mysql-to-postgres.yml down --remove-orphans
-        docker-compose -p trafficops -f convert.yml down --remove-orphans
-        docker rm trafficops_mysql-to-postgres_1 
-        docker rm trafficops_convert_1
-        docker rm trafficops_mysql_host_1
-        docker rmi trafficops_mysql-to-postgres
-        docker rmi trafficops_convert 
-        docker rmi trafficops_mysql_host
-        docker rmi mysql:5.6 
-        docker rmi dimitri/pgloader:latest
->>>>>>> master
 }
 
 start_staging_mysql_server
