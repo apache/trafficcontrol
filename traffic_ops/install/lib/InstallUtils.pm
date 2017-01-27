@@ -165,10 +165,10 @@ sub promptUser {
     my ( $promptString, $defaultValue, $noEcho ) = @_;
 
     if ($defaultValue) {
-        print $promptString, " [", $defaultValue, "]:  ";
+        print $promptString, " [", $defaultValue, "]: ";
     }
     else {
-        print $promptString, ":  ";
+        print $promptString, ": ";
     }
 
     if ( defined $noEcho && $noEcho ) {
