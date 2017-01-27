@@ -43,14 +43,13 @@ type Regexes struct {
 }
 
 // DeliveryService returns the delivery service which matches the given fqdn, or false.
-func (d Regexes) DeliveryService(fqdn string) (enum.DeliveryServiceName, bool) {
-	if ds, ok := d.DirectMatches[fqdn]; ok {
+func (d Regexes) DeliveryService(domain, subdomain, subsubdomain string) (enum.DeliveryServiceName, bool) {
+	if ds, ok := d.DotStartSlashDotFooSlashDotDotStar[subdomain]; ok {
 		return ds, true
 	}
-	for matchStr, ds := range d.DotStartSlashDotFooSlashDotDotStar {
-		if strings.Contains(fqdn, "."+matchStr+".") {
-			return ds, true
-		}
+	fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
+	if ds, ok := d.DirectMatches[fqdn]; ok {
+		return ds, true
 	}
 	for regex, ds := range d.RegexMatch {
 		if regex.MatchString(fqdn) {
