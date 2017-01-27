@@ -24,10 +24,6 @@
       "Traffic Ops database password":"default",
       "config_var":"password",
       "hidden":"1"
-    },
-    {
-      "Download Maxmind Database?":"yes",
-      "config_var":"maxmind"
     }
   ],
   "/opt/traffic_ops/app/db/dbconf.yml":[
@@ -39,6 +35,10 @@
       "Database server admin password":"default",
       "config_var":"dbAdminPw",
       "hidden":"1"
+    },
+    {
+      "Download Maxmind Database?":"yes",
+      "config_var":"maxmind"
     }
   ],
   "/opt/traffic_ops/app/conf/cdn.conf":[
@@ -164,7 +164,7 @@
       "config_var":"health_thresh_load_avg"
     },
     {
-      "Health Threshold Available Bandwidth in Kbps":">1750000",
+      "Health Threshold Available Bandwidth in Kbps":"1750000",
       "config_var":"health_thresh_kbps"
     },
     {

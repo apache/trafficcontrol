@@ -142,18 +142,21 @@ sub createCert {
         }
     }
 
-    if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", "pass:$passphrase", "1024" ) != 0 ) {
-        exit 1;
-    }
     InstallUtils::logger( "The server key has been generated", "info" );
 
     if ($params) {
+        if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", "pass:$passphrase", "1024" ) != 0 ) {
+            exit 1;
+        }
         if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", "pass:$passphrase", "-subj", $params ) != 0 ) {
             exit 1;
         }
     }
     else {
-        if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", "pass:$passphrase" ) != 0 ) {
+        if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "1024" ) != 0 ) {
+            exit 1;
+        }
+        if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr") != 0 ) {
             exit 1;
         }
     }
@@ -162,9 +165,17 @@ sub createCert {
 
     InstallUtils::execCommand( "/bin/mv", "server.key", "server.key.orig" );
 
-    if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", "pass:$passphrase" ) != 0 ) {
-        exit 1;
+    if ($params) {
+        if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", "pass:$passphrase" ) != 0 ) {
+            exit 1;
+        }
     }
+    else {
+        if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key") != 0 ) {
+            exit 1;
+        }
+    }
+
     InstallUtils::logger( "The pass phrase has been removed from the server key", "info" );
 
     if ( execOpenssl( "Generating a Self-signed certificate", "x509", "-req", "-days", "365", "-in", "server.csr", "-signkey", "server.key", "-out", "server.crt" ) != 0 ) {

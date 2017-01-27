@@ -407,11 +407,8 @@ sub getDefaults {
                 "Password for Traffic Ops database user" => "",
                 "config_var"                             => "password",
                 "hidden"                                 => "true"
-            },
-            {
-                "Download Maxmind Database?" => "yes",
-                "config_var"                 => "maxmind"
             }
+
         ],
         $dbConfFile => [
             {
@@ -422,6 +419,10 @@ sub getDefaults {
                 "Password for database server admin" => "",
                 "config_var"                         => "dbAdminPw",
                 "hidden"                             => "true"
+            },
+            {
+                "Download Maxmind Database?" => "yes",
+                "config_var"                 => "maxmind"
             }
         ],
         $cdnConfFile => [
@@ -754,7 +755,9 @@ sub main {
     my $opensslconf = generateOpenSSLConf( $userInput, $opensslConfFile );
     my $paramconf = generateParamConf( $userInput, $paramConfFile );
 
-    InstallUtils::writeJson( $post_install_cfg, $paramconf );
+    if ( !-f $post_install_cfg ) {
+        InstallUtils::writeJson( $post_install_cfg, {} );
+    }
 
     # if reconfigure is set then setup the database
     if ($reconfigure) {
@@ -762,7 +765,7 @@ sub main {
             setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
         }
         else {
-            setupDatabase( $todbconf, 0, $opensslconf->{"genCert"} );
+            setupDatabase( $todbconf, 0, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
         }
     }
 
