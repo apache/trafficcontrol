@@ -15,9 +15,6 @@
 
 . mysql-to-postgres.env
 
-MYSQL_PORT=3306
-POSTGRES_PORT=5432
-
 separator="---------------------------------------"
 
 function shutdown_trafficops_database() {
@@ -51,11 +48,12 @@ function start_staging_postgres_server() {
   echo $separator
 }
 
+
 function run_postgres_datatypes_conversion() {
-	echo $separator
-	echo "Starting Mysql to Postgres Migration..."
-	echo $separator
-	docker-compose -p trafficops -f convert.yml up --build
+  echo $separator
+  echo "Starting Mysql to Postgres Migration..."
+  echo $separator
+  docker-compose -p trafficops -f convert.yml up --build
 }
 
 
