@@ -30,10 +30,10 @@ use Data::Dumper qw(Dumper);
 use Scalar::Util qw(looks_like_number);
 use Getopt::Long;
 
-use InstallUtils;
-use BuildPerlDeps;
+use InstallUtils qw{ :all };
+use BuildPerlDeps qw{ :all };
 use GenerateCert qw{ :all };
-use ProfileCleanup;
+use ProfileCleanup qw{ :all };
 
 # paths of the output configuration files
 my $databaseConfFile = "/opt/traffic_ops/app/conf/production/database.conf";
@@ -122,10 +122,10 @@ sub getField {
 
         # if hidden then dont show password in terminal
         if ($hidden) {
-            return promptPasswordVerify($question);
+            return InstallUtils::promptPasswordVerify($question);
         }
         else {
-            return promptUser( $question, $config_answer );
+            return InstallUtils::promptUser( $question, $config_answer );
         }
     }
 
@@ -157,7 +157,7 @@ sub getConfig {
 
         $config{ $var->{"config_var"} } = $answer;
         if ( !$hidden ) {
-            InstallUtils::logger( "$question:  $answer", "info" );
+            InstallUtils::logger( "$question: $answer", "info" );
         }
     }
     return %config;
@@ -351,10 +351,10 @@ sub sanityCheckConfig {
                 else {
                     InstallUtils::logger( "Prompting user for answer", "info" );
                     if ($hidden) {
-                        $answer = promptPasswordVerify($question);
+                        $answer = InstallUtils::promptPasswordVerify($question);
                     }
                     else {
-                        $answer = promptUser( $question, $defaultValue->{$question} );
+                        $answer = InstallUtils::promptUser( $question, $defaultValue->{$question} );
                     }
                 }
 
