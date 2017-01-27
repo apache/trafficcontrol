@@ -421,17 +421,22 @@ func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName
 }
 
 func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
-	if len(statParts) < 2 {
+	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
 
-	fqdn := strings.Join(statParts[:len(statParts)-1], ".")
+	// the FQDN is `subsubdomain`.`subdomain`.`domain`. For a HTTP delivery service, `subsubdomain` will be the cache hostname; for a DNS delivery service, it will be `edge`. Then, `subdomain` is the delivery service regex.
+	subsubdomain := statParts[0]
+	subdomain := statParts[1]
+	domain := strings.Join(statParts[2:len(statParts)-1], ".")
 
-	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(fqdn)
+	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
 	if !ok {
+		fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
 		return stats, fmt.Errorf("ERROR no delivery service match for fqdn '%v' stat '%v'\n", fqdn, strings.Join(statParts, "."))
 	}
 	if ds == "" {
+		fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
 		return stats, fmt.Errorf("ERROR EMPTY delivery service fqdn %v stat %v\n", fqdn, strings.Join(statParts, "."))
 	}
 
