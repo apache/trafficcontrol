@@ -51,22 +51,12 @@ go_get_version() {
   )
 }
 
-# get traffic_ops client
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
-( mkdir -p "$godir" && \
-  cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_ops/client/* . && \
-  go get -v \
-) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
-
 #get traffic_stats client
 godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_stats/* . && \
-  go get -d -v && \
-  go_get_version "$oldpwd"/src/github.com/influxdata/influxdb v1.0.1 && \
+  cp -L -r "$TC_DIR"/traffic_stats/* . && \
   go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
@@ -75,8 +65,8 @@ godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb_tool
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
-  go build sync_ts_databases.go
-  go build create_ts_databases.go
+  go build sync/sync_ts_databases.go
+  go build create/create_ts_databases.go
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install
@@ -182,4 +172,3 @@ if [ -e /etc/init.d/ts_daily_summary ]; then
 	/etc/init.d/ts_daily_summary stop
 	/sbin/chkconfig --del ts_daily_summary
 fi
-

@@ -263,7 +263,7 @@ sub update {
 		edge_header_rewrite         => $params->{edgeHeaderRewrite},
 		geolimit_redirect_url       => $params->{geoLimitRedirectURL},
 		geo_limit                   => $params->{geoLimit},
-		geo_limit_countries         => $params->{geoLimitCountries},
+		geo_limit_countries         => sanitize_geo_limit_countries($params->{geoLimitCountries}),
 		geo_provider                => $params->{geoProvider},
 		global_max_mbps             => $params->{globalMaxMbps},
 		global_max_tps              => $params->{globalMaxTps},
@@ -300,6 +300,12 @@ sub update {
 
 	my $rs = $ds->update($values);
 	if ($rs) {
+		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
+		&UI::DeliveryService::cacheurl( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
+
 		my @response;
 		push(
 			@response, {
@@ -403,7 +409,7 @@ sub create {
 		edge_header_rewrite         => $params->{edgeHeaderRewrite},
 		geolimit_redirect_url       => $params->{geoLimitRedirectURL},
 		geo_limit                   => $params->{geoLimit},
-		geo_limit_countries         => $params->{geoLimitCountries},
+		geo_limit_countries         => sanitize_geo_limit_countries($params->{geoLimitCountries}),
 		geo_provider                => $params->{geoProvider},
 		global_max_mbps             => $params->{globalMaxMbps},
 		global_max_tps              => $params->{globalMaxTps},
@@ -438,69 +444,84 @@ sub create {
 		xml_id                      => $params->{xmlId},
 	};
 
-	my $insert = $self->db->resultset('Deliveryservice')->create($values);
-	my $rs     = $insert->insert();
-	if ($rs) {
+	my $insert = $self->db->resultset('Deliveryservice')->create($values)->insert();
+	if ($insert) {
+		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
+		&UI::DeliveryService::header_rewrite( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
+		&UI::DeliveryService::cacheurl( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
+
+		# create dnssec keys if necessary
+		my $cdn = $self->db->resultset('Cdn')->search( { id => $params->{cdnId} } )->single();
+		my $dnssec_enabled = $cdn->dnssec_enabled;
+		if ( $dnssec_enabled ) {
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id );
+		}
+
+		# create a default deliveryservice_regex in the format .*\.xml-id\..*
+		$self->create_default_ds_regex($insert->id, '.*\.' . $insert->xml_id . '\..*');
+
 		my @response;
 		push(
 			@response, {
-				"active"                   => $rs->active,
-				"cacheurl"                 => $rs->cacheurl,
-				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
-				"cdnId"                    => $rs->cdn->id,
-				"cdnName"                  => $rs->cdn->name,
-				"checkPath"                => $rs->check_path,
-				"displayName"              => $rs->display_name,
-				"dnsBypassCname"           => $rs->dns_bypass_cname,
-				"dnsBypassIp"              => $rs->dns_bypass_ip,
-				"dnsBypassIp6"             => $rs->dns_bypass_ip6,
-				"dnsBypassTtl"             => $rs->dns_bypass_ttl,
-				"dscp"                     => $rs->dscp,
-				"edgeHeaderRewrite"        => $rs->edge_header_rewrite,
-				"geoLimitRedirectURL"      => $rs->geolimit_redirect_url,
-				"geoLimit"                 => $rs->geo_limit,
-				"geoLimitCountries"        => $rs->geo_limit_countries,
-				"geoProvider"              => $rs->geo_provider,
-				"globalMaxMbps"            => $rs->global_max_mbps,
-				"globalMaxTps"             => $rs->global_max_tps,
-				"httpBypassFqdn"           => $rs->http_bypass_fqdn,
-				"id"                       => $rs->id,
-				"infoUrl"                  => $rs->info_url,
-				"initialDispersion"        => $rs->initial_dispersion,
-				"ipv6RoutingEnabled"       => $rs->ipv6_routing_enabled,
-				"lastUpdated"              => $rs->last_updated,
-				"logsEnabled"              => $rs->logs_enabled,
-				"longDesc"                 => $rs->long_desc,
-				"longDesc1"                => $rs->long_desc_1,
-				"longDesc2"                => $rs->long_desc_2,
-				"maxDnsAnswers"            => $rs->max_dns_answers,
-				"midHeaderRewrite"         => $rs->mid_header_rewrite,
-				"missLat"                  => $rs->miss_lat,
-				"missLong"                 => $rs->miss_long,
-				"multiSiteOrigin"          => $rs->multi_site_origin,
-				# "multiSiteOriginAlgorithm" => $rs->multi_site_origin_algorithm,
-				"orgServerFqdn"            => $rs->org_server_fqdn,
-				"originShield"             => $rs->origin_shield,
-				"profileId"                => $rs->profile->id,
-				"profileName"              => $rs->profile->name,
-				"profileDescription"       => $rs->profile->description,
-				"protocol"                 => $rs->protocol,
-				"qstringIgnore"            => $rs->qstring_ignore,
-				"rangeRequestHandling"     => $rs->range_request_handling,
-				"regexRemap"               => $rs->regex_remap,
-				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
-				"remapText"                => $rs->remap_text,
-				"signed"                   => $rs->signed,
-				"sslKeyVersion"            => $rs->ssl_key_version,
-				"trRequestHeaders"         => $rs->tr_request_headers,
-				"trResponseHeaders"        => $rs->tr_response_headers,
-				"type"                     => $rs->type->name,
-				"typeId"                   => $rs->type->id,
-				"xmlId"                    => $rs->xml_id
+				"active"                   => $insert->active,
+				"cacheurl"                 => $insert->cacheurl,
+				"ccrDnsTtl"                => $insert->ccr_dns_ttl,
+				"cdnId"                    => $insert->cdn->id,
+				"cdnName"                  => $insert->cdn->name,
+				"checkPath"                => $insert->check_path,
+				"displayName"              => $insert->display_name,
+				"dnsBypassCname"           => $insert->dns_bypass_cname,
+				"dnsBypassIp"              => $insert->dns_bypass_ip,
+				"dnsBypassIp6"             => $insert->dns_bypass_ip6,
+				"dnsBypassTtl"             => $insert->dns_bypass_ttl,
+				"dscp"                     => $insert->dscp,
+				"edgeHeaderRewrite"        => $insert->edge_header_rewrite,
+				"geoLimitRedirectURL"      => $insert->geolimit_redirect_url,
+				"geoLimit"                 => $insert->geo_limit,
+				"geoLimitCountries"        => $insert->geo_limit_countries,
+				"geoProvider"              => $insert->geo_provider,
+				"globalMaxMbps"            => $insert->global_max_mbps,
+				"globalMaxTps"             => $insert->global_max_tps,
+				"httpBypassFqdn"           => $insert->http_bypass_fqdn,
+				"id"                       => $insert->id,
+				"infoUrl"                  => $insert->info_url,
+				"initialDispersion"        => $insert->initial_dispersion,
+				"ipv6RoutingEnabled"       => $insert->ipv6_routing_enabled,
+				"lastUpdated"              => $insert->last_updated,
+				"logsEnabled"              => $insert->logs_enabled,
+				"longDesc"                 => $insert->long_desc,
+				"longDesc1"                => $insert->long_desc_1,
+				"longDesc2"                => $insert->long_desc_2,
+				"maxDnsAnswers"            => $insert->max_dns_answers,
+				"midHeaderRewrite"         => $insert->mid_header_rewrite,
+				"missLat"                  => $insert->miss_lat,
+				"missLong"                 => $insert->miss_long,
+				#"multiSiteOrigin"          => $insert->multi_site_origin,
+				"multiSiteOriginAlgorithm" => $insert->multi_site_origin_algorithm,
+				"orgServerFqdn"            => $insert->org_server_fqdn,
+				"originShield"             => $insert->origin_shield,
+				"profileId"                => $insert->profile->id,
+				"profileName"              => $insert->profile->name,
+				"profileDescription"       => $insert->profile->description,
+				"protocol"                 => $insert->protocol,
+				"qstringIgnore"            => $insert->qstring_ignore,
+				"rangeRequestHandling"     => $insert->range_request_handling,
+				"regexRemap"               => $insert->regex_remap,
+				"regionalGeoBlocking"      => $insert->regional_geo_blocking,
+				"remapText"                => $insert->remap_text,
+				"signed"                   => $insert->signed,
+				"sslKeyVersion"            => $insert->ssl_key_version,
+				"trRequestHeaders"         => $insert->tr_request_headers,
+				"trResponseHeaders"        => $insert->tr_response_headers,
+				"type"                     => $insert->type->name,
+				"typeId"                   => $insert->type->id,
+				"xmlId"                    => $insert->xml_id
 			}
 		);
 
-		&log( $self, "Created deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
+		&log( $self, "Created deliveryservice [ '" . $insert->xml_id . "' ] with id: " . $insert->id, "APICHANGE" );
 
 		return $self->success( \@response, "Deliveryservice creation was successful." );
 	}
@@ -1006,5 +1027,39 @@ sub is_valid_long {
 
 	return undef;
 }
+
+sub sanitize_geo_limit_countries {
+	my $geo_limit_countries = shift;
+
+	if (!defined($geo_limit_countries)) {
+		return "";
+	}
+
+	$geo_limit_countries =~ s/\s+//g;
+	$geo_limit_countries = uc($geo_limit_countries);
+	return $geo_limit_countries;
+}
+
+sub create_default_ds_regex {
+	my $self	= shift;
+	my $ds_id	= shift;
+	my $pattern	= shift;
+
+	my $type_id = $self->db->resultset('Type')->find( { name => 'HOST_REGEXP' } );
+
+	my $values = {
+		type        => $type_id,
+		pattern     => $pattern,
+	};
+
+	my $rs_regex = $self->db->resultset('Regex')->create($values)->insert();
+	if ($rs_regex) {
+		# now insert the regex into the deliveryservice_regex table with set number = 0
+		$self->db->resultset('DeliveryserviceRegex')->create( { deliveryservice => $ds_id, regex => $rs_regex->id, set_number => 0 } )->insert();
+		&log( $self, "Default regex created [ " . $rs_regex->pattern . " ] for deliveryservice: " . $ds_id, "APICHANGE" );
+	}
+
+}
+
 
 1;

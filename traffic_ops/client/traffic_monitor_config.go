@@ -75,14 +75,86 @@ type TMProfile struct {
 }
 
 // TMParameters ...
+// TODO change TO to return this struct, so a custom UnmarshalJSON isn't necessary.
 type TMParameters struct {
-	HealthConnectionTimeout                 int     `json:"health.connection.timeout"`
-	HealthPollingURL                        string  `json:"health.polling.url"`
-	HealthThresholdQueryTime                int     `json:"health.threshold.queryTime"`
-	HistoryCount                            int     `json:"history.count"`
-	HealthThresholdAvailableBandwidthInKbps string  `json:"health.threshold.availableBandwidthInKbps"`
-	HealthThresholdLoadAvg                  float64 `json:"health.threshold.loadavg,string"`
-	MinFreeKbps                             int64
+	HealthConnectionTimeout int    `json:"health.connection.timeout"`
+	HealthPollingURL        string `json:"health.polling.url"`
+	HistoryCount            int    `json:"history.count"`
+	MinFreeKbps             int64
+	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
+}
+
+const DefaultHealthThresholdComparator = "<"
+
+type HealthThreshold struct {
+	Val        float64
+	Comparator string // TODO change to enum?
+}
+
+// strToThreshold takes a string like ">=42" and returns a HealthThreshold with a Val of `42` and a Comparator of `">="`. If no comparator exists, `DefaultHealthThresholdComparator` is used. If the string is not of the form "(>|<|)(=|)\d+" an error is returned
+func strToThreshold(s string) (HealthThreshold, error) {
+	comparators := []string{"=", ">", "<", ">=", "<="}
+	for _, comparator := range comparators {
+		if strings.HasPrefix(s, comparator) {
+			valStr := s[len(comparator):]
+			val, err := strconv.ParseFloat(valStr, 64)
+			if err != nil {
+				return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN")
+			}
+			return HealthThreshold{Val: val, Comparator: comparator}, nil
+		}
+	}
+	val, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN")
+	}
+	return HealthThreshold{Val: val, Comparator: DefaultHealthThresholdComparator}, nil
+}
+
+func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
+	raw := map[string]interface{}{}
+	if err := json.Unmarshal(bytes, &raw); err != nil {
+		return err
+	}
+
+	if vi, ok := raw["health.connection.timeout"]; ok {
+		if v, ok := vi.(float64); !ok {
+			return fmt.Errorf("Unmarshalling TMParameters health.connection.timeout expected integer, got %v", vi)
+		} else {
+			params.HealthConnectionTimeout = int(v)
+		}
+	}
+
+	if vi, ok := raw["health.polling.url"]; ok {
+		if v, ok := vi.(string); !ok {
+			return fmt.Errorf("Unmarshalling TMParameters health.polling.url expected string, got %v", vi)
+		} else {
+			params.HealthPollingURL = v
+		}
+	}
+
+	if vi, ok := raw["history.count"]; ok {
+		if v, ok := vi.(float64); !ok {
+			return fmt.Errorf("Unmarshalling TMParameters history.count expected integer, got %v", vi)
+		} else {
+			params.HistoryCount = int(v)
+		}
+	}
+
+	params.Thresholds = map[string]HealthThreshold{}
+	thresholdPrefix := "health.threshold."
+	for k, v := range raw {
+		if strings.HasPrefix(k, thresholdPrefix) {
+			stat := k[len(thresholdPrefix):]
+			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
+			if t, err := strToThreshold(vStr); err != nil {
+				return fmt.Errorf("Unmarshalling TMParameters `health.threshold.` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v'", k, v)
+			} else {
+				params.Thresholds[stat] = t
+			}
+		}
+	}
+	return nil
 }
 
 // TrafficMonitorConfigMap ...
@@ -146,14 +218,8 @@ func trafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	}
 
 	for _, profile := range tmConfig.Profiles {
-		bwThresholdString := profile.Parameters.HealthThresholdAvailableBandwidthInKbps
-		if strings.HasPrefix(bwThresholdString, ">") {
-			var err error
-			profile.Parameters.MinFreeKbps, err = strconv.ParseInt(bwThresholdString[1:len(bwThresholdString)], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-		}
+		bwThreshold := profile.Parameters.Thresholds["availableBandwidthInKbps"]
+		profile.Parameters.MinFreeKbps = int64(bwThreshold.Val)
 		tm.Profile[profile.Name] = profile
 	}
 

@@ -177,17 +177,18 @@ func (t *CRStatesThreadsafe) DeleteDeliveryService(name enum.DeliveryServiceName
 // CRStatesPeersThreadsafe provides safe access for multiple goroutines to read a map of Traffic Monitor peers to their returned Crstates, with a single goroutine writer.
 // This could be made lock-free, if the performance was necessary
 type CRStatesPeersThreadsafe struct {
-	crStates map[enum.TrafficMonitorName]Crstates
-	m        *sync.RWMutex
+	crStates   map[enum.TrafficMonitorName]Crstates
+	peerStates map[enum.TrafficMonitorName]bool
+	m          *sync.RWMutex
 }
 
 // NewCRStatesPeersThreadsafe creates a new CRStatesPeers object safe for multiple goroutine readers and a single writer.
 func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
-	return CRStatesPeersThreadsafe{m: &sync.RWMutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}}
+	return CRStatesPeersThreadsafe{m: &sync.RWMutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}, peerStates: map[enum.TrafficMonitorName]bool{}}
 }
 
-// Get returns the internal Traffic Monitor peer Crstates data. This MUST NOT be modified.
-func (t *CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
+// GetCrstates returns the internal Traffic Monitor peer Crstates data. This MUST NOT be modified.
+func (t *CRStatesPeersThreadsafe) GetCrstates() map[enum.TrafficMonitorName]Crstates {
 	t.m.RLock()
 	m := map[enum.TrafficMonitorName]Crstates{}
 	for k, v := range t.crStates {
@@ -197,9 +198,36 @@ func (t *CRStatesPeersThreadsafe) Get() map[enum.TrafficMonitorName]Crstates {
 	return m
 }
 
-// Set sets the internal Traffic Monitor peer Crstates data. This MUST NOT be called by multiple goroutines.
-func (t *CRStatesPeersThreadsafe) Set(peerName enum.TrafficMonitorName, peerState Crstates) {
+// GetPeerAvailability returns the state of the given peer
+func (t *CRStatesPeersThreadsafe) GetPeerAvailability(peer enum.TrafficMonitorName) bool {
+	t.m.RLock()
+	availability := t.peerStates[peer]
+	t.m.RUnlock()
+	return availability
+}
+
+// HasAvailablePeers returns true if at least one peer is online
+func (t *CRStatesPeersThreadsafe) HasAvailablePeers() bool {
+	availablePeers := false
+
+	t.m.RLock()
+
+	for _, available := range t.peerStates {
+		if available {
+			availablePeers = true
+			break
+		}
+	}
+
+	t.m.RUnlock()
+
+	return availablePeers
+}
+
+// Set sets the internal Traffic Monitor peer state and Crstates data. This MUST NOT be called by multiple goroutines.
+func (t *CRStatesPeersThreadsafe) Set(result Result) {
 	t.m.Lock()
-	t.crStates[peerName] = peerState
+	t.crStates[result.ID] = result.PeerStates
+	t.peerStates[result.ID] = result.Available
 	t.m.Unlock()
 }

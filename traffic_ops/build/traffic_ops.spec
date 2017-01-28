@@ -53,18 +53,6 @@ Built: %(date) by %{getenv: USER}
 %build
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
-    # compile go executables used during postinstall
-    # suppress strip of go execs
-    %define debug_package %{nil}
-
-    export GOPATH="$(pwd)/install/go"
-    export GOBIN="$(pwd)/install/bin"
-
-    echo "Compiling go executables"
-    for d in install/go/src/comcast.com/*; do
-	(cd "$d" && go get -ldflags "-B 0x%{commit}" -v ) || \
-	    { echo "Could not compile $d"; exit 1; }
-    done
 
 %install
 
@@ -121,7 +109,6 @@ Built: %(date) by %{getenv: USER}
     # install
     if [ "$1" = "1" ]; then
       # see postinstall, the .reconfigure file triggers init().
-      /bin/touch %{PACKAGEDIR}/.reconfigure
     	echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the install.\n"
     fi
 
@@ -166,6 +153,5 @@ fi
 %{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install
-%exclude %{PACKAGEDIR}/install/go
 %{PACKAGEDIR}/etc
 %doc %{PACKAGEDIR}/doc

@@ -924,10 +924,10 @@ sub readupdate {
 			push(
 				@data, {
 					host_name      => $row->host_name,
-					upd_pending    => $row->upd_pending,
+					upd_pending    => \$row->upd_pending,
 					host_id        => $row->id,
 					status         => $row->status->name,
-					parent_pending => "1"
+					parent_pending => \1
 				}
 			);
 		}
@@ -935,10 +935,10 @@ sub readupdate {
 			push(
 				@data, {
 					host_name      => $row->host_name,
-					upd_pending    => $row->upd_pending,
+					upd_pending    => \$row->upd_pending,
 					host_id        => $row->id,
 					status         => $row->status->name,
-					parent_pending => "0"
+					parent_pending => \0
 				}
 			);
 		}

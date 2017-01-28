@@ -20,31 +20,32 @@ package threadsafe
  */
 
 import (
-	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservice"
 	"sync"
+
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
 )
 
 // LastStats wraps a deliveryservice.LastStats object to be safe for multiple readers and one writer.
 type LastStats struct {
-	stats *ds.LastStats
+	stats *dsdata.LastStats
 	m     *sync.RWMutex
 }
 
 // NewLastStats returns a wrapped a deliveryservice.LastStats object safe for multiple readers and one writer.
 func NewLastStats() LastStats {
-	s := ds.NewLastStats()
+	s := dsdata.NewLastStats()
 	return LastStats{m: &sync.RWMutex{}, stats: &s}
 }
 
 // Get returns the last KBPS stats object. Callers MUST NOT modify the object. It is not threadsafe for writing. If the object must be modified, callers must call LastStats.Copy() and modify the copy.
-func (o *LastStats) Get() ds.LastStats {
+func (o *LastStats) Get() dsdata.LastStats {
 	o.m.RLock()
 	defer o.m.RUnlock()
 	return *o.stats
 }
 
 // Set sets the internal LastStats object. This MUST NOT be called by multiple goroutines.
-func (o *LastStats) Set(s ds.LastStats) {
+func (o *LastStats) Set(s dsdata.LastStats) {
 	o.m.Lock()
 	*o.stats = s
 	o.m.Unlock()

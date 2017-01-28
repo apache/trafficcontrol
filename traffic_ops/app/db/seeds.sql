@@ -29,7 +29,6 @@ insert into type (name, description, use_in_table) values ('CONFIG_EXTENSION', '
 insert into type (name, description, use_in_table) values ('STATISTIC_EXTENSION', 'Extension source for 12M graphs', 'to_extension') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('RESOLVE4', 'federation type resolve4', 'federation') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('RESOLVE6', 'federation type resolve6', 'federation') ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) values ('snapshot_dir', 'regex_revalidate.config','public/Trafficserver-Snapshots/') ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) values ('ttl_max_hours', 'regex_revalidate.config', '672') ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) values ('ttl_min_hours', 'regex_revalidate.config', '48') ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90') ON CONFLICT DO NOTHING;

@@ -11,9 +11,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-FROM mysql:5.5
+FROM mysql:5.6
 
 MAINTAINER Dan Kirkwood
 
+# Mysql Access
+ENV MYSQL_HOST=$MYSQL_HOST
+ENV MYSQL_PORT=$MYSQL_PORT
+ENV MYSQL_PASSWORD=$MYSQL_PASSWORD
+ENV MYSQL_DATABASE=$MYSQL_DATABASE
+
+EXPOSE 3306
 ADD runmysql.sh /
 CMD /runmysql.sh

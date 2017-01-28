@@ -29,11 +29,11 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
-	//	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"github.com/davecheney/gmx"
 )
 
@@ -60,9 +60,9 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		Pending: gmx.NewGauge("fetchPending"),
 	}
 
-	// TODO investigate whether a unique client per cache to be polled is faster
 	sharedClient := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+		Timeout:   cfg.HTTPTimeout,
 	}
 
 	localStates := peer.NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
@@ -75,7 +75,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	cacheHealthHandler := cache.NewHandler()
 	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep)
-	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates) // TODO figure out if this is necessary, with the CacheHealthPoller
+	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates)
 	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
@@ -85,6 +85,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	go cacheHealthPoller.Poll()
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
+
+	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
 	cachesChanged := make(chan struct{})
 
@@ -99,14 +101,18 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		staticAppData,
 	)
 
-	combinedStates := StartPeerManager(
+	combinedStates, events := StartPeerManager(
 		peerHandler.ResultChannel,
 		localStates,
 		peerStates,
+		events,
+		cfg.PeerOptimistic, // TODO remove
+		toData,
+		cfg,
 	)
 
-	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches := StartStatHistoryManager(
-		cacheStatHandler.ResultChannel,
+	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
+		cacheStatHandler.ResultChan(),
 		localStates,
 		combinedStates,
 		toData,
@@ -114,10 +120,11 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		errorCount,
 		cfg,
 		monitorConfig,
+		events,
 	)
 
-	lastHealthDurations, events, localCacheStatus, healthHistory := StartHealthResultManager(
-		cacheHealthHandler.ResultChannel,
+	lastHealthDurations, healthHistory := StartHealthResultManager(
+		cacheHealthHandler.ResultChan(),
 		toData,
 		localStates,
 		monitorConfig,
@@ -126,6 +133,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		fetchCount,
 		errorCount,
 		cfg,
+		events,
+		localCacheStatus,
 	)
 
 	StartOpsConfigManager(

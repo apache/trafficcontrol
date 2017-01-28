@@ -92,27 +92,31 @@ func getLogWriter(location string) (io.Writer, error) {
 	case config.LogLocationNull:
 		return ioutil.Discard, nil
 	default:
-		return os.Open(location)
+		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	}
 }
-func getLogWriters(errLoc, warnLoc, infoLoc, debugLoc string) (io.Writer, io.Writer, io.Writer, io.Writer, error) {
+func getLogWriters(eventLoc, errLoc, warnLoc, infoLoc, debugLoc string) (io.Writer, io.Writer, io.Writer, io.Writer, io.Writer, error) {
+	eventW, err := getLogWriter(eventLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
+	}
 	errW, err := getLogWriter(errLoc)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
 	}
 	warnW, err := getLogWriter(warnLoc)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
 	}
 	infoW, err := getLogWriter(infoLoc)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
 	}
 	debugW, err := getLogWriter(debugLoc)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
 	}
-	return errW, warnW, infoW, debugW, nil
+	return eventW, errW, warnW, infoW, debugW, nil
 }
 
 func main() {
@@ -140,12 +144,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	errW, warnW, infoW, debugW, err := getLogWriters(cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug)
+	eventW, errW, warnW, infoW, debugW, err := getLogWriters(cfg.LogLocationEvent, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug)
 	if err != nil {
 		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
 		os.Exit(1)
 	}
-	log.Init(errW, warnW, infoW, debugW)
+	log.Init(eventW, errW, warnW, infoW, debugW)
 
 	log.Infof("Starting with config %+v\n", cfg)
 

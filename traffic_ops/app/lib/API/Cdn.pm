@@ -279,7 +279,8 @@ sub get_traffic_monitor_config {
 		{ 'cdn.name' => $cdn_name },
 		{   prefetch => ['cdn', 'profile', 'type'],
 			select   => 'me.profile',
-			distinct => 1
+			distinct => 1,
+			group_by => [qw/cdn.id profile.id me.profile type.id/],
 		}
 	);
 

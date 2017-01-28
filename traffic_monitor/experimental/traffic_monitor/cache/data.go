@@ -20,6 +20,7 @@ package cache
  */
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -35,6 +36,10 @@ type AvailableStatus struct {
 	Available bool
 	Status    string
 	Why       string
+	// UnavailableStat is the stat whose threshold made the cache unavailable. If this is the empty string, the cache is unavailable for a non-threshold reason. This exists so a poller (health, stat) won't mark an unavailable cache as available if the stat whose threshold was reached isn't available on that poller.
+	UnavailableStat string
+	// Poller is the name of the poller which set this available status
+	Poller string
 }
 
 // CacheAvailableStatuses is the available status of each cache.
@@ -47,17 +52,6 @@ func (a AvailableStatuses) Copy() AvailableStatuses {
 		b[k] = v
 	}
 	return b
-}
-
-// Event represents an event change in aggregated data. For example, a cache being marked as unavailable.
-type Event struct {
-	Index       uint64         `json:"index"`
-	Time        int64          `json:"time"`
-	Description string         `json:"description"`
-	Name        enum.CacheName `json:"name"`
-	Hostname    enum.CacheName `json:"hostname"`
-	Type        string         `json:"type"`
-	Available   bool           `json:"isAvailable"`
 }
 
 // ResultHistory is a map of cache names, to an array of result history from each cache.
@@ -87,18 +81,22 @@ type ResultStatValHistory map[string][]ResultStatVal
 // Span is the number of polls this stat has been the same. For example, if History is set to 100, and the last 50 polls had the same value for this stat (but none of the previous 50 were the same), this stat's map value slice will actually contain 51 entries, and the first entry will have the value, the time of the last poll, and a Span of 50. Assuming the poll time is every 8 seconds, users will then know, looking at the Span, that the value was unchanged for the last 50*8=400 seconds.
 // JSON values are all strings, for the TM1.0 /publish/CacheStats API.
 type ResultStatVal struct {
-	Val  interface{} `json:"value,string"`
-	Time TM1Time     `json:"time,string"`
-	Span uint64      `json:"span,string"`
+	Val  interface{} `json:"value"`
+	Time time.Time   `json:"time"`
+	Span uint64      `json:"span"`
 }
 
-// TM1Time provides a custom MarshalJSON func to serialise a time.Time into milliseconds since the epoch, as served in Traffic Monitor 1.x APIs
-type TM1Time time.Time
-
-func (t *TM1Time) MarshalJSON() ([]byte, error) {
-	NanosecondsPerMillisecond := int64(1000000)
-	it := (*time.Time)(t).UnixNano() / NanosecondsPerMillisecond
-	return []byte(fmt.Sprintf("%d", it)), nil
+func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
+	v := struct {
+		Val  string `json:"value"`
+		Time int64  `json:"time"`
+		Span uint64 `json:"span"`
+	}{
+		Val:  fmt.Sprintf("%v", t.Val),
+		Time: t.Time.UnixNano() / 1000000, // ms since the epoch
+		Span: t.Span,
+	}
+	return json.Marshal(&v)
 }
 
 func copyResultStatVals(a []ResultStatVal) []ResultStatVal {
@@ -135,12 +133,12 @@ func (a ResultStatHistory) Add(r Result, limit uint64) {
 		statHistory := a[r.ID][statName]
 		// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
 		if len(statHistory) > 0 && statHistory[0].Val == statVal {
-			statHistory[0].Time = TM1Time(r.Time)
+			statHistory[0].Time = r.Time
 			statHistory[0].Span++
 		} else {
 			resultVal := ResultStatVal{
 				Val:  statVal,
-				Time: TM1Time(r.Time),
+				Time: r.Time,
 				Span: 1,
 			}
 			statHistory = pruneStats(append([]ResultStatVal{resultVal}, statHistory...), limit)
@@ -152,6 +150,7 @@ func (a ResultStatHistory) Add(r Result, limit uint64) {
 	}
 }
 
+// TODO determine if anything ever needs more than the latest, and if not, change ResultInfo to not be a slice.
 type ResultInfoHistory map[enum.CacheName][]ResultInfo
 
 // ResultInfo contains all the non-stat result info. This includes the cache ID, any errors, the time of the poll, the request time duration, Astats System (Vitals), Poll ID, and Availability.
@@ -161,11 +160,12 @@ type ResultInfo struct {
 	Time        time.Time
 	RequestTime time.Duration
 	Vitals      Vitals
+	System      AstatsSystem
 	PollID      uint64
 	Available   bool
 }
 
-func toInfo(r Result) ResultInfo {
+func ToInfo(r Result) ResultInfo {
 	return ResultInfo{
 		ID:          r.ID,
 		Error:       r.Error,
@@ -174,15 +174,8 @@ func toInfo(r Result) ResultInfo {
 		Vitals:      r.Vitals,
 		PollID:      r.PollID,
 		Available:   r.Available,
+		System:      r.Astats.System,
 	}
-}
-
-func toInfos(rs []Result) []ResultInfo {
-	infos := make([]ResultInfo, len(rs), len(rs))
-	for i, r := range rs {
-		infos[i] = toInfo(r)
-	}
-	return infos
 }
 
 func copyResultInfos(a []ResultInfo) []ResultInfo {
@@ -207,7 +200,7 @@ func pruneInfos(history []ResultInfo, limit uint64) []ResultInfo {
 }
 
 func (a ResultInfoHistory) Add(r Result, limit uint64) {
-	a[r.ID] = pruneInfos(append([]ResultInfo{toInfo(r)}, a[r.ID]...), limit)
+	a[r.ID] = pruneInfos(append([]ResultInfo{ToInfo(r)}, a[r.ID]...), limit)
 }
 
 // Kbpses is the kbps values of each cache.

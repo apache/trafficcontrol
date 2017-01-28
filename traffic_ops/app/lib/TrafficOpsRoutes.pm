@@ -240,9 +240,7 @@ sub ui_routes {
 	# -- Ort
 	$r->route('/ort/:hostname/ort1')->via('GET')->over( authenticated => 1 )->to( 'Ort#ort1', namespace => $namespace );
 	$r->route('/ort/:hostname/packages')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_package_versions', namespace => $namespace );
-	$r->route('/ort/:hostname/package/:package')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_package_version', namespace => $namespace );
 	$r->route('/ort/:hostname/chkconfig')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_chkconfig', namespace => $namespace );
-	$r->route('/ort/:hostname/chkconfig/:package')->via('GET')->over( authenticated => 1 )->to( 'Ort#get_package_chkconfig', namespace => $namespace );
 
 	# -- Parameter
 	$r->post('/parameter/create')->over( authenticated => 1 )->to( 'Parameter#create', namespace => $namespace );
@@ -539,7 +537,12 @@ sub api_routes {
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
 	# -- DELIVERY SERVICE: REGEXES
-	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#all', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:dsId/regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:dsId/regexes/:id")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#show', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/:dsId/regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#create', namespace => $namespace );
+	$r->put("/api/$version/deliveryservices/:dsId/regexes/:id")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#update', namespace => $namespace );
+	$r->delete("/api/$version/deliveryservices/:dsId/regexes/:id")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#delete', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: MATCHES
 	$r->get("/api/$version/deliveryservice_matches")->over( authenticated => 1 )->to( 'DeliveryServiceMatches#index', namespace => $namespace );

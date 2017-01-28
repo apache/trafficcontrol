@@ -22,41 +22,46 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
-	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 	"io"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/deliveryservicedata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/srvhttp"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // Handler is a cache handler, which fulfills the common/handler `Handler` interface.
 type Handler struct {
-	ResultChannel      chan Result
+	resultChan         chan Result
 	Notify             int
 	ToData             *todata.TODataThreadsafe
 	PeerStates         *peer.CRStatesPeersThreadsafe
 	MultipleSpaceRegex *regexp.Regexp
 }
 
-// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChannel, and Result.Precomputed will be nil
-// TODO change this to take the ResultChan. It doesn't make sense for the Handler to 'own' the Result Chan.
+func (h Handler) ResultChan() <-chan Result {
+	return h.resultChan
+}
+
+// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChan, and Result.Precomputed will be nil
 func NewHandler() Handler {
-	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
+	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
 }
 
-// NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChannel.
+// NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChan.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
-	return Handler{ResultChannel: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
+	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
 }
 
-// Precompute returns whether this handler precomputes data before passing the result to the ResultChannel
+// Precompute returns whether this handler precomputes data before passing the result to the ResultChan
 func (handler Handler) Precompute() bool {
 	return handler.ToData != nil && handler.PeerStates != nil
 }
@@ -83,6 +88,18 @@ type Result struct {
 	PollFinished    chan<- uint64
 	PrecomputedData PrecomputedData
 	Available       bool
+}
+
+// HasStat returns whether the given stat is in the Result.
+func (result *Result) HasStat(stat string) bool {
+	computedStats := ComputedStats()
+	if _, ok := computedStats[stat]; ok {
+		return true // health poll has all computed stats
+	}
+	if _, ok := result.Astats.Ats[stat]; ok {
+		return true
+	}
+	return false
 }
 
 // Vitals is the vitals data returned from a cache.
@@ -113,12 +130,94 @@ type Filter interface {
 	WithinStatHistoryMax(int) bool
 }
 
+const nsPerMs = 1000000
+
+type StatComputeFunc func(resultInfo ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{}
+
+// ComputedStats returns a map of cache stats which are computed by Traffic Monitor (rather than returned literally from ATS), mapped to the func to compute them.
+func ComputedStats() map[string]StatComputeFunc {
+	return map[string]StatComputeFunc{
+		"availableBandwidthInKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut
+		},
+
+		"availableBandwidthInMbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000
+		},
+		"bandwidth": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.KbpsOut
+		},
+		"error-string": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			if info.Error != nil {
+				return info.Error.Error()
+			}
+			return "false"
+		},
+		"isAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return combinedState.IsAvailable // if the cache is missing, default to false
+		},
+		"isHealthy": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			if enum.CacheStatusFromString(serverInfo.Status) == enum.CacheStatusAdminDown {
+				return true
+			}
+			return combinedState.IsAvailable
+		},
+		"kbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.KbpsOut
+		},
+		"loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.LoadAvg
+		},
+		"maxKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.Vitals.MaxKbpsOut
+		},
+		"queryTime": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.RequestTime.Nanoseconds() / nsPerMs
+		},
+		"stateUrl": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return serverProfile.Parameters.HealthPollingURL
+		},
+		"status": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return serverInfo.Status
+		},
+		"system.astatsLoad": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.AstatsLoad
+		},
+		"system.configReloadRequests": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ConfigLoadRequest
+		},
+		"system.configReloads": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ConfigReloads
+		},
+		"system.inf.name": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.InfName
+		},
+		"system.inf.speed": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.InfSpeed
+		},
+		"system.lastReload": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.LastReload
+		},
+		"system.lastReloadRequest": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.LastReloadRequest
+		},
+		"system.proc.loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ProcLoadavg
+		},
+		"system.proc.net.dev": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.ProcNetDev
+		},
+	}
+}
+
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statResultHistory ResultStatHistory, filter Filter, params url.Values) ([]byte, error) {
+func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHistory, combinedStates peer.Crstates, monitorConfig to.TrafficMonitorConfigMap, statMaxKbpses Kbpses, filter Filter, params url.Values) ([]byte, error) {
 	stats := Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 		Caches:        map[enum.CacheName]map[string][]ResultStatVal{},
 	}
+
+	computedStats := ComputedStats()
 
 	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
 
@@ -145,6 +244,39 @@ func StatsMarshall(statResultHistory ResultStatHistory, filter Filter, params ur
 		}
 	}
 
+	for id, infos := range statInfo {
+		if !filter.UseCache(id) {
+			continue
+		}
+
+		serverInfo, ok := monitorConfig.TrafficServer[string(id)]
+		if !ok {
+			log.Warnf("cache.StatsMarshall server %s missing from monitorConfig\n", id)
+		}
+
+		serverProfile, ok := monitorConfig.Profile[serverInfo.Profile]
+		if !ok {
+			log.Warnf("cache.StatsMarshall server %s missing profile in monitorConfig\n", id)
+		}
+
+		for i, resultInfo := range infos {
+			if !filter.WithinStatHistoryMax(i + 1) {
+				break
+			}
+			if _, ok := stats.Caches[id]; !ok {
+				stats.Caches[id] = map[string][]ResultStatVal{}
+			}
+
+			t := resultInfo.Time
+
+			for stat, statValF := range computedStats {
+				if !filter.UseStat(stat) {
+					continue
+				}
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStates.Caches[id]), Time: t, Span: 1}) // combinedState will default to unavailable
+			}
+		}
+	}
 	return json.Marshal(stats)
 }
 
@@ -160,16 +292,16 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	}
 
 	if reqErr != nil {
-		log.Errorf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
+		log.Warnf("%v handler given error '%v'\n", id, reqErr) // error here, in case the thing that called Handle didn't error
 		result.Error = reqErr
-		handler.ResultChannel <- result
+		handler.resultChan <- result
 		return
 	}
 
 	if r == nil {
-		log.Errorf("%v handle reader nil\n", id)
+		log.Warnf("%v handle reader nil\n", id)
 		result.Error = fmt.Errorf("handler got nil reader")
-		handler.ResultChannel <- result
+		handler.resultChan <- result
 		return
 	}
 
@@ -177,9 +309,9 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	result.PrecomputedData.Time = result.Time
 
 	if decodeErr := json.NewDecoder(r).Decode(&result.Astats); decodeErr != nil {
-		log.Errorf("%s procnetdev decode error '%v'\n", id, decodeErr)
+		log.Warnf("%s procnetdev decode error '%v'\n", id, decodeErr)
 		result.Error = decodeErr
-		handler.ResultChannel <- result
+		handler.resultChan <- result
 		return
 	}
 
@@ -191,8 +323,6 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 		log.Warnf("addkbps %s inf.speed empty\n", id)
 	}
 
-	log.Debugf("poll %v %v handle decode end\n", pollID, time.Now())
-
 	if reqErr != nil {
 		result.Error = reqErr
 		log.Errorf("addkbps handle %s error '%v'\n", id, reqErr)
@@ -201,13 +331,10 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 	}
 
 	if handler.Precompute() {
-		log.Debugf("poll %v %v handle precompute start\n", pollID, time.Now())
 		result = handler.precompute(result)
-		log.Debugf("poll %v %v handle precompute end\n", pollID, time.Now())
 	}
-	log.Debugf("poll %v %v handle write start\n", pollID, time.Now())
-	handler.ResultChannel <- result
-	log.Debugf("poll %v %v handle end\n", pollID, time.Now())
+
+	handler.resultChan <- result
 }
 
 // outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
@@ -254,7 +381,7 @@ func (handler Handler) precompute(result Result) Result {
 		var err error
 		stats, err = processStat(result.ID, stats, todata, stat, value, result.Time)
 		if err != nil && err != dsdata.ErrNotProcessedStat {
-			log.Errorf("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
+			log.Infof("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
 			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
 		}
 	}
@@ -263,7 +390,6 @@ func (handler Handler) precompute(result Result) Result {
 }
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-// TODO fix this being crazy slow. THIS IS THE BOTTLENECK
 func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
@@ -375,7 +501,6 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		}
 		stat.OutBytes.Value += int64(v)
 	case "is_available":
-		log.Debugln("got is_available")
 		v, ok := val.(bool)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)
@@ -420,7 +545,7 @@ func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) err
 		}
 		stat.ErrorString.Value += v + ", "
 	case "tps_total":
-		v, ok := val.(int64)
+		v, ok := val.(float64)
 		if !ok {
 			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
 		}

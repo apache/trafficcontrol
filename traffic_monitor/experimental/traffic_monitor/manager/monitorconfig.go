@@ -137,18 +137,10 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 	return time.Duration(t) * time.Millisecond
 }
 
+var healthPollCount int
+
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
 func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config) (time.Duration, time.Duration, time.Duration, error) {
-	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["health.polling.interval"]
-	if !healthPollIntervalExists {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
-	}
-	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
-	if !healthPollIntervalIsInt {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'health.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", healthPollIntervalI, healthPollIntervalI)
-	}
-	healthPollInterval := trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
-
 	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
 	if !peerPollIntervalExists {
 		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'peers.polling.interval', not setting config changes.\n")
@@ -159,22 +151,29 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 	}
 	peerPollInterval := trafficOpsPeerPollIntervalToDuration(int(peerPollIntervalInt))
 
-	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["stat.polling.interval"]
+	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["health.polling.interval"]
 	if !statPollIntervalExists {
-		log.Warnf("Traffic Ops Monitor config missing 'stat.polling.interval', using health for stat.\n")
-		statPollIntervalI = healthPollIntervalI
+		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
 	}
 	statPollIntervalInt, statPollIntervalIsInt := statPollIntervalI.(float64)
 	if !statPollIntervalIsInt {
-		log.Warnf("Traffic Ops Monitor config 'stat.polling.interval' value '%v' type %T is not an integer, using health for stat\n", statPollIntervalI, statPollIntervalI)
-		statPollIntervalInt = healthPollIntervalInt
+		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'health.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", statPollIntervalI, statPollIntervalI)
 	}
 	statPollInterval := trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
 
-	// Formerly, only 'health' polling existed. If TO still has old configuration and doesn't have a 'stat' parameter, this allows us to assume the 'health' poll is slow, and sets it to the stat poll (which used to be the only poll, getting all astats data) to the given presumed-slow health poll, and set the now-fast-and-small health poll to a short fraction of that.
-	if healthPollIntervalExists && !statPollIntervalExists {
-		healthPollInterval = time.Duration(float64(healthPollInterval) / float64(cfg.HealthToStatRatio))
+	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
+	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
+	if !healthPollIntervalExists {
+		if healthPollCount == 0 { //only log this once
+			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
+			healthPollCount++
+		}
+		healthPollIntervalInt = statPollIntervalInt
+	} else if !healthPollIntervalIsInt {
+		log.Warnf("Traffic Ops Monitor config 'heartbeat.polling.interval' value '%v' type %T is not an integer, using health for heartbeat\n", statPollIntervalI, statPollIntervalI)
+		healthPollIntervalInt = statPollIntervalInt
 	}
+	healthPollInterval := trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
 
 	return healthPollInterval, peerPollInterval, statPollInterval, nil
 }
@@ -230,14 +229,14 @@ func monitorConfigListen(
 			r := strings.NewReplacer(
 				"${hostname}", srv.IP,
 				"${interface_name}", srv.InterfaceName,
-				"application=system", "application=plugin.remap",
-				"application=", "application=plugin.remap",
+				"application=plugin.remap", "application=system",
+				"application=", "application=system",
 			)
 			url = r.Replace(url)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
 			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Timeout: connTimeout}
-			r = strings.NewReplacer("application=plugin.remap", "application=")
+			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Timeout: connTimeout}
 		}

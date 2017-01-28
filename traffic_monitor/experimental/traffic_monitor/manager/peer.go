@@ -20,11 +20,18 @@ package manager
  */
 
 import (
+	"fmt"
 	"sort"
+	"strings"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/common/util"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/peer"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopsdata"
 )
 
 // StartPeerManager listens for peer results, and when it gets one, it adds it to the peerStates list, and optimistically combines the good results into combinedStates
@@ -32,43 +39,84 @@ func StartPeerManager(
 	peerChan <-chan peer.Result,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
-) peer.CRStatesThreadsafe {
+	events health.ThreadsafeEvents,
+	peerOptimistic bool,
+	toData todata.TODataThreadsafe,
+	cfg config.Config,
+) (peer.CRStatesThreadsafe, health.ThreadsafeEvents) {
 	combinedStates := peer.NewCRStatesThreadsafe()
+	overrideMap := map[enum.CacheName]bool{}
+
 	go func() {
-		for crStatesResult := range peerChan {
-			peerStates.Set(crStatesResult.ID, crStatesResult.PeerStats)
-			combineCrStates(peerStates.Get(), localStates.Get(), combinedStates)
-			crStatesResult.PollFinished <- crStatesResult.PollID
+		for peerResult := range peerChan {
+			comparePeerState(events, peerResult, peerStates)
+			peerStates.Set(peerResult)
+			combineCrStates(events, peerOptimistic, peerStates, localStates.Get(), combinedStates, overrideMap, toData)
+			peerResult.PollFinished <- peerResult.PollID
 		}
 	}()
-	return combinedStates
+	return combinedStates, events
+}
+
+func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {
+	if result.Available != peerStates.GetPeerAvailability(result.ID) {
+		events.Add(health.Event{Time: result.Time, Unix: result.Time.Unix(), Description: util.JoinErrorsString(result.Errors), Name: result.ID.String(), Hostname: result.ID.String(), Type: "Peer", Available: result.Available})
+	}
 }
 
 // TODO JvD: add deliveryservice stuff
-func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe) {
+func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TODataThreadsafe) {
+	toDataCopy := toData.Get()
+
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
-		downVotes := 0 // TODO JvD: change to use parameter when deciding to be optimistic or pessimistic.
+		var overrideCondition string
 		available := false
+		override := overrideMap[cacheName]
+
 		if localCacheState.IsAvailable {
-			// log.Infof(cacheName, " is available locally - setting to IsAvailable: true")
 			available = true // we don't care about the peers, we got a "good one", and we're optimistic
-		} else {
-			downVotes++ // localStates says it's not happy
-			for _, peerCrStates := range peerStates {
-				if peerCrStates.Caches[cacheName].IsAvailable {
-					// log.Infoln(cacheName, "- locally we think it's down, but", peerName, "says IsAvailable: ", peerCrStates.Caches[cacheName].IsAvailable, "trusting the peer.")
-					available = true // we don't care about the peers, we got a "good one", and we're optimistic
-					break            // one peer that thinks we're good is all we need.
+
+			if override {
+				overrideCondition = "cleared; healthy locally"
+				overrideMap[cacheName] = false
+			}
+		} else if peerOptimistic {
+			if !peerStates.HasAvailablePeers() {
+				if override {
+					overrideCondition = "irrelevant; no peers online"
+					overrideMap[cacheName] = false
+				}
+			} else {
+				onlineOnPeers := make([]string, 0)
+
+				for peer, peerCrStates := range peerStates.GetCrstates() {
+					if peerStates.GetPeerAvailability(peer) {
+						if peerCrStates.Caches[cacheName].IsAvailable {
+							onlineOnPeers = append(onlineOnPeers, peer.String())
+						}
+					}
+				}
+
+				if len(onlineOnPeers) > 0 {
+					available = true
+
+					if !override {
+						overrideCondition = fmt.Sprintf("detected; healthy on (at least) %s", strings.Join(onlineOnPeers, ", "))
+						overrideMap[cacheName] = true
+					}
 				} else {
-					// log.Infoln(cacheName, "- locally we think it's down, and", peerName, "says IsAvailable: ", peerCrStates.Caches[cacheName].IsAvailable, "down voting")
-					downVotes++ // peerStates for this peer doesn't like it
+					if override {
+						overrideCondition = "irrelevant; not online on any peers"
+						overrideMap[cacheName] = false
+					}
 				}
 			}
 		}
-		if downVotes > len(peerStates) {
-			// log.Infoln(cacheName, "-", downVotes, "down votes, setting to IsAvailable: false")
-			available = false
+
+		if overrideCondition != "" {
+			events.Add(health.Event{Time: time.Now(), Unix: time.Now().Unix(), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toDataCopy.ServerTypes[cacheName].String(), Available: available})
 		}
+
 		combinedStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: available})
 	}
 
@@ -79,7 +127,7 @@ func combineCrStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, local
 		}
 		deliveryService.DisabledLocations = localDeliveryService.DisabledLocations
 
-		for peerName, iPeerStates := range peerStates {
+		for peerName, iPeerStates := range peerStates.GetCrstates() {
 			peerDeliveryService, ok := iPeerStates.Deliveryservice[deliveryServiceName]
 			if !ok {
 				log.Warnf("local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)

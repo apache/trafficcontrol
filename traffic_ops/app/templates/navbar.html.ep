@@ -36,7 +36,7 @@
         </li>
 	  	<li><a id="nav-p">Parameters</a>
 	  	<ul>
-  			<li><a href="/parameters/profile/global">Global Profile</a></li>
+  			<li><a href="/parameters/profile/GLOBAL">Global Profile</a></li>
   			<li><a href="/parameters/cachegroup/all">All Cache Groups</a></li>
   			<li><a href="/parameters/profile/all">All Profiles</a></li>
   			<li><a href="/profiles">Select Profile</a></li>
@@ -77,7 +77,7 @@
 	  <li><a id="nav-us"><div>Help</div></a>
 	  	<ul>
 	  		<li><a href="/help/about">About</a></li>
-	  		<li><a href="https://github.com/Comcast/traffic_control/milestones">Release Notes</a></li>
+	  		<li><a href="https://github.com/apache/incubator-trafficcontrol/milestones">Release Notes</a></li>
 	  		<li><a href="/logout" id="nav-lo">Logout</a></li>
 	  	</ul>
 	  </li>

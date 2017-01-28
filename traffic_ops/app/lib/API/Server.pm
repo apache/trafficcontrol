@@ -190,7 +190,7 @@ sub update {
 		return $self->forbidden();
 	}
 
-	my ( $is_valid, $result ) = $self->is_server_valid($params);
+	my ( $is_valid, $result ) = $self->is_server_valid($params, $id);
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
@@ -850,7 +850,7 @@ sub get_servers_by_cdn {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
+	$servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
 	return ( $forbidden, $servers );
 }
 
@@ -880,16 +880,46 @@ sub get_servers_by_cachegroup {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { cachegroup => $cg_id } );
+	$servers = $self->db->resultset('Server')->search( { cachegroup => $cg_id } );
 	return ( $forbidden, $servers );
 }
 
 sub is_server_valid {
-	my $self   = shift;
-	my $params = shift;
+	my $self   	= shift;
+	my $params 	= shift;
+	my $id 		= shift;
 
 	if ( !$self->is_valid_server_type( $params->{typeId} ) ) {
 		return ( 0, "Invalid server type" );
+	}
+
+	my $ip_used_for_profile;
+	if ($id) {
+		$ip_used_for_profile = $self->db->resultset('Server')
+			->search( { -and => [ 'ip_address' => $params->{ipAddress} , 'profile' => $params->{profileId}, 'id' => { '!=' => $id } ] })->single();
+	} else {
+		$ip_used_for_profile = $self->db->resultset('Server')
+			->search( { -and => [ 'ip_address' => $params->{ipAddress} , 'profile' => $params->{profileId} ] })->single();
+	}
+
+	if ($ip_used_for_profile) {
+		return ( 0, "IP Address already in use for that profile" );
+	}
+
+	my $ip6_used_for_profile;
+	if (defined($params->{ip6Address}) && $params->{ip6Address} ne "") {
+		if ($id) {
+			$ip6_used_for_profile = $self->db->resultset('Server')
+				->search( { -and => [ 'ip6_address' => $params->{ip6Address} , 'profile' => $params->{profileId}, 'id' => { '!=' => $id } ] })->single();
+		} else {
+			$ip6_used_for_profile = $self->db->resultset('Server')
+				->search( { -and => [ 'ip6_address' => $params->{ip6Address} , 'profile' => $params->{profileId} ] })->single();
+		}
+
+	}
+
+	if ($ip6_used_for_profile) {
+		return ( 0, "IP6 Address already in use for that profile" );
 	}
 
 	my $rules = {
