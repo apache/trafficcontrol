@@ -434,8 +434,14 @@ sub capacity {
 
 sub health {
 	my $self = shift;
+	my $args = {};
 
-	return $self->get_cache_health();
+	my $cdn_name = $self->param('name');
+	if (defined($cdn_name)) {
+		$args->{'cdn_name'} = $cdn_name;
+	}
+
+	return $self->get_cache_health($args);
 }
 
 sub routing {
