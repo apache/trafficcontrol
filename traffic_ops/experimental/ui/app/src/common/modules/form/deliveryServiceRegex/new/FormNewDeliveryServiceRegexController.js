@@ -17,20 +17,23 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes', [])
-	.controller('DeliveryServiceRegexesController', require('./DeliveryServiceRegexesController'))
-	.config(function($stateProvider, $urlRouterProvider) {
-		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.regexes', {
-				url: '/{deliveryServiceId}/regexes',
-				abstract: true,
-				views: {
-					deliveryServicesContent: {
-						templateUrl: 'modules/private/configure/deliveryServices/regexes/deliveryServiceRegexes.tpl.html',
-						controller: 'DeliveryServiceRegexesController'
-					}
-				}
-			})
-		;
-		$urlRouterProvider.otherwise('/');
-	});
+var FormNewDeliveryServiceRegexController = function(deliveryService, regex, $scope, $controller, deliveryServiceRegexService) {
+
+	// extends the FormDeliveryServiceRegexController to inherit common methods
+	angular.extend(this, $controller('FormDeliveryServiceRegexController', { deliveryService: deliveryService, regex: regex, $scope: $scope }));
+
+	$scope.regexPattern = 'New';
+
+	$scope.settings = {
+		isNew: true,
+		saveLabel: 'Create'
+	};
+
+	$scope.save = function(dsId, regex) {
+		deliveryServiceRegexService.createDeliveryServiceRegex(dsId, regex);
+	};
+
+};
+
+FormNewDeliveryServiceRegexController.$inject = ['deliveryService', 'regex', '$scope', '$controller', 'deliveryServiceRegexService'];
+module.exports = FormNewDeliveryServiceRegexController;

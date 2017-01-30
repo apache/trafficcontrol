@@ -24,7 +24,7 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{deliveryService.displayName}}</a></li>
             <li class="active">Regexes</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="addRegex()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Regex to DS</button>
+        <button class="btn btn-primary pull-right" ng-click="createRegex(deliveryService.id)"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Regex</button>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -34,16 +34,14 @@ under the License.
             <tr class="headings">
                 <th>type</th>
                 <th>pattern</th>
-                <th>setNumber</th>
-                <th></th>
+                <th>order</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="regex in regexes.regexes | orderBy:['setNumber']">
-                <td>{{regex.type}}</td>
+            <tr ng-click="editRegex(deliveryService.id, regex.id)" ng-repeat="regex in regexes | orderBy:['setNumber']">
+                <td>{{regex.typeName}}</td>
                 <td>{{regex.pattern}}</td>
                 <td>{{regex.setNumber}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove from Delivery Service" ng-click="removeRegex()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>
         </table>

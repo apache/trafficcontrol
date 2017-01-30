@@ -17,30 +17,31 @@
  * under the License.
  */
 
-var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, locationUtils) {
+var FormDeliveryServiceRegexController = function(deliveryService, regex, $scope, formUtils, locationUtils, typeService) {
+
+	var getTypes = function() {
+		typeService.getTypes({ useInTable: 'regex' })
+			.then(function(result) {
+				$scope.types = result;
+			});
+	};
 
 	$scope.deliveryService = deliveryService;
 
-	$scope.regexes = regexes;
-
-	$scope.editRegex = function(dsId, regexId) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/' + regexId);
-	};
-
-	$scope.createRegex = function(dsId) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/new');
-	};
+	$scope.regex = regex;
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
-	angular.element(document).ready(function () {
-		$('#regexesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1
-		});
-	});
+	$scope.hasError = formUtils.hasError;
+
+	$scope.hasPropertyError = formUtils.hasPropertyError;
+
+	var init = function () {
+		getTypes();
+	};
+	init();
 
 };
 
-TableDeliveryServiceRegexesController.$inject = ['deliveryService', 'regexes', '$scope', 'locationUtils', 'deliveryServiceRegexService'];
-module.exports = TableDeliveryServiceRegexesController;
+FormDeliveryServiceRegexController.$inject = ['deliveryService', 'regex', '$scope', 'formUtils', 'locationUtils', 'typeService'];
+module.exports = FormDeliveryServiceRegexController;
