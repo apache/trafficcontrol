@@ -57,7 +57,7 @@ function start_staging_mysql_server() {
   echo "Mysql Host is started..."
   echo $separator
 
-  #Wait for Postgres to come up
+  #Ensure the Postgres instance is up
   export WAITER_HOST=$POSTGRES_HOST
   export WAITER_PORT=$POSTGRES_PORT
   docker-compose -p trafficops -f waiter.yml up --build
@@ -79,7 +79,7 @@ function migrate_data_from_mysql_to_postgres() {
 
 function run_postgres_datatypes_conversion() {
   echo $separator
-  echo "Starting Mysql to Postgres Migration..."
+  echo "Starting Mysql to Postgres Datatype Conversion..."
   echo $separator
   docker-compose -p trafficops -f convert.yml up --build
 }
@@ -89,12 +89,12 @@ function clean() {
   echo $separator
   echo "Cleaning up..."
   echo $separator
-  docker kill trafficops_mysql_host_1
+  #docker kill trafficops_mysql_host_1
   docker-compose -p trafficops -f mysql-to-postgres.yml down --remove-orphans
   docker-compose -p trafficops -f convert.yml down --remove-orphans
-  docker rm trafficops_mysql-to-postgres_1 
-  docker rm trafficops_convert_1
-  docker rm trafficops_mysql_host_1
+  #docker rm trafficops_mysql-to-postgres_1 
+  #docker rm trafficops_convert_1
+  #docker rm trafficops_mysql_host_1
   docker rmi trafficops_mysql-to-postgres
   docker rmi trafficops_convert 
   docker rmi trafficops_mysql_host

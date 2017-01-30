@@ -23,8 +23,8 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - '$PGDATA_VOLUME:/opt/postgresql/data/pgdata'
-      - '$PGLOGS_VOLUME:/var/log/postgresql'
+      - ./pgdata:/opt/postgresql/data/pgdata
+      - ./postgres_logs:/var/log/postgresql
     networks:
       - default
 

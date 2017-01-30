@@ -47,9 +47,7 @@ function start_staging_postgres_server() {
 
   docker-compose -v -p trafficops -f postgres.yml down
 
-  echo "PGDATA_VOLUME: $PGDATA_VOLUME"
-  echo "PGLOGS_VOLUME: $PGLOGS_VOLUME"
-  PGLOGS_VOLUME=$PGLOGS_VOLUME PGDATA_VOLUME=$PGDATA_VOLUME docker-compose -p trafficops -f postgres.yml up  -d
+  docker-compose -p trafficops -f postgres.yml up  -d --build
 
 }
 
