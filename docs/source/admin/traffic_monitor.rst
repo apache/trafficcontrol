@@ -30,7 +30,7 @@ The following are requirements to ensure an accurate set up:
 * perl-JSON
 * perl-WWW-Curl
 
-#. Enter the Traffic Monitor server into Traffic Ops. Set the 'Type' field to 'RASCAL'.
+#. Add the Traffic Monitor server into Traffic Ops using 'Servers' -> 'Add Server'. Set the 'Type' field to 'RASCAL'.
 
 #. Make sure the FQDN of the Traffic Monitor is resolvable in DNS.
 
@@ -133,7 +133,7 @@ The following are requirements to ensure an accurate set up:
    with the address of the traffic monitor being installed, so that the traffic servers will allow this Traffic Monitor
    to access the astats plugin.
    For details see :ref:`rl-param-prof` in the *Configuring Traffic Ops* section.
-   
+
 #. Start Tomcat: ``sudo service tomcat start`` ::
 
     Using CATALINA_BASE: /opt/tomcat
@@ -146,7 +146,10 @@ The following are requirements to ensure an accurate set up:
 
 #. Configure tomcat to start automatically: ``sudo chkconfig tomcat on``
 
-#. Verify Traffic Monitor is running by pointing your browser to port 80 on the Traffic Monitor host.
+#. Verify Traffic Monitor is running by pointing your browser to port 80 on the Traffic Monitor host:
+
+   * The 'Cache States' tab should display all Mid and Edge caches configured in Traffic Ops.
+   * The 'DeliveryService States' tab should display all delivery services configured in Traffic Ops.
 
 #. In Traffic Ops servers table, click 'Edit' for this server, then click 'Online'.
 
