@@ -98,6 +98,7 @@ function clean() {
   docker rmi trafficops_mysql-to-postgres
   docker rmi trafficops_convert 
   docker rmi trafficops_mysql_host
+  docker rmi trafficops_waiter
   docker rmi mysql:5.6 
   docker rmi dimitri/pgloader:latest
 }
