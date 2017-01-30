@@ -90,19 +90,20 @@ function clean() {
   echo "Cleaning up..."
   echo $separator
   #docker kill trafficops_mysql_host_1
-  docker-compose -p trafficops -f mysql-to-postgres.yml down --remove-orphans
-  docker-compose -p trafficops -f convert.yml down --remove-orphans
+  docker-compose -p trafficops -f mysql-to-postgres.yml down 
+  docker-compose -p trafficops -f convert.yml down
   #docker rm trafficops_mysql-to-postgres_1 
   #docker rm trafficops_convert_1
   #docker rm trafficops_mysql_host_1
   docker rmi trafficops_mysql-to-postgres
   docker rmi trafficops_convert 
-  docker rmi trafficops_mysql_host
-  docker rmi trafficops_waiter
   docker rmi mysql:5.6 
   docker rmi dimitri/pgloader:latest
+  docker rmi trafficops_mysql_host --force
+  docker rmi trafficops_waiter --force
 }
 
+clean
 start_staging_mysql_server
 #display_env
 migrate_data_from_mysql_to_postgres
