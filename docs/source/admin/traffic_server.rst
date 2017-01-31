@@ -19,45 +19,42 @@ Traffic Server Administration
 Installing Traffic Server
 =========================
 
-#. Get the Traffic Server RPM and the astats RPM.
+#.  Get the Traffic Server RPM and the astats RPM.
 
-   Sample command: ::
+    Sample command: ::
 
-      wget http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/trafficserver-5.3.2-759.ee14bbe.el6.x86_64.rpm
-      wget http://traffic-control-cdn.net/downloads/1.6.1/RELEASE-1.6.1/astats_over_http-1.2-8.el6.x86_64.rpm
+        wget http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/trafficserver-5.3.2-759.ee14bbe.el6.x86_64.rpm
+        wget http://traffic-control-cdn.net/downloads/1.6.1/RELEASE-1.6.1/astats_over_http-1.2-8.el6.x86_64.rpm
 
-   (astats was not released as part of 1.7, so in this examples 1.6.1 was used)
-#. Install Traffic Server and astats: ::
+    (astats was not released as part of 1.7, so in this examples 1.6.1 was used)
+#.  Install Traffic Server and astats: ::
 
-    sudo yum -y install trafficserver-*.rpm astats_over_http*.rpm
+        sudo yum -y install trafficserver-*.rpm astats_over_http*.rpm
 
-#. Add the server using the Traffic Ops web interface:
+#.  Add the server using the Traffic Ops web interface:
 
-   #. Select **Servers**.
-   #. Scroll to the bottom of the page and click **Add Server**.
-   #. Complete the *Required Info:* section:
-      * Set 'Interface Name' to the name of the interface from which traffic server delivers content. 
-      * Set 'Type' to 'MID' or 'EDGE'.
+    #. Select **Servers**.
+    #. Scroll to the bottom of the page and click **Add Server**.
+    #. Complete the "Required Info:" section:
+        * Set 'Interface Name' to the name of the interface from which traffic server delivers content. 
+        * Set 'Type' to 'MID' or 'EDGE'.
 
-   #. Click **Submit**.
-   #. Click **Save**.
-   #. Click **Online Server**.
+    #. Click **Submit**.
+    #. Click **Save**.
+    #. Click **Online Server**. 
+    #. Verify that the server status is now listed as **Reported**
 
-#. Install the ORT script and run it in 'badass' mode to create the initial configuration, see :ref:`reference-traffic-ops-ort` 
+#.  Install the ORT script and run it in 'badass' mode to create the initial configuration, see :ref:`reference-traffic-ops-ort` 
 
-#. Start the service: ``sudo service trafficserver start``
+#.  Start the service: ``sudo service trafficserver start``
 
-#. Configure traffic server to start automatically: ``sudo chkconfig trafficserver on``
+#.  Configure traffic server to start automatically: ``sudo chkconfig trafficserver on``
 
-#. Verify that the installation is good:
+#.  Verify that the installation is good:
 
-   #. Make sure that the service is running: ``sudo service trafficserver status``
+    #. Make sure that the service is running: ``sudo service trafficserver status``
 
-   #. Assuming a traffic monitor is already installed, login to the traffic monitor, and run the command from it: ::
-
-        curl <traffic-server-name>/_astats
-
-      Make sure you get a json full of values, and not an error.
+    #. Assuming a traffic monitor is already installed, browse to it, and verify that the traffic server appears in the "Cahce States" table, in white.
 
 
 .. _reference-traffic-ops-ort:
@@ -92,36 +89,40 @@ The traffic_ops_ort.pl should be installed on all caches (by puppet or other non
 Installing the ORT script
 --------------------------
 
-#. The ORT script is not a part of the traffic server distribution. You need to get and install in manually. In this sample session, we get it from github: ::
+#.  The ORT script is not a part of the traffic server distribution. In this sample session, we get it manually from github: ::
 
-     sudo mkdir /opt/ort
-     sudo wget -P /opt/ort https://raw.githubusercontent.com/apache/incubator-trafficcontrol/1.7.x/traffic_ops/bin/traffic_ops_ort.pl
-     sudo chmod +x /opt/ort/traffic_ops_ort.pl
+        sudo mkdir /opt/ort
+        sudo wget -P /opt/ort https://raw.githubusercontent.com/apache/incubator-trafficcontrol/1.7.x/traffic_ops/bin/traffic_ops_ort.pl
+        sudo chmod +x /opt/ort/traffic_ops_ort.pl
 
-#. Install modules required by ORT: ``sudo yum -y install perl-JSON perl-Crypt-SSLeay``
+#.  Install modules required by ORT: ``sudo yum -y install perl-JSON perl-Crypt-SSLeay``
 
-#. For initial configuration or when major changes (like a Profile change) need to be made, run the script in "badass mode". All required rpm packages 
-   will be installed, all Traffic Server config files will be fetched and installed, and (if needed) the Traffic Server application will be restarted.  
-   
-   Example run below: ::
+#.  For initial configuration or when major changes (like a Profile change) need to be made, run the script in "badass mode". All required rpm packages 
+    will be installed, all Traffic Server config files will be fetched and installed, and (if needed) the Traffic Server application will be restarted.  
 
-      $ sudo /opt/ort/traffic_ops_ort.pl --dispersion=0 badass warn https://ops.$tcDomain admin:admin123
+    Example run below: ::
 
-   .. Note:: First run gives a lot of state errors that are expected. The "badass" mode fixes these issues. Run it a second time, this should be cleaner.  
-   .. Note:: Many ERROR messages emitted by ORT are actually information messages. Do not panic.
+        $ sudo /opt/ort/traffic_ops_ort.pl --dispersion=0 badass warn https://ops.$tcDomain admin:admin123
 
-#. Create a cron entry for running ort in 'syncds' mode every 15 minutes. 
-   This makes traffic control check periodically if 'Queue Updates' was run on Traffic Ops, and it so, get the updated configuration.
+    .. Note:: First run gives a lot of state errors that are expected. The "badass" mode fixes these issue s. Run it a second time, this should be cleaner.
+       Also, note that many ERROR messages emitted by ORT are actually information messages. Do not panic.
 
-   Run ``sudo crontab -e`` and add the following line ::
+#.  Create a cron entry for running ort in 'syncds' mode every 15 minutes. 
+    This makes traffic control check periodically if 'Queue Updates' was run on Traffic Ops, and it so, get the updated configuration.
 
-  		*/15 * * * * /opt/ort/traffic_ops_ort.pl syncds warn https://traffops.kabletown.net admin:password > /tmp/ort/syncds.log 2>&1
+    Run ``sudo crontab -e`` and add the following line :: 
 
-   .. Note:: In 'syncds' mode, the ort script updates only configurations that might be changed as part of normal operations, such as:
+  	  	*/15 * * * * /opt/ort/traffic_ops_ort.pl syncds warn https://traffops.kabletown.net admin:password > /tmp/ort/syncds.log 2>&1
 
-      * Delivery Services
-      * SSL certificates
-      * Traffic Monitor IP addresses
-      * Logging configuration
-      * More stuff <To be completed>
+    .. Note:: By default, running ort on an edge traffic server waits for it's parent (mid) servers to download their configuration before 
+       it downloads it's own configuration. Because of this, scheduling ort for running every 15 minutes (with 5 minutes default dispersion) means 
+       that it might take up to ~35 minutes for a "Queue Updates" operation to affect all traffic servers.
+
+    .. Note:: In 'syncds' mode, the ort script updates only configurations that might be changed as part of normal operations, such as:
+
+        * Delivery Services
+        * SSL certificates
+        * Traffic Monitor IP addresses
+        * Logging configuration
+        * More stuff <To be completed>
 
