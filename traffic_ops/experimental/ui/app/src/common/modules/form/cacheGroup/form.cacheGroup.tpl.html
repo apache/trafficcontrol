@@ -24,6 +24,7 @@ under the License.
             <li class="active">{{cacheGroupName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
+            <button class="btn btn-primary" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
@@ -35,7 +36,6 @@ under the License.
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="viewAsns()">View ASNs</a></li>
                     <li role="menuitem"><a ng-click="viewParams()">View Parameters</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
                 </ul>
             </div>
         </div>
