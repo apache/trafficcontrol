@@ -25,8 +25,9 @@ under the License.
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <button class="btn btn-primary" ng-show="type.useInTable == 'server'" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
-            <button class="btn btn-primary" ng-show="type.useInTable == 'deliveryservice'" ng-click="viewDeliveryServices()">View Delivery Services &nbsp;&nbsp;<i class="fa fa-server"></i></button>
-            <button class="btn btn-primary" ng-show="type.useInTable == 'cachegroup'" ng-click="viewCacheGroups()">View Cache Groups &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+            <button class="btn btn-primary" ng-show="type.useInTable == 'deliveryservice'" ng-click="viewDeliveryServices()">View Delivery Services</button>
+            <button class="btn btn-primary" ng-show="type.useInTable == 'cachegroup'" ng-click="viewCacheGroups()">View Cache Groups</button>
+            <button class="btn btn-primary" ng-show="type.useInTable == 'staticdnsentry'" ng-click="viewStaticDnsEntries()">View Static DNS Entries</button>
         </div>
         <div class="clearfix"></div>
     </div>

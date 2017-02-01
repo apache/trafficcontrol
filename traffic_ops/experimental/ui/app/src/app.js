@@ -105,6 +105,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/admin/types/servers').name,
         require('./modules/private/admin/types/cacheGroups').name,
         require('./modules/private/admin/types/deliveryServices').name,
+        require('./modules/private/admin/types/staticDnsEntries').name,
         require('./modules/private/admin/users').name,
         require('./modules/private/admin/users/deliveryServices').name,
         require('./modules/private/admin/users/edit').name,
@@ -233,6 +234,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/typeCacheGroups').name,
         require('./common/modules/table/typeDeliveryServices').name,
         require('./common/modules/table/typeServers').name,
+        require('./common/modules/table/typeStaticDnsEntries').name,
         require('./common/modules/table/users').name,
         require('./common/modules/table/userDeliveryServices').name,
 
