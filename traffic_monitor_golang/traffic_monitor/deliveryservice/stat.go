@@ -238,7 +238,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 		stat.CommonStats.IsAvailable.Value = false
 		stat.CommonStats.IsHealthy.Value = false
 		stat.CommonStats.ErrorStr.Value = errStr
-		events.Add(health.Event{Time: time.Now(), Unix: time.Now().Unix(), Description: errStr, Name: dsName.String(), Hostname: dsName.String(), Type: "Delivery Service", Available: stat.CommonStats.IsAvailable.Value})
+		events.Add(health.Event{Time: health.Time(time.Now()), Description: errStr, Name: dsName.String(), Hostname: dsName.String(), Type: "Delivery Service", Available: stat.CommonStats.IsAvailable.Value})
 	}
 
 	dsStats.DeliveryService[dsName] = stat

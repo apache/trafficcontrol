@@ -60,7 +60,7 @@ func StartPeerManager(
 
 func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {
 	if result.Available != peerStates.GetPeerAvailability(result.ID) {
-		events.Add(health.Event{Time: result.Time, Unix: result.Time.Unix(), Description: util.JoinErrorsString(result.Errors), Name: result.ID.String(), Hostname: result.ID.String(), Type: "Peer", Available: result.Available})
+		events.Add(health.Event{Time: health.Time(result.Time), Description: util.JoinErrorsString(result.Errors), Name: result.ID.String(), Hostname: result.ID.String(), Type: "Peer", Available: result.Available})
 	}
 }
 
@@ -114,7 +114,7 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerSt
 		}
 
 		if overrideCondition != "" {
-			events.Add(health.Event{Time: time.Now(), Unix: time.Now().Unix(), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toDataCopy.ServerTypes[cacheName].String(), Available: available})
+			events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toDataCopy.ServerTypes[cacheName].String(), Available: available})
 		}
 
 		combinedStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: available})
