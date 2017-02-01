@@ -52,7 +52,7 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
 		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
 		this.ttl = keyPair.optLong("ttl", defaultTTL);
-		this.name = keyPair.getString("name");
+		this.name = keyPair.getString("name").toLowerCase();
 
 		final Decoder mimeDecoder = getMimeDecoder();
 		try {
