@@ -78,7 +78,8 @@ sub get_cdn_domain {
 			distinct => 1
 		}
 	)->get_column('value')->single();
-	return $cdn_domain;
+	# Always return a lowercase FQDN.
+	return lc($cdn_domain);
 }
 
 sub get_example_urls {
