@@ -101,16 +101,16 @@ sub get_config_metadata {
 		my $scope = $data_obj->{'config_files'}->{$config_file}->{'scope'};
 		my $scope_id;
 		if ( $scope eq 'cdn' ) {
-			$scope_id = $cdn_name;
+			$scope_id = $server->cdn->id;
 		}
 		elsif ( $scope eq 'profile' ) {
-			$scope_id = $server->profile->name;
+			$scope_id = $server->profile->id;
 		}
 		else {
-			$scope_id = $host_name;
+			$scope_id = $server_obj->id;
 		}
-		$data_obj->{'config_files'}->{$config_file}->{'API_URI'} = "api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
-		#$data_obj->{'config_files'}->{$config_file}->{'UI_URL'} = "http://kablelab:3000/genfiles/view/" . $host_name . "/" . $config_file;
+		$data_obj->{'config_files'}->{$config_file}->{'API_URI'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		$data_obj->{'config_files'}->{$config_file}->{'UI_URI'} = "/genfiles/view/" . $host_name . "/" . $config_file;
 	}
 
 	my $file_contents = encode_json($data_obj);
