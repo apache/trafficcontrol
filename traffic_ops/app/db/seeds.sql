@@ -20,6 +20,8 @@ insert into role (id, name, description, priv_level) values (4, 'admin','super-u
 insert into role (id, name, description, priv_level) values (5, 'portal','Portal User', 2) ON CONFLICT DO NOTHING;
 insert into role (id, name, description, priv_level) values (6, 'migrations','database migrations user - DO NOT REMOVE', 20) ON CONFLICT DO NOTHING;
 insert into role (id, name, description, priv_level) values (7, 'federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
+insert into role (id, name, description, priv_level) values (8, 'steering', 'Role for Steering Delivery Services', 15) ON CONFLICT DO NOTHING;
+
 insert into tm_user (username, role,full_name) values ('portal',(select id from role where name='portal'),'Portal User') ON CONFLICT DO NOTHING;
 insert into tm_user (username, role, full_name, token) values ('extension', 3, 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension') ON CONFLICT DO NOTHING;
@@ -32,6 +34,20 @@ insert into type (name, description, use_in_table) values ('RESOLVE6', 'federati
 insert into parameter (name, config_file, value) values ('ttl_max_hours', 'regex_revalidate.config', '672') ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) values ('ttl_min_hours', 'regex_revalidate.config', '48') ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90') ON CONFLICT DO NOTHING;
+
+insert into type (name, description, use_in_table) values ('ANY_MAP', 'No Content Routing - arbitrary remap at the edge, no Traffic Router config', 'deliveryservice') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('ORG_LOC', 'Origin Logical Site', 'cachegroup') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('STEERING', 'Steering Delivery Service', 'deliveryservice') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('STEERING_REGEXP', 'Steering target filter regular expression', 'regex') ON CONFLICT DO NOTHING;
+
+insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT DO NOTHING;
+insert into job_status (name, description) values ('IN_PROGRESS', 'Job is being processed by agents') ON CONFLICT DO NOTHING;
+insert into job_status (name, description) values ('COMPLETED', 'Job has finished') ON CONFLICT DO NOTHING;
+insert into job_status (name, description) values ('CANCELLED', 'Job was cancelled') ON CONFLICT DO NOTHING;
+insert into job_status (name, description) values ('PURGE', 'Initial Purge state') ON CONFLICT DO NOTHING;
+insert into job_agent (name, description, active) values ('dummy','Description of Purge Agent','1') ON CONFLICT DO NOTHING;
+
+insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT DO NOTHING;
 
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
