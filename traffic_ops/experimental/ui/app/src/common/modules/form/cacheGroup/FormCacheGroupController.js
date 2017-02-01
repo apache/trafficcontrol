@@ -55,12 +55,8 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         $location.path($location.path() + '/servers');
     };
 
-    $scope.viewParams = function() {
-        $location.path($location.path() + '/parameters');
-    };
-
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
+    $scope.viewStaticDnsEntries = function() {
+        $location.path($location.path() + '/static-dns-entries');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
