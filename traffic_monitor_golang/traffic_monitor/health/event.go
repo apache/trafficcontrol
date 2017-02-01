@@ -20,22 +20,28 @@ package health
  */
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
+type Time time.Time
+
+func (t Time) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%d", time.Time(t).Unix())), nil
+}
+
 // Event represents an event change in aggregated data. For example, a cache being marked as unavailable.
 type Event struct {
-	Time        time.Time `json:"-"`
-	Index       uint64    `json:"index"`
-	Unix        int64     `json:"time"`
-	Description string    `json:"description"`
-	Name        string    `json:"name"`
-	Hostname    string    `json:"hostname"`
-	Type        string    `json:"type"`
-	Available   bool      `json:"isAvailable"`
+	Time        Time   `json:"time"`
+	Index       uint64 `json:"index"`
+	Description string `json:"description"`
+	Name        string `json:"name"`
+	Hostname    string `json:"hostname"`
+	Type        string `json:"type"`
+	Available   bool   `json:"isAvailable"`
 }
 
 // Events provides safe access for multiple goroutines readers and a single writer to a stored Events slice.
@@ -68,7 +74,7 @@ func (o *ThreadsafeEvents) Get() []Event {
 // Add adds the given event. This is threadsafe for one writer, multiple readers. This MUST NOT be called by multiple threads, as it non-atomically fetches and adds.
 func (o *ThreadsafeEvents) Add(e Event) {
 	// host="hostname", type=EDGE, available=true, msg="REPORTED - available"
-	log.Eventf(e.Time, "host=\"%s\", type=%s, available=%t, msg=\"%s\"", e.Hostname, e.Type, e.Available, e.Description)
+	log.Eventf(time.Time(e.Time), "host=\"%s\", type=%s, available=%t, msg=\"%s\"", e.Hostname, e.Type, e.Available, e.Description)
 	o.m.Lock() // TODO test removing
 	events := copyEvents(*o.events)
 	e.Index = *o.nextIndex
