@@ -133,8 +133,8 @@ func newLastDSStat() dsdata.LastDSStat {
 const BytesPerKilobit = 125
 
 func addLastStat(lastData dsdata.LastStatData, newStat int64, newStatTime time.Time) (dsdata.LastStatData, error) {
-	if newStat == lastData.Stat {
-		return lastData, nil
+	if lastData.Time == newStatTime {
+		return lastData, nil // TODO fix callers to not pass the same stat twice
 	}
 
 	if newStat < lastData.Stat {
@@ -204,7 +204,7 @@ func addLastDSStatTotals(lastStat dsdata.LastDSStat, cachesReporting map[enum.Ca
 }
 
 // addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures, and returns the augmented structures.
-func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats dsdata.LastStats, dsStats dsdata.Stats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents) (dsdata.Stats, dsdata.LastStats) {
+func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastStats dsdata.LastStats, dsStats dsdata.Stats, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[enum.CacheName]cache.PrecomputedData) (dsdata.Stats, dsdata.LastStats) {
 	err := error(nil)
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
@@ -212,10 +212,12 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 	}
 
 	for cacheName, cacheStats := range stat.Caches {
-		lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, dsStatsTime)
-		if err != nil {
-			log.Warnf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
-			continue
+		if _, ok := precomputed[cacheName]; ok {
+			lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, precomputed[cacheName].Time)
+			if err != nil {
+				log.Warnf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
+				continue
+			}
 		}
 		cacheStats.Kbps.Value = lastStat.Caches[cacheName].Bytes.PerSec / BytesPerKilobit
 		stat.Caches[cacheName] = cacheStats
@@ -275,9 +277,9 @@ func addCachePerSecStats(cacheName enum.CacheName, precomputed cache.Precomputed
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats dsdata.Stats, lastStats dsdata.LastStats, dsStatsTime time.Time, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents) (dsdata.Stats, dsdata.LastStats) {
+func addPerSecStats(precomputed map[enum.CacheName]cache.PrecomputedData, dsStats dsdata.Stats, lastStats dsdata.LastStats, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverTypes map[enum.CacheName]enum.CacheType, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents) (dsdata.Stats, dsdata.LastStats) {
 	for dsName, stat := range dsStats.DeliveryService {
-		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, dsStatsTime, serverCachegroups, serverTypes, mc, events)
+		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, serverCachegroups, serverTypes, mc, events, precomputed)
 	}
 	for cacheName, precomputedData := range precomputed {
 		lastStats = addCachePerSecStats(cacheName, precomputedData, lastStats)
@@ -338,7 +340,7 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 		}
 	}
 
-	perSecStats, lastStats := addPerSecStats(precomputed, dsStats, lastStats, now, toData.ServerCachegroups, toData.ServerTypes, mc, events)
+	perSecStats, lastStats := addPerSecStats(precomputed, dsStats, lastStats, toData.ServerCachegroups, toData.ServerTypes, mc, events)
 	log.Infof("CreateStats took %v\n", time.Since(start))
 	perSecStats.Time = time.Now()
 	return perSecStats, lastStats, nil
