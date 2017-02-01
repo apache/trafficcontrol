@@ -1068,6 +1068,10 @@ func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, f
 	return apiPeerStates
 }
 
+type JSONStats struct {
+	Stats Stats `json:"stats"`
+}
+
 // Stats contains statistics data about this running app. Designed to be returned via an API endpoint.
 type Stats struct {
 	MaxMemoryMB         uint64 `json:"Max Memory (MB),string"`
@@ -1135,7 +1139,7 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.MemTotalBytes = memStats.TotalAlloc
 	s.MemSysBytes = memStats.Sys
 
-	return json.Marshal(s)
+	return json.Marshal(JSONStats{Stats: s})
 }
 
 type StatSummary struct {
