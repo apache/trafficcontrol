@@ -159,7 +159,7 @@ sub register {
 				cachegroups  => [],
 			};
 
-			$self->app->log->debug("get_cache_health() - " . 
+			$self->app->log->trace("get_cache_health() - " . 
 				Data::Dumper->Dump([$args, [keys(%{$rascal_data})]], [qw(args rascal_keys)]));
 
 			my $cachegroup_data = {};
