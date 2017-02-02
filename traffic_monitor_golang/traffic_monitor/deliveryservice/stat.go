@@ -138,11 +138,15 @@ func addLastStat(lastData dsdata.LastStatData, newStat int64, newStatTime time.T
 	}
 
 	if newStat < lastData.Stat {
-		return lastData, fmt.Errorf("new stat '%d'@'%v' value less than last stat '%d'@'%v'", lastData.Stat, lastData.Time, newStat, newStatTime)
+		// if a new stat comes in lower than current, assume rollover, set the 'last stat' to the new one, but leave PerSec what it was (not negative).
+		lastData.Stat = newStat
+		lastData.Time = newStatTime
+		err := fmt.Errorf("new stat '%d'@'%v' value less than last stat '%d'@'%v'", newStat, newStatTime, lastData.Stat, lastData.Time)
+		return lastData, err
 	}
 
 	if newStatTime.Before(lastData.Time) {
-		return lastData, fmt.Errorf("new stat '%d'@'%v' time less than last stat '%d'@'%v'", lastData.Stat, lastData.Time, newStat, newStatTime)
+		return lastData, fmt.Errorf("new stat '%d'@'%v' time less than last stat '%d'@'%v'", newStat, newStatTime, lastData.Stat, lastData.Time)
 	}
 
 	if lastData.Stat != 0 {
@@ -215,7 +219,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 		if _, ok := precomputed[cacheName]; ok {
 			lastStat.Caches[cacheName], err = addLastStats(lastStat.Caches[cacheName], cacheStats, precomputed[cacheName].Time)
 			if err != nil {
-				log.Warnf("%v adding kbps for cache %v: %v", dsName, cacheName, err)
+				log.Warnf("%v adding per-second stats for cache %v: %v", dsName, cacheName, err)
 				continue
 			}
 		}
