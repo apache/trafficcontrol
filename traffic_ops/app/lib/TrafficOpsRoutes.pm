@@ -422,6 +422,9 @@ sub api_routes {
 	$r->put("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#update', namespace => $namespace );
 	$r->delete("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#delete', namespace => $namespace );
 
+	# -- CDNS: QUEUE UPDATES
+	$r->post("/api/$version/cdns/:id/queue_update")->over( authenticated => 1 )->to( 'Cdn#queue_updates', namespace => $namespace );
+
 	# -- CDNS: HEALTH
 	$r->get("/api/$version/cdns/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
 	$r->get("/api/$version/cdns/:name/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
