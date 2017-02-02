@@ -110,7 +110,6 @@ sub get_config_metadata {
 			$scope_id = $server_obj->id;
 		}
 		$data_obj->{'config_files'}->{$config_file}->{'API_URI'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
-		$data_obj->{'config_files'}->{$config_file}->{'UI_URI'} = "/genfiles/view/" . $host_name . "/" . $config_file;
 	}
 
 	my $file_contents = encode_json($data_obj);
