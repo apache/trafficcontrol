@@ -331,6 +331,59 @@ CDN
 
 |
 
+**POST /api/1.2/cdns/{:id}/queue_update**
+
+  Queue or dequeue updates for all servers assigned to a specific CDN.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin or oper
+
+  **Request Route Parameters**
+
+  +-----------------+----------+----------------------+
+  | Name            | Required | Description          |
+  +=================+==========+======================+
+  | id              | yes      | the cdn id.          |
+  +-----------------+----------+----------------------+
+
+  **Request Properties**
+
+  +--------------+---------+-----------------------------------------------+
+  | Name         | Type    | Description                                   |
+  +==============+=========+===============================================+
+  | action       | string  | queue or dequeue                              |
+  +--------------+---------+-----------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "action": "queue"
+    }
+
+
+  **Response Properties**
+
+  +-----------------+---------+----------------------------------------------------+
+  | Name            | Type    | Description                                        |
+  +=================+=========+====================================================+
+  | action          | string  | The action processed, queue or dequeue.            |
+  +-----------------+---------+----------------------------------------------------+
+  | cdnId           | integer | cdn id                                             |
+  +-----------------+---------+----------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": {
+            "action": "queue",
+            "cdn": 1
+        }
+    }
+
+|
+
+
 Health
 ++++++
 
