@@ -376,6 +376,7 @@ type LastDSStat struct {
 	CacheGroups map[enum.CacheGroupName]LastStatsData
 	Type        map[enum.CacheType]LastStatsData
 	Total       LastStatsData
+	Available   bool
 }
 
 // Copy performs a deep copy of this LastDSStat object.
@@ -385,6 +386,7 @@ func (a LastDSStat) Copy() LastDSStat {
 		Type:        map[enum.CacheType]LastStatsData{},
 		Caches:      map[enum.CacheName]LastStatsData{},
 		Total:       a.Total,
+		Available:   a.Available,
 	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v

@@ -236,15 +236,32 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 		stat.Types[cacheType] = addLastStatsToStatCacheStats(stat.Types[cacheType], cacheTypeStat)
 	}
 	stat.TotalStats = addLastStatsToStatCacheStats(stat.TotalStats, lastStat.Total)
-	lastStats.DeliveryServices[dsName] = lastStat
-	errStr := getDsErrString(dsName, stat.TotalStats, mc)
-	if errStr != "" {
+
+	dsErr := getDSErr(dsName, stat.TotalStats, mc)
+	if dsErr != nil {
 		stat.CommonStats.IsAvailable.Value = false
 		stat.CommonStats.IsHealthy.Value = false
-		stat.CommonStats.ErrorStr.Value = errStr
-		events.Add(health.Event{Time: health.Time(time.Now()), Description: errStr, Name: dsName.String(), Hostname: dsName.String(), Type: "Delivery Service", Available: stat.CommonStats.IsAvailable.Value})
+		stat.CommonStats.ErrorStr.Value = err.Error()
 	}
 
+	getEvent := func(desc string) health.Event {
+		return health.Event{
+			Time:        health.Time(time.Now()),
+			Description: desc,
+			Name:        dsName.String(),
+			Hostname:    dsName.String(),
+			Type:        "Delivery Service",
+			Available:   stat.CommonStats.IsAvailable.Value,
+		}
+	}
+	if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true {
+		events.Add(getEvent(dsErr.Error()))
+	} else if stat.CommonStats.IsAvailable.Value == true && lastStat.Available == false {
+		events.Add(getEvent("REPORTED - available"))
+	}
+	lastStat.Available = stat.CommonStats.IsAvailable.Value
+
+	lastStats.DeliveryServices[dsName] = lastStat
 	dsStats.DeliveryService[dsName] = stat
 	return dsStats, lastStats
 }
@@ -350,15 +367,12 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 	return perSecStats, lastStats, nil
 }
 
-func getDsErrString(dsName enum.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) string {
-	tpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalTPSThreshold
-	if tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
-		return fmt.Sprintf("total.tps_total too high (%v > %v)", dsStats.TpsTotal.Value, tpsThreshold)
+func getDSErr(dsName enum.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) error {
+	if tpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalTPSThreshold; tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
+		return fmt.Errorf("total.tps_total too high (%v > %v)", dsStats.TpsTotal.Value, tpsThreshold)
 	}
-
-	kbpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalKbpsThreshold
-	if kbpsThreshold > 0 && dsStats.Kbps.Value > float64(kbpsThreshold) {
-		return fmt.Sprintf("total.kbps too high (%v > %v)", dsStats.Kbps.Value, kbpsThreshold)
+	if kbpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalKbpsThreshold; kbpsThreshold > 0 && dsStats.Kbps.Value > float64(kbpsThreshold) {
+		return fmt.Errorf("total.kbps too high (%v > %v)", dsStats.Kbps.Value, kbpsThreshold)
 	}
-	return ""
+	return nil
 }
