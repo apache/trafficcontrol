@@ -235,10 +235,10 @@ func monitorConfigListen(
 			url = r.Replace(url)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Timeout: connTimeout}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout}
 			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Timeout: connTimeout}
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout}
 		}
 
 		for _, srv := range monitorConfig.TrafficMonitor {
@@ -250,7 +250,7 @@ func monitorConfigListen(
 			}
 			// TODO: the URL should be config driven. -jse
 			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			peerURLs[srv.HostName] = poller.PollConfig{URL: url} // TODO determine timeout.
+			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
 		}
 
 		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: statPollInterval}

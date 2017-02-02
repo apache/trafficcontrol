@@ -50,6 +50,7 @@ type HttpPoller struct {
 
 type PollConfig struct {
 	URL     string
+	Host    string
 	Timeout time.Duration
 	Handler handler.Handler
 }
@@ -151,6 +152,7 @@ type HTTPPollInfo struct {
 	Timeout  time.Duration
 	ID       string
 	URL      string
+	Host     string
 	Handler  handler.Handler
 }
 
@@ -186,7 +188,7 @@ func (p HttpPoller) SleepPoll() {
 				fetcher.Client = &c // copy the client, so we don't change other fetchers.
 				fetcher.Client.Timeout = info.Timeout
 			}
-			go sleepPoller(info.Interval, info.ID, info.URL, fetcher, kill)
+			go sleepPoller(info.Interval, info.ID, info.URL, info.Host, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
@@ -202,7 +204,7 @@ func mustDie(die <-chan struct{}) bool {
 }
 
 // TODO iterationCount and/or p.TickChan?
-func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+func sleepPoller(interval time.Duration, id string, url string, host string, fetcher fetcher.Fetcher, die <-chan struct{}) {
 	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
@@ -220,7 +222,7 @@ func sleepPoller(interval time.Duration, id string, url string, fetcher fetcher.
 			pollId := atomic.AddUint64(&debugPollNum, 1)
 			pollFinishedChan := make(chan uint64)
 			log.Debugf("poll %v %v start\n", pollId, time.Now())
-			go fetcher.Fetch(id, url, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			go fetcher.Fetch(id, url, host, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 			<-pollFinishedChan
 		case <-die:
 			tick.Stop()
@@ -257,6 +259,7 @@ func (p HttpPoller) InsomniacPoll() {
 				Interval: newCfg.Interval - InsomniacPollerEmptySleepDuration,
 				ID:       id,
 				URL:      pollCfg.URL,
+				Host:     pollCfg.Host,
 				Timeout:  pollCfg.Timeout,
 			})
 		}
@@ -295,7 +298,7 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 		// TODO change pollFinishedChan to callback, for performance
 		pollFinishedChan := make(chan uint64)
 
-		go fetchers[p.Info.ID].Fetch(p.Info.ID, p.Info.URL, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+		go fetchers[p.Info.ID].Fetch(p.Info.ID, p.Info.URL, p.Info.Host, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 		<-pollFinishedChan
 		now := time.Now()
 		p.Next = timeMax(start.Add(p.Info.Interval), now)
@@ -362,6 +365,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval: new.Interval,
 				ID:       id,
 				URL:      pollCfg.URL,
+				Host:     pollCfg.Host,
 				Timeout:  pollCfg.Timeout,
 			})
 		}
@@ -378,6 +382,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval: new.Interval,
 				ID:       id,
 				URL:      newPollCfg.URL,
+				Host:     newPollCfg.Host,
 				Timeout:  newPollCfg.Timeout,
 			})
 		}
@@ -390,6 +395,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval: new.Interval,
 				ID:       id,
 				URL:      newPollCfg.URL,
+				Host:     newPollCfg.Host,
 				Timeout:  newPollCfg.Timeout,
 			})
 		}
