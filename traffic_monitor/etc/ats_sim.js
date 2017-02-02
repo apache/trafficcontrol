@@ -252,7 +252,7 @@ function getData(request) {
 	ret.ats["proxy.process.cache.volume_1.bytes_used"] = v1_bytes_used; 
 	ret.ats["proxy.process.cache.volume_1.bytes_total"] = v1_bytes_total;
 
-	if (server_name in cr_config.contentServers) {
+	if (cr_config && cr_config.contentServers && server_name in cr_config.contentServers) {
 		if (debug) console.log("Attempting to build stats for " + server_name);
 
 		for (var delivery_service in cr_config.contentServers[server_name]['deliveryServices']) {
