@@ -31,7 +31,7 @@ import (
 )
 
 type Fetcher interface {
-	Fetch(string, string, uint64, chan<- uint64)
+	Fetch(id string, url string, host string, pollId uint64, pollFinishedChan chan<- uint64)
 }
 
 type HttpFetcher struct {
@@ -53,12 +53,13 @@ type Counters struct {
 	Pending *gmx.Gauge
 }
 
-func (f HttpFetcher) Fetch(id string, url string, pollId uint64, pollFinishedChan chan<- uint64) {
+func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, pollFinishedChan chan<- uint64) {
 	log.Debugf("poll %v %v fetch start\n", pollId, time.Now())
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
 	req.Header.Set("User-Agent", "traffic_monitor/1.0") // TODO change to 2.0?
 	req.Header.Set("Connection", "keep-alive")
+	req.Host = host
 	if f.Pending != nil {
 		f.Pending.Inc()
 	}
