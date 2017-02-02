@@ -194,7 +194,7 @@ func processStatResults(
 	statResultHistoryThreadsafe.Set(statResultHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
 
-	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc, events)
+	newDsStats, newLastStats, err := ds.CreateStats(precomputedData, toData, combinedStates, lastStats.Get().Copy(), time.Now(), mc, events, localStates)
 	if err != nil {
 		errorCount.Inc()
 		log.Errorf("getting deliveryservice: %v\n", err)
