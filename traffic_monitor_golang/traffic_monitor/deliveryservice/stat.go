@@ -244,6 +244,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 		stat.CommonStats.ErrorStr.Value = dsErr.Error()
 
 	}
+	//it's ok to ignore the 'ok' return here.  If the DS doesn't exist, an empty struct will be returned and we can use it.
 	dsState, _ := states.GetDeliveryService(dsName)
 	dsState.IsAvailable = stat.CommonStats.IsAvailable.Value
 	states.SetDeliveryService(dsName, dsState)
