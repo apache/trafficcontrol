@@ -44,7 +44,7 @@ func setStaticData(dsStats dsdata.Stats, dsServers map[enum.DeliveryServiceName]
 	return dsStats
 }
 
-func addAvailableData(dsStats dsdata.Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData) (dsdata.Stats, error) {
+func addAvailableData(dsStats dsdata.Stats, crStates peer.Crstates, serverCachegroups map[enum.CacheName]enum.CacheGroupName, serverDs map[enum.CacheName][]enum.DeliveryServiceName, serverTypes map[enum.CacheName]enum.CacheType, precomputed map[enum.CacheName]cache.PrecomputedData, lastStats dsdata.LastStats, events health.ThreadsafeEvents) (dsdata.Stats, error) {
 	for cache, available := range crStates.Caches {
 		cacheGroup, ok := serverCachegroups[cache]
 		if !ok {
@@ -99,6 +99,29 @@ func addAvailableData(dsStats dsdata.Stats, crStates peer.Crstates, serverCacheg
 			}
 
 			dsStats.DeliveryService[deliveryService] = stat // TODO Necessary? Remove?
+		}
+	}
+
+	for dsName, stat := range dsStats.DeliveryService {
+		lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
+		if !lastStatExists {
+			continue
+		}
+
+		getEvent := func(desc string) health.Event {
+			return health.Event{
+				Time:        health.Time(time.Now()),
+				Description: desc,
+				Name:        dsName.String(),
+				Hostname:    dsName.String(),
+				Type:        "Delivery Service",
+				Available:   stat.CommonStats.IsAvailable.Value,
+			}
+		}
+		if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true {
+			events.Add(getEvent("no available caches"))
+		} else if stat.CommonStats.IsAvailable.Value == true && lastStat.Available == false {
+			events.Add(getEvent("available caches"))
 		}
 	}
 
@@ -259,7 +282,7 @@ func addDSPerSecStats(dsName enum.DeliveryServiceName, stat dsdata.Stat, lastSta
 			Available:   stat.CommonStats.IsAvailable.Value,
 		}
 	}
-	if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true {
+	if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true && dsErr != nil {
 		events.Add(getEvent(dsErr.Error()))
 	} else if stat.CommonStats.IsAvailable.Value == true && lastStat.Available == false {
 		events.Add(getEvent("REPORTED - available"))
@@ -328,7 +351,7 @@ func CreateStats(precomputed map[enum.CacheName]cache.PrecomputedData, toData to
 	}
 	dsStats = setStaticData(dsStats, toData.DeliveryServiceServers)
 	var err error
-	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed) // TODO move after stat summarisation
+	dsStats, err = addAvailableData(dsStats, crStates, toData.ServerCachegroups, toData.ServerDeliveryServices, toData.ServerTypes, precomputed, lastStats, events) // TODO move after stat summarisation
 	if err != nil {
 		return dsStats, lastStats, fmt.Errorf("Error getting Cache availability data: %v", err)
 	}
