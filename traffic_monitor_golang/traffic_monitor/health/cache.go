@@ -201,7 +201,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 
 		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
 	}
-	// calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
+	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
 }
 
@@ -250,23 +250,19 @@ func eventDesc(status enum.CacheStatus, message string) string {
 	return fmt.Sprintf("%s - %s", status, message)
 }
 
-// calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-// func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
-// 	deliveryServices := states.GetDeliveryServices()
-// 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
-// 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
-// 			// log.Errorf("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
-// 			continue
-// 		}
-// 		deliveryServiceState.IsAvailable = false
-// 		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
-// 		for _, server := range deliveryServiceServers[deliveryServiceName] {
-// 			if available, _ := states.GetCache(server); available.IsAvailable {
-// 				deliveryServiceState.IsAvailable = true
-// 			} else {
-// 				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
-// 			}
-// 		}
-// 		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
-// 	}
-// }
+//calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
+func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
+	deliveryServices := states.GetDeliveryServices()
+	for deliveryServiceName, deliveryServiceState := range deliveryServices {
+		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
+			log.Infof("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
+			continue
+		}
+		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
+		for _, server := range deliveryServiceServers[deliveryServiceName] {
+				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
+			}
+		}
+		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
+	}
+}
