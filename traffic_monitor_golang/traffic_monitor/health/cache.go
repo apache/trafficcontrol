@@ -260,8 +260,7 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 		}
 		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 		for _, server := range deliveryServiceServers[deliveryServiceName] {
-				deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
-			}
+			deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
 		}
 		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
 	}
