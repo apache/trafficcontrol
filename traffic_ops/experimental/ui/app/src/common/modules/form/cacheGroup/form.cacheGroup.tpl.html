@@ -24,6 +24,8 @@ under the License.
             <li class="active">{{cacheGroupName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
+            <button class="btn btn-success" ng-click="queueUpdates()">Queue Server Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
+            <button class="btn btn-danger" ng-click="dequeueUpdates()">Dequeue Server Updates &nbsp;&nbsp;<i class="fa fa-times"></i></button>
             <button class="btn btn-primary" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
@@ -31,9 +33,6 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="queueUpdates()">Queue Server Updates</a></li>
-                    <li role="menuitem"><a ng-click="dequeueUpdates()">Dequeue Server Updates</a></li>
-                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="viewAsns()">View ASNs</a></li>
                     <li role="menuitem"><a ng-click="viewParams()">View Parameters</a></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>

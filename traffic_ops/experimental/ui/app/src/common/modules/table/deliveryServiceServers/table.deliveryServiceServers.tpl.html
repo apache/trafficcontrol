@@ -63,7 +63,7 @@ under the License.
                 <td>{{server.profile}}</td>
                 <td>{{server.iloIpAddress}}</td>
                 <td>{{server.iloIpGateway}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove from Delivery Service" ng-click="removeServer()"><i class="fa fa-trash-o"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Remove from Delivery Service" ng-show="server.type == 'EDGE'" ng-click="removeServer()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>
         </table>

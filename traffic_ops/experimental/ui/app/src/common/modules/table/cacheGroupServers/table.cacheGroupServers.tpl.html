@@ -24,7 +24,10 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/cache-groups/' + cacheGroup.id)">{{cacheGroup.name}}</a></li>
             <li class="active">Servers</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="queueUpdates()">Queue Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
+        <div class="pull-right">
+            <button class="btn btn-success" ng-click="queueUpdates()">Queue Server Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
+            <button class="btn btn-danger" ng-click="dequeueUpdates()">Dequeue Server Updates &nbsp;&nbsp;<i class="fa fa-times"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
