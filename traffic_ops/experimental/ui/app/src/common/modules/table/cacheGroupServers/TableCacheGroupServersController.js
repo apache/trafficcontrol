@@ -28,7 +28,11 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, lo
 	};
 
 	$scope.queueUpdates = function() {
-		alert('not hooked up yet: queuing updates for all cdn servers');
+		alert('not hooked up yet: queuing updates for all cachegroup servers');
+	};
+
+	$scope.dequeueUpdates = function() {
+		alert('not hooked up yet: dequeuing updates for all cachegroup servers');
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
