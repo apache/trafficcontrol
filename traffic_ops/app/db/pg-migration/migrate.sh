@@ -13,78 +13,106 @@
 #  limitations under the License.
 #
 
-: ${TO_SERVER?"Please set the TO_SERVER environment variable: ie: https://kabletown.net"}
-: ${TO_USER?"Please set the TO_USER environment variable: ie: <your Traffic Ops userid>"}
-: ${TO_PASSWORD?"Please set the TO_PASSWORD environment variable: ie: <your Traffic Ops password>"}
+. mysql-to-postgres.env
 
-MYSQL_PORT=3306
-POSTGRES_PORT=5432
-
+#Traffic Ops Settings
+# The following configs should be configured to point to the 
+# Traffic Ops instances that is connected to the MySQL that 
+# you want to convert
 separator="---------------------------------------"
+docker_project="pgmigration"
 
-function shutdown_trafficops_database() {
-     sudo systemctl stop trafficops-db
+function display_env() {
+
+  echo "TO_SERVER: $TO_SERVER"
+  echo "TO_USER: $TO_USER"
+  echo "TO_PASSWORD: $TO_PASSWORD"
+  echo "MYSQL_HOST: $MYSQL_HOST"
+  echo "MYSQL_PORT: $MYSQL_PORT"
+  echo "MYSQL_DATABASE: $MYSQL_DATABASE"
+  echo "MYSQL_USER: $MYSQL_USER"
+  echo "MYSQL_PASSWORD: $MYSQL_PASSWORD"
+
+  echo "POSTGRES_HOST: $POSTGRES_HOST"
+  echo "POSTGRES_PORT: $POSTGRES_PORT"
+  echo "POSTGRES_DATABASE: $POSTGRES_DATABASE"
+  echo "POSTGRES_USER: $POSTGRES_USER"
+  echo "POSTGRES_PASSOWRD: $POSTGRES_PASSWORD"
+  echo "PGDATA: $PGDATA"
+  echo "PGDATA_VOLUME: $PGDATA_VOLUME"
+  echo "PGLOGS_VOLUME: $PGLOGS_VOLUME"
+
 }
+
 
 function start_staging_mysql_server() {
-      docker-compose -p trafficops -f mysql_host.yml up --build -d
-      while [[ ! `netstat -lnt | grep :$MYSQL_PORT` ]]; do
-	    # wait for signal that other container is waiting
-	    echo "Waiting for Mysql to Start..."
-	    sleep 3
-      done
-      echo $separator
-      echo "Mysql Host is started..."
-      echo $separator
+
+  docker-compose -p $docker_project -f mysql_host.yml down --remove-orphans
+  docker-compose -p $docker_project -f mysql_host.yml up --build -d
+
+  #Wait for MySQL to come up
+  export WAITER_HOST=$MYSQL_HOST
+  export WAITER_PORT=$MYSQL_PORT
+  docker-compose -p $docker_project -f waiter.yml up --build
+  echo $separator
+  echo "Mysql Host is started..."
+  echo $separator
+
+  #Ensure the Postgres instance is up
+  export WAITER_HOST=$POSTGRES_HOST
+  export WAITER_PORT=$POSTGRES_PORT
+  docker-compose -p $docker_project -f waiter.yml up --build
+  echo $separator
+  echo "Postgres Host is started..."
+  echo $separator
+
 }
 
-function start_staging_postgres_server() {
-	sudo systemctl start trafficops-db
-	while [[ ! `netstat -lnt | grep :$POSTGRES_PORT` ]]; do
-	    # wait for signal that other container is waiting
-	    echo "Waiting for Postgres to Start..."
-	    sleep 3
-	done
-	echo $separator
-	echo "Postgres started.."
-	echo $separator
+function migrate_data_from_mysql_to_postgres() {
+
+  echo $separator
+  echo "Starting Mysql to Postgres Migration..."
+  echo $separator
+  docker-compose -p $docker_project -f mysql-to-postgres.yml down
+  docker-compose -p $docker_project -f mysql-to-postgres.yml up --build
 }
 
 
 function run_postgres_datatypes_conversion() {
-	echo $separator
-	echo "Starting Mysql to Postgres Migration..."
-	echo $separator
-	docker-compose -p trafficops -f convert.yml up --build
+  echo $separator
+  echo "Starting Mysql to Postgres Datatype Conversion..."
+  echo $separator
+  docker-compose -p $docker_project -f convert.yml up --build
 }
 
-
-function migrate_data_from_mysql_to_postgres() {
-	echo $separator
-	echo "Starting Mysql to Postgres Migration..."
-	echo $separator
-	docker-compose -p trafficops -f mysql-to-postgres.yml up --build
-}
 
 function clean() {
-        echo $separator
-        echo "Cleaning up..."
-        echo $separator
-        docker kill trafficops_mysql_host_1
-        docker-compose -p trafficops -f mysql-to-postgres.yml down --remove-orphans
-        docker-compose -p trafficops -f convert.yml down --remove-orphans
-        docker rm trafficops_mysql-to-postgres_1 
-        docker rm trafficops_convert_1
-        docker rm trafficops_mysql_host_1
-        docker rmi trafficops_mysql-to-postgres
-        docker rmi trafficops_convert 
-        docker rmi trafficops_mysql_host
-        docker rmi mysql:5.6 
-        docker rmi dimitri/pgloader:latest
+  echo $separator
+  echo "Cleaning up..."
+  echo $separator
+  #docker kill trafficops_mysql_host_1
+  docker-compose -p $docker_project -f mysql-to-postgres.yml down --remove-orphans
+  docker-compose -p $docker_project -f convert.yml down --remove-orphans
+
+  #docker rm trafficops_mysql-to-postgres_1 
+  #docker rm trafficops_convert_1
+  #docker rm trafficops_mysql_host_1
+  IMAGE=$docker_project"_mysql-to-postgres"
+  echo "IMAGE: $IMAGE"
+  docker rmi $IMAGE
+  IMAGE=$docker_project"_convert"
+  docker rmi $IMAGE
+  docker rmi mysql:5.6 
+  docker rmi dimitri/pgloader:latest
+  IMAGE=$docker_project"_mysql_host"
+  docker rmi $IMAGE --force
+  IMAGE=$docker_project"_waiter"
+  docker rmi $IMAGE --force
 }
 
+clean
 start_staging_mysql_server
-start_staging_postgres_server
+#display_env
 migrate_data_from_mysql_to_postgres
 run_postgres_datatypes_conversion
 clean

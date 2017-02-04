@@ -21,15 +21,21 @@ output=/tmp/trafficops_init.sql
 cookiejar=/tmp/cookiejar
 cred=/tmp/cred.json
 
-echo "mig:MYSQL_HOST: $MYSQL_HOST"
-echo "mig:MYSQL_USER: $MYSQL_USER"
-echo "mig:MYSQL_PASSWORD: $MYSQL_PASSWORD"
-echo "mig:MYSQL_DATABASE: $MYSQL_DATABASE"
+echo "----------------------------------------"
+echo "Migrating Mysql data from:"
+echo "----------------------------------------"
+echo "MYSQL_HOST: $MYSQL_HOST"
+echo "MYSQL_USER: $MYSQL_USER"
+echo "MYSQL_DATABASE: $MYSQL_DATABASE"
+echo "----------------------------------------"
 
-echo "mig:POSTGRES_HOST: $POSTGRES_HOST"
-echo "mig:POSTGRES_USER: $POSTGRES_USER"
-echo "mig:POSTGRES_DATABASE: $POSTGRES_DATABASE"
-echo "mig:POSTGRES_PASSWORD: $POSTGRES_PASSWORD"
+echo "----------------------------------------"
+echo "To Postgres..."
+echo "----------------------------------------"
+echo "POSTGRES_HOST: $POSTGRES_HOST"
+echo "POSTGRES_USER: $POSTGRES_USER"
+echo "POSTGRES_DATABASE: $POSTGRES_DATABASE"
+echo "----------------------------------------"
 
 cat >$cred <<-CREDS
 	{ "u" : "$TO_USER", "p" : "$TO_PASSWORD" }

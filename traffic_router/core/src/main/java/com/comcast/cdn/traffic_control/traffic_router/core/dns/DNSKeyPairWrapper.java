@@ -45,7 +45,7 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
 		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
 		this.ttl = keyPair.optLong("ttl", defaultTTL);
-		this.name = keyPair.getString("name");
+		this.name = keyPair.getString("name").toLowerCase();
 
 		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.getString("private"));
 		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.getString("public"));

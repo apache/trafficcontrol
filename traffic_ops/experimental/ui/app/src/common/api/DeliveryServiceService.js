@@ -30,9 +30,9 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
     this.createDeliveryService = function(deliveryService) {
         return Restangular.service('deliveryservices').post(deliveryService)
             .then(
-                function() {
+                function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
-                    locationUtils.navigateToPath('/configure/delivery-services');
+                    locationUtils.navigateToPath('/configure/delivery-services/' + response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
