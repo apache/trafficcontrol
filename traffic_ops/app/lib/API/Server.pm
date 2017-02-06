@@ -636,7 +636,7 @@ sub details_v11 {
 	my $isadmin   = &is_admin($self);
 	my $host_name = $self->param('name');
 	my $rs_data   = $self->db->resultset('Server')->search( { host_name => $host_name },
-		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', 'deliveryservice_servers' ], } );
+		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', { 'deliveryservice_servers' => 'deliveryservice' } ], } );
 	while ( my $row = $rs_data->next ) {
 
 		my $serv = {
