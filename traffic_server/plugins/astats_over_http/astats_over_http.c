@@ -326,6 +326,8 @@ static int getSpeed(char *interface, char *buffer, int bufferSize) {
 	char *inf;
 	char b[256];
 	int speed = 0;
+	int i = 0;
+	const char *fnames[] = {"slave_", "lower_"};
 
 	if (!interface)
 		return 0;
@@ -333,7 +335,7 @@ static int getSpeed(char *interface, char *buffer, int bufferSize) {
 	str = getFile("/sys/class/net/bonding_masters", buffer, bufferSize);
 	if (str) {
 		str = strstr(str, interface);
-		if (!str)
+		if (str)
 			return getSpeedForIF(interface, buffer, bufferSize);
 	}
 
@@ -342,10 +344,13 @@ static int getSpeed(char *interface, char *buffer, int bufferSize) {
 
 	if (dp != NULL) {
 		while ((ep = readdir (dp))) {
-			str = strstr(ep->d_name, "slave_");
-			if (str) {
-				inf = str + strlen("slave_");
-				speed += getSpeedForIF (inf, buffer, bufferSize);
+			for (i = 0; i < sizeof(fnames)/sizeof(fnames[0]); i++) {
+				str = strstr(ep->d_name, fnames[i]);
+				if (str) {
+					inf = str + strlen(fnames[i]);
+					speed += getSpeedForIF (inf, buffer, bufferSize);
+					break; // in case we happen to have slave_ and lower_ for some odd reason
+				}
 			}
 		}
 
