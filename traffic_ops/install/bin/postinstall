@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use Safe;
+use DBI;
 use POSIX;
 use File::Basename qw{dirname};
 use File::Path qw{make_path};
@@ -558,6 +559,9 @@ sub setupDatabase {
     my $todbconf     = shift;
     my $opensslconf  = shift;
     my $setupMaxmind = shift;
+    my $databaseConfFile = shift;
+
+    my $dbconf = InstallUtils::readJson( $databaseConfFile );
 
     InstallUtils::logger( "Setting up database", "info" );
     chdir("/opt/traffic_ops/app");
@@ -568,6 +572,18 @@ sub setupDatabase {
     }
     else {
         InstallUtils::logger( "Database initialization succeeded", "info" );
+    }
+
+    my $dsn = sprintf( "DBI:mysql:%s:%s:%s", "mysql", $dbconf->{"hostname"}, $dbconf->{"port"} );
+    my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
+    if ($dbh) {
+        InstallUtils::logger("Database connection succeeded", "info");
+        # Success!
+        $dbh->disconnect();
+    }
+    else {
+        InstallUtils::logger("Error connecting to database", "error");
+        exit(-1)
     }
 
     if ( $setupMaxmind =~ /^y(?:es)?/ ) {
@@ -750,7 +766,7 @@ sub main {
 
     # if reconfigure is set then setup the database
     if ($reconfigure) {
-        setupDatabase( $todbconf, $opensslconf, $todbconf->{"maxmind"} );
+        setupDatabase( $todbconf, $opensslconf, $todbconf->{"maxmind"}, $databaseConfFile );
     }
 
     InstallUtils::logger( "Starting Traffic Ops", "info" );
