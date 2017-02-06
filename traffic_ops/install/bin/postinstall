@@ -88,7 +88,7 @@ my $automatic = 0;
 my $defaultInputs;
 
 sub getDbDriver {
-    return "pg";
+    return "Pg";
 }
 
 sub getInstallPath {
@@ -574,7 +574,7 @@ sub setupDatabase {
         InstallUtils::logger( "Database initialization succeeded", "info" );
     }
 
-    my $dsn = sprintf( "DBI:mysql:%s:%s:%s", "mysql", $dbconf->{"hostname"}, $dbconf->{"port"} );
+    my $dsn = sprintf( "DBI:Pg:%s:%s:%s", "Pg", $dbconf->{"hostname"}, $dbconf->{"port"} );
     my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
     if ($dbh) {
         InstallUtils::logger("Database connection succeeded", "info");
