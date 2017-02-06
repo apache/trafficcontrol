@@ -270,17 +270,7 @@ sub generateOpenSSLConf {
     my $userInput = shift;
     my $fileName  = shift;
 
-    if ( !defined $userInput->{$fileName} ) {
-        InstallUtils::logger( "No OpenSSL Configuration - questions will be asked", "info" );
-
-        # write an empty config so openssl does not use an old file
-        InstallUtils::writeJson( $fileName, my %emptyConfig );
-        return;
-    }
-
     my %config = getConfig( $userInput, $fileName );
-
-    InstallUtils::writeJson( $fileName, \%config );
     return \%config;
 }
 
@@ -408,7 +398,6 @@ sub getDefaults {
                 "config_var"                             => "password",
                 "hidden"                                 => "true"
             }
-
         ],
         $dbConfFile => [
             {
@@ -568,7 +557,6 @@ sub getDefaults {
 sub setupDatabase {
     my $todbconf     = shift;
     my $opensslconf  = shift;
-    my $genCert      = shift;
     my $setupMaxmind = shift;
 
     InstallUtils::logger( "Setting up database", "info" );
@@ -600,7 +588,7 @@ sub setupDatabase {
         InstallUtils::logger( "Failed to copy coverage zone file", "error" );
     }
 
-    if ( lc $genCert =~ /^y(?:es)?/ ) {
+    if ( lc $opensslconf->{"genCert"} =~ /^y(?:es)?/ ) {
         if ( -x "/usr/bin/openssl" ) {
             InstallUtils::logger( "Installing SSL Certificates", "info" );
             $result = GenerateCert::createCert($opensslconf);
@@ -662,8 +650,9 @@ sub main {
 
     InstallUtils::initLogger( $debug, $logFile );
 
+    print("unzipping log\n");
     if ( -f "$logFile.gz" ) {
-        InstallUtils::execCommand( "/bin/gunzip", "$logFile.gz" );
+        InstallUtils::execCommand( "/bin/gunzip", "-f", "$logFile.gz" );
     }
 
     InstallUtils::logger( "Starting postinstall", "info" );
@@ -687,7 +676,7 @@ sub main {
         return;
     }
 
-    InstallUtils::logger( "Postinstall " . ( defined $reconfigure ? "in" : "not" ) . " in reconfigure mode", "info" );
+    InstallUtils::logger( "Postinstall " . ( $reconfigure ? "" : "not " ) . "in reconfigure mode", "info" );
 
     InstallUtils::rotateLog($cpanLogFile);
 
@@ -761,12 +750,7 @@ sub main {
 
     # if reconfigure is set then setup the database
     if ($reconfigure) {
-        if ($automatic) {
-            setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
-        }
-        else {
-            setupDatabase( $todbconf, 0, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
-        }
+        setupDatabase( $todbconf, $opensslconf, $todbconf->{"maxmind"} );
     }
 
     InstallUtils::logger( "Starting Traffic Ops", "info" );
