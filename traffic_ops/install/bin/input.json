@@ -1,7 +1,7 @@
 {
   "/opt/traffic_ops/app/conf/production/database.conf":[
     {
-      "Database type":"pg",
+      "Database type":"Pg",
       "config_var":"type"
     },
     {
