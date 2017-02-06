@@ -199,9 +199,6 @@ Delivery Service
             "dnsBypassTtl": "30",
             "dscp": "40",
             "edgeHeaderRewrite": null,
-            "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
-            ],
             "geoLimit": "0",
             "geoLimitCountries": null,
             "geoLimitRedirectURL": null,
