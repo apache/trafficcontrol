@@ -35,7 +35,6 @@ import (
 // 2. .*\.foo\..* expressions, where foo is a direct string match with no regular expression matching characters
 // 3. Everything else
 // This allows us to do a cheap match on 1 and 2, and only regex match the uncommon case.
-// TODO performance tests, whether Go compiled *Regexp is relevantly slower than `strings.Contains` for direct and .foo. matches
 type Regexes struct {
 	DirectMatches                      map[string]enum.DeliveryServiceName
 	DotStartSlashDotFooSlashDotDotStar map[string]enum.DeliveryServiceName

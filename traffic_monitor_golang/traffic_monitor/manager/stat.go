@@ -46,8 +46,7 @@ func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS TrafficMo
 	caches := map[enum.CacheName]struct{}{}
 	for cacheName := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
-		// TODO add a function IsPolled() which can be called by this and the monitorConfig func which sets the polling, to prevent updating in one place breaking the other.
-		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.Status == "ONLINE" || ts.Status == "OFFLINE" {
+		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.Status == string(enum.CacheStatusOnline) || ts.Status == string(enum.CacheStatusOffline) {
 			continue
 		}
 		caches[cacheName] = struct{}{}
