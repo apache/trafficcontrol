@@ -114,6 +114,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
 		cacheStatHandler.ResultChan(),
 		localStates,
+		peerStates,
 		combinedStates,
 		toData,
 		cachesChanged,
