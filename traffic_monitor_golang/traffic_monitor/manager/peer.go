@@ -51,7 +51,7 @@ func StartPeerManager(
 		for peerResult := range peerChan {
 			comparePeerState(events, peerResult, peerStates)
 			peerStates.Set(peerResult)
-			combineCrStates(events, peerOptimistic, peerStates, localStates.Get(), combinedStates, overrideMap, toData)
+			CombineCrStates(events, peerOptimistic, peerStates, localStates.Get(), combinedStates, overrideMap, toData.Get())
 			peerResult.PollFinished <- peerResult.PollID
 		}
 	}()
@@ -65,8 +65,7 @@ func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerSt
 }
 
 // TODO JvD: add deliveryservice stuff
-func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TODataThreadsafe) {
-	toDataCopy := toData.Get()
+func CombineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
 
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		var overrideCondition string
@@ -114,7 +113,7 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerSt
 		}
 
 		if overrideCondition != "" {
-			events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toDataCopy.ServerTypes[cacheName].String(), Available: available})
+			events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toData.ServerTypes[cacheName].String(), Available: available})
 		}
 
 		combinedStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: available})

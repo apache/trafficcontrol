@@ -61,6 +61,7 @@ func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS TrafficMo
 func StartStatHistoryManager(
 	cacheStatChan <-chan cache.Result,
 	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
 	combinedStates peer.CRStatesThreadsafe,
 	toData todata.TODataThreadsafe,
 	cachesChanged <-chan struct{},
@@ -82,9 +83,10 @@ func StartStatHistoryManager(
 
 	precomputedData := map[enum.CacheName]cache.PrecomputedData{}
 	lastResults := map[enum.CacheName]cache.Result{}
+	overrideMap := map[enum.CacheName]bool{}
 
 	process := func(results []cache.Result) {
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates.Get(), lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, peerStates, events, localCacheStatus, overrideMap)
 	}
 
 	go func() {
@@ -129,7 +131,7 @@ func processStatResults(
 	statInfoHistoryThreadsafe threadsafe.ResultInfoHistory,
 	statResultHistoryThreadsafe threadsafe.ResultStatHistory,
 	statMaxKbpsesThreadsafe threadsafe.CacheKbpses,
-	combinedStates peer.Crstates,
+	combinedStatesThreadsafe peer.CRStatesThreadsafe,
 	lastStats threadsafe.LastStats,
 	toData todata.TOData,
 	errorCount threadsafe.Uint,
@@ -141,12 +143,15 @@ func processStatResults(
 	precomputedData map[enum.CacheName]cache.PrecomputedData,
 	lastResults map[enum.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
+	overrideMap map[enum.CacheName]bool,
 ) {
 	if len(results) == 0 {
 		return
 	}
+	combinedStates := combinedStatesThreadsafe.Get()
 	defer func() {
 		for _, r := range results {
 			// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
@@ -204,6 +209,8 @@ func processStatResults(
 	}
 
 	health.CalcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events)
+	peerOptimistic := true
+	CombineCrStates(events, peerOptimistic, peerStates, localStates.Get(), combinedStatesThreadsafe, overrideMap, toData)
 
 	endTime := time.Now()
 	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
