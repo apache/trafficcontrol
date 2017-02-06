@@ -281,11 +281,11 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
 		ID:           enum.CacheName(id),
-		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
+		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
 		PollFinished: pollFinished,

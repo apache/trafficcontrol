@@ -34,7 +34,7 @@ const (
 )
 
 type Handler interface {
-	Handle(string, io.Reader, time.Duration, error, uint64, chan<- uint64)
+	Handle(string, io.Reader, time.Duration, time.Time, error, uint64, chan<- uint64)
 }
 
 type OpsConfigFileHandler struct {
