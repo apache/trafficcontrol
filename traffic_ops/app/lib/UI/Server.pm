@@ -48,16 +48,20 @@ sub view {
 		# Get list of ds ids associated with server
 		$self->stash( server_data => $data );
 
-		my @ds_ids = $self->db->resultset('DeliveryserviceServer')->search( { server => $id } )->get_column('deliveryservice')->all;
+		my %delivery_services;
+		my $rs_data = $self->db->resultset('DeliveryserviceServer')->search(
+			{ server => $id },
+			{ prefetch => [ 'deliveryservice' ]}
+		);
+
+		while ( my $row = $rs_data->next ) {
+			$delivery_services{$row->deliveryservice->id} = $row->deliveryservice->xml_id;
+		}
 
 		my $service_tag =
 			$self->db->resultset('Hwinfo')->search( { -and => [ serverid => $id, description => 'ServiceTag' ] } )->get_column('val')->single();
 		$self->stash( service_tag => $service_tag );
-		my %delivery_services;
-		for my $ds_id (@ds_ids) {
-			my $desc = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single;
-			$delivery_services{$ds_id} = $desc;
-		}
+
 		$self->stash( delivery_services => \%delivery_services );
 		$self->stash( fbox_layout       => 1 );
 	}
