@@ -184,7 +184,7 @@ sub generateDbConf {
     open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
     print $fh "production:\n";
     print $fh "    driver: $dbconf{type}\n";
-    print $fh "    open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
+    print $fh "    open: host=$dbconf{hostname} port=$dbconf{port} user=$dbconf{user} password=$dbconf{password} dbname=$dbconf{dbname} sslmode=disable\n";
     close $fh;
 
     return \%todbconf;
