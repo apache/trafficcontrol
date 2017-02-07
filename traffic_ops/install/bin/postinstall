@@ -87,10 +87,6 @@ my $inputFile = "";
 my $automatic = 0;
 my $defaultInputs;
 
-sub getDbDriver {
-    return "Pg";
-}
-
 sub getInstallPath {
     my $relPath = shift;
     return join( '/', "/tmp/traffic_ops", $relPath );
@@ -187,7 +183,7 @@ sub generateDbConf {
     # No YAML library installed, but this is a simple file..
     open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
     print $fh "production:\n";
-    print $fh "    driver: ", getDbDriver() . "\n";
+    print $fh "    driver: $dbconf{type}\n";
     print $fh "    open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
     close $fh;
 
@@ -563,18 +559,7 @@ sub setupDatabase {
 
     my $dbconf = InstallUtils::readJson( $databaseConfFile );
 
-    InstallUtils::logger( "Setting up database", "info" );
-    chdir("/opt/traffic_ops/app");
-    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
-
-    if ( $result != 0 ) {
-        errorOut("Database initialization failed");
-    }
-    else {
-        InstallUtils::logger( "Database initialization succeeded", "info" );
-    }
-
-    my $dsn = sprintf( "DBI:Pg:%s:%s:%s", "Pg", $dbconf->{"hostname"}, $dbconf->{"port"} );
+    my $dsn = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbconf->{"dbname"} );
     my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
     if ($dbh) {
         InstallUtils::logger("Database connection succeeded", "info");
@@ -584,6 +569,17 @@ sub setupDatabase {
     else {
         InstallUtils::logger("Error connecting to database", "error");
         exit(-1)
+    }
+
+    InstallUtils::logger( "Setting up database", "info" );
+    chdir("/opt/traffic_ops/app");
+    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
+
+    if ( $result != 0 ) {
+        errorOut("Database initialization failed");
+    }
+    else {
+        InstallUtils::logger( "Database initialization succeeded", "info" );
     }
 
     if ( $setupMaxmind =~ /^y(?:es)?/ ) {
