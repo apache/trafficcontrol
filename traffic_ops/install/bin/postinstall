@@ -371,7 +371,7 @@ sub getDefaults {
     return {
         $databaseConfFile => [
             {
-                "Database type" => "pg",
+                "Database type" => "Pg",
                 "config_var"    => "type"
             },
             {
@@ -383,7 +383,7 @@ sub getDefaults {
                 "config_var"                          => "hostname"
             },
             {
-                "Database port number" => "3306",
+                "Database port number" => "5432",
                 "config_var"           => "port"
             },
             {
