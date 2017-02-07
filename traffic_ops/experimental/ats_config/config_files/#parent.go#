@@ -120,6 +120,7 @@ func uriPort(u *url.URL) string {
 	return "80"
 }
 
+
 func createParentDotConfigMid(toClient towrap.ITrafficOpsSession, filename string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
 	deliveryServices, err := toClient.DeliveryServices()
 	if err != nil {
@@ -189,7 +190,7 @@ func createParentDotConfigMid(toClient towrap.ITrafficOpsSession, filename strin
 			msoAlgorithm := ""
 			if multiSiteOriginAlgorithm == 0 {
 				msoAlgorithm = "consistent_hash"
-				if ds.QStringIgnore != 0 {
+				if ds.QStringIgnore != "" && ds.QStringIgnore != "0" {
 					parentQstring = "consider"
 				}
 			} else if multiSiteOriginAlgorithm == 1 {
@@ -365,7 +366,7 @@ func parentData(toClient towrap.ITrafficOpsSession, serverHostName string, param
 			if serverDomain != "" && profileInfo.Domain == serverDomain {
 				port := profileInfo.Port
 				if port == "" {
-					port = strconv.Itoa(server.TCPPort)
+					port = server.TCPPort
 				}
 
 				primaryParent := serverCacheGroup.ParentName
@@ -430,7 +431,7 @@ func createParentDotConfigEdge(toClient towrap.ITrafficOpsSession, filename stri
 			continue
 		}
 
-		if ds.QStringIgnore == 0 {
+		if ds.QStringIgnore == "" || ds.QStringIgnore == "0" {
 			parentQstring = "consider"
 		}
 

@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"io/ioutil"
 	"net/http"
@@ -29,7 +29,7 @@ func getRiakURL(toClient towrap.ITrafficOpsSession) (string, error) {
 		return "", fmt.Errorf("no riak server found")
 	}
 
-	if riakServer.TCPPort != "" {
+	if riakServer.TCPPort != 0 {
 		return fmt.Sprintf("%s.%s:%s", riakServer.HostName, riakServer.DomainName, riakServer.TCPPort), nil
 	}
 	return fmt.Sprintf("%s.%s", riakServer.HostName, riakServer.DomainName), nil

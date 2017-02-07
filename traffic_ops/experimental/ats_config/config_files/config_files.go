@@ -20,7 +20,7 @@ package config_files
 
 import (
 	"fmt"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"regexp"
 )
@@ -40,6 +40,7 @@ func Get(toClient towrap.ITrafficOpsSession, serverHostname string, configFileNa
 	}
 
 	params, err := toClient.Parameters(profile)
+
 	if err != nil {
 		return "", fmt.Errorf("Error getting Traffic Ops parameters: %v", err)
 	}

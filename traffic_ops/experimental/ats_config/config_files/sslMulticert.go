@@ -3,9 +3,8 @@ package config_files
 import (
 	"encoding/json"
 	"fmt"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -42,7 +41,7 @@ func createSslMulticertDotConfig(toClient towrap.ITrafficOpsSession, filename st
 		if _, ok := serverDSes[ds.XMLID]; !ok {
 			continue
 		}
-		if protocol, err := strconv.Atoi(ds.Protocol); err != nil || protocol <= 0 {
+		if ds.Protocol <= 0 {
 			continue
 		}
 

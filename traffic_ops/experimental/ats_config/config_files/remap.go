@@ -3,9 +3,8 @@ package config_files
 import (
 	"encoding/json"
 	"fmt"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -44,14 +43,14 @@ func createRemapDotConfigMid(toClient towrap.ITrafficOpsSession, filename string
 		if ds.MidHeaderRewrite != "" {
 			midRemap[orgFqdn] += fmt.Sprintf(" @plugin=header_rewrite.so @pparam=%s", midHdrRwFile(ds))
 		}
-		if ds.QStringIgnore == "1" {
+		if ds.QStringIgnore == 1 {
 			midRemap[orgFqdn] += " @plugin=cacheurl.so @pparam=cacheurl_qstring.config"
 		}
 		// TODO warn for invalid QStringIgnore
 		if ds.CacheURL != "" {
 			midRemap[orgFqdn] += fmt.Sprintf(" @plugin=cacheurl.so @pparam=", cacheurlFile(ds))
 		}
-		if ds.RangeRequestHandling == "2" {
+		if ds.RangeRequestHandling == 2 {
 			midRemap[orgFqdn] += " @plugin=cache_range_requests.so"
 		}
 		// TODO warn for invalid RangeRequestHandling
@@ -110,7 +109,7 @@ matchsetFor:
 			}
 
 			portStr := ""
-			serverPort, err := strconv.Atoi(server.TCPPort)
+			serverPort := server.TCPPort
 			if err != nil {
 				return nil, fmt.Errorf("server %v port %v is not a number", server.HostName, server.TCPPort)
 			}
@@ -118,21 +117,21 @@ matchsetFor:
 				portStr = fmt.Sprintf(":%d", serverPort)
 			}
 
-			if ds.Protocol == "0" || ds.Protocol == "2" {
+			if ds.Protocol == 0 || ds.Protocol == 2 {
 				mapFrom := fmt.Sprintf(`http://%s%s%s%s/`, hname, re, domainName, portStr)
 				remapLines[mapFrom] = mapTo
 			}
-			if ds.Protocol == "1" || ds.Protocol == "3" {
+			if ds.Protocol == 1 || ds.Protocol == 3 {
 				mapFrom := fmt.Sprintf(`https://%s%s%s/`, hname, re, domainName)
 				remapLines[mapFrom] = mapTo
 			}
 			// TODO log invalid protocol
 		} else {
-			if ds.Protocol == "0" || ds.Protocol == "2" {
+			if ds.Protocol == 0 || ds.Protocol == 2 {
 				mapFrom := fmt.Sprintf(`http://%s/`, hostRe)
 				remapLines[mapFrom] = mapTo
 			}
-			if ds.Protocol == "1" || ds.Protocol == "3" {
+			if ds.Protocol == 1 || ds.Protocol == 3 {
 				mapFrom := fmt.Sprintf(`https://%s/`, hostRe)
 				remapLines[mapFrom] = mapTo
 			}
@@ -229,10 +228,10 @@ func buildRemapLine(toClient towrap.ITrafficOpsSession, trafficServerHost string
 		s += fmt.Sprintf(` @plugin=url_sig.so @pparam=url_sig_%s.config`, ds.XMLID)
 	}
 
-	if ds.QStringIgnore == "2" {
+	if ds.QStringIgnore == 2 {
 		dqsFile := "drop_qstring.config"
 		s += fmt.Sprintf(` @plugin=regex_remap.so @pparam=%s`, dqsFile)
-	} else if ds.QStringIgnore == "1" {
+	} else if ds.QStringIgnore == 1 {
 		globalExists := false
 		if locationParams, ok := paramMap["location"]; ok {
 			if _, cacheUrlExists := locationParams["cacheurl.config"]; cacheUrlExists {
@@ -255,9 +254,9 @@ func buildRemapLine(toClient towrap.ITrafficOpsSession, trafficServerHost string
 		s += fmt.Sprintf(` @plugin=regex_remap.so @pparam=regex_remap_%s.config`, ds.XMLID)
 	}
 
-	if ds.RangeRequestHandling == "1" {
+	if ds.RangeRequestHandling == 1 {
 		s += ` @plugin=background_fetch.so @pparam=bg_fetch.config`
-	} else if ds.RangeRequestHandling == "2" {
+	} else if ds.RangeRequestHandling == 2 {
 		s += ` @plugin=cache_range_requests.so `
 	}
 
@@ -280,7 +279,6 @@ func getDS(name string, dses []to.DeliveryService) (to.DeliveryService, error) {
 }
 
 func createRemapDotConfigEdge(toClient towrap.ITrafficOpsSession, filename string, trafficOpsHost string, trafficServerHost string, params []to.Parameter) (string, error) {
-
 	s := "# DO NOT EDIT - Generated for " + trafficServerHost + " by Traffic Ops (" + trafficOpsHost + ") on " + time.Now().String() + "\n"
 
 	deliveryServices, err := toClient.DeliveryServices()

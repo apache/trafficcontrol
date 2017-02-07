@@ -16,7 +16,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	configfiles "github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/ats_config/config_files"
 )

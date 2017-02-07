@@ -2,7 +2,7 @@ package config_files
 
 import (
 	"fmt"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor/experimental/traffic_monitor/trafficopswrapper"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"strings"
 	"time"
@@ -39,7 +39,7 @@ func createCacheurlDotConfig(toClient towrap.ITrafficOpsSession, filename string
 		return "", fmt.Errorf("error getting delivery services: %v", err)
 	}
 	for _, deliveryService := range deliveryServices {
-		if deliveryService.QStringIgnore == "1" {
+		if deliveryService.QStringIgnore == 1 {
 			continue
 		}
 		org := stripProtocol(deliveryService.OrgServerFQDN)
