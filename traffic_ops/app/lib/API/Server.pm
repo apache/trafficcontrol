@@ -702,7 +702,7 @@ sub details {
 
 	my $rs_data = $self->db->resultset('Server')->search(
 		[ { host_name => $host_name }, { phys_location => $phys_location_id } ], {
-			prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', 'deliveryservice_servers' ],
+			prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', { 'deliveryservice_servers' => 'deliveryservice' } ],
 			order_by => 'me.' . $orderby_snakecase
 		}
 	);
