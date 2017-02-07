@@ -454,7 +454,7 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 
 	cachegroup, ok := toData.ServerCachegroups[server]
 	if !ok {
-		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
+		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups")
 	}
 	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
 
