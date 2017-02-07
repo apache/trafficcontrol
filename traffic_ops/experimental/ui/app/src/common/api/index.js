@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -24,14 +24,14 @@ module.exports = angular.module('trafficOps.api', [])
     .service('cacheGroupParameterService', require('./CacheGroupParameterService'))
     .service('cdnService', require('./CDNService'))
     .service('deliveryServiceService', require('./DeliveryServiceService'))
-    .service('divisionService', require('./DivisionService'))
+	.service('deliveryServiceRegexService', require('./DeliveryServiceRegexService'))
+	.service('divisionService', require('./DivisionService'))
     .service('httpService', require('./HttpService'))
     .service('physLocationService', require('./PhysLocationService'))
     .service('parameterService', require('./ParameterService'))
     .service('profileService', require('./ProfileService'))
     .service('roleService', require('./RoleService'))
     .service('regionService', require('./RegionService'))
-    .service('regexService', require('./RegexService'))
     .service('serverService', require('./ServerService'))
     .service('statusService', require('./StatusService'))
     .service('tenantService', require('./TenantService'))

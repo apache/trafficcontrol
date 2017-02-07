@@ -74,8 +74,15 @@ sub edit {
 sub get_cdn_domain {
 	my $self       = shift;
 	my $id         = shift;
-
-	return $self->db->resultset('Deliveryservice')->search( { id => $id }, { prefetch => ['cdn']} )->get_column('domain_name')->single();
+	my $cdn_domain = $self->db->resultset('Parameter')->search(
+		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
+		{
+			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
+			distinct => 1
+		}
+	)->get_column('value')->single();
+	# Always return a lowercase FQDN.
+	return lc($cdn_domain);
 }
 
 sub get_example_urls {
