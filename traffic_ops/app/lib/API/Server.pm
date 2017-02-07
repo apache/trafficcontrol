@@ -51,9 +51,6 @@ sub index {
 	elsif ( defined $profile_id ) {
 		( $forbidden, $servers ) = $self->get_servers_by_profile_id($profile_id);
 	}
-	elsif ( defined $profile_id ) {
-		( $forbidden, $servers ) = $self->get_servers_by_profile_id($profile_id);
-	}
 	elsif ( defined $cdn_id ) {
 		( $forbidden, $servers ) = $self->get_servers_by_cdn($cdn_id);
 	}
@@ -835,7 +832,7 @@ sub get_servers_by_profile_id {
 		return ( $forbidden, $servers );
 	}
 
-	$servers = $self->db->resultset('Server')->search( { profile => $profile_id } );
+	$servers = $self->db->resultset('Server')->search( { profile => $profile_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
@@ -850,7 +847,7 @@ sub get_servers_by_cdn {
 		return ( $forbidden, $servers );
 	}
 
-	$servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
+	$servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
@@ -865,7 +862,7 @@ sub get_servers_by_phys_loc {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id } );
+	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
@@ -880,7 +877,7 @@ sub get_servers_by_cachegroup {
 		return ( $forbidden, $servers );
 	}
 
-	$servers = $self->db->resultset('Server')->search( { cachegroup => $cg_id } );
+	$servers = $self->db->resultset('Server')->search( { cachegroup => $cg_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
