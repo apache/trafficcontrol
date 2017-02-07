@@ -565,7 +565,7 @@ sub get_deliveryservices_by_serverId {
 	my $server_ds_ids = $self->db->resultset('DeliveryserviceServer')->search( { server => $server_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')->search(
-		{ 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }
+		{ 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ]}
 	);
 
 	my @data;
@@ -640,7 +640,7 @@ sub get_deliveryservices_by_userId {
 	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')->search(
-		{ 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }
+		{ 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ]}
 	);
 
 	my @data;
