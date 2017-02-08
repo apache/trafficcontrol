@@ -69,7 +69,7 @@ sub index {
 	my %criteria;
 	$criteria{'deliveryservice'} = $ds_id;
 
-	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria, { order_by => 'me.set_number' } );
+	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria, { prefetch => [ { 'regex' => 'type' } ], order_by => 'me.set_number' } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -99,7 +99,7 @@ sub show {
 	$criteria{'deliveryservice'} = $ds_id;
 	$criteria{'regex'}           = $regex_id;
 
-	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria );
+	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria, { prefetch => [ { 'regex' => 'type' } ] } );
 	my @data    = ();
 	while ( my $row = $rs_data->next ) {
 		push(

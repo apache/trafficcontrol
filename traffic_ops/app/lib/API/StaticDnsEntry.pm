@@ -25,7 +25,7 @@ sub index {
 
 	my @data;
 	my $orderby = $self->param('orderby') || "deliveryservice";
-	my $rs_data = $self->db->resultset("Staticdnsentry")->search( undef, { order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Staticdnsentry")->search( undef, { prefetch => [ 'deliveryservice', 'type', 'cachegroup' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

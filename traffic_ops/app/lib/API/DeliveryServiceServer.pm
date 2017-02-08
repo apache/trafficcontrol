@@ -30,7 +30,7 @@ sub index {
 	# defaulted pagination and limits because there are 38129 rows in this table and counting...
 	my $page  = $self->param('page')  || 1;
 	my $limit = $self->param('limit') || 20;
-	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { page => $page, rows => $limit, order_by => $orderby } );
+	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { prefetch => [ 'deliveryservice', 'server' ], page => $page, rows => $limit, order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

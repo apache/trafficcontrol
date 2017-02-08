@@ -45,15 +45,15 @@ sub index {
 		$criteria{'type'} = $type_id;
 	}
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ 'type' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
 				"id"                            => $row->id,
 				"name"                          => $row->name,
 				"shortName"                     => $row->short_name,
-				"latitude"                      => 0.0 + $row->latitude,
-				"longitude"                     => 0.0 + $row->longitude,
+				"latitude"                      => defined($row->latitude) ? 0.0 + $row->latitude : undef,
+				"longitude"                     => defined($row->longitude) ? 0.0 + $row->longitude : undef,
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
@@ -74,7 +74,7 @@ sub index_trimmed {
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
@@ -89,7 +89,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( { id => $id } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( { id => $id }, { prefetch => [ 'type' ] } );
 
 	my @data = ();
 	my %idnames;
@@ -105,8 +105,8 @@ sub show {
 				"id"                            => $row->id,
 				"name"                          => $row->name,
 				"shortName"                     => $row->short_name,
-				"latitude"                      => 0.0 + $row->latitude,
-				"longitude"                     => 0.0 + $row->longitude,
+				"latitude"                      => defined($row->latitude) ? 0.0 + $row->latitude : undef,
+				"longitude"                     => defined($row->longitude) ? 0.0 + $row->longitude : undef,
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
