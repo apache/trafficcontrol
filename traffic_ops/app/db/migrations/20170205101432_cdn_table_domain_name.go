@@ -129,7 +129,16 @@ func Up_20170205101432(txn *sql.Tx) {
 		pDesc := "Deliveryservice profile for " + xml_id
 		pType := "DS_PROFILE"
 		mhrString := mid_header_rewrite.String
-		pmap[pName] = Profile{Id: -1, Name: pName, Desc: pDesc, Type: pType, Cdn: cdn_id, MidHeaderRewrite: mhrString, MultiSiteOriginAlg: multi_site_origin_algorithm.Int64, XMLId: xml_id}
+		pmap[pName] = Profile{
+			Id:                 -1,
+			Name:               pName,
+			Desc:               pDesc,
+			Type:               pType,
+			Cdn:                cdn_id,
+			MidHeaderRewrite:   mhrString,
+			MultiSiteOriginAlg: multi_site_origin_algorithm.Int64,
+			XMLId:              xml_id,
+		}
 	}
 	err = rows.Err()
 	checkErr(err, txn)
@@ -155,8 +164,10 @@ func Up_20170205101432(txn *sql.Tx) {
 					newId, ok = existingParam[string(match[1])+string(match[2])]
 					fmt.Printf("%s -> %v %v\n", string(match[1])+string(match[2]), newId, ok)
 					if !ok {
-						fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+string(match[1]), "parent.config", string(match[2]))
-						newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+string(match[1]), "parent.config", string(match[2]))
+						fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+
+							string(match[1]), "parent.config", string(match[2]))
+						newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+
+							string(match[1]), "parent.config", string(match[2]))
 						err := newRow.Scan(&newId)
 						checkErr(err, txn)
 						existingParam[string(match[1])+string(match[2])] = newId
@@ -182,8 +193,10 @@ func Up_20170205101432(txn *sql.Tx) {
 		var ok bool
 		newId, ok = existingParam["mso.algorithm"+"parent.config"+string(prof.MultiSiteOriginAlg)]
 		if !ok {
-			fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso.algorithm", "parent.config", prof.MultiSiteOriginAlg)
-			newRow = txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso.algorithm", "parent.config", prof.MultiSiteOriginAlg)
+			fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
+				"mso.algorithm", "parent.config", prof.MultiSiteOriginAlg)
+			newRow = txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
+				"mso.algorithm", "parent.config", prof.MultiSiteOriginAlg)
 			err = newRow.Scan(&newId)
 			checkErr(err, txn)
 			existingParam["mso.algorithm"+"parent.config"+string(prof.MultiSiteOriginAlg)] = newId
