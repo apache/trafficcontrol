@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TablePhysLocationsController = function(physLocations, $scope, locationUtils) {
+var TablePhysLocationsController = function(physLocations, $scope, $state, locationUtils) {
 
     $scope.physLocations = physLocations;
 
@@ -29,6 +29,10 @@ var TablePhysLocationsController = function(physLocations, $scope, locationUtils
         locationUtils.navigateToPath('/admin/phys-locations/new')
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#physLocationsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TablePhysLocationsController = function(physLocations, $scope, locationUtils
 
 };
 
-TablePhysLocationsController.$inject = ['physLocations', '$scope', 'locationUtils'];
+TablePhysLocationsController.$inject = ['physLocations', '$scope', '$state', 'locationUtils'];
 module.exports = TablePhysLocationsController;

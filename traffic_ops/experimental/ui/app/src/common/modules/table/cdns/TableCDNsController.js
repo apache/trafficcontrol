@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNsController = function(cdns, $scope, locationUtils) {
+var TableCDNsController = function(cdns, $scope, $state, locationUtils) {
 
     $scope.cdns = cdns;
 
@@ -29,6 +29,10 @@ var TableCDNsController = function(cdns, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/cdns/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#cdnsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableCDNsController = function(cdns, $scope, locationUtils) {
 
 };
 
-TableCDNsController.$inject = ['cdns', '$scope', 'locationUtils'];
+TableCDNsController.$inject = ['cdns', '$scope', '$state', 'locationUtils'];
 module.exports = TableCDNsController;

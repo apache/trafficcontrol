@@ -24,7 +24,10 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{deliveryService.displayName}}</a></li>
             <li class="active">Regexes</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="createRegex(deliveryService.id)"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Regex</button>
+        <div class="pull-right">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-primary" ng-click="createRegex(deliveryService.id)"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Regex</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

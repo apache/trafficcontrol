@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypesController = function(types, $scope, locationUtils) {
+var TableTypesController = function(types, $scope, $state, locationUtils) {
 
     $scope.types = types;
 
@@ -29,6 +29,10 @@ var TableTypesController = function(types, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/types/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#typesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableTypesController = function(types, $scope, locationUtils) {
 
 };
 
-TableTypesController.$inject = ['types', '$scope', 'locationUtils'];
+TableTypesController.$inject = ['types', '$scope', '$state', 'locationUtils'];
 module.exports = TableTypesController;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $scope, locationUtils) {
+var TableCDNServersController = function(cdn, servers, $scope, $state, locationUtils) {
 
 	$scope.cdn = cdn;
 
@@ -31,6 +31,10 @@ var TableCDNServersController = function(cdn, servers, $scope, locationUtils) {
 		alert('not hooked up yet: queuing updates for all cdn servers');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableCDNServersController = function(cdn, servers, $scope, locationUtils) {
 
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$scope', 'locationUtils'];
+TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableCDNServersController;

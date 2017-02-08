@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, locationUtils) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, locationUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
@@ -35,6 +35,10 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, lo
 		alert('not hooked up yet: dequeuing updates for all cachegroup servers');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -46,5 +50,5 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, lo
 
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', 'locationUtils'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableCacheGroupsServersController;

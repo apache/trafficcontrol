@@ -17,11 +17,15 @@
  * under the License.
  */
 
-var TableTypeStaticDnsEntriesController = function(type, staticDnsEntries, $scope, locationUtils) {
+var TableTypeStaticDnsEntriesController = function(type, staticDnsEntries, $scope, $state, locationUtils) {
 
 	$scope.type = type;
 
 	$scope.staticDnsEntries = staticDnsEntries;
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -34,5 +38,5 @@ var TableTypeStaticDnsEntriesController = function(type, staticDnsEntries, $scop
 
 };
 
-TableTypeStaticDnsEntriesController.$inject = ['type', 'staticDnsEntries', '$scope', 'locationUtils'];
+TableTypeStaticDnsEntriesController.$inject = ['type', 'staticDnsEntries', '$scope', '$state', 'locationUtils'];
 module.exports = TableTypeStaticDnsEntriesController;

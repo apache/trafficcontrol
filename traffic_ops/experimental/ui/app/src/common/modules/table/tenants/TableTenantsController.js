@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTenantsController = function(tenants, $scope, locationUtils) {
+var TableTenantsController = function(tenants, $scope, $state, locationUtils) {
 
     $scope.tenants = tenants;
 
@@ -29,6 +29,10 @@ var TableTenantsController = function(tenants, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/tenants/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#tenantsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableTenantsController = function(tenants, $scope, locationUtils) {
 
 };
 
-TableTenantsController.$inject = ['tenants', '$scope', 'locationUtils'];
+TableTenantsController.$inject = ['tenants', '$scope', '$state', 'locationUtils'];
 module.exports = TableTenantsController;

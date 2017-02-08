@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, locationUtils) {
+var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
 
@@ -31,6 +31,10 @@ var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $
 		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/new');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $
 
 };
 
-TableDeliveryServiceRegexesController.$inject = ['deliveryService', 'regexes', '$scope', 'locationUtils', 'deliveryServiceRegexService'];
+TableDeliveryServiceRegexesController.$inject = ['deliveryService', 'regexes', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceRegexesController;

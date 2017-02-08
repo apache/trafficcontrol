@@ -22,7 +22,10 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li class="active">Cache Groups</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="createCacheGroup()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Cache Group</button>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-primary" ng-click="createCacheGroup()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Cache Group</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
