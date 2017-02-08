@@ -8,9 +8,9 @@ package cache
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package cache
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import (
 	"encoding/json"
@@ -36,11 +35,12 @@ type AstatsSystem struct {
 	InfSpeed          int    `json:"inf.speed"`
 	ProcNetDev        string `json:"proc.net.dev"`
 	ProcLoadavg       string `json:"proc.loadavg"`
-	ConfigLoadRequest int    `json:"configReloadRequests"`
-	LastReloadRequest int    `json:"lastReloadRequest"`
-	ConfigReloads     int    `json:"configReloads"`
-	LastReload        int    `json:"lastReload"`
-	AstatsLoad        int    `json:"astatsLoad"`
+	ConfigLoadRequest int    `json:"configReloadRequests,omitempty"`
+	LastReloadRequest int    `json:"lastReloadRequest,omitempty"`
+	ConfigReloads     int    `json:"configReloads,omitempty"`
+	LastReload        int    `json:"lastReload,omitempty"`
+	AstatsLoad        int    `json:"astatsLoad,omitempty"`
+	NotAvailable      bool   `json:"notAvailable,omitempty"`
 }
 
 // Unmarshal unmarshalls the given bytes, which must be JSON Astats data, into an Astats object.

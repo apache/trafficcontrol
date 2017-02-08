@@ -201,6 +201,9 @@ func ComputedStats() map[string]StatComputeFunc {
 		"system.lastReloadRequest": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
 			return info.System.LastReloadRequest
 		},
+		"system.notAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.NotAvailable
+		},
 		"system.proc.loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
 			return info.System.ProcLoadavg
 		},

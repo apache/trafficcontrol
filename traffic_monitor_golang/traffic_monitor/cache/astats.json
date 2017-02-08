@@ -526,6 +526,7 @@
    "configReloads": 9,
    "lastReload": 4703274272,
    "astatsLoad": 4703274272,
+   "notAvailable": false,
 "something": "here"
   }
 }
