@@ -26,7 +26,7 @@ sub read {
 	my $self = shift;
 	my @data;
 	my $orderby = $self->param('orderby') || "profile";
-	my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { order_by => $orderby } );
+	my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { prefetch => [ 'profile', 'parameter' ], order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

@@ -164,7 +164,7 @@ sub read {
 	my @data;
 	my $orderby = "deliveryservice";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("Staticdnsentry")->search( undef, { order_by => $orderby } );
+	my $rs_data = $self->db->resultset("Staticdnsentry")->search( undef, { prefetch => [ 'deliveryservice', 'type', 'cachegroup' ], order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
