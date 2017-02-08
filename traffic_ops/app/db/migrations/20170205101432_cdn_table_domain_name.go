@@ -28,8 +28,40 @@ func doExec(stmt string, txn *sql.Tx) {
 	}
 }
 
+/*
+ if ( $multi_site_origin_algorithm == 0 ) {
+1174                     $mso_algorithm = "consistent_hash";
+1175                     if ( $ds->{qstring_ignore} == 0 ) {
+1176                         $parent_qstring = "consider";
+1177                     }
+1178                 }
+1179                 elsif ( $multi_site_origin_algorithm == 1 ) {
+1180                     $mso_algorithm = "false";
+1181                 }
+1182                 elsif ( $multi_site_origin_algorithm == 2 ) {
+1183                     $mso_algorithm = "strict";
+1184                 }
+1185                 elsif ( $multi_site_origin_algorithm == 3 ) {
+1186                     $mso_algorithm = "true";
+1187                 }
+1188                 elsif ( $multi_site_origin_algorithm == 4 ) {
+1189                     $mso_algorithm = "latched";
+1190                 }
+1191                 else {
+1192                     $mso_algorithm = "consistent_hash";
+1193                 }
+*/
 // Up is executed when this migration is applied
 func Up_20170205101432(txn *sql.Tx) {
+
+	algorithmStr := map[int64]string{
+		0: "consistent_hash",
+		1: "false",
+		2: "strict",
+		3: "true",
+		4: "latched",
+	}
+
 	fmt.Println("  Starting migration 20130106222315...")
 	doExec("CREATE TYPE profile_type AS ENUM ("+
 		"'ATS_PROFILE', 'TR_PROFILE', 'TM_PROFILE', 'TS_PROFILE', 'TP_PROFILE', 'INFLUXDB_PROFILE',"+
@@ -184,24 +216,28 @@ func Up_20170205101432(txn *sql.Tx) {
 				}
 			}
 		}
+		/* -- Not doing the remove at this time, so we can support both 5.x and 6.x - 6.x will have a warning if these are not removed from the DS, but
+		      should run just fine.
+
 		fmt.Printf("MHRW was: %s, \nMHRW now: %s\n", prof.MidHeaderRewrite, remainingString)
 
 		_, err = txn.Exec("UPDATE deliveryservice set mid_header_rewrite=$1 where xml_id=$2", remainingString, prof.XMLId)
 		checkErr(err, txn)
+		*/
 
 		var newId int64
 		var ok bool
-		newId, ok = existingParam["mso.algorithm"+"parent.config"+string(prof.MultiSiteOriginAlg)]
+		newId, ok = existingParam["mso.algorithm"+"parent.config"+algorithmStr[prof.MultiSiteOriginAlg]]
 		if !ok {
 			fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
-				"mso.algorithm", "parent.config", prof.MultiSiteOriginAlg)
+				"mso.algorithm", "parent.config", algorithmStr[prof.MultiSiteOriginAlg])
 			newRow = txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
-				"mso.algorithm", "parent.config", prof.MultiSiteOriginAlg)
+				"mso.algorithm", "parent.config", algorithmStr[prof.MultiSiteOriginAlg])
 			err = newRow.Scan(&newId)
 			checkErr(err, txn)
-			existingParam["mso.algorithm"+"parent.config"+string(prof.MultiSiteOriginAlg)] = newId
+			existingParam["mso.algorithm"+"parent.config"+algorithmStr[prof.MultiSiteOriginAlg]] = newId
 		} else {
-			newId = existingParam["mso.algorithm"+"parent.config"+string(prof.MultiSiteOriginAlg)]
+			newId = existingParam["mso.algorithm"+"parent.config"+algorithmStr[prof.MultiSiteOriginAlg]]
 		}
 
 		fmt.Println("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
