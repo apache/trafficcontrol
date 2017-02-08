@@ -1293,9 +1293,14 @@ sub ip_allow_data {
 	$ipallow->[$i]->{action} = 'ip_allow';
 	$ipallow->[$i]->{method} = "ALL";
 	$i++;
+
+	# default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
+	my $coalesce_masklen_v4 = 24;
+	my $coalesce_number_v4 = 5;
+	my $coalesce_masklen_v6 = 48;
+	my $coalesce_number_v6 = 5;
 	my $rs_parameter =
-		$self->db->resultset('ProfileParameter')
-		->search( { profile => $server_obj->profile->id }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
+		$self->db->resultset('ProfileParameter')->search( { profile => $server_obj->profile->id }, { prefetch => [ "parameter", "profile" ] } );
 
 	while ( my $row = $rs_parameter->next ) {
 		if ( $row->parameter->name eq 'purge_allow_ip' && $row->parameter->config_file eq 'ip_allow.config' ) {
@@ -1304,57 +1309,69 @@ sub ip_allow_data {
 			$ipallow->[$i]->{method} = "ALL";
 			$i++;
 		}
+		elsif ($row->parameter->name eq 'coalesce_masklen_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_masklen_v4 = $row->parameter->value;
+		}
+		elsif ($row->parameter->name eq 'coalesce_number_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_number_v4 = $row->parameter->value;
+		}
+		elsif ($row->parameter->name eq 'coalesce_masklen_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_masklen_v6 = $row->parameter->value;
+		}
+		elsif ($row->parameter->name eq 'coalesce_number_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+			$coalesce_number_v6 = $row->parameter->value;
+		}
 	}
 
+
 	if ( $server_obj->type->name =~ m/^MID/ ) {
-		my @edge_cachegroups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server_obj->cachegroup->id } )->get_column('id')->all();
-		my %allow_cachegroups;
-		foreach my $cg (@edge_cachegroups) {
-			$allow_cachegroups{$cg} = 1;
+		my @edge_locs = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server_obj->cachegroup->id } )->get_column('id')->all();
+		my %allow_locs;
+		foreach my $loc (@edge_locs) {
+			$allow_locs{$loc} = 1;
 		}
 
-		# get all the EDGE and Traffic Monitor (RASCAL) nets
-		my @allowed_ipv4_netaddrips;
+		# get all the EDGE and RASCAL nets
+		my @allowed_netaddrips;
 		my @allowed_ipv6_netaddrips;
-		my @server_types;
-		push( @server_types, &type_ids( $self, 'EDGE%', 'server' ) );
-		my $tm_type = &type_id( $self, 'RASCAL' );
-		push( @server_types, $tm_type );
-		my $rs_allowed_servers = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@server_types } }, { prefetch => [ 'type', 'cachegroup' ] } );
+		my @types;
+		push( @types, &type_ids( $self, 'EDGE%', 'server' ) );
+		my $rtype = &type_id( $self, 'RASCAL' );
+		push( @types, $rtype );
+		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
 
-		while ( my $allowed_server = $rs_allowed_servers->next ) {
-			if ( $allowed_server->type->id == $tm_type
-				|| ( defined( $allow_cachegroups{ $allowed_server->cachegroup->id } ) && $allow_cachegroups{ $allowed_server->cachegroup->id } == 1 ) )
+		while ( my $allow_row = $rs_allowed->next ) {
+			if ( $allow_row->type->id == $rtype
+				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
 			{
-				my $ipv4 = NetAddr::IP->new( $allowed_server->ip_address, $allowed_server->ip_netmask );
+				my $ipv4 = NetAddr::IP->new( $allow_row->ip_address, $allow_row->ip_netmask );
 
 				if ( defined($ipv4) ) {
-					push( @allowed_ipv4_netaddrips, $ipv4 );
+					push( @allowed_netaddrips, $ipv4 );
 				}
 				else {
 					$self->app->log->error(
-						$allowed_server->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server_obj->host_name );
+						$allow_row->host_name . " has an invalid IPv4 address; excluding from ip_allow data for " . $server_obj->host_name );
 				}
 
-				if ( defined $allowed_server->ip6_address ) {
-					my $ipv6 = NetAddr::IP->new( $allowed_server->ip6_address );
+				if ( defined $allow_row->ip6_address ) {
+					my $ipv6 = NetAddr::IP->new( $allow_row->ip6_address );
 
 					if ( defined($ipv6) ) {
-						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allowed_server->ip6_address ) );
+						push( @allowed_ipv6_netaddrips, NetAddr::IP->new( $allow_row->ip6_address ) );
 					}
 					else {
 						$self->app->log->error(
-							$allowed_server->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server_obj->host_name );
+							$allow_row->host_name . " has an invalid IPv6 address; excluding from ip_allow data for " . $server_obj->host_name );
 					}
 				}
 			}
 		}
 
 		# compact, coalesce and compact combined list again
-		# if more than 5 servers are in a /24, list that /24 - TODO JvD: parameterize
-		my @compacted_list = NetAddr::IP::Compact(@allowed_ipv4_netaddrips);
-		my $coalesced_list = NetAddr::IP::Coalesce( 24, 5, @allowed_ipv4_netaddrips );
-		my @combined_list  = NetAddr::IP::Compact( @allowed_ipv4_netaddrips, @{$coalesced_list} );
+		my @compacted_list = NetAddr::IP::Compact(@allowed_netaddrips);
+		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4 , $coalesce_number_v4, @allowed_netaddrips );
+		my @combined_list  = NetAddr::IP::Compact( @allowed_netaddrips, @{$coalesced_list} );
 		foreach my $net (@combined_list) {
 			my $range = $net->range();
 			$range =~ s/\s+//g;
@@ -1366,7 +1383,7 @@ sub ip_allow_data {
 
 		# now add IPv6. TODO JvD: paremeterize support enabled on/ofd and /48 and number 5
 		my @compacted__ipv6_list = NetAddr::IP::Compact(@allowed_ipv6_netaddrips);
-		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( 48, 5, @allowed_ipv6_netaddrips );
+		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( $coalesce_masklen_v6 , $coalesce_number_v6, @allowed_ipv6_netaddrips );
 		my @combined_ipv6_list   = NetAddr::IP::Compact( @allowed_ipv6_netaddrips, @{$coalesced_ipv6_list} );
 		foreach my $net (@combined_ipv6_list) {
 			my $range = $net->range();
