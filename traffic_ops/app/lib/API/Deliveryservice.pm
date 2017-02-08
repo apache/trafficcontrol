@@ -717,7 +717,7 @@ sub routing {
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
 			my $cdn_name = $result->cdn->name;
 
 			# we expect type to be a dns or http type, but strip off any trailing bit

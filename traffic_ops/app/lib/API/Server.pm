@@ -126,7 +126,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data  = $self->db->resultset("Server")->search( { id => $id } );
+	my $rs_data  = $self->db->resultset("Server")->search( { id => $id }, { prefetch => [ 'cachegroup', 'cdn', 'phys_location', 'profile', 'status', 'type' ]} );
 	my @data     = ();
 	my $is_admin = &is_admin($self);
 	while ( my $row = $rs_data->next ) {
