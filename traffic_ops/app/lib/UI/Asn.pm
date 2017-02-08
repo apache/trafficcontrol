@@ -162,7 +162,7 @@ sub view {
 	&stash_role($self);
 	$self->stash( asn_data => {}, cg_data => {} );
 
-	my $rs               = $self->db->resultset('Asn')->search( { id => $id } );
+	my $rs               = $self->db->resultset('Asn')->search( { id => $id }, { prefetch => [ 'cachegroup' ] } );
 	my $data             = $rs->single;
 	my $cache_group_name = $data->cachegroup->name;
 
@@ -196,25 +196,5 @@ sub get_asns {
 
 	return \%data;
 }
-
-# Read - get through API
-# sub index {
-# 	my $self = shift;
-# 	my @data;
-# 	my $orderby = "asn";
-# 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-# 	my $rs_data = $self->db->resultset("Asn")->search( undef, { prefetch => [ { 'cachegroup' => undef } ], order_by => $orderby } );
-# 	while ( my $row = $rs_data->next ) {
-# 		push(
-# 			@data, {
-# 				"id"           => $row->id,
-# 				"asn"          => $row->asn,
-# 				"cachegroup"   => $row->cachegroup->name,
-# 				"last_updated" => $row->last_updated,
-# 			}
-# 		);
-# 	}
-# 	$self->render( json => \@data );
-# }
 
 1;

@@ -895,17 +895,17 @@ sub readupdate {
 	my $rs_servers;
 	my %parent_pending = ();
 	if ( $host_name =~ m/^all$/ ) {
-		$rs_servers = $self->db->resultset("Server")->search(undef);
+		$rs_servers = $self->db->resultset("Server")->search(undef, { prefetch => [ 'type', 'cachegroup' ] } );
 	}
 	else {
 		$rs_servers =
-			$self->db->resultset("Server")->search( { host_name => $host_name } );
+			$self->db->resultset("Server")->search( { host_name => $host_name }, { prefetch => [ 'type', 'cachegroup' ] } );
 		my $count = $rs_servers->count();
 		if ( $count > 0 ) {
 			if ( $rs_servers->single->type->name =~ m/^EDGE/ ) {
 				my $parent_cg =
 					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
-				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );
+				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg }, { prefetch => [ 'status'] } );
 				while ( my $prow = $rs_parents->next ) {
 					if (   $prow->upd_pending == 1
 						&& $prow->status->name ne "OFFLINE" )

@@ -24,7 +24,7 @@ sub index {
 	my $self = shift;
 	my @data;
 	my $orderby = $self->param('orderby') || "cachegroup";
-	my $rs_data = $self->db->resultset("CachegroupParameter")->search( undef, { order_by => $orderby } );
+	my $rs_data = $self->db->resultset("CachegroupParameter")->search( undef, { prefetch => [ 'cachegroup', 'parameter' ], order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

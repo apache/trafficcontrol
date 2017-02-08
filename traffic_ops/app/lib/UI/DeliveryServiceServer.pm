@@ -28,7 +28,7 @@ sub cpdss_iframe {
 	my $srvr_id = $self->param('id');
 
 	if ( $mode eq "view" ) {
-		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id } )->single();
+		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id }, { prefetch => [ 'cachegroup' ] } )->single();
 
 		my @etypeids = &type_ids( $self, 'EDGE%', 'server' );
 		my $rs = $self->db->resultset('Server')->search( { type => { -in => \@etypeids }, cdn_id => $server->cdn_id }, { prefetch => 'profile', order_by => 'host_name' } );
@@ -64,12 +64,12 @@ sub edit {
 
 	# Get list of server ids associated with ds
 	my $assigned_servers;
-	my $rsas = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } );
+	my $rsas = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id }, { prefetch => [ 'server' ] } );
 	while ( my $row = $rsas->next ) {
 		$assigned_servers->{ $row->server->id } = 1;
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => 'cdn' } )->single();
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id } )->single();
 	my $valid_profiles;
 	my $psas = $self->db->resultset('Server')->search(
 		{ cdn_id => $ds->cdn_id },
@@ -82,7 +82,7 @@ sub edit {
 		$valid_profiles->{$row} = 1;
 	}
 
-	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id } )->single();
+	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id }, { prefetch => [ 'cdn' ] } )->single();
 
 	my @types;
 	push(@types, &type_ids( $self, 'EDGE%', 'server' ) );
@@ -133,7 +133,7 @@ sub read {
 	my $limit   = 10;
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
 	$limit   = $self->param('limit')   if ( defined $self->param('limit') );
-	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { order_by => $orderby, rows => $limit } );
+	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { prefetch => [ 'deliveryservice', 'server' ], order_by => $orderby, rows => $limit } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

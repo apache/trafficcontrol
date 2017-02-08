@@ -151,10 +151,10 @@ sub server_data {
 	my $server;
 
 	if ( $id =~ /^\d+$/ ) {
-		$server = $self->db->resultset('Server')->search( { id => $id } )->single;
+		$server = $self->db->resultset('Server')->search( { id => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
 	}
 	else {
-		$server = $self->db->resultset('Server')->search( { host_name => $id } )->single;
+		$server = $self->db->resultset('Server')->search( { host_name => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
 	}
 
 	return $server;
@@ -1411,13 +1411,13 @@ sub header_rewrite_dot_config {
 	my $ds_xml_id = undef;
 	if ( $file =~ /^hdr_rw_mid_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id } )->single();
 		my $actions = $ds->mid_header_rewrite;
 		$text .= $actions . "\n";
 	}
 	elsif ( $file =~ /^hdr_rw_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id } )->single();
 		my $actions = $ds->edge_header_rewrite;
 		$text .= $actions . "\n";
 	}
@@ -1438,7 +1438,7 @@ sub regex_remap_dot_config {
 
 	if ( $file =~ /^regex_remap_(.*)\.config$/ ) {
 		my $ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id } )->single();
 		$text .= $ds->regex_remap . "\n";
 	}
 
@@ -1509,7 +1509,7 @@ sub ssl_multicert_dot_config {
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
-		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } );
+		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
 		my $data         = $rs_ds->single;
 		my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );

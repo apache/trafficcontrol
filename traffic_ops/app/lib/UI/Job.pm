@@ -356,7 +356,7 @@ sub readresult {
 	my $id   = $self->param('id');
 	my @data;
 
-	my $rs_data = $self->db->resultset('JobResult')->search( { job => $self->param('id') } );
+	my $rs_data = $self->db->resultset('JobResult')->search( { job => $self->param('id') }, { prefetch => [ 'job', 'agent' ] } );
 	while ( my $row = $rs_data->next ) {
 		my %hash = (
 			id           => $row->id,
@@ -432,10 +432,10 @@ sub viewagentjob {
 
 	my $rs_data;
 	if ( $id eq "all" ) {
-		$rs_data = $self->db->resultset('Job')->search( { status => 1 }, { order_by => 'me.' . $orderby, } );
+		$rs_data = $self->db->resultset('Job')->search( { status => 1 }, { prefetch => [ 'agent', 'status', 'job_user' ], order_by => 'me.' . $orderby, } );
 	}
 	else {
-		$rs_data = $self->db->resultset('Job')->search( { agent => $id, status => 1 }, { order_by => 'me.' . $orderby, } );
+		$rs_data = $self->db->resultset('Job')->search( { agent => $id, status => 1 }, { prefetch => [ 'agent', 'status', 'job_user' ], order_by => 'me.' . $orderby, } );
 	}
 
 	while ( my $row = $rs_data->next ) {

@@ -64,7 +64,7 @@ sub get_ds_name {
 sub get_deliveryservices {
 	my $self = shift;
 	my %ds_data;
-	my $rs = $self->db->resultset('Deliveryservice');
+	my $rs = $self->db->resultset('Deliveryservice')->search(undef, { prefetch => [ 'type' ] });
 	while ( my $row = $rs->next ) {
 		if ( $row->type->name =~ m/^HTTP/ ) {
 			$ds_data{ $row->id } = $row->xml_id;
