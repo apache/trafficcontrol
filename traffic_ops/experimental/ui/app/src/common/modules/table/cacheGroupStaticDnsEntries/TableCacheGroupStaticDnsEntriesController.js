@@ -17,11 +17,15 @@
  * under the License.
  */
 
-var TableCacheGroupsStaticDnsEntriesController = function(cacheGroup, staticDnsEntries, $scope, locationUtils) {
+var TableCacheGroupsStaticDnsEntriesController = function(cacheGroup, staticDnsEntries, $scope, $state, locationUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
 	$scope.staticDnsEntries = staticDnsEntries;
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -34,5 +38,5 @@ var TableCacheGroupsStaticDnsEntriesController = function(cacheGroup, staticDnsE
 
 };
 
-TableCacheGroupsStaticDnsEntriesController.$inject = ['cacheGroup', 'staticDnsEntries', '$scope', 'locationUtils'];
+TableCacheGroupsStaticDnsEntriesController.$inject = ['cacheGroup', 'staticDnsEntries', '$scope', '$state', 'locationUtils'];
 module.exports = TableCacheGroupsStaticDnsEntriesController;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypeCacheGroupsController = function(type, cacheGroups, $scope, locationUtils) {
+var TableTypeCacheGroupsController = function(type, cacheGroups, $scope, $state, locationUtils) {
 
 	$scope.type = type;
 
@@ -25,6 +25,10 @@ var TableTypeCacheGroupsController = function(type, cacheGroups, $scope, locatio
 
 	$scope.editCacheGroup = function(id) {
 		locationUtils.navigateToPath('/configure/cache-groups/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableTypeCacheGroupsController = function(type, cacheGroups, $scope, locatio
 
 };
 
-TableTypeCacheGroupsController.$inject = ['type', 'cacheGroups', '$scope', 'locationUtils'];
+TableTypeCacheGroupsController.$inject = ['type', 'cacheGroups', '$scope', '$state', 'locationUtils'];
 module.exports = TableTypeCacheGroupsController;

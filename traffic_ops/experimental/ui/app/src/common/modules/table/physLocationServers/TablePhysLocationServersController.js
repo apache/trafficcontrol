@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $scope, locationUtils) {
+var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils) {
 
 	$scope.physLocation = physLocation;
 
@@ -25,6 +25,10 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 
 	$scope.editServer = function(id) {
 		locationUtils.navigateToPath('/configure/servers/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', 'locationUtils'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TablePhysLocationServersController;

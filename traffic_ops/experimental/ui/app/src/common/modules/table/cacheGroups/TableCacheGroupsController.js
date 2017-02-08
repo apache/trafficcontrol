@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupsController = function(cacheGroups, $scope, locationUtils) {
+var TableCacheGroupsController = function(cacheGroups, $scope, $state, locationUtils) {
 
     $scope.cacheGroups = cacheGroups;
 
@@ -29,6 +29,10 @@ var TableCacheGroupsController = function(cacheGroups, $scope, locationUtils) {
         locationUtils.navigateToPath('/configure/cache-groups/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#cacheGroupsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableCacheGroupsController = function(cacheGroups, $scope, locationUtils) {
 
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$scope', 'locationUtils'];
+TableCacheGroupsController.$inject = ['cacheGroups', '$scope', '$state', 'locationUtils'];
 module.exports = TableCacheGroupsController;

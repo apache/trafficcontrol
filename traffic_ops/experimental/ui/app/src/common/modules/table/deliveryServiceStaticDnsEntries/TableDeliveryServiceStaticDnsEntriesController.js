@@ -17,11 +17,15 @@
  * under the License.
  */
 
-var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, staticDnsEntries, $scope, locationUtils) {
+var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, staticDnsEntries, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
 
 	$scope.staticDnsEntries = staticDnsEntries;
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -34,5 +38,5 @@ var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, s
 
 };
 
-TableDeliveryServiceStaticDnsEntriesController.$inject = ['deliveryService', 'staticDnsEntries', '$scope', 'locationUtils'];
+TableDeliveryServiceStaticDnsEntriesController.$inject = ['deliveryService', 'staticDnsEntries', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceStaticDnsEntriesController;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, locationUtils) {
+var TableServersController = function(servers, $scope, $state, locationUtils) {
 
     $scope.servers = servers;
 
@@ -33,6 +33,10 @@ var TableServersController = function(servers, $scope, locationUtils) {
         alert('not hooked up yet: uploadServerCSV');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#serversTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -42,5 +46,5 @@ var TableServersController = function(servers, $scope, locationUtils) {
 
 };
 
-TableServersController.$inject = ['servers', '$scope', 'locationUtils'];
+TableServersController.$inject = ['servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableServersController;

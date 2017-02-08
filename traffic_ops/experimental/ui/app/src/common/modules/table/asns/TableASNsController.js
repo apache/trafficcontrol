@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableASNsController = function(asns, $scope, locationUtils) {
+var TableASNsController = function(asns, $scope, $state, locationUtils) {
 
     $scope.asns = asns;
 
@@ -29,6 +29,10 @@ var TableASNsController = function(asns, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/asns/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#asnsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableASNsController = function(asns, $scope, locationUtils) {
 
 };
 
-TableASNsController.$inject = ['asns', '$scope', 'locationUtils'];
+TableASNsController.$inject = ['asns', '$scope', '$state', 'locationUtils'];
 module.exports = TableASNsController;

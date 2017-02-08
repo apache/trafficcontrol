@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(deliveryServices, $scope, locationUtils) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, $state, locationUtils) {
 
     $scope.deliveryServices = deliveryServices;
 
@@ -29,6 +29,10 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, locatio
         locationUtils.navigateToPath('/configure/delivery-services/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#deliveryServicesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, locatio
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', 'locationUtils'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServicesController;

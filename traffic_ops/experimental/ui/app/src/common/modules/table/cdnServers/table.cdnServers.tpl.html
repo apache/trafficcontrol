@@ -24,7 +24,10 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/cdns/' + cdn.id)">{{cdn.name}}</a></li>
             <li class="active">Servers</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="queueUpdates()">Queue Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
+        <div class="pull-right">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-primary" ng-click="queueUpdates()">Queue Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

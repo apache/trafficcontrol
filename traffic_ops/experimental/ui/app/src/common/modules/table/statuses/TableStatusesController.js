@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableStatusesController = function(statuses, $scope, locationUtils) {
+var TableStatusesController = function(statuses, $scope, $state, locationUtils) {
 
     $scope.statuses = statuses;
 
@@ -29,6 +29,10 @@ var TableStatusesController = function(statuses, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/statuses/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#statusesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableStatusesController = function(statuses, $scope, locationUtils) {
 
 };
 
-TableStatusesController.$inject = ['statuses', '$scope', 'locationUtils'];
+TableStatusesController.$inject = ['statuses', '$scope', '$state', 'locationUtils'];
 module.exports = TableStatusesController;

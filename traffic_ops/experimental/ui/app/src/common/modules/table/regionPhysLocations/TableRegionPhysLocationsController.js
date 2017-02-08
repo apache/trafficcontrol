@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableRegionPhysLocationsController = function(region, physLocations, $scope, locationUtils) {
+var TableRegionPhysLocationsController = function(region, physLocations, $scope, $state, locationUtils) {
 
 	$scope.region = region;
 
@@ -31,6 +31,10 @@ var TableRegionPhysLocationsController = function(region, physLocations, $scope,
 		locationUtils.navigateToPath('/admin/phys-locations/new')
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableRegionPhysLocationsController = function(region, physLocations, $scope,
 
 };
 
-TableRegionPhysLocationsController.$inject = ['region', 'physLocations', '$scope', 'locationUtils'];
+TableRegionPhysLocationsController.$inject = ['region', 'physLocations', '$scope', '$state', 'locationUtils'];
 module.exports = TableRegionPhysLocationsController;

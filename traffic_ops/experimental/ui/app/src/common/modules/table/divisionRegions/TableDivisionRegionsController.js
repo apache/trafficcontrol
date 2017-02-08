@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDivisionRegionsController = function(division, divisionRegions, $scope, locationUtils) {
+var TableDivisionRegionsController = function(division, divisionRegions, $scope, $state, locationUtils) {
 
 	$scope.division = division;
 
@@ -25,6 +25,10 @@ var TableDivisionRegionsController = function(division, divisionRegions, $scope,
 
 	$scope.editRegion = function(id) {
 		locationUtils.navigateToPath('/admin/regions/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableDivisionRegionsController = function(division, divisionRegions, $scope,
 
 };
 
-TableDivisionRegionsController.$inject = ['division', 'divisionRegions', '$scope', 'locationUtils'];
+TableDivisionRegionsController.$inject = ['division', 'divisionRegions', '$scope', '$state', 'locationUtils'];
 module.exports = TableDivisionRegionsController;
