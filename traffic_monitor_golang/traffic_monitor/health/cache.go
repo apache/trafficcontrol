@@ -131,6 +131,8 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 		return true, eventDesc(status, availability), ""
 	case result.Error != nil:
 		return false, eventDesc(status, fmt.Sprintf("%v", result.Error)), ""
+	case result.System.NotAvailable == true:
+		return false, eventDesc(status, fmt.Sprintf("system.notAvailable == %v", result.System.NotAvailable)), ""
 	}
 
 	computedStats := cache.ComputedStats()
