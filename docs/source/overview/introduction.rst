@@ -27,23 +27,23 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
 
 
 **Traffic Ops**
-  *`_Traffic Ops <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html>`_ is used configure Traffic Servers and CDN Delivery Services. It also contains APIs used to access CDN data.
+  * _`Traffic Ops <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html>`_ is used configure Traffic Servers and CDN Delivery Services. It also contains APIs used to access CDN data.
 
 **Traffic Router**
-  *`_Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html>`_ is used to route clients with the closest healthy cache by analyzing the state of the Traffic Servers and the the location of the Client.
+  * _`Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html>`_ is used to route clients with the closest healthy cache by analyzing the state of the Traffic Servers and the the location of the Client.
 
 **Traffic Monitor**
-  *`_Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html>`_ does health polling of the Traffic Servers on a very short interval to keep track of which servers should be kept in rotation.
+  * _`Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html>`_ does health polling of the Traffic Servers on a very short interval to keep track of which servers should be kept in rotation.
 
 **Traffic Stats**
-  *`_Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html>`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess whether a Traffic Server is over taxed.
+  * _`Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html>`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess whether a Traffic Server is over taxed.
 
 
 **Traffic Portal**
-  *`_Traffic Portal <http://trafficcontrol.apache.org/docs/latest/overview/traffic_portal.html>`_ is a web application which leverages the Traffic Ops APIs to present CDN data through a web interface.
+  * _`Traffic Portal <http://trafficcontrol.apache.org/docs/latest/overview/traffic_portal.html>`_ is a web application which leverages the Traffic Ops APIs to present CDN data through a web interface.
 
 **Traffic Logs**
-*Traffic Logs is currently under construction with the intent of being an aggregator for all Traffic Server request and response logs.  Logs are parsed by service and indexed for search.
+  *Traffic Logs is currently under construction with the intent of being an aggregator for all Traffic Server request and response logs.  Logs are parsed by service and indexed for search.
 
 
 In the next sections each of these components will be explained further.
