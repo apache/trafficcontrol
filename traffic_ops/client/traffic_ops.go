@@ -31,11 +31,12 @@ import (
 
 // Session ...
 type Session struct {
-	UserName  string
-	Password  string
-	URL       string
-	UserAgent *http.Client
-	Cache     map[string]CacheEntry
+	UserName     string
+	Password     string
+	URL          string
+	UserAgent    *http.Client
+	Cache        map[string]CacheEntry
+	UserAgentStr string
 }
 
 // HTTPError is returned on Update Session failure.
@@ -125,11 +126,15 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 	return &to, nil
 }
 
+func Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string) (*Session, error) {
+	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client") // TODO add version
+}
+
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
 //     to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
+func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string) (*Session, error) {
 	credentials, err := loginCreds(toUser, toPasswd)
 	if err != nil {
 		return nil, err
@@ -151,10 +156,11 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 			},
 			Jar: jar,
 		},
-		URL:      toURL,
-		UserName: toUser,
-		Password: toPasswd,
-		Cache:    make(map[string]CacheEntry),
+		UserAgentStr: userAgent,
+		URL:          toURL,
+		UserName:     toUser,
+		Password:     toPasswd,
+		Cache:        make(map[string]CacheEntry),
 	}
 
 	path := "/api/1.2/user/login"
@@ -207,6 +213,7 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 		}
 	}
 
+	req.Header.Set("User-Agent", to.UserAgentStr)
 	resp, err := to.UserAgent.Do(req)
 	if err != nil {
 		return nil, err
