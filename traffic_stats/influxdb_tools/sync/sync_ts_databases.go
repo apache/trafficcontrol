@@ -127,8 +127,8 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 		//these take a long time so do them last
 		"bandwidth.1min",
 		"connections.1min",
-		//
 	}
+
 	for _, statName := range stats {
 		fmt.Printf("Syncing %s database with %s \n", db, statName)
 		syncCacheStat(sourceClient, targetClient, statName, days)
@@ -205,7 +205,8 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	for ssKey := range sourceStats {
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
-		if ts.value > ss.value {
+
+		if ts.value >= ss.value {
 			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
@@ -232,7 +233,10 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		}
 		bps.AddPoint(pt)
 	}
-	targetClient.Write(bps)
+	err = targetClient.Write(bps)
+	if err != nil {
+		fmt.Println("Error writing stat - ", err)
+	}
 }
 
 func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
@@ -291,7 +295,10 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		}
 		bps.AddPoint(pt)
 	}
-	targetClient.Write(bps)
+	err = targetClient.Write(bps)
+	if err != nil {
+		fmt.Println("Error writing stat - ", err)
+	}
 }
 
 func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
@@ -347,7 +354,10 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 		}
 		bps.AddPoint(pt)
 	}
-	targetClient.Write(bps)
+	err = targetClient.Write(bps)
+	if err != nil {
+		fmt.Println("Error writing stat - ", err)
+	}
 }
 
 func getCacheStats(res []influx.Result) map[string]cacheStats {
@@ -374,7 +384,7 @@ func getCacheStats(res []influx.Result) map[string]cacheStats {
 					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue
 				}
-				key := data.t + data.cdn + data.hostname
+				key := data.t + data.cdn + data.cacheType + data.hostname
 				response[key] = *data
 			}
 		}
