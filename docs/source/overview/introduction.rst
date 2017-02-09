@@ -36,13 +36,13 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
   * `Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html/>`_ does health polling of the Traffic Servers on a very short interval to keep track of which servers should be kept in rotation.
 
 **Traffic Stats**
-  * `Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html>/`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess whether a Traffic Server is over taxed.
+  * `Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html/>`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess whether a Traffic Server is over taxed.
 
 **Traffic Portal**
   * `Traffic Portal <http://trafficcontrol.apache.org/docs/latest/overview/traffic_portal.html/>`_ is a web application which leverages the Traffic Ops APIs to present CDN data through a web interface.
 
 **Traffic Logs**
-  *Traffic Logs is currently under construction with the intent of being an aggregator for all Traffic Server request and response logs.  Logs are parsed by service and indexed for search.
+  * Traffic Logs is currently under construction with the intent of being an aggregator for all Traffic Server request and response logs.  Logs are parsed by service and indexed for search.
 
 
 In the next sections each of these components will be explained further.
