@@ -43,7 +43,6 @@ type Handler struct {
 	resultChan         chan Result
 	Notify             int
 	ToData             *todata.TODataThreadsafe
-	PeerStates         *peer.CRStatesPeersThreadsafe
 	MultipleSpaceRegex *regexp.Regexp
 }
 
@@ -57,13 +56,13 @@ func NewHandler() Handler {
 }
 
 // NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChan.
-func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
-	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
+func NewPrecomputeHandler(toData todata.TODataThreadsafe) Handler {
+	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData}
 }
 
 // Precompute returns whether this handler precomputes data before passing the result to the ResultChan
 func (handler Handler) Precompute() bool {
-	return handler.ToData != nil && handler.PeerStates != nil
+	return handler.ToData != nil
 }
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
