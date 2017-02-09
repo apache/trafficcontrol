@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO
+# * fix ntp check (issue on traffic_control)
+#   * don't check server check to see if time is locked.
+#   * check to see if the when is double+32 the poll number
+
 use strict;
 use warnings;
 use feature qw(switch);
@@ -24,22 +29,29 @@ use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
+use Socket;
+use Data::Dumper;
 
 $| = 1;
-my $date           = `/bin/date`;
+my $date = `/bin/date`;
 chomp($date);
 print "$date\n";
 
 # supported redhat/centos releases
 my %supported_el_release = ( "EL6" => 1, "EL7" => 1);
 
-my $dispersion = 300;
-my $retries = 5;
+my $dispersion       = 300;
+my $retries          = 5;
 my $wait_for_parents = 1;
+my $stats_log        = undef;
+my $host_id          = undef;    # will contain the host_id from TO
 
-GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
-            "retries=i"          => \$retries,
-            "wait_for_parents=i" => \$wait_for_parents );
+GetOptions(
+	"dispersion=i"       => \$dispersion,         # dispersion (in seconds)
+	"retries=i"          => \$retries,
+	"wait_for_parents=i" => \$wait_for_parents,
+	"stats_log=s"        => \$stats_log
+);
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -60,7 +72,7 @@ given ( $ARGV[1] ) {
 }
 
 my $traffic_ops_host = undef;
-my $TM_LOGIN         = undef;
+my $TROPS_LOGIN      = undef;
 
 if ( defined( $ARGV[2] ) ) {
 	if ( $ARGV[2] !~ /^https*:\/\/.*$/ ) {
@@ -80,7 +92,7 @@ if ( defined( $ARGV[3] ) ) {
 		&usage();
 	}
 	else {
-		$TM_LOGIN = $ARGV[3];
+		$TROPS_LOGIN = $ARGV[3];
 	}
 }
 else {
@@ -102,10 +114,18 @@ my $ERROR = 2;
 my $FATAL = 1;
 my $NONE  = 0;
 
+### Counters for report and syncds mode
+my $err_cnt   = 0;
+my $warn_cnt  = 0;
+my $fatal_cnt = 0;
+
 my $RELEASE = &os_version();
 ( $log_level >> $DEBUG ) && print "DEBUG OS release is $RELEASE.\n";
 
-my $script_mode = &check_script_mode();
+my $unixtime        = time();
+my $script_mode     = &check_script_mode();
+my $script_mode_str = $ARGV[0];
+
 &check_run_user();
 &check_only_copy_running();
 &check_log_level();
@@ -133,15 +153,14 @@ my $CFG_FILE_ALREADY_PROCESSED = 4;
 #### LWP globals
 my $lwp_conn                   = &setup_lwp();
 
-my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
 
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
 
-my $TMP_BASE  = "/tmp/ort";
-my $cookie    = &get_cookie( $traffic_ops_host, $TM_LOGIN );
+my $TMP_BASE = "/tmp/ort";
+my $cookie = &get_cookie( $traffic_ops_host, $TROPS_LOGIN );
 
 # add any special yum options for your environment here; this variable is used with all yum commands
 my $YUM_OPTS = "";
@@ -166,16 +185,25 @@ my $ats_running   = 0;
 my $teakd_running = 0;
 
 #### Process installed tracker
-my $installed_new_ssl_keys    = 0;
+my $installed_new_ssl_keys = 0;
 my %install_tracker;
 
 my $config_dirs      = undef;
 my $cfg_file_tracker = undef;
 my $ssl_tracker      = undef;
+my $ats_uid          = getpwnam("ats");
 
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### Start main flow
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
+
+my $sl_fh;
+if ($stats_log) {
+	open( $sl_fh, '>>', $stats_log );
+	if ( tell($sl_fh) == -1 ) {
+		( $log_level >> $ERROR ) && print "ERROR Could not open stats log '$stats_log' $!";
+	}
+}
 
 #### First and foremost, if this is a syncds run, check to see if we can bail.
 my $syncds_update = undef;
@@ -184,6 +212,11 @@ if ( defined $traffic_ops_host ) {
 }
 else {
 	print "FATAL Could not resolve Traffic Ops host!\n";
+	if ($stats_log) {
+		print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Could not resolve Traffic Ops host!\" "
+		  . time() . "\n";
+		print $sl_fh "ort-stats,id=$unixtime,host=$hostname_short,mode=$script_mode_str fatals=1i,errors=0i,warns=0i " . time() . "\n";
+	}
 	exit 1;
 }
 
@@ -197,8 +230,7 @@ if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == 
 my $header_comment = &get_header_comment($traffic_ops_host);
 
 &process_packages( $hostname_short, $traffic_ops_host );
-# get the ats user's UID after package installation in case this is the initial badass
-my $ats_uid          = getpwnam("ats");
+
 &process_chkconfig( $hostname_short, $traffic_ops_host );
 
 #### First time
@@ -206,9 +238,9 @@ my $ats_uid          = getpwnam("ats");
 #### Second time, in case there were new files added to the registry
 &process_config_files();
 
-foreach my $file ( keys ( %{$cfg_file_tracker} ) ) {
-	if ( exists($cfg_file_tracker->{$file}->{'remap_plugin_config_file'}) && $cfg_file_tracker->{$file}->{'remap_plugin_config_file'} ) {
-		if ( exists($cfg_file_tracker->{$file}->{'change_applied'}) && $cfg_file_tracker->{$file}->{'change_applied'} ) {
+foreach my $file ( keys( %{$cfg_file_tracker} ) ) {
+	if ( exists( $cfg_file_tracker->{$file}->{'remap_plugin_config_file'} ) && $cfg_file_tracker->{$file}->{'remap_plugin_config_file'} ) {
+		if ( exists( $cfg_file_tracker->{$file}->{'change_applied'} ) && $cfg_file_tracker->{$file}->{'change_applied'} ) {
 			( $log_level >> $DEBUG ) && print "\nDEBUG $file is a remap plugin config file, and was changed. remap.config needs touched.  ========\n";
 			&touch_file('remap.config');
 			last;
@@ -237,6 +269,36 @@ if ( $sysctl_p_needed && $script_mode != $SYNCDS ) {
 if ( $script_mode != $REPORT ) {
 	&update_trops();
 }
+
+if ( $script_mode == $REPORT ) {
+	if ($stats_log) {
+		print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+		  . $fatal_cnt
+		  . "i,errors="
+		  . $err_cnt
+		  . "i,warns="
+		  . $warn_cnt . "i "
+		  . time() . "\n";
+	}
+	my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+	&update_to_check($tot_err);
+}
+
+if ( $script_mode == $SYNCDS ) {
+	if ($stats_log) {
+		print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+		  . $fatal_cnt
+		  . "i,errors="
+		  . $err_cnt
+		  . "i,warns="
+		  . $warn_cnt . "i "
+		  . time() . "\n";
+	}
+	my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+	&update_to_check($tot_err);
+}
+
+exit();
 
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 #### End main flow
@@ -269,9 +331,10 @@ sub usage {
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
 	print "\n\t[optional flags]:\n";
-	print "\t\tdispersion=<time>      => wait a random number between 0 and <time> before starting. Default = 300.\n";
-	print "\t\tretries=<number>       => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
-	print "\t\twait_for_parents=<0|1> => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
+	print "\t\tdispersion=<time>        => wait a random number between 0 and <time> before starting. Default = 300.\n";
+	print "\t\tretries=<number>         => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
+	print "\t\twait_for_parents=<0|1>   => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
+	print "\t\tstats_log=</path/to/log> => writes a stats log that is consumable by telegraf to put in influxdb.";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -283,8 +346,10 @@ sub process_cfg_file {
 	my $return_code = 0;
 	my $url;
 
+	( $log_level >> $TRACE ) && print "\nTRACE: ======== In process_cfg_file() ========\n";
+
 	return $CFG_FILE_ALREADY_PROCESSED
-		if ( defined( $cfg_file_tracker->{$cfg_file}->{'audit_complete'} ) && $cfg_file_tracker->{$cfg_file}->{'audit_complete'} > 0 );
+	  if ( defined( $cfg_file_tracker->{$cfg_file}->{'audit_complete'} ) && $cfg_file_tracker->{$cfg_file}->{'audit_complete'} > 0 );
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_filename($cfg_file) );
 
@@ -336,21 +401,22 @@ sub process_cfg_file {
 	}
 
 	( $log_level >> $INFO )
-		&& print "INFO: ======== End processing config file: $cfg_file for service: " . $cfg_file_tracker->{$cfg_file}->{'service'} . " ========\n";
+	  && print "INFO: ======== End processing config file: $cfg_file for service: " . $cfg_file_tracker->{$cfg_file}->{'service'} . " ========\n";
 	$cfg_file_tracker->{$cfg_file}->{'audit_complete'}++;
 
 	return $return_code;
 }
 
 sub systemd_service_set {
-	my $systemd_service = shift;
+	my $systemd_service        = shift;
 	my $systemd_service_enable = shift;
 
 	my $command = "/bin/systemctl $systemd_service_enable $systemd_service";
 	`$command 2>/dev/null`;
-	if ($? == 0) {
+	if ( $? == 0 ) {
 		return 1;
-	} else {
+	}
+	else {
 		return 0;
 	}
 }
@@ -359,10 +425,10 @@ sub systemd_service_chk {
 	my $service = shift;
 
 	my $status = "disabled";
-	open(FH, "/bin/systemctl list-unit-files ${service}.service|") or die ("/bin/systemctl: $!");
-	while(<FH>) {
+	open( FH, "/bin/systemctl list-unit-files ${service}.service|" ) or die("/bin/systemctl: $!");
+	while (<FH>) {
 		chomp($_);
-		if ($_ =~ m/$service\.service\s(\w+)/) {
+		if ( $_ =~ m/$service\.service\s(\w+)/ ) {
 			$status = $1;
 		}
 	}
@@ -377,21 +443,22 @@ sub systemd_service_status {
 	my $pid;
 	my $prog;
 
-	open(FH, "/bin/systemctl status $pkg_name|") or die ("/bin/systemctl $!");
-	while(<FH>) {
-		chomp ($_);
-		if ($_ =~ m/\s+Active:\s+active\s\(running\)/) {
+	open( FH, "/bin/systemctl status $pkg_name|" ) or die("/bin/systemctl $!");
+	while (<FH>) {
+		chomp($_);
+		if ( $_ =~ m/\s+Active:\s+active\s\(running\)/ ) {
 			$running = 1;
 		}
-		if ($_ =~ m/\s+Main\sPID:\s(\d+)\s+\((\w+)\)/) {
-			$pid = $1;
-			$prog = $2
+		if ( $_ =~ m/\s+Main\sPID:\s(\d+)\s+\((\w+)\)/ ) {
+			$pid  = $1;
+			$prog = $2;
 		}
 	}
 	close(FH);
 	if ($running) {
 		$running_string = "$prog (pid $pid) is running...";
-	} else {
+	}
+	else {
 		$running_string = "$pkg_name is stopped";
 	}
 
@@ -404,10 +471,11 @@ sub start_service {
 	( $log_level >> $DEBUG ) && print "DEBUG start_service called for $pkg_name.\n";
 
 	my $pkg_running;
-	if ($RELEASE eq "EL7") {
+	if ( $RELEASE eq "EL7" ) {
 		$pkg_running = &systemd_service_status($pkg_name);
-	} else {
-		$pkg_running  = `/sbin/service $pkg_name status`;
+	}
+	else {
+		$pkg_running = `/sbin/service $pkg_name status`;
 	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
@@ -420,18 +488,24 @@ sub start_service {
 		if ( $pkg_running !~ m/$running_string \(pid\s+(\d+)\) is running.../ ) {
 			if ( $script_mode == $REPORT || $script_mode == $SYNCDS ) {
 				( $log_level >> $ERROR ) && print "ERROR $pkg_name is not running.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$pkg_name is not running\" "
+					  . time() . "\n";
+				}
 				$pkg_running = $START_NOT_ATTEMPTED;
 			}
 			elsif ( $script_mode == $BADASS ) {
 				( $log_level >> $ERROR ) && print "ERROR $pkg_name needs started. Trying to do that now.\n";
 				my $pkg_start_output = `/sbin/service $pkg_name start`;
-				my $pkg_started = 0;
-				if ($RELEASE eq "EL7") {
+				my $pkg_started      = 0;
+				if ( $RELEASE eq "EL7" ) {
 					my $_st = &systemd_service_status($pkg_name);
-					if ($_st =~ m/\(pid\s+(\d+)\) is running.../) {
+					if ( $_st =~ m/\(pid\s+(\d+)\) is running.../ ) {
 						$pkg_started++;
 					}
-				} else {
+				}
+				else {
 					( my @output_lines ) = split( /\n/, $pkg_start_output );
 					foreach my $ol (@output_lines) {
 						if ( $ol =~ m/\[.*\]/ && $ol =~ m/OK/ ) {
@@ -458,13 +532,14 @@ sub start_service {
 				if ( $select =~ m/Y/ ) {
 					( $log_level >> $ERROR ) && print "ERROR $pkg_name needs started. Trying to do that now.\n";
 					my $pkg_start_output = `/sbin/service $pkg_name start`;
-					my $pkg_started = 0;
-					if ($RELEASE eq "EL7") {
+					my $pkg_started      = 0;
+					if ( $RELEASE eq "EL7" ) {
 						my $_st = &systemd_service_status($pkg_name);
-						if ($_st =~ m/\(pid\s+(\d+)\) is running.../) {
+						if ( $_st =~ m/\(pid\s+(\d+)\) is running.../ ) {
 							$pkg_started++;
 						}
-					} else {
+					}
+					else {
 						( my @output_lines ) = split( /\n/, $pkg_start_output );
 						foreach my $ol (@output_lines) {
 							if ( $ol =~ m/\[.*\]/ && $ol =~ m/OK/ ) {
@@ -486,11 +561,20 @@ sub start_service {
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR $pkg_name is running.\n";
+			if ($stats_log) {
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"INFO\",msg=\"$pkg_name is running\" " . time . "\n";
+			}
 			$pkg_running = $ALREADY_RUNNING;
 		}
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL Unrecognized service: $pkg_name. Not starting $pkg_name.\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Unrecognized service: $pkg_name. Not starting $pkg_name\" "
+			  . time . "\n";
+		}
 	}
 	return $pkg_running;
 }
@@ -499,10 +583,11 @@ sub restart_service {
 	my $pkg_name = $_[0];
 
 	my $pkg_running;
-	if ($RELEASE eq "EL7") {
+	if ( $RELEASE eq "EL7" ) {
 		$pkg_running = &systemd_service_status($pkg_name);
-	} else {
-		$pkg_running  = `/sbin/service $pkg_name status`;
+	}
+	else {
+		$pkg_running = `/sbin/service $pkg_name status`;
 	}
 	my $running_string = "";
 	if ( $pkg_name eq "trafficserver" ) {
@@ -512,6 +597,12 @@ sub restart_service {
 		if ( $pkg_running =~ m/$running_string \(pid  (\d+)\) is running.../ ) {
 			if ( $script_mode == $REPORT ) {
 				( $log_level >> $ERROR ) && print "ERROR $pkg_name needs to be restarted. Please run 'service $pkg_name restart' to fix.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$pkg_name needs to be restarted. Please run 'service $pkg_name restart' to fix.\" "
+					  . time() . "\n";
+				}
 			}
 			if ( $script_mode == $BADASS ) {
 				( $log_level >> $ERROR ) && print "ERROR Trying to restart $pkg_name.\n";
@@ -565,6 +656,12 @@ sub restart_service {
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL Unrecognized service: $pkg_name. Not restarting $pkg_name.\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Unrecognized service: $pkg_name. Not restarting $pkg_name\" "
+			  . time() . "\n";
+		}
 	}
 	return $pkg_running;
 }
@@ -578,7 +675,7 @@ sub smart_mkdir {
 			system("/bin/mkdir -p $dir");
 			if ( $dir =~ m/config_trops/ ) {
 				( $log_level >> $DEBUG )
-					&& print "DEBUG Temp directory created: $dir. Config files from Traffic Ops will be placed here for future processing.\n";
+				  && print "DEBUG Temp directory created: $dir. Config files from Traffic Ops will be placed here for future processing.\n";
 			}
 			elsif ( $dir =~ m/config_bkp/ ) {
 				( $log_level >> $DEBUG ) && print "DEBUG Backup directory created: $dir. Config files will be backed up here.\n";
@@ -589,6 +686,12 @@ sub smart_mkdir {
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Directory: $dir doesn't exist, and was not created.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Directory: $dir doesn't exist, and was not created.\" "
+				  . time() . "\n";
+			}
 		}
 	}
 	else {
@@ -618,7 +721,7 @@ sub update_trops {
 	}
 	elsif ( $syncds_update == $UPDATE_TROPS_FAILED ) {
 		( $log_level >> $ERROR )
-			&& print "ERROR Traffic Ops requires an update, but applying the update locally failed. Traffic Ops is not being updated!\n";
+		  && print "ERROR Traffic Ops requires an update, but applying the update locally failed. Traffic Ops is not being updated!\n";
 		return 1;
 	}
 	elsif ( $syncds_update == $UPDATE_TROPS_SUCCESSFUL ) {
@@ -627,8 +730,8 @@ sub update_trops {
 	}
 	elsif ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 		( $log_level >> $ERROR )
-			&& print
-			"ERROR Traffic Ops is signaling that an update is ready to be applied, but none was found! Clearing update state in Traffic Ops anyway.\n";
+		  && print
+		  "ERROR Traffic Ops is signaling that an update is ready to be applied, but none was found! Clearing update state in Traffic Ops anyway.\n";
 		$update_result++;
 	}
 	if ($update_result) {
@@ -642,7 +745,7 @@ sub update_trops {
 			}
 			else {
 				( $log_level >> $ERROR )
-					&& print "ERROR Traffic Ops needs updated. You elected not to do that now; you should probably do that manually.\n";
+				  && print "ERROR Traffic Ops needs updated. You elected not to do that now; you should probably do that manually.\n";
 			}
 		}
 		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
@@ -659,7 +762,7 @@ sub send_update_to_trops {
 	my %headers = ( 'Cookie' => $cookie );
 	my $response = $lwp_conn->post( $url, [ 'updated' => $status ], %headers );
 
-	&check_lwp_response_code($response, $ERROR);
+	&check_lwp_response_code( $response, $ERROR );
 
 	( $log_level >> $DEBUG ) && print "DEBUG Response from Traffic Ops is: " . $response->content() . ".\n";
 }
@@ -684,42 +787,115 @@ sub check_syncds_state {
 		my $upd_ref = &lwp_get($url);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+			if ($stats_log) {
+				$fatal_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Update URL: $url returned $upd_ref. Exiting, not sure what else to do.' "
+				  . time() . "\n";
+				print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+				  . $fatal_cnt
+				  . "i,errors="
+				  . $err_cnt
+				  . "i,warns="
+				  . $warn_cnt . "i "
+				  . time() . "\n";
+			}
+			my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+			&update_to_check($tot_err);
 			exit 1;
 		}
 
 		my $upd_json = decode_json($upd_ref);
+		$host_id = ( defined( $upd_json->[0]->{'host_id'} ) ) ? $upd_json->[0]->{'host_id'} : undef;
 		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
 		if ( !defined($upd_pending) ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an upd_pending key.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg='Update URL: $url did not have an upd_pending key.' "
+				  . time() . "\n";
+			}
 			if ( $script_mode != $SYNCDS ) {
 				return $syncds_update;
 			}
 			else {
 				( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+				if ($stats_log) {
+					$fatal_cnt++;
+					print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Invalid JSON for $url. Exiting.\" "
+					  . time() . "\n";
+					print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+					  . $fatal_cnt
+					  . "i,errors="
+					  . $err_cnt
+					  . "i,warns="
+					  . $warn_cnt . "i "
+					  . time() . "\n";
+				}
+				my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+				&update_to_check($tot_err);
 				exit 1;
 			}
 		}
 
 		if ( $upd_pending == 1 ) {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
+			if ($stats_log) {
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"INFO\",msg=\"Update URL: $url did not have a parent_pending key.\" "
+				  . time() . "\n";
+			}
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
 			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 			if ( !defined($parent_pending) ) {
-				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_pending key.\n";
+
+				# this is an informational message. Don't count as an error
+				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have a parent_pending key.\n";
+				if ($stats_log) {
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"INFO\",msg=\"Update URL: $url did not have a parent_pending key.\" "
+					  . time() . "\n";
+				}
 				if ( $script_mode != $SYNCDS ) {
 					return $syncds_update;
 				}
 				else {
+					# this is actually FATAL
 					( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+					if ($stats_log) {
+						$fatal_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Invalid JSON for $url. Exiting.\" "
+						  . time() . "\n";
+						print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+						  . $fatal_cnt
+						  . "i,errors="
+						  . $err_cnt
+						  . "i,warns="
+						  . $warn_cnt . "i "
+						  . time() . "\n";
+					}
+					my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+					&update_to_check($tot_err);
 					exit 1;
 				}
 			}
-			if ( $parent_pending == 1 && $wait_for_parents == 1) {
+			if ( $parent_pending == 1 && $wait_for_parents == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
+				if ($stats_log) {
+
+					# downgrading this to warn because it should eventually be cleared.
+					$warn_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"WARN\",msg=\"Traffic Ops is signaling that my parents need an update.\" "
+					  . time() . "\n";
+				}
 				if ( $script_mode == $SYNCDS ) {
 					if ( $dispersion > 0 ) {
-						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						( $log_level >> $WARN )
+						  && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
 						for ( my $i = $dispersion; $i > 0; $i-- ) {
 							( $log_level >> $WARN ) && print ".";
 							sleep 1;
@@ -730,17 +906,62 @@ sub check_syncds_state {
 					$upd_ref = &lwp_get($url);
 					if ( $upd_ref =~ m/^\d{3}$/ ) {
 						( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+						if ($stats_log) {
+							$fatal_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Update URL: $url returned $upd_ref. Exiting.\" "
+							  . time() . "\n";
+							print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+							  . $fatal_cnt
+							  . "i,errors="
+							  . $err_cnt
+							  . "i,warns="
+							  . $warn_cnt . "i "
+							  . time() . "\n";
+						}
+						my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+						&update_to_check($tot_err);
 						exit 1;
 					}
 					$upd_json = decode_json($upd_ref);
 					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 					if ( !defined($parent_pending) ) {
 						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+						if ($stats_log) {
+							$fatal_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Invalid JSON for $url. Exiting.\" "
+							  . time() . "\n";
+							print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+							  . $fatal_cnt
+							  . "i,errors="
+							  . $err_cnt
+							  . "i,warns="
+							  . $warn_cnt . "i "
+							  . time() . "\n";
+						}
+						my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+						&update_to_check($tot_err);
+						exit 1;
 					}
 					if ( $parent_pending == 1 ) {
 						( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+						if ($stats_log) {
+							$warn_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"WARN\",msg=\"My parents still need an update, exiting\" "
+							  . time() . "\n";
+							print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+							  . $fatal_cnt
+							  . "i,errors="
+							  . $err_cnt
+							  . "i,warns="
+							  . $warn_cnt . "i "
+							  . time() . "\n";
+						}
+						my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+						&update_to_check($tot_err);
 						exit 1;
-
 					}
 					else {
 						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
@@ -753,15 +974,42 @@ sub check_syncds_state {
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
 			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. I'm outta here.\n";
+			if ($stats_log) {
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"INFO\",msg=\"In syncds mode, but no syncds update needs to be applied.\" "
+				  . time() . "\n";
+				print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+				  . $fatal_cnt
+				  . "i,errors="
+				  . $err_cnt
+				  . "i,warns="
+				  . $warn_cnt . "i "
+				  . time() . "\n";
+			}
+			my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+			&update_to_check($tot_err);
 			exit 0;
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
+			if ($stats_log) {
+
+				# this is an info message
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"INFO\",msg=\"Traffic Ops is signaling that no update is waiting to be applied.\" "
+				  . time() . "\n";
+			}
 		}
 
 		my $stj = &lwp_get("$traffic_ops_host\/datastatus");
 		if ( $stj =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "Statuses URL: $url returned $stj! Skipping creation of status file.\n";
+			( $log_level >> $ERROR ) && print "ERROR Statuses URL: $url returned $stj! Skipping creation of status file.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Statuses URL: $url returned $stj! Skipping creation of status file\" "
+				  . time() . "\n";
+			}
 		}
 
 		my $statuses = decode_json($stj);
@@ -772,6 +1020,12 @@ sub check_syncds_state {
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Returning; did not find status from Traffic Ops!\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Returning; Did not find status from Traffic Ops!\" "
+				  . time() . "\n";
+			}
 			return ($syncds_update);
 		}
 
@@ -780,6 +1034,12 @@ sub check_syncds_state {
 
 		if ( !-f $status_file ) {
 			( $log_level >> $ERROR ) && print "ERROR status file $status_file does not exist.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Status file $status_file does not exist\" "
+				  . time() . "\n";
+			}
 		}
 
 		for my $status ( @{$statuses} ) {
@@ -788,6 +1048,12 @@ sub check_syncds_state {
 
 			if ( -f $other_status && $status->{name} ne $my_status ) {
 				( $log_level >> $ERROR ) && print "ERROR Other status file $other_status exists.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Other status file $other_status exists\" "
+					  . time() . "\n";
+				}
 				if ( $script_mode != $REPORT ) {
 					( $log_level >> $DEBUG ) && print "DEBUG Removing $other_status\n";
 					unlink($other_status);
@@ -805,6 +1071,11 @@ sub check_syncds_state {
 
 				if ( !$r ) {
 					( $log_level >> $ERROR ) && print "ERROR Unable to touch $status_file\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Unable to touch $status_file\" "
+						  . time() . "\n";
+					}
 				}
 				else {
 					close(FH);
@@ -850,7 +1121,7 @@ sub process_config_files {
 				|| $file =~ m/\.key$/
 				|| $file eq "logs_xml.config"
 				|| $file eq "ssl_multicert.config" )
-			)
+		  )
 		{
 			if ( package_installed("trafficserver") ) {
 				( $log_level >> $DEBUG ) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
@@ -859,6 +1130,21 @@ sub process_config_files {
 			}
 			else {
 				( $log_level >> $FATAL ) && print "FATAL In syncds mode, but trafficserver isn't installed. Bailing.\n";
+				if ($stats_log) {
+					$fatal_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"In syncds mode, but trafficserver isn't installed. Exiting.\" "
+					  . time() . "\n";
+					print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+					  . $fatal_cnt
+					  . "i,errors="
+					  . $err_cnt
+					  . "i,warns="
+					  . $warn_cnt . "i "
+					  . time() . "\n";
+				}
+				my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+				&update_to_check($tot_err);
 				exit 1;
 			}
 		}
@@ -880,7 +1166,7 @@ sub process_config_files {
 				package_installed("trafficserver")
 				&& ( defined( $cfg_file_tracker->{$file}->{'location'} )
 					&& ( $cfg_file_tracker->{$file}->{'location'} =~ m/trafficserver/ || $cfg_file_tracker->{$file}->{'location'} =~ m/udev/ ) )
-				)
+			  )
 			{
 				$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
 				$return = &process_cfg_file($file);
@@ -899,6 +1185,12 @@ sub process_config_files {
 			}
 			else {
 				( $log_level >> $WARN ) && print "WARN $file is being processed with an unknown service\n";
+				if ($stats_log) {
+					$warn_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"WARN\",msg=\"$file is being processed with an unknown service\" "
+					  . time() . "\n";
+				}
 				$cfg_file_tracker->{$file}->{'service'} = "unknown";
 				$return = &process_cfg_file($file);
 			}
@@ -916,12 +1208,24 @@ sub process_config_files {
 		{
 			if ( $file eq "plugin.config" && $cfg_file_tracker->{'remap.config'}->{'prereq_failed'} ) {
 				( $log_level >> $ERROR )
-					&& print "ERROR plugin.config changed. However, prereqs failed for remap.config so I am skipping updates for plugin.config.\n";
+				  && print "ERROR plugin.config changed. However, prereqs failed for remap.config so I am skipping updates for plugin.config.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"plugin.config changed. However, prereqs failed for remap.config so I am skipping updates for plugin.config\" "
+					  . time() . "\n";
+				}
 				next;
 			}
 			elsif ( $file eq "remap.config" && $cfg_file_tracker->{'plugin.config'}->{'prereq_failed'} ) {
 				( $log_level >> $ERROR )
-					&& print "ERROR remap.config changed. However, prereqs failed for plugin.config so I am skipping updates for remap.config.\n";
+				  && print "ERROR remap.config changed. However, prereqs failed for plugin.config so I am skipping updates for remap.config.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"remap.config changed. However, prereqs failed for plugin.config so I am skipping updates for remap.config\" "
+					  . time() . "\n";
+				}
 				next;
 			}
 			else {
@@ -936,12 +1240,21 @@ sub process_config_files {
 sub touch_file {
 	my $return = 0;
 	my $file   = shift;
+
+	( $log_level >> $TRACE ) && print "TRACE ### in touch_file ###";
+
 	if ( defined( $cfg_file_tracker->{$file}->{'location'} ) ) {
 		$file = $cfg_file_tracker->{$file}->{'location'} . "/" . $file;
 		( $log_level >> $DEBUG ) && print "DEBUG About to touch $file.\n";
 	}
 	else {
-		( $log_level >> $ERROR ) && print "ERROR $file has not location defined. Not touching $file.\n";
+		( $log_level >> $ERROR ) && print "ERROR $file has no location defined. Not touching $file.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$file has no location defined. Not touching $file\" "
+			  . time() . "\n";
+		}
 		return $return;
 	}
 	if ( $script_mode == $INTERACTIVE ) {
@@ -958,6 +1271,12 @@ sub touch_file {
 	}
 	elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
 		( $log_level >> $ERROR ) && print "ERROR $file needs touched. Doing that now.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$file needs to be touched. Doing that now\" "
+			  . time() . "\n";
+		}
 		$return = &touch_this_file($file);
 	}
 	return $return;
@@ -970,6 +1289,12 @@ sub touch_this_file {
 	chomp($result);
 	if ( $result =~ m/cannot touch/ || $result =~ m/Permission denied/ || $result =~ m/No such file or directory/ ) {
 		( $log_level >> $ERROR ) && print "ERROR $file was not touched successfully. Error: $result.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$file was not touched successfully: $result\" "
+			  . time() . "\n";
+		}
 		$success = 0;
 	}
 	else {
@@ -990,10 +1315,21 @@ sub run_traffic_line {
 	else {
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 			( $log_level >> $ERROR ) && print "ERROR traffic_line run failed. Updating Traffic Ops anyway.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"traffic_line run failed. Updating Traffic Ops anyway.\" "
+				  . time() . "\n";
+			}
 			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR traffic_line run failed.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"traffic_line run failed\" "
+				  . time() . "\n";
+			}
 		}
 	}
 }
@@ -1019,6 +1355,12 @@ sub check_plugins {
 			}
 			elsif ( $return_code == $PLUGIN_NO ) {
 				( $log_level >> $ERROR ) && print "ERROR Package for plugin: $plugin_name is not installed!\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Package for plugin: $plugin_name is not installed!\" "
+					  . time() . "\n";
+				}
 				$cfg_file_tracker->{$cfg_file}->{'prereq_failed'}++;
 			}
 		}
@@ -1028,19 +1370,19 @@ sub check_plugins {
 		foreach my $liner (@file_lines) {
 			if ( $liner =~ m/^\#/ ) { next; }
 			( my @parts ) = split( /\@plugin\=/, $liner );
-			foreach my $i ( 1..$#parts ) {
+			foreach my $i ( 1 .. $#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
-				if (defined( $plugin_config_file ) ) {
-					($plugin_config_file) = split( /\s+/, $plugin_config_file);
+				if ( defined($plugin_config_file) ) {
+					($plugin_config_file) = split( /\s+/, $plugin_config_file );
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
+					if ( !exists( $cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) ) {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}
 				else {
-					($plugin_name) = split(/\s/, $plugin_name);
+					($plugin_name) = split( /\s/, $plugin_name );
 				}
 				$plugin_name =~ s/\s//g;
 				( $log_level >> $DEBUG ) && print "DEBUG Found plugin $plugin_name in $cfg_file.\n";
@@ -1050,6 +1392,12 @@ sub check_plugins {
 				}
 				elsif ( $return_code == $PLUGIN_NO ) {
 					( $log_level >> $ERROR ) && print "ERROR Package for plugin: $plugin_name is not installed\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Package for plugin: $plugin_name is not installed\" "
+						  . time() . "\n";
+					}
 					$cfg_file_tracker->{$cfg_file}->{'prereq_failed'}++;
 				}
 			}
@@ -1081,6 +1429,11 @@ sub check_ntp {
 	}
 	if ( $script_mode == $REPORT ) {
 		open my $fh, '<', "/etc/ntp.conf" || ( ( $log_level >> $ERROR ) && print "ERROR Can't open /etc/ntp.conf\n" );
+		if ( ( tell($fh) == -1 ) && $stats_log ) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Could not open /etc/ntp.conf\" "
+			  . time() . "\n";
+		}
 		my %ntp_conf_servers = ();
 		while (<$fh>) {
 			my $line = $_;
@@ -1125,10 +1478,21 @@ sub check_ntp {
 
 			if ( !exists( $ntp_conf_servers{$ntpq_server} ) ) {
 				( $log_level >> $ERROR ) && print "ERROR NTP server ($ntpq_server) is in use but is not configured in ntp.conf!\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"NTP server ($ntpq_server) is in use but is not configured in ntp.conf\" "
+					  . time() . "\n";
+				}
 			}
 		}
 		if ( !$ntp_peer_found ) {
 			( $log_level >> $ERROR ) && print "ERROR No NTP server peer found!\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"No NTP server peer found\" "
+				  . time() . "\n";
+			}
 		}
 	}
 }
@@ -1162,47 +1526,80 @@ sub lwp_get {
 	my $response;
 	my $response_content;
 
-	while( $retry_counter > 0 ) {
+	while ( $retry_counter > 0 ) {
 
-		$response = $lwp_conn->get($url, %headers);
+		$response = $lwp_conn->get( $url, %headers );
 		$response_content = $response->content;
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
+		if ( &check_lwp_response_code( $response, $ERROR ) || &check_lwp_response_content_length( $response, $ERROR ) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"result for $url is: $response->code\" "
+				  . time() . "\n";
+			}
 			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
 		}
+
 		# https://github.com/Comcast/traffic_control/issues/1168
 		elsif ( $url =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
 			( $log_level >> $FATAL ) && print "FATAL result for $url is: ..." . $response->content . "...\n";
+			if ($stats_log) {
+				$fatal_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"result for $url is: $response->code\" "
+				  . time() . "\n";
+				print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+				  . $fatal_cnt
+				  . "i,errors="
+				  . $err_cnt
+				  . "i,warns="
+				  . $warn_cnt . "i "
+				  . time() . "\n";
+			}
+			my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+			&update_to_check($tot_err);
 			exit 1;
 		}
 		else {
 			( $log_level >> $DEBUG ) && print "DEBUG result for $url is: ..." . $response->content . "...\n";
 			last;
 		}
-
 	}
 
-	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
+	( &check_lwp_response_code( $response, $FATAL ) || &check_lwp_response_content_length( $response, $FATAL ) ) if ( $retry_counter == 0 );
 
 	&eval_json($response) if ( $url =~ m/\.json$/ );
 
 	return $response_content;
-
 }
 
 sub eval_json {
 	my $lwp_response = shift;
 	eval {
-		decode_json($lwp_response->content());
+		decode_json( $lwp_response->content() );
 		1;
 	} or do {
 		my $error = $@;
-		( $log_level >> $FATAL ) && print "FATAL " . $lwp_response->request->uri . " did not return valid JSON: " . $lwp_response->content() . " | Error: $error\n";
+		( $log_level >> $FATAL )
+		  && print "FATAL " . $lwp_response->request->uri . " did not return valid JSON: " . $lwp_response->content() . " | Error: $error\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"$lwp_response->request->uri did not return valid JSON. Error: $error\" "
+			  . time() . "\n";
+			print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+			  . $fatal_cnt
+			  . "i,errors="
+			  . $err_cnt
+			  . "i,warns="
+			  . $warn_cnt . "i "
+			  . time() . "\n";
+		}
+		my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+		&update_to_check($tot_err);
 		exit 1;
-	}
-
+	  }
 }
 
 sub replace_cfg_file {
@@ -1211,8 +1608,8 @@ sub replace_cfg_file {
 	my $select      = 2;
 	if ( $script_mode == $INTERACTIVE ) {
 		( $log_level >> $ERROR )
-			&& print
-			"ERROR $cfg_file on disk needs updated with one from Traffic Ops. [1] override files on disk with data in Traffic Ops, [2] ignore and continue. (2): ";
+		  && print
+		  "ERROR $cfg_file on disk needs updated with one from Traffic Ops. [1] override files on disk with data in Traffic Ops, [2] ignore and continue. (2): ";
 		my $input = <STDIN>;
 		chomp($input);
 		if ( $input =~ m/\d/ ) {
@@ -1221,10 +1618,18 @@ sub replace_cfg_file {
 	}
 	if ( $select == 1 || $script_mode == $BADASS || $script_mode == $SYNCDS ) {
 		( $log_level >> $ERROR )
-			&& print "ERROR Copying "
-			. $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} . " to "
-			. $cfg_file_tracker->{$cfg_file}->{'location'}
-			. "/$cfg_file\n";
+		  && print "ERROR Copying "
+		  . $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} . " to "
+		  . $cfg_file_tracker->{$cfg_file}->{'location'}
+		  . "/$cfg_file\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Copying "
+			  . $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} . " to "
+			  . $cfg_file_tracker->{$cfg_file}->{'location'}
+			  . "/$cfg_file\" "
+			  . time() . "\n";
+		}
 		system("/bin/cp $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} $cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file");
 		$cfg_file_tracker->{$cfg_file}->{'change_applied'}++;
 		( $log_level >> $TRACE ) && print "TRACE Setting change applied for $cfg_file.\n";
@@ -1233,6 +1638,12 @@ sub replace_cfg_file {
 	}
 	elsif ( $select == 2 && $script_mode != $REPORT ) {
 		( $log_level >> $ERROR ) && print "ERROR You elected not to replace $cfg_file with version from Traffic Ops.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"You elected not to replace $cfg_file with version from Traffic Ops\" "
+			  . time() . "\n";
+		}
 		$cfg_file_tracker->{$cfg_file}->{'change_applied'} = 0;
 		$return_code = $CFG_FILE_UNCHANGED;
 	}
@@ -1293,6 +1704,10 @@ sub check_output {
 		$out =~ s/(\n+|\t+|\r+|\s+)/ /g;
 		if ( $out =~ m/error/i ) {
 			( $log_level >> $ERROR ) && print "ERROR $out\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$out\" " . time() . "\n";
+			}
 			return 1;
 		}
 		else {
@@ -1305,19 +1720,19 @@ sub check_output {
 }
 
 sub get_cookie {
-	my $to_host     = shift;
-	my $to_login    = shift;
+	my $to_host  = shift;
+	my $to_login = shift;
 	my ( $u, $p ) = split( /:/, $to_login );
 	my %headers;
 
 	my $url = $to_host . "/login";
 	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ], %headers );
 
-	&check_lwp_response_code($response, $FATAL);
+	&check_lwp_response_code( $response, $FATAL );
 
 	my $cookie;
 	if ( $response->header('Set-Cookie') ) {
-		($cookie) = split(/\;/, $response->header('Set-Cookie'));
+		($cookie) = split( /\;/, $response->header('Set-Cookie') );
 	}
 
 	if ( $cookie =~ m/mojolicious/ ) {
@@ -1326,24 +1741,41 @@ sub get_cookie {
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL mojolicious cookie not found from Traffic Ops!\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"mojolicious cookie not found from Traffic Ops!\" "
+			  . time() . "\n";
+			print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+			  . $fatal_cnt
+			  . "i,errors="
+			  . $err_cnt
+			  . "i,warns="
+			  . $warn_cnt . "i "
+			  . time() . "\n";
+		}
+		my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+		&update_to_check($tot_err);
 		exit 1;
 	}
 }
 
+# TODO this function should probably never exit. Leave the decision to exit up
+# to the calling function.
 sub check_lwp_response_code {
 	my $lwp_response  = shift;
 	my $panic_level   = shift;
 	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
-	if ( !defined($lwp_response->code()) ) {
+	if ( !defined( $lwp_response->code() ) ) {
 		( $log_level >> $panic_level ) && print $log_level_str . " $url failed!\n";
-		exit 1 if ($log_level_str eq 'FATAL');
+		exit 1 if ( $log_level_str eq 'FATAL' );
 		return 1;
 	}
 	elsif ( $lwp_response->code() >= 400 ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "! " . $lwp_response->message() . " \n";
-		exit 1 if ($log_level_str eq 'FATAL');
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned HTTP " . $lwp_response->code() . "!\n";
+		exit 1 if ( $log_level_str eq 'FATAL' );
 		return 1;
 	}
 	else {
@@ -1358,21 +1790,29 @@ sub check_lwp_response_content_length {
 	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
-	if ( !defined($lwp_response->header('Content-Length')) ) {
+	if ( !defined( $lwp_response->header('Content-Length') ) ) {
 		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n";
 		exit;
 		return 1;
 	}
-	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
-		exit 1 if ($log_level_str eq 'FATAL');
+	elsif ( $lwp_response->header('Content-Length') != length( $lwp_response->content() ) ) {
+		( $log_level >> $panic_level )
+		  && print $log_level_str
+		  . " $url returned a Content-Length of "
+		  . $lwp_response->header('Content-Length')
+		  . ", however actual content length is "
+		  . length( $lwp_response->content() ) . "!\n";
+		exit 1 if ( $log_level_str eq 'FATAL' );
 		return 1;
 	}
 	else {
-		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
+		( $log_level >> $DEBUG )
+		  && print "DEBUG $url returned a Content-Length of "
+		  . $lwp_response->header('Content-Length')
+		  . ", and actual content length is "
+		  . length( $lwp_response->content() ) . "\n";
 		return 0;
 	}
-
 }
 
 sub check_script_mode {
@@ -1396,11 +1836,25 @@ sub check_script_mode {
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL You did not specify a valid mode. Exiting.\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"You did not specify a valid mode. Exiting.\" "
+			  . time() . "\n";
+			print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+			  . $fatal_cnt
+			  . "i,errors="
+			  . $err_cnt
+			  . "i,warns="
+			  . $warn_cnt . "i "
+			  . time() . "\n";
+		}
+		my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+		&update_to_check($tot_err);
 		&usage();
 		exit 1;
 	}
 	return $script_mode;
-
 }
 
 sub check_run_user {
@@ -1410,6 +1864,21 @@ sub check_run_user {
 		&& ( $script_mode == $INTERACTIVE || $script_mode == $BADASS || $script_mode == $SYNCDS ) )
 	{
 		( $log_level >> $FATAL ) && print "FATAL For interactive, badass, or syncds mode, you must run script as root user. Exiting.\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"For $script_mode_str mode, you must run script as root user\" "
+			  . time() . "\n";
+			print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+			  . $fatal_cnt
+			  . "i,errors="
+			  . $err_cnt
+			  . "i,warns="
+			  . $warn_cnt . "i "
+			  . time() . "\n";
+		}
+		my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+		&update_to_check($tot_err);
 		exit 1;
 	}
 	else {
@@ -1426,10 +1895,11 @@ sub check_log_level {
 
 sub set_domainname {
 	my $hostname;
-	if ($RELEASE eq "EL7") {
+	if ( $RELEASE eq "EL7" ) {
 		$hostname = `cat /etc/hostname`;
 		chomp($hostname);
-	} else {
+	}
+	else {
 		$hostname = `cat /etc/sysconfig/network | grep HOSTNAME`;
 		chomp($hostname);
 		$hostname =~ s/HOSTNAME\=//g;
@@ -1447,11 +1917,11 @@ sub set_domainname {
 
 sub get_cfg_file_list {
 	my $host_name = shift;
-	my $tm_host   = shift;
+	my $to_host   = shift;
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $url = "$tm_host/ort/$host_name/ort1";
+	my $url = "$to_host/ort/$host_name/ort1";
 
 	my $result = &lwp_get($url);
 
@@ -1463,8 +1933,9 @@ sub get_cfg_file_list {
 	foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
 		my $fname_on_disk = &get_filename_on_disk($cfg_file);
 		( $log_level >> $INFO )
-			&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-		$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+		  && printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n",
+			$fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
+		$cfg_files->{$fname_on_disk}->{'location'}    = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
 		$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
@@ -1472,7 +1943,7 @@ sub get_cfg_file_list {
 
 sub get_filename_on_disk {
 	my $config_file = shift;
-	$config_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ($config_file =~ m/^to\_ext\_/);
+	$config_file =~ s/^to\_ext\_(.*)\.config$/$1\.config/ if ( $config_file =~ m/^to\_ext\_/ );
 	return $config_file;
 }
 
@@ -1489,11 +1960,14 @@ sub get_header_comment {
 		( $log_level >> $INFO ) && printf("INFO Found tm.toolname: $toolname\n");
 	}
 	else {
-		print "ERROR Did not find tm.toolaname!\n";
+		( $log_level >> $ERROR ) && print "ERROR Did not find tm.toolaname!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Did not find tm.toolname' " . time() . "\n";
+		}
 		$toolname = "";
 	}
 	return $toolname;
-
 }
 
 sub __package_action {
@@ -1508,7 +1982,11 @@ sub __package_action {
 	if ( $? != 0 ) {
 		( $log_level >> $ERROR ) && print "ERROR Execution of $yum_command failed!\n";
 		( $log_level >> $ERROR ) && print "ERROR Output: $out\n";
-
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Execution of $yum_command failed: $out\" "
+			  . time() . "\n";
+		}
 		return (0);
 	}
 	else {
@@ -1609,6 +2087,12 @@ sub packages_available {
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR $package is not available in the yum repo(s)!\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$package is not available in the yum repo(s)\" "
+				  . time() . "\n";
+			}
 			$package_missing = 1;
 		}
 	}
@@ -1644,10 +2128,10 @@ sub remove_packages {
 
 sub process_packages {
 	my $host_name = shift;
-	my $tm_host   = shift;
+	my $to_host   = shift;
 
 	my $proceed = 0;
-	my $url     = "$tm_host/ort/$host_name/packages";
+	my $url     = "$to_host/ort/$host_name/packages";
 	my $result  = &lwp_get($url);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^(\d){3}$/ ) {
@@ -1673,6 +2157,12 @@ sub process_packages {
 
 				if ( $script_mode == $REPORT ) {
 					( $log_level >> $FATAL ) && print "ERROR $installed_package: Currently installed and needs to be removed.\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$installed_package: Currently installed and needs to be removed\" "
+						  . time() . "\n";
+					}
 				}
 				else {
 					( $log_level >> $TRACE ) && print "TRACE $installed_package: Currently installed, marked for removal.\n";
@@ -1684,11 +2174,17 @@ sub process_packages {
 				for my $dependent_package ( package_requires( $package->{name} ) ) {
 					if ( $script_mode == $REPORT ) {
 						( $log_level >> $FATAL )
-							&& print "ERROR $dependent_package: Currently installed and depends on " . $package->{name} . "and needs to be removed.\n";
+						  && print "ERROR $dependent_package: Currently installed and depends on " . $package->{name} . " and needs to be removed.\n";
+						if ($stats_log) {
+							$err_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$dependent_package: Currently installed and depends on $package->{name} and needs to be removed\" "
+							  . time() . "\n";
+						}
 					}
 					else {
 						( $log_level >> $TRACE )
-							&& print "TRACE $dependent_package: Currently installed and depends on " . $package->{name} . ", marked for removal.\n";
+						  && print "TRACE $dependent_package: Currently installed and depends on " . $package->{name} . ", marked for removal.\n";
 					}
 
 					$package_map{"uninstall"}{$dependent_package} = 1;
@@ -1702,6 +2198,12 @@ sub process_packages {
 			if ( !package_installed( $package->{name}, $package->{version} ) ) {
 				if ( $script_mode == $REPORT ) {
 					( $log_level >> $FATAL ) && print "ERROR $full_package: Needs to be installed.\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$full_package: Needs to be installed\" "
+						  . time() . "\n";
+					}
 				}
 				else {
 					( $log_level >> $TRACE ) && print "TRACE $full_package: Needs to be installed.\n";
@@ -1712,6 +2214,12 @@ sub process_packages {
 			elsif ( exists( $package_map{"uninstall"}{$full_package} ) ) {
 				if ( $script_mode == $REPORT ) {
 					( $log_level >> $FATAL ) && print "ERROR $full_package: Marked for removal and needs to be installed.\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$full_package: Marked for removal and needs to be installed\" "
+						  . time() . "\n";
+					}
 				}
 				else {
 					( $log_level >> $TRACE ) && print "TRACE $full_package: Marked for removal and needs to be installed.\n";
@@ -1744,7 +2252,7 @@ sub process_packages {
 				}
 				elsif ( $script_mode == $INTERACTIVE && scalar(@uninstall_packages) > 0 ) {
 					( $log_level >> $INFO )
-						&& print "INFO The following packages must be uninstalled before proceeding:\n  - " . join( "\n  - ", @uninstall_packages ) . "\n";
+					  && print "INFO The following packages must be uninstalled before proceeding:\n  - " . join( "\n  - ", @uninstall_packages ) . "\n";
 					if ( get_answer("Should I uninstall them now?") && get_answer("Are you sure you want to proceed with the uninstallation?") ) {
 						$proceed = 1;
 					}
@@ -1756,12 +2264,19 @@ sub process_packages {
 				if ( $proceed && scalar(@uninstall_packages) > 0 ) {
 					if ( remove_packages(@uninstall_packages) ) {
 						( $log_level >> $INFO )
-							&& print "INFO Successfully uninstalled the following packages:\n  - " . join( "\n  - ", @uninstall_packages ) . "\n";
+						  && print "INFO Successfully uninstalled the following packages:\n  - " . join( "\n  - ", @uninstall_packages ) . "\n";
 						$uninstalled = 1;
 					}
 					else {
 						( $log_level >> $ERROR )
-							&& print "ERROR Unable to uninstall the following packages:\n  - " . join( "\n  - ", @uninstall_packages ) . "\n";
+						  && print "ERROR Unable to uninstall the following packages:\n  - " . join( "\n  - ", @uninstall_packages ) . "\n";
+						if ($stats_log) {
+							$err_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Unable to uninstall the following packages: "
+							  . join( @uninstall_packages, "," ) . "\" "
+							  . time() . "\n";
+						}
 						$proceed = 0;
 					}
 				}
@@ -1779,12 +2294,19 @@ sub process_packages {
 				if ( $uninstalled && $proceed && scalar(@install_packages) > 0 ) {
 					if ( install_packages(@install_packages) ) {
 						( $log_level >> $INFO )
-							&& print "INFO Successfully installed the following packages:\n  - " . join( "\n  - ", @install_packages ) . "\n";
+						  && print "INFO Successfully installed the following packages:\n  - " . join( "\n  - ", @install_packages ) . "\n";
 						$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 					}
 					else {
 						( $log_level >> $ERROR )
-							&& print "ERROR Unable to install the following packages:\n  - " . join( "\n  - ", @install_packages ) . "\n";
+						  && print "ERROR Unable to install the following packages:\n  - " . join( "\n  - ", @install_packages ) . "\n";
+						if ($stats_log) {
+							$err_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Unable to install the following packages: "
+							  . join( @install_packages, "," ) . "\" "
+							  . time() . "\n";
+						}
 					}
 				}
 				elsif ( scalar(@install_packages) == 0 ) {
@@ -1793,6 +2315,12 @@ sub process_packages {
 			}
 			else {
 				( $log_level >> $ERROR ) && print "ERROR Not all of the required packages are available in the configured yum repo(s)!\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Not all of the required packages are available in the configured yum repo(s)\" "
+					  . time() . "\n";
+				}
 			}
 		}
 		else {
@@ -1806,6 +2334,21 @@ sub process_packages {
 	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL Error getting package list from Traffic Ops!\n";
+		if ($stats_log) {
+			$fatal_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Error getting package list from Traffic Ops!\" "
+			  . time() . "\n";
+			print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+			  . $fatal_cnt
+			  . "i,errors="
+			  . $err_cnt
+			  . "i,warns="
+			  . $warn_cnt . "i "
+			  . time() . "\n";
+		}
+		my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+		&update_to_check($tot_err);
 		exit 1;
 	}
 }
@@ -1847,26 +2390,42 @@ sub chkconfig_matches {
 	# This will work for now as  it trys to map from chkconfig run level settings to systemd enabled/disabled state.
 	# I think that a new generic endpoint should be added to traffic opts for chkconfig and systemd state settings and that functions
 	# here in the ort script should abstract the checking of chkconfig/systemd states with traffic ops.
-	if ($RELEASE eq "EL7") {
+	if ( $RELEASE eq "EL7" ) {
 		my $service_state = systemd_service_chk($service);
-		if ($service_state eq "enabled") {
-			if ($service_settings =~ m/on/) {
+		if ( $service_state eq "enabled" ) {
+			if ( $service_settings =~ m/on/ ) {
 				( $log_level >> $INFO ) && print "INFO chkconfig output for $service matches $service_settings.\n";
 				return 1;
-			} else {
+			}
+			else {
 				( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"chkconfig output for $service does not match what we expect\" "
+					  . time() . "\n";
+				}
 				return 0;
 			}
-		} else {
-			if ($service_settings =~ m/on/) {
+		}
+		else {
+			if ( $service_settings =~ m/on/ ) {
 				( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"chkconfig output for $service does not match what we expect\" "
+					  . time() . "\n";
+				}
 				return 0;
-			} else {
+			}
+			else {
 				( $log_level >> $INFO ) && print "INFO chkconfig output for $service matches $service_settings.\n";
 				return 1;
 			}
 		}
-	} else {
+	}
+	else {
 		my $command = "/sbin/chkconfig --list $service";
 		my $output  = `$command 2>&1`;
 		chomp($output);
@@ -1878,12 +2437,24 @@ sub chkconfig_matches {
 			}
 			else {
 				( $log_level >> $ERROR ) && print "ERROR chkconfig output for $service does not match what we expect...\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg='chkconfig output for $service does not match what we expect' "
+					  . time() . "\n";
+				}
 				( $log_level >> $TRACE ) && print "TRACE $output != $service_settings.\n";
 				return (0);
 			}
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR $command returned non-zero ($?), output: $output.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$command returned non-zero ($?), output: $output\" "
+				  . time() . "\n";
+			}
 
 			return (0);
 		}
@@ -1892,10 +2463,10 @@ sub chkconfig_matches {
 
 sub process_chkconfig {
 	my $host_name = shift;
-	my $tm_host   = shift;
+	my $to_host   = shift;
 
 	my $proceed = 0;
-	my $url     = "$tm_host/ort/$host_name/chkconfig";
+	my $url     = "$to_host/ort/$host_name/chkconfig";
 	my $result  = &lwp_get($url);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^\d{3}$/ ) {
@@ -1917,18 +2488,34 @@ sub process_chkconfig {
 						}
 
 						if ($fixit) {
+
 							#use systemd commands by mapping chkconfig runlrvrld to either enable or disable.
-							if ($RELEASE eq "EL7") {
+							if ( $RELEASE eq "EL7" ) {
 								my $systemd_service_enable = "disable";
-								if ($chkconfig->{"value"} =~ m/on/) {
+								if ( $chkconfig->{"value"} =~ m/on/ ) {
 									$systemd_service_enable = "enable";
 								}
-								if (&systemd_service_set($chkconfig->{"name"}, $systemd_service_enable)) {
+								if ( &systemd_service_set( $chkconfig->{"name"}, $systemd_service_enable ) ) {
 									( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: has been set to $systemd_service_enable\n";
-								} else {
-									( $log_level >> $ERROR ) && print "ERROR failed to set the systemd service for $chkconfig->{name} to $systemd_service_enable\n";
+									if ($stats_log) {
+										$err_cnt++;
+										print $sl_fh
+										  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$chkconfig->{name}: has been set to $systemd_service_enable\" "
+										  . time() . "\n";
+									}
 								}
-							} else {
+								else {
+									( $log_level >> $ERROR )
+									  && print "ERROR failed to set the systemd service for $chkconfig->{name} to $systemd_service_enable\n";
+									if ($stats_log) {
+										$err_cnt++;
+										print $sl_fh
+										  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"failed to set the systemd service for $chkconfig->{name} to $systemd_service_enable\" "
+										  . time() . "\n";
+									}
+								}
+							}
+							else {
 								my (@levels) = split( /\s+/, $chkconfig->{"value"} );
 
 								if ( scalar(@levels) == 7 ) {
@@ -1941,11 +2528,24 @@ sub process_chkconfig {
 											( $log_level >> $TRACE ) && print "TRACE $chkconfig->{name}: Setting run level $run_level to $setting\n";
 
 											if ( !set_chkconfig( $chkconfig->{"name"}, $run_level, $setting ) ) {
-												( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: Unable to set run level $run_level to $setting!\n";
+												( $log_level >> $ERROR )
+												  && print "ERROR $chkconfig->{name}: Unable to set run level $run_level to $setting!\n";
+												if ($stats_log) {
+													$err_cnt++;
+													print $sl_fh
+													  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$chkconfig->{name}: Unable to set run level $run_level to $setting\" "
+													  . time() . "\n";
+												}
 											}
 										}
 										else {
 											( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: $level is not what we expected!\n";
+											if ($stats_log) {
+												$err_cnt++;
+												print $sl_fh
+												  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$chkconfig->{name}: $level is not what we expected\" "
+												  . time() . "\n";
+											}
 										}
 									}
 
@@ -1954,10 +2554,22 @@ sub process_chkconfig {
 									}
 									else {
 										( $log_level >> $ERROR ) && print "FATAL Unable to set chkconfig values for $chkconfig->{name}!\n";
+										if ($stats_log) {
+											$err_cnt++;
+											print $sl_fh
+											  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Unable to set chkconfig values for $chkconfig->{name}\" "
+											  . time() . "\n";
+										}
 									}
 								}
 								else {
 									( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name}: $chkconfig->{value} is not what we expected!\n";
+									if ($stats_log) {
+										$err_cnt++;
+										print $sl_fh
+										  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$chkconfig->{name}: $chkconfig->{value} is not what we expected\" "
+										  . time() . "\n";
+									}
 								}
 							}
 						}
@@ -1977,11 +2589,22 @@ sub process_chkconfig {
 			}
 			else {
 				( $log_level >> $ERROR ) && print "ERROR $chkconfig->{name} is not installed!\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$chkconfig->{name} is not installed\" "
+					  . time() . "\n";
+				}
 			}
 		}
 	}
 	else {
 		( $log_level >> $ERROR ) && print "ERROR No chkconfig parameters returned.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"No chkconfig parameters returned\" "
+			  . time() . "\n";
+		}
 	}
 }
 
@@ -2026,9 +2649,21 @@ sub start_restart_services {
 	if ( $ats_running == $ALREADY_RUNNING && $traffic_line_needed && !$trafficserver_restart_needed ) {
 		if ( $script_mode == $REPORT ) {
 			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_LINE -x' needs to be run.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"ATS configuration has changed. '$TRAFFIC_LINE -x' needs to be run\" "
+				  . time() . "\n";
+			}
 		}
 		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
 			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. Running '$TRAFFIC_LINE -x' now.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"ATS configuration has changed. Running '$TRAFFIC_LINE -x'\" "
+				  . time() . "\n";
+			}
 			&run_traffic_line();
 		}
 		elsif ( $script_mode == $INTERACTIVE ) {
@@ -2045,8 +2680,20 @@ sub start_restart_services {
 			}
 			else {
 				( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_LINE -x' was not run.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"ATS configuration has changed. '$TRAFFIC_LINE -x' was not run\" "
+					  . time() . "\n";
+				}
 				if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 					( $log_level >> $ERROR ) && print "ERROR $TRAFFIC_LINE -x was not run, so Traffic Ops was not updated!\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$TRAFFIC_LINE -x was not run, so Traffic Ops was not updated\" "
+						  . time() . "\n";
+					}
 					$syncds_update = $UPDATE_TROPS_FAILED;
 				}
 			}
@@ -2054,14 +2701,32 @@ sub start_restart_services {
 	}
 	elsif ( $traffic_line_needed && ( $ats_running == $START_FAILED || $ats_running == $START_NOT_ATTEMPTED ) ) {
 		( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. The new config will be picked up the next time ATS is started.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"ATS configuration has changed. The new config will be picked up the next time ATS is started\" "
+			  . time() . "\n";
+		}
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 			( $log_level >> $ERROR ) && print "ERROR $TRAFFIC_LINE -x was not run, but Traffic Ops is being updated anyway.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$TRAFFIC_LINE -x was not run, but Traffic Ops is being updated anyway\" "
+				  . time() . "\n";
+			}
 			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 		}
 	}
 	elsif ( $ats_running && $trafficserver_restart_needed ) {
 		if ( $script_mode == $REPORT ) {
 			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed, trafficserver needs to be restarted (service trafficserver restart).\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"ATS configuration has changed, trafficserver needs to be restarted\" "
+				  . time() . "\n";
+			}
 		}
 		elsif ( $script_mode == $INTERACTIVE ) {
 			my $select = 'n';
@@ -2087,7 +2752,7 @@ sub start_restart_services {
 		( $log_level >> $DEBUG ) && print "DEBUG teakd is installed.\n";
 		$teakd_running = &start_service("teakd");
 
-		# Do something here in the future.
+		# TODO Do something here in the future.
 	}
 
 }
@@ -2132,16 +2797,31 @@ sub validate_result {
 
 	if ( $result =~ m/^\d{3}$/ ) {
 		( $log_level >> $ERROR ) && print "ERROR Result from getting $url is HTTP $result!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Result from getting $url is: $result\" "
+			  . time() . "\n";
+		}
 		return 0;
 	}
 
 	my $size = length($result);
 	if ( $size == 0 ) {
 		( $log_level >> $ERROR ) && print "ERROR URL: $url returned empty!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"URL: $url returned empty\" "
+			  . time() . "\n";
+		}
 		return 0;
 	}
 	elsif ( $size < 125 ) {
 		( $log_level >> $WARN ) && print "WARN URL: $url returned only the header.\n";
+		if ($stats_log) {
+			$warn_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"WARN\",msg=\"URL: $url returned only the header\" "
+			  . time() . "\n";
+		}
 		return 1;
 	}
 	else {
@@ -2154,9 +2834,10 @@ sub set_url {
 	my $filename = shift;
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
 
-	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
+	return if ( !defined( $cfg_file_tracker->{$filename}->{'fname-in-TO'} ) );
 
-	return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+        return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+
 }
 
 sub scrape_unencode_text {
@@ -2193,18 +2874,32 @@ sub can_read_write_file {
 
 	if ( -z $file ) {
 		( $log_level >> $ERROR ) && print "ERROR $file has size=0!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$file has size=0\" " . time() . "\n";
+		}
 		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
 		return 0;
 	}
 
 	if ( !-R $file ) {
 		( $log_level >> $ERROR ) && print "ERROR $file is not readable by $username!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$file is not readable by $username\" "
+			  . time() . "\n";
+		}
 		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
 		return 0;
 	}
 
 	if ( !-W $file && $script_mode != $REPORT ) {
 		( $log_level >> $ERROR ) && print "ERROR $file is not writable by $username!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$file is not writable by $username\" "
+			  . time() . "\n";
+		}
 		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
 		return 0;
 	}
@@ -2221,6 +2916,11 @@ sub file_exists {
 
 	if ( !-e $file ) {
 		( $log_level >> $ERROR ) && print "ERROR $filename does not exist!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"$filename does not exist\" "
+			  . time() . "\n";
+		}
 		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
 		return 0;
 	}
@@ -2237,6 +2937,10 @@ sub open_file_get_contents {
 
 	( $log_level >> $DEBUG ) && print "DEBUG Opening file from disk:\t$file.\n";
 	open my $fh, '<', $file || ( ( $log_level >> $ERROR ) && print "ERROR Can't open $file: $!\n" );
+	if ( ( tell($fh) == -1 ) && $stats_log ) {
+		$err_cnt++;
+		print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Could not open $file: $!\" " . time() . "\n";
+	}
 
 	while (<$fh>) {
 		my $line = $_;
@@ -2267,6 +2971,11 @@ sub prereqs_ok {
 		&check_plugins( $filename, $file_lines_ref );
 		if ( $cfg_file_tracker->{$filename}->{'prereq_failed'} ) {
 			( $log_level >> $ERROR ) && print "ERROR Prereqs failed for $filename!\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Prereqs failed for $filename!\" "
+				  . time() . "\n";
+			}
 			return 0;
 		}
 	}
@@ -2346,14 +3055,25 @@ sub diff_file_lines {
 
 	if ( scalar(@db_lines_missing) || scalar(@disk_lines_missing) ) {
 		( $log_level >> $ERROR ) && print "ERROR Lines for $file from Traffic Ops do not match file on disk.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Lines for $file from Traffic Ops do not match file on disk.' "
+			  . time() . "\n";
+		}
 	}
 	if ( scalar(@db_lines_missing) ) {
 		my $line_count = scalar(@db_lines_missing);
 		( $log_level >> $DEBUG ) && print "DEBUG $line_count lines are missing from file that is in Traffic Ops.\n";
 		foreach my $line (@db_lines_missing) {
 			( $log_level >> $ERROR ) && print "ERROR Config file $cfg_file line only on disk :\t$line\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Config file $cfg_file line only on disk: $line\" "
+				  . time() . "\n";
+			}
 		}
-
 	}
 
 	if ( scalar(@disk_lines_missing) ) {
@@ -2361,12 +3081,16 @@ sub diff_file_lines {
 		( $log_level >> $DEBUG ) && print "DEBUG $line_count lines are missing from file that is on disk.\n";
 		foreach my $line (@disk_lines_missing) {
 			( $log_level >> $ERROR ) && print "ERROR Config file $cfg_file line only in TrOps:\t$line\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Config file $cfg_file line only in TrOps: $line\" "
+				  . time() . "\n";
+			}
 		}
-
 	}
 
 	return ( \@db_lines_missing, \@disk_lines_missing );
-
 }
 
 sub validate_filename {
@@ -2375,6 +3099,11 @@ sub validate_filename {
 
 	if ( $filename eq "" ) {
 		( $log_level >> $ERROR ) && print "ERROR Config file name is empty!\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Config file name is empty!\" "
+			  . time() . "\n";
+		}
 		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
 		return 0;
 	}
@@ -2395,6 +3124,12 @@ sub backup_file {
 		my $bkp_file;
 		if ( -e $file ) {
 			( $log_level >> $ERROR ) && print "ERROR Creating backup of file on disk for $filename.\n";
+			if ($stats_log) {
+				$err_cnt++;
+				print $sl_fh
+				  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Creating backup of file on disk for $filename\" "
+				  . time() . "\n";
+			}
 			$bkp_dir  = $TMP_BASE . "/" . $unixtime . "/" . $cfg_file_tracker->{$filename}->{'service'} . "/config_bkp/";
 			$bkp_file = $bkp_dir . $filename;
 			&smart_mkdir($bkp_dir);
@@ -2406,6 +3141,12 @@ sub backup_file {
 			( $log_level >> $DEBUG ) && print "DEBUG Config file: $file doesn't exist. No need to back up.\n";
 		}
 		( $log_level >> $ERROR ) && print "ERROR Creating backup of file in TrOps for $filename.\n";
+		if ($stats_log) {
+			$err_cnt++;
+			print $sl_fh
+			  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Creating backup of file in TrOps for $filename\" "
+			  . time() . "\n";
+		}
 		$bkp_dir  = $TMP_BASE . "/" . $unixtime . "/" . $cfg_file_tracker->{$filename}->{'service'} . "/config_trops/";
 		$bkp_file = $bkp_dir . $filename;
 		&smart_mkdir($bkp_dir);
@@ -2443,6 +3184,12 @@ sub adv_processing_udev {
 
 			if ( $ats_uid =~ m/No such user/ ) {
 				( $log_level >> $ERROR ) && print "ERROR User: $should_own does not exist! Skipping future checks for $dev_path\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"User: $should_own does not exist! Skipping future checks for $dev_path\" "
+					  . time() . "\n";
+				}
 				next;
 			}
 
@@ -2455,16 +3202,33 @@ sub adv_processing_udev {
 				( $dc, $dc, $dc, $dc, my $uid, $dc, $dc, $dc, $dc, $dc, $dc, $dc, $dc ) = stat($dev_path);
 				if ( $uid != $ats_uid ) {
 					( $log_level >> $ERROR ) && print "ERROR Device $dev_path is owned by $uid, not $should_own ($ats_uid)\n";
+					if ($stats_log) {
+						$err_cnt++;
+						print $sl_fh
+						  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Device $dev_path is owned by $uid, not $should_own ($ats_uid)\" "
+						  . time() . "\n";
+					}
 				}
 				( my @df_lines ) = split( /\n/, `/bin/df` );
 				foreach my $l (@df_lines) {
 					if ( $l =~ m/$dev_path/ ) {
 						( $log_level >> $FATAL ) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
+						if ($stats_log) {
+							$fatal_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Device /dev/$dev has an active partition and a file system!!\" "
+							  . time() . "\n";
+						}
 					}
 				}
 			}
 			else {
 				open( DEV, "ls /dev/* |" ) or ( $log_level >> $FATAL ) && print "FATAL Couldn't get /dev/ listing: $!\n";
+				if ($stats_log) {
+					$fatal_cnt++;
+					print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Couldn't get /dev/ listing: $!\" "
+					  . time() . "\n";
+				}
 				while ( my $dnode = <DEV> ) {
 					next unless ( $dnode =~ m!$dev_path! );
 
@@ -2475,11 +3239,23 @@ sub adv_processing_udev {
 					( $dc, $dc, $dc, $dc, my $uid, $dc, $dc, $dc, $dc, $dc, $dc, $dc, $dc ) = stat($dnode);
 					if ( $uid != $ats_uid ) {
 						( $log_level >> $ERROR ) && print "ERROR Device $dnode is owned by $uid, not $should_own ($ats_uid)\n";
+						if ($stats_log) {
+							$err_cnt++;
+							print $sl_fh
+							  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"Device $dnode is owned by $uid, not $should_own ($ats_uid)\" "
+							  . time() . "\n";
+						}
 					}
 					( my @df_lines ) = split( /\n/, `/bin/df` );
 					foreach my $l (@df_lines) {
 						if ( $l =~ m/$dnode/ ) {
 							( $log_level >> $FATAL ) && print "FATAL Device /dev/$dev has an active partition and a file system!!\n";
+							if ($stats_log) {
+								$fatal_cnt++;
+								print $sl_fh
+								  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"Device /dev/$dev has an active partition and a file system!!\" "
+								  . time() . "\n";
+							}
 						}
 					}
 				}
@@ -2500,9 +3276,29 @@ sub adv_processing_ssl {
 		if ( $result =~ m/^\d{3}$/ ) {
 			if ( $script_mode == $REPORT ) {
 				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
+				if ($stats_log) {
+					$err_cnt++;
+					print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"ERROR\",msg=\"SSL URL: $url returned $result\" "
+					  . time() . "\n";
+				}
 				return 1;
 			} else {
 				( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
+				if ($stats_log) {
+					$fatal_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"SSL URL: $url returned $result. Exiting.\" "
+					  . time() . "\n";
+					print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+					  . $fatal_cnt
+					  . "i,errors="
+					  . $err_cnt
+					  . "i,warns="
+					  . $warn_cnt . "i "
+					  . time() . "\n";
+				}
+				my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+				&update_to_check($tot_err);
 				exit 1;
 			}
 		}
@@ -2518,13 +3314,14 @@ sub adv_processing_ssl {
 
 		foreach my $keypair ( @{ $ssl_tracker->{'db_config'} } ) {
 			( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
+
 			my $remap = $keypair->{'key_name'};
 			$remap =~ s/\.key$//;
-			if ($remap !~ /^edge/) {
-				#remove routing name (ccr/tr) and add * for wildcard certs
-				$remap =~ /^(.*?)(\..*)/;
-				$remap = "*$2";
-			}
+                        if ($remap !~ /^edge/) {
+                               #remove routing name (ccr/tr) and add * for wildcard certs
+                               $remap =~ /^(.*?)(\..*)/;
+                               $remap = "*$2";
+                        }
 			my $found = 0;
 			foreach my $record (@$certs){
 				if ($record->{'hostname'} eq $remap){
@@ -2550,6 +3347,21 @@ sub adv_processing_ssl {
 			#if no cert is found, log error and exit
 			if (!$found) {
 				( $log_level >> $FATAL ) && print "FATAL SSL certificate for $remap not found!\n";
+				if ($stats_log) {
+					$fatal_cnt++;
+					print $sl_fh
+					  "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"SSL certificate for $remap not found. Exiting.\" "
+					  . time() . "\n";
+					print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+					  . $fatal_cnt
+					  . "i,errors="
+					  . $err_cnt
+					  . "i,warns="
+					  . $warn_cnt . "i "
+					  . time() . "\n";
+				}
+				my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+				&update_to_check($tot_err);
 				exit 1;
 			}
 		}
@@ -2560,7 +3372,7 @@ sub adv_processing_ssl {
 sub setup_lwp {
 	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
 
-	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
+	my $lwp_cc = $browser->conn_cache( LWP::ConnCache->new() );
 	$browser->timeout(15);
 
 	return $browser;
@@ -2586,7 +3398,68 @@ sub log_level_to_string {
 
 		unless ( flock( $fh, LOCK_EX | LOCK_NB ) ) {
 			( $log_level >> $FATAL ) && print "FATAL $0 is already running. Exiting.\n";
+			if ($stats_log) {
+				$fatal_cnt++;
+				print $sl_fh "ort-log,id=$unixtime,host=$hostname_short,mode=$script_mode_str value=\"FATAL\",msg=\"$0 is already running. Exiting.\" "
+				  . time() . "\n";
+				print $sl_fh "ort-stats,id=$unixtime,hostname=$hostname_short,mode=$script_mode_str fatals="
+				  . $fatal_cnt
+				  . "i,errors="
+				  . $err_cnt
+				  . "i,warns="
+				  . $warn_cnt . "i "
+				  . time() . "\n";
+			}
+			my $tot_err = $fatal_cnt + $err_cnt + $warn_cnt;
+			&update_to_check($tot_err);
 			exit 1;
 		}
 	}
 }
+
+# This code does shutdown connections but, causes the script to exit with a 1.
+# I was trying to add this to free up the connections faster.
+# TODO: Figure out if this can be used and exit properly. -HB
+#
+#sub IO::Socket::DESTROY {
+#    my $sock = shift @_;
+#    return if !defined fileno $sock;
+#    my $peerAddr = getpeername($sock);
+#    my ( $port, $ip ) = sockaddr_in($peerAddr);
+#    my $host = gethostbyaddr( $ip, AF_INET() );
+#    $ip = inet_ntoa($ip);
+#    $ip = "$host($ip)" if $host;
+#    ( $log_level >> $DEBUG ) && print "DEBUG Shutting down socket to $ip:$port...\n";
+#    shutdown( $sock, 2 );
+#    close($sock);
+#}
+
+sub update_to_check {
+	my ($errors) = @_;
+	my ( $url, $response );
+	my %headers = ( 'Cookie' => $cookie );
+	my %data;
+	if ( $script_mode == $SYNCDS ) {
+		%data = ( 'id' => $host_id, 'servercheck_short_name' => 'SYNCDS', 'value' => $errors );
+	}
+	elsif ( $script_mode == $REPORT ) {
+		%data = ( 'id' => $host_id, 'servercheck_short_name' => 'ORT', 'value' => $errors );
+	}
+	else {
+		return 0;
+	}
+	my $data = encode_json( \%data );
+
+	if ( defined($host_id) ) {
+		$url = "$traffic_ops_host\/api/1.2/servercheck";
+		$response = $lwp_conn->post( $url, Content_Type => 'application/json', Content => $data, %headers );
+		&check_lwp_response_code( $response, $ERROR );
+		( $log_level >> $DEBUG ) && print "DEBUG Response from Traffic Ops is: " . $response->code() . ".\n";
+	}
+	else {
+		( $log_level >> $DEBUG ) && print "DEBUG host_id is not defined\n";
+		return 0;
+	}
+	return 1;
+}
+
