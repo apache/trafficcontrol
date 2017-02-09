@@ -15,7 +15,7 @@
 
 Introduction
 ============
-Traffic Control is a control plane which stitches together caching servers into a Content Delivery Network. The CDN caching software chosen for Traffic Control is `Apache Traffic Server <http://trafficserver.apache.org/>`_ (ATS). Although the current release only supports ATS as a cache, this may change with future releases. 
+Traffic Control is a caching server control plane application.  It stitches together caching servers to form a Content Delivery Network (CDN). The CDN caching software chosen for Traffic Control is `Apache Traffic Server <http://trafficserver.apache.org/>`_ (ATS). Although the current release only supports ATS as a cache, this may change with future releases. 
 
 Traffic Control was first developed at Comcast for internal use and released to Open Source in April of 2015. Traffic Control moved into the Apache Incubator in August of 2016.
 
@@ -42,7 +42,7 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
   * `Traffic Portal <http://trafficcontrol.apache.org/docs/latest/overview/traffic_portal.html/>`_ is a web application which leverages the Traffic Ops APIs to present CDN data through a web interface.
 
 **Traffic Logs**
-  * Traffic Logs is currently under construction with the intent to aggregate Traffic Server request and response logs as well as other server logs.  Logs will be parsed and indexed for search.
+  * Traffic Logs is currently under construction and is intended  to aggregate Traffic Server request/response logs as well as other server logs.  Logs will be parsed and indexed for search.
 
 
 In the next sections each of these components will be explained further.
