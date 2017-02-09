@@ -47,6 +47,7 @@ type StaticAppData struct {
 	Name           string
 	BuildTimestamp string
 	Hostname       string
+	UserAgent      string
 }
 
 //
