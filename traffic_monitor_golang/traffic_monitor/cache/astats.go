@@ -35,11 +35,11 @@ type AstatsSystem struct {
 	InfSpeed          int    `json:"inf.speed"`
 	ProcNetDev        string `json:"proc.net.dev"`
 	ProcLoadavg       string `json:"proc.loadavg"`
-	ConfigLoadRequest int    `json:"configReloadRequests,omitempty"`
-	LastReloadRequest int    `json:"lastReloadRequest,omitempty"`
-	ConfigReloads     int    `json:"configReloads,omitempty"`
-	LastReload        int    `json:"lastReload,omitempty"`
-	AstatsLoad        int    `json:"astatsLoad,omitempty"`
+	ConfigLoadRequest int    `json:"configReloadRequests"`
+	LastReloadRequest int    `json:"lastReloadRequest"`
+	ConfigReloads     int    `json:"configReloads"`
+	LastReload        int    `json:"lastReload"`
+	AstatsLoad        int    `json:"astatsLoad"`
 	NotAvailable      bool   `json:"notAvailable,omitempty"`
 }
 
