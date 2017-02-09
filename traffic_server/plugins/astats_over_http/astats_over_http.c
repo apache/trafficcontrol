@@ -297,29 +297,6 @@ static int getSpeedForIF(char *inf, char *buffer, int bufferSize) {
 }
 
 static int getSpeed(char *interface, char *buffer, int bufferSize) {
-	//  List<String> interfaces = new ArrayList<String>();
-	//  String str = getFile("/sys/class/net/bonding_masters");
-	//  if(str !=null && str.contains(myInterface)) {
-	//          String base = "/sys/class/net/"+myInterface+"/";
-	//          File directory = new File(base);
-	//          String[] children = directory.list();
-	//          for(String child : children) {
-	//                  if(child.contains("slave_")) {
-	//                          child = child.replace("slave_", "");
-	//                          interfaces.add(child);
-	//                  }
-	//          }
-	//  } else {
-	//          interfaces.add(myInterface);
-	//  }
-
-	//  for(String ifName : interfaces) {
-	//          str = getFile("/sys/class/net/" +ifName+ "/operstate");
-	//          if(str.contains("up")) {
-	//                  str = getFile("/sys/class/net/" +ifName+ "/speed");
-	//                  result.speed += Long.parseLong(str.trim());
-	//          }
-	//  }
 	DIR *dp;
 	struct dirent *ep;
 	char *str;
