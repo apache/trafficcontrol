@@ -28,6 +28,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -80,6 +81,7 @@ func getStaticAppData() (manager.StaticAppData, error) {
 		return manager.StaticAppData{}, err
 	}
 
+	d.UserAgent = fmt.Sprintf("%s/%s", filepath.Base(d.Name), d.Version)
 	return d, nil
 }
 
