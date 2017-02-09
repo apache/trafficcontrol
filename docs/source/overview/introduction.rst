@@ -15,7 +15,7 @@
 
 Introduction
 ============
-Traffic Control is a CDN control plane, which includes all of the components listed below. The CDN caching software chosen for Traffic Control is `Apache Traffic Server <http://trafficserver.apache.org/>`_ (ATS). Although the current release only supports ATS as a cache, this may change with future releases. 
+Traffic Control is a CDN control plane which stitches together caching servers into a Content Delivery Network. The CDN caching software chosen for Traffic Control is `Apache Traffic Server <http://trafficserver.apache.org/>`_ (ATS). Although the current release only supports ATS as a cache, this may change with future releases. 
 
 Traffic Control was first developed at Comcast for internal use and released to Open Source in April of 2015. Traffic Control moved into the Apache Incubator in August of 2016.
 
@@ -30,19 +30,19 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
   * `Traffic Ops <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used configure Traffic Servers and CDN Delivery Services. It also contains APIs used to access CDN data.
 
 **Traffic Router**
-  * `Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to route clients with the closest healthy cache by analyzing the state of the Traffic Servers and the the location of the Client.
+  * `Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to route clients requests to the closest healthy cache by analyzing the health, capacity, and state of the Traffic Servers and the the location of the Client.
 
 **Traffic Monitor**
   * `Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html/>`_ does health polling of the Traffic Servers on a very short interval to keep track of which servers should be kept in rotation.
 
 **Traffic Stats**
-  * `Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html/>`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess whether a Traffic Server is over taxed.
+  * `Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html/>`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess the available capacity of each Traffic Server which it uses to balance traffic load and prevent overload.
 
 **Traffic Portal**
   * `Traffic Portal <http://trafficcontrol.apache.org/docs/latest/overview/traffic_portal.html/>`_ is a web application which leverages the Traffic Ops APIs to present CDN data through a web interface.
 
 **Traffic Logs**
-  * Traffic Logs is currently under construction with the intent of being an aggregator for all Traffic Server request and response logs.  Logs are parsed by service and indexed for search.
+  * Traffic Logs is currently under construction with the intent to aggregate Traffic Server request and response logs as well as other server logs.  Logs will be parsed and indexed for search.
 
 
 In the next sections each of these components will be explained further.
