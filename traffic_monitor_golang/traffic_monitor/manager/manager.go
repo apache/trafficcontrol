@@ -66,9 +66,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		Timeout:   cfg.HTTPTimeout,
 	}
 
-	localStates := peer.NewCRStatesThreadsafe()     // this is the local state as discoverer by this traffic_monitor
-	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
-	fetchCount := threadsafe.NewUint()              // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
+	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
+	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
 	healthIteration := threadsafe.NewUint()
 	errorCount := threadsafe.NewUint()
 
@@ -76,7 +75,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 
 	cacheHealthHandler := cache.NewHandler()
 	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep)
-	cacheStatHandler := cache.NewPrecomputeHandler(toData, peerStates)
+	cacheStatHandler := cache.NewPrecomputeHandler(toData)
 	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
@@ -102,20 +101,19 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		staticAppData,
 	)
 
-	combinedStates, events := StartPeerManager(
+	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
+	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)
+
+	StartPeerManager(
 		peerHandler.ResultChannel,
-		localStates,
 		peerStates,
 		events,
-		cfg.PeerOptimistic, // TODO remove
-		toData,
-		cfg,
+		combineStateFunc,
 	)
 
 	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
 		cacheStatHandler.ResultChan(),
 		localStates,
-		peerStates,
 		combinedStates,
 		toData,
 		cachesChanged,
@@ -123,6 +121,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		cfg,
 		monitorConfig,
 		events,
+		combineStateFunc,
 	)
 
 	lastHealthDurations, healthHistory := StartHealthResultManager(
@@ -130,7 +129,6 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		toData,
 		localStates,
 		monitorConfig,
-		peerStates,
 		combinedStates,
 		fetchCount,
 		errorCount,
