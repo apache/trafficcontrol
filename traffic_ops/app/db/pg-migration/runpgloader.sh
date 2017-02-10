@@ -14,6 +14,7 @@
 #
 
 pgloader -v \
+	--before create_tables.sql \
 	--cast 'type tinyint to smallint drop typemod' \
 	--cast 'type varchar to text drop typemod' \
 	--cast 'type double to numeric drop typemod' \
