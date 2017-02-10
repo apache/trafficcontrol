@@ -44,6 +44,14 @@ func StartPeerManager(
 
 func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {
 	if result.Available != peerStates.GetPeerAvailability(result.ID) {
-		events.Add(health.Event{Time: health.Time(result.Time), Description: util.JoinErrorsString(result.Errors), Name: result.ID.String(), Hostname: result.ID.String(), Type: "Peer", Available: result.Available})
+		description := util.JoinErrorsString(result.Errors)
+
+		if description == "" && result.Available {
+			description = "Peer is reachable"
+		} else if description == "" && !result.Available {
+			description = "Peer is unreachable"
+		}
+
+		events.Add(health.Event{Time: health.Time(result.Time), Description: description, Name: result.ID.String(), Hostname: result.ID.String(), Type: "Peer", Available: result.Available})
 	}
 }
