@@ -58,7 +58,8 @@ SELECT
     deliveryservice.regex_remap,
     deliveryservice.cacheurl,
     deliveryservice.remap_text,
-    deliveryservice.protocol
+    deliveryservice.protocol,
+    deliveryservice.profile
 FROM
     deliveryservice
     JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
@@ -100,6 +101,7 @@ __PACKAGE__->add_columns(
 	"protocol",                    { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"range_request_handling",      { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
+    "profile",                     { data_type => "integer", is_nullable => 1},
 );
 
 1;
