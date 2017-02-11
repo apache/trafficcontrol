@@ -741,9 +741,9 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
-	foreach my $f ($self->param) {
-		print $f . " => " . $self->param($f) . "\n";
-	}
+#	foreach my $f ($self->param) {
+#		print $f . " => " . $self->param($f) . "\n";
+#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
 
@@ -806,7 +806,7 @@ sub update {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
 		}
 
-		print Dumper( \%hash );
+		#print Dumper( \%hash );
 		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
 		$update->update( \%hash );
 		$update->update();
@@ -965,7 +965,7 @@ sub create {
 	}
 
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
-		print "CDN:$cdn_id\n";
+		#print "CDN:$cdn_id\n";
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),

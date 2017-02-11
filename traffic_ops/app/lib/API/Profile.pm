@@ -124,7 +124,6 @@ sub show {
 
 sub create {
 	my $self   = shift;
-	print "KK:\n";
 	my $params = $self->req->json;
 	if ( !defined($params) ) {
 		return $self->alert("parameters must be in JSON format,  please check!");
