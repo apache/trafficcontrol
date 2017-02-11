@@ -116,7 +116,6 @@ func (t *CRStatesThreadsafe) Get() Crstates {
 }
 
 // GetDeliveryServices returns the internal Crstates delivery services map for reading.
-// TODO add GetCaches, GetDeliveryservices?
 func (t *CRStatesThreadsafe) GetDeliveryServices() map[enum.DeliveryServiceName]Deliveryservice {
 	t.m.RLock()
 	defer t.m.RUnlock()

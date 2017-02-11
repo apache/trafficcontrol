@@ -77,7 +77,7 @@ sub edit {
 
 		my $role_name;
 		my $user_id;
-		my $ftusers = $self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user' ] } );
+		my $ftusers = $self->db->resultset('FederationTmuser')->search( { federation => $fed_id }, { prefetch => [ 'federation', 'tm_user', 'role' ] } );
 		while ( my $ft = $ftusers->next ) {
 			$user_id   = $ft->tm_user->id;
 			$role_name = $ft->role->name;
@@ -158,7 +158,7 @@ sub group_resolvers {
 
 	my $data;
 	my $fed_fed_resolvers =
-		$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => ['federation_resolver'] } );
+		$self->db->resultset('FederationFederationResolver')->search( { federation => $fed_id }, { prefetch => [ { 'federation_resolver' => 'type' } ] } );
 	my $resolvers;
 	while ( my $row = $fed_fed_resolvers->next ) {
 		my $fed_resolver    = $row->federation_resolver;

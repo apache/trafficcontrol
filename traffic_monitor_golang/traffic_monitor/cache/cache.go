@@ -43,7 +43,6 @@ type Handler struct {
 	resultChan         chan Result
 	Notify             int
 	ToData             *todata.TODataThreadsafe
-	PeerStates         *peer.CRStatesPeersThreadsafe
 	MultipleSpaceRegex *regexp.Regexp
 }
 
@@ -57,13 +56,13 @@ func NewHandler() Handler {
 }
 
 // NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChan.
-func NewPrecomputeHandler(toData todata.TODataThreadsafe, peerStates peer.CRStatesPeersThreadsafe) Handler {
-	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData, PeerStates: &peerStates}
+func NewPrecomputeHandler(toData todata.TODataThreadsafe) Handler {
+	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData}
 }
 
 // Precompute returns whether this handler precomputes data before passing the result to the ResultChan
 func (handler Handler) Precompute() bool {
-	return handler.ToData != nil && handler.PeerStates != nil
+	return handler.ToData != nil
 }
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
@@ -201,6 +200,9 @@ func ComputedStats() map[string]StatComputeFunc {
 		"system.lastReloadRequest": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
 			return info.System.LastReloadRequest
 		},
+		"system.notAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+			return info.System.NotAvailable
+		},
 		"system.proc.loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
 			return info.System.ProcLoadavg
 		},
@@ -281,11 +283,11 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
 		ID:           enum.CacheName(id),
-		Time:         time.Now(), // TODO change this to be computed the instant we get the result back, to minimise inaccuracy
+		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
 		PollFinished: pollFinished,
@@ -454,7 +456,7 @@ func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryS
 
 	cachegroup, ok := toData.ServerCachegroups[server]
 	if !ok {
-		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups") // TODO check logs, make sure this isn't normal
+		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups")
 	}
 	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
 

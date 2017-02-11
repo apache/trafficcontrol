@@ -29,7 +29,7 @@ sub index {
 
 	my $rs;
 	if ( &is_privileged($self) ) {
-		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'type', { 'deliveryservice_regexes' => 'regex' }  ], order_by => 'xml_id' } );
 
 		my @matches;
 		while ( my $row = $rs->next ) {

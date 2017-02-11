@@ -36,6 +36,7 @@ type ITrafficOpsSession interface {
 	Servers() ([]to.Server, error)
 	Parameters(profileName string) ([]to.Parameter, error)
 	DeliveryServices() ([]to.DeliveryService, error)
+	CacheGroups() ([]to.CacheGroup, error)
 }
 
 var ErrNilSession = fmt.Errorf("nil session")
@@ -125,4 +126,13 @@ func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]to.DeliveryService, e
 		return nil, ErrNilSession
 	}
 	return (*s.session).DeliveryServices()
+}
+
+func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]to.CacheGroup, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if s.session == nil || *s.session == nil {
+		return nil, ErrNilSession
+	}
+	return (*s.session).CacheGroups()
 }

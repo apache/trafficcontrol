@@ -48,16 +48,20 @@ sub view {
 		# Get list of ds ids associated with server
 		$self->stash( server_data => $data );
 
-		my @ds_ids = $self->db->resultset('DeliveryserviceServer')->search( { server => $id } )->get_column('deliveryservice')->all;
+		my %delivery_services;
+		my $rs_data = $self->db->resultset('DeliveryserviceServer')->search(
+			{ server => $id },
+			{ prefetch => [ 'deliveryservice' ]}
+		);
+
+		while ( my $row = $rs_data->next ) {
+			$delivery_services{$row->deliveryservice->id} = $row->deliveryservice->xml_id;
+		}
 
 		my $service_tag =
 			$self->db->resultset('Hwinfo')->search( { -and => [ serverid => $id, description => 'ServiceTag' ] } )->get_column('val')->single();
 		$self->stash( service_tag => $service_tag );
-		my %delivery_services;
-		for my $ds_id (@ds_ids) {
-			my $desc = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single;
-			$delivery_services{$ds_id} = $desc;
-		}
+
 		$self->stash( delivery_services => \%delivery_services );
 		$self->stash( fbox_layout       => 1 );
 	}
@@ -897,17 +901,17 @@ sub readupdate {
 	my $rs_servers;
 	my %parent_pending = ();
 	if ( $host_name =~ m/^all$/ ) {
-		$rs_servers = $self->db->resultset("Server")->search(undef);
+		$rs_servers = $self->db->resultset("Server")->search(undef, { prefetch => [ 'type', 'cachegroup' ] } );
 	}
 	else {
 		$rs_servers =
-			$self->db->resultset("Server")->search( { host_name => $host_name } );
+			$self->db->resultset("Server")->search( { host_name => $host_name }, { prefetch => [ 'type', 'cachegroup' ] } );
 		my $count = $rs_servers->count();
 		if ( $count > 0 ) {
 			if ( $rs_servers->single->type->name =~ m/^EDGE/ ) {
 				my $parent_cg =
 					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
-				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg } );
+				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg }, { prefetch => [ 'status'] } );
 				while ( my $prow = $rs_parents->next ) {
 					if (   $prow->upd_pending == 1
 						&& $prow->status->name ne "OFFLINE" )

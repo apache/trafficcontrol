@@ -200,6 +200,7 @@ func monitorConfigListen(
 
 		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg)
 		if err != nil {
+			log.Errorf("monitor config error getting polling intervals, can't poll: %v", err)
 			continue
 		}
 
@@ -262,6 +263,10 @@ func monitorConfigListen(
 				log.Warnf("Removing %s from localStates", cacheName)
 				localStates.DeleteCache(cacheName)
 			}
+		}
+
+		if len(healthURLs) == 0 {
+			log.Errorf("No REPORTED caches exist in Traffic Ops, nothing to poll.")
 		}
 
 		cachesChangeSubscriber <- struct{}{}

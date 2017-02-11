@@ -256,6 +256,42 @@ sub delete_by_name {
 	return $self->success_message("cdn was deleted.");
 }
 
+sub queue_updates {
+	my $self		= shift;
+	my $params		= $self->req->json;
+	my $cdn_id		= $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
+	}
+
+	my $cdn_servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
+
+	if ( $cdn_servers->count() < 1 ) {
+		return $self->alert("No servers found for cdn_id = $cdn_id");
+	}
+
+	my $setqueue = $params->{action};
+
+	if ( $setqueue eq "queue" ) {
+		$setqueue = 1;
+	}
+	elsif ( $setqueue eq "dequeue" ) {
+		$setqueue = 0;
+	}
+	else {
+		return $self->alert("Action required, Should be queue or dequeue.");
+	}
+
+	$cdn_servers->update( { upd_pending => $setqueue } );
+
+	my $response;
+	$response->{cdnId} = $cdn_id;
+	$response->{action} = $params->{action};
+	return $self->success($response);
+}
+
+
 sub configs_monitoring {
 	my $self      = shift;
 	my $cdn_name  = $self->param('name');
@@ -449,8 +485,14 @@ sub capacity {
 
 sub health {
 	my $self = shift;
+	my $args = {};
 
-	return $self->get_cache_health();
+	my $cdn_name = $self->param('name');
+	if (defined($cdn_name)) {
+		$args->{'cdn_name'} = $cdn_name;
+	}
+
+	return $self->get_cache_health($args);
 }
 
 sub routing {
