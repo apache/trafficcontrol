@@ -18,7 +18,7 @@ package Fixtures::Integration::Parameter;
 # under the License.
 
 
-# Note - removing the NODNAME parameter wreaks all kinds of havoc because of ordering / id problems, so I renamed
+# Note - removing the domain_name parameter wreaks all kinds of havoc because of ordering / id problems, so I renamed
 # it to NODNAME - JvD
 
 use Moose;
