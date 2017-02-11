@@ -83,7 +83,7 @@ sub edit {
 		$valid_profiles->{$row} = 1;
 	}
 
-	$ds = $self->db->resultset('Deliveryservice')->search( { id => $id }, { prefetch => [ 'cdn' ] } )->single();
+	$ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn' ] } )->single();
 
 	my @types;
 	push(@types, &type_ids( $self, 'EDGE%', 'server' ) );
