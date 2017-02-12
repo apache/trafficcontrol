@@ -396,7 +396,6 @@ sub parent_data {
 			my $rank             = $profile_cache{$pid}->{rank};
 			my $primary_parent   = $server->cachegroup->parent_cachegroup_id // -1;
 			my $secondary_parent = $server->cachegroup->secondary_parent_cachegroup_id // -1;
-			print "ds_domain:" . $ds_domain . " server_domain: " . $server_domain . "\n";
 
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 				my %p = (
@@ -1094,7 +1093,8 @@ sub parent_dot_config {
 
 	my $server      = $self->server_data($id);
 	my $server_type = $server->type->name;
-	my $parent_qstring;
+
+	#my $parent_qstring;
 	my $pinfo;
 	my $text = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
@@ -1106,12 +1106,24 @@ sub parent_dot_config {
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origin;
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id = $ds->{ds_xml_id};
-			my $os     = $ds->{origin_shield};
-			$parent_qstring = "ignore";
-			my $multi_site_origin           = defined( $ds->{multi_site_origin} )           ? $ds->{multi_site_origin}           : 0;
-			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
-
+			my $xml_id                           = $ds->{ds_xml_id};
+			my $os                               = $ds->{origin_shield};
+			my $multi_site_origin                = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
+			my $msoa                             = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'};
+			my $mso_algorithm                    = defined($msoa) ? $msoa : 0;
+			my $dsre                             = $ds->{'param'}->{'parent.config'}->{'mso.dead_server_retry_enabled'};
+			my $dead_server_retry_enabled        = defined($dsre) ? $dsre : 0;
+			my $sre                              = $ds->{'param'}->{'parent.config'}->{'mso.simple_retry_enabled'};
+			my $simple_retry_enabled             = defined($sre) ? $sre : 0;
+			my $srsc                             = $ds->{'param'}->{'parent.config'}->{'mso.simple_retry_response_codes'};
+			my $simple_retry_response_codes      = defined($srsc) ? $srsc : "";
+			my $dsrrc                            = $ds->{'param'}->{'parent.config'}->{'mso.dead_server_retry_response_codes'};
+			my $dead_server_retry_response_codes = defined($dsrrc) ? $dsrrc : "";
+			my $qsh                              = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $parent_qstring                   = "ignore"; # default is ignore, unless for alg consistent_hash
+			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
+				$parent_qstring = 'consider';
+			}
 			my $org_uri = URI->new( $ds->{org} );
 
 			# Don't duplicate origin line if multiple seen
@@ -1168,28 +1180,7 @@ sub parent_dot_config {
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
 				}
 				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
-				my $mso_algorithm = "";
-				if ( $multi_site_origin_algorithm == 0 ) {
-					$mso_algorithm = "consistent_hash";
-					if ( $ds->{qstring_ignore} == 0 ) {
-						$parent_qstring = "consider";
-					}
-				}
-				elsif ( $multi_site_origin_algorithm == 1 ) {
-					$mso_algorithm = "false";
-				}
-				elsif ( $multi_site_origin_algorithm == 2 ) {
-					$mso_algorithm = "strict";
-				}
-				elsif ( $multi_site_origin_algorithm == 3 ) {
-					$mso_algorithm = "true";
-				}
-				elsif ( $multi_site_origin_algorithm == 4 ) {
-					$mso_algorithm = "latched";
-				}
-				else {
-					$mso_algorithm = "consistent_hash";
-				}
+
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false\n";
 			}
 		}
@@ -1198,16 +1189,12 @@ sub parent_dot_config {
 		$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		return $text;
 	}
-	else {
-
-		#"True" Parent
+	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
 		$pinfo = $self->parent_data($server);
-
 		my %done = ();
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			my $org = $remap->{org};
-			$parent_qstring = "ignore";
 			next if !defined $org || $org eq "";
 			next if $done{$org};
 			my $org_uri = URI->new($org);
@@ -1215,7 +1202,9 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				if ( $remap->{qstring_ignore} == 0 ) {
+				my $qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
+				if ( $remap->{qstring_ignore} == 0 && !defined($qsh) ) {
 					$parent_qstring = "consider";
 				}
 
