@@ -102,6 +102,10 @@ func Up_20170205101432(txn *sql.Tx) {
 
 	doExec("UPDATE deliveryservice SET profile=NULL", txn)
 
+	doExec("INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'simple_retry');", txn)
+	doExec("INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'unavailable_server_retry');", txn)
+	doExec("INSERT INTO parameter (name, config_file, value) VALUES ('mso.parent_retry', 'parent.config', 'both');", txn)
+
 	type Profile struct {
 		Id                 int64
 		Name               string
@@ -114,7 +118,7 @@ func Up_20170205101432(txn *sql.Tx) {
 	}
 	// move data
 	pmap := make(map[string]Profile)
-	rows, err := txn.Query("select id,xml_id,mid_header_rewrite,multi_site_origin,multi_site_origin_algorithm,cdn_id from deliveryservice where multi_site_origin=true")
+	rows, err := txn.Query("SELECT id,xml_id,mid_header_rewrite,multi_site_origin,multi_site_origin_algorithm,cdn_id FROM deliveryservice WHERE multi_site_origin=true")
 	if err != nil {
 		fmt.Println("Error:", err)
 		fmt.Println("Attempting Roll back!")
@@ -161,6 +165,7 @@ func Up_20170205101432(txn *sql.Tx) {
 		checkErr(err, txn)
 
 		remainingString := ""
+		parent_retry := ""
 		var regexpOne = regexp.MustCompile(`^\s*set-config\s+proxy.config.http.parent_origin.(\S+)\s+(.*)$`)
 		if prof.MidHeaderRewrite != "" {
 			remapParts := strings.Split(prof.MidHeaderRewrite, "__RETURN__")
@@ -173,19 +178,33 @@ func Up_20170205101432(txn *sql.Tx) {
 					newId, ok = existingParam[string(match[1])+string(match[2])]
 					//	fmt.Printf("%s -> %v %v\n", string(match[1])+string(match[2]), newId, ok)
 					if !ok {
-						fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+
-							string(match[1]), "parent.config", string(match[2]))
-						newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+
-							string(match[1]), "parent.config", string(match[2]))
-						err := newRow.Scan(&newId)
-						checkErr(err, txn)
-						existingParam[string(match[1])+string(match[2])] = newId
+						if string(match[1]) == "simple_retry_enabled" || string(match[1]) == "dead_server_retry_enabled" {
+							if parent_retry == "" {
+								parent_retry = string(match[1])
+							} else {
+								parent_retry = "both"
+							}
+						} else {
+							// unavailable_server_retry_responses is the only one that survives?
+							if string(match[1]) == "dead_server_retry_response_codes" {
+								pName := "mso.unavailable_server_retry_responses"
+								fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
+									pName, "parent.config", string(match[2]))
+								newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
+									pName, "parent.config", string(match[2]))
+								err := newRow.Scan(&newId)
+								checkErr(err, txn)
+								existingParam[string(match[1])+string(match[2])] = newId
+							}
+						}
 					} else {
 						newId = existingParam[string(match[1])+string(match[2])]
 					}
-					fmt.Println("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
-					_, err = txn.Exec("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
-					checkErr(err, txn)
+					if newId != 0 {
+						fmt.Println("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
+						_, err = txn.Exec("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
+						checkErr(err, txn)
+					}
 				} else {
 					if !strings.HasSuffix(line, "__RETURN__") {
 						remainingString = remainingString + line + "__RETURN__"
@@ -193,13 +212,14 @@ func Up_20170205101432(txn *sql.Tx) {
 				}
 			}
 		}
-		/* -- Not doing the remove at this time, so we can support both 5.x and 6.x - 6.x will have a warning if these are not removed from the DS, but
-		      should run just fine.
+		/* Not doing the removal of the header_rewrite stuff  at this time, so we can support both 5.x and 6.x - 6.x will have a warning if these are
+		   not removed from the DS, but should run just fine.
 
 		fmt.Printf("MHRW was: %s, \nMHRW now: %s\n", prof.MidHeaderRewrite, remainingString)
 
 		_, err = txn.Exec("UPDATE deliveryservice set mid_header_rewrite=$1 where xml_id=$2", remainingString, prof.XMLId)
 		checkErr(err, txn)
+
 		*/
 
 		var newId int64
@@ -220,6 +240,13 @@ func Up_20170205101432(txn *sql.Tx) {
 		fmt.Println("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
 		_, err = txn.Exec("INSERT INTO PROFILE_PARAMETER (parameter, profile) VALUES ($1, $2)", newId, newProfileId)
 		checkErr(err, txn)
+
+		fmt.Println("INSERT INTO profile_parameter (profile, parameter) SELECT $1, id FROM parameter "+
+			"WHERE config_file='parent.config' AND name='mso.parent_retry' AND value=$2", newProfileId, parent_retry)
+		_, err = txn.Exec("INSERT INTO profile_parameter (profile, parameter) SELECT $1, id FROM parameter "+
+			"WHERE config_file='parent.config' AND name='mso.parent_retry' AND value=$2", newProfileId, parent_retry)
+		checkErr(err, txn)
+
 		_, err = txn.Exec("UPDATE deliveryservice SET profile=$1 WHERE xml_id=$2", newProfileId, prof.XMLId)
 		checkErr(err, txn)
 	}
