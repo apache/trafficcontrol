@@ -28,29 +28,6 @@ func doExec(stmt string, txn *sql.Tx) {
 	}
 }
 
-/*
- if ( $multi_site_origin_algorithm == 0 ) {
-1174                     $mso_algorithm = "consistent_hash";
-1175                     if ( $ds->{qstring_ignore} == 0 ) {
-1176                         $parent_qstring = "consider";
-1177                     }
-1178                 }
-1179                 elsif ( $multi_site_origin_algorithm == 1 ) {
-1180                     $mso_algorithm = "false";
-1181                 }
-1182                 elsif ( $multi_site_origin_algorithm == 2 ) {
-1183                     $mso_algorithm = "strict";
-1184                 }
-1185                 elsif ( $multi_site_origin_algorithm == 3 ) {
-1186                     $mso_algorithm = "true";
-1187                 }
-1188                 elsif ( $multi_site_origin_algorithm == 4 ) {
-1189                     $mso_algorithm = "latched";
-1190                 }
-1191                 else {
-1192                     $mso_algorithm = "consistent_hash";
-1193                 }
-*/
 // Up is executed when this migration is applied
 func Up_20170205101432(txn *sql.Tx) {
 
@@ -194,7 +171,7 @@ func Up_20170205101432(txn *sql.Tx) {
 					var newId int64
 					var ok bool
 					newId, ok = existingParam[string(match[1])+string(match[2])]
-					fmt.Printf("%s -> %v %v\n", string(match[1])+string(match[2]), newId, ok)
+					//	fmt.Printf("%s -> %v %v\n", string(match[1])+string(match[2]), newId, ok)
 					if !ok {
 						fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id", "mso."+
 							string(match[1]), "parent.config", string(match[2]))
