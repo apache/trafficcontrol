@@ -88,16 +88,18 @@ Built: %(date) by %{getenv: USER}
 
 %post
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
+    %__mkdir -p /var/www/files
+    %__cp %{PACKAGEDIR}/install/data/perl/osversions.cfg /var/www/files/.
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
-     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
-     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
+    %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
+    %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
     %__chown root:root /etc/init.d/traffic_ops
     %__chown root:root /etc/cron.d/trafops_dnssec_refresh
     %__chown root:root /etc/logrotate.d/traffic_ops
     %__chown root:root /etc/logrotate.d/traffic_ops_access
     %__chmod +x /etc/init.d/traffic_ops
     %__chmod +x %{PACKAGEDIR}/install/bin/*
-    /sbin/chkconfig --add traffic_ops 
+    /sbin/chkconfig --add traffic_ops
 	
     %__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
 
@@ -147,6 +149,7 @@ fi
 %attr(755,root,root) %{PACKAGEDIR}/app/db/*.pl
 %attr(755,root,root) %{PACKAGEDIR}/app/db/*.sh
 %config(noreplace)/opt/traffic_ops/app/conf/*
+%config(noreplace)/var/www/files/osversions.cfg
 %{PACKAGEDIR}/app/cpanfile
 %{PACKAGEDIR}/app/db
 %{PACKAGEDIR}/app/lib
