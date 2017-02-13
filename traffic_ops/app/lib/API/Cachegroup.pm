@@ -89,7 +89,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( { id => $id }, { prefetch => [ 'type' ] } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( { 'me.id' => $id }, { prefetch => [ 'type' ] } );
 
 	my @data = ();
 	my %idnames;
