@@ -151,7 +151,7 @@ sub server_data {
 	my $server;
 
 	if ( $id =~ /^\d+$/ ) {
-		$server = $self->db->resultset('Server')->search( { id => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
+		$server = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
 	}
 	else {
 		$server = $self->db->resultset('Server')->search( { host_name => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
