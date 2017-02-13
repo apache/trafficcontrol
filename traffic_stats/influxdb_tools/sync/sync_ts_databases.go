@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb"
@@ -176,16 +177,24 @@ func syncDailyDb(ch chan string, sourceClient influx.Client, targetClient influx
 func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 	//get records from source DB
 	db := cache
+	rp := "monthly"
+
+	if strings.Contains(statName, "1day") {
+		rp = "indefinite"
+	}
+
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
-		RetentionPolicy: "monthly",
+		RetentionPolicy: rp,
 	})
 
-	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"monthly\".\"%s\"", statName)
+	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"%s\".\"%s\"", rp, statName)
+
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
+
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
@@ -305,8 +314,9 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 
 	db := daily
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
-		Database:  db,
-		Precision: "s",
+		Database:        db,
+		Precision:       "s",
+		RetentionPolicy: "indefinite",
 	})
 	//get records from source DB
 	queryString := fmt.Sprintf("select time, cdn, deliveryservice, value from \"%s\"", statName)
