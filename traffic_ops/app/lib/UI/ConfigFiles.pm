@@ -1094,7 +1094,12 @@ sub parent_dot_config {
 	my $server      = $self->server_data($id);
 	my $server_type = $server->type->name;
 
-	#my $parent_qstring;
+	my $ats_ver =
+		$self->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	my $ats_major_version = substr( $ats_ver, 0, 1 );
+
 	my $pinfo;
 	my $text = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
@@ -1106,21 +1111,17 @@ sub parent_dot_config {
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origin;
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id                           = $ds->{ds_xml_id};
-			my $os                               = $ds->{origin_shield};
-			my $multi_site_origin                = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
-			my $msoa                             = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'};
-			my $mso_algorithm                    = defined($msoa) ? $msoa : 0;
-			my $dsre                             = $ds->{'param'}->{'parent.config'}->{'mso.dead_server_retry_enabled'};
-			my $dead_server_retry_enabled        = defined($dsre) ? $dsre : 0;
-			my $sre                              = $ds->{'param'}->{'parent.config'}->{'mso.simple_retry_enabled'};
-			my $simple_retry_enabled             = defined($sre) ? $sre : 0;
-			my $srsc                             = $ds->{'param'}->{'parent.config'}->{'mso.simple_retry_response_codes'};
-			my $simple_retry_response_codes      = defined($srsc) ? $srsc : "";
-			my $dsrrc                            = $ds->{'param'}->{'parent.config'}->{'mso.dead_server_retry_response_codes'};
-			my $dead_server_retry_response_codes = defined($dsrrc) ? $dsrrc : "";
-			my $qsh                              = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
-			my $parent_qstring                   = "ignore"; # default is ignore, unless for alg consistent_hash
+			my $xml_id                             = $ds->{ds_xml_id};
+			my $os                                 = $ds->{origin_shield};
+			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
+			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 0;
+			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'};
+			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'};
+			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
+			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
+
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
 			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
 				$parent_qstring = 'consider';
 			}
@@ -1181,12 +1182,18 @@ sub parent_dot_config {
 				}
 				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
 
-				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false\n";
+				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
+
+				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
+					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
+				} 
+				$text .= "\n";
 			}
 		}
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
-		$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
+		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		return $text;
 	}
 	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
