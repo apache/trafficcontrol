@@ -162,7 +162,7 @@ sub view {
 	&stash_role($self);
 	$self->stash( asn_data => {}, cg_data => {} );
 
-	my $rs               = $self->db->resultset('Asn')->search( { id => $id }, { prefetch => [ 'cachegroup' ] } );
+	my $rs               = $self->db->resultset('Asn')->search( { 'me.id' => $id }, { prefetch => [ 'cachegroup' ] } );
 	my $data             = $rs->single;
 	my $cache_group_name = $data->cachegroup->name;
 
