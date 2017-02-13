@@ -544,9 +544,9 @@ void TSPluginInit(int argc, const char *argv[]) {
 	  if (TSPluginRegister(TS_SDK_VERSION_3_0, &info) != TS_SUCCESS) {
 	#else
 	  if (TSPluginRegister(&info) != TS_SUCCESS) {
-      TSError("Plugin registration failed. \n");
-  #endif
-    }
+	    TSError("Plugin registration failed. \n");
+	#endif
+	  }
 
 	config_holder = new_config_holder(argc > 1 ? argv[1] : NULL);
 
