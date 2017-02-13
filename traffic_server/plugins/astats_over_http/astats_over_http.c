@@ -539,14 +539,14 @@ void TSPluginInit(int argc, const char *argv[]) {
 	astatsLoad = time(NULL);
 
 	#if (TS_VERSION_NUMBER < 3000000)
-	  if (TSPluginRegister(TS_SDK_VERSION_2_0, &info) != TS_SUCCESS) {
+	if (TSPluginRegister(TS_SDK_VERSION_2_0, &info) != TS_SUCCESS) {
 	#elif (TS_VERSION_NUMBER < 6000000)
-	  if (TSPluginRegister(TS_SDK_VERSION_3_0, &info) != TS_SUCCESS) {
+	if (TSPluginRegister(TS_SDK_VERSION_3_0, &info) != TS_SUCCESS) {
 	#else
-	  if (TSPluginRegister(&info) != TS_SUCCESS) {
-	    TSError("Plugin registration failed. \n");
+	if (TSPluginRegister(&info) != TS_SUCCESS) {
 	#endif
-	  }
+	  TSError("Plugin registration failed. \n");
+	}
 
 	config_holder = new_config_holder(argc > 1 ? argv[1] : NULL);
 
