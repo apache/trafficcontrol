@@ -201,16 +201,15 @@ func Up_20170205101432(txn *sql.Tx) {
 							}
 						} else {
 							// unavailable_server_retry_responses is the only one that survives?
-							if string(match[1]) == "dead_server_retry_response_codes" {
-								pName := "mso.unavailable_server_retry_responses"
-								fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
-									pName, "parent.config", string(match[2]))
-								newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
-									pName, "parent.config", string(match[2]))
-								err := newRow.Scan(&newId)
-								checkErr(err, txn)
-								existingParam[string(match[1])+string(match[2])] = newId
-							}
+							//	if string(match[1]) == "dead_server_retry_response_codes" {
+							pName := strings.Replace("mso."+string(match[1]), "dead", "unavailable", 1) // "mso.unavailable_server_retry_responses"
+							fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
+								pName, "parent.config", string(match[2]))
+							newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
+								pName, "parent.config", string(match[2]))
+							err := newRow.Scan(&newId)
+							checkErr(err, txn)
+							existingParam[string(match[1])+string(match[2])] = newId
 						}
 					} else {
 						newId = existingParam[string(match[1])+string(match[2])]
