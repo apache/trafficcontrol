@@ -27,16 +27,16 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
 
 
 **Traffic Ops**
-  * `Traffic Ops <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used configure Traffic Servers and CDN Delivery Services. It also contains APIs used to access CDN data.
+  * `Traffic Ops <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to configure caching  servers and CDN delivery services. It also contains APIs used to access CDN data.
 
 **Traffic Router**
-  * `Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to route clients requests to the closest healthy cache by analyzing the health, capacity, and state of the Traffic Servers and the the location of the Client.
+  * `Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to route clients requests to the closest healthy cache by analyzing the health, capacity, and state of the caching servers and relative distance from each cache group to the location of the client.
 
 **Traffic Monitor**
-  * `Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html/>`_ does health polling of the Traffic Servers on a very short interval to keep track of which servers should be kept in rotation.
+  * `Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html/>`_ does health polling of the caching servers on a very short interval to keep track of which servers should be kept in rotation.
 
 **Traffic Stats**
-  * `Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html/>`_ collects real time traffic statistics aggregated from each of the Traffic Servers. This data is used by the Traffic Router to assess the available capacity of each Traffic Server which it uses to balance traffic load and prevent overload.
+  * `Traffic Stats <http://trafficcontrol.apache.org/docs/latest/overview/traffic_stats.html/>`_ collects real time traffic statistics aggregated from each of the caching servers. This data is used by the Traffic Router to assess the available capacity of each caching server which it uses to balance traffic load and prevent overload.
 
 **Traffic Portal**
   * `Traffic Portal <http://trafficcontrol.apache.org/docs/latest/overview/traffic_portal.html/>`_ is a web application which leverages the Traffic Ops APIs to present CDN data through a web interface.
