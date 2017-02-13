@@ -47,5 +47,3 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
 
 In the next sections each of these components will be explained further.
 
-.. image:: Tenant_Services_User_Relationship.svg
-	:align: center
