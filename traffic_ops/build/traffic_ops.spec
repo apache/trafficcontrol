@@ -65,6 +65,8 @@ Built: %(date) by %{getenv: USER}
     fi
 
     %__cp -R $RPM_BUILD_DIR/traffic_ops-%{version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+    %__mkdir -p $RPM_BUILD_ROOT/var/www/files
+    %__cp install/data/perl/osversions.cfg $RPM_BUILD_ROOT/var/www/files/.
 
     if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
@@ -89,7 +91,6 @@ Built: %(date) by %{getenv: USER}
 %post
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__mkdir -p /var/www/files
-    %__cp %{PACKAGEDIR}/install/data/perl/osversions.cfg /var/www/files/.
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
