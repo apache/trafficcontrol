@@ -1123,20 +1123,20 @@ sub create_dnssec_keys {
 
 	#get default expiration days and ttl for DSs from CDN record to use when generating new keys
 	my $cdn_ksk = $keys->{$cdn_name}->{ksk};
-	my $k_exp_days = $self->get_key_expiration_days( $cdn_ksk, "365" );
+	my $k_exp_days = get_key_expiration_days( $cdn_ksk, "365" );
 
 	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
-	my $z_exp_days = $self->get_key_expiration_days( $cdn_zsk, "30" );
+	my $z_exp_days = get_key_expiration_days( $cdn_zsk, "30" );
 
-	my $dnskey_ttl = $self->get_key_ttl( $cdn_ksk, "60" );
+	my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
 
 	#create the ds domain name for dnssec keys
-	my $domain_name             = $self->get_cdn_domain($ds_id);
-	my $deliveryservice_regexes = $self->get_regexp_set($ds_id);
+	my $domain_name             = get_cdn_domain($ds_id);
+	my $deliveryservice_regexes = get_regexp_set($ds_id);
 	my $rs_ds =
 		$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 	my $data = $rs_ds->single;
-	my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
+	my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
 
 	#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 	my $ds_name = $example_urls[0] . ".";
@@ -1162,7 +1162,6 @@ sub create_dnssec_keys {
 }
 
 sub get_key_expiration_days {
-	my $self        = shift;
 	my $keys        = shift;
 	my $default_exp = shift;
 	foreach my $key (@$keys) {
@@ -1177,7 +1176,6 @@ sub get_key_expiration_days {
 }
 
 sub get_key_ttl {
-	my $self = shift;
 	my $keys = shift;
 	my $ttl  = shift;
 
