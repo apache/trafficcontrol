@@ -22,7 +22,7 @@ Traffic Control was first developed at Comcast for internal use and released to 
 Traffic Control implements the elements illustrated in green in the diagram  below. 
 
 
-.. image:: CDN-Traffic-Control.png
+.. image:: traffic_control_overview_3.png
 	:align: center
 
 
