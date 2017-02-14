@@ -127,7 +127,7 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 }
 
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
-func Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string) (*Session, error) {
+func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client") // TODO add version
 }
 
