@@ -24,9 +24,9 @@ under the License.
             <li class="active">{{cdnName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button class="btn btn-success" ng-click="queueUpdates()">Queue Server Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
-            <button class="btn btn-danger" ng-click="dequeueUpdates()">Dequeue Server Updates &nbsp;&nbsp;<i class="fa fa-times"></i></button>
-            <button class="btn btn-primary" ng-click="manageSnapshots()">Snapshot CDN Config &nbsp;&nbsp;<i class="fa fa-camera"></i></button>
+            <button class="btn btn-primary" title="Snapshot {{cdn.name}} config" ng-click="manageSnapshots()"><i class="fa fa-camera"></i></button>
+            <button class="btn btn-danger" title="Queue {{cdn.name}} server updates" ng-click="queueUpdates(cdn)"><i class="fa fa-flag"></i></button>
+            <button class="btn btn-info" title="Dequeue {{cdn.name}} server updates" ng-click="dequeueUpdates()"><i class="fa fa-times"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More

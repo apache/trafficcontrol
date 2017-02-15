@@ -64,6 +64,30 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
+    this.queueCDNServers = function(id) {
+        return Restangular.one("cdns", id).customPOST( { action: "queue"}, "queue_update" )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'CDN servers queued' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+    this.dequeueCDNServers = function(id) {
+        return Restangular.one("cdns", id).customPOST( { action: "dequeue"}, "queue_update" )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'CDN servers dequeued' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
 };
 
 CDNService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
