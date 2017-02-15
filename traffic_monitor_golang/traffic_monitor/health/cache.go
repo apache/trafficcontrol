@@ -203,7 +203,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 
 		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
 	}
-	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
+	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
 }
 
@@ -253,17 +253,52 @@ func eventDesc(status enum.CacheStatus, message string) string {
 }
 
 //calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe) {
+func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe, toData todata.TOData) {
+	cacheStates := states.GetCaches() // map[enum.CacheName]IsAvailable
+
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
 			log.Infof("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
 			continue
 		}
-		deliveryServiceState.DisabledLocations = []enum.CacheName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
-		for _, server := range deliveryServiceServers[deliveryServiceName] {
-			deliveryServiceState.DisabledLocations = append(deliveryServiceState.DisabledLocations, server)
-		}
+		deliveryServiceState.DisabledLocations = getDisabledLocations(deliveryServiceName, toData.DeliveryServiceServers[deliveryServiceName], cacheStates, toData.ServerCachegroups)
 		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
 	}
+}
+
+func getDisabledLocations(deliveryService enum.DeliveryServiceName, deliveryServiceServers []enum.CacheName, cacheStates map[enum.CacheName]peer.IsAvailable, serverCacheGroups map[enum.CacheName]enum.CacheGroupName) []enum.CacheGroupName {
+	disabledLocations := []enum.CacheGroupName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
+	dsCacheStates := getDeliveryServiceCacheAvailability(cacheStates, deliveryServiceServers)
+	dsCachegroupsAvailable := getDeliveryServiceCachegroupAvailability(dsCacheStates, serverCacheGroups)
+	for cg, avail := range dsCachegroupsAvailable {
+		if avail {
+			continue
+		}
+		disabledLocations = append(disabledLocations, cg)
+	}
+	return disabledLocations
+}
+
+func getDeliveryServiceCacheAvailability(cacheStates map[enum.CacheName]peer.IsAvailable, deliveryServiceServers []enum.CacheName) map[enum.CacheName]peer.IsAvailable {
+	dsCacheStates := map[enum.CacheName]peer.IsAvailable{}
+	for _, server := range deliveryServiceServers {
+		dsCacheStates[server] = cacheStates[server]
+	}
+	return dsCacheStates
+}
+
+func getDeliveryServiceCachegroupAvailability(dsCacheStates map[enum.CacheName]peer.IsAvailable, serverCachegroups map[enum.CacheName]enum.CacheGroupName) map[enum.CacheGroupName]bool {
+	cgAvail := map[enum.CacheGroupName]bool{}
+	for cache, available := range dsCacheStates {
+		cg, ok := serverCachegroups[cache]
+		if !ok {
+			log.Errorf("cache %v not found in cachegroups!")
+			continue
+		}
+		if _, ok := cgAvail[cg]; !ok || available.IsAvailable {
+			cgAvail[cg] = available.IsAvailable
+		}
+	}
+	return cgAvail
 }

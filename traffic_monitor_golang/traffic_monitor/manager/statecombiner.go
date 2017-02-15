@@ -118,7 +118,7 @@ func combineCacheState(cacheName enum.CacheName, localCacheState peer.IsAvailabl
 }
 
 func combineDSState(deliveryServiceName enum.DeliveryServiceName, localDeliveryService peer.Deliveryservice, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
-	deliveryService := peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
+	deliveryService := peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
 	if localDeliveryService.IsAvailable {
 		deliveryService.IsAvailable = true
 	}
@@ -148,18 +148,18 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerSt
 }
 
 // CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
-type CacheNameSlice []enum.CacheName
+type CacheGroupNameSlice []enum.CacheGroupName
 
-func (p CacheNameSlice) Len() int           { return len(p) }
-func (p CacheNameSlice) Less(i, j int) bool { return p[i] < p[j] }
-func (p CacheNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p CacheGroupNameSlice) Len() int           { return len(p) }
+func (p CacheGroupNameSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p CacheGroupNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // intersection returns strings in both a and b.
 // Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
-func intersection(a []enum.CacheName, b []enum.CacheName) []enum.CacheName {
-	sort.Sort(CacheNameSlice(a))
-	sort.Sort(CacheNameSlice(b))
-	c := []enum.CacheName{} // important to initialize, so JSON is `[]` not `null`
+func intersection(a []enum.CacheGroupName, b []enum.CacheGroupName) []enum.CacheGroupName {
+	sort.Sort(CacheGroupNameSlice(a))
+	sort.Sort(CacheGroupNameSlice(b))
+	c := []enum.CacheGroupName{} // important to initialize, so JSON is `[]` not `null`
 	for _, s := range a {
 		i := sort.Search(len(b), func(i int) bool { return b[i] >= s })
 		if i < len(b) && b[i] == s {

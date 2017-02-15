@@ -78,8 +78,8 @@ type IsAvailable struct {
 
 // Deliveryservice contains data about the availability of a particular delivery service, and which caches in that delivery service have been marked as unavailable.
 type Deliveryservice struct {
-	DisabledLocations []enum.CacheName `json:"disabledLocations"`
-	IsAvailable       bool             `json:"isAvailable"`
+	DisabledLocations []enum.CacheGroupName `json:"disabledLocations"`
+	IsAvailable       bool                  `json:"isAvailable"`
 }
 
 // CrstatesUnMarshall takes bytes of a JSON string, and unmarshals them into a Crstates object.
