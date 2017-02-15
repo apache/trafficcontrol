@@ -101,59 +101,28 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMapRaw(cdn string) (*to
 func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error) {
 	mc, err := s.TrafficMonitorConfigMapRaw(cdn)
 	if err != nil {
-		fmt.Printf("DEBUG4 TrafficMonitorConfigMap err: %v\n", err)
 		return nil, fmt.Errorf("getting monitor config map: %v", err)
 	}
 
 	crcData, err := s.CRConfigRaw(cdn)
 	if err != nil {
-		fmt.Printf("DEBUG4 CRConfigRaw err: %v\n", err)
 		return nil, fmt.Errorf("getting CRConfig: %v", err)
 	}
 
 	crConfig := crconfig.CRConfig{}
 	if err := json.Unmarshal(crcData, &crConfig); err != nil {
-		fmt.Printf("DEBUG4 CRConfig Unmarshal err: %v\n", err)
-		return nil, fmt.Errorf("Error unmarshalling CRConfig JSON: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
 	}
 
 	mc, err = CreateMonitorConfig(crConfig, mc)
 	if err != nil {
-		fmt.Printf("DEBUG4 CreateMonitorConfig err: %v\n", err)
-		return nil, fmt.Errorf("Error creating Traffic Monitor Config: %v", err)
+		return nil, fmt.Errorf("creating Traffic Monitor Config: %v", err)
 	}
-
-	// mcMap, err := to.TrafficMonitorTransformToMap(mc)
-	// if err != nil {
-	// 	fmt.Printf("DEBUG4 TrafficMonitorTransformToMap err: %v\n", err)
-	// 	return nil, fmt.Errorf("Error transforming Traffic Monitor Config to Map: %v", err)
-	// }
-
-	// debug
-
-	// if bytes, err := json.Marshal(mcMap); err != nil {
-	// 	fmt.Printf("DEBUG4 error marshalling map: %v\n", err)
-	// } else {
-	// 	fmt.Printf("DEBUG4 New Map: %v\n\n", string(bytes))
-	// }
 
 	return mc, nil
 }
 
 func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfigMap) (*to.TrafficMonitorConfigMap, error) {
-	// mc := to.TrafficMonitorConfig{}
-
-	// cgs, err := s.CacheGroups()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Error getting CacheGroups: %v", err)
-	// }
-
-	// allProfiles, err := s.Profiles()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Error getting Profiles: %v", err)
-	// }
-
 	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
 	mc.TrafficServer = map[string]to.TrafficServer{}
 	for name, srv := range crConfig.ContentServers {
@@ -172,18 +141,6 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 		}
 	}
 
-	// for _, cg := range cgs {
-	// 	mc.CacheGroups = append(mc.CacheGroups, to.TMCacheGroup{
-	// 		Name: cg.Name,
-	// 		Coordinates: to.Coordinates{
-	// 			Latitude:  cg.Latitude,
-	// 			Longitude: cg.Longitude,
-	// 		},
-	// 	})
-	// }
-
-	// monitorProfile := ""
-
 	// Dump the "live" monitoring.json monitors, and populate with the "snapshotted" CRConfig
 	mc.TrafficMonitor = map[string]to.TrafficMonitor{}
 	for name, mon := range crConfig.Monitors {
@@ -200,19 +157,6 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 		}
 	}
 
-	// monitorParams, err := s.Parameters(monitorProfile)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Error getting profile %v parameters: %v", monitorProfile, err)
-	// }
-	// mc.Config = map[string]interface{}{}
-	// for _, param := range monitorParams {
-	// 	if numParam, err := strconv.ParseFloat(param.Value, 64); err == nil {
-	// 		mc.Config[param.Name] = numParam
-	// 	} else {
-	// 		mc.Config[param.Name] = param.Value
-	// 	}
-	// }
-
 	// Dump the "live" monitoring.json DeliveryServices, and populate with the "snapshotted" CRConfig
 	mc.DeliveryService = map[string]to.TMDeliveryService{}
 	for name, _ := range crConfig.DeliveryServices {
@@ -224,55 +168,6 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 		}
 	}
 
-	// mc.Profiles = []to.TMProfile{}
-	// for _, prof := range allProfiles {
-	// 	if strings.HasPrefix(prof.Name, "EDGE") || strings.HasPrefix(prof.Name, "TEAK") {
-	// 		mc.Profiles = append(mc.Profiles, to.TMProfile{
-	// 			Name: prof.Name,
-	// 			Type: "EDGE",
-	// 		})
-	// 	} else if strings.HasPrefix(prof.Name, "MID") {
-	// 		mc.Profiles = append(mc.Profiles, to.TMProfile{
-	// 			Name: prof.Name,
-	// 			Type: "MID",
-	// 		})
-	// 	}
-	// }
-	// for profI, prof := range mc.Profiles {
-	// 	// MID2_TOP_v5.3.2-757
-	// 	prof.Parameters.Thresholds = map[string]to.HealthThreshold{}
-	// 	// TODO lock
-	// 	params, err := s.Parameters(prof.Name)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("Error getting profile %v parameters: %v", prof, err)
-	// 	}
-	// 	fmt.Printf("DEBUG5 profile %v len(params) %v\n", prof.Name, len(params))
-	// 	for _, param := range params {
-	// 		if param.Name == "health.connection.timeout" {
-	// 			i, err := strconv.Atoi(param.Value)
-	// 			if err != nil {
-	// 				return nil, fmt.Errorf("Error getting profile %v parameter %v: %v", prof, param.Name, err)
-	// 			}
-	// 			prof.Parameters.HealthConnectionTimeout = i
-	// 		} else if param.Name == "health.polling.url" {
-	// 			prof.Parameters.HealthPollingURL = param.Value
-	// 		} else if param.Name == "history.count" {
-	// 			i, err := strconv.Atoi(param.Value)
-	// 			if err != nil {
-	// 				return nil, fmt.Errorf("Error getting profile %v parameter %v: %v", prof, param.Name, err)
-	// 			}
-	// 			prof.Parameters.HistoryCount = i
-	// 		} else if strings.HasPrefix(param.Name, "health.threshold.") {
-	// 			stat := param.Name[len("health.threshold."):]
-	// 			thresh, err := to.StrToThreshold(param.Value)
-	// 			if err != nil {
-	// 				return nil, fmt.Errorf("Error getting profile %v parameter %v: %v", prof, param.Name, err)
-	// 			}
-	// 			prof.Parameters.Thresholds[stat] = thresh
-	// 		}
-	// 	}
-	// 	mc.Profiles[profI] = prof
-	// }
 	return mc, nil
 }
 
