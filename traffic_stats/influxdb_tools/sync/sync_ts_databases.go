@@ -184,7 +184,7 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		RetentionPolicy: "monthly",
 	})
 
-	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"%s\".\"%s\"", rp, statName)
+	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"%s\".\"%s\"", "monthly", statName)
 
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
@@ -254,7 +254,7 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		RetentionPolicy: rp,
 	})
 
-	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"monthly\".\"%s\"", statName)
+	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"%s\".\"%s\"", rp, statName)
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
