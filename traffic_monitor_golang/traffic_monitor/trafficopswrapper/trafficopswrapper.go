@@ -158,16 +158,22 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 	}
 
 	// Dump the "live" monitoring.json DeliveryServices, and populate with the "snapshotted" CRConfig
+	// But keep using the monitoring.json thresholds, because they're not in the CRConfig.
+	rawDeliveryServices := mc.DeliveryService
 	mc.DeliveryService = map[string]to.TMDeliveryService{}
 	for name, _ := range crConfig.DeliveryServices {
-		mc.DeliveryService[name] = to.TMDeliveryService{
-			XMLID:              name,
-			TotalTPSThreshold:  0,          // TODO verify
-			Status:             "Reported", // TODO verify
-			TotalKbpsThreshold: 0,          // TODO verify
+		if rawDS, ok := rawDeliveryServices[name]; ok {
+			// use the raw DS if it exists, because the CRConfig doesn't have thresholds or statuses
+			mc.DeliveryService[name] = rawDS
+		} else {
+			mc.DeliveryService[name] = to.TMDeliveryService{
+				XMLID:              name,
+				TotalTPSThreshold:  0,
+				Status:             "REPORTED",
+				TotalKbpsThreshold: 0,
+			}
 		}
 	}
-
 	return mc, nil
 }
 
