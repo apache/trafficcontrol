@@ -90,13 +90,12 @@ function clean() {
   echo $separator
   echo "Cleaning up..."
   echo $separator
-  #docker kill trafficops_mysql_host_1
+
+  # Powerdown the containers (to remove them)
   docker-compose -p $docker_project -f mysql-to-postgres.yml down --remove-orphans
   docker-compose -p $docker_project -f convert.yml down --remove-orphans
 
-  #docker rm trafficops_mysql-to-postgres_1 
-  #docker rm trafficops_convert_1
-  #docker rm trafficops_mysql_host_1
+  # Cleanup any temporary images
   IMAGE=$docker_project"_mysql-to-postgres"
   echo "IMAGE: $IMAGE"
   docker rmi $IMAGE
@@ -108,6 +107,9 @@ function clean() {
   docker rmi $IMAGE --force
   IMAGE=$docker_project"_waiter"
   docker rmi $IMAGE --force
+
+  # Cleanup any dangling volumes
+  docker volume rm $(docker volume ls -qf dangling=true)
 }
 
 clean
