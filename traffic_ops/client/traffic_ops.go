@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/juju/persistent-cookiejar"
@@ -35,8 +36,21 @@ type Session struct {
 	Password     string
 	URL          string
 	UserAgent    *http.Client
-	Cache        map[string]CacheEntry
+	cache        map[string]CacheEntry
+	cacheMutex   *sync.RWMutex
 	UserAgentStr string
+}
+
+func NewSession(user, password, url, userAgent string, client *http.Client) *Session {
+	return &Session{
+		UserName:     user,
+		Password:     password,
+		URL:          url,
+		UserAgent:    client,
+		cache:        map[string]CacheEntry{},
+		cacheMutex:   &sync.RWMutex{},
+		UserAgentStr: userAgent,
+	}
 }
 
 // HTTPError is returned on Update Session failure.
@@ -103,16 +117,12 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 		return nil, err
 	}
 
-	to := Session{
-		UserAgent: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-			},
-			Jar: jar,
+	to := NewSession("", "", toURL, "", &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
-		URL:   toURL,
-		Cache: make(map[string]CacheEntry),
-	}
+		Jar: jar,
+	})
 
 	resp, err := to.request("GET", "/api/1.2/user/current.json", nil)
 
@@ -123,7 +133,7 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 	jar.Save()
 	fmt.Printf("Traffic Ops Session Resumed (%s)\n", resp.Status)
 
-	return &to, nil
+	return to, nil
 }
 
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
@@ -150,19 +160,12 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 		return nil, err
 	}
 
-	to := Session{
-		UserAgent: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-			},
-			Jar: jar,
+	to := NewSession(toUser, toPasswd, toURL, userAgent, &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
-		UserAgentStr: userAgent,
-		URL:          toURL,
-		UserName:     toUser,
-		Password:     toPasswd,
-		Cache:        make(map[string]CacheEntry),
-	}
+		Jar: jar,
+	})
 
 	path := "/api/1.2/user/login"
 	resp, err := to.request("POST", path, credentials)
@@ -191,7 +194,7 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 
 	jar.Save()
 
-	return &to, nil
+	return to, nil
 }
 
 // request performs the actual HTTP request to Traffic Ops
@@ -257,6 +260,23 @@ func StringToCacheHitStatus(s string) CacheHitStatus {
 	}
 }
 
+// setCache Sets the given cache key and value. This is threadsafe for multiple goroutines.
+func (to *Session) setCache(path string, entry CacheEntry) {
+	to.cacheMutex.Lock()
+	defer to.cacheMutex.Unlock()
+	to.cache[path] = entry
+}
+
+// getCache gets the cache value at the given key, or false if it doesn't exist. This is threadsafe for multiple goroutines.
+func (to *Session) getCache(path string) (CacheEntry, bool) {
+	to.cacheMutex.RLock()
+	defer to.cacheMutex.RUnlock()
+	cacheEntry, ok := to.cache[path]
+	return cacheEntry, ok
+}
+
+//if cacheEntry, ok := to.Cache[path]; ok {
+
 // getBytesWithTTL - get the path, and cache in the session
 // return from cache is found and the ttl isn't expired, otherwise get it and
 // store it in cache
@@ -265,7 +285,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 	var err error
 	var cacheHitStatus CacheHitStatus
 	getFresh := false
-	if cacheEntry, ok := to.Cache[path]; ok {
+	if cacheEntry, ok := to.getCache(path); ok {
 		if cacheEntry.Entered > time.Now().Unix()-ttl {
 			cacheHitStatus = CacheHitStatusHit
 			body = cacheEntry.Bytes
@@ -274,7 +294,6 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 			getFresh = true
 		}
 	} else {
-		to.Cache = make(map[string]CacheEntry)
 		cacheHitStatus = CacheHitStatusMiss
 		getFresh = true
 	}
@@ -289,7 +308,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 			Entered: time.Now().Unix(),
 			Bytes:   body,
 		}
-		to.Cache[path] = newEntry
+		to.setCache(path, newEntry)
 	}
 
 	return body, cacheHitStatus, nil
