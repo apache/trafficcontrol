@@ -275,7 +275,7 @@ func monitorConfigListen(
 		for _, ds := range monitorConfig.DeliveryService {
 			// since caches default to unavailable, also default DS false
 			if _, exists := localStates.GetDeliveryService(enum.DeliveryServiceName(ds.XMLID)); !exists {
-				localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
+				localStates.SetDeliveryService(enum.DeliveryServiceName(ds.XMLID), peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheGroupName{}}) // important to initialize DisabledLocations, so JSON is `[]` not `null`
 			}
 		}
 		for ds := range localStates.GetDeliveryServices() {
