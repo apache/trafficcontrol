@@ -44,26 +44,6 @@ type ITrafficOpsSession interface {
 
 var ErrNilSession = fmt.Errorf("nil session")
 
-func (s TrafficOpsSessionThreadsafe) URL() (string, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
-		return "", ErrNilSession
-	}
-	url := (*s.session).URL
-	return url, nil
-}
-
-func (s TrafficOpsSessionThreadsafe) User() (string, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
-		return "", ErrNilSession
-	}
-	user := (*s.session).UserName
-	return user, nil
-}
-
 // TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
 type TrafficOpsSessionThreadsafe struct {
 	session **to.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
@@ -75,31 +55,61 @@ func NewTrafficOpsSessionThreadsafe(s *to.Session) TrafficOpsSessionThreadsafe {
 	return TrafficOpsSessionThreadsafe{&s, &sync.Mutex{}}
 }
 
-// CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
+// Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
+func (s TrafficOpsSessionThreadsafe) Set(session *to.Session) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	*s.session = session
+}
+
+// getThreadsafeSession is used internally to get a copy of the session pointer, or nil if it doesn't exist. This should not be used outside TrafficOpsSessionThreadsafe, and never stored, because part of the purpose of TrafficOpsSessionThreadsafe is to store a pointer to the Session pointer, so it can be updated by one goroutine and immediately used by another. This should only be called immediately before using the session, since someone else may update it concurrently.
+func (s TrafficOpsSessionThreadsafe) get() *to.Session {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if s.session == nil || *s.session == nil {
+		return nil
+	}
+	return *s.session
+}
+
+func (s TrafficOpsSessionThreadsafe) URL() (string, error) {
+	ss := s.get()
+	if ss == nil {
+		return "", ErrNilSession
+	}
+	return ss.URL, nil
+}
+
+func (s TrafficOpsSessionThreadsafe) User() (string, error) {
+	ss := s.get()
+	if ss == nil {
+		return "", ErrNilSession
+	}
+	return ss.UserName, nil
+}
+
+// CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
+func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	b, _, e := (*s.session).GetCRConfig(cdn)
+	b, _, e := ss.GetCRConfig(cdn)
 	return b, e
 }
 
 // TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `TrafficMonitorConfigMap`. This is safe for multiple goroutines.
-func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMapRaw(cdn string) (*to.TrafficMonitorConfigMap, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
+func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*to.TrafficMonitorConfigMap, error) {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	d, e := (*s.session).TrafficMonitorConfigMap(cdn)
-	return d, e
+	return ss.TrafficMonitorConfigMap(cdn)
 }
 
 // TrafficMonitorConfigMap returns the Traffic Monitor config map from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error) {
-	mc, err := s.TrafficMonitorConfigMapRaw(cdn)
+	mc, err := s.trafficMonitorConfigMapRaw(cdn)
 	if err != nil {
 		return nil, fmt.Errorf("getting monitor config map: %v", err)
 	}
@@ -177,54 +187,42 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 	return mc, nil
 }
 
-// Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
-func (s TrafficOpsSessionThreadsafe) Set(session *to.Session) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	*s.session = session
-}
-
 func (s TrafficOpsSessionThreadsafe) Servers() ([]to.Server, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	return (*s.session).Servers()
+	return ss.Servers()
 }
 
 func (s TrafficOpsSessionThreadsafe) Profiles() ([]to.Profile, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	return (*s.session).Profiles()
+	return ss.Profiles()
 }
 
 func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]to.Parameter, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	return (*s.session).Parameters(profileName)
+	return ss.Parameters(profileName)
 }
 
 func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]to.DeliveryService, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	return (*s.session).DeliveryServices()
+	return ss.DeliveryServices()
 }
 
 func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]to.CacheGroup, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if s.session == nil || *s.session == nil {
+	ss := s.get()
+	if ss == nil {
 		return nil, ErrNilSession
 	}
-	return (*s.session).CacheGroups()
+	return ss.CacheGroups()
 }
