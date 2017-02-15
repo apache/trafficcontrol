@@ -20,4 +20,4 @@ package main
  */
 
 // Version is the current version of the app, in string form.
-var Version = "2.0.2"
+var Version = "2.0.3"

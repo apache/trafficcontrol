@@ -136,35 +136,69 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
 	mc.TrafficServer = map[string]to.TrafficServer{}
 	for name, srv := range crConfig.ContentServers {
-		mc.TrafficServer[name] = to.TrafficServer{
-			Profile:       *srv.Profile,
-			IP:            *srv.Ip,
-			Status:        string(*srv.Status),
-			CacheGroup:    *srv.CacheGroup,
-			IP6:           *srv.Ip6,
-			Port:          *srv.Port,
-			HostName:      name,
-			FQDN:          *srv.Fqdn,
-			InterfaceName: *srv.InterfaceName,
-			Type:          *srv.ServerType,
-			HashID:        *srv.HashId,
+		s := to.TrafficServer{}
+		if srv.Profile != nil {
+			s.Profile = *srv.Profile
 		}
+		if srv.Ip != nil {
+			s.IP = *srv.Ip
+		}
+		if srv.Status != nil {
+			s.Status = string(*srv.Status)
+		}
+		if srv.CacheGroup != nil {
+			s.CacheGroup = *srv.CacheGroup
+		}
+		if srv.Ip6 != nil {
+			s.IP6 = *srv.Ip6
+		}
+		if srv.Port != nil {
+			s.Port = *srv.Port
+		}
+		s.HostName = name
+		if srv.Fqdn != nil {
+			s.FQDN = *srv.Fqdn
+		}
+		if srv.InterfaceName != nil {
+			s.InterfaceName = *srv.InterfaceName
+		}
+		if srv.ServerType != nil {
+			s.Type = *srv.ServerType
+		}
+		if srv.HashId != nil {
+			s.HashID = *srv.HashId
+		}
+		mc.TrafficServer[name] = s
 	}
 
 	// Dump the "live" monitoring.json monitors, and populate with the "snapshotted" CRConfig
 	mc.TrafficMonitor = map[string]to.TrafficMonitor{}
 	for name, mon := range crConfig.Monitors {
 		// monitorProfile = *mon.Profile
-		mc.TrafficMonitor[name] = to.TrafficMonitor{
-			Port:     *mon.Port,
-			IP6:      *mon.IP6,
-			IP:       *mon.IP,
-			HostName: name,
-			FQDN:     *mon.FQDN,
-			Profile:  *mon.Profile,
-			Location: *mon.Location,
-			Status:   string(*mon.Status),
+		m := to.TrafficMonitor{}
+		if mon.Port != nil {
+			m.Port = *mon.Port
 		}
+		if mon.IP6 != nil {
+			m.IP6 = *mon.IP6
+		}
+		if mon.IP != nil {
+			m.IP = *mon.IP
+		}
+		m.HostName = name
+		if mon.FQDN != nil {
+			m.FQDN = *mon.FQDN
+		}
+		if mon.Profile != nil {
+			m.Profile = *mon.Profile
+		}
+		if mon.Location != nil {
+			m.Location = *mon.Location
+		}
+		if mon.Status != nil {
+			m.Status = string(*mon.Status)
+		}
+		mc.TrafficMonitor[name] = m
 	}
 
 	// Dump the "live" monitoring.json DeliveryServices, and populate with the "snapshotted" CRConfig
