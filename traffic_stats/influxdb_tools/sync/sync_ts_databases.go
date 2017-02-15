@@ -177,16 +177,11 @@ func syncDailyDb(ch chan string, sourceClient influx.Client, targetClient influx
 func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 	//get records from source DB
 	db := cache
-	rp := "monthly"
-
-	if strings.Contains(statName, "1day") {
-		rp = "indefinite"
-	}
 
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
-		RetentionPolicy: rp,
+		RetentionPolicy: "monthly",
 	})
 
 	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"%s\".\"%s\"", rp, statName)
@@ -247,10 +242,16 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 
 	db := deliveryService
+	rp := "monthly"
+
+	if strings.Contains(statName, "1day") {
+		rp = "indefinite"
+	}
+
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
-		RetentionPolicy: "monthly",
+		RetentionPolicy: rp,
 	})
 
 	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"monthly\".\"%s\"", statName)
