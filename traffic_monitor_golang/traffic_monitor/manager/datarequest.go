@@ -777,8 +777,15 @@ func MakeDispatchMap(
 		"/api/bandwidth-capacity-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthCapacityKbps(statMaxKbpses)
 		}, ContentTypeJSON)),
+		"/api/monitor-config": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvMonitorConfig(monitorConfig)
+		}, ContentTypeJSON)),
 	}
 	return addTrailingSlashEndpoints(dispatchMap)
+}
+
+func srvMonitorConfig(mcThs TrafficMonitorConfigMapThreadsafe) ([]byte, error) {
+	return json.Marshal(mcThs.Get())
 }
 
 // latestResultInfoTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result info.
