@@ -230,10 +230,10 @@ For the fontawesome component:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/fontawesome-webfont.*
 @traffic_ops/experimental/ui/app/src/assets/fonts/[Ff]ont[Aa]wesome*
 
-SIL License for fontawesome font:
+These binary fontawesome fonts are provided under the SIL Open Font License 1.1:
 ./licenses/SIL-1.1
 
-MIT License for fontawesome css:
+The fontawesome CSS files are provided under an MIT license:
 ./licenses/MIT-fontawesome
 
 For the Inconsolata and Lato fonts:
@@ -241,7 +241,6 @@ For the Inconsolata and Lato fonts:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/Inconsolata.ttf
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Bold.ttf
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Regular.ttf
-
 ./licenses/SIL-1.1
 
 For the bootstrap component:
