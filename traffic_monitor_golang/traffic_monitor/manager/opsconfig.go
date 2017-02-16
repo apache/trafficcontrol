@@ -159,7 +159,8 @@ func StartOpsConfigManager(
 				continue
 			}
 
-			realToSession, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent)
+			useCache := false // TODO add config
+			realToSession, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache)
 			if err != nil {
 				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
 				continue
