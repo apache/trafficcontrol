@@ -114,7 +114,7 @@ func combineCacheState(cacheName enum.CacheName, localCacheState peer.IsAvailabl
 		events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toData.ServerTypes[cacheName].String(), Available: available})
 	}
 
-	combinedStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: available})
+	combinedStates.AddCache(cacheName, peer.IsAvailable{IsAvailable: available})
 }
 
 func combineDSState(deliveryServiceName enum.DeliveryServiceName, localDeliveryService peer.Deliveryservice, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
@@ -138,13 +138,26 @@ func combineDSState(deliveryServiceName enum.DeliveryServiceName, localDeliveryS
 	combinedStates.SetDeliveryService(deliveryServiceName, deliveryService)
 }
 
+// pruneCombinedCaches deletes caches in combined states which have been removed from localStates.
+func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates peer.Crstates) {
+	combinedCaches := combinedStates.GetCaches()
+	for cacheName, _ := range combinedCaches {
+		if _, ok := localStates.Caches[cacheName]; !ok {
+			combinedStates.DeleteCache(cacheName)
+		}
+	}
+}
+
 func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}
+
 	for deliveryServiceName, localDeliveryService := range localStates.Deliveryservice {
 		combineDSState(deliveryServiceName, localDeliveryService, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}
+
+	pruneCombinedCaches(combinedStates, localStates)
 }
 
 // CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.

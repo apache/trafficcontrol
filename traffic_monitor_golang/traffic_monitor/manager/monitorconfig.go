@@ -211,7 +211,7 @@ func monitorConfigListen(
 
 			srvStatus := enum.CacheStatusFromString(srv.Status)
 			if srvStatus == enum.CacheStatusOnline {
-				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: true})
+				localStates.AddCache(cacheName, peer.IsAvailable{IsAvailable: true})
 				continue
 			}
 			if srvStatus == enum.CacheStatusOffline {
@@ -219,7 +219,7 @@ func monitorConfigListen(
 			}
 			// seed states with available = false until our polling cycle picks up a result
 			if _, exists := localStates.GetCache(cacheName); !exists {
-				localStates.SetCache(cacheName, peer.IsAvailable{IsAvailable: false})
+				localStates.AddCache(cacheName, peer.IsAvailable{IsAvailable: false})
 			}
 
 			url := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL

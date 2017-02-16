@@ -145,8 +145,17 @@ func (t *CRStatesThreadsafe) GetDeliveryService(name enum.DeliveryServiceName) (
 	return
 }
 
-// SetCache sets the internal availability data for a particular cache.
+// SetCache sets the internal availability data for a particular cache. It does NOT set data if the cache doesn't already exist. By adding newly received caches with `AddCache`, this allows easily avoiding a race condition when an in-flight poller tries to set a cache which has been removed.
 func (t *CRStatesThreadsafe) SetCache(cacheName enum.CacheName, available IsAvailable) {
+	t.m.Lock()
+	if _, ok := t.crStates.Caches[cacheName]; ok {
+		t.crStates.Caches[cacheName] = available
+	}
+	t.m.Unlock()
+}
+
+// AddCache adds the internal availability data for a particular cache.
+func (t *CRStatesThreadsafe) AddCache(cacheName enum.CacheName, available IsAvailable) {
 	t.m.Lock()
 	t.crStates.Caches[cacheName] = available
 	t.m.Unlock()
