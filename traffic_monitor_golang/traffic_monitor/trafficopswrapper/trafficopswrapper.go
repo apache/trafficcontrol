@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
@@ -139,34 +140,54 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 		s := to.TrafficServer{}
 		if srv.Profile != nil {
 			s.Profile = *srv.Profile
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Profile field\n", name)
 		}
 		if srv.Ip != nil {
 			s.IP = *srv.Ip
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing IP field\n", name)
 		}
 		if srv.Status != nil {
 			s.Status = string(*srv.Status)
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Status field\n", name)
 		}
 		if srv.CacheGroup != nil {
 			s.CacheGroup = *srv.CacheGroup
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing CacheGroup field\n", name)
 		}
 		if srv.Ip6 != nil {
 			s.IP6 = *srv.Ip6
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing IP6 field\n", name)
 		}
 		if srv.Port != nil {
 			s.Port = *srv.Port
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Port field\n", name)
 		}
 		s.HostName = name
 		if srv.Fqdn != nil {
 			s.FQDN = *srv.Fqdn
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing FQDN field\n", name)
 		}
 		if srv.InterfaceName != nil {
 			s.InterfaceName = *srv.InterfaceName
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing InterfaceName field\n", name)
 		}
 		if srv.ServerType != nil {
 			s.Type = *srv.ServerType
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing Type field\n", name)
 		}
 		if srv.HashId != nil {
 			s.HashID = *srv.HashId
+		} else {
+			log.Warnf("Creating monitor config: CRConfig server %s missing HashId field\n", name)
 		}
 		mc.TrafficServer[name] = s
 	}
@@ -178,25 +199,39 @@ func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfig
 		m := to.TrafficMonitor{}
 		if mon.Port != nil {
 			m.Port = *mon.Port
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing Port field\n", name)
 		}
 		if mon.IP6 != nil {
 			m.IP6 = *mon.IP6
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing IP6 field\n", name)
 		}
 		if mon.IP != nil {
 			m.IP = *mon.IP
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing IP field\n", name)
 		}
 		m.HostName = name
 		if mon.FQDN != nil {
 			m.FQDN = *mon.FQDN
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing FQDN field\n", name)
 		}
 		if mon.Profile != nil {
 			m.Profile = *mon.Profile
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing Profile field\n", name)
 		}
 		if mon.Location != nil {
 			m.Location = *mon.Location
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing Location field\n", name)
 		}
 		if mon.Status != nil {
 			m.Status = string(*mon.Status)
+		} else {
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing Status field\n", name)
 		}
 		mc.TrafficMonitor[name] = m
 	}
