@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
@@ -32,6 +33,7 @@ import (
 // ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
 type ITrafficOpsSession interface {
 	CRConfigRaw(cdn string) ([]byte, error)
+	LastCRConfig(cdn string) ([]byte, time.Time, error)
 	TrafficMonitorConfigMap(cdn string) (*to.TrafficMonitorConfigMap, error)
 	Set(session *to.Session)
 	URL() (string, error)
@@ -45,15 +47,46 @@ type ITrafficOpsSession interface {
 
 var ErrNilSession = fmt.Errorf("nil session")
 
+type ByteTime struct {
+	bytes []byte
+	time  time.Time
+}
+
+type ByteMapCache struct {
+	cache *map[string]ByteTime
+	m     *sync.RWMutex
+}
+
+func NewByteMapCache() ByteMapCache {
+	return ByteMapCache{m: &sync.RWMutex{}, cache: &map[string]ByteTime{}}
+}
+
+func (c ByteMapCache) Set(key string, newBytes []byte) {
+	c.m.Lock()
+	defer c.m.Unlock()
+	(*c.cache)[key] = ByteTime{bytes: newBytes, time: time.Now()}
+}
+
+func (c ByteMapCache) Get(key string) ([]byte, time.Time) {
+	c.m.RLock()
+	defer c.m.RUnlock()
+	if byteTime, ok := (*c.cache)[key]; !ok {
+		return nil, time.Time{}
+	} else {
+		return byteTime.bytes, byteTime.time
+	}
+}
+
 // TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
 type TrafficOpsSessionThreadsafe struct {
-	session **to.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
-	m       *sync.Mutex
+	session      **to.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
+	m            *sync.Mutex
+	lastCRConfig ByteMapCache
 }
 
 // NewTrafficOpsSessionThreadsafe returns a new threadsafe TrafficOpsSessionThreadsafe wrapping the given `Session`.
 func NewTrafficOpsSessionThreadsafe(s *to.Session) TrafficOpsSessionThreadsafe {
-	return TrafficOpsSessionThreadsafe{&s, &sync.Mutex{}}
+	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache()}
 }
 
 // Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
@@ -95,8 +128,21 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	if ss == nil {
 		return nil, ErrNilSession
 	}
-	b, _, e := ss.GetCRConfig(cdn)
-	return b, e
+	b, _, err := ss.GetCRConfig(cdn)
+	if err == nil {
+		s.lastCRConfig.Set(cdn, b)
+	}
+	return b, err
+}
+
+// LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the time it was returned. This is designed to be used in conjunction with a poller which regularly calls CRConfigRaw. If no last CRConfig exists, because CRConfigRaw has never been called successfully, this calls CRConfigRaw once to try to get the CRConfig from Traffic Ops.
+func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time, error) {
+	crConfig, crConfigTime := s.lastCRConfig.Get(cdn)
+	if crConfig == nil {
+		b, err := s.CRConfigRaw(cdn)
+		return b, time.Now(), err
+	}
+	return crConfig, crConfigTime, nil
 }
 
 // TrafficMonitorConfigMapRaw returns the Traffic Monitor config map from the Traffic Ops, directly from the monitoring.json endpoint. This is not usually what is needed, rather monitoring needs the snapshotted CRConfig data, which is filled in by `TrafficMonitorConfigMap`. This is safe for multiple goroutines.

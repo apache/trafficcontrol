@@ -547,15 +547,26 @@ func WrapParams(f SrvFunc, contentType string) http.HandlerFunc {
 	}
 }
 
-func srvTRConfig(opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) ([]byte, error) {
+func WrapAgeErr(errorCount threadsafe.Uint, f func() ([]byte, time.Time, error), contentType string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bytes, contentTime, err := f()
+		_, code := WrapErrCode(errorCount, r.URL.EscapedPath(), bytes, err)
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Age", fmt.Sprintf("%.0f", time.Since(contentTime).Seconds()))
+		w.WriteHeader(code)
+		log.Write(w, bytes, r.URL.EscapedPath())
+	}
+}
+
+func srvTRConfig(opsConfig OpsConfigThreadsafe, toSession towrap.ITrafficOpsSession) ([]byte, time.Time, error) {
 	cdnName := opsConfig.Get().CdnName
 	if toSession == nil {
-		return nil, fmt.Errorf("Unable to connect to Traffic Ops")
+		return nil, time.Time{}, fmt.Errorf("Unable to connect to Traffic Ops")
 	}
 	if cdnName == "" {
-		return nil, fmt.Errorf("No CDN Configured")
+		return nil, time.Time{}, fmt.Errorf("No CDN Configured")
 	}
-	return toSession.CRConfigRaw(cdnName)
+	return toSession.LastCRConfig(cdnName)
 }
 
 func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
@@ -725,7 +736,7 @@ func MakeDispatchMap(
 	}
 
 	dispatchMap := map[string]http.HandlerFunc{
-		"/publish/CrConfig": wrap(WrapErr(errorCount, func() ([]byte, error) {
+		"/publish/CrConfig": wrap(WrapAgeErr(errorCount, func() ([]byte, time.Time, error) {
 			return srvTRConfig(opsConfig, toSession)
 		}, ContentTypeJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
