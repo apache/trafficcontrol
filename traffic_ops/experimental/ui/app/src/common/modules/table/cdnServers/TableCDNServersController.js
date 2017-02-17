@@ -27,8 +27,8 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 		locationUtils.navigateToPath('/configure/servers/' + id);
 	};
 
-	$scope.queueUpdates = function(cdn) {
-		cdnService.queueCDNServers(cdn.id)
+	$scope.queueServerUpdates = function(cdn) {
+		cdnService.queueServerUpdates(cdn.id)
 			.then(
 				function() {
 					$scope.refresh();
@@ -36,8 +36,8 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 			);
 	};
 
-	$scope.dequeueUpdates = function(cdn) {
-		cdnService.dequeueCDNServers(cdn.id)
+	$scope.clearServerUpdates = function(cdn) {
+		cdnService.clearServerUpdates(cdn.id)
 			.then(
 				function() {
 					$scope.refresh();

@@ -64,11 +64,11 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
-    this.queueCDNServers = function(id) {
+    this.queueServerUpdates = function(id) {
         return Restangular.one("cdns", id).customPOST( { action: "queue"}, "queue_update" )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'CDN servers queued' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Queued CDN server updates' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -76,11 +76,11 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
-    this.dequeueCDNServers = function(id) {
+    this.clearServerUpdates = function(id) {
         return Restangular.one("cdns", id).customPOST( { action: "dequeue"}, "queue_update" )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'CDN servers dequeued' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Cleared CDN server updates' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

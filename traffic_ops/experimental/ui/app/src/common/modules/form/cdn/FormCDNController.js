@@ -44,12 +44,12 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         alert('not hooked up yet: cachegroupHealth for CDN');
     };
 
-    $scope.queueUpdates = function(cdn) {
-        cdnService.queueCDNServers(cdn.id);
+    $scope.queueServerUpdates = function(cdn) {
+        cdnService.queueServerUpdates(cdn.id);
     };
 
-    $scope.dequeueUpdates = function() {
-        cdnService.dequeueCDNServers(cdn.id);
+    $scope.clearServerUpdates = function(cdn) {
+        cdnService.clearServerUpdates(cdn.id);
     };
 
     $scope.manageSnapshots = function() {
