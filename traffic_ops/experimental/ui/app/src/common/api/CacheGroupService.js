@@ -80,7 +80,7 @@ var CacheGroupService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one("cachegroups", cgId).customPOST( { action: "dequeue", cdnId: cdnId}, "queue_update" )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cleared cache group server updates' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Cancelled cache group server updates' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

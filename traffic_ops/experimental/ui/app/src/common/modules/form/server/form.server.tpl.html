@@ -26,9 +26,8 @@ under the License.
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <button class="btn btn-danger" ng-click="offlineServer()">Offline Server &nbsp;&nbsp;<i class="fa fa-warning"></i></button>
             <!--<button class="btn btn-success" ng-click="onlineServer()">Online Server</button>-->
-            <button class="btn btn-primary" ng-show="!server.updPending" ng-click="queueUpdates()">Queue Update &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
-            <button class="btn btn-primary" ng-show="server.updPending" ng-click="dequeueUpdates()">Dequeue Update &nbsp;&nbsp;<i class="fa fa-times"></i></button>
-
+            <button class="btn btn-primary" title="Queue {{server.hostName}} updates" ng-show="!server.updPending" ng-click="queueServerUpdates(server)"><i class="fa fa-flag"></i></button>
+            <button class="btn btn-primary" title="Cancel {{server.hostName}} updates" ng-show="server.updPending" ng-click="clearServerUpdates(server)"><i class="fa fa-ban"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
