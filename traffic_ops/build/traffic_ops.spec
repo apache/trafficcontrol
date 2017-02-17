@@ -92,10 +92,12 @@ Built: %(date) by %{getenv: USER}
     %__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
     %__mkdir -p /var/www/files
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
+    %__cp %{PACKAGEDIR}/etc/cron.d/trafops_clean_isos /etc/cron.d/trafops_clean_isos
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
     %__chown root:root /etc/init.d/traffic_ops
     %__chown root:root /etc/cron.d/trafops_dnssec_refresh
+    %__chown root:root /etc/cron.d/trafops_clean_isos
     %__chown root:root /etc/logrotate.d/traffic_ops
     %__chown root:root /etc/logrotate.d/traffic_ops_access
     %__chmod +x /etc/init.d/traffic_ops
