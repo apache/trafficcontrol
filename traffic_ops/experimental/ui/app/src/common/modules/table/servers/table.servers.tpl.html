@@ -23,8 +23,8 @@ under the License.
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
+            <button class="btn btn-primary" title="Create Server" ng-click="createServer()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="createServer()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Server</button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
@@ -42,7 +42,7 @@ under the License.
         <table id="serversTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>Update?</th>
+                <th></th>
                 <th>hostName</th>
                 <th>domainName</th>
                 <th>cdn</th>
@@ -59,7 +59,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editServer(server.id)" ng-repeat="server in servers" ng-class="{'active': server.updPending}">
-                <td>{{server.updPending}}</td>
+                <td><i class="fa fa-flag" ng-show="server.updPending"></i></td>
                 <td>{{server.hostName}}</td>
                 <td>{{server.domainName}}</td>
                 <td>{{server.cdnName}}</td>
