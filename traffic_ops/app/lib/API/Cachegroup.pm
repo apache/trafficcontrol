@@ -390,7 +390,7 @@ sub postupdatequeue {
 	}
 
 	my $cdn = $params->{cdn};
-	my $cdn_id = $self->db->resultset('Cdn')->search( { name => $cdn } )->get_column('id')->single();
+	my $cdn_id = $params->{cdnId} // $self->db->resultset('Cdn')->search( { name => $cdn } )->get_column('id')->single();
 	if ( !defined($cdn_id) ) {
 		return $self->alert( "cdn " . $cdn . " does not exist." );
 	}
