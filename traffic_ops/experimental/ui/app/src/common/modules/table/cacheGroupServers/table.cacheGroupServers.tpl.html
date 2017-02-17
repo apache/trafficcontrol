@@ -25,9 +25,9 @@ under the License.
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
+            <button class="btn btn-primary" title="Queue {{cacheGroup.name}} server updates" ng-click="confirmQueueServerUpdates(cacheGroup)"><i class="fa fa-flag"></i></button>
+            <button class="btn btn-primary" title="Clear {{cacheGroup.name}} server updates" ng-click="confirmClearServerUpdates(cacheGroup)"><i class="fa fa-ban"></i></button>
             <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-success" ng-click="queueUpdates()">Queue Server Updates &nbsp;&nbsp;<i class="fa fa-flag"></i></button>
-            <button class="btn btn-danger" ng-click="dequeueUpdates()">Dequeue Server Updates &nbsp;&nbsp;<i class="fa fa-times"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -36,7 +36,7 @@ under the License.
         <table id="serversTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>Update?</th>
+                <th></th>
                 <th>hostName</th>
                 <th>domainName</th>
                 <th>cdn</th>
@@ -53,7 +53,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editServer(server.id)" ng-repeat="server in servers" ng-class="{'active': server.updPending}">
-                <td>{{server.updPending}}</td>
+                <td><i class="fa fa-flag" ng-show="server.updPending"></i></td>
                 <td>{{server.hostName}}</td>
                 <td>{{server.domainName}}</td>
                 <td>{{server.cdnName}}</td>

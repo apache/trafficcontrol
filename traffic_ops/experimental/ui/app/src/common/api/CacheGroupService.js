@@ -64,6 +64,31 @@ var CacheGroupService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
+    this.queueServerUpdates = function(cgId, cdnId) {
+        return Restangular.one("cachegroups", cgId).customPOST( { action: "queue", cdnId: cdnId }, "queue_update" )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Queued cache group server updates' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+    this.clearServerUpdates = function(cgId, cdnId) {
+        return Restangular.one("cachegroups", cgId).customPOST( { action: "dequeue", cdnId: cdnId}, "queue_update" )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Cleared cache group server updates' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+
 };
 
 CacheGroupService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
