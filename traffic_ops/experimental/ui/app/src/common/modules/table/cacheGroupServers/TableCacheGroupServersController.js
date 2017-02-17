@@ -17,26 +17,86 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, locationUtils) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, $uibModal, cacheGroupService, locationUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
 	$scope.servers = servers;
 
+	var queueServerUpdates = function(cacheGroup, cdnId) {
+		cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
+	};
+
+	var clearServerUpdates = function(cacheGroup, cdnId) {
+		cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
+	};
+
 	$scope.editServer = function(id) {
 		locationUtils.navigateToPath('/configure/servers/' + id);
 	};
 
-	$scope.queueUpdates = function() {
-		alert('not hooked up yet: queuing updates for all cachegroup servers');
-	};
-
-	$scope.dequeueUpdates = function() {
-		alert('not hooked up yet: dequeuing updates for all cachegroup servers');
-	};
-
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
+	};
+
+	$scope.confirmQueueServerUpdates = function(cacheGroup) {
+		var params = {
+			title: 'Queue Server Updates: ' + cacheGroup.name,
+			message: "Please select a CDN"
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdnId) {
+			queueServerUpdates(cacheGroup, cdnId);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.confirmClearServerUpdates = function(cacheGroup) {
+		var params = {
+			title: 'Clear Server Updates: ' + cacheGroup.name,
+			message: "Please select a CDN"
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(cdnService) {
+					return cdnService.getCDNs();
+				}
+			}
+		});
+		modalInstance.result.then(function(cdnId) {
+			clearServerUpdates(cacheGroup, cdnId);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -50,5 +110,5 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', 'locationUtils'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', '$uibModal', 'cacheGroupService', 'locationUtils'];
 module.exports = TableCacheGroupsServersController;

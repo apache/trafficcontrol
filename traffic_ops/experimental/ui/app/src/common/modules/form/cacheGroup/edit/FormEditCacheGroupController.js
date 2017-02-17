@@ -22,6 +22,13 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
     // extends the FormCacheGroupController to inherit common methods
     angular.extend(this, $controller('FormCacheGroupController', { cacheGroup: cacheGroup, $scope: $scope }));
 
+    $scope.cacheGroupName = angular.copy(cacheGroup.name);
+
+    $scope.settings = {
+        isNew: false,
+        saveLabel: 'Update'
+    };
+
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
             .then(function() {
@@ -29,11 +36,12 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
             });
     };
 
-    $scope.cacheGroupName = angular.copy(cacheGroup.name);
+    var queueServerUpdates = function(cacheGroup, cdnId) {
+        cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId);
+    };
 
-    $scope.settings = {
-        isNew: false,
-        saveLabel: 'Update'
+    var clearServerUpdates = function(cacheGroup, cdnId) {
+        cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId);
     };
 
     $scope.save = function(cacheGroup) {
@@ -61,6 +69,56 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
         });
         modalInstance.result.then(function() {
             deleteCacheGroup(cacheGroup);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    $scope.confirmQueueServerUpdates = function(cacheGroup) {
+        var params = {
+            title: 'Queue Server Updates: ' + cacheGroup.name,
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdnId) {
+            queueServerUpdates(cacheGroup, cdnId);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    $scope.confirmClearServerUpdates = function(cacheGroup) {
+        var params = {
+            title: 'Clear Server Updates: ' + cacheGroup.name,
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdnId) {
+            clearServerUpdates(cacheGroup, cdnId);
         }, function () {
             // do nothing
         });
