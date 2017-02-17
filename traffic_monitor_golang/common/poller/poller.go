@@ -120,6 +120,14 @@ func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 func (p MonitorConfigPoller) Poll() {
 	tick := time.NewTicker(p.Interval)
 	defer tick.Stop()
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorf("MonitorConfigPoller panic: %v\n", err)
+		} else {
+			log.Errorf("MonitorConfigPoller failed without panic\n")
+		}
+		os.Exit(1) // The Monitor can't run without a MonitorConfigPoller
+	}()
 	for {
 		select {
 		case opsConfig := <-p.OpsConfigChannel:
