@@ -21,6 +21,7 @@ package manager
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -191,6 +192,14 @@ func monitorConfigListen(
 	cfg config.Config,
 	staticAppData StaticAppData,
 ) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorf("MonitorConfigManager panic: %v\n", err)
+		} else {
+			log.Errorf("MonitorConfigManager failed without panic\n")
+		}
+		os.Exit(1) // The Monitor can't run without a MonitorConfigManager
+	}()
 	for monitorConfig := range monitorConfigPollChan {
 		monitorConfigTS.Set(monitorConfig)
 		healthURLs := map[string]poller.PollConfig{}
