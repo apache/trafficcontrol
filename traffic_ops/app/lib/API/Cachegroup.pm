@@ -409,29 +409,20 @@ sub postupdatequeue {
 		return $self->alert("action should be queue or dequeue.");
 	}
 
-	my @profiles;
-	@profiles = $self->db->resultset('Server')->search(
-		{ 'cdn.name' => $cdn },
-		{
-			prefetch => 'cdn',
-			select   => 'me.profile',
-			distinct => 1
-		}
-	)->get_column('profile')->all();
-	my $update = $self->db->resultset('Server')->search(
+	my $servers = $self->db->resultset('Server')->search(
 		{
 			-and => [
-				cachegroup => $id,
-				profile    => { -in => \@profiles }
+				cachegroup	=> $id,
+				cdn_id		=> $cdn_id
 			]
 		}
 	);
 
 	my $response;
 	my @svrs = ();
-	if ( $update->count() > 0 ) {
-		$update->update( { upd_pending => $setqueue } );
-		my @row = $update->get_column('host_name')->all();
+	if ( $servers->count() > 0 ) {
+		$servers->update( { upd_pending => $setqueue } );
+		my @row = $servers->get_column('host_name')->all();
 		foreach my $svr (@row) {
 			push( @svrs, $svr );
 		}
