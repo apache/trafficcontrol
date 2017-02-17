@@ -30,7 +30,7 @@ Traffic Control implements the elements illustrated in green in the diagram  bel
   * `Traffic Ops <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to configure caching  servers and CDN delivery services. It also contains APIs used to access CDN data.
 
 **Traffic Router**
-  * `Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_ops.html/>`_ is used to route clients requests to the closest healthy cache by analyzing the health, capacity, and state of the caching servers and relative distance from each cache group to the location of the client.
+  * `Traffic Router <http://trafficcontrol.apache.org/docs/latest/overview/traffic_router.html/>`_ is used to route clients requests to the closest healthy cache by analyzing the health, capacity, and state of the caching servers and relative distance from each cache group to the location of the client.
 
 **Traffic Monitor**
   * `Traffic Monitor <http://trafficcontrol.apache.org/docs/latest/overview/traffic_monitor.html/>`_ does health polling of the caching servers on a very short interval to keep track of which servers should be kept in rotation.
