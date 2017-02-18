@@ -148,9 +148,12 @@ insert into profile_parameter (profile, parameter) values (
 ) ON CONFLICT DO NOTHING;
 update server set https_port = 443 where https_port is null;
 
+-- tenant
+insert into tenant (id, name) values (1, 'none') ON CONFLICT DO NOTHING;
+
 -- users
-insert into tm_user (username, role,full_name) values ('portal',(select id from role where name='portal'),'Portal User') ON CONFLICT DO NOTHING;
-insert into tm_user (username, role, full_name, token) values ('extension', 3, 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
+insert into tm_user (username, tenant_id, role,full_name) values ('portal', 1, (select id from role where name='portal'),'Portal User') ON CONFLICT DO NOTHING;
+insert into tm_user (username, tenant_id, role, full_name, token) values ('extension', 1, 3, 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
 
 -- to extensions
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.

@@ -48,6 +48,13 @@ __PACKAGE__->table("cdn");
   default_value: false
   is_nullable: 0
 
+=head2 tenant_id
+
+  data_type: 'bigint'
+  default_value: 1
+  is_foreign_key: 1
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -69,6 +76,13 @@ __PACKAGE__->add_columns(
   },
   "dnssec_enabled",
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
+  "tenant_id",
+  {
+    data_type      => "bigint",
+    default_value  => 1,
+    is_foreign_key => 1,
+    is_nullable    => 0,
+  },
 );
 
 =head1 PRIMARY KEY
@@ -85,7 +99,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_24701_cdn_cdn_unique>
+=head2 C<idx_89491_cdn_cdn_unique>
 
 =over 4
 
@@ -95,7 +109,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_24701_cdn_cdn_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_89491_cdn_cdn_unique", ["name"]);
 
 =head1 RELATIONS
 
@@ -144,9 +158,24 @@ __PACKAGE__->might_have(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 tenant
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2016-12-09 09:10:09
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yBLkvGMimI0emk0nO5/CAA
+Type: belongs_to
+
+Related object: L<Schema::Result::Tenant>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "tenant",
+  "Schema::Result::Tenant",
+  { id => "tenant_id" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 09:32:58
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:o/4nImKo2c2AAJqoFouQ6g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

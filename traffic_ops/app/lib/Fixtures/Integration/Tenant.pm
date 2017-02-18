@@ -1,4 +1,4 @@
-package Fixtures::Integration::Cdn;
+package Fixtures::Integration::Tenant;
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -28,28 +28,17 @@ use namespace::autoclean;
 my %definition_for = (
 	## id => 1
 	'0' => {
-		new => 'Cdn',
+		new => 'Tenant',
 		using => {
-			name => 'cdn_number_1',
-			tenant_id => '1',
-			dnssec_enabled => '0',
-			last_updated => '2015-12-10 15:43:45',
-		},
-	},
-	## id => 2
-	'1' => {
-		new => 'Cdn',
-		using => {
-			name => 'cdn_number_2',
-			tenant_id => '1',
-			dnssec_enabled => '0',
+                        id => 1,
+			name => 'tenant_number_1',
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},
 );
 
 sub name {
-		return "Cdn";
+		return "Tenant";
 }
 
 sub get_definition {

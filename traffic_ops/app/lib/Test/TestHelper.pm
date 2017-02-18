@@ -37,6 +37,7 @@ use Fixtures::ProfileParameter;
 use Fixtures::Role;
 use Fixtures::Server;
 use Fixtures::Status;
+use Fixtures::Tenant;
 use Fixtures::TmUser;
 use Fixtures::Type;
 use Fixtures::Division;
@@ -103,6 +104,7 @@ sub load_core_data {
 
 	$self->reset_sequence_id();
 
+        $self->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -153,6 +155,7 @@ sub unload_core_data {
 	$self->teardown($schema, 'Status');
 	$self->teardown( $schema, 'Snapshot' );
 	$self->teardown($schema, 'Cdn');
+	$self->teardown($schema, 'Tenant');
 }
 
 sub teardown {

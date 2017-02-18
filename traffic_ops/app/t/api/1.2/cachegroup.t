@@ -37,6 +37,7 @@ Test::TestHelper->unload_core_data($schema);
 
 # Load the test data up until 'cachegroup', because this test case creates
 # them.
+Test::TestHelper->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
