@@ -35,7 +35,7 @@ type Session struct {
 	UserName     string
 	Password     string
 	URL          string
-	UserAgent    *http.Client
+	Client       *http.Client
 	cache        map[string]CacheEntry
 	cacheMutex   *sync.RWMutex
 	useCache     bool
@@ -47,13 +47,15 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 		UserName:     user,
 		Password:     password,
 		URL:          url,
-		UserAgent:    client,
+		Client:       client,
 		cache:        map[string]CacheEntry{},
 		cacheMutex:   &sync.RWMutex{},
 		useCache:     useCache,
 		UserAgentStr: userAgent,
 	}
 }
+
+const DefaultTimeout = time.Second * time.Duration(30)
 
 // HTTPError is returned on Update Session failure.
 type HTTPError struct {
@@ -120,6 +122,7 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 	}
 
 	to := NewSession("", "", toURL, "", &http.Client{
+		Timeout: DefaultTimeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
@@ -140,14 +143,14 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
-	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false) // TODO add version
+	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout) // TODO add UserAgent version
 }
 
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
 //     to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool) (*Session, error) {
+func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, error) {
 	credentials, err := loginCreds(toUser, toPasswd)
 	if err != nil {
 		return nil, err
@@ -163,6 +166,7 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 	}
 
 	to := NewSession(toUser, toPasswd, toURL, userAgent, &http.Client{
+		Timeout: requestTimeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
@@ -220,7 +224,7 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 	}
 
 	req.Header.Set("User-Agent", to.UserAgentStr)
-	resp, err := to.UserAgent.Do(req)
+	resp, err := to.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
