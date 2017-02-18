@@ -51,7 +51,7 @@ __PACKAGE__->table("cdn");
 =head2 tenant_id
 
   data_type: 'bigint'
-  default_value: 1
+  default_value: 2
   is_foreign_key: 1
   is_nullable: 0
 
@@ -79,7 +79,7 @@ __PACKAGE__->add_columns(
   "tenant_id",
   {
     data_type      => "bigint",
-    default_value  => 1,
+    default_value  => 2,
     is_foreign_key => 1,
     is_nullable    => 0,
   },
@@ -174,8 +174,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 09:32:58
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:o/4nImKo2c2AAJqoFouQ6g
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 15:01:46
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Uv5I/pvO3MC+ng0e8LeOVA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

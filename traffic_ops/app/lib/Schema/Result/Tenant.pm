@@ -33,6 +33,12 @@ __PACKAGE__->table("tenant");
   data_type: 'text'
   is_nullable: 0
 
+=head2 parent_id
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =head2 last_updated
 
   data_type: 'timestamp with time zone'
@@ -47,6 +53,8 @@ __PACKAGE__->add_columns(
   { data_type => "bigint", is_nullable => 0 },
   "name",
   { data_type => "text", is_nullable => 0 },
+  "parent_id",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -114,6 +122,41 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 parent
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Tenant>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "parent",
+  "Schema::Result::Tenant",
+  { id => "parent_id" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
+
+=head2 tenants
+
+Type: has_many
+
+Related object: L<Schema::Result::Tenant>
+
+=cut
+
+__PACKAGE__->has_many(
+  "tenants",
+  "Schema::Result::Tenant",
+  { "foreign.parent_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 tm_users
 
 Type: has_many
@@ -130,8 +173,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 09:32:59
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GwD6l7apYu+ouFMo7Jv/Tg
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 14:49:53
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TqTJ5SqUDIAXj4028Gepfw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

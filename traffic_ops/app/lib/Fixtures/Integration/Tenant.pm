@@ -31,7 +31,17 @@ my %definition_for = (
 		new => 'Tenant',
 		using => {
                         id => 1,
+			name => 'root-tenant',
+			last_updated => '2015-12-10 15:43:45',
+		},
+	},
+	## id => 2
+	'1' => {
+		new => 'Tenant',
+		using => {
+                        id => 2,
 			name => 'tenant_number_1',
+			parent_id => 1,
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},

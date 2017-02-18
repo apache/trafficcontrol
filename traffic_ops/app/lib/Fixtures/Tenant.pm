@@ -20,11 +20,19 @@ use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
 	## id => 1
-	tenant1_tenant_name => {
+	root_tenant_name => {
 		new   => 'Tenant',
 		using => {
 			id          => 1,
+			name        => 'root',
+		},
+	},
+	tenant1_tenant_name => {
+		new   => 'Tenant',
+		using => {
+			id          => 2,
 			name        => 'tenant1',
+			parent_id   => 1,
 		},
 	},
 );

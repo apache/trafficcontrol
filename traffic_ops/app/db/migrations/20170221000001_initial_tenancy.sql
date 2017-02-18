@@ -20,6 +20,8 @@
 CREATE TABLE tenant (
     id bigint primary key NOT NULL,
     name text UNIQUE NOT NULL,
+    parent_id bigint,
+    CONSTRAINT fk_parentid FOREIGN KEY (parent_id) REFERENCES tenant(id) ON DELETE CASCADE,
     last_updated timestamp with time zone DEFAULT now()
 );
 
@@ -27,18 +29,18 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tenant FOR EACH ROW 
 
 ALTER TABLE tm_user
     ADD tenant_id BIGINT NOT NULL,
-    ADD CONSTRAINT tenantidfk FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
-    ALTER COLUMN tenant_id SET DEFAULT 1;
+    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
+    ALTER COLUMN tenant_id SET DEFAULT 2;
 
 ALTER TABLE cdn
     ADD tenant_id BIGINT NOT NULL,
-    ADD CONSTRAINT tenantidfk FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
-    ALTER COLUMN tenant_id SET DEFAULT 1;
+    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
+    ALTER COLUMN tenant_id SET DEFAULT 2;
 
 ALTER TABLE deliveryservice
     ADD tenant_id BIGINT NOT NULL,
-    ADD CONSTRAINT tenantidfk FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
-    ALTER COLUMN tenant_id SET DEFAULT 1;
+    ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
+    ALTER COLUMN tenant_id SET DEFAULT 2;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
