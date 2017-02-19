@@ -291,9 +291,8 @@ __PACKAGE__->table("deliveryservice");
 =head2 tenant_id
 
   data_type: 'bigint'
-  default_value: 2
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =cut
 
@@ -407,12 +406,7 @@ __PACKAGE__->add_columns(
   "geolimit_redirect_url",
   { data_type => "text", is_nullable => 1 },
   "tenant_id",
-  {
-    data_type      => "bigint",
-    default_value  => 2,
-    is_foreign_key => 1,
-    is_nullable    => 0,
-  },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -619,7 +613,12 @@ __PACKAGE__->belongs_to(
   "tenant",
   "Schema::Result::Tenant",
   { id => "tenant_id" },
-  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
 );
 
 =head2 type
@@ -638,8 +637,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 15:01:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:yYBYZ1tHTl5tO5W2owX6+A
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-19 10:20:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:REpODBN1VhP+vyfl49Jt7g
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

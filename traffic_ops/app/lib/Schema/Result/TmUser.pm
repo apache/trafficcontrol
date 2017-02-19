@@ -142,9 +142,8 @@ __PACKAGE__->table("tm_user");
 =head2 tenant_id
 
   data_type: 'bigint'
-  default_value: 2
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =cut
 
@@ -204,12 +203,7 @@ __PACKAGE__->add_columns(
   "registration_sent",
   { data_type => "timestamp with time zone", is_nullable => 1 },
   "tenant_id",
-  {
-    data_type      => "bigint",
-    default_value  => 2,
-    is_foreign_key => 1,
-    is_nullable    => 0,
-  },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -344,12 +338,17 @@ __PACKAGE__->belongs_to(
   "tenant",
   "Schema::Result::Tenant",
   { id => "tenant_id" },
-  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 15:01:46
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Dbm4DqHCsjYdssGUGmKNPA
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-19 10:20:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2lI3iG0t7INKH+xQq+lo9g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

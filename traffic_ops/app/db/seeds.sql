@@ -150,7 +150,6 @@ update server set https_port = 443 where https_port is null;
 
 -- tenant
 insert into tenant (name, parent_id) values ('root', null) ON CONFLICT DO NOTHING;
-insert into tenant (name) values ('guest') ON CONFLICT DO NOTHING;
 
 -- users
 insert into tm_user (username, tenant_id, role,full_name) values ('portal', 2, (select id from role where name='portal'),'Portal User') ON CONFLICT DO NOTHING;

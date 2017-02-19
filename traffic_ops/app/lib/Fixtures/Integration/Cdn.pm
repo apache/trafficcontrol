@@ -31,7 +31,7 @@ my %definition_for = (
 		new => 'Cdn',
 		using => {
 			name => 'cdn_number_1',
-			tenant_id => '2',
+			tenant_id => undef,
 			dnssec_enabled => '0',
 			last_updated => '2015-12-10 15:43:45',
 		},
@@ -41,7 +41,7 @@ my %definition_for = (
 		new => 'Cdn',
 		using => {
 			name => 'cdn_number_2',
-			tenant_id => '2',
+			tenant_id => undef,
 			dnssec_enabled => '0',
 			last_updated => '2015-12-10 15:43:45',
 		},

@@ -23,17 +23,9 @@ my %definition_for = (
 	root_tenant_name => {
 		new   => 'Tenant',
 		using => {
-			id          => 1,
+			#id          => 1, #not setting the id in order not to confuse the id sequence
 			name        => 'root',
 			parent_id   => undef,
-		},
-	},
-	tenant1_tenant_name => {
-		new   => 'Tenant',
-		using => {
-			id          => 2,
-			name        => 'tenant1',
-			parent_id   => 1,
 		},
 	},
 );

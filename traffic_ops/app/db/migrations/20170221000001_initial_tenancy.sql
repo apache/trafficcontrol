@@ -30,21 +30,21 @@ CREATE INDEX idx_k_tenant_parent_tenant_idx ON tenant USING btree (parent_id);
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tenant FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 ALTER TABLE tm_user
-    ADD tenant_id BIGINT NOT NULL,
+    ADD tenant_id BIGINT,
     ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
-    ALTER COLUMN tenant_id SET DEFAULT 2;
+    ALTER COLUMN tenant_id SET DEFAULT NULL;
 CREATE INDEX idx_k_tm_user_tenant_idx ON tm_user USING btree (tenant_id);
 
 ALTER TABLE cdn
-    ADD tenant_id BIGINT NOT NULL,
+    ADD tenant_id BIGINT,
     ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
-    ALTER COLUMN tenant_id SET DEFAULT 2;
+    ALTER COLUMN tenant_id SET DEFAULT NULL;
 CREATE INDEX idx_k_cdn_tenant_idx ON cdn USING btree (tenant_id);
 
 ALTER TABLE deliveryservice
-    ADD tenant_id BIGINT NOT NULL,
+    ADD tenant_id BIGINT,
     ADD CONSTRAINT fk_tenantid FOREIGN KEY (tenant_id) REFERENCES tenant (id) MATCH FULL,
-    ALTER COLUMN tenant_id SET DEFAULT 2;
+    ALTER COLUMN tenant_id SET DEFAULT NULL;
 CREATE INDEX idx_k_deliveryservice_tenant_idx ON deliveryservice USING btree (tenant_id);
 
 -- +goose Down

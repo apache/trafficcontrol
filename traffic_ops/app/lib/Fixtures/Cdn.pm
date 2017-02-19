@@ -25,7 +25,7 @@ my %definition_for = (
 		using => {
 			id          => 100,
 			name        => 'cdn1',
-			tenant_id   => 2,
+			tenant_id   => undef,
 		},
 	},
 	## id => 2
@@ -34,7 +34,7 @@ my %definition_for = (
 		using => {
 			id          => 200,
 			name        => 'cdn2',
-			tenant_id   => 2,
+			tenant_id   => undef,
 		},
 	},
 );
