@@ -38,30 +38,60 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-$t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/id", 100 )
-	->json_is( "/response/0/name", "mountain" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+#verifying the basic cfg
+$t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/name", "root" )->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
-$t->get_ok("/api/1.2/tenants/100")->status_is(200)->json_is( "/response/0/id", 100 )
-	->json_is( "/response/0/name", "mountain" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+my $root_tenant_id = &get_tenant_id('root');
 
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenant1" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/name" => "tenant1" )
+        "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/name" => "tenantA" )
+	->json_is( "/response/parentId" =>  $root_tenant_id)
             , 'Does the tenant details return?';
 
+#same name - would not accept
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenant1" })->status_is(400);
+        "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(400);
 
-my $tenant_id = &get_tenant_id('tenant1');
-ok $t->put_ok('/api/1.2/tenants/' . $tenant_id  => {Accept => 'application/json'} => json => {
-			"name" => "tenant2"
+#no name - would not accept
+ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
+        "parentId" => $root_tenant_id })->status_is(400);
+
+#no parent - would not accept
+ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
+        "name" => "tenantB" })->status_is(400);
+
+#rename
+my $tenantA_id = &get_tenant_id('tenantA');
+ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
+			"name" => "tenantA2", "parentId" => $root_tenant_id 
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/response/name" => "tenant2" )
+		->json_is( "/response/name" => "tenantA2" )
+		->json_is( "/response/id" => $tenantA_id )
+		->json_is( "/response/parentId" => $root_tenant_id )
 		->json_is( "/alerts/0/level" => "success" )
 	, 'Does the tenant2 details return?';
 
-ok $t->delete_ok('/api/1.2/tenants/' . $tenant_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+#cannot change tenant parent to undef
+ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
+			"name" => "tenantC", 
+		})->status_is(400);
+
+#adding a child tenant
+ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
+        "name" => "tenantD", "parentId" => $tenantA_id })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	->json_is( "/response/name" => "tenantD" )
+	->json_is( "/response/parentId" =>  $tenantA_id)
+            , 'Does the tenant details return?';
+
+#cannot delete a tenant that have children
+ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(500);
+
+my $tenantD_id = &get_tenant_id('tenantD');
+
+ok $t->delete_ok('/api/1.2/tenants/' . $tenantD_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
