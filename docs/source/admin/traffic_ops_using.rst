@@ -122,6 +122,8 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   +--------------------+-------------------------------------------------------------------------------------------+
   |       Option       |                                        Description                                        |
   +====================+===========================================================================================+
+  | CDNs               | Create/Read/Update/Delete CDNs                                                            |
+  +--------------------+-------------------------------------------------------------------------------------------+
   | Cache Groups       | Create/Read/Update/Delete cache groups                                                    |
   +--------------------+-------------------------------------------------------------------------------------------+
   | Users              | Create/Read/Update/Delete users                                                           |
@@ -255,7 +257,7 @@ These are the types of servers that can be managed in Traffic Ops:
 +---------------+---------------------------------------------+
 | ORG           | Origin                                      |
 +---------------+---------------------------------------------+
-| CCR           | Comcast Content Router                      |
+| CCR           | Traffic Router                              |
 +---------------+---------------------------------------------+
 | RASCAL        | Rascal health polling & reporting           |
 +---------------+---------------------------------------------+
@@ -278,7 +280,7 @@ These are the types of servers that can be managed in Traffic Ops:
 
 Bulk Upload Server
 ++++++++++++++++++
-
+TBD
 
 
 Delivery Service
@@ -339,12 +341,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Use Multi Site Origin Feature                    | Enable the Multi Site Origin feature for this delivery service. See :ref:`rl-multi-site-origin`                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Multi Site Origin Algorithm                      | - 1 Consistent Hash spreads requests across multiple parents simultaneously based on hash of content URL.                                                                                                           |
-|                                                  | - 2 Strict Round Robin spreads requests across multiple parents simultaneously based on order of requests.                                                                                                          |
-|                                                  | - 3 IP Based Round Robin spreads requests across multiple parents simultaneously based on order of requests, but ensures that requests from the same IP always go to the same parent if available.                  |
-|                                                  | - 4 Latched uses only a single parent at any given time and switches to a new parent only if the current parent fails.                                                                                              |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| CCR profile                                      | The Traffic Router  profile for this delivery service. See :ref:`rl-ccr-profile`.                                                                                                                                   |
+| Profile                                          | The profile for this delivery service.                                                                                                                                                                              |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Maximum Bits per Second allowed globally         | The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used     |
 |                                                  | (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.                                                                                                   |
@@ -594,14 +591,14 @@ Parameters in the Mid (parent) profile that influence this feature:
 
 Multi Site Origin
 +++++++++++++++++
-.. Note:: The Multi Site Origin feature is based upon a feature n ATS that has yet to be submitted to Traffic Server upstream, until it is, set this to 0, or use the ATS rpm supplied on the trafficcontrol.apache.org website.
 
-Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions.
+.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht-ats5` for the ATS version 5.x configuration details.
 
-With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is ""
+Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. A prerequisite for MSO to work is that the multiple origin sites serve identical content with identical paths, and both are configured to serve the same origin hostname as is configured in the deliveryservice `Origin Server Base URL` field. See the `Apache Traffic Server docs <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/parent.config.en.html>`_ for more information on that cache's implementation.
 
+With This feature enabled, origin servers (or origin server VIP names for a site) are going to be entered as servers in to the Traiffic Ops UI. Server type is "ORG".
 
-Parameters in the Origin profile that influence this feature:
+Parameters in the mid profile that influence this feature:
 
 +--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
 |                                   Name                                   |    Filename    |  Default   |                                            Description                                             |
@@ -610,27 +607,40 @@ Parameters in the Origin profile that influence this feature:
 +--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
 | CONFIG proxy.config. url_remap.remap_required                            | records.config | INT 1      | required for parent selection.                                                                     |
 +--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. http.parent_proxy.per_parent_connect_attempts       | records.config | INT 5      | maximum of 5 connection attempts per parent (parent.config list) within a transaction.             |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. http.parent_proxy.total_connect_attempts            | records.config | INT 10     | maximum of 10 total connection attempts within a transaction.                                      |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. http.parent_origin.simple_retry_enabled             | records.config | INT 1      | enables simple retry.                                                                              |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. http.parent_origin.simple_retry_response_codes      | records.config | STRING 404 | the response code that invokes simple retry.  May be a comman separated list of response codes.    |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. http.parent_origin.dead_server_retry_response_codes | records.config | STRING 503 | the response code that invokes dead server retry.  May be a comma separated list of response codes |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. http.parent_origin.dead_server_retry_enabled        | records.config | INT 1      | enables dead server retry.                                                                         |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
-| CONFIG proxy.config. diags.debug.enabled                                 | records.config | INT 1      | enable debugging for testing only                                                                  |
-+--------------------------------------------------------------------------+----------------+------------+----------------------------------------------------------------------------------------------------+
+
+
+Parameters in the deliveryservice profile that influence this feature:
+
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+|                                   Name      |    Filename    |  Default        |                                                                         Description                                             |
++=============================================+================+=================+=================================================================================================================================+
+| mso.parent_retry                            | parent.config  | \-              | Either ``simple_retry``, ``dead_server_retry`` or ``both``.                                                                     |
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+| mso.algorithm                               | parent.config  | consistent_hash | The algorithm to use. ``consisten_hash``, ``strict``, ``true``, ``false``, or ``latched``.                                      |
+|                                             |                |                 |                                                                                                                                 |
+|                                             |                |                 | - ``consisten_hash`` - spreads requests across multiple parents simultaneously based on hash of content URL.                    |
+|                                             |                |                 | - ``strict`` - strict Round Robin spreads requests across multiple parents simultaneously based on order of requests.           |
+|                                             |                |                 | - ``true`` - same as strict, but ensures that requests from the same IP always go to the same parent if available.              |
+|                                             |                |                 | - ``false`` - uses only a single parent at any given time and switches to a new parent only if the current parent fails.        |
+|                                             |                |                 | - ``latched`` - same as false, but now, a failed parent will not be retried.                                                    |
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+| mso.unavailable_server_retry_response_codes | parent.config  | "503"           | Quoted, comma separated list of HTTP status codes that count as a unavailable_server_retry_response_code.                       |
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+| mso.max_unavailable_server_retries          | parent.config  | 1               | How many times an unavailable server will be retried.                                                                           |
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+| mso.simple_retry_response_codes             | parent.config  | "404"           | Quoted, comma separated list of HTTP status codes that count as a simple retry response code.                                   |
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+| mso.max_simple_retries                      | parent.config  | 1               | How many times a simple retry will be done.                                                                                     |
++---------------------------------------------+----------------+-----------------+---------------------------------------------------------------------------------------------------------------------------------+
+
+
 
 see :ref:`rl-multi-site-origin-qht` for a *quick how to* on this feature.
 
 .. _rl-ccr-profile:
 
-CCR Profile or Traffic Router Profile
-+++++++++++++++++++++++++++++++++++++
+Traffic Router Profile
+++++++++++++++++++++++
 
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                   Name                  |      Config_file       |                                                                                                Description                                                                                                |
@@ -654,8 +664,6 @@ CCR Profile or Traffic Router Profile
 | coveragezone.polling.interval           | CRConfig.json          | How often to refresh the coverage zone map in ms                                                                                                                                                          |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | coveragezone.polling.url                | CRConfig.json          | The location (URL) to retrieve the coverage zone map file in XML format from.                                                                                                                             |
-+-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| domain_name                             | CRConfig.json          | The top level domain of this Traffic Router instance.                                                                                                                                                     |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | tld.soa.expire                          | CRConfig.json          | The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records.                                                                                       |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
