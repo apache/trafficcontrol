@@ -34,7 +34,7 @@ sub getTenantName {
 sub isRootTenant {
 	my $self 	= shift;
 	my $tenant_id	= shift;
-	return $tenant_id eq 1;
+	return !defined($self->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('parent_id')->single());
 }
 
 sub index {
@@ -134,6 +134,10 @@ sub update {
 		return $self->alert("Parent Id is required.");
 	}
 
+	if ( !defined($params->{parentId}) && !isRootTenant($id) ) {
+		return $self->alert("Only the \"root\" tenant can have no parent.");
+	}
+	
 	my $values = {
 		name      => $params->{name},
 		parent_id => $params->{parentId}
