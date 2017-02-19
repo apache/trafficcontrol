@@ -554,6 +554,14 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
 
+	# -- TENANTS
+	$r->get("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#index', namespace => $namespace );
+	$r->get( "/api/$version/tenants/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Tenant#show', namespace => $namespace );
+	$r->get( "/api/$version/tenants/name/:name")->over( authenticated => 1 )->to( 'Tenant#index_by_name', namespace => $namespace );
+	$r->put("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#update', namespace => $namespace );
+	$r->post("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#create', namespace => $namespace );
+	$r->delete("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#delete', namespace => $namespace );
+
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#index', namespace => $namespace );
 	$r->get( "/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Division#show', namespace => $namespace );

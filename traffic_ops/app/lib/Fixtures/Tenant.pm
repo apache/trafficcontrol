@@ -25,6 +25,7 @@ my %definition_for = (
 		using => {
 			id          => 1,
 			name        => 'root',
+			parent_id   => undef,
 		},
 	},
 	tenant1_tenant_name => {

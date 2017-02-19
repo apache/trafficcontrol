@@ -32,6 +32,7 @@ my %definition_for = (
 		using => {
                         id => 1,
 			name => 'root-tenant',
+			parent_id => undef,
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},

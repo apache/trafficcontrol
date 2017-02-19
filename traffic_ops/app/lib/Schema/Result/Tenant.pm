@@ -26,7 +26,9 @@ __PACKAGE__->table("tenant");
 =head2 id
 
   data_type: 'bigint'
+  is_auto_increment: 1
   is_nullable: 0
+  sequence: 'tenant_id_seq'
 
 =head2 name
 
@@ -36,6 +38,7 @@ __PACKAGE__->table("tenant");
 =head2 parent_id
 
   data_type: 'bigint'
+  default_value: 1
   is_foreign_key: 1
   is_nullable: 1
 
@@ -50,11 +53,21 @@ __PACKAGE__->table("tenant");
 
 __PACKAGE__->add_columns(
   "id",
-  { data_type => "bigint", is_nullable => 0 },
+  {
+    data_type         => "bigint",
+    is_auto_increment => 1,
+    is_nullable       => 0,
+    sequence          => "tenant_id_seq",
+  },
   "name",
   { data_type => "text", is_nullable => 0 },
   "parent_id",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  {
+    data_type      => "bigint",
+    default_value  => 1,
+    is_foreign_key => 1,
+    is_nullable    => 1,
+  },
   "last_updated",
   {
     data_type     => "timestamp with time zone",
@@ -137,7 +150,7 @@ __PACKAGE__->belongs_to(
   {
     is_deferrable => 0,
     join_type     => "LEFT",
-    on_delete     => "NO ACTION",
+    on_delete     => "CASCADE",
     on_update     => "NO ACTION",
   },
 );
@@ -173,8 +186,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 14:49:53
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TqTJ5SqUDIAXj4028Gepfw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 21:04:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:i9zkvG6Tv0q7IYLT5co5qQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
