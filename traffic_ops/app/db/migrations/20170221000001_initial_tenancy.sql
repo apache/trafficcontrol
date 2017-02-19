@@ -21,12 +21,11 @@
 CREATE TABLE tenant (
     id BIGSERIAL primary key NOT NULL,
     name text UNIQUE NOT NULL,
-    parent_id bigint DEFAULT 1,
+    parent_id bigint DEFAULT 1 CHECK (id != parent_id),
     CONSTRAINT fk_parentid FOREIGN KEY (parent_id) REFERENCES tenant(id) ON DELETE CASCADE,    
     last_updated timestamp with time zone DEFAULT now()
 );
 CREATE INDEX idx_k_tenant_parent_tenant_idx ON tenant USING btree (parent_id);
-
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tenant FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
