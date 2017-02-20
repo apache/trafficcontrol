@@ -422,6 +422,9 @@ sub api_routes {
 	$r->put("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#update', namespace => $namespace );
 	$r->delete("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#delete', namespace => $namespace );
 
+	# -- CDNS: QUEUE UPDATES
+	$r->post("/api/$version/cdns/:id/queue_update")->over( authenticated => 1 )->to( 'Cdn#queue_updates', namespace => $namespace );
+
 	# -- CDNS: HEALTH
 	$r->get("/api/$version/cdns/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
 	$r->get("/api/$version/cdns/:name/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );
@@ -537,7 +540,12 @@ sub api_routes {
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
 	# -- DELIVERY SERVICE: REGEXES
-	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#all', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:dsId/regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
+	$r->get("/api/$version/deliveryservices/:dsId/regexes/:id")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#show', namespace => $namespace );
+	$r->post("/api/$version/deliveryservices/:dsId/regexes")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#create', namespace => $namespace );
+	$r->put("/api/$version/deliveryservices/:dsId/regexes/:id")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#update', namespace => $namespace );
+	$r->delete("/api/$version/deliveryservices/:dsId/regexes/:id")->over( authenticated => 1 )->to( 'DeliveryServiceRegexes#delete', namespace => $namespace );
 
 	# -- DELIVERY SERVICE: MATCHES
 	$r->get("/api/$version/deliveryservice_matches")->over( authenticated => 1 )->to( 'DeliveryServiceMatches#index', namespace => $namespace );

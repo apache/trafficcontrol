@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableParametersController = function(parameters, $scope, locationUtils) {
+var TableParametersController = function(parameters, $scope, $state, locationUtils) {
 
     $scope.parameters = parameters;
 
@@ -29,6 +29,10 @@ var TableParametersController = function(parameters, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/parameters/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#parametersTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableParametersController = function(parameters, $scope, locationUtils) {
 
 };
 
-TableParametersController.$inject = ['parameters', '$scope', 'locationUtils'];
+TableParametersController.$inject = ['parameters', '$scope', '$state', 'locationUtils'];
 module.exports = TableParametersController;

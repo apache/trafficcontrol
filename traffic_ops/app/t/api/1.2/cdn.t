@@ -44,13 +44,37 @@ $t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 100 )
 $t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 )
     ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+ok $t->post_ok('/api/1.2/cdns/100/queue_update' => {Accept => 'application/json'} => json => {
+            "action" => "queue" })
+        ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/response/cdnId" => 100 )
+        ->json_is( "/response/action" => "queue" )
+    , 'Does the cdn details return?';
+
+$t->get_ok("/api/1.2/servers?cdnId=100")->status_is(200)
+    ->json_is( "/response/0/updPending", 1 )
+    ->json_is( "/response/1/updPending", 1 )
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok('/api/1.2/cdns/100/queue_update' => {Accept => 'application/json'} => json => {
+            "action" => "dequeue" })
+        ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/response/cdnId" => 100 )
+        ->json_is( "/response/action" => "dequeue" )
+    , 'Does the cdn details return?';
+
+$t->get_ok("/api/1.2/servers?cdnId=100")->status_is(200)
+    ->json_is( "/response/0/updPending", 0 )
+    ->json_is( "/response/1/updPending", 0 )
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
         "name" => "cdn_test", "dnssecEnabled" => "true" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test" )
     ->json_is( "/alerts/0/level" => "success" )
     ->json_is( "/alerts/0/text" => "cdn was created." )
-            , 'Does the cdn details return?';
+            , 'Do the cdn queue update details return?';
 
 my $cdn_id = &get_cdn_id('cdn_test');
 

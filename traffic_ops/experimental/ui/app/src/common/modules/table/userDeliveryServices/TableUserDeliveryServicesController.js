@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableUserDeliveryServicesController = function(user, userDeliveryServices, $scope, locationUtils) {
+var TableUserDeliveryServicesController = function(user, userDeliveryServices, $scope, $state, locationUtils) {
 
 	$scope.user = user;
 
@@ -31,6 +31,10 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, $
 		alert('not hooked up yet: removeDeliveryService from user');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, $
 
 };
 
-TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', 'locationUtils'];
+TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', '$state', 'locationUtils'];
 module.exports = TableUserDeliveryServicesController;

@@ -1,0 +1,68 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id + '/regexes')">Regexes</a></li>
+            <li class="active">{{regexPattern}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="dsRegexForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(dsRegexForm.pattern), 'has-feedback': hasError(dsRegexForm.pattern)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Pattern *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="pattern" name="pattern" type="text" class="form-control" ng-model="regex.pattern" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.pattern, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.pattern, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.pattern, 'pattern')">No spaces</small>
+                    <span ng-show="hasError(dsRegexForm.pattern)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsRegexForm.type), 'has-feedback': hasError(dsRegexForm.type)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="type" name="type" class="form-control" ng-model="regex.type" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.type, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsRegexForm.setNumber), 'has-feedback': hasError(dsRegexForm.setNumber)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Order *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="setNumber" name="setNumber" type="text" class="form-control" ng-model="regex.setNumber" ng-required="true" ng-maxlength="3" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'pattern')">Number</small>
+                    <span ng-show="hasError(dsRegexForm.setNumber)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(regex)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsRegexForm.$pristine || dsRegexForm.$invalid" ng-click="save(deliveryService.id, regex)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

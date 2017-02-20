@@ -309,6 +309,8 @@ The fields in the Delivery Service view are:
 |                                                  | - 0 use in cache key and hand up to origin -this means each unique query string Is treated as a unique URL.                                                                                                         |
 |                                                  | - 1 Do not use in cache key, but pass up to origin - this means a 2 URLs that are the same except for the query string will match, and cache HIT, while the origin still sees original query string in the request. |
 |                                                  | - 2 Drop at edge - this means a 2 URLs that are the same except for  the query string will match, and cache HIT, while the origin will not see original query string in the request.                                |
+|                                                  |                                                                                                                                                                                                                     |
+|                                                  | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`rl-regex-remap`.                                                                                  |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Limit?                                       | Some services are intended to be limited by geography. The possible settings are are:                                                                                                                               |
 |                                                  |                                                                                                                                                                                                                     |
@@ -361,6 +363,8 @@ The fields in the Delivery Service view are:
 | Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`rl-header-rewrite`. [1]_                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Regex Remap Expression                           | Regex Remap rule to apply to this delivery service at the Edge tier. See `ATS documentation on regex_remap <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_. [1]_        |
+|                                                  |                                                                                                                                                                                                                     |
+|                                                  | **Note:** you will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. See :ref:`rl-regex-remap`.                                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Cache URL expression                             | Cache URL rule to apply to this delivery service. See `ATS documentation on cacheurl <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cacheurl.en.html>`_. [1]_                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -718,6 +722,21 @@ CCR Profile or Traffic Router Profile
 | DNSKEY.effective.multiplier             | CRConfig.json          | Used when creating an effective date for a new key set.  New keys are generated with an effective date of old key expiration - (effective multiplier * TTL).  Default is 2.                               |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+
+.. index::
+  Regex Remap Expression
+
+.. _rl-regex-remap:
+
+Regex Remap Expression
+++++++++++++++++++++++
+The regex remap expression allows to to use a regex and resulting match group(s) in order to modify the request URIs that are sent to origin. For example: ::
+
+  ^/original/(.*) http://origin.example.com/remapped/$1
+
+.. Note:: If **Query String Handling** is set to ``2 Drop at edge``, then you will not be allowed to save a regex remap expression, as dropping query strings actually relies on a regex remap of its own. However, if there is a need to both drop query strings **and** remap request URIs, this can be accomplished by setting **Query String Handling** to ``1 Do not use in cache key, but pass up to origin``, and then using a custom regex remap expression to do the necessary remapping, while simultaneously dropping query strings. The following example will capture the original request URI up to, but not including, the query string and then forward to a remapped URI: ::
+
+  ^/([^?]*).* http://origin.example.com/remapped/$1
 
 ..   index::
   HOST_REGEXP

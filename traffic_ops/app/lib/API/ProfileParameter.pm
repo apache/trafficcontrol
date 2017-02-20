@@ -27,7 +27,7 @@ sub index {
 	my @data;
 	my $orderby = "profile";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { order_by => $orderby } );
+	my $rs_data = $self->db->resultset("ProfileParameter")->search( undef, { prefetch => [ 'profile' ], order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

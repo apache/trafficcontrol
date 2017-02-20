@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileServersController = function(profile, servers, $scope, locationUtils) {
+var TableProfileServersController = function(profile, servers, $scope, $state, locationUtils) {
 
 	$scope.profile = profile;
 
@@ -25,6 +25,10 @@ var TableProfileServersController = function(profile, servers, $scope, locationU
 
 	$scope.editServer = function(id) {
 		locationUtils.navigateToPath('/configure/servers/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableProfileServersController = function(profile, servers, $scope, locationU
 
 };
 
-TableProfileServersController.$inject = ['profile', 'servers', '$scope', 'locationUtils'];
+TableProfileServersController.$inject = ['profile', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableProfileServersController;

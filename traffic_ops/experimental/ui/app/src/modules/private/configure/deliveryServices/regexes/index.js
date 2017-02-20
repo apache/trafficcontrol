@@ -18,22 +18,16 @@
  */
 
 module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes', [])
+	.controller('DeliveryServiceRegexesController', require('./DeliveryServiceRegexesController'))
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficOps.private.configure.deliveryServices.regexes', {
 				url: '/{deliveryServiceId}/regexes',
+				abstract: true,
 				views: {
 					deliveryServicesContent: {
-						templateUrl: 'common/modules/table/deliveryServiceRegexes/table.deliveryServiceRegexes.tpl.html',
-						controller: 'TableDeliveryServiceRegexesController',
-						resolve: {
-							deliveryService: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
-							},
-							regexes: function($stateParams, regexService) {
-								return regexService.getRegexes($stateParams.deliveryServiceId);
-							}
-						}
+						templateUrl: 'modules/private/configure/deliveryServices/regexes/deliveryServiceRegexes.tpl.html',
+						controller: 'DeliveryServiceRegexesController'
 					}
 				}
 			})

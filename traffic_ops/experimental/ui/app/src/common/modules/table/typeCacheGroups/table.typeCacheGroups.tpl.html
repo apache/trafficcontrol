@@ -24,6 +24,9 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/types/' + type.id)">{{type.name}}</a></li>
             <li class="active">Cache Groups</li>
         </ol>
+        <div class="pull-right">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

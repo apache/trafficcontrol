@@ -26,7 +26,7 @@ sub readhwinfo {
 	my $limit   = $self->param('limit')   || 1000;
 
 	# get list of servers in one query
-	my $rs_data = $self->db->resultset("Hwinfo")->search( undef, { rows => $limit } );
+	my $rs_data = $self->db->resultset("Hwinfo")->search( undef, { prefetch => [ 'serverid' ], rows => $limit } );
 
 	while ( my $row = $rs_data->next ) {
 		my $id = $row->id;

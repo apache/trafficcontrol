@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableStatusServersController = function(status, servers, $scope, locationUtils) {
+var TableStatusServersController = function(status, servers, $scope, $state, locationUtils) {
 
 	$scope.status = status;
 
@@ -25,6 +25,10 @@ var TableStatusServersController = function(status, servers, $scope, locationUti
 
 	$scope.editServer = function(id) {
 		locationUtils.navigateToPath('/configure/servers/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableStatusServersController = function(status, servers, $scope, locationUti
 
 };
 
-TableStatusServersController.$inject = ['status', 'servers', '$scope', 'locationUtils'];
+TableStatusServersController.$inject = ['status', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableStatusServersController;

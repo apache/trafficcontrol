@@ -40,6 +40,9 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
+const UserAgent = "traffic-stats"
+const TrafficOpsRequestTimeout = time.Second * time.Duration(10)
+
 const (
 	// FATAL will exit after printing error
 	FATAL = iota
@@ -412,7 +415,7 @@ func queryDB(con influx.Client, cmd string, database string) (res []influx.Resul
 }
 
 func writeSummaryStats(config StartupConfig, statsSummary traffic_ops.StatsSummary) {
-	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
+	to, err := traffic_ops.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
 	if err != nil {
 		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
 		log.Error(newErr)
@@ -426,7 +429,7 @@ func writeSummaryStats(config StartupConfig, statsSummary traffic_ops.StatsSumma
 
 func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
-	to, err := traffic_ops.Login(config.ToURL, config.ToUser, config.ToPasswd, true)
+	to, err := traffic_ops.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
 	if err != nil {
 		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToURL, err)
 		if init {

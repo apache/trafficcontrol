@@ -68,6 +68,29 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one('deliveryservices', dsId).getList('servers');
     };
 
+    this.queueServerUpdates = function(id) {
+        return Restangular.one("servers", id).customPOST( { action: "queue"}, "queue_update" )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Queued server updates' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+    this.clearServerUpdates = function(id) {
+        return Restangular.one("servers", id).customPOST( { action: "dequeue"}, "queue_update" )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Cancelled server updates' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
 
 };
 

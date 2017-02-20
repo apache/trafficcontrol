@@ -597,7 +597,7 @@ API 1.1 Reference
   traffic_ops_api/v11/type
   traffic_ops_api/v11/user
 
-API 1.2 Reference 
+API 1.2 Reference
 -----------------
 
 .. toctree:: 
@@ -609,6 +609,7 @@ API 1.2 Reference
   traffic_ops_api/v12/cdn
   traffic_ops_api/v12/changelog
   traffic_ops_api/v12/deliveryservice
+  traffic_ops_api/v12/deliveryservice_regex
   traffic_ops_api/v12/deliveryservice_stats
   traffic_ops_api/v12/division
   traffic_ops_api/v12/federation

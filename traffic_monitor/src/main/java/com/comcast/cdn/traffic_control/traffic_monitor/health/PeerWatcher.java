@@ -53,6 +53,10 @@ public class PeerWatcher {
 			ExecutorService pool = null;
 
 			while (true) {
+				if(!isActive ) {
+					return;
+				}
+
 				final long time = System.currentTimeMillis();
 				final RouterConfig crConfig = RouterConfig.getCrConfig();
 
@@ -86,10 +90,6 @@ public class PeerWatcher {
 				} catch (Exception e) { }
 
 				final long mytime = System.currentTimeMillis()-time;
-
-				if(!isActive ) {
-					return;
-				}
 			}
 		}
 

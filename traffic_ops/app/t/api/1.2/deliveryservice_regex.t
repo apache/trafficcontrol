@@ -40,10 +40,72 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(200),
 	'Log into the admin user?';
 
-ok $t->get_ok("/api/1.2/deliveryservices_regexes.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+ok $t->get_ok("/api/1.2/deliveryservices_regexes")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_has( '/response', 'has a response' )->json_is( '/response/0/dsName', 'steering-ds1' )->json_has( '/response/0/regexes/0/type', 'has a regex type' )
 	->json_is( '/response/1/dsName', 'steering-ds2' )
 	->json_has( '/response/1/regexes', 'has a second regex' )->json_has( '/response/7/regexes/0/type', 'has a second regex type' ), 'Query regexes';
+
+$t->get_ok("/api/1.2/deliveryservices/100/regexes")->status_is(200)->json_is( "/response/0/id", 200 )
+	->json_is( "/response/0/pattern" => '.*\.foo\..*' )
+	->json_is( "/response/0/type" => 19 )
+	->json_is( "/response/0/typeName" => 'HOST_REGEXP' )
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/deliveryservices/100/regexes")->status_is(200)->json_is( "/response/1/id", 800 )
+	->json_is( "/response/1/pattern" => '.*\.steering-ds1\..*' )
+	->json_is( "/response/1/type" => 19 )
+	->json_is( "/response/1/typeName" => 'HOST_REGEXP' )
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/deliveryservices/100/regexes/200")->status_is(200)->json_is( "/response/0/id", 200 )
+	->json_is( "/response/0/pattern" => '.*\.foo\..*' )
+	->json_is( "/response/0/type" => 19 )
+	->json_is( "/response/0/typeName" => 'HOST_REGEXP' )
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->put_ok('/api/1.2/deliveryservices/100/regexes/200' => {Accept => 'application/json'} => json => {
+			"pattern" => '.*\.foo-bar\..*',
+			"type" => 20,
+			"setNumber" => 22,
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/pattern" => '.*\.foo-bar\..*' )
+		->json_is( "/response/type" => 20 )
+		->json_is( "/response/typeName" => 'PATH_REGEXP' )
+		->json_is( "/response/setNumber" => 22 )
+		->json_is( "/alerts/0/level" => "success" )
+	, 'Did the delivery service regex update?';
+
+ok $t->delete_ok('/api/1.2/deliveryservices/100/regexes/200')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->delete_ok('/api/1.2/deliveryservices/100/regexes/800')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "A delivery service must have at least one regex." )
+	, 'Does the delivery service regex delete fail because each ds must have at least one regex?';;
+
+ok $t->post_ok('/api/1.2/deliveryservices/100/regexes' => {Accept => 'application/json'} => json => {
+			"pattern" => "foo.bar.com",
+			"type" => 19,
+			"setNumber" => 2,
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/pattern" => "foo.bar.com" )
+		->json_is( "/response/type" => 19 )
+		->json_is( "/response/typeName" => "HOST_REGEXP" )
+		->json_is( "/response/setNumber" => 2 )
+		->json_is( "/alerts/0/level" => "success" )
+		->json_is( "/alerts/0/text" => "Delivery service regex creation was successful." )
+	, 'Is the delivery service regex created?';
+
+ok $t->post_ok('/api/1.2/deliveryservices/100/regexes' => {Accept => 'application/json'} => json => {
+			"pattern" => "foo2.bar.com",
+			"type" => 12,
+			"setNumber" => 2,
+		})
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "Invalid regex type" )
+	, 'Does the delivery service regex create fail due to bad regex type?';
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -52,7 +114,7 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_U
 	'Log into the portal user?';
 
 # Verify Permissions
-ok $t->get_ok("/api/1.2/deliveryservices_regexes.json")->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->get_ok("/api/1.2/deliveryservices_regexes")->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

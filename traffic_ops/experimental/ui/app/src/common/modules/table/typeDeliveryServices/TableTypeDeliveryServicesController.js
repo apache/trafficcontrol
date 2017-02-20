@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypeDeliveryServicesController = function(type, deliveryServices, $scope, locationUtils) {
+var TableTypeDeliveryServicesController = function(type, deliveryServices, $scope, $state, locationUtils) {
 
 	$scope.type = type;
 
@@ -25,6 +25,10 @@ var TableTypeDeliveryServicesController = function(type, deliveryServices, $scop
 
 	$scope.editDeliveryServices = function(id) {
 		locationUtils.navigateToPath('/configure/delivery-services/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableTypeDeliveryServicesController = function(type, deliveryServices, $scop
 
 };
 
-TableTypeDeliveryServicesController.$inject = ['type', 'deliveryServices', '$scope', 'locationUtils'];
+TableTypeDeliveryServicesController.$inject = ['type', 'deliveryServices', '$scope', '$state', 'locationUtils'];
 module.exports = TableTypeDeliveryServicesController;

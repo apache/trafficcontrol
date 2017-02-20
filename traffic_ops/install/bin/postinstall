@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 #
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,702 +14,791 @@
 # limitations under the License.
 #
 
-use strict;
-use warnings;
-
 use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
 $ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
 $ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
 
-use DBI;
-use JSON;
-use InstallUtils qw{ :all };
+use strict;
+use warnings;
+
+use Safe;
+use POSIX;
+use File::Basename qw{dirname};
+use File::Path qw{make_path};
 use Digest::SHA1 qw(sha1_hex);
-use Data::Dumper;
-use File::Temp;
-use WWW::Curl::Easy;
-use LWP::UserAgent;
-use File::Copy;
+use Data::Dumper qw(Dumper);
+use Scalar::Util qw(looks_like_number);
+use Getopt::Long;
 
-my $database_conf     = "/opt/traffic_ops/app/conf/production/database.conf";
-my $ldap_conf         = "/opt/traffic_ops/app/conf/ldap.conf";
-my $cdn_conf          = "/opt/traffic_ops/app/conf/cdn.conf";
-my $migrations_dbconf = "/opt/traffic_ops/app/db/dbconf.yml";
-my $post_install_cfg  = "/opt/traffic_ops/install/data/json/post_install.json";
-my $users_file        = "/opt/traffic_ops/install/data/json/users.json";
-my $profile_dir       = "/opt/traffic_ops/install/data/profiles/";
-my %dbdriver          = ( mysql => "mymysql", );
+use InstallUtils qw{ :all };
+use BuildPerlDeps qw{ :all };
+use GenerateCert qw{ :all };
+use ProfileCleanup qw{ :all };
 
-my $reconfigure = "/opt/traffic_ops/.reconfigure";
-my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
-my $tmAdminUser = "";
-my $tmAdminPw = "";
+# paths of the output configuration files
+my $databaseConfFile = "/opt/traffic_ops/app/conf/production/database.conf";
+my $dbConfFile       = "/opt/traffic_ops/app/db/dbconf.yml";
+my $cdnConfFile      = "/opt/traffic_ops/app/conf/cdn.conf";
+my $ldapConfFile     = "/opt/traffic_ops/app/conf/ldap.conf";
+my $usersConfFile    = "/opt/traffic_ops/install/data/json/users.json";
+my $profilesConfFile = "/opt/traffic_ops/install/data/profiles/";
+my $opensslConfFile  = "/opt/traffic_ops/install/data/json/openssl_configuration.json";
+my $paramConfFile    = "/opt/traffic_ops/install/data/json/profiles.json";
+
+my $custom_profile_dir = $profilesConfFile . "custom";
+
+# stores parameters for traffic ops config
 my $parameters;
 
-my $installMsg = << 'EOF';
+# location of traffic ops profiles
+my $profileDir       = "/opt/traffic_ops/install/data/profiles/";
+my $post_install_cfg = "/opt/traffic_ops/install/data/json/post_install.json";
 
-This script will initialize the Traffic Ops database.
-Please enter the following information in order to completely 
-configure the Traffic Ops mysql database.
+# log file for the installer
+my $logFile = "/var/log/traffic_ops/postinstall.log";
 
-EOF
+# debug mode
+my $debug = 0;
 
-sub readJson {
-	my $file = shift;
-	open( my $fh, '<', $file ) or return;
-	local $/;    # slurp mode
-	my $text = <$fh>;
-	undef $fh;
-	return JSON->new->utf8->decode($text);
+# log file for cpan output
+my $cpanLogFile = "/var/log/traffic_ops/cpan.log";
+
+# whether or not to reconfigure traffic ops
+my $reconfigure = 0;
+
+# used to check for .reconfigure_defaults file for backwards compatability
+my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
+
+# old way of reconfiguring postinstall - only here to check for file and let user know it is deprecated
+my $reconfigure_file = "/opt/traffic_ops/.reconfigure";
+
+# maximum size the uncompressed log file should be before rotating it - rotating it copies the current log
+#  file to the same name appended with .bkp replacing the old backup if any is there
+my $maxLogSize = 10000000;    #bytes
+
+# whether to create a config file with default values
+my $dumpDefaults;
+
+# configuration file output with answers which can be used as input to postinstall
+my $outputConfigFile = "/opt/traffic_ops/install/bin/configuration_file.json";
+
+my $inputFile = "";
+my $automatic = 0;
+my $defaultInputs;
+
+sub getDbDriver {
+    return "pg";
 }
 
-sub writeJson {
-	my $file = shift;
-	open( my $fh, '>', $file ) or die("open(): $!");
-	foreach my $data (@_) {
-		my $json_text = JSON->new->utf8->encode($data);
-		print $fh $json_text, "\n";
-	}
-	close $fh;
+sub getInstallPath {
+    my $relPath = shift;
+    return join( '/', "/tmp/traffic_ops", $relPath );
 }
 
-sub writeYamlToFH {
-	my $fh     = shift;
-	my $data   = shift;
-	my $level  = shift || 0;
-	my $prefix = shift || '';
-
-	my $type   = ref($data);
-	my $indent = ' ' x $level;
-	if ( $type eq '' ) {
-
-		# scalar
-		print $fh "$indent$prefix$data\n";
-	}
-	elsif ( $type eq 'HASH' ) {
-		foreach my $key ( keys %$data ) {
-			my $value = $data->{$key};
-			if ( ref($value) eq '' ) {
-				print $fh "$indent$key: $value\n";
-			}
-			else {
-				print $fh "$indent$key:\n";
-				writeYamlToFH( $fh, $data->{$key}, $level + 1 );
-			}
-		}
-	}
-	elsif ( $type eq 'ARRAY' ) {
-		foreach my $d (@$data) {
-			writeYamlToFH( $fh, $d, $level + 1, '- ' );
-		}
-	}
-}
-
-sub writeYaml {
-	my $file = shift;
-	my $data = shift;
-	open my $fh, '>', $file or die "open(): $!";
-	writeYamlToFH( $fh, $data );
-}
-
-# Init.
-sub init () {
-	my $c      = readJson($database_conf);
-	my %dbconf = %$c;
-	my $dbAdminUser;
-	my $dbAdminPw;
-
-	# loop exits on successful db connect
-	while (1) {
-		execCommand( "/usr/bin/tput", "clear" );
-
-		if ($DBI::errstr) {
-			print "Error connecting to database using the supplied information: $DBI::errstr\n";
-		}
-
-		print "\n$installMsg\n";
-
-		$dbconf{type}     = promptUser( "Database type",                       $dbconf{type}     || "mysql" );
-		$dbconf{dbname}   = promptUser( "Database name",                       $dbconf{dbname}   || "traffic_ops_db" );
-		$dbconf{hostname} = promptUser( "Database server hostname IP or FQDN", $dbconf{hostname} || "localhost" );
-		$dbconf{port}     = promptUser( "Database port number",                $dbconf{port}     || "3306" );
-		$dbconf{user}     = promptUser( "Traffic Ops database user",           $dbconf{user}     || "traffic_ops" );
-		$dbconf{password} = promptPasswordVerify("Password for $dbconf{user}");
-		$dbconf{description} = "$dbconf{type} database on $dbconf{hostname}:$dbconf{port}";
-		print "\n";
-		$dbAdminUser = promptUser( "Database server root (admin) user name", "root" );
-		$dbAdminPw = promptPassword("Database server $dbAdminUser password");
-
-		print "Database Type: $dbconf{type}\n";
-		print "Database Name: $dbconf{dbname}\n";
-		print "Hostname: $dbconf{hostname}\n";
-		print "Port: $dbconf{port}\n";
-		print "Database User: $dbconf{user}\n";
-		my $ans = promptUser( "Is the above information correct (y/n)", "n" );
-
-		if ( $ans eq "y" ) {
-			my $dsn = sprintf( "DBI:mysql:%s:%s:%s", "mysql", $dbconf{hostname}, $dbconf{port} );
-			my $dbh = DBI->connect( $dsn, $dbAdminUser, $dbAdminPw );
-			if ($dbh) {
-
-				# Success!
-				$dbh->disconnect();
-				last;
-			}
-		}
-	}
-
-	writeJson( $database_conf, \%dbconf );
-	print "\nThe database properties have been saved to $database_conf\n";
-
-	# migrations dbconf is in YAML
-	my $driver = $dbdriver{ $dbconf{type} };
-	my %migrations = ( production => { driver => $driver, open => "tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}" } );
-	writeYaml( $migrations_dbconf, \%migrations );
-
-	my $msg = << 'EOF';
-
-  The database configuration has been saved.  Now we need to set some custom
-  fields that are necessary for the CDN to function correctly.
-
-EOF
-
-	print $msg, "\n";
-	while (1) {
-
-		my $tmurl = promptUser( "Traffic Ops url", $parameters->{"tm.url"} || "https://localhost" );
-		$parameters->{"tm.url"}     = $tmurl;
-		$parameters->{"tm.infourl"} = "$tmurl/info";
-
-		$parameters->{cdnname}    = promptUser( "Human-readable CDN Name.  (No whitespace, please)",  $parameters->{cdnname}    || "kabletown_cdn" );
-		$parameters->{domainname} = promptUser( "DNS sub-domain for which your CDN is authoritative", $parameters->{domainname} || "cdn1.kabletown.net" );
-
-		my $geolocationUrl = "$tmurl/routing/GeoIP2-City.mmdb.gz";
-		$parameters->{"geolocation.polling.url"} = $geolocationUrl;
-
-		my $coverageZoneUrl = "$tmurl/routing/coverage-zone.json";
-		$parameters->{"coveragezone.polling.url"} = $coverageZoneUrl;
-
-		my $centosTarballFqn = '';
-		my $skip;
-		while (1) {
-			$centosTarballFqn = promptUser( "Fully qualified name of your CentOS ISO kickstart tarball, or 'na' to skip and add files later",
-				"/var/cache/centos72.tgz" );
-			if ( $centosTarballFqn eq 'na' ) {
-				$skip = 1;
-				last;
-			}
-			if ( -f $centosTarballFqn ) {
-				last;
-			}
-			print "\nNo file named $centosTarballFqn found.\n\n";
-		}
-
-		my $kickstartFilesFqn = promptUser( "Fully qualified location to store your ISO kickstart files", "/var/www/files" );
-		my $parametersJson = "/opt/traffic_ops/install/data/json/parameter.json";
-
-		## Replace parameter with $kickstartFilesFqn
-		open( my $json_fh, "<:encoding(UTF-8)", $parametersJson )
-			or die("Can't open \$filename\": $!\n");
-
-		my $json = JSON->new;
-		my @json_obj;
-		while ( my $json_text = <$json_fh> ) {
-			my $data = $json->decode($json_text);
-
-			if ( $data->{"name"} eq "kickstart.files.location" ) {
-				$data->{"value"} = $kickstartFilesFqn;
-			}
-			push @json_obj, $data;
-		}
-		writeJson( $parametersJson, @json_obj );
-
-		execCommand( "/bin/cp", "/opt/traffic_ops/install/data/perl/osversions.cfg", $kickstartFilesFqn );
-
-		if ( !$skip ) {
-			print "\nUncompressing CentOS ISO kickstart tarball.\n";
-			print "\nFirst creating $kickstartFilesFqn.\n";
-			execCommand( "/bin/mkdir", "-p", $kickstartFilesFqn );
-			print "\nUncompressing $centosTarballFqn.\n";
-			execCommand( "/bin/tar", "-xzf", $centosTarballFqn, "-C", $kickstartFilesFqn );
-		}
-
-		print "\nTraffic Ops URL: $parameters->{'tm.url'}\n";
-		print "Traffic Ops Info URL: $parameters->{'tm.infourl'}\n";
-		print "Domainname: $parameters->{domainname}\n";
-		print "CDN Name: $parameters->{cdnname}\n";
-		print "GeoLocation Polling URL: $parameters->{'geolocation.polling.url'}\n";
-		print "CoverageZone Polling URL: $parameters->{'coveragezone.polling.url'}\n\n";
-		my $ans = promptUser( "Is the above information correct (y/n)", "n" );
-		if ( $ans eq 'y' ) {
-			last;
-		}
-	}
-	writeJson( $post_install_cfg, $parameters );
-	print "Install information has been saved to $post_install_cfg\n\n";
-
-	print "\nAdding an administration user to the Traffic Ops database.\n\n";
-	my %user = ();
-	$tmAdminUser = promptUser( "Administration username for Traffic Ops", 'admin' );
-	$user{username} = $tmAdminUser;
-	$tmAdminPw = promptPasswordVerify("Password for the admin user $tmAdminUser");
-	$user{password} = sha1_hex($tmAdminPw);
-
-	writeJson( $users_file, \%user );
-
-	my $ans = promptUser( "Do you wish to create an ldap configuration for access to traffic ops [y/n] ?", "n" );
-	if ( $ans eq "y" ) {
-		my %ldapconf = readJson($ldap_conf);
-		while (1) {
-			$ldapconf{host}     = promptUser( "LDAP server hostname", $ldapconf{host}     || "ldap.foobar.com" );
-			$ldapconf{admin_dn} = promptUser( "LDAP Admin DN",        $ldapconf{admin_dn} || 'admin@foobar.com' );
-			$ldapconf{admin_pass} = promptPasswordVerify("LDAP Admin Password");
-			$ldapconf{search_base} = promptUser( "LDAP Search Base", "dc=foobar,dc=com" );
-			my $correct = promptUser( "Are the above values correct [y/n]?", "y" );
-			if ( $correct eq 'y' ) {
-				last;
-			}
-		}
-		writeJson( $ldap_conf, \%ldapconf );
-		print "The ldap configuration has been saved.\n\n";
-	}
-
-	# Prompt for new secret
-	writeSecret($cdn_conf);
-
-	#
-	# Call mysql initialization script.
-	#
-	print "Creating database\n";
-	my $result = execCommand( "/opt/traffic_ops/install/bin/create_db", $dbAdminUser, $dbAdminPw );
-	if ( $result != 0 ) {
-		print "failed to create the database.\n";
-		exit 1;
-	}
-
-	print "Setting up database\n";
-	chdir("/opt/traffic_ops/app");
-	$result = execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
-
-	if ( $result != 0 ) {
-		print "Database initialization failed.\n";
-		exit 2;
-	}
-	else {
-		print "Database initialization succeeded.\n";
-	}
-
-	$result = execCommand( "/opt/traffic_ops/install/bin/dataload", $dbAdminUser, $dbAdminPw );
-	if ( $result != 0 ) {
-		print "failed to load seed data.\n";
-		exit 1;
-	}
-
-	print "Downloading MaxMind data.\n";
-	chdir("/opt/traffic_ops/app/public/routing");
-	$result = execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
-	if ( $result != 0 ) {
-		print "failed to download MaxMind data.\n";
-
-		# exit 1;
-	}
-
-	print "Copying coverage zone file to public dir.\n";
-	$result = execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
-	if ( $result != 0 ) {
-		print "failed to copy coverage zone file.\n";
-
-		# exit 1;
-	}
-
-	if ( -x "/usr/bin/openssl" ) {
-		print "\nInstalling SSL Certificates.\n\n";
-		$result = execCommand("/opt/traffic_ops/install/bin/generateCert");
-
-		if ( $result != 0 ) {
-			print "\nSSL Certificate Installation failed.\n";
-			exit 3;
-		}
-		else {
-			print "\nSSL Certificates have been installed.\n";
-		}
-	}
-	else {
-		print "Unable to install SSL certificates as openssl is not installed.\n";
-		print "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates.\n";
-		exit 4;
-	}
-}    # end of Init
-
-sub writeSecret {
-	print "\n\nTraffic Ops requires a secret key to generate authentication cookies.\n\n";
-
-	# read conf file -- see if secrets already there
-	my $cdnh = do $cdn_conf;
-	unless ( ref($cdnh) eq 'HASH' ) {
-		my $err = $@ || $! || ' -- not a HASH';
-		if ($err) {
-			print "Could not load $cdn_conf $err";
-			exit 4;
-		}
-	}
-
-	# newSecret
-	my $secrets = $cdnh->{secrets};
-	if ( ( ref $secrets eq 'ARRAY' ) && scalar @$secrets > 0 ) {
-		print "One or more secrets found in $cdn_conf.\n";
-		my $ans = promptUser( " Do want to add a new one (only 2 will be kept) [y/n] ?", "y" );
-		if ( $ans eq "n" ) {
-
-			# nothing further to do...
-			return;
-		}
-	}
-	my $new_secret = "";
-	while ( length $new_secret == 0 ) {
-		print "Adding a new secret.\n";
-		my $ans = promptUser( " Do you want one generated for you [y/n] ?", "y" );
-		if ( $ans eq "n" ) {
-			$new_secret = promptUser( "Secret key:", "" );
-		}
-		else {
-
-			# create random word 12 chars long
-			$new_secret = randomWord(12);
-		}
-	}
-
-	# keep 2 at most..
-	unshift( @$secrets, $new_secret );
-	if ( scalar @$secrets > 2 ) {
-		$#{$secrets} = 1;
-	}
-
-	# dump conf data in compact but readable form
-	my $dumper = Data::Dumper->new( [$cdnh] );
-	$dumper->Indent(1)->Terse(1)->Quotekeys(0);
-
-	# write whole config to temp file in pwd (keeps in same filesystem)
-	my $tmpfile = File::Temp->new(DIR => '.');
-	print $tmpfile $dumper->Dump();
-	close $tmpfile;
-
-	# rename current config file to something unique so it's not lost
-	my $backup_num = 0;
-	my $backup_name;
-	do {
-		$backup_num++;
-		$backup_name = "$cdn_conf.backup$backup_num";
-	} while ( -e $backup_name );
-	rename( $cdn_conf, $backup_name ) or die("rename(): $!");
-
-	# rename temp file to cdn.conf and set ownership/permissions same as backup
-	my @stats = stat($backup_name);
-	my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
-	rename( $tmpfile, $cdn_conf ) or die("rename(): $!");
-
-	chown $uid, $gid, $cdn_conf;
-	chmod $perm, $cdn_conf;
-}
-
-chdir("/opt/traffic_ops/install/bin");
-
-$parameters = readJson($post_install_cfg);
-if ( -f $reconfigure ) {
-	my $rc = execCommand( "/opt/traffic_ops/install/bin/build_trafficops_perl_library", "-i" );
-	if ( $rc != 0 ) {
-		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
-		exit 5;
-	}
-	$rc = execCommand( "./download_web_deps", "-i" );
-	if ( $rc != 0 ) {
-		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
-	}
-	init();
-	unlink($reconfigure);
-}
-else {
-	my $rc = execCommand("/opt/traffic_ops/install/bin/build_trafficops_perl_library");
-	if ( $rc != 0 ) {
-		print "ERROR: failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
-		exit 6;
-	}
-	$rc = execCommand( "./download_web_deps", "-i" );
-	if ( $rc != 0 ) {
-		print "ERROR: failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error.\n";
-	}
-}
-
-sub profile_replace {
-		my($profile) = @_;
-		my $profile_bak = $profile . ".bak";
-		rename($profile, $profile_bak) or die("rename(): $!");
-		open(my $fh, '<', $profile_bak) or die("open(): $!");
-		open(my $ofh, '>', $profile) or die("open(): $!");
-		while (<$fh>) {
-				s/{{.TmUrl}}/$parameters->{'tm.url'}/g;
-				s/{{.TmInfoUrl}}/$parameters->{"tminfo.url"}/g;
-				s/{{.TmInstanceName}}/$parameters->{"cdnname"}/g;
-				s/{{.GeolocationPollingUrl}}/$parameters->{"geolocation.polling.url"}/g;
-				s/{{.Geolocation6PollingUrl}}/$parameters->{"geolocation6.polling.url"}/g;
-				s/{{.TmUrl}}/$parameters->{'tm.url'}/g;
-				s/{{.TmToolName}}/Traffic Ops/g;
-				s/{{.HealthPollingInterval}}/$parameters->{"health.polling.interval"}/g;
-				s/{{.CoveragezonePollingUrl}}/$parameters->{"coveragezone.polling.url"}/g;
-				s/{{.DomainName}}/$parameters->{"domainname"}/g;
-				s/{{.TldSoaAdmin}}/$parameters->{"tld.soa.admin"}/g;
-				s/{{.DrivePrefix}}/$parameters->{"Drive_Prefix"}/g;
-				s/{{.HealthThresholdLoadavg}}/$parameters->{"health.threshold.loadavg"}/g;
-				s/{{.HealthThresholdAvailableBandwidthInKbps}}/$parameters->{"health.threshold.availableBandwidthInKbps"}/g;
-				s/{{.RAMDrivePrefix}}/$parameters->{"RAM_Drive_Prefix"}/g;
-				s/{{.RAMDriveLetters}}/$parameters->{"RAM_Drive_Letters"}/g;
-				s/{{.HealthConnectionTimeout}}/$parameters->{"health.connection.timeout"}/g;
-				s#{{.CronOrtSyncds}}#*/15 * * * * root /opt/ort/traffic_ops_ort.pl syncds warn $parameters->{'tm.url'} $tmAdminUser:$tmAdminPw > /tmp/ort/syncds.log 2>&1#g;
-				print $ofh $_;
-		}
-		close $fh;
-		close $ofh;
-		unlink $profile_bak;
-}
-
-sub replace_profile_templates() {
-	  while (!defined $parameters->{'tm.url'} ||  $parameters->{'tm.url'} eq "") {
-				$parameters->{'tm.url'} = InstallUtils::promptUser ("Traffic Ops url", "https://localhost");
-	  }
-	  while (!defined $parameters->{"tminfo.url"} || $parameters->{"tminfo.url"} eq "") {
-				$parameters->{"tminfo.url"} = "$parameters->{'tm.url'}/info"
-	  }
-	  while (!defined $parameters->{"cdnname"} || $parameters->{"cdnname"} eq "") {
-				$parameters->{"cdnname"} = InstallUtils::promptUser ("Human-readable CDN Name.  (No whitespace, please)", "kabletown_cdn");
-	  }
-	  while (!defined $parameters->{"geolocation.polling.url"} || $parameters->{"geolocation.polling.url"} eq "") {
-				$parameters->{"geolocation.polling.url"} = "$parameters->{'tm.url'}/routing/GeoIP2-City.mmdb.gz";
-	  }
-	  while (!defined $parameters->{"geolocation6.polling.url"} || $parameters->{"geolocation6.polling.url"} eq "") {
-				$parameters->{"geolocation6.polling.url"} = "$parameters->{'tm.url'}/routing/GeoIP2-Cityv6.mmdb.gz";
-	  }
-	  while (!defined $parameters->{"health.polling.interval"} || $parameters->{"health.polling.interval"} eq "") {
-				$parameters->{"health.polling.interval"} = InstallUtils::promptUser ("Health Polling Interval (milliseconds)", "8000");
-	  }
-	  while (!defined $parameters->{"coveragezone.polling.url"} || $parameters->{"coveragezone.polling.url"} eq "") {
-				$parameters->{"coveragezone.polling.url"} = "$parameters->{'tm.url'}/routing/coverage-zone.json"
-	  }
-	  while (!defined $parameters->{"domainname"} || $parameters->{"domainname"} eq "") {
-				$parameters->{"domainname"} = InstallUtils::promptUser ("DNS sub-domain for which your CDN is authoritative", "cdn1.kabletown.net");
-	  }
-	  while (!defined $parameters->{"tld.soa.admin"} || $parameters->{"tld.soa.admin"} eq "") {
-				$parameters->{"tld.soa.admin"} = InstallUtils::promptUser ("TLD SOA admin", "traffic_ops");
-	  }
-	  while (!defined $parameters->{"Drive_Prefix"} || $parameters->{"Drive_Prefix"} eq "") {
-				$parameters->{"Drive_Prefix"} = InstallUtils::promptUser ("TrafficServer Drive Prefix", "/dev/sd");
-	  }
-	  while (!defined $parameters->{"RAM_Drive_Prefix"} || $parameters->{"RAM_Drive_Prefix"} eq "") {
-				$parameters->{"RAM_Drive_Prefix"} = InstallUtils::promptUser ("TrafficServer RAM Drive Prefix", "/dev/ram");
-	  }
-	  while (!defined $parameters->{"RAM_Drive_Letters"} || $parameters->{"RAM_Drive_Letters"} eq "") {
-				$parameters->{"RAM_Drive_Letters"} = InstallUtils::promptUser ("TrafficServer RAM Drive Letters (comma separated)", "0,1,2,3,4,5,6,7");
-	  }
-	  while (!defined $parameters->{"health.threshold.loadavg"} || $parameters->{"health.threshold.loadavg"} eq "") {
-				$parameters->{"health.threshold.loadavg"} = InstallUtils::promptUser ("Health Threshold Load Average", "25");
-	  }
-	  while (!defined $parameters->{"health.threshold.availableBandwidthInKbps"} || $parameters->{"health.threshold.availableBandwidthInKbps"} eq "" || $parameters->{"health.threshold.availableBandwidthInKbps"} eq ">") {
-				$parameters->{"health.threshold.availableBandwidthInKbps"} = ">" . InstallUtils::promptUser ("Health Threshold Available Bandwidth in Kbps", "1750000");
-	  }
-	  while (!defined $parameters->{"health.connection.timeout"} || $parameters->{"health.connection.timeout"} eq "") {
-				$parameters->{"health.connection.timeout"} = InstallUtils::promptUser ("Traffic Server Health Connection Timeout (milliseconds)", "2000");
-	  }
-
-	  profile_replace($profile_dir . "profile.global.traffic_ops");
-	  profile_replace($profile_dir . "profile.traffic_monitor.traffic_ops");
-	  profile_replace($profile_dir . "profile.traffic_router.traffic_ops");
-	  profile_replace($profile_dir . "profile.trafficserver_edge.traffic_ops");
-	  profile_replace($profile_dir . "profile.trafficserver_mid.traffic_ops");
-	  writeJson( $post_install_cfg, $parameters );
-}
-
-# Takes the Traffic Ops URI, user, and password.
-# Returns the cookie, or the empty string on error
-sub get_traffic_ops_cookie {
-		my($uri, $user, $pass) = @_;
-
-		my $loginUri = "/api/1.2/user/login";
-
-		my $curl = WWW::Curl::Easy->new;
-		my $response_body = "";
-		open(my $fileb, ">", \$response_body);
-		my $loginData = JSON::encode_json({ u => $user, p => $pass});
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_URL, $uri . $loginUri);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_SSL_VERIFYPEER, 0);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_HEADER, 1); # include header in response
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_NOBODY, 1); # disclude body in response
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_POST, 1);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS, $loginData);
-		$curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA, $fileb);	# put response in this var
-		$curl->perform();
-
-		my $cookie = $response_body;
-		if($cookie =~ /mojolicious=(.*); expires/)
-		{
-				$cookie = $1;
-		}
-		else
-		{
-				$cookie = ""
-		}
-		return $cookie;
-}
-
-# Takes the filename of a Traffic Ops (TO) profile to import, the TO URI, and the TO login cookie
-sub profile_import_single {
-    my($profileFilename, $uri, $trafficOpsCookie) = @_;
-    print "Importing Profiles with: " . "curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doI\
-mport";
-    my $rc = execCommand("curl -v -k -X POST -H \"Cookie: mojolicious=$trafficOpsCookie\" -F \"filename=$profileFilename\" -F \"profile_to_import=\@$profileFilename\" $uri/profile/doImport");
-    if ( $rc != 0 ) {
-        print "ERROR: failed to import Traffic Ops profile, check the console output and rerun postinstall once you've resolved the error.\n";
+# given a var to the hash of config_var and question, will return the question
+sub getConfigQuestion {
+    my $var = shift;
+    foreach my $key ( keys $var ) {
+        if ( $key ne "hidden" && $key ne "config_var" ) {
+            return $key;
+        }
     }
 }
 
-sub import_profiles() {
-		while (length $tmAdminUser == 0) {
-				$tmAdminUser = InstallUtils::promptUser ("Administration username for Traffic Ops");
-		}
-		while ($tmAdminPw eq "") {
-				$tmAdminPw = InstallUtils::promptUser ("Password for the admin user $tmAdminUser", "", 1);
-		}
-    while (!defined $parameters->{'tm.url'} || length $parameters->{'tm.url'} == 0) {
-				$parameters->{'tm.url'} = InstallUtils::promptUser ("Traffic Ops url", "https://localhost");
-	  }
+# question: The question given in the config file
+# config_answer: The answer given in the config file - if no config file given will be defaultInput
+# hidden: Whether or not the answer should be hidden from the terminal and logs, ex. passwords
+#
+# Determines if the script is being run in complete interactive mode and prompts user - otherwise
+#  returns answer to question in config or defaults
 
-		print "Importing profiles...\n";
-		# \todo take as params
-		my $toUri = $parameters->{'tm.url'};
-		my $toUser = $tmAdminUser;
-		my $toPass = $tmAdminPw;
+sub getField {
+    my $question      = shift;
+    my $config_answer = shift;
+    my $hidden        = shift;
 
-		my $toCookie = get_traffic_ops_cookie($toUri, $toUser, $toPass);
+    # if there is no config file and not in automatic mode prompt for all questions with default answers
+    if ( !$inputFile && !$automatic ) {
 
-		print "Got cookie: " . $toCookie;
+        # if hidden then dont show password in terminal
+        if ($hidden) {
+            return InstallUtils::promptPasswordVerify($question);
+        }
+        else {
+            return InstallUtils::promptUser( $question, $config_answer );
+        }
+    }
 
-		# \todo use an array?
-		print "Importing Global profile...\n";
-		profile_import_single($profile_dir . "profile.global.traffic_ops", $toUri, $toCookie);
-		print "Importing Traffic Monitor profile...\n";
-		profile_import_single($profile_dir . "profile.traffic_monitor.traffic_ops", $toUri, $toCookie);
-		print "Importing Traffic Router profile...\n";
-		profile_import_single($profile_dir . "profile.traffic_router.traffic_ops", $toUri, $toCookie);
-		print "Importing TrafficServer Edge profile...\n";
-		profile_import_single($profile_dir . "profile.trafficserver_edge.traffic_ops", $toUri, $toCookie);
-		print "Importing TrafficServer Mid profile...\n";
-		profile_import_single($profile_dir . "profile.trafficserver_mid.traffic_ops", $toUri, $toCookie);
-		print "Finished Importing Profiles.\n";
+    return $config_answer;
 }
 
-print "\nStarting Traffic Ops.\n\n";
-execCommand("/sbin/service traffic_ops start");
+# userInput: The entire input config file which is either user input or the defaults
+# fileName: The name of the output config file given by the input config file
+#
+# Loops through an input config file and determines answers to each question using getField
+#  and returns the hash of answers
 
-print "\nWaiting for Traffic Ops to start.\n\n";
-sleep(5);
+sub getConfig {
+    my $userInput = shift;
+    my $fileName  = shift;
 
-sub profiles_exist {
-		if ( -f $reconfigure_defaults ) {
-				print "Default profiles were previously created. Remove " . $reconfigure_defaults . " to create again.\n";
-				return 1;
-		}
+    my %config;
 
-		while ( length $tmAdminUser == 0 ) {
-				$tmAdminUser =
-						InstallUtils::promptUser("Administration username for Traffic Ops");
-		}
-		while ( $tmAdminPw eq "" ) {
-				$tmAdminPw =
-						InstallUtils::promptUser( "Password for the admin user $tmAdminUser",
-																			"", 1 );
-		}
-		while ( !defined $parameters->{'tm.url'}
-						|| length $parameters->{'tm.url'} == 0 )
-		{
-				$parameters->{'tm.url'} =
-						InstallUtils::promptUser( "Traffic Ops url", "https://localhost" );
-		}
+    if ( !defined $userInput->{$fileName} ) {
+        InstallUtils::logger( "No $fileName found in config", "error" );
+    }
 
-		my $uri      = $parameters->{'tm.url'};
-		my $toCookie = get_traffic_ops_cookie( $parameters->{'tm.url'},
-																					 $tmAdminUser, $tmAdminPw );
+    InstallUtils::logger( "===========$fileName===========", "info" );
 
-		my $profileEndpoint = "/api/1.2/profiles.json";
+    foreach my $var ( @{ $userInput->{$fileName} } ) {
+        my $question = getConfigQuestion($var);
+        my $hidden   = $var->{"hidden"} if ( exists $var->{"hidden"} );
+        my $answer   = $config{ $var->{"config_var"} } = getField( $question, $var->{$question}, $hidden );
 
-		my $ua = LWP::UserAgent->new;
-		$ua->ssl_opts( verify_hostname => 0, SSL_verify_mode => 0x00 );
-		my $req = HTTP::Request->new( GET => $uri . $profileEndpoint );
-		$req->header( 'Cookie' => "mojolicious=" . $toCookie );
-		my $resp = $ua->request($req);
-
-		if ( !$resp->is_success ) {
-				print "Error checking if profiles exist: " . $resp->status_line . "\n";
-				return 1;    # return true, so we don't attempt to create profiles
-		}
-		my $message = $resp->decoded_content;
-
-		my $profiles = JSON->new->utf8->decode($message);
-		if (   ( !defined $profiles->{"response"} )
-					 || ( ref $profiles->{"response"} ne 'ARRAY' ) )
-		{
-				print "Error checking if profiles exist: invalid JSON: $message\n";
-				return 1;    # return true, so we don't attempt to create profiles
-		}
-
-		my $num_profiles = scalar( @{ $profiles->{"response"} } );
-		print "Existing Profile Count: $num_profiles\n";
-
-		my %initial_profiles = (
-				"INFLUXDB"       => 1,
-				"RIAK_ALL"       => 1,
-				"TRAFFIC_STATS"  => 1,
-				"TRAFFIC_PORTAL" => 1
-				);
-
-		my $profiles_response = $profiles->{"response"};
-		foreach my $profile (@$profiles_response) {
-				if ( !exists $initial_profiles{ $profile->{"name"} } ) {
-						print "Found existing profile (" . $profile->{"name"} . ")\n";
-						open( my $reconfigure_defaults_file, '>', $reconfigure_defaults ) or die("Failed to open() $reconfigure_defaults: $!");
-						close( $reconfigure_defaults_file );
-						return 1;
-				}
-		}
-		return 0;
+        $config{ $var->{"config_var"} } = $answer;
+        if ( !$hidden ) {
+            InstallUtils::logger( "$question: $answer", "info" );
+        }
+    }
+    return %config;
 }
 
-if ( !profiles_exist() ) {
-		print "Creating default profiles...\n";
-		replace_profile_templates();
-		import_profiles();
-		profiles_exist(); # call again to create $reconfigure_defaults file if import was successful
-}
-else {
-		print "Not creating default profiles.\n";
+# userInput: The entire input config file which is either user input or the defaults
+# dbFileName: The filename of the output config file for the database
+# toDBFileName: The filename of the output config file for the Traffic Ops database
+#
+# Generates a config file for the database based on the questions and answers in the input config file
+
+sub generateDbConf {
+    my $userInput    = shift;
+    my $dbFileName   = shift;
+    my $toDBFileName = shift;
+
+    my %dbconf = getConfig( $userInput, $dbFileName );
+    $dbconf{"description"} = "$dbconf{type} database on $dbconf{hostname}:$dbconf{port}";
+    make_path( dirname($dbFileName), { mode => 0755 } );
+    InstallUtils::writeJson( $dbFileName, \%dbconf );
+    InstallUtils::logger( "Database configuration has been saved", "info" );
+
+    # broken out into separate file/config area
+    my %todbconf = getConfig( $userInput, $toDBFileName );
+
+    # No YAML library installed, but this is a simple file..
+    open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
+    print $fh "production:\n";
+    print $fh "    driver: ", getDbDriver() . "\n";
+    print $fh "    open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
+    close $fh;
+
+    return \%todbconf;
 }
 
-#print "\nRunning smoke tests.\n\n";
-#$rc = execCommand ("/opt/traffic_ops/install/bin/systemtest", "localhost", $user{username}, $tmAdminPw, "0");
-{
-		my $ans = promptUser( "\nInstall Cron entry to clean install .iso files older than 7 days? [y/n]", "n" );
-		if ($ans eq "y" || $ans eq "Y") {
-				execCommand( "/bin/echo \"00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} \; > /dev/null 2>&1 \" > /etc/cron.d/trafops_clean_isos" );
-		}
+# userInput: The entire input config file which is either user input or the defaults
+# fileName: The filename of the output config file
+#
+# Generates a config file for the CDN
+
+sub generateCdnConf {
+    my $userInput = shift;
+    my $fileName  = shift;
+
+    my %cdnConfiguration = getConfig( $userInput, $fileName );
+
+    # First, read existing one -- already loaded with a bunch of stuff
+    my $cdnConf;
+    if ( -f $fileName ) {
+        $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
+    }
+    if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
+        my @secrets   = @{ $cdnConf->{secrets} };
+        my $newSecret = InstallUtils::randomWord();
+        unshift @secrets, InstallUtils::randomWord();
+        if ( $cdnConfiguration{keepSecrets} > 0 && $#secrets > $cdnConfiguration{keepSecrets} - 1 ) {
+
+            # Shorten the array to requested length
+            $#secrets = $cdnConfiguration{keepSecrets} - 1;
+        }
+    }
+    InstallUtils::writePerl( $fileName, $cdnConf );
 }
 
-{
-		my $ans = promptUser( "\nShutdown Traffic Ops [y/n]", "n" );
-		if ( $ans eq "y" ) {
-				print "\nShutting down Traffic Ops.\n\n";
-				execCommand( "/sbin/service", "traffic_ops", "stop" );
-		}
+# userInput: The entire input config file which is either user input or the defaults
+# fileName: The filename of the output config file
+#
+# Generates an LDAP config file
+
+sub generateLdapConf {
+    my $userInput = shift;
+    my $fileName  = shift;
+
+    my $useLdap = $userInput->{$fileName}[0]->{"Do you want to set up LDAP?"};
+
+    if ( !lc $useLdap =~ /^y(?:es)?/ ) {
+        InstallUtils::logger( "Not setting up ldap", "info" );
+        return;
+    }
+
+    my %ldapConf = getConfig( $userInput, $fileName );
+
+    make_path( dirname($fileName), { mode => 0755 } );
+    InstallUtils::writeJson( $fileName, \%ldapConf );
 }
 
-print "\nTo start Traffic Ops:  service traffic_ops start\n";
-print "To stop Traffic Ops:   service traffic_ops stop\n";
-print "\n";
+sub generateUsersConf {
+    my $userInput = shift;
+    my $fileName  = shift;
 
-exit 0;
+    my %user = ();
+    my %config = getConfig( $userInput, $fileName );
+
+    $user{username} = $config{tmAdminUser};
+    $user{password} = sha1_hex( $config{tmAdminPw} );
+
+    InstallUtils::writeJson( $fileName, \%user );
+    $user{password} = $config{tmAdminPw};
+    return \%user;
+}
+
+sub generateProfilesDir {
+    my $userInput = shift;
+    my $fileName  = shift;
+
+    my $userIn = $userInput->{$fileName};
+}
+
+sub generateOpenSSLConf {
+    my $userInput = shift;
+    my $fileName  = shift;
+
+    if ( !defined $userInput->{$fileName} ) {
+        InstallUtils::logger( "No OpenSSL Configuration - questions will be asked", "info" );
+
+        # write an empty config so openssl does not use an old file
+        InstallUtils::writeJson( $fileName, my %emptyConfig );
+        return;
+    }
+
+    my %config = getConfig( $userInput, $fileName );
+
+    InstallUtils::writeJson( $fileName, \%config );
+    return \%config;
+}
+
+sub generateParamConf {
+    my $userInput = shift;
+    my $fileName  = shift;
+
+    my %config = getConfig( $userInput, $fileName );
+    InstallUtils::writeJson( $fileName, \%config );
+    return \%config;
+}
+
+# check default values for missing config_var parameter
+sub sanityCheckDefaults {
+    foreach my $file ( ( keys $defaultInputs ) ) {
+        foreach my $defaultValue ( @{ $defaultInputs->{$file} } ) {
+            my $question = getConfigQuestion($defaultValue);
+
+            if ( !defined $defaultValue->{"config_var"}
+                || $defaultValue->{"config_var"} eq "" )
+            {
+                errorOut("Question '$question' in file '$file' has no config_var");
+            }
+        }
+    }
+}
+
+# userInput: The entire input config file which is either user input or the defaults
+#
+# Checks the input config file against the default inputs. If there is a question located in the default inputs which
+#  is not located in the input config file it will output a warning message.
+
+sub sanityCheckConfig {
+    my $userInput = shift;
+    my $diffs     = 0;
+
+    foreach my $file ( ( keys $defaultInputs ) ) {
+        if ( !defined $userInput->{$file} ) {
+            InstallUtils::logger( "File '$file' found in defaults but not config file", "warn" );
+            $userInput->{$file} = [];
+        }
+
+        foreach my $defaultValue ( @{ $defaultInputs->{$file} } ) {
+
+            my $found = 0;
+            foreach my $configValue ( @{ $userInput->{$file} } ) {
+                if ( $defaultValue->{"config_var"} eq $configValue->{"config_var"} ) {
+                    $found = 1;
+                }
+            }
+
+            # if the question is not found in the config file add it from defaults
+            if ( !$found ) {
+                my $question = getConfigQuestion($defaultValue);
+                InstallUtils::logger( "Question '$question' found in defaults but not in '$file'", "warn" );
+
+                my %temp;
+                my $answer;
+                my $hidden = exists $defaultValue->{"hidden"} && $defaultValue->{"hidden"} ? 1 : 0;
+
+                # in automatic mode add the missing question with default answer
+                if ($automatic) {
+                    $answer = $defaultValue->{$question};
+                    InstallUtils::logger( "Adding question '$question' with default answer " . ( $hidden ? "" : "'$answer'" ), "info" );
+                }
+
+                # in interactive mode prompt the user for answer to missing question
+                else {
+                    InstallUtils::logger( "Prompting user for answer", "info" );
+                    if ($hidden) {
+                        $answer = InstallUtils::promptPasswordVerify($question);
+                    }
+                    else {
+                        $answer = InstallUtils::promptUser( $question, $defaultValue->{$question} );
+                    }
+                }
+
+                %temp = (
+                    "config_var" => $defaultValue->{"config_var"},
+                    $question    => $answer
+                );
+
+                if ($hidden) {
+                    $temp{"hidden"} .= "true";
+                }
+
+                push $userInput->{$file}, \%temp;
+
+                $diffs++;
+            }
+        }
+    }
+
+    InstallUtils::logger( "File sanity check complete - found $diffs difference" . ( $diffs == 1 ? "" : "s" ), "info" );
+}
+
+# A function which returns the default inputs data structure. These questions and answers will be used if there is no
+#  user input config file or if there are questions in the input config file which do not have answers
+
+sub getDefaults {
+    return {
+        $databaseConfFile => [
+            {
+                "Database type" => "pg",
+                "config_var"    => "type"
+            },
+            {
+                "Database name" => "traffic_ops",
+                "config_var"    => "dbname"
+            },
+            {
+                "Database server hostname IP or FQDN" => "localhost",
+                "config_var"                          => "hostname"
+            },
+            {
+                "Database port number" => "3306",
+                "config_var"           => "port"
+            },
+            {
+                "Traffic Ops database user" => "traffic_ops",
+                "config_var"                => "user"
+            },
+            {
+                "Password for Traffic Ops database user" => "",
+                "config_var"                             => "password",
+                "hidden"                                 => "true"
+            }
+
+        ],
+        $dbConfFile => [
+            {
+                "Database server root (admin) user" => "root",
+                "config_var"                        => "dbAdminUser"
+            },
+            {
+                "Password for database server admin" => "",
+                "config_var"                         => "dbAdminPw",
+                "hidden"                             => "true"
+            },
+            {
+                "Download Maxmind Database?" => "yes",
+                "config_var"                 => "maxmind"
+            }
+        ],
+        $cdnConfFile => [
+            {
+                "Generate a new secret?" => "yes",
+                "config_var"             => "genSecret"
+            },
+            {
+                "Number of secrets to keep?" => "10",
+                "config_var"                 => "keepSecrets"
+            }
+        ],
+        $ldapConfFile => [
+            {
+                "Do you want to set up LDAP?" => "no",
+                "config_var"                  => "setupLdap"
+            },
+            {
+                "LDAP server hostname" => "",
+                "config_var"           => "hostname"
+            },
+            {
+                "LDAP Admin DN" => "",
+                "config_var"    => "admin_dn"
+            },
+            {
+                "LDAP Admin Password" => "",
+                "config_var"          => "password",
+                "hidden"              => "true"
+            },
+            {
+                "LDAP Search Base" => "",
+                "config_var"       => "search_base"
+            }
+        ],
+        $usersConfFile => [
+            {
+                "Administration username for Traffic Ops" => "admin",
+                "config_var"                              => "tmAdminUser"
+            },
+            {
+                "Password for the admin user" => "",
+                "config_var"                  => "tmAdminPw",
+                "hidden"                      => "true"
+            }
+        ],
+        $profilesConfFile => [
+            {
+                "Add custom profiles?" => "no",
+                "config_var"           => "custom_profiles"
+            }
+        ],
+        $opensslConfFile => [
+            {
+                "Do you want to generate a certificate?" => "yes",
+                "config_var"                             => "genCert"
+            },
+            {
+                "Country Name (2 letter code)" => "XX",
+                "config_var"                   => "country"
+            },
+            {
+                "State or Province Name (full name)" => "San Jose",
+                "config_var"                         => "state"
+            },
+            {
+                "Locality Name (eg, city)" => "Default City",
+                "config_var"               => "locality"
+            },
+            {
+                "Organization Name (eg, company)" => "Default Company Ltd",
+                "config_var"                      => "company"
+            },
+            {
+                "Organizational Unit Name (eg, section)" => "",
+                "config_var"                             => "org_unit"
+            },
+            {
+                "Common Name (eg, your name or your server's hostname)" => "example.com",
+                "config_var"                                            => "common_name"
+            },
+            {
+                "RSA Passphrase" => "",
+                "config_var"     => "rsaPassword",
+                "hidden"         => "true"
+            }
+        ],
+        $paramConfFile => [
+            {
+                "Traffic Ops url" => "https://localhost",
+                "config_var"      => "tm.url"
+            },
+            {
+                "Human-readable CDN Name.  (No whitespace, please)" => "kabletown_cdn",
+                "config_var"                                        => "cdn_name"
+            },
+            {
+                "Health Polling Interval (milliseconds)" => "8000",
+                "config_var"                             => "health_polling_int"
+            },
+            {
+                "DNS sub-domain for which your CDN is authoritative" => "cdn1.kabletown.net",
+                "config_var"                                         => "dns_subdomain"
+            },
+            {
+                "TLD SOA admin" => "traffic_ops",
+                "config_var"    => "soa_admin"
+            },
+            {
+                "TrafficServer Drive Prefix" => "/dev/sd",
+                "config_var"                 => "driver_prefix"
+            },
+            {
+                "TrafficServer RAM Drive Prefix" => "/dev/ram",
+                "config_var"                     => "ram_drive_prefix"
+            },
+            {
+                "TrafficServer RAM Drive Letters (comma separated)" => "0,1,2,3,4,5,6,7",
+                "config_var"                                        => "ram_drive_letters"
+            },
+            {
+                "Health Threshold Load Average" => "25",
+                "config_var"                    => "health_thresh_load_avg"
+            },
+            {
+                "Health Threshold Available Bandwidth in Kbps" => "1750000",
+                "config_var"                                   => "health_thresh_kbps"
+            },
+            {
+                "Traffic Server Health Connection Timeout (milliseconds)" => "2000",
+                "config_var"                                              => "health_connect_timeout"
+            }
+
+        ]
+    };
+}
+
+# carried over from old postinstall
+#
+# todbconf: The database configuration to be used
+# opensslconf: The openssl configuration if any
+
+sub setupDatabase {
+    my $todbconf     = shift;
+    my $opensslconf  = shift;
+    my $genCert      = shift;
+    my $setupMaxmind = shift;
+
+    InstallUtils::logger( "Setting up database", "info" );
+    chdir("/opt/traffic_ops/app");
+    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
+
+    if ( $result != 0 ) {
+        errorOut("Database initialization failed");
+    }
+    else {
+        InstallUtils::logger( "Database initialization succeeded", "info" );
+    }
+
+    if ( $setupMaxmind =~ /^y(?:es)?/ ) {
+        InstallUtils::logger( "Downloading Maxmind data", "info" );
+        chdir("/opt/traffic_ops/app/public/routing");
+        $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
+        if ( $result != 0 ) {
+            InstallUtils::logger( "Failed to download MaxMind data", "error" );
+        }
+    }
+    else {
+        InstallUtils::logger("Not downloading Maxmind data");
+    }
+
+    InstallUtils::logger( "Copying coverage zone file to public dir", "info" );
+    $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
+    if ( $result != 0 ) {
+        InstallUtils::logger( "Failed to copy coverage zone file", "error" );
+    }
+
+    if ( lc $genCert =~ /^y(?:es)?/ ) {
+        if ( -x "/usr/bin/openssl" ) {
+            InstallUtils::logger( "Installing SSL Certificates", "info" );
+            $result = GenerateCert::createCert($opensslconf);
+
+            if ( $result != 0 ) {
+                errorOut("SSL Certificate Installation failed");
+            }
+            else {
+                InstallUtils::logger( "SSL Certificates have been installed", "info" );
+            }
+        }
+        else {
+            InstallUtils::logger( "Unable to install SSL certificates as openssl is not installed",                                     "error" );
+            InstallUtils::logger( "Install openssl and then run /opt/traffic_ops/install/bin/generateCert to install SSL certificates", "error" );
+            exit 4;
+        }
+    }
+    else {
+        InstallUtils::logger( "Not generating openssl certification", "info" );
+    }
+}
+
+# -cfile     - Input File:       The input config file used to ask and answer questions
+# -a         - Automatic mode:   If there are questions in the config file which do not have answers, the script
+#                                will look to the defaults for the answer. If the answer is not in the defaults
+#                                the script will exit
+# -r         - Reconfigure:      Whether or not to reconfigure the database and check perl dependencies - This will recreate the database
+# -defaults  - Defaults:         Writes out a configuration file with defaults which can be used as input
+# -debug     - Debug Mode:       More output to the terminal
+# -h         - Help:             Basic command line help menu
+
+sub main {
+    my $help = 0;
+
+    # help string
+    my $usageString = "Usage: postinstall [-a] [-debug] [-defaults] [-r] -cfile=[config_file]\n";
+
+    GetOptions(
+        "cfile=s"     => \$inputFile,
+        "automatic"   => \$automatic,
+        "reconfigure" => \$reconfigure,
+        "defaults"    => \$dumpDefaults,
+        "debug"       => \$debug,
+        "help"        => \$help
+    ) or die($usageString);
+
+    # stores the default questions and answers
+    $defaultInputs = getDefaults();
+
+    if ($help) {
+        print $usageString;
+        return;
+    }
+
+    # check if the user running postinstall is root
+    if ( $ENV{USER} ne "root" ) {
+        errorOut("You must run this script as the root user");
+    }
+
+    InstallUtils::initLogger( $debug, $logFile );
+
+    if ( -f "$logFile.gz" ) {
+        InstallUtils::execCommand( "/bin/gunzip", "$logFile.gz" );
+    }
+
+    InstallUtils::logger( "Starting postinstall", "info" );
+
+    InstallUtils::logger( "Debug is on", "info" );
+
+    if ($automatic) {
+        InstallUtils::logger( "Running in automatic mode", "info" );
+    }
+
+    # check if the reconfigure_file is present on the system - if it is let the user know its deprecated
+    #  and exit with an error
+    if ( -f $reconfigure_file ) {
+        InstallUtils::logger( "$reconfigure_file file is depreprecated - please remove and rerun postinstall", "error" );
+        return;
+    }
+
+    if ($dumpDefaults) {
+        InstallUtils::logger( "Writing default configuration file to $outputConfigFile", "info" );
+        InstallUtils::writeJson( $outputConfigFile, $defaultInputs );
+        return;
+    }
+
+    InstallUtils::logger( "Postinstall " . ( defined $reconfigure ? "in" : "not" ) . " in reconfigure mode", "info" );
+
+    InstallUtils::rotateLog($cpanLogFile);
+
+    if ( -s $logFile > $maxLogSize ) {
+        InstallUtils::logger( "Postinstall log above max size of $maxLogSize bytes - rotating", "info" );
+        rotateLog($logFile);
+    }
+
+    # used to store the questions and answers provided by the user
+    my $userInput;
+
+    # if no input file provided use the defaults
+    if ( $inputFile eq "" ) {
+        InstallUtils::logger( "No input file given - using defaults", "info" );
+        $userInput = $defaultInputs;
+    }
+    else {
+        InstallUtils::logger( "Using input file $inputFile", "info" );
+
+        # check if the input file exists
+        errorOut("File '$inputFile' not found") if ( !-f $inputFile );
+
+        # read and store the input file
+        $userInput = InstallUtils::readJson($inputFile);
+    }
+
+    # sanity check the defaults if running them automatically
+    sanityCheckDefaults();
+
+    # check the input config file against the defaults to check for missing questions
+    sanityCheckConfig($userInput) if ( $inputFile ne "" );
+
+    chdir("/opt/traffic_ops/install/bin");
+
+    # if reconfigure is set then rebuild the perl deps
+    if ($reconfigure) {
+        my $rc = BuildPerlDeps::build( 1, $cpanLogFile );
+        if ( $rc != 0 ) {
+            errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
+        }
+        $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+        if ( $rc != 0 ) {
+            errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
+        }
+    }
+    else {
+        my $rc = BuildPerlDeps::build();
+        if ( $rc != 0 ) {
+            errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
+        }
+        $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+        if ( $rc != 0 ) {
+            errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
+        }
+    }
+
+    # The generator functions handle checking input/default/automatic mode
+
+    # todbconf will be used later when setting up the database
+    my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
+    generateCdnConf( $userInput, $cdnConfFile );
+    generateLdapConf( $userInput, $ldapConfFile );
+    my $adminconf = generateUsersConf( $userInput, $usersConfFile );
+    my $custom_profile = generateProfilesDir( $userInput, $profilesConfFile );
+    my $opensslconf = generateOpenSSLConf( $userInput, $opensslConfFile );
+    my $paramconf = generateParamConf( $userInput, $paramConfFile );
+
+    if ( !-f $post_install_cfg ) {
+        InstallUtils::writeJson( $post_install_cfg, {} );
+    }
+
+    # if reconfigure is set then setup the database
+    if ($reconfigure) {
+        if ($automatic) {
+            setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
+        }
+        else {
+            setupDatabase( $todbconf, 0, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
+        }
+    }
+
+    InstallUtils::logger( "Starting Traffic Ops", "info" );
+    InstallUtils::execCommand("/sbin/service traffic_ops start");
+
+    InstallUtils::logger( "Waiting for Traffic Ops to start", "info" );
+
+    if ( -f $post_install_cfg ) {
+        $parameters = InstallUtils::readJson($post_install_cfg);
+    }
+
+    if ( !ProfileCleanup::profiles_exist( $adminconf, $paramconf->{"tm.url"}, $parameters, $reconfigure_defaults, $reconfigure ) ) {
+        InstallUtils::logger( "Creating default profiles...", "info" );
+        ProfileCleanup::replace_profile_templates( $paramconf, $adminconf, $post_install_cfg, $parameters, $profileDir );
+        ProfileCleanup::import_profiles( $paramconf->{"tm.url"}, $adminconf, $profileDir );
+
+        # call again to create $reconfigure_defaults file if import was successful
+        ProfileCleanup::profiles_exist( $adminconf, $paramconf->{"tm.url"}, $parameters, $reconfigure_defaults, $reconfigure );
+    }
+    else {
+        InstallUtils::logger( "Not creating default profiles", "info" );
+    }
+
+    if ( $custom_profile =~ /^y(?:es)?/ ) {
+        ProfileCleanup::add_custom_profiles( $custom_profile_dir, $adminconf, $parameters->{"tm.url"} );
+    }
+
+    InstallUtils::logger("Postinstall complete");
+
+    InstallUtils::execCommand( "/bin/gzip", "$logFile" );
+}
+
+main;
+
+# vi:syntax=perl

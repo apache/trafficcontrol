@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, locationUtils) {
+var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, $state, locationUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
@@ -25,6 +25,10 @@ var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, locationU
 
 	$scope.editASN = function(id) {
 		locationUtils.navigateToPath('/admin/asns/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, locationU
 
 };
 
-TableCacheGroupAsnsController.$inject = ['cacheGroup', 'asns', '$scope', 'locationUtils'];
+TableCacheGroupAsnsController.$inject = ['cacheGroup', 'asns', '$scope', '$state', 'locationUtils'];
 module.exports = TableCacheGroupAsnsController;
