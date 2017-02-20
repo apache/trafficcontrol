@@ -23,6 +23,7 @@ use Term::ReadKey;
 use LWP::UserAgent;
 use File::Find;
 use File::Spec;
+use Time::HiRes qw(gettimeofday tv_interval);
 
 #use Data::Compare;
 use Test::Deep;
@@ -309,9 +310,12 @@ sub get_files {
 
 		foreach my $filename ( keys %{ $file_list_json->{config_files} } ) {
 
-			next unless  $filename eq "parent.config";
-			print "Getting " . $sample_server . " " . $filename . "\n";
+			#next unless  $filename eq "parent.config";
+			print "Getting " . $sample_server . " " . $filename;
+			my $start = [gettimeofday];
 			my $fcontents = &curl_me( $to_url . '/genfiles/view/' . $profile_sample{$sample_server} . "/" . $filename );
+			my $load_time = tv_interval($start);
+			print " load_time: " . $load_time . "\n";
 			open( my $fh, '>', $dir . '/' . $filename );
 			print $fh $fcontents;
 			close $fh;
