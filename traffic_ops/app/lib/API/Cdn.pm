@@ -1086,19 +1086,20 @@ sub dnssec_keys {
 sub dnssec_keys_refresh {
 	my $self = shift;
 
-	# daemonize so we can avoid blocking
-	my $pid = $self->daemonize();
+	# fork and daemonize so we can avoid blocking
+	my $rc = $self->fork_and_daemonize();
 
-	if ( !defined($pid) || $pid < 0 ) {
-		my $error = "Unable to daemonize to check DNSSEC keys for refresh in the background";
+	if ( $rc < 0 ) {
+		my $error = "Unable to fork_and_daemonize to check DNSSEC keys for refresh in the background";
 		$self->app->log->fatal($error);
 		return $self->alert( { Error => $error } );
 	}
-	elsif ( $pid > 0 ) {
+	elsif ( $rc > 0 ) {
+    	# This is the parent, report success and return
 		return $self->success("Checking DNSSEC keys for refresh in the background");
 	}
 
-	# we're in the fork()ed process now
+	# we're in the fork()ed process now, do the work and exit
 	$self->refresh_keys();
 	exit(0);
 }
