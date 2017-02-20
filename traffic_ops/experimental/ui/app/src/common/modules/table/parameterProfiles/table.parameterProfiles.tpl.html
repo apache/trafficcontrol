@@ -24,7 +24,10 @@ under the License.
             <li><a ng-click="navigateToPath('/admin/parameters/' + parameter.id)">{{parameter.name}}</a></li>
             <li class="active">Profiles</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="addProfile()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Profile to Param</button>
+        <div class="pull-right">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-primary" ng-click="addProfile()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Profile to Param</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

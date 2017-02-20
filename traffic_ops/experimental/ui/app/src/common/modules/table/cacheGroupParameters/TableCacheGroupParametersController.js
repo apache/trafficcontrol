@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParameters, $scope, locationUtils) {
+var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParameters, $scope, $state, locationUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
@@ -31,6 +31,10 @@ var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParamet
 		alert('not hooked up yet: remove Parameter from cache group');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParamet
 
 };
 
-TableCacheGroupParametersController.$inject = ['cacheGroup', 'cacheGroupParameters', '$scope', 'locationUtils'];
+TableCacheGroupParametersController.$inject = ['cacheGroup', 'cacheGroupParameters', '$scope', '$state', 'locationUtils'];
 module.exports = TableCacheGroupParametersController;

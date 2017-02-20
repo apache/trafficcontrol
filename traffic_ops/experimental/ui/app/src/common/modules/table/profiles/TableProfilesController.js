@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfilesController = function(profiles, $scope, locationUtils) {
+var TableProfilesController = function(profiles, $scope, $state, locationUtils) {
 
     $scope.profiles = profiles;
 
@@ -37,6 +37,10 @@ var TableProfilesController = function(profiles, $scope, locationUtils) {
         alert('not hooked up yet: compareProfiles');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#profilesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -46,5 +50,5 @@ var TableProfilesController = function(profiles, $scope, locationUtils) {
 
 };
 
-TableProfilesController.$inject = ['profiles', '$scope', 'locationUtils'];
+TableProfilesController.$inject = ['profiles', '$scope', '$state', 'locationUtils'];
 module.exports = TableProfilesController;

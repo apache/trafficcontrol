@@ -281,7 +281,7 @@ public final class SignatureManager {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private List<DnsSecKeyPair> getKeyPairs(final Name name, final boolean wantKsk, final boolean wantSigningKey, final long maxTTL) throws IOException, NoSuchAlgorithmException {
-		final List<DnsSecKeyPair> keyPairs = keyMap.get(name.toString());
+		final List<DnsSecKeyPair> keyPairs = keyMap.get(name.toString().toLowerCase());
 		DnsSecKeyPair signingKey = null;
 
 		if (keyPairs == null) {

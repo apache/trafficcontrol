@@ -2156,12 +2156,7 @@ sub set_url {
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
-	if ( $filename ne "regex_revalidate.config" ) {
-		return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
-	}
-	else {
-		return "$traffic_ops_host\/Trafficserver-Snapshots\/$my_cdn_name\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
-	}
+	return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 }
 
 sub scrape_unencode_text {

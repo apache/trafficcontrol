@@ -24,7 +24,9 @@ under the License.
             <li class="active">{{cdnName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button class="btn btn-primary" ng-click="manageSnapshots()">Snapshot CDN Config &nbsp;&nbsp;<i class="fa fa-camera"></i></button>
+            <button class="btn btn-primary" title="Snapshot {{cdn.name}} config" ng-click="manageSnapshots()"><i class="fa fa-camera"></i></button>
+            <button class="btn btn-primary" title="Queue {{cdn.name}} server updates" ng-click="queueServerUpdates(cdn)"><i class="fa fa-flag"></i></button>
+            <button class="btn btn-primary" title="Cancel {{cdn.name}} server updates" ng-click="clearServerUpdates(cdn)"><i class="fa fa-ban"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
@@ -33,9 +35,6 @@ under the License.
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
                     <li role="menuitem"><a ng-click="manageSSL()">Manage SSL Keys</a></li>
-                    <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="queueUpdates()">Queue Server Updates</a></li>
-                    <li role="menuitem"><a ng-click="dequeueUpdates()">Dequeue Server Updates</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="cachegroupHealth()">View Cachegroup Health</a></li>
                     <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>

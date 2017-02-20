@@ -186,7 +186,7 @@ sub dropdb {
 
 sub createdb {
 	createuser();
-	my $db_exists = `psql -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
+	my $db_exists = `psql -h $host_ip -p $host_port -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ( $db_exists ) {
 		print "Database $db_name already exists\n";
 		return;
@@ -198,26 +198,26 @@ sub createdb {
 }
 
 sub createuser {
-	my $user_exists = `psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
+	my $user_exists = `psql -h $host_ip -p $host_port -U postgres postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
 	if ( $user_exists ) {
 		print "Role $db_username already exists\n";
 		return;
 	}
 
 	my $cmd = "CREATE USER $db_username WITH SUPERUSER CREATEROLE CREATEDB ENCRYPTED PASSWORD '$db_password'";
-	if ( system( qq{psql -h $host_ip -p $host_port -tAc "$cmd"} ) != 0 ) {
+	if ( system( qq{psql -h $host_ip -p $host_port -U postgres -tAc "$cmd"} ) != 0 ) {
 		die "Can't create user $db_username\n";
 	}
 }
 
 sub dropuser {
-	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_username;") != 0 ) {
+	if ( system("dropuser -h $host_ip -p $host_port -U postgres -i -e $db_username;") != 0 ) {
 		die "Can't drop user $db_username\n";
 	}
 }
 
 sub showusers {
-	if ( system("psql postgres -ec '\\du';") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -U postgres -ec '\\du';") != 0 ) {
 		die "Can't show users";
 	}
 }

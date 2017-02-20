@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/juju/persistent-cookiejar"
@@ -31,12 +32,30 @@ import (
 
 // Session ...
 type Session struct {
-	UserName  string
-	Password  string
-	URL       string
-	UserAgent *http.Client
-	Cache     map[string]CacheEntry
+	UserName     string
+	Password     string
+	URL          string
+	Client       *http.Client
+	cache        map[string]CacheEntry
+	cacheMutex   *sync.RWMutex
+	useCache     bool
+	UserAgentStr string
 }
+
+func NewSession(user, password, url, userAgent string, client *http.Client, useCache bool) *Session {
+	return &Session{
+		UserName:     user,
+		Password:     password,
+		URL:          url,
+		Client:       client,
+		cache:        map[string]CacheEntry{},
+		cacheMutex:   &sync.RWMutex{},
+		useCache:     useCache,
+		UserAgentStr: userAgent,
+	}
+}
+
+const DefaultTimeout = time.Second * time.Duration(30)
 
 // HTTPError is returned on Update Session failure.
 type HTTPError struct {
@@ -102,16 +121,13 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 		return nil, err
 	}
 
-	to := Session{
-		UserAgent: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-			},
-			Jar: jar,
+	to := NewSession("", "", toURL, "", &http.Client{
+		Timeout: DefaultTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
-		URL:   toURL,
-		Cache: make(map[string]CacheEntry),
-	}
+		Jar: jar,
+	}, false)
 
 	resp, err := to.request("GET", "/api/1.2/user/current.json", nil)
 
@@ -122,14 +138,19 @@ func ResumeSession(toURL string, insecure bool) (*Session, error) {
 	jar.Save()
 	fmt.Printf("Traffic Ops Session Resumed (%s)\n", resp.Status)
 
-	return &to, nil
+	return to, nil
+}
+
+// Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
+func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
+	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout) // TODO add UserAgent version
 }
 
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
 //     to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
+func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, error) {
 	credentials, err := loginCreds(toUser, toPasswd)
 	if err != nil {
 		return nil, err
@@ -144,18 +165,13 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 		return nil, err
 	}
 
-	to := Session{
-		UserAgent: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-			},
-			Jar: jar,
+	to := NewSession(toUser, toPasswd, toURL, userAgent, &http.Client{
+		Timeout: requestTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
-		URL:      toURL,
-		UserName: toUser,
-		Password: toPasswd,
-		Cache:    make(map[string]CacheEntry),
-	}
+		Jar: jar,
+	}, useCache)
 
 	path := "/api/1.2/user/login"
 	resp, err := to.request("POST", path, credentials)
@@ -184,7 +200,7 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 
 	jar.Save()
 
-	return &to, nil
+	return to, nil
 }
 
 // request performs the actual HTTP request to Traffic Ops
@@ -207,7 +223,8 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 		}
 	}
 
-	resp, err := to.UserAgent.Do(req)
+	req.Header.Set("User-Agent", to.UserAgentStr)
+	resp, err := to.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -249,6 +266,26 @@ func StringToCacheHitStatus(s string) CacheHitStatus {
 	}
 }
 
+// setCache Sets the given cache key and value. This is threadsafe for multiple goroutines.
+func (to *Session) setCache(path string, entry CacheEntry) {
+	if !to.useCache {
+		return
+	}
+	to.cacheMutex.Lock()
+	defer to.cacheMutex.Unlock()
+	to.cache[path] = entry
+}
+
+// getCache gets the cache value at the given key, or false if it doesn't exist. This is threadsafe for multiple goroutines.
+func (to *Session) getCache(path string) (CacheEntry, bool) {
+	to.cacheMutex.RLock()
+	defer to.cacheMutex.RUnlock()
+	cacheEntry, ok := to.cache[path]
+	return cacheEntry, ok
+}
+
+//if cacheEntry, ok := to.Cache[path]; ok {
+
 // getBytesWithTTL - get the path, and cache in the session
 // return from cache is found and the ttl isn't expired, otherwise get it and
 // store it in cache
@@ -257,7 +294,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 	var err error
 	var cacheHitStatus CacheHitStatus
 	getFresh := false
-	if cacheEntry, ok := to.Cache[path]; ok {
+	if cacheEntry, ok := to.getCache(path); ok {
 		if cacheEntry.Entered > time.Now().Unix()-ttl {
 			cacheHitStatus = CacheHitStatusHit
 			body = cacheEntry.Bytes
@@ -266,7 +303,6 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 			getFresh = true
 		}
 	} else {
-		to.Cache = make(map[string]CacheEntry)
 		cacheHitStatus = CacheHitStatusMiss
 		getFresh = true
 	}
@@ -281,7 +317,7 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 			Entered: time.Now().Unix(),
 			Bytes:   body,
 		}
-		to.Cache[path] = newEntry
+		to.setCache(path, newEntry)
 	}
 
 	return body, cacheHitStatus, nil

@@ -79,7 +79,7 @@ my %definition_for = (
 		using => {
 			deliveryservice => 100,
 			regex           => 800,
-			set_number      => 0,
+			set_number      => 1,
 		},
 	},
 	steering_2 => {

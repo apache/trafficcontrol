@@ -297,35 +297,14 @@ static int getSpeedForIF(char *inf, char *buffer, int bufferSize) {
 }
 
 static int getSpeed(char *interface, char *buffer, int bufferSize) {
-	//  List<String> interfaces = new ArrayList<String>();
-	//  String str = getFile("/sys/class/net/bonding_masters");
-	//  if(str !=null && str.contains(myInterface)) {
-	//          String base = "/sys/class/net/"+myInterface+"/";
-	//          File directory = new File(base);
-	//          String[] children = directory.list();
-	//          for(String child : children) {
-	//                  if(child.contains("slave_")) {
-	//                          child = child.replace("slave_", "");
-	//                          interfaces.add(child);
-	//                  }
-	//          }
-	//  } else {
-	//          interfaces.add(myInterface);
-	//  }
-
-	//  for(String ifName : interfaces) {
-	//          str = getFile("/sys/class/net/" +ifName+ "/operstate");
-	//          if(str.contains("up")) {
-	//                  str = getFile("/sys/class/net/" +ifName+ "/speed");
-	//                  result.speed += Long.parseLong(str.trim());
-	//          }
-	//  }
 	DIR *dp;
 	struct dirent *ep;
 	char *str;
 	char *inf;
 	char b[256];
 	int speed = 0;
+	int i = 0;
+	const char *fnames[] = {"slave_", "lower_"};
 
 	if (!interface)
 		return 0;
@@ -333,7 +312,7 @@ static int getSpeed(char *interface, char *buffer, int bufferSize) {
 	str = getFile("/sys/class/net/bonding_masters", buffer, bufferSize);
 	if (str) {
 		str = strstr(str, interface);
-		if (!str)
+		if (str)
 			return getSpeedForIF(interface, buffer, bufferSize);
 	}
 
@@ -342,10 +321,13 @@ static int getSpeed(char *interface, char *buffer, int bufferSize) {
 
 	if (dp != NULL) {
 		while ((ep = readdir (dp))) {
-			str = strstr(ep->d_name, "slave_");
-			if (str) {
-				inf = str + strlen("slave_");
-				speed += getSpeedForIF (inf, buffer, bufferSize);
+			for (i = 0; i < sizeof(fnames)/sizeof(fnames[0]); i++) {
+				str = strstr(ep->d_name, fnames[i]);
+				if (str) {
+					inf = str + strlen(fnames[i]);
+					speed += getSpeedForIF (inf, buffer, bufferSize);
+					break; // in case we happen to have slave_ and lower_ for some odd reason
+				}
 			}
 		}
 
@@ -538,8 +520,14 @@ void TSPluginInit(int argc, const char *argv[]) {
 	info.support_email = "justin@fp-x.com";
 	astatsLoad = time(NULL);
 
+	#if (TS_VERSION_NUMBER < 3000000)
+	if (TSPluginRegister(TS_SDK_VERSION_2_0, &info) != TS_SUCCESS) {
+	#elif (TS_VERSION_NUMBER < 6000000)
+	if (TSPluginRegister(TS_SDK_VERSION_3_0, &info) != TS_SUCCESS) {
+	#else
 	if (TSPluginRegister(&info) != TS_SUCCESS) {
-        TSError("Plugin registration failed. \n");
+	#endif
+	  TSError("Plugin registration failed. \n");
 	}
 
 	config_holder = new_config_holder(argc > 1 ? argv[1] : NULL);
@@ -860,4 +848,3 @@ static int config_handler(TSCont cont, TSEvent event, void *edata) {
 	load_config_file(config_holder);
 	return 0;
 }
-

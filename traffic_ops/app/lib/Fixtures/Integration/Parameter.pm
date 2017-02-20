@@ -4167,16 +4167,6 @@ use namespace::autoclean;
 			config_file => 'plugin.config',
 		},
 	},
-	## id => 415
-	'414' => {
-		new => 'Parameter',
-		using => {
-			name => 'snapshot_dir',
-	 		config_file => 'regex_revalidate.config',
-			last_updated => '2015-12-10 15:43:46',
-			value => 'public/Trafficserver-Snapshots/',
-		},
-	},
 	## id => 416
 	'415' => {
 			new => 'Parameter',

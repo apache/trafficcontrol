@@ -35,14 +35,6 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
 
     $scope.cacheGroup = cacheGroup;
 
-    $scope.queueUpdates = function() {
-        alert('not hooked up yet: queuing updates for all cachegroup servers');
-    };
-
-    $scope.dequeueUpdates = function() {
-        alert('not hooked up yet: dequeuing updates for all cachegroup servers');
-    };
-
     $scope.viewAsns = function() {
         $location.path($location.path() + '/asns');
     };
@@ -55,12 +47,8 @@ var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils
         $location.path($location.path() + '/servers');
     };
 
-    $scope.viewParams = function() {
-        $location.path($location.path() + '/parameters');
-    };
-
-    $scope.viewServers = function() {
-        $location.path($location.path() + '/servers');
+    $scope.viewStaticDnsEntries = function() {
+        $location.path($location.path() + '/static-dns-entries');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;

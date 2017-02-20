@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDivisionsController = function(divisions, $scope, locationUtils) {
+var TableDivisionsController = function(divisions, $scope, $state, locationUtils) {
 
     $scope.divisions = divisions;
 
@@ -29,6 +29,10 @@ var TableDivisionsController = function(divisions, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/divisions/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#divisionsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableDivisionsController = function(divisions, $scope, locationUtils) {
 
 };
 
-TableDivisionsController.$inject = ['divisions', '$scope', 'locationUtils'];
+TableDivisionsController.$inject = ['divisions', '$scope', '$state', 'locationUtils'];
 module.exports = TableDivisionsController;

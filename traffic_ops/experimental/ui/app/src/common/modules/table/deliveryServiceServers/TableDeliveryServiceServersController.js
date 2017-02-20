@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, locationUtils) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
 
@@ -31,6 +31,10 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		alert('not hooked up yet: removeServer from ds');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', 'locationUtils'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceServersController;

@@ -22,7 +22,10 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li class="active">ASNs</li>
         </ol>
-        <button class="btn btn-primary pull-right" ng-click="createASN()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create ASN</button>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-primary" ng-click="createASN()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create ASN</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

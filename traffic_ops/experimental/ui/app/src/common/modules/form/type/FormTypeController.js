@@ -40,6 +40,10 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
         $location.path($location.path() + '/cache-groups');
     };
 
+    $scope.viewStaticDnsEntries = function() {
+        $location.path($location.path() + '/static-dns-entries');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

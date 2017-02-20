@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableRegionsController = function(regions, $scope, locationUtils) {
+var TableRegionsController = function(regions, $scope, $state, locationUtils) {
 
     $scope.regions = regions;
 
@@ -29,6 +29,10 @@ var TableRegionsController = function(regions, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/regions/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#regionsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableRegionsController = function(regions, $scope, locationUtils) {
 
 };
 
-TableRegionsController.$inject = ['regions', '$scope', 'locationUtils'];
+TableRegionsController.$inject = ['regions', '$scope', '$state', 'locationUtils'];
 module.exports = TableRegionsController;

@@ -1,0 +1,1 @@
+00 04 * * * root /bin/find /opt/traffic_ops/app/public/iso/*.iso -mtime +7 -exec /bin/rm {} ; > /dev/null 2>&1

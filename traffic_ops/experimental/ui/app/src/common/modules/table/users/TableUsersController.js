@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableUsersController = function(users, $scope, locationUtils) {
+var TableUsersController = function(users, $scope, $state, locationUtils) {
 
     $scope.users = users;
 
@@ -29,6 +29,10 @@ var TableUsersController = function(users, $scope, locationUtils) {
         locationUtils.navigateToPath('/admin/users/new');
     };
 
+    $scope.refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
     angular.element(document).ready(function () {
         $('#usersTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -38,5 +42,5 @@ var TableUsersController = function(users, $scope, locationUtils) {
 
 };
 
-TableUsersController.$inject = ['users', '$scope', 'locationUtils'];
+TableUsersController.$inject = ['users', '$scope', '$state', 'locationUtils'];
 module.exports = TableUsersController;

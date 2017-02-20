@@ -24,6 +24,9 @@ under the License.
             <li><a ng-click="navigateToPath('/configure/cache-groups/' + cacheGroup.id)">{{cacheGroup.name}}</a></li>
             <li class="active">ASNs</li>
         </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">

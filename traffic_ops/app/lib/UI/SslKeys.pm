@@ -28,7 +28,7 @@ use MIME::Base64;
 sub add {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
-	my $rs_ds  = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } );
+	my $rs_ds  = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => [ 'cdn', 'type' ] } );
 	my $data   = $rs_ds->single;
 	my $xml_id = $data->xml_id;
 	&stash_role($self);

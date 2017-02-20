@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceUsersController = function(deliveryService, users, $scope, locationUtils) {
+var TableDeliveryServiceUsersController = function(deliveryService, users, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
 
@@ -35,6 +35,10 @@ var TableDeliveryServiceUsersController = function(deliveryService, users, $scop
 		return user.role == 4;
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -46,5 +50,5 @@ var TableDeliveryServiceUsersController = function(deliveryService, users, $scop
 
 };
 
-TableDeliveryServiceUsersController.$inject = ['deliveryService', 'users', '$scope', 'locationUtils'];
+TableDeliveryServiceUsersController.$inject = ['deliveryService', 'users', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceUsersController;

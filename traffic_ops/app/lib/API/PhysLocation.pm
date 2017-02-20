@@ -97,7 +97,7 @@ sub index_trimmed {
 	my $self = shift;
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { prefetch => ['region'], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 
 		next if $row->short_name eq 'UNDEF';

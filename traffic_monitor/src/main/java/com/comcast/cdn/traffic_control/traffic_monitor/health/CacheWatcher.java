@@ -150,6 +150,11 @@ public class CacheWatcher {
 
 		public void run() {
 			while (true) {
+				if (!isActive) {
+					LOGGER.warn("Not active");
+					return;
+				}
+
 				try {
 					final long time = System.currentTimeMillis();
 					final RouterConfig crConfig = RouterConfig.getCrConfig();
@@ -207,11 +212,6 @@ public class CacheWatcher {
 					} catch (InterruptedException ex) {
 						// Ignore
 					}
-				}
-
-				if (!isActive) {
-					LOGGER.warn("Not active");
-					return;
 				}
 			}
 		}
