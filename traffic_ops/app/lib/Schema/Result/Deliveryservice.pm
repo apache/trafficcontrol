@@ -308,7 +308,7 @@ __PACKAGE__->table("deliveryservice");
 =head2 logs_enabled
 
   data_type: 'tinyint'
-  is_nullable: 1
+  is_nullable: 0
 
 =head2 multi_site_origin_algorithm
 
@@ -428,7 +428,7 @@ __PACKAGE__->add_columns(
   "geo_limit_countries",
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
-  { data_type => "tinyint", is_nullable => 1 },
+  { data_type => "tinyint", is_nullable => 0 },
   "multi_site_origin_algorithm",
   { data_type => "tinyint", is_nullable => 1 },
   "geolimit_redirect_url",
