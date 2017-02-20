@@ -321,7 +321,6 @@ sub get_files {
 
 		foreach my $filename ( keys %{ $file_list_json->{config_files} } ) {
 
-			next unless  $filename eq "to_ext_teak.config";
 			print "Getting " . $sample_server . " " . $filename;
 			my $start     = [gettimeofday];
 			my $fcontents = &curl_me( $to_url . '/genfiles/view/' . $profile_sample{$sample_server} . "/" . $filename );
