@@ -43,6 +43,9 @@ public class CertificatesClient {
 
 		while (status != HttpURLConnection.HTTP_NOT_MODIFIED && status != HttpURLConnection.HTTP_OK) {
 			trafficRouterManager.trackEvent("lastHttpsCertificatesFetchFail");
+			if (shutdown){
+				return null;
+			}
 			try {
 				Thread.sleep(trafficOpsUtils.getConfigLongValue("certificates.retry.interval", 30 * 1000L));
 			} catch (InterruptedException e) {
@@ -69,6 +72,9 @@ public class CertificatesClient {
 	public int fetchRawData(final StringBuilder stringBuilder) {
 		while (trafficOpsUtils == null || trafficOpsUtils.getHostname() == null || trafficOpsUtils.getHostname().isEmpty()) {
 			LOGGER.error("No traffic ops hostname yet!");
+			if (shutdown) {
+				return -1;
+			}
 			try {
 				Thread.sleep(5000L);
 			} catch (Exception e) {
