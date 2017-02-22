@@ -897,6 +897,7 @@ sub readupdate {
 
 	my $rs_servers;
 	my %parent_pending = ();
+	my %parent_reval_pending = ();
 	if ( $host_name =~ m/^all$/ ) {
 		$rs_servers = $self->db->resultset("Server")->search(undef, { prefetch => [ 'type', 'cachegroup' ] } );
 	}
@@ -915,20 +916,53 @@ sub readupdate {
 					{
 						$parent_pending{ $rs_servers->single->host_name } = 1;
 					}
+					if (   $prow->reval_pending == 1
+						&& $prow->status->name ne "OFFLINE" )
+					{
+						$parent_reval_pending{ $rs_servers->single->host_name } = 1;
+					}
 				}
 			}
 		}
 	}
 
 	while ( my $row = $rs_servers->next ) {
-		if ( $parent_pending{ $row->host_name } ) {
+		if ( $parent_pending{ $row->host_name } && $parent_reval_pending{ $row->host_name } ) {
 			push(
 				@data, {
 					host_name      => $row->host_name,
 					upd_pending    => \$row->upd_pending,
+					reval_pending  => \$row->reval_pending,
 					host_id        => $row->id,
 					status         => $row->status->name,
-					parent_pending => \1
+					parent_pending => \1,
+					parent_reval_pending => \1
+				}
+			);
+		}
+		elsif ( $parent_reval_pending{ $row->host_name } ) {
+			push(
+				@data, {
+					host_name      => $row->host_name,
+					upd_pending    => \$row->upd_pending,
+					reval_pending  => \$row->reval_pending,
+					host_id        => $row->id,
+					status         => $row->status->name,
+					parent_pending => \0,
+					parent_reval_pending => \1
+				}
+			);
+		}
+		elsif ( $parent_pending{ $row->host_name } ) {
+			push(
+				@data, {
+					host_name      => $row->host_name,
+					upd_pending    => \$row->upd_pending,
+					reval_pending  => \$row->reval_pending,
+					host_id        => $row->id,
+					status         => $row->status->name,
+					parent_pending => \1,
+					parent_reval_pending => \0
 				}
 			);
 		}
@@ -937,9 +971,11 @@ sub readupdate {
 				@data, {
 					host_name      => $row->host_name,
 					upd_pending    => \$row->upd_pending,
+					reval_pending  => \$row->reval_pending,
 					host_id        => $row->id,
 					status         => $row->status->name,
-					parent_pending => \0
+					parent_pending => \0,
+					parent_reval_pending => \0
 				}
 			);
 		}
