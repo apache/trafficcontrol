@@ -413,9 +413,6 @@ sub check_server_input {
 		if ( !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) ) {
 			$err .= "Gateway " . $paramHashRef->{'ip6_gateway'} . " is not a valid IPv6 address " . $sep;
 		}
-		if ( !&in_same_net( $paramHashRef->{'ip6_address'}, $paramHashRef->{'ip6_gateway'} ) ) {
-			$err .= $paramHashRef->{'ip6_address'} . " and " . $paramHashRef->{'ip6_gateway'} . " are not in same network" . $sep;
-		}
 	}
 
 	$ipstr1 = $paramHashRef->{'ilo_ip_address'} . "/" . $paramHashRef->{'ilo_ip_netmask'};

@@ -217,9 +217,6 @@ sub check_server_params {
                 $json->{'ip6Gateway'} = $update_base->{'ip6_gateway'};
             }
         }
-        if ( !&in_same_net( $json->{'ip6Address'}, $json->{'ip6Gateway'} ) ) {
-            return ( \%params, $json->{'ip6Address'} . " and " . $json->{'ip6Gateway'} . " are not in same network" );
-        }
     }
 
     my $ipstr1;
