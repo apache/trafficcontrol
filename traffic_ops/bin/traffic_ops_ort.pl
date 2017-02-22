@@ -509,7 +509,7 @@ sub restart_service {
 		$running_string = "traffic_cop";
 	}
 	if ( $running_string ne "" ) {
-		if ( $pkg_running =~ m/$running_string \(pid  (\d+)\) is running.../ ) {
+		if ( $pkg_running =~ m/$running_string \(pid\s+(\d+)\) is running.../ ) {
 			if ( $script_mode == $REPORT ) {
 				( $log_level >> $ERROR ) && print "ERROR $pkg_name needs to be restarted. Please run 'service $pkg_name restart' to fix.\n";
 			}
