@@ -24,6 +24,7 @@ use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
+use Data::Dumper;
 
 $| = 1;
 my $date           = `/bin/date`;
@@ -660,6 +661,17 @@ sub update_trops {
 		$update_result++;
 	}
 	if ($update_result) {
+		#need to know if reval_pending is supported
+		my $url     = "$traffic_ops_host\/update/$hostname_short";
+		my $upd_ref = &lwp_get($url);
+		if ( $upd_ref =~ m/^\d{3}$/ ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+			exit 1;
+		}
+		my $upd_json = decode_json($upd_ref);
+		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
+		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
+
 		if ( $script_mode == $INTERACTIVE ) {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops needs updated. Should I do that now? [Y/n] (n): ";
 			my $select = 'n';
@@ -674,18 +686,28 @@ sub update_trops {
 			}
 		}
 		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
-			&send_update_to_trops($CLEAR);
+			if ( !defined $reval_pending ) {
+				&send_update_to_trops($CLEAR, $reval_pending );
+			}
+			else {
+				&send_update_to_trops($CLEAR, $CLEAR);
+			}
+		}
+		elsif ( $script_mode = $REVALIDATE ) {
+			&send_update_to_trops($upd_pending, $CLEAR);
 		}
 	}
 }
 
 sub send_update_to_trops {
 	my $status = shift;
+	my $reval_status = shift;
 	my $url    = "$traffic_ops_host\/update/$hostname_short";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
 
 	my %headers = ( 'Cookie' => $cookie );
-	my $response = $lwp_conn->post( $url, [ 'updated' => $status ], %headers );
+
+	my $response = $lwp_conn->post( $url, [ 'updated' => $status, 'reval_updated' => $reval_status ], %headers );
 
 	&check_lwp_response_code($response, $ERROR);
 
@@ -716,7 +738,7 @@ sub check_revalidate_state {
 		}
 
 		my $upd_json = decode_json($upd_ref);
-		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
+		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
 		if ( !defined($reval_pending) ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an reval_pending key.  This mode is not compatible with the installed Traffic Ops version.\n";
 			exit 1;
@@ -726,7 +748,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that a revalidation is waiting to be applied.\n";
 			$reval_update = $UPDATE_REVAL_NEEDED;
 
-			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
 			if ( !defined($parent_reval_pending) ) {
 				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_reval_pending key.  Unable to continue!\n";
 				exit 1;
@@ -847,7 +869,7 @@ sub check_syncds_state {
 
 			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
-			
+			print STDERR Dumper($parent_reval_pending);
 			if ( !defined($parent_pending) ) {
 				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_pending key.\n";
 				if ( $script_mode != $SYNCDS ) {
@@ -859,7 +881,7 @@ sub check_syncds_state {
 				}
 			}
 			if ( defined($parent_reval_pending) ) {
-				( $log_level >> $DEBUG ) && print "DEBUG Parent Reval Pending key exists!\n";
+				( $log_level >> $ERROR ) && print "ERROR Parent Reval Pending key exists!\n";
 				if ( ( $parent_pending == 1 || $parent_reval_pending == 1 ) && $wait_for_parents == 1 ) {
 					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
 					if ( $script_mode == $SYNCDS ) {
