@@ -70,8 +70,17 @@ sub register {
 				}
 			);
 
-			my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
-			&log( $self, "Set upd_pending = 1 for all applicable caches", "OPER" );
+			my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
+
+			print STDERR Dumper($use_reval_pending);
+			if ( defined($use_reval_pending) ) {
+				my $result = $update_server_bit_rs->update( { reval_pending => 1 } );
+				&log( $self, "Set reval_pending = 1 for all applicable caches", "OPER" );
+			}
+			else {
+				my $result = $update_server_bit_rs->update( { upd_pending => 1 } );
+				&log( $self, "Set upd_pending = 1 for all applicable caches", "OPER" );
+			}
 		}
 	);
 
