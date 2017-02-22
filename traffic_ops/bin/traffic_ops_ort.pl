@@ -117,9 +117,7 @@ my $UPDATE_TROPS_NOTNEEDED  = 0;
 my $UPDATE_TROPS_NEEDED     = 1;
 my $UPDATE_TROPS_SUCCESSFUL = 2;
 my $UPDATE_TROPS_FAILED     = 3;
-my $UPDATE_REVAL_NEEDED     = 4;
-my $UPDATE_REVAL_SUCCESSFUL = 5;
-my $UPDATE_REVAL_FAILED		= 6;
+
 #### Other constants #####
 my $START_FAILED        = 0;
 my $START_SUCCESSFUL    = 1;
@@ -723,8 +721,7 @@ sub get_print_current_client_connections {
 
 sub check_revalidate_state {
 
-	my $revalidate_update = 0;
-	return $revalidate_update;
+	my $syncds_update = 0;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Checking revalidate state.\n";
 	if ( $script_mode == $REVALIDATE ) {
@@ -746,7 +743,7 @@ sub check_revalidate_state {
 
 		if ( $reval_pending == 1 ) {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that a revalidation is waiting to be applied.\n";
-			$reval_update = $UPDATE_REVAL_NEEDED;
+			$syncds_update = $UPDATE_TROPS_NEEDED;
 
 			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
 			if ( !defined($parent_reval_pending) ) {
@@ -807,7 +804,7 @@ sub check_revalidate_state {
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Returning; did not find status from Traffic Ops!\n";
-			return ($revalidate_update);
+			return ($syncds_update);
 		}
 
 		my $status_dir  = dirname($0) . "/status";
@@ -830,7 +827,7 @@ sub check_revalidate_state {
 			}
 		}
 	}
-	return ($revalidate_update);
+	return ($syncds_update);
 }
 
 
@@ -869,7 +866,6 @@ sub check_syncds_state {
 
 			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
-			print STDERR Dumper($parent_reval_pending);
 			if ( !defined($parent_pending) ) {
 				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_pending key.\n";
 				if ( $script_mode != $SYNCDS ) {
@@ -881,7 +877,6 @@ sub check_syncds_state {
 				}
 			}
 			if ( defined($parent_reval_pending) ) {
-				( $log_level >> $ERROR ) && print "ERROR Parent Reval Pending key exists!\n";
 				if ( ( $parent_pending == 1 || $parent_reval_pending == 1 ) && $wait_for_parents == 1 ) {
 					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
 					if ( $script_mode == $SYNCDS ) {
