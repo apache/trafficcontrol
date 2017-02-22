@@ -846,6 +846,8 @@ sub check_syncds_state {
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
 			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
+			
 			if ( !defined($parent_pending) ) {
 				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_pending key.\n";
 				if ( $script_mode != $SYNCDS ) {
@@ -856,40 +858,80 @@ sub check_syncds_state {
 					exit 1;
 				}
 			}
-			if ( $parent_pending == 1 && $wait_for_parents == 1) {
-				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
-				if ( $script_mode == $SYNCDS ) {
-					if ( $dispersion > 0 ) {
-						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-						for ( my $i = $dispersion; $i > 0; $i-- ) {
-							( $log_level >> $WARN ) && print ".";
-							sleep 1;
+			if ( defined($parent_reval_pending) ) {
+				( $log_level >> $DEBUG ) && print "DEBUG Parent Reval Pending key exists!\n";
+				if ( ( $parent_pending == 1 || $parent_reval_pending == 1 ) && $wait_for_parents == 1 ) {
+					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
+					if ( $script_mode == $SYNCDS ) {
+						if ( $dispersion > 0 ) {
+							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+							for ( my $i = $dispersion; $i > 0; $i-- ) {
+								( $log_level >> $WARN ) && print ".";
+								sleep 1;
+							}
+						}
+	
+						( $log_level >> $WARN ) && print "\n";
+						$upd_ref = &lwp_get($url);
+						if ( $upd_ref =~ m/^\d{3}$/ ) {
+							( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+							exit 1;
+						}
+						$upd_json = decode_json($upd_ref);
+						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+						if ( !defined($parent_pending) ) {
+							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+						}
+						if ( $parent_pending == 1 ) {
+							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+							exit 1;
+	
+						}
+						else {
+							( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
 						}
 					}
-
-					( $log_level >> $WARN ) && print "\n";
-					$upd_ref = &lwp_get($url);
-					if ( $upd_ref =~ m/^\d{3}$/ ) {
-						( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
-						exit 1;
-					}
-					$upd_json = decode_json($upd_ref);
-					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-					if ( !defined($parent_pending) ) {
-						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
-					}
-					if ( $parent_pending == 1 ) {
-						( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-						exit 1;
-
-					}
-					else {
-						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-					}
+				}			
+				else {
+					( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
 				}
 			}
 			else {
-				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
+				if ( $parent_pending == 1 && $wait_for_parents == 1 ) {
+					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
+					if ( $script_mode == $SYNCDS ) {
+						if ( $dispersion > 0 ) {
+							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+							for ( my $i = $dispersion; $i > 0; $i-- ) {
+								( $log_level >> $WARN ) && print ".";
+								sleep 1;
+							}
+						}
+	
+						( $log_level >> $WARN ) && print "\n";
+						$upd_ref = &lwp_get($url);
+						if ( $upd_ref =~ m/^\d{3}$/ ) {
+							( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+							exit 1;
+						}
+						$upd_json = decode_json($upd_ref);
+						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+						if ( !defined($parent_pending) ) {
+							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+						}
+						if ( $parent_pending == 1 ) {
+							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+							exit 1;
+	
+						}
+						else {
+							( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
+						}
+					}
+				}			
+				else {
+					( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
+				}
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
