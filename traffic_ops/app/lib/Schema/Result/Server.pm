@@ -211,6 +211,12 @@ __PACKAGE__->table("server");
   data_type: 'bigint'
   is_nullable: 1
 
+=head2 reval_pending
+
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -299,6 +305,8 @@ __PACKAGE__->add_columns(
   },
   "https_port",
   { data_type => "bigint", is_nullable => 1 },
+  "reval_pending",
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -323,7 +331,7 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54485_ip6_profile>
+=head2 C<idx_16629_ip6_profile>
 
 =over 4
 
@@ -335,9 +343,9 @@ __PACKAGE__->set_primary_key("id", "cachegroup", "type", "status", "profile");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54485_ip6_profile", ["ip6_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_16629_ip6_profile", ["ip6_address", "profile"]);
 
-=head2 C<idx_54485_ip_profile>
+=head2 C<idx_16629_ip_profile>
 
 =over 4
 
@@ -349,9 +357,9 @@ __PACKAGE__->add_unique_constraint("idx_54485_ip6_profile", ["ip6_address", "pro
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54485_ip_profile", ["ip_address", "profile"]);
+__PACKAGE__->add_unique_constraint("idx_16629_ip_profile", ["ip_address", "profile"]);
 
-=head2 C<idx_54485_se_id_unique>
+=head2 C<idx_16629_se_id_unique>
 
 =over 4
 
@@ -361,7 +369,7 @@ __PACKAGE__->add_unique_constraint("idx_54485_ip_profile", ["ip_address", "profi
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54485_se_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_16629_se_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -501,8 +509,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:3f6+Y6k32Vn3CDG7R7uToQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-21 19:34:06
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:KJKD6BEj4wc8uPGqonz13g
 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
