@@ -1024,10 +1024,12 @@ sub postupdate {
 	my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
 
 	if ( defined($use_reval_pending) && $use_reval_pending == 1 ) {
+		print STDERR "updating upd_pending and reval_pending\n";
 		$update_server->update( { upd_pending => $updated } );
 		$update_server->update( { reval_pending => $reval_updated } );
 	}
 	else {
+		print STDERR "updating upd_pending\n";
 		$update_server->update( { upd_pending => $updated } );
 	}
 
