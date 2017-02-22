@@ -16,7 +16,9 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 ALTER TABLE server ADD COLUMN reval_pending boolean NOT NULL DEFAULT false;
+INSERT INTO parameter (name, config_file, value, secure) VALUES ('use_reval_pending', 'global', '0', False);
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 ALTER TABLE server DROP COLUMN reval_pending;
+delete from parameter where name = 'use_reval_pending';
