@@ -52,12 +52,12 @@ is( $key_uri, "/riak/" . BUCKET . "/" . KEY );
 my $response = $riak_util->get( BUCKET, KEY );
 is( $response->{_rc},                        200 );
 is( $response->{_headers}->{'content-type'}, 'application/json' );
-is( $fake_answer,                            $response->{_content} );
+is( $fake_answer, $response->{_content} );
 
 #PUT
 $response = $riak_util->put( BUCKET, KEY, "value1" );
 is( $response->{_rc}, 200 );
-is( $fake_answer,     $response->{_content} );
+is( $fake_answer, $response->{_content} );
 
 #PUT - With Content Type
 $response = $riak_util->put( BUCKET, KEY, "value1", "application/json" );
@@ -67,7 +67,7 @@ is( $fake_answer,     $response->{_content} );
 #DELETE
 $response = $riak_util->delete( BUCKET, KEY );
 is( $response->{_rc}, 200 );
-is( $fake_answer,     $response->{_content} );
+is( $fake_answer, $response->{_content} );
 
 #PING
 $response = $riak_util->ping();
@@ -78,10 +78,5 @@ is( $fake_answer,     $response->{_content} );
 $response = $riak_util->stats();
 is( $response->{_rc}, 200 );
 is( $fake_answer,     $response->{_content} );
-
-#diag "response: " . Dumper($response);
-#my $response = $riak_util->send_retry( sub { Utils::Riak->get( BUCKET, KEY ) } );
-
-#my $response = $riak_util->get( BUCKET, KEY );
 
 done_testing();
