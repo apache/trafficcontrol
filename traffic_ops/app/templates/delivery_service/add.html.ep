@@ -110,7 +110,7 @@
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').show(speed);
-            $('#json_steering_row').hide(speed);
+            $('#client_steering_row').hide(speed);
             $('#ipv6_routing_enabled_row').show(speed);
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').hide(speed);
@@ -154,7 +154,7 @@
             $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').hide(speed);
             $('#ipv6_routing_enabled_row').show(speed);
-            $('#json_steering_row').hide(speed);
+            $('#client_steering_row').hide(speed);
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').show(speed);
             $('#dns_bypass_ip6_row').show(speed);
@@ -193,7 +193,7 @@
             $('#geo_limit_row').hide(speed);
             $('#http_bypass_fqdn_row').hide(speed);
             $('#ipv6_routing_enabled_row').hide(speed);
-            $('#json_steering_row').hide(speed);
+            $('#client_steering_row').hide(speed);
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
@@ -232,7 +232,7 @@
             $('#geo_limit_row').hide(speed);
             $('#http_bypass_fqdn_row').hide(speed);
             $('#ipv6_routing_enabled_row').show(speed);
-            $('#json_steering_row').show(speed);
+            $('#client_steering_row').show(speed);
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
