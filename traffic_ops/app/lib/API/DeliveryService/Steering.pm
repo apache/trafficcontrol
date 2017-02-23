@@ -62,7 +62,7 @@ sub find_steering {
         my $target_id = $row->target_id;
 
         if (! exists($steering{$row->steering_xml_id})) {
-            $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id, 'jsonDefault' => $row->json_default};
+            $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id, 'jsonDefault' => $row->client_steering};
         }
 
         my $steering_entry = $steering{$row->steering_xml_id};

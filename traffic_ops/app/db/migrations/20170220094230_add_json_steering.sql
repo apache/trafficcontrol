@@ -16,8 +16,8 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE deliveryservice ADD json_steering TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE deliveryservice ADD client_steering TINYINT(1) NOT NULL DEFAULT 0;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE deliveryservice drop json_steering;
+ALTER TABLE deliveryservice drop client_steering;

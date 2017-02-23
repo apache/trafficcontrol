@@ -1,24 +1,6 @@
 use utf8;
 package Schema::Result::Deliveryservice;
 
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-
-
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
@@ -308,7 +290,7 @@ __PACKAGE__->table("deliveryservice");
 =head2 logs_enabled
 
   data_type: 'tinyint'
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 multi_site_origin_algorithm
 
@@ -321,7 +303,7 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 1
   size: 255
 
-=head2 json_steering
+=head2 client_steering
 
   data_type: 'tinyint'
   default_value: 0
@@ -428,12 +410,12 @@ __PACKAGE__->add_columns(
   "geo_limit_countries",
   { data_type => "varchar", is_nullable => 1, size => 750 },
   "logs_enabled",
-  { data_type => "tinyint", is_nullable => 0 },
+  { data_type => "tinyint", is_nullable => 1 },
   "multi_site_origin_algorithm",
   { data_type => "tinyint", is_nullable => 1 },
   "geolimit_redirect_url",
   { data_type => "varchar", is_nullable => 1, size => 255 },
-  "json_steering",
+  "client_steering",
   { data_type => "tinyint", default_value => 0, is_nullable => 0 },
 );
 
@@ -645,8 +627,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-20 09:44:35
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:V7zjS2YajGvF7OOqr8GxJg
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-23 13:05:20
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:GP4+aqfs14NBJPP7yOVnGQ
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
