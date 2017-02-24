@@ -221,7 +221,7 @@
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
 		}
-		else if (type_selected.match(/^STEERING$/)) {
+		else if (type_selected.match(/STEERING$/)) {
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
             $('#signed_row').hide(speed);
