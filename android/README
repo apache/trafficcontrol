@@ -1,3 +1,0 @@
-# Camera5799 Android app
-
-## This Android app is a hybrid mobile application build with Cordova and Meteor. It consumes the microservices by calling the camera5799 backend. To install the app, download the ‘debug.apk’ file to your Android device. PLEASE NOTE that you will need to check the setting ‘Install from Unknown Source’ in your Android device since the application has not been signed.
