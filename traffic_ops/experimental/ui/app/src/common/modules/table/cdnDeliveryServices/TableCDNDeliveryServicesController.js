@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, locationUtils) {
+var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, $state, locationUtils) {
 
 	$scope.cdn = cdn;
 
@@ -25,6 +25,10 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 
 	$scope.editDeliveryService = function(id) {
 		locationUtils.navigateToPath('/configure/delivery-services/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 
 };
 
-TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', 'locationUtils'];
+TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', '$state', 'locationUtils'];
 module.exports = TableCDNDeliveryServicesController;

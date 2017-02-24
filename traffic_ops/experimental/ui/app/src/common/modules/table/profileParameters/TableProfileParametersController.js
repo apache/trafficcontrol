@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, profileParameters, $scope, locationUtils) {
+var TableProfileParametersController = function(profile, profileParameters, $scope, $state, locationUtils) {
 
 	$scope.profile = profile;
 
@@ -31,6 +31,10 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 		alert('not hooked up yet: remove Parameter from profile');
 	};
 
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', 'locationUtils'];
+TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', '$state', 'locationUtils'];
 module.exports = TableProfileParametersController;

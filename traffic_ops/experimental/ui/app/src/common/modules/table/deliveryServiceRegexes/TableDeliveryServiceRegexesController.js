@@ -17,18 +17,22 @@
  * under the License.
  */
 
-var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, locationUtils) {
+var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
 
-	$scope.regexes = _.find(regexes, function(dsRegexes) { return dsRegexes.dsName == deliveryService.xmlId; });
+	$scope.regexes = regexes;
 
-	$scope.addRegex = function() {
-		alert('not hooked up yet: addRegex to ds');
+	$scope.editRegex = function(dsId, regexId) {
+		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/' + regexId);
 	};
 
-	$scope.removeRegex = function() {
-		alert('not hooked up yet: removeRegex from ds');
+	$scope.createRegex = function(dsId) {
+		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/new');
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -36,11 +40,11 @@ var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $
 	angular.element(document).ready(function () {
 		$('#regexesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": -1
 		});
 	});
 
 };
 
-TableDeliveryServiceRegexesController.$inject = ['deliveryService', 'regexes', '$scope', 'locationUtils'];
+TableDeliveryServiceRegexesController.$inject = ['deliveryService', 'regexes', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceRegexesController;

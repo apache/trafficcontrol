@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypeServersController = function(type, servers, $scope, locationUtils) {
+var TableTypeServersController = function(type, servers, $scope, $state, locationUtils) {
 
 	$scope.type = type;
 
@@ -25,6 +25,10 @@ var TableTypeServersController = function(type, servers, $scope, locationUtils) 
 
 	$scope.editServer = function(id) {
 		locationUtils.navigateToPath('/configure/servers/' + id);
+	};
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -38,5 +42,5 @@ var TableTypeServersController = function(type, servers, $scope, locationUtils) 
 
 };
 
-TableTypeServersController.$inject = ['type', 'servers', '$scope', 'locationUtils'];
+TableTypeServersController.$inject = ['type', 'servers', '$scope', '$state', 'locationUtils'];
 module.exports = TableTypeServersController;

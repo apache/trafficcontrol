@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, formUtils, stringUtils, locationUtils, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
+var FormServerController = function(server, $scope, $location, $state, formUtils, stringUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -61,6 +61,11 @@ var FormServerController = function(server, $scope, $location, formUtils, string
             });
     };
 
+    var refresh = function() {
+        $state.reload(); // reloads all the resolves for the view
+    };
+
+
     // supposedly matches IPv4 and IPv6 formats. but actually need one that matches each. todo.
     var ipRegex = new RegExp(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/);
 
@@ -100,6 +105,24 @@ var FormServerController = function(server, $scope, $location, formUtils, string
         { value: false, label: 'false' },
         { value: true, label: 'true' }
     ];
+
+    $scope.queueServerUpdates = function(server) {
+        serverService.queueServerUpdates(server.id)
+            .then(
+                function() {
+                    refresh();
+                }
+            );
+    };
+
+    $scope.clearServerUpdates = function(server) {
+        serverService.clearServerUpdates(server.id)
+            .then(
+                function() {
+                    refresh();
+                }
+            );
+    };
 
     $scope.queueUpdates = function() {
         alert('not hooked up yet: queuing updates for server');
@@ -143,5 +166,5 @@ var FormServerController = function(server, $scope, $location, formUtils, string
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', 'formUtils', 'stringUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
 module.exports = FormServerController;

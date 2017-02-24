@@ -241,6 +241,42 @@ sub delete_by_name {
 	return $self->success_message("cdn was deleted.");
 }
 
+sub queue_updates {
+	my $self		= shift;
+	my $params		= $self->req->json;
+	my $cdn_id		= $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
+	}
+
+	my $cdn_servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
+
+	if ( $cdn_servers->count() < 1 ) {
+		return $self->alert("No servers found for cdn_id = $cdn_id");
+	}
+
+	my $setqueue = $params->{action};
+
+	if ( $setqueue eq "queue" ) {
+		$setqueue = 1;
+	}
+	elsif ( $setqueue eq "dequeue" ) {
+		$setqueue = 0;
+	}
+	else {
+		return $self->alert("Action required, Should be queue or dequeue.");
+	}
+
+	$cdn_servers->update( { upd_pending => $setqueue } );
+
+	my $response;
+	$response->{cdnId} = $cdn_id;
+	$response->{action} = $params->{action};
+	return $self->success($response);
+}
+
+
 sub configs_monitoring {
 	my $self      = shift;
 	my $cdn_name  = $self->param('name');
@@ -1050,19 +1086,20 @@ sub dnssec_keys {
 sub dnssec_keys_refresh {
 	my $self = shift;
 
-	# daemonize so we can avoid blocking
-	my $pid = $self->daemonize();
+	# fork and daemonize so we can avoid blocking
+	my $rc = $self->fork_and_daemonize();
 
-	if ( !defined($pid) || $pid < 0 ) {
-		my $error = "Unable to daemonize to check DNSSEC keys for refresh in the background";
+	if ( $rc < 0 ) {
+		my $error = "Unable to fork_and_daemonize to check DNSSEC keys for refresh in the background";
 		$self->app->log->fatal($error);
 		return $self->alert( { Error => $error } );
 	}
-	elsif ( $pid > 0 ) {
+	elsif ( $rc > 0 ) {
+    	# This is the parent, report success and return
 		return $self->success("Checking DNSSEC keys for refresh in the background");
 	}
 
-	# we're in the fork()ed process now
+	# we're in the fork()ed process now, do the work and exit
 	$self->refresh_keys();
 	exit(0);
 }

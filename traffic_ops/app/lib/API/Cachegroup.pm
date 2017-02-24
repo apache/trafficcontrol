@@ -45,15 +45,15 @@ sub index {
 		$criteria{'type'} = $type_id;
 	}
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ 'type' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
 				"id"                            => $row->id,
 				"name"                          => $row->name,
 				"shortName"                     => $row->short_name,
-				"latitude"                      => 0.0 + $row->latitude,
-				"longitude"                     => 0.0 + $row->longitude,
+				"latitude"                      => defined($row->latitude) ? 0.0 + $row->latitude : undef,
+				"longitude"                     => defined($row->longitude) ? 0.0 + $row->longitude : undef,
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
@@ -74,7 +74,7 @@ sub index_trimmed {
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
@@ -89,7 +89,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( { id => $id } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( { 'me.id' => $id }, { prefetch => [ 'type' ] } );
 
 	my @data = ();
 	my %idnames;
@@ -105,8 +105,8 @@ sub show {
 				"id"                            => $row->id,
 				"name"                          => $row->name,
 				"shortName"                     => $row->short_name,
-				"latitude"                      => 0.0 + $row->latitude,
-				"longitude"                     => 0.0 + $row->longitude,
+				"latitude"                      => defined($row->latitude) ? 0.0 + $row->latitude : undef,
+				"longitude"                     => defined($row->longitude) ? 0.0 + $row->longitude : undef,
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
@@ -390,7 +390,7 @@ sub postupdatequeue {
 	}
 
 	my $cdn = $params->{cdn};
-	my $cdn_id = $self->db->resultset('Cdn')->search( { name => $cdn } )->get_column('id')->single();
+	my $cdn_id = $params->{cdnId} // $self->db->resultset('Cdn')->search( { name => $cdn } )->get_column('id')->single();
 	if ( !defined($cdn_id) ) {
 		return $self->alert( "cdn " . $cdn . " does not exist." );
 	}
@@ -409,29 +409,20 @@ sub postupdatequeue {
 		return $self->alert("action should be queue or dequeue.");
 	}
 
-	my @profiles;
-	@profiles = $self->db->resultset('Server')->search(
-		{ 'cdn.name' => $cdn },
-		{
-			prefetch => 'cdn',
-			select   => 'me.profile',
-			distinct => 1
-		}
-	)->get_column('profile')->all();
-	my $update = $self->db->resultset('Server')->search(
+	my $servers = $self->db->resultset('Server')->search(
 		{
 			-and => [
-				cachegroup => $id,
-				profile    => { -in => \@profiles }
+				cachegroup	=> $id,
+				cdn_id		=> $cdn_id
 			]
 		}
 	);
 
 	my $response;
 	my @svrs = ();
-	if ( $update->count() > 0 ) {
-		$update->update( { upd_pending => $setqueue } );
-		my @row = $update->get_column('host_name')->all();
+	if ( $servers->count() > 0 ) {
+		$servers->update( { upd_pending => $setqueue } );
+		my @row = $servers->get_column('host_name')->all();
 		foreach my $svr (@row) {
 			push( @svrs, $svr );
 		}

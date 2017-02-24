@@ -98,8 +98,6 @@ sub view {
 		secondary_parent_name          => $secondary_parent_name,
 	);
 
-	# $self->stash( cg_data => $data );
-
 	&stash_role($self);
 	$self->stash( fbox_layout => 1, cg_data => $data, selected_type => $selected_type );
 

@@ -6,5 +6,11 @@
 
 * Ensure that your new Postgres service is running (local or remote)
 
+* Run your Postgres Instance and configure mysql-to-postgres.env accordingly
+
+* A sample Postgres Docker container has been provided for testing
+  * `sh start_postgres.sh`
+  
+
 * Run the Mysql to Postgres Migration Docker flow
   * `sh migrate.sh`

@@ -29,15 +29,11 @@ sub all {
 
 	my $rs;
 	if ( &is_privileged($self) ) {
-		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } } ], order_by => 'xml_id' } );
 
 		my @regexes;
-		while ( my $row = $rs->next ) {
-			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
-			my $xml_id   = defined( $row->xml_id ) ? $row->xml_id    : "";
-
-			my $re_rs = $row->deliveryservice_regexes;
-
+		while ( my $ds = $rs->next ) {
+			my $re_rs = $ds->deliveryservice_regexes;
 			my @matchlist;
 			while ( my $re_row = $re_rs->next ) {
 				push(
@@ -48,7 +44,7 @@ sub all {
 					}
 				);
 			}
-			my $delivery_service->{dsName} = $xml_id;
+			my $delivery_service->{dsName} = $ds->xml_id;
 			$delivery_service->{regexes} = \@matchlist;
 			push( @regexes, $delivery_service );
 		}
@@ -73,7 +69,7 @@ sub index {
 	my %criteria;
 	$criteria{'deliveryservice'} = $ds_id;
 
-	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria, { order_by => 'me.set_number' } );
+	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria, { prefetch => [ { 'regex' => 'type' } ], order_by => 'me.set_number' } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -103,7 +99,7 @@ sub show {
 	$criteria{'deliveryservice'} = $ds_id;
 	$criteria{'regex'}           = $regex_id;
 
-	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria );
+	my $rs_data = $self->db->resultset("DeliveryserviceRegex")->search( \%criteria, { prefetch => [ { 'regex' => 'type' } ] } );
 	my @data    = ();
 	while ( my $row = $rs_data->next ) {
 		push(

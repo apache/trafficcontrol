@@ -55,12 +55,8 @@ sub index {
 		$criteria{'me.id'} = { -in => \@ds_ids },;
 	}
 
-	my $rs_data = $self->db->resultset("Deliveryservice")->search( \%criteria, { order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Deliveryservice")->search( \%criteria, { prefetch => [ 'cdn', 'profile', 'type' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
-		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
-		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
-
 		push(
 			@data, {
 				"active"                   => \$row->active,
@@ -76,7 +72,6 @@ sub index {
 				"dnsBypassTtl"             => $row->dns_bypass_ttl,
 				"dscp"                     => $row->dscp,
 				"edgeHeaderRewrite"        => $row->edge_header_rewrite,
-				"exampleURLs"              => \@example_urls,
 				"geoLimitRedirectURL"      => $row->geolimit_redirect_url,
 				"geoLimit"                 => $row->geo_limit,
 				"geoLimitCountries"        => $row->geo_limit_countries,
@@ -95,8 +90,8 @@ sub index {
 				"longDesc2"                => $row->long_desc_2,
 				"maxDnsAnswers"            => $row->max_dns_answers,
 				"midHeaderRewrite"         => $row->mid_header_rewrite,
-				"missLat"                  => 0.0 + $row->miss_lat,
-				"missLong"                 => 0.0 + $row->miss_long,
+				"missLat"                  => defined($row->miss_lat) ? 0.0 + $row->miss_lat : undef,
+				"missLat"                  => defined($row->miss_long) ? 0.0 + $row->miss_long : undef,
 				"multiSiteOrigin"          => \$row->multi_site_origin,
 				"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $row->org_server_fqdn,
@@ -192,8 +187,8 @@ sub show {
 				"matchList"                => \@matchlist,
 				"maxDnsAnswers"            => $row->max_dns_answers,
 				"midHeaderRewrite"         => $row->mid_header_rewrite,
-				"missLat"                  => 0.0 + $row->miss_lat,
-				"missLong"                 => 0.0 + $row->miss_long,
+				"missLat"                  => defined($row->miss_lat) ? 0.0 + $row->miss_lat : undef,
+				"missLat"                  => defined($row->miss_long) ? 0.0 + $row->miss_long : undef,
 				"multiSiteOrigin"          => \$row->multi_site_origin,
 				"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $row->org_server_fqdn,
@@ -570,7 +565,7 @@ sub get_deliveryservices_by_serverId {
 	my $server_ds_ids = $self->db->resultset('DeliveryserviceServer')->search( { server => $server_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')->search(
-		{ 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }
+		{ 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ]}
 	);
 
 	my @data;
@@ -645,7 +640,7 @@ sub get_deliveryservices_by_userId {
 	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')->search(
-		{ 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }
+		{ 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ]}
 	);
 
 	my @data;
@@ -722,7 +717,7 @@ sub routing {
 
 	if ( $self->is_valid_delivery_service($id) ) {
 		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
-			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
 			my $cdn_name = $result->cdn->name;
 
 			# we expect type to be a dns or http type, but strip off any trailing bit

@@ -59,7 +59,13 @@ At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist_
   
 #### traffic_monitor and traffic_router:
 * jdk 6.0 or higher
+  * CentOS 6 (java-1.[6,7,8].0-openjdk, java-1.[6,7,8].0-openjdk-devel)
 * apache-maven 3.3.1 or higher
+
+#### traffic_portal
+* npm (yum install npm)
+  * bower (npm install -g bower)
+  * grunt (npm install -g grunt)
  
 # Docker build instructions
 

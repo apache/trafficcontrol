@@ -62,7 +62,7 @@ sub readphys_location {
 sub readphys_locationtrimmed {
 	my $self = shift;
 	my @data;
-	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { prefetch => ['region'], order_by => 'me.name' } );
+	my $rs_data = $self->db->resultset("PhysLocation")->search( undef, { order_by => 'me.name' } );
 	while ( my $row = $rs_data->next ) {
 
 		next if $row->short_name eq 'UNDEF';
@@ -79,7 +79,7 @@ sub readphys_locationtrimmed {
 sub readregion {
 	my $self = shift;
 	my @data;
-	my $rs_data = $self->db->resultset("Region")->search( undef, { prefetch => ['division'], order_by => 'me.name' } );
+	my $rs_data = $self->db->resultset("Region")->search( undef, { order_by => 'me.name' } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {

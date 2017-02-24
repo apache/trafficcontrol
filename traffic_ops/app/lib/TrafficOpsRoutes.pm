@@ -376,9 +376,6 @@ sub api_routes {
 	my $version   = shift;
 	my $namespace = shift;
 
-	# -- API DOCS
-	$r->get("/api/$version/docs")->to( 'ApiDocs#index', namespace => $namespace );
-
 	# -- ASNS (CRANS)
 	$r->get("/api/1.1/asns")->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get("/api/1.2/asns")->over( authenticated => 1 )->to( 'Asn#index',     namespace => $namespace );
@@ -421,6 +418,9 @@ sub api_routes {
 	$r->post("/api/$version/cdns")->over( authenticated => 1 )->to( 'Cdn#create', namespace => $namespace );
 	$r->put("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#update', namespace => $namespace );
 	$r->delete("/api/$version/cdns/:id")->over( authenticated => 1 )->to( 'Cdn#delete', namespace => $namespace );
+
+	# -- CDNS: QUEUE UPDATES
+	$r->post("/api/$version/cdns/:id/queue_update")->over( authenticated => 1 )->to( 'Cdn#queue_updates', namespace => $namespace );
 
 	# -- CDNS: HEALTH
 	$r->get("/api/$version/cdns/health")->over( authenticated => 1 )->to( 'Cdn#health', namespace => $namespace );

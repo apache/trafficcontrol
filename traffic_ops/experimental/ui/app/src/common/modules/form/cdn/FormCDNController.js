@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils, locationUtils) {
+var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils, locationUtils, cdnService) {
 
     $scope.cdn = cdn;
 
@@ -44,12 +44,12 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         alert('not hooked up yet: cachegroupHealth for CDN');
     };
 
-    $scope.queueUpdates = function() {
-        alert('not hooked up yet: queuing updates for all cdn servers');
+    $scope.queueServerUpdates = function(cdn) {
+        cdnService.queueServerUpdates(cdn.id);
     };
 
-    $scope.dequeueUpdates = function() {
-        alert('not hooked up yet: dequeuing updates for all cdn servers');
+    $scope.clearServerUpdates = function(cdn) {
+        cdnService.clearServerUpdates(cdn.id);
     };
 
     $scope.manageSnapshots = function() {
@@ -72,5 +72,5 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
 
 };
 
-FormCDNController.$inject = ['cdn', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
+FormCDNController.$inject = ['cdn', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService'];
 module.exports = FormCDNController;
