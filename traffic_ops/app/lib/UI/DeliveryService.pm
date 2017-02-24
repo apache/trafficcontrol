@@ -1131,8 +1131,8 @@ sub create_dnssec_keys {
 	my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
 
 	#create the ds domain name for dnssec keys
-	my $domain_name             = get_cdn_domain($ds_id);
-	my $deliveryservice_regexes = get_regexp_set($ds_id);
+	my $domain_name             = get_cdn_domain($self, $ds_id);
+	my $deliveryservice_regexes = get_regexp_set($self, $ds_id);
 	my $rs_ds =
 		$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
 	my $data = $rs_ds->single;
