@@ -46,7 +46,7 @@ var DeliveryServiceViewOverviewController = function($scope, $location, $state, 
             windowClass: 'ds-config-modal',
             resolve: {
                 deliveryService: function () {
-                    return angular.copy(ds);
+                    return deliveryServiceService.getDeliveryService(ds.id);
                 }
             }
         });
