@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+./traffic_router/pom.xml<?xml version="1.0" encoding="UTF-8"?>
 
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
@@ -25,16 +25,53 @@ under the License.
 	<parent>
 		<artifactId>traffic_router</artifactId>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-		<version>2.0.0</version>
+		<version>1.9.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>traffic_router_geolocation</artifactId>
+	<artifactId>traffic_router_shared</artifactId>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<version>3.6</version>
+				<executions>
+					<execution>
+						<id>PMD</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<targetJdk>${java.version}</targetJdk>
+					<verbose>true</verbose>
+					<failurePriority>5</failurePriority>
+					<rulesets>
+						<ruleset>build/pmd/ruleset.xml</ruleset>
+					</rulesets>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>${commons-lang3.version}</version>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.4.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
@@ -57,5 +94,6 @@ under the License.
 			<artifactId>junit</artifactId>
 		</dependency>
 	</dependencies>
+
 
 </project>
