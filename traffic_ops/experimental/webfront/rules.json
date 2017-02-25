@@ -1,13 +1,32 @@
-	[
-		{"Host": "local.com", "Path" : "/login",      "Forward": "localhost:8080", "secure": false},
-		{"Host": "local.com", "Path" : "/users",      "Forward": "localhost:8081", "secure": true },
-		{"Host": "local.com", "Path" : "/cameras",    "Forward": "localhost:8082", "secure": true },
-		{"Host": "local.com", "Path" : "/register",   "Forward": "localhost:8083", "secure": false},
-		{"Host": "local.com", "Path" : "/video",      "Forward": "ec2-52-39-10-124.us-west-2.compute.amazonaws.com", "secure": true},
-		{"Host": "local.com", "Path" : "/video",      "Forward": "ec2-52-39-10-124.us-west-2.compute.amazonaws.com", "secure": true},
-		{"Host": "local.com", "Path" : "/feed",       "Forward": "ec2-52-38-216-71.us-west-2.compute.amazonaws.com", "secure": true},
-		{"Host": "local.com", "Path" : "/livestream", "Forward": "ec2-52-26-0-251.us-west-2.compute.amazonaws.com", "secure": true},
-		{"Host": "local.com", "Path" : "/control",    "Forward": "ec2-52-39-30-100.us-west-2.compute.amazonaws.com", "secure": true},
-		{"Host": "local.com", "Path" : "/last", "Forward": "localhost:8086", "secure": false}
-	]
-
+[
+  {
+    "host": "domain.com",
+    "path": "/login",
+    "forward": "localhost:9004",
+    "secure": false
+  },
+  {
+    "host": "domain.com",
+    "path": "/ds/",
+    "forward": "localhost:8081",
+    "secure": true,
+    "capabilities": {
+    	"GET": "read-ds",
+    	"POST": "write-ds",
+    	"PUT": "write-ds",
+    	"PATCH": "write-ds"
+    }
+  },
+  {
+    "host": "domain.com",
+    "path": "/cachegroups/",
+    "forward": "localhost:8082",
+    "secure": true,
+    "capabilities": {
+    	"GET": "read-cg",
+    	"POST": "write-cg",
+    	"PUT": "write-cg",
+    	"PATCH": "write-cg"
+    }
+  }
+]

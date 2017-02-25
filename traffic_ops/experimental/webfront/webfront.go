@@ -13,11 +13,14 @@ import (
 	"net/http/httputil"
 	"os"
 	"path"
-	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
+
+// TODO(amiry) - Handle token expiration
+// TODO(amiry) - Handle refresh tokens
 
 // Server implements an http.Handler that acts as a reverse proxy
 type Server struct {
@@ -28,42 +31,44 @@ type Server struct {
 
 // Rule represents a rule in a configuration file.
 type Rule struct {
-	Host    string // to match against request Host header
-	Path    string // to match against a path (start)
-	Forward string // reverse proxy map-to
-	Secure  bool   // protect with jwt?
+	Host          string              // to match against request Host header
+	Path          string              // to match against a path (start)
+	Forward       string              // reverse proxy map-to
+	Secure        bool                // protect with jwt?
+	Capabilities  map[string]string   // map HTTP methods to capabilitues  
 
 	handler http.Handler
 }
 
-type loginJson struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
+type Claims struct {
+    Capabilities []string `json:"cap"`
+    jwt.StandardClaims
 }
 
 // Config holds the configuration of the server.
 type Config struct {
-	HTTPSAddr    string `json:"httpsAddr"`
-	RuleFile     string `json:"ruleFile"`
-	PollInterval int    `json:"pollInterval"`
+	RuleFile     string `json:"rule-file"`
+	PollInterval int    `json:"poll-interval"`
+	ListenPort   int    `json:"listen-port"`
 }
 
 var Logger *log.Logger
 
 func printUsage() {
 	exampleConfig := `{
-	"httpsAddr": ":9000",
-	"ruleFile": "rules.json",
-	"pollInterval": 60
+	"listen-port":   9000,
+	"rule-file":     "rules.json",
+	"poll-interval": 60
 }`
-	Logger.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
-	Logger.Println("")
-	Logger.Println("Example config file:")
-	Logger.Println(exampleConfig)
+	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
+	fmt.Println("")
+	fmt.Println("Example config-file:")
+	fmt.Println(exampleConfig)
 }
 
 func main() {
-	if len(os.Args) < 2 {
+
+	if len(os.Args) < 3 {
 		printUsage()
 		return
 	}
@@ -75,6 +80,7 @@ func main() {
 		Logger.Println("Error opening config file:", err)
 		return
 	}
+
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
@@ -82,7 +88,7 @@ func main() {
 		Logger.Println("Error reading config file:", err)
 		return
 	}
-	Logger.Println("Starting webfront...")
+
 	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
 	if err != nil {
 		Logger.Fatal(err)
@@ -97,17 +103,19 @@ func main() {
 	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
 		Logger.Fatal("server.key file not found")
 	}
-	http.ListenAndServeTLS(config.HTTPSAddr, "server.pem", "server.key", s)
+
+	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
 
 	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte("CAmeRAFiveSevenNineNine"), nil
+		return []byte(os.Args[2]), nil
 	})
 	return token, err
 }
@@ -117,7 +125,7 @@ func validateToken(tokenString string) (*jwt.Token, error) {
 func NewServer(file string, poll time.Duration) (*Server, error) {
 	s := new(Server)
 	if err := s.loadRules(file); err != nil {
-		return nil, err
+		Logger.Fatal("Error loading rules file: ", err)
 	}
 	go s.refreshRules(file, poll)
 	return s, nil
@@ -127,53 +135,65 @@ func NewServer(file string, poll time.Duration) (*Server, error) {
 // request with the Rule's handler. If the rule's secure field is true, it will
 // only allow access if the request has a valid JWT bearer token.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	isSecure := s.isSecure(r)
-	tokenValid := false
-	token, err := validateToken(r.Header.Get("Authorization"))
-	if err == nil {
-		tokenValid = true
-	} else {
-		Logger.Println("Token Error:", err.Error())
+
+	rule := s.getRule(r)
+	if rule == nil {
+		Logger.Printf("%v %v No mapping in rules file!", r.Method, r.URL.RequestURI())
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
 	}
 
-	if isSecure {
+	isAuthorized := false
+
+	if rule.Secure {
+		tokenValid := false
+		token, err := validateToken(r.Header.Get("Authorization"))
+
+		if err == nil {
+			tokenValid = true
+		} else {
+			Logger.Println("Token Error:", err.Error())
+		}
+
 		if !tokenValid {
-			Logger.Println(r.URL.Path + ": valid token required, but none found!")
+			Logger.Printf("%v %v Valid token required, but none found!", r.Method, r.URL.RequestURI())
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		tokenUser := token.Claims["User"]
 
-		re := regexp.MustCompile("[^/]+")
-		params := re.FindAllString(r.URL.Path, -1)
-		// Logger.Println(">>>", r.URL.Path, " >>> ", len(params))
-		if len(params) < 2 {
-			Logger.Println("Invalid path: ", r.URL.Path)
-			// TODO add root user exemption here.
-			http.Error(w, "Invalid request - user not found.", http.StatusBadRequest)
+		claims, ok := token.Claims.(*Claims)
+		if !ok {
+			Logger.Printf("%v %v Valid token found, but cannot parse claims!", r.Method, r.URL.RequestURI())
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		pathUser := params[1]
-		if pathUser != tokenUser {
-			if tokenUser != "root" {
-				Logger.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", tokenUser, " != ", pathUser, " - deny")
-				http.Error(w, "Not Authorized", http.StatusUnauthorized)
-				return
-			} else {
-				Logger.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", tokenUser, " - allow")
+
+		// Authorization: Check is the list of capabilities in the token's claims contains 
+		// the reqired capability that is listed in the rule
+		for _, c := range claims.Capabilities {
+        	if c == rule.Capabilities[r.Method] {
+				isAuthorized = true
+				break
 			}
-		}
-		Logger.Println(r.Method+" "+r.URL.RequestURI()+": valid token found, identified user:", token.Claims["User"], " matches path - allow")
+        }
+
+		Logger.Printf("%v %v Valid token. Subject=%v, ExpiresAt=%v, Capabilities=%v, Required=%v, Authorized=%v", 
+			r.Method, r.URL.RequestURI(), claims.Subject, claims.ExpiresAt, claims.Capabilities, 
+			rule.Capabilities[r.Method], isAuthorized)
+
 	} else {
-		Logger.Println(r.Method + " " + r.URL.RequestURI() + ": no token required - allow")
+		isAuthorized = true
 	}
 
-	if h := s.handler(r); h != nil {
-		h.ServeHTTP(w, r)
-		return
+	if isAuthorized {
+		if h := rule.handler; h != nil {
+			h.ServeHTTP(w, r)
+			return
+		}
 	}
-	Logger.Println(r.Method + " " + r.URL.Path + ": no mapping in rules file!")
-	http.Error(w, "Not found.", http.StatusNotFound)
+
+	http.Error(w, "Not Authorized", http.StatusUnauthorized)
+	return
 }
 
 func rejectNoToken(handler http.Handler) http.HandlerFunc {
@@ -182,44 +202,26 @@ func rejectNoToken(handler http.Handler) http.HandlerFunc {
 	}
 }
 
-// isSecure returns the true if this path should be protected by a jwt
-func (s *Server) isSecure(req *http.Request) bool {
+func (s *Server) getRule(req *http.Request) *Rule {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	h := req.Host
-	p := req.URL.Path
-	// Some clients include a port in the request host; strip it.
-	if i := strings.Index(h, ":"); i >= 0 {
-		h = h[:i]
-	}
-	for _, r := range s.rules {
-		// Logger.Println(p, "==", r.Path)
-		if strings.HasPrefix(p, r.Path) {
-			return r.Secure
-		}
-	}
-	Logger.Println("returning hard false")
-	return true
-}
 
-// handler returns the appropriate Handler for the given Request,
-// or nil if none found.
-func (s *Server) handler(req *http.Request) http.Handler {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
 	h := req.Host
 	p := req.URL.Path
+
 	// Some clients include a port in the request host; strip it.
 	if i := strings.Index(h, ":"); i >= 0 {
 		h = h[:i]
 	}
+
 	for _, r := range s.rules {
-		// Logger.Println(p, "==", r.Path)
 		if strings.HasPrefix(p, r.Path) {
-			return r.handler
+			// Logger.Printf("Found rule")
+			return r
 		}
 	}
-	Logger.Println("returning nil")
+
+	// Logger.Printf("Rule not found")
 	return nil
 }
 
@@ -227,7 +229,7 @@ func (s *Server) handler(req *http.Request) http.Handler {
 // set if the file has been modified.
 func (s *Server) refreshRules(file string, poll time.Duration) {
 	for {
-		// Logger.Println("loading file")
+		// Logger.Printf("loading rule file")
 		if err := s.loadRules(file); err != nil {
 			Logger.Println(file, ":", err)
 		}
@@ -272,7 +274,7 @@ func parseRules(file string) ([]*Rule, error) {
 	for _, r := range rules {
 		r.handler = makeHandler(r)
 		if r.handler == nil {
-			Logger.Printf("bad rule: %#v", r)
+			Logger.Printf("Bad rule: %#v", r)
 		}
 	}
 	return rules, nil

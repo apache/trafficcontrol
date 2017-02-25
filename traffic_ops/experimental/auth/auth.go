@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -11,24 +12,33 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"time"
 )
 
 // Config holds the configuration of the server.
 type Config struct {
-	DbName       string `json:"dbName"`
-	DbUser       string `json:"dbUser"`
-	DbPassword   string `json:"dbPassword"`
-	DbServer     string `json:"dbServer,omitempty"`
-	DbPort       uint   `json:"dbPort,omitempty"`
-	ListenerPort string `json:"listenerPort"`
+	DbName      string `json:"db-name"`
+	DbUser      string `json:"db-user"`
+	DbPassword  string `json:"db-password"`
+	DbServer    string `json:"db-server"`
+	DbPort      uint   `json:"db-port"`
+	ListenPort  uint   `json:"listen-port"`
 }
 
-type User struct {
-	Username  string `db:"username" json:"username"`
-	FirstName string `db:"first_name" json:"firstName,omitempty"`
-	LastName  string `db:"last_name" json:"lastName,omitempty"`
-	Password  string `db:"password" json:"Password"`
+type Login struct {
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+}
+
+type TmUser struct {
+	Role        uint   `db:"role"`
+	Password    string `db:"local_passwd"`
+}
+
+type Claims struct {
+    Capabilities []string `json:"cap"`
+    jwt.StandardClaims
 }
 
 type TokenResponse struct {
@@ -37,30 +47,29 @@ type TokenResponse struct {
 
 var db *sqlx.DB // global and simple
 
-func printUsage() {
-	exampleConfig := `{
-	"dbName":"my-db",
-	"dbUser":"my-user",
-	"dbPassword":"secret",
-	"dbServer":"localhost",
-	"dbPort":5432,
-	"listenerPort":"8080"
-}`
-	Logger.Println("Usage: " + path.Base(os.Args[0]) + " configfile")
-	Logger.Println("")
-	Logger.Println("Example config file:")
-	Logger.Println(exampleConfig)
-}
-
 var Logger *log.Logger
 
+func printUsage() {
+	exampleConfig := `{
+	"db_name":     "my-db",
+	"db_user":     "my-user",
+	"db_password": "secret",
+	"db_server":   "localhost",
+	"db_port":     5432,
+	"listen_port": 9004
+}`
+	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
+	fmt.Println("")
+	fmt.Println("Example config file:")
+	fmt.Println(exampleConfig)
+}
+
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		printUsage()
 		return
 	}
 
-	// log.SetOutput(os.Stdout)
 	Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	file, err := os.Open(os.Args[1])
@@ -68,6 +77,7 @@ func main() {
 		Logger.Println("Error opening config file:", err)
 		return
 	}
+
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
@@ -82,15 +92,18 @@ func main() {
 		return
 	}
 
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/login", handler)
+	
 	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
 		Logger.Fatal("server.pem file not found")
 	}
+
 	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
 		Logger.Fatal("server.key file not found")
 	}
-	Logger.Printf("Starting server on port " + config.ListenerPort + "...")
-	Logger.Fatal(http.ListenAndServeTLS(":"+config.ListenerPort, "server.pem", "server.key", nil))
+
+	Logger.Printf("Starting server on port %d...", config.ListenPort)
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", nil))
 }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
@@ -107,53 +120,80 @@ func InitializeDatabase(username, password, dbname, server string, port uint) (*
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
+
 	if r.Method == "POST" {
-		var u User
-		userlist := []User{}
+		var login Login
+		tmUserlist := []TmUser{}
 		body, err := ioutil.ReadAll(r.Body)
-		log.Println(string(body))
 		if err != nil {
 			Logger.Println("Error reading body: ", err.Error())
 			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = json.Unmarshal(body, &u)
+		
+		err = json.Unmarshal(body, &login)
 		if err != nil {
-			Logger.Println("Error unmarshalling JSON: ", err.Error())
+			Logger.Println("Invalid JSON: ", err.Error())
 			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		stmt, err := db.PrepareNamed("SELECT * FROM users WHERE username=:username")
-		err = stmt.Select(&userlist, u)
+		
+		stmt, err := db.PrepareNamed("SELECT role,local_passwd FROM tm_user WHERE username=:username")
 		if err != nil {
-			Logger.Println(err.Error())
+			Logger.Println("Database error: ", err.Error())
 			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if len(userlist) == 0 || userlist[0].Password != u.Password {
-			http.Error(w, "Invalid username/password ", http.StatusUnauthorized)
+
+		err = stmt.Select(&tmUserlist, login)
+		if err != nil {
+			Logger.Println("Database error: ", err.Error())
+			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		token := jwt.New(jwt.SigningMethodHS256)
-		token.Claims["User"] = u.Username
-		token.Claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-		tokenString, err := token.SignedString([]byte("CAmeRAFiveSevenNineNine"))
+    	hasher := sha1.New()
+    	hasher.Write([]byte(login.Password))
+    	hashedPassword := fmt.Sprintf("%x", hasher.Sum(nil))
+
+		if len(tmUserlist) == 0 || tmUserlist[0].Password != string(hashedPassword) {
+			Logger.Printf("Invalid username/password, username %s", login.Username)
+			http.Error(w, "Invalid username/password", http.StatusUnauthorized)
+			return
+		}
+
+		Logger.Printf("User %s authenticated", login.Username)
+
+		claims := Claims {
+	        []string{"read-ds", "write-ds", "read-cg"},	// TODO(amiry) - Adding hardcoded capabilities as a POC. 
+	        											// Need to read from TO role tables when tables are ready
+	        jwt.StandardClaims {
+	        	Subject: login.Username,
+	            ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),	// TODO(amiry) - We will need to use shorter expiration, 
+	            													// and use refresh tokens to extend access
+	        },
+	    }
+
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+		tokenString, err := token.SignedString([]byte(os.Args[2]))
 		if err != nil {
 			Logger.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		js, err := json.Marshal(TokenResponse{Token: tokenString})
 		if err != nil {
 			Logger.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// w.WriteHeader(http.StatusOK)
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
 		return
 	}
+
 	http.Error(w, r.Method+" "+r.URL.Path+" not valid for this microservice", http.StatusNotFound)
 }
