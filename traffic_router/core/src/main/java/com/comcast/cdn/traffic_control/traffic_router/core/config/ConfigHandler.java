@@ -126,6 +126,11 @@ public class ConfigHandler {
 			date = new Date(sts * 1000L);
 
 			if (sts <= getLastSnapshotTimestamp()) {
+				if (sts == getLastSnapshotTimestamp()) {
+					//only call this if they are equal so that the lastConfigCheck stat is updated
+					//if the incoming timestamp is <, there could be a problem so we don't want to update the stat
+					trafficRouterManager.setCacheRegister(null);
+				}
 				cancelled.set(false);
 				isProcessing.set(false);
 				publishStatusQueue.clear();
