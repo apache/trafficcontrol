@@ -13,14 +13,13 @@ import (
 	"net/http/httputil"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-// TODO(amiry) - Handle token expiration
 // TODO(amiry) - Handle refresh tokens
-// TODO(amiry) - Where to keep the jwt secret? In the command line
 
 // Server implements an http.Handler that acts as a reverse proxy
 type Server struct {
@@ -47,20 +46,20 @@ type Claims struct {
 
 // Config holds the configuration of the server.
 type Config struct {
-	HTTPSAddr    string `json:"httpsAddr"`
-	RuleFile     string `json:"ruleFile"`
-	PollInterval int    `json:"pollInterval"`
+	RuleFile     string `json:"rule-file"`
+	PollInterval int    `json:"poll-interval"`
+	ListenPort   int    `json:"listen-port"`
 }
 
 var Logger *log.Logger
 
 func printUsage() {
 	exampleConfig := `{
-	"httpsAddr": ":9000",
-	"ruleFile": "rules.json",
-	"pollInterval": 60
+	"listen-port":   9000,
+	"rule-file":     "rules.json",
+	"poll-interval": 60
 }`
-	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file")
+	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
 	fmt.Println("")
 	fmt.Println("Example config-file:")
 	fmt.Println(exampleConfig)
@@ -68,7 +67,7 @@ func printUsage() {
 
 func main() {
 
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		printUsage()
 		return
 	}
@@ -80,6 +79,7 @@ func main() {
 		Logger.Println("Error opening config file:", err)
 		return
 	}
+
 	decoder := json.NewDecoder(file)
 	config := Config{}
 	err = decoder.Decode(&config)
@@ -87,7 +87,7 @@ func main() {
 		Logger.Println("Error reading config file:", err)
 		return
 	}
-	Logger.Println("Starting webfront...")
+
 	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
 	if err != nil {
 		Logger.Fatal(err)
@@ -102,7 +102,9 @@ func main() {
 	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
 		Logger.Fatal("server.key file not found")
 	}
-	http.ListenAndServeTLS(config.HTTPSAddr, "server.pem", "server.key", s)
+
+	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
@@ -112,7 +114,7 @@ func validateToken(tokenString string) (*jwt.Token, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte("CAmeRAFiveSevenNineNine"), nil
+		return []byte(os.Args[2]), nil
 	})
 	return token, err
 }
@@ -165,9 +167,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Authorization: Check is the list of capabilities in the token's claims contains the reqired capability
-		// that is listed in the rule
-		Logger.Printf("Required capabilities %v", rule.Capabilities)
+		// Authorization: Check is the list of capabilities in the token's claims contains 
+		// the reqired capability that is listed in the rule
 		for _, c := range claims.Capabilities {
         	if c == rule.Capabilities[r.Method] {
 				isAuthorized = true
