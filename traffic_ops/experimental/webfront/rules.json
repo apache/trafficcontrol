@@ -1,0 +1,32 @@
+[
+  {
+    "host": "local.com",
+    "path": "/login",
+    "forward": "localhost:8080",
+    "secure": false
+  },
+  {
+    "host": "local.com",
+    "path": "/a",
+    "forward": "localhost:8081",
+    "secure": true,
+    "capabilities": {
+    	"GET": "read-a",
+    	"POST": "write-a",
+    	"PUT": "write-a",
+    	"PATCH": "write-a"
+    }
+  },
+  {
+    "host": "local.com",
+    "path": "/b",
+    "forward": "localhost:8082",
+    "secure": true,
+    "capabilities": {
+    	"GET": "read-b",
+    	"POST": "write-b",
+    	"PUT": "write-b",
+    	"PATCH": "write-b"
+    }
+  }
+]
