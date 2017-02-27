@@ -140,6 +140,9 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 
 var healthPollCount int
 
+// PollIntervalRatio is the ratio of the configuration interval to poll. The configured intervals are 'target' times, so we actually poll at some small fraction less, in attempt to make the actual poll marginally less than the target.
+const PollIntervalRatio = float64(0.97) // TODO make config?
+
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
 func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config) (time.Duration, time.Duration, time.Duration, error) {
 	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
@@ -176,6 +179,9 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 	}
 	healthPollInterval := trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
 
+	healthPollInterval = time.Duration(float64(healthPollInterval) * PollIntervalRatio)
+	peerPollInterval = time.Duration(float64(peerPollInterval) * PollIntervalRatio)
+	statPollInterval = time.Duration(float64(statPollInterval) * PollIntervalRatio)
 	return healthPollInterval, peerPollInterval, statPollInterval, nil
 }
 
