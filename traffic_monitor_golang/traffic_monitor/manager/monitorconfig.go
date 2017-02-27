@@ -138,13 +138,11 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 	return time.Duration(t) * time.Millisecond
 }
 
-var healthPollCount int
-
 // PollIntervalRatio is the ratio of the configuration interval to poll. The configured intervals are 'target' times, so we actually poll at some small fraction less, in attempt to make the actual poll marginally less than the target.
 const PollIntervalRatio = float64(0.97) // TODO make config?
 
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
-func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config) (time.Duration, time.Duration, time.Duration, error) {
+func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config, logMissingHeartbeatParam bool) (time.Duration, time.Duration, time.Duration, error) {
 	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
 	if !peerPollIntervalExists {
 		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'peers.polling.interval', not setting config changes.\n")
@@ -168,9 +166,8 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
 	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
 	if !healthPollIntervalExists {
-		if healthPollCount == 0 { //only log this once
+		if logMissingHeartbeatParam {
 			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
-			healthPollCount++
 		}
 		healthPollIntervalInt = statPollIntervalInt
 	} else if !healthPollIntervalIsInt {
@@ -206,6 +203,9 @@ func monitorConfigListen(
 		}
 		os.Exit(1) // The Monitor can't run without a MonitorConfigManager
 	}()
+
+	logMissingHeartbeatParam := true
+
 	for monitorConfig := range monitorConfigPollChan {
 		monitorConfigTS.Set(monitorConfig)
 		healthURLs := map[string]poller.PollConfig{}
@@ -213,7 +213,9 @@ func monitorConfigListen(
 		peerURLs := map[string]poller.PollConfig{}
 		caches := map[string]string{}
 
-		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg)
+		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg, logMissingHeartbeatParam)
+		logMissingHeartbeatParam = false // only log the heartbeat parameter missing once
+
 		if err != nil {
 			log.Errorf("monitor config error getting polling intervals, can't poll: %v", err)
 			continue
