@@ -523,8 +523,9 @@ public class TrafficRouter {
 		}
 
 		CacheLocation cacheLocation = networkNode.getCacheLocation();
+		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 
-		if (cacheLocation != null) {
+                if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			return cacheLocation;
 		}
 
@@ -534,7 +535,6 @@ public class TrafficRouter {
 
 		// find CacheLocation
 		cacheLocation = getCacheRegister().getCacheLocationById(networkNode.getLoc());
-		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			networkNode.setCacheLocation(cacheLocation);
 			return cacheLocation;
