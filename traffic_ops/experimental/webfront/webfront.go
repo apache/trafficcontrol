@@ -13,7 +13,7 @@
     limitations under the License.
 */
 
-//  Started with https://github.com/nf/webfront/blob/master/main.go
+// Started with https://github.com/nf/webfront/blob/master/main.go
 // by Andrew Gerrand <adg@golang.org>
 
 package main
