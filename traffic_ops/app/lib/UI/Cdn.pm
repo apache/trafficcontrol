@@ -160,6 +160,16 @@ sub delete {
         $self->flash( alertmsg => "You must be an ADMIN to perform this operation!" );
     }
     else {
+        my $server_count = $self->db->resultset('Server')->search( { cdn_id => $id } )->count();
+        if ($server_count > 0) {
+            $self->flash( alertmsg => "Failed to delete cdn id = $id has servers." );
+            return $self->redirect_to('/close_fancybox.html');
+        }
+        my $ds_count = $self->db->resultset('Deliveryservice')->search( { cdn_id => $id } )->count();
+        if ($ds_count > 0) {
+            $self->flash( alertmsg => "Failed to delete cdn id = $id has delivery services." );
+            return $self->redirect_to('/close_fancybox.html');
+        }
         my $p_name = $self->db->resultset('Cdn')->search( { id => $id } )->get_column('name')->single();
         my $delete = $self->db->resultset('Cdn')->search( { id => $id } );
         $delete->delete();
