@@ -200,6 +200,7 @@ sub curlMe {
     $curl->setopt( CURLOPT_CONNECTTIMEOUT, 5 );
     $curl->setopt( CURLOPT_TIMEOUT,        15 );
     $curl->setopt( CURLOPT_HEADER,         0 );
+    $curl->setopt( CURLOPT_FOLLOWLOCATION, 1 );
     $curl->setopt( CURLOPT_URL,            $url );
     $curl->setopt( CURLOPT_WRITEDATA,      \$response_body );
     my $retcode       = $curl->perform;
