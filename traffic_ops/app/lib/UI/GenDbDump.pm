@@ -22,22 +22,25 @@ sub dbdump {
 	my $self = shift;
 	my $filename = $self->param('filename');
 
+	my ($db_name, $host, $port) = $Schema::dsn =~ /:database=([^;]*);host=([^;]+);port=(\d+)/;
 	my $db_user = $Schema::user;
 	my $db_pass = $Schema::pass;
-	my $db_name = $Schema::dsn;
-	my $host;
-	my $port;
-	my $dsn = $Schema::dsn;
-	($db_name, $host, $port) = $dsn =~ /:database=(\w+);host=(\w+);port=(\d+)/;
+	my $uri = sprintf 'postgresql://%s:%s@%s:%s/%s', $db_user, $db_pass, $host, $port, $db_name;
 
-	my $cmd = "pg_dump -U " . $db_user . " -h localhost -C --column-insert";
-	my $extension = ".psql";
+	my $ok = open my $fh, '-|', "pg_dump $uri -C --column-insert";
+	if (! $ok ) {
+		$self->internal_server_error( { Error => "Error dumping database" } );	
+		return;
+	}
 
-	my $data = `$cmd`;
+	# slurp it in..
+	undef $/;
+	my $data = <$fh>;
 
 	$self->res->headers->content_type("application/download");
 	$self->res->headers->content_disposition( "attachment; filename=\"" . $filename . "\"" );
 	$self->render( data => $data );
+	close $fh;
 }
 
 1;

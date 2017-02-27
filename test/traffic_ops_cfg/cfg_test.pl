@@ -23,6 +23,7 @@ use Term::ReadKey;
 use LWP::UserAgent;
 use File::Find;
 use File::Spec;
+use Time::HiRes qw(gettimeofday tv_interval);
 
 #use Data::Compare;
 use Test::Deep;
@@ -32,9 +33,11 @@ use List::Compare;
 my $config;
 my $ref_db_file  = "/tmp/to_ref.mysql";
 my $tmp_dir_base = "/tmp/files";
-my $tmp_dir = $tmp_dir_base . "/ref";
+my $tmp_dir      = $tmp_dir_base . "/ref";
 my $CURL_OPTS;
 my $cookie;
+
+my $gen_crconfig = 1; # TODO parameter
 
 &configure( $ARGV[1] );
 
@@ -58,38 +61,38 @@ if (0) {
 	&pg_migrate();
 
 	# get a cookie from the reference system; cookie and CURL_OPTs are globals
-#	if ( !defined( $config->{ref_to_passwd} ) ) {
-#		$config->{ref_to_passwd} = &get_to_passwd( $config->{ref_to_user} );
-#	}
-#	my $to_login = $config->{ref_to_user} . ":" . $config->{ref_to_passwd};
-#	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
-#	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
-#
-#	&get_files( $config->{ref_to_url} );
-#	&get_crconfigs( $config->{ref_to_url} );
-#
+	#	if ( !defined( $config->{ref_to_passwd} ) ) {
+	#		$config->{ref_to_passwd} = &get_to_passwd( $config->{ref_to_user} );
+	#	}
+	#	my $to_login = $config->{ref_to_user} . ":" . $config->{ref_to_passwd};
+	#	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
+	#	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
+	#
+	#	&get_files( $config->{ref_to_url} );
+	#	&get_crconfigs( $config->{ref_to_url} );
+	#
 ## start riak; it needs to be available at 127.0.0.1:8088
 ## update server set status=1 where type=41;
 ## insert into server (host_name, domain_name, type, ip_address, ip_gateway, ip_netmask, profile, tcp_port,interface_name, phys_location, cachegroup,status, cdn_id) values ('riak-local', 'cdnlab.comcast.net', 41, '127.0.0.1', '127.0.0.2', '255.255.255.0', 51, 8088,'eth0', 1, 1, 2, 2);
 ## /etc/hosts: 127.0.0.1   localhost riak-local.cdnlab.comcast.net
-#
-#	# start morbo like export `MOJO_MODE=test 	./bin/start.pl`
-#	# get a cookie from the system we're testing; cookie and CURL_OPTs are globals
-#
-#	if ( !defined( $config->{to_passwd} ) ) {
-#		$config->{to_passwd} = &get_to_passwd( $config->{to_user} );
-#	}
-#	my $to_login = $config->{to_user} . ":" . $config->{to_passwd};
-#	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
-#	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
-#
-#	$tmp_dir = $tmp_dir_base . "/new";
-#	&get_files( $config->{to_url} );
-#	&get_crconfigs( $config->{to_url} );
-#
-#	#
-#	&compare_all_files();
-#
+	#
+	#	# start morbo like export `MOJO_MODE=test 	./bin/start.pl`
+	#	# get a cookie from the system we're testing; cookie and CURL_OPTs are globals
+	#
+	#	if ( !defined( $config->{to_passwd} ) ) {
+	#		$config->{to_passwd} = &get_to_passwd( $config->{to_user} );
+	#	}
+	#	my $to_login = $config->{to_user} . ":" . $config->{to_passwd};
+	#	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
+	#	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
+	#
+	#	$tmp_dir = $tmp_dir_base . "/new";
+	#	&get_files( $config->{to_url} );
+	#	&get_crconfigs( $config->{to_url} );
+	#
+	#	#
+	#	&compare_all_files();
+	#
 }
 
 sub get_ref {
@@ -118,8 +121,9 @@ sub get_new {
 
 	$tmp_dir = $tmp_dir_base . "/new";
 
-	&get_files( $config->{to_url} );     # old style
-#    &get_files_new( $config->{to_url} ); # derek style
+	&get_files( $config->{to_url} );    # old style
+
+	#    &get_files_new( $config->{to_url} ); # derek style
 	&get_crconfigs( $config->{to_url} );
 }
 
@@ -275,11 +279,19 @@ sub get_crconfigs {
 		next unless $cdn->{name} ne "ALL";
 		my $dir = $tmp_dir . '/cdn-' . $cdn->{name};
 		system( 'mkdir -p ' . $dir );
-		print "Generating CRConfig for " . $cdn->{name} . "\n";
-		&curl_me($to_url . "/tools/write_crconfig/" . $cdn->{name});
-		print "Getting CRConfig for " . $cdn->{name} . "\n";
+		if ($gen_crconfig) {
+			print "Generating CRConfig for " . $cdn->{name};
+			my $start = [gettimeofday];
+			&curl_me( $to_url . "/tools/write_crconfig/" . $cdn->{name} );
+			my $load_time = tv_interval($start);
+			print " time: " . $load_time . "\n";
+		}
+		print "Getting CRConfig for " . $cdn->{name};
+			my $start = [gettimeofday];
 		my $fcontents = &curl_me( $to_url . '/CRConfig-Snapshots/' . $cdn->{name} . '/CRConfig.json' );
 		open( my $fh, '>', $dir . '/CRConfig.json' );
+			my $load_time = tv_interval($start);
+			print " time: " . $load_time . "\n";
 		print $fh $fcontents;
 		close $fh;
 	}
@@ -309,9 +321,11 @@ sub get_files {
 
 		foreach my $filename ( keys %{ $file_list_json->{config_files} } ) {
 
-			next unless  $filename eq "parent.config";
-			print "Getting " . $sample_server . " " . $filename . "\n";
+			print "Getting " . $sample_server . " " . $filename;
+			my $start     = [gettimeofday];
 			my $fcontents = &curl_me( $to_url . '/genfiles/view/' . $profile_sample{$sample_server} . "/" . $filename );
+			my $load_time = tv_interval($start);
+			print " load_time: " . $load_time . "\n";
 			open( my $fh, '>', $dir . '/' . $filename );
 			print $fh $fcontents;
 			close $fh;
@@ -498,8 +512,10 @@ sub configure {
 	};
 
 	my $json = JSON->new;
+
 	#print Dumper($config);
 	$config = $json->decode($json_text);
+
 	#print Dumper($config);
 
 }

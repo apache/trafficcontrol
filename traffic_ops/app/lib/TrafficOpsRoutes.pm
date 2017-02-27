@@ -376,9 +376,6 @@ sub api_routes {
 	my $version   = shift;
 	my $namespace = shift;
 
-	# -- API DOCS
-	$r->get("/api/$version/docs")->to( 'ApiDocs#index', namespace => $namespace );
-
 	# -- ASNS (CRANS)
 	$r->get("/api/1.1/asns")->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get("/api/1.2/asns")->over( authenticated => 1 )->to( 'Asn#index',     namespace => $namespace );
