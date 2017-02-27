@@ -618,8 +618,8 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func srvStats(staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount threadsafe.Uint, healthIteration threadsafe.Uint, errorCount threadsafe.Uint) ([]byte, error) {
-	return getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get())
+func srvStats(staticAppData StaticAppData, healthPollInterval time.Duration, lastHealthDurations DurationMapThreadsafe, fetchCount threadsafe.Uint, healthIteration threadsafe.Uint, errorCount threadsafe.Uint, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
+	return getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get(), peerStates)
 }
 
 func srvConfigDoc(opsConfig OpsConfigThreadsafe) ([]byte, error) {
@@ -756,7 +756,7 @@ func MakeDispatchMap(
 			return srvPeerStates(params, errorCount, path, toData, peerStates)
 		}, ContentTypeJSON)),
 		"/publish/Stats": wrap(WrapErr(errorCount, func() ([]byte, error) {
-			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount)
+			return srvStats(staticAppData, healthPollInterval, lastHealthDurations, fetchCount, healthIteration, errorCount, peerStates)
 		}, ContentTypeJSON)),
 		"/publish/ConfigDoc": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvConfigDoc(opsConfig)
@@ -1114,6 +1114,8 @@ type Stats struct {
 	MemAllocBytes       uint64 `json:"Memory Bytes Allocated"`
 	MemTotalBytes       uint64 `json:"Total Bytes Allocated"`
 	MemSysBytes         uint64 `json:"System Bytes Allocated"`
+	OldestPolledPeer    string `json:"Oldest Polled Peer"`
+	OldestPolledPeerMs  int64  `json:"Oldest Polled Peer Time (ms)"`
 }
 
 func getLongestPoll(lastHealthTimes map[enum.CacheName]time.Duration) (enum.CacheName, time.Duration) {
@@ -1128,7 +1130,25 @@ func getLongestPoll(lastHealthTimes map[enum.CacheName]time.Duration) (enum.Cach
 	return longestCache, longestTime
 }
 
-func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHealthTimes map[enum.CacheName]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64) ([]byte, error) {
+func oldestPeerPollTime(peerTimes map[enum.TrafficMonitorName]time.Time) (enum.TrafficMonitorName, time.Time) {
+	now := time.Now()
+	oldestTime := now
+	oldestPeer := enum.TrafficMonitorName("")
+	for p, t := range peerTimes {
+		if oldestTime.After(t) {
+			oldestTime = t
+			oldestPeer = p
+		}
+	}
+	if oldestTime == now {
+		oldestTime = time.Time{}
+	}
+	return oldestPeer, oldestTime
+}
+
+const MillisecondsPerNanosecond = int64(1000000)
+
+func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHealthTimes map[enum.CacheName]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
 	longestPollCache, longestPollTime := getLongestPoll(lastHealthTimes)
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -1156,6 +1176,10 @@ func getStats(staticAppData StaticAppData, pollingInterval time.Duration, lastHe
 	s.MemAllocBytes = memStats.Alloc
 	s.MemTotalBytes = memStats.TotalAlloc
 	s.MemSysBytes = memStats.Sys
+
+	oldestPolledPeer, oldestPolledPeerTime := oldestPeerPollTime(peerStates.GetQueryTimes()) // map[enum.TrafficMonitorName]time.Time)
+	s.OldestPolledPeer = string(oldestPolledPeer)
+	s.OldestPolledPeerMs = time.Now().Sub((oldestPolledPeerTime)).Nanoseconds() / MillisecondsPerNanosecond
 
 	return json.Marshal(JSONStats{Stats: s})
 }
@@ -1195,9 +1219,8 @@ func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.F
 				continue
 			}
 			ssStat := StatSummaryStat{}
-			msPerNs := int64(1000000)
-			ssStat.StartTime = statHistory[len(statHistory)-1].Time.UnixNano() / msPerNs
-			ssStat.EndTime = statHistory[0].Time.UnixNano() / msPerNs
+			ssStat.StartTime = statHistory[len(statHistory)-1].Time.UnixNano() / MillisecondsPerNanosecond
+			ssStat.EndTime = statHistory[0].Time.UnixNano() / MillisecondsPerNanosecond
 			oldestVal, isOldestValNumeric := util.ToNumeric(statHistory[len(statHistory)-1].Val)
 			newestVal, isNewestValNumeric := util.ToNumeric(statHistory[0].Val)
 			if !isOldestValNumeric || !isNewestValNumeric {
