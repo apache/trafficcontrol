@@ -22,6 +22,7 @@ package peer
 import (
 	"encoding/json"
 	"sync"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 )
@@ -187,12 +188,18 @@ func (t *CRStatesThreadsafe) DeleteDeliveryService(name enum.DeliveryServiceName
 type CRStatesPeersThreadsafe struct {
 	crStates   map[enum.TrafficMonitorName]Crstates
 	peerStates map[enum.TrafficMonitorName]bool
+	peerTimes  map[enum.TrafficMonitorName]time.Time
 	m          *sync.RWMutex
 }
 
 // NewCRStatesPeersThreadsafe creates a new CRStatesPeers object safe for multiple goroutine readers and a single writer.
 func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
-	return CRStatesPeersThreadsafe{m: &sync.RWMutex{}, crStates: map[enum.TrafficMonitorName]Crstates{}, peerStates: map[enum.TrafficMonitorName]bool{}}
+	return CRStatesPeersThreadsafe{
+		m:          &sync.RWMutex{},
+		crStates:   map[enum.TrafficMonitorName]Crstates{},
+		peerStates: map[enum.TrafficMonitorName]bool{},
+		peerTimes:  map[enum.TrafficMonitorName]time.Time{},
+	}
 }
 
 // GetCrstates returns the internal Traffic Monitor peer Crstates data. This MUST NOT be modified.
@@ -206,12 +213,27 @@ func (t *CRStatesPeersThreadsafe) GetCrstates() map[enum.TrafficMonitorName]Crst
 	return m
 }
 
+func copyPeerTimes(a map[enum.TrafficMonitorName]time.Time) map[enum.TrafficMonitorName]time.Time {
+	m := make(map[enum.TrafficMonitorName]time.Time, len(a))
+	for k, v := range a {
+		m[k] = v
+	}
+	return m
+}
+
 // GetPeerAvailability returns the state of the given peer
 func (t *CRStatesPeersThreadsafe) GetPeerAvailability(peer enum.TrafficMonitorName) bool {
 	t.m.RLock()
 	availability := t.peerStates[peer]
 	t.m.RUnlock()
 	return availability
+}
+
+// GetPeerAvailability returns the state of the given peer
+func (t *CRStatesPeersThreadsafe) GetQueryTimes() map[enum.TrafficMonitorName]time.Time {
+	t.m.RLock()
+	defer t.m.RUnlock()
+	return copyPeerTimes(t.peerTimes)
 }
 
 // HasAvailablePeers returns true if at least one peer is online
@@ -237,5 +259,6 @@ func (t *CRStatesPeersThreadsafe) Set(result Result) {
 	t.m.Lock()
 	t.crStates[result.ID] = result.PeerStates
 	t.peerStates[result.ID] = result.Available
+	t.peerTimes[result.ID] = result.Time
 	t.m.Unlock()
 }
