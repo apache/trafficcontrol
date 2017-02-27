@@ -1,0 +1,122 @@
+#!/usr/bin/perl
+
+package main;
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+use Getopt::Long;
+use DBI;
+use Schema;
+
+use YAML;
+use YAML qw(LoadFile);
+use DBIx::Class::Schema::Loader qw/make_schema_at/;
+
+BEGIN { $ENV{MOJO_MODE} = "test" }
+
+use DBIx::Class::Schema::Loader qw/make_schema_at/;
+
+#TEMPLATE TO BE CHANGED BY THE USER
+#################################################################################################
+# Environment: If not set by command-line, the below variable setting will take effect. 
+# If variable is not set, we are counting on the MOJO_MODE env variable alternatively may 
+my $default_environment = '';
+
+# The tenant user to be created: If not set by command-line, the below variable setting will take effect. 
+# There must not be any tenant already defined
+my $default_tenant_name = 'root';
+
+# The admin user name to be set with this tenancy: If not set by command-line, the below variable setting will take effect. 
+# This user must be already defined and have no tenancy
+my $default_admin_user_name = 'admin';
+#################################################################################################3
+#DONE TEMPLATE TO BE CHANGED BY THE USER
+
+
+
+#parameters retrival
+my $environment = '';
+my $tenant_name = '';
+my $admin_user_name = '';
+
+GetOptions( "env:s", \$environment, "tenant-name:s", \$tenant_name, "admin-user-name:s", \$admin_user_name );
+
+
+if ($environment eq "") {
+	$environment =  $default_environment;
+}
+if ($environment eq "") {
+	$environment = $ENV{'MOJO_MODE'};
+}
+if ($environment eq "") {
+	print "No environment set!\n" and exit(1);
+}
+$ENV{'MOJO_MODE'} = $environment;
+
+
+if ($tenant_name eq "") {
+	$tenant_name =  $default_tenant_name;
+}
+if ($tenant_name eq "") {
+	print "No tenant-name set!\n" and exit(1);
+}
+
+
+if ($admin_user_name eq "") {
+	$admin_user_name =  $default_admin_user_name;
+}
+if ($admin_user_name eq "") {
+	print "No admin-user-name set!\n" and exit(1);
+}
+
+#DB connection
+my $dbh    = Schema->database_handle;
+my $schema = Schema->connect_to_database;
+
+
+#validity checks
+my $already_set_tenants = $schema->resultset('Tenant')->search( undef );
+if (defined($already_set_tenants)){
+	print "System already have tenants!\n" and exit(1);
+}
+
+my $user_data = $schema->resultset('TmUser')->search({ username => $admin_user_name }, { prefetch => [ 'role' ]})->single;
+if (!defined($user_data)) {
+	print "User $admin_user_name does not exists!\n" and exit(1);
+}
+
+if ( $user_data->role->name ne "admin" ) {
+	print "User $admin_user_name role is not 'admin' ($user_data->role->name)!\n" and exit(1);
+}
+
+
+#actual work
+my $tenant_values = {
+		name => $tenant_name,
+		parent_id => undef
+		};
+		
+my $insert = $schema->resultset('Tenant')->create($tenant_values)->insert();
+if (! $insert) {
+	print "Failed creating tenant!\n" and exit;
+}
+
+my $user = $schema->resultset('TmUser')->find( { id => $user_data->id } );
+my $rc = $user->update({tenant_id=>$insert->id});
+
+if (! $rc) {
+	print "Failed setting tenancy to user!\n" and exit(1);
+}
+exit(0);
