@@ -54,7 +54,7 @@ ok $t->get_ok("/api/1.2/server/100/configfiles/ats/hosting.config")->status_is(2
 
 # Check CDN routes
 ok $t->get_ok("/api/1.2/cdn/cdn1/configfiles/ats/cacheurl.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/cdn/cdn1/configfiles/ats/regex_revalidate.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );ok $t->get_ok("/api/1.2/cdn/cdn1/configfiles/ats/hdr_rw_cdl-c2.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/cdn/cdn1/configfiles/ats/regex_revalidate.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 
 # Check profile routes
 ok $t->get_ok("/api/1.2/profile/100/configfiles/ats/50-ats.rules")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
