@@ -37,6 +37,15 @@ my %definition_for = (
 			tenant_id   => undef,
 		},
 	},
+	## id => 3
+	cdn_root_cdn_name => {
+		new   => 'Cdn',
+		using => {
+			id          => 300,
+			name        => 'cdn-root',
+			tenant_id   => 10**9,
+		},
+	},
 );
 
 sub get_definition {
