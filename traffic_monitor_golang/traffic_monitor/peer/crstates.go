@@ -229,7 +229,7 @@ func (t *CRStatesPeersThreadsafe) GetPeerAvailability(peer enum.TrafficMonitorNa
 	return availability
 }
 
-// GetPeerAvailability returns the state of the given peer
+// GetQueryTimes returns the last query time of all peers
 func (t *CRStatesPeersThreadsafe) GetQueryTimes() map[enum.TrafficMonitorName]time.Time {
 	t.m.RLock()
 	defer t.m.RUnlock()
