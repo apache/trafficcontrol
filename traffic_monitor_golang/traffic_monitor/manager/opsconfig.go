@@ -21,13 +21,13 @@ package manager
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
@@ -36,32 +36,6 @@ import (
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
-
-// OpsConfigThreadsafe provides safe access for multiple reader goroutines and a single writer to a stored OpsConfig object.
-// This could be made lock-free, if the performance was necessary
-type OpsConfigThreadsafe struct {
-	opsConfig *handler.OpsConfig
-	m         *sync.RWMutex
-}
-
-// NewOpsConfigThreadsafe returns a new single-writer-multiple-reader OpsConfig
-func NewOpsConfigThreadsafe() OpsConfigThreadsafe {
-	return OpsConfigThreadsafe{m: &sync.RWMutex{}, opsConfig: &handler.OpsConfig{}}
-}
-
-// Get gets the internal OpsConfig object. This MUST NOT be modified. If modification is necessary, copy the object.
-func (o *OpsConfigThreadsafe) Get() handler.OpsConfig {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return *o.opsConfig
-}
-
-// Set sets the internal OpsConfig object. This MUST NOT be called from multiple goroutines.
-func (o *OpsConfigThreadsafe) Set(newOpsConfig handler.OpsConfig) {
-	o.m.Lock()
-	*o.opsConfig = newOpsConfig
-	o.m.Unlock()
-}
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.
 // Note the OpsConfigManager is in charge of the httpServer, because ops config changes trigger server changes. If other things needed to trigger server restarts, the server could be put in its own goroutine with signal channels
@@ -81,17 +55,17 @@ func StartOpsConfigManager(
 	lastStats threadsafe.LastStats,
 	dsStats threadsafe.DSStatsReader,
 	events health.ThreadsafeEvents,
-	staticAppData StaticAppData,
+	staticAppData config.StaticAppData,
 	healthPollInterval time.Duration,
-	lastHealthDurations DurationMapThreadsafe,
+	lastHealthDurations threadsafe.DurationMap,
 	fetchCount threadsafe.Uint,
 	healthIteration threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	unpolledCaches threadsafe.UnpolledCaches,
-	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	cfg config.Config,
-) OpsConfigThreadsafe {
+) threadsafe.OpsConfig {
 
 	opsConfigFileChannel := make(chan interface{})
 	opsConfigFilePoller := poller.FilePoller{
@@ -108,7 +82,7 @@ func StartOpsConfigManager(
 	go opsConfigFileHandler.Listen()
 	go opsConfigFilePoller.Poll()
 
-	opsConfig := NewOpsConfigThreadsafe()
+	opsConfig := threadsafe.NewOpsConfig()
 
 	// TODO remove change subscribers, give Threadsafes directly to the things that need them. If they only set vars, and don't actually do work on change.
 	go func() {
@@ -129,7 +103,7 @@ func StartOpsConfigManager(
 				log.Errorf("OpsConfigManager: %v\n", err)
 			}
 
-			endpoints := MakeDispatchMap(
+			endpoints := datareq.MakeDispatchMap(
 				opsConfig,
 				toSession,
 				localStates,

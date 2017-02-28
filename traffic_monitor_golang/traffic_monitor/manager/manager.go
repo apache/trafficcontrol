@@ -22,7 +22,6 @@ package manager
 import (
 	"crypto/tls"
 	"net/http"
-	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
@@ -37,23 +36,10 @@ import (
 	"github.com/davecheney/gmx"
 )
 
-// StaticAppData encapsulates data about the app available at startup
-type StaticAppData struct {
-	StartTime      time.Time
-	GitRevision    string
-	FreeMemoryMB   uint64
-	Version        string
-	WorkingDir     string
-	Name           string
-	BuildTimestamp string
-	Hostname       string
-	UserAgent      string
-}
-
 //
 // Start starts the poller and handler goroutines
 //
-func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
+func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData) {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
 	counters := fetcher.Counters{
 		Success: gmx.NewCounter("fetchSuccess"),
