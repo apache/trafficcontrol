@@ -554,7 +554,6 @@ sub api_routes {
 	# -- TENANTS
 	$r->get("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#index', namespace => $namespace );
 	$r->get( "/api/$version/tenants/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Tenant#show', namespace => $namespace );
-	$r->get( "/api/$version/tenants/name/:name")->over( authenticated => 1 )->to( 'Tenant#index_by_name', namespace => $namespace );
 	$r->put("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#update', namespace => $namespace );
 	$r->post("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#create', namespace => $namespace );
 	$r->delete("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#delete', namespace => $namespace );

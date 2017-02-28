@@ -50,33 +50,12 @@ sub index {
 				"name"         => $row->name,
 				"active"       => $row->active,
 				"parentId"     => $row->parent_id,
-				#"parentName"   => $self->getTenantName($row->parent_id)
 			}
 		);
 	}
 	$self->success( \@data );
 }
 
-
-sub index_by_name {
-	my $self = shift;
-	my $name = $self->param('name');
-
-	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.name' => $name });
-	my @data = ();
-	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"id"           => $row->id,
-				"name"         => $row->name,
-				"active"       => $row->active,
-				"parentId"     => $row->parent_id,
-				#"parentName"   => $self->getTenantName($row->parent_id)
-			}
-		);
-	}
-	$self->success( \@data );
-}
 
 sub show {
 	my $self = shift;
@@ -91,7 +70,6 @@ sub show {
 				"name"         => $row->name,
 				"active"       => $row->active,
 				"parentId"     => $row->parent_id,
-				#"parentName"   => $self->getTenantName($row->parent_id)
 			}
 		);
 	}
@@ -156,7 +134,6 @@ sub update {
 		$response->{name}        = $rs->name;
 		$response->{active}      = $rs->active;
 		$response->{parentId}    = $rs->parent_id;
-		#$response->{parentName}  = $self->getTenantName($rs->parent_id);
 		$response->{lastUpdated} = $rs->last_updated;
 		&log( $self, "Updated Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "Tenant update was successful." );
@@ -211,7 +188,6 @@ sub create {
 		$response->{name}        	= $rs->name;
 		$response->{active}        	= $rs->active;
 		$response->{parentId}           = $rs->parent_id;
-		#$response->{parentName}         = $self->getTenantName($rs->parent_id);
 		$response->{lastUpdated} 	= $rs->last_updated;
 
 		&log( $self, "Created Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
