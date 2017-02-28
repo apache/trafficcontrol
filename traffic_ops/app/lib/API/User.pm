@@ -97,7 +97,8 @@ sub index {
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
-				"username"        => $row->username
+				"username"        => $row->username,
+				"tenantId"        => $row->tenant_id
 			}
 		);
 	}
@@ -132,7 +133,8 @@ sub show {
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
-				"username"        => $row->username
+				"username"        => $row->username,
+				"tenantId"        => $row->tenant_id
 			}
 		);
 	}
@@ -159,6 +161,9 @@ sub update {
 		return $self->not_found();
 	}
 
+	#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+ 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
+ 	
 	my $values = {
 		address_line1 			=> $params->{addressLine1},
 		address_line2 			=> $params->{addressLine2},
@@ -171,10 +176,12 @@ sub update {
 		phone_number 			=> $params->{phoneNumber},
 		postal_code 			=> $params->{postalCode},
 		public_ssh_key 			=> $params->{publicSshKey},
-		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
+		registration_sent 		=> ( $params->{registrationSent} ) ? $params->{registrationSent} : undef,
 		role 					=> $params->{role},
 		state_or_province 		=> $params->{stateOrProvince},
-		username 				=> $params->{username}
+		username 				=> $params->{username},
+		tenant_id 				=> $tenant_id
+		
 	};
 
 	if ( defined($params->{localPasswd}) && $params->{localPasswd} ne '' ) {
@@ -207,6 +214,7 @@ sub update {
 		$response->{stateOrProvince} 		= $rs->state_or_province;
 		$response->{uid} 					= $rs->uid;
 		$response->{username} 				= $rs->username;
+		$response->{tenantId} 				= $rs->tenant_id;
 
 		&log( $self, "Updated User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -262,7 +270,8 @@ sub create {
 		return $self->alert("role is required.");
 	}
 	
-	
+	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
 
 	my $values = {
 		address_line1 			=> defined_or_default($params->{addressLine1}, ""),
@@ -284,7 +293,8 @@ sub create {
 		uid                  		=> defined_or_default($params->{uid}, 0),		
 		gid                  		=> defined_or_default($params->{gid}, 0),
 		local_passwd         		=> sha1_hex($params->{localPassword} ),
-		confirm_local_passwd 		=> sha1_hex($params->{confirmLocalPassword} ),		
+		confirm_local_passwd 		=> sha1_hex($params->{confirmLocalPassword} ),
+		tenant_id			=> $tenant_id,		
 
 	};
 	
@@ -319,6 +329,7 @@ sub create {
 		$response->{stateOrProvince} 		= $rs->state_or_province;
 		$response->{uid} 			= $rs->uid;
 		$response->{username} 			= $rs->username;
+		$response->{tenantId} 			= $rs->tenant_id;
 
 		&log( $self, "Adding User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -389,7 +400,8 @@ sub current {
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
-				"publicSshKey"  => "",
+				"tenantId"	  => $self->current_user_tenant(),
+				"publicSshKey"    => "",
 				"role"            => $role,
 				"uid"             => "0",
 				"gid"             => "0",
@@ -433,6 +445,7 @@ sub current {
 					"phoneNumber"     => $row->phone_number,
 					"postalCode"      => $row->postal_code,
 					"country"         => $row->country,
+					"tenantId"        => $row->tenant_id,
 				}
 			);
 		}
@@ -448,7 +461,7 @@ sub update_current {
 	if ( &is_ldap($self) ) {
 		return $self->alert("Profile cannot be updated because '" . $user->{username} ."' is logged in as LDAP.");
 	}
-
+	
 	my $db_user;
 
 	# Prevent these from getting updated
@@ -487,6 +500,10 @@ sub update_current {
 		if ( defined( $user->{"username"} ) ) {
 			$db_user->{"username"} = $user->{"username"};
 		}
+		if ( exists( $user->{"tenantId"} ) ) {
+		        #if value is not set, it will be kept as is. Keeping consistency. Using "exists" and not "defined" to allow data clearing
+ 			$db_user->{"tenant_id"} = $user->{"tenantId"};
+ 		}
 		if ( defined( $user->{"public_ssh_key"} ) ) {
 			$db_user->{"public_ssh_key"} = $user->{"public_ssh_key"};
 		}
@@ -587,6 +604,8 @@ sub is_valid {
 					return $self->is_username_taken( $value, $params );
 				}
 			},
+			
+			#TODO(nirs) MAYBE when tenancy is not optional, add a tenant not null check
 
 		]
 	};
