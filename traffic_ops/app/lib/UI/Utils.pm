@@ -42,7 +42,7 @@ use constant ADMIN      => 30;
 our %EXPORT_TAGS = (
 	'all' => [
 		qw(trim_whitespace is_admin is_oper is_ldap is_privileged log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id type_ids
-			profile_id profile_ids tm_version tm_url name_version_string is_regexp stash_role navbarpage rascal_hosts_by_cdn is_steering)
+			profile_id profile_ids tm_version tm_url name_version_string is_regexp stash_role navbarpage rascal_hosts_by_cdn is_steering defined_or_default)
 	]
 );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{all} } );
@@ -401,4 +401,9 @@ sub exec_command {
 	return $result;
 }
 
+sub defined_or_default {
+	my $val = shift;
+	my $default = shift;
+	return defined($val) ? $val : $default;
+}
 1;

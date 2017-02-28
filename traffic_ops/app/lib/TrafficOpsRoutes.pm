@@ -712,6 +712,8 @@ sub api_routes {
 	$r->get("/api/$version/users")->over( authenticated => 1 )->to( 'User#index', namespace => $namespace );
 	$r->get( "/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'User#show', namespace => $namespace );
 	$r->put("/api/$version/users/:id")->over( authenticated => 1 )->to( 'User#update', namespace => $namespace );
+	$r->post("/api/$version/users")->over( authenticated => 1 )->to( 'User#create', namespace => $namespace );
+	
 
     # get all deliveryservices assigned to a user (from deliveryservice_tmuser table)
     $r->get( "/api/$version/users/:id/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );
