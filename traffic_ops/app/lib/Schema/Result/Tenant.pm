@@ -35,6 +35,12 @@ __PACKAGE__->table("tenant");
   data_type: 'text'
   is_nullable: 0
 
+=head2 active
+
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 0
+
 =head2 parent_id
 
   data_type: 'bigint'
@@ -61,6 +67,8 @@ __PACKAGE__->add_columns(
   },
   "name",
   { data_type => "text", is_nullable => 0 },
+  "active",
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "parent_id",
   {
     data_type      => "bigint",
@@ -150,7 +158,7 @@ __PACKAGE__->belongs_to(
   {
     is_deferrable => 0,
     join_type     => "LEFT",
-    on_delete     => "CASCADE",
+    on_delete     => "NO ACTION",
     on_update     => "NO ACTION",
   },
 );
@@ -186,8 +194,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-18 21:04:12
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:i9zkvG6Tv0q7IYLT5co5qQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-28 01:59:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Qg/su0fUzS2zjFtZHD1hNA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

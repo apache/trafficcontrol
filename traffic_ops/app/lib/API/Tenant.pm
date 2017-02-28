@@ -39,21 +39,16 @@ sub isRootTenant {
 
 sub index {
 	my $self 	= shift;
-	my $parent_id	= $self->param('parent_iId');
-
-	my %criteria;
-	if ( defined $parent_id ) {
-		$criteria{'parent_id'} = $parent_id;
-	}
 
 	my @data;
 	my $orderby = $self->param('orderby') || "name";
-	my $rs_data = $self->db->resultset("Tenant")->search( \%criteria, {order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Tenant")->search( undef, {order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
+				"active"       => $row->active,
 				"parentId"     => $row->parent_id,
 				#"parentName"   => $self->getTenantName($row->parent_id)
 			}
@@ -61,6 +56,7 @@ sub index {
 	}
 	$self->success( \@data );
 }
+
 
 sub index_by_name {
 	my $self = shift;
@@ -73,6 +69,7 @@ sub index_by_name {
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
+				"active"       => $row->active,
 				"parentId"     => $row->parent_id,
 				#"parentName"   => $self->getTenantName($row->parent_id)
 			}
@@ -92,6 +89,7 @@ sub show {
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
+				"active"       => $row->active,
 				"parentId"     => $row->parent_id,
 				#"parentName"   => $self->getTenantName($row->parent_id)
 			}
@@ -133,6 +131,13 @@ sub update {
 	if ( !defined( $params->{parentId}) && !$self->isRootTenant($id) ) {
 		return $self->alert("Parent Id is required.");
 	}
+	
+	my $is_active = $params->{active};
+	
+	if ( !$params->{active} && $self->isRootTenant($id)) {
+		return $self->alert("Root user cannot be in-active.");
+	}
+	
 
 	if ( !defined($params->{parentId}) && !isRootTenant($id) ) {
 		return $self->alert("Only the \"root\" tenant can have no parent.");
@@ -140,6 +145,7 @@ sub update {
 	
 	my $values = {
 		name      => $params->{name},
+		active    => $params->{active},
 		parent_id => $params->{parentId}
 	};
 
@@ -148,6 +154,7 @@ sub update {
 		my $response;
 		$response->{id}          = $rs->id;
 		$response->{name}        = $rs->name;
+		$response->{active}      = $rs->active;
 		$response->{parentId}    = $rs->parent_id;
 		#$response->{parentName}  = $self->getTenantName($rs->parent_id);
 		$response->{lastUpdated} = $rs->last_updated;
@@ -184,8 +191,15 @@ sub create {
 		return $self->alert("A tenant with name \"$name\" already exists.");
 	}
 
+	my $is_active = exists($params->{active})? $params->{active} : 0; #optional, if not set use default
+	
+	if ( !$is_active && !defined($parent_id)) {
+		return $self->alert("Root user cannot be in-active.");
+	}
+	
 	my $values = {
 		name 		=> $params->{name} ,
+		active		=> $is_active,
 		parent_id 	=> $params->{parentId}
 	};
 
@@ -195,6 +209,7 @@ sub create {
 		my $response;
 		$response->{id}          	= $rs->id;
 		$response->{name}        	= $rs->name;
+		$response->{active}        	= $rs->active;
 		$response->{parentId}           = $rs->parent_id;
 		#$response->{parentName}         = $self->getTenantName($rs->parent_id);
 		$response->{lastUpdated} 	= $rs->last_updated;

@@ -30,8 +30,9 @@ my %definition_for = (
 	'0' => {
 		new => 'Tenant',
 		using => {
-                        #id => 1,#not setting the id in order not to confuse the id sequence
+                        #id => 10**9,#a large in order not to confuse the id sequence
 			name => 'root',
+			active => 1,
 			parent_id => undef,
 			last_updated => '2015-12-10 15:43:45',
 		},
