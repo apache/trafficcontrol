@@ -11,19 +11,18 @@ are automatically loaded into the image used to build each component.
 
 ### Steps
 
-From the top level of the incubator-trafficcontrol directory.  Use the BRANCH
-environment variable to specify the version of Traffic Control to build.   One
-or more components (with \_build suffix added) can be added on the command
-line.
+From the top level of the incubator-trafficcontrol directory.  The source in
+the current directory is used for the process.   One or more components (with
+\_build suffix added) can be added on the command line.
 
 Clean up any previously-built docker containers:
 > $ docker-compose -f infrastructure/docker/build/docker-compose.yml down -v
 
 And images:
-> $ docker images | awk '/traffic\_.\*\_build/ { print $3 }' | xargs docker rmi -f
+> $ docker images | awk '/traffic\_.*\_build/ { print $3 }' | xargs docker rmi -f
 
 Create and run new build containers:
-> $ BRANCH=1.8.x docker-compose -f infrastructure/docker/build/docker-compose.yml up [ container name ...] 
+> $ docker-compose -f infrastructure/docker/build/docker-compose.yml up [ container name ...] 
 
 Container names can be one or more of these:
 * `traffic_monitor_build`
