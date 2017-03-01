@@ -33,26 +33,47 @@ import (
 
 const UserAgent = "tm-offline-validator/0.1"
 
+const LogLimit = 100000
+
 type Log struct {
-	l *[]string
-	m *sync.RWMutex
+	log     *[]string
+	limit   int
+	errored *bool
+	m       *sync.RWMutex
 }
 
 func (l *Log) Add(msg string) {
 	l.m.Lock()
 	defer l.m.Unlock()
-	*l.l = append(*l.l, msg)
+	*l.log = append([]string{msg}, *l.log...)
+	if len(*l.log) > l.limit {
+		*l.log = (*l.log)[:l.limit]
+	}
 }
 
 func (l *Log) Get() []string {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	return *l.l
+	return *l.log
+}
+
+func (l *Log) GetErrored() bool {
+	l.m.RLock()
+	defer l.m.RUnlock()
+	return *l.errored
+}
+
+func (l *Log) SetErrored(e bool) {
+	l.m.Lock()
+	defer l.m.Unlock()
+	*l.errored = e
 }
 
 func NewLog() Log {
-	s := make([]string, 0)
-	return Log{l: &s, m: &sync.RWMutex{}}
+	log := make([]string, 0, LogLimit+1)
+	errored := false
+	limit := LogLimit
+	return Log{log: &log, errored: &errored, m: &sync.RWMutex{}, limit: limit}
 }
 
 func main() {
@@ -80,10 +101,12 @@ func main() {
 
 	onErr := func(err error) {
 		log.Add(fmt.Sprintf("%v ERROR %v\n", time.Now(), err))
+		log.SetErrored(true)
 	}
 
 	onResumeSuccess := func() {
 		log.Add(fmt.Sprintf("%v INFO State Valid\n", time.Now()))
+		log.SetErrored(false)
 	}
 
 	onCheck := func(err error) {
@@ -96,21 +119,37 @@ func main() {
 
 	go tmcheck.Validator(*tmURI, toClient, *interval, *grace, onErr, onResumeSuccess, onCheck)
 
-	if err := serve(log); err != nil {
+	if err := serve(log, *toURI, *tmURI); err != nil {
 		fmt.Printf("Serve error: %v\n", err)
 	}
 }
 
-func serve(log Log) error {
+func serve(log Log, toURI string, tmURI string) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `<html><head><meta http-equiv="refresh" content="5"></head><body><pre>`)
+		fmt.Fprintf(w, `<!DOCTYPE html>
+<meta http-equiv="refresh" content="5">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traffic Monitor Offline Validator</title>
+<style type="text/css">body{margin:40px auto;max-width:650px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}h1,h2,h3{line-height:1.2}</style>`)
+
+		fmt.Fprintf(w, `<p>%s`, toURI)
+		fmt.Fprintf(w, `<p>%s`, tmURI)
+		if log.GetErrored() {
+			fmt.Fprintf(w, `<h1 style="color:red">Invalid</h1>`)
+		} else {
+			fmt.Fprintf(w, `<h1 style="color:limegreen">Valid</h1>`)
+		}
+
+		fmt.Fprintf(w, `<pre>`)
 		logCopy := log.Get()
 		for i := len(logCopy) - 1; i >= 0; i-- {
 			fmt.Fprintf(w, "%s\n", logCopy[i])
 		}
-		fmt.Fprintf(w, `</pre></body></html>`)
+		fmt.Fprintf(w, `</pre>`)
+
 	})
 	return http.ListenAndServe(":80", nil)
 }
