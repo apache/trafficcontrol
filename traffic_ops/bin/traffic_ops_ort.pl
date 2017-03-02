@@ -37,6 +37,7 @@ my %supported_el_release = ( "EL6" => 1, "EL7" => 1);
 my $dispersion = 300;
 my $retries = 5;
 my $wait_for_parents = 1;
+my $reval_in_use = 0;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
@@ -179,12 +180,25 @@ my $ssl_tracker      = undef;
 #### Start main flow
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 
-#### First and foremost, if this is a syncds run, check to see if we can bail.
-my $reval_update = undef;
+
+#### Delete /tmp dirs older than one week
+if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
+	&smart_mkdir($TMP_BASE);
+	&clean_tmp_dirs();
+}
+
+my $header_comment = &get_header_comment($traffic_ops_host);
+
+my $ats_uid          = getpwnam("ats");
+
+#### If this is a syncds run, check to see if we can bail.
 my $syncds_update = undef;
 if ( $script_mode == $REVALIDATE ) {
 	if ( defined $traffic_ops_host ) {
 		($syncds_update) = &check_revalidate_state();
+		if ( $syncds_update < 1 ) {
+			exit 1;
+		}
 	}
 	else {
 		print "FATAL Could not resolve Traffic Ops host!\n";
@@ -202,25 +216,18 @@ else {
 }
 
 
-#### Delete /tmp dirs older than one week
-if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
-	&smart_mkdir($TMP_BASE);
-	&clean_tmp_dirs();
-}
-
 ( my $my_profile_name, $cfg_file_tracker, my $my_cdn_name ) = &get_cfg_file_list( $hostname_short, $traffic_ops_host, $script_mode );
-my $header_comment = &get_header_comment($traffic_ops_host);
 
 
-my $ats_uid          = getpwnam("ats");
+
 if ( $script_mode == $REVALIDATE ) {
-	( $log_level >> $INFO ) && print "\nINFO: ======== Doing the revalidate thing========\n";
+	( $log_level >> $INFO ) && print "\nINFO: ======== Revalidating, no package processing needed ========\n";
 }
 else {
-	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing packages========\n";
+	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing packages ========\n";
 	&process_packages( $hostname_short, $traffic_ops_host );
 	# get the ats user's UID after package installation in case this is the initial badass
-	( $log_level >> $INFO ) && print "\nINFO: ======== Start second package processing run========\n";
+	( $log_level >> $INFO ) && print "\nINFO: ======== Start second package processing run ========\n";
 	&process_chkconfig( $hostname_short, $traffic_ops_host );
 }
 
@@ -638,6 +645,11 @@ sub clean_tmp_dirs {
 }
 
 sub update_trops {
+	my $sleep_override = shift;
+
+	if (defined ($sleep_override) ) {
+		$syncds_update = $sleep_override;
+	}
 	my $update_result = 0;
 	if ( $syncds_update == $UPDATE_TROPS_NOTNEEDED ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops does not require an update at this time.\n";
@@ -667,6 +679,7 @@ sub update_trops {
 			exit 1;
 		}
 		my $upd_json = decode_json($upd_ref);
+
 		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
 
@@ -686,6 +699,9 @@ sub update_trops {
 		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
 			if ( !defined $reval_pending ) {
 				&send_update_to_trops($CLEAR, $reval_pending );
+			}
+			elsif ( defined($sleep_override) ) {
+				&send_update_to_trops($upd_pending, $CLEAR);
 			}
 			else {
 				&send_update_to_trops($CLEAR, $CLEAR);
@@ -720,11 +736,12 @@ sub get_print_current_client_connections {
 }
 
 sub check_revalidate_state {
+	my $sleep_override = shift;
 
 	my $syncds_update = 0;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Checking revalidate state.\n";
-	if ( $script_mode == $REVALIDATE ) {
+	if ( $script_mode == $REVALIDATE || $sleep_override == '1' ) {
 		## The herd is about to get /update/<hostname>
 
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
@@ -738,7 +755,7 @@ sub check_revalidate_state {
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
 		if ( !defined($reval_pending) ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an reval_pending key.  This mode is not compatible with the installed Traffic Ops version.\n";
-			exit 1;
+			return($UPDATE_TROPS_NOTNEEDED);
 		}
 
 		if ( $reval_pending == 1 ) {
@@ -748,36 +765,37 @@ sub check_revalidate_state {
 			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
 			if ( !defined($parent_reval_pending) ) {
 				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_reval_pending key.  Unable to continue!\n";
-				exit 1;
+				return($UPDATE_TROPS_NOTNEEDED);
 			}
 			if ( $parent_reval_pending == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need to revalidate.\n";
-				if ( $dispersion > 0 ) {
-					( $log_level >> $WARN ) && print "WARN In revalidate mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-					for ( my $i = $dispersion; $i > 0; $i-- ) {
-						( $log_level >> $WARN ) && print ".";
-						sleep 1;
-					}
-				}
-				( $log_level >> $WARN ) && print "\n";
-				$upd_ref = &lwp_get($url);
-				if ( $upd_ref =~ m/^\d{3}$/ ) {
-					( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
-					exit 1;
-				}
-				$upd_json = decode_json($upd_ref);
-				$parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
-				if ( !defined($parent_reval_pending) ) {
-					( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
-					exit 1;
-				}
-				if ( $parent_reval_pending == 1 ) {
-					( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-					exit 1;
-				}
-				else {
-					( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-				}
+				return($UPDATE_TROPS_NOTNEEDED);
+				#if ( $dispersion > 0 ) {
+				#	( $log_level >> $WARN ) && print "WARN In revalidate mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+				#	for ( my $i = $dispersion; $i > 0; $i-- ) {
+				#		( $log_level >> $WARN ) && print ".";
+				#		sleep 1;
+				#	}
+				#}
+				#( $log_level >> $WARN ) && print "\n";
+				#$upd_ref = &lwp_get($url);
+				#if ( $upd_ref =~ m/^\d{3}$/ ) {
+				#	( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+				#	exit 1;
+				#}
+				#$upd_json = decode_json($upd_ref);
+				#$parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
+				#if ( !defined($parent_reval_pending) ) {
+				#	( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+				#	exit 1;
+				#}
+				#if ( $parent_reval_pending == 1 ) {
+				#	( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+				#	exit 1;
+				#}
+				#else {
+				#	( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
+				#}
 			}
 			else {
 				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
@@ -785,7 +803,7 @@ sub check_revalidate_state {
 		}
 		elsif ( $script_mode == $REVALIDATE && $reval_pending != 1 ) {
 			( $log_level >> $ERROR ) && print "ERROR In revalidate mode, but no update needs to be applied. I'm outta here.\n";
-			exit 0;
+			return($UPDATE_TROPS_NOTNEEDED);
 		}
 		else {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
@@ -827,6 +845,7 @@ sub check_revalidate_state {
 			}
 		}
 	}
+
 	return ($syncds_update);
 }
 
@@ -838,16 +857,23 @@ sub check_syncds_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
-		( $dispersion > 0 ) && &sleep_rand($dispersion);
-
+		## need to check if revalidation is being used first.
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
 		my $upd_ref = &lwp_get($url);
+		my $upd_json = decode_json($upd_ref);
+		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
+		if (defined($reval_pending) ) {
+			$reval_in_use = 1;
+		}
+		( $dispersion > 0 ) && &sleep_rand($dispersion);
+
+		$upd_ref = &lwp_get($url);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
 		}
 
-		my $upd_json = decode_json($upd_ref);
+		$upd_json = decode_json($upd_ref);
 		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
 		if ( !defined($upd_pending) ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an upd_pending key.\n";
@@ -882,10 +908,11 @@ sub check_syncds_state {
 					if ( $script_mode == $SYNCDS ) {
 						if ( $dispersion > 0 ) {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							for ( my $i = $dispersion; $i > 0; $i-- ) {
-								( $log_level >> $WARN ) && print ".";
-								sleep 1;
-							}
+							( $dispersion > 0 ) && &sleep_rand($dispersion, 1);
+							#for ( my $i = $dispersion; $i > 0; $i-- ) {
+							#	( $log_level >> $WARN ) && print ".";
+							#	sleep 1;
+							#}
 						}
 	
 						( $log_level >> $WARN ) && print "\n";
@@ -919,10 +946,11 @@ sub check_syncds_state {
 					if ( $script_mode == $SYNCDS ) {
 						if ( $dispersion > 0 ) {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							for ( my $i = $dispersion; $i > 0; $i-- ) {
-								( $log_level >> $WARN ) && print ".";
-								sleep 1;
-							}
+							( $dispersion > 0 ) && &sleep_rand($dispersion, 1);
+							#for ( my $i = $dispersion; $i > 0; $i-- ) {
+							#	( $log_level >> $WARN ) && print ".";
+							#	sleep 1;
+							#}
 						}
 	
 						( $log_level >> $WARN ) && print "\n";
@@ -1016,14 +1044,47 @@ sub check_syncds_state {
 }
 
 sub sleep_rand {
-	my $duration = int( rand(shift) );
+	my $dispersal = shift;
+	my $full_duration = shift;
+	my $duration = $dispersal;
+	if ( !defined($full_duration) ) {
+		$duration = int( rand($dispersal) );
+	}
+	
+	my $proper_script_mode = $script_mode; 
 
 	( $log_level >> $WARN ) && print "WARN Sleeping for $duration seconds: ";
 
+	my $reval_clock = 60;
 	for ( my $i = $duration; $i > 0; $i-- ) {
 		( $log_level >> $WARN ) && print ".";
 		sleep 1;
+		$reval_clock++;
+		if ($reval_clock > 60 && $script_mode != $BADASS ) {
+			( $log_level >> $WARN ) && print "\n";
+			( $log_level >> $WARN ) && print "WARN Pausing dispersion sleep period for revalidation check. \n";
+			my $reval_update = 0;
+			$reval_update = &check_revalidate_state(1);
+			if ( $reval_update > 0 ) {
+				( my $my_profile_name, $cfg_file_tracker, my $my_cdn_name ) = &get_cfg_file_list( $hostname_short, $traffic_ops_host, $REVALIDATE );
+
+				&process_config_files();
+
+				&update_trops($reval_update);
+
+				&start_restart_services();
+
+				$traffic_line_needed = 0;
+			}
+
+			$reval_clock = 1;
+			
+			( $log_level >> $WARN ) && print "WARN Revalidate pass complete. $i seconds remaining in dispersion period: ";
+		}
 	}
+
+	$script_mode = $proper_script_mode; 
+
 	( $log_level >> $WARN ) && print "\n";
 }
 
