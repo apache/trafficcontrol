@@ -853,6 +853,7 @@ sub check_revalidate_state {
 sub check_syncds_state {
 
 	my $syncds_update = 0;
+	my $random_duration = int( rand($dispersion) );
 
 	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
@@ -865,7 +866,7 @@ sub check_syncds_state {
 		if (defined($reval_pending) ) {
 			$reval_in_use = 1;
 		}
-		( $dispersion > 0 ) && &sleep_rand($dispersion);
+		( $dispersion > 0 ) && &sleep_timer($random_duration);
 
 		$upd_ref = &lwp_get($url);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -908,7 +909,7 @@ sub check_syncds_state {
 					if ( $script_mode == $SYNCDS ) {
 						if ( $dispersion > 0 ) {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							( $dispersion > 0 ) && &sleep_rand($dispersion, 1);
+							( $dispersion > 0 ) && &sleep_timer($dispersion);
 							#for ( my $i = $dispersion; $i > 0; $i-- ) {
 							#	( $log_level >> $WARN ) && print ".";
 							#	sleep 1;
@@ -946,7 +947,7 @@ sub check_syncds_state {
 					if ( $script_mode == $SYNCDS ) {
 						if ( $dispersion > 0 ) {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							( $dispersion > 0 ) && &sleep_rand($dispersion, 1);
+							( $dispersion > 0 ) && &sleep_timer($dispersion);
 							#for ( my $i = $dispersion; $i > 0; $i-- ) {
 							#	( $log_level >> $WARN ) && print ".";
 							#	sleep 1;
@@ -1043,13 +1044,8 @@ sub check_syncds_state {
 	return ($syncds_update);
 }
 
-sub sleep_rand {
-	my $dispersal = shift;
-	my $full_duration = shift;
-	my $duration = $dispersal;
-	if ( !defined($full_duration) ) {
-		$duration = int( rand($dispersal) );
-	}
+sub sleep_timer {
+	my $duration = shift;
 	
 	my $proper_script_mode = $script_mode; 
 
