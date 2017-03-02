@@ -117,7 +117,7 @@ func main() {
 		}
 	}
 
-	go tmcheck.Validator(*tmURI, toClient, *interval, *grace, onErr, onResumeSuccess, onCheck)
+	go tmcheck.CRStatesOfflineValidator(*tmURI, toClient, *interval, *grace, onErr, onResumeSuccess, onCheck)
 
 	if err := serve(log, *toURI, *tmURI); err != nil {
 		fmt.Printf("Serve error: %v\n", err)
@@ -145,8 +145,8 @@ func serve(log Log, toURI string, tmURI string) error {
 
 		fmt.Fprintf(w, `<pre>`)
 		logCopy := log.Get()
-		for i := len(logCopy) - 1; i >= 0; i-- {
-			fmt.Fprintf(w, "%s\n", logCopy[i])
+		for _, msg := range logCopy {
+			fmt.Fprintf(w, "%s\n", msg)
 		}
 		fmt.Fprintf(w, `</pre>`)
 
