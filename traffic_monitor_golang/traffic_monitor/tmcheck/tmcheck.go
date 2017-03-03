@@ -227,11 +227,16 @@ func AllMonitorsCRStatesOfflineValidator(
 ) {
 	invalid := map[enum.TrafficMonitorName]bool{}
 	invalidStart := map[enum.TrafficMonitorName]time.Time{}
+	metaFail := false
 	for {
 		tmErrs, err := ValidateAllMonitorsOfflineStates(toClient, includeOffline)
 		if err != nil {
 			onErr("", fmt.Errorf("Error validating monitors: %v", err))
 			time.Sleep(interval)
+			metaFail = true
+		} else if metaFail {
+			onResumeSuccess("")
+			metaFail = false
 		}
 
 		for name, err := range tmErrs {
