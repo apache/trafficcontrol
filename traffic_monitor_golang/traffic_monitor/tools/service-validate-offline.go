@@ -28,19 +28,21 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/tmcheck"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 )
 
 const UserAgent = "tm-offline-validator/0.1"
 
-const LogLimit = 10000
+const LogLimit = 10
 
 type Log struct {
-	log     *[]string
-	limit   int
-	errored *bool
-	m       *sync.RWMutex
+	log       *[]string
+	limit     int
+	errored   *bool
+	lastCheck *time.Time
+	m         *sync.RWMutex
 }
 
 func (l *Log) Add(msg string) {
@@ -58,23 +60,25 @@ func (l *Log) Get() []string {
 	return *l.log
 }
 
-func (l *Log) GetErrored() bool {
+func (l *Log) GetErrored() (bool, time.Time) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	return *l.errored
+	return *l.errored, *l.lastCheck
 }
 
 func (l *Log) SetErrored(e bool) {
 	l.m.Lock()
 	defer l.m.Unlock()
 	*l.errored = e
+	*l.lastCheck = time.Now()
 }
 
 func NewLog() Log {
 	log := make([]string, 0, LogLimit+1)
 	errored := false
 	limit := LogLimit
-	return Log{log: &log, errored: &errored, m: &sync.RWMutex{}, limit: limit}
+	lastCheck := time.Time{}
+	return Log{log: &log, errored: &errored, m: &sync.RWMutex{}, limit: limit, lastCheck: &lastCheck}
 }
 
 type Logs struct {
@@ -95,12 +99,12 @@ func (l Logs) Get(name enum.TrafficMonitorName) Log {
 	return l.logs[name]
 }
 
-func (l Logs) GetMonitors() []enum.TrafficMonitorName {
+func (l Logs) GetMonitors() []string {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	monitors := []enum.TrafficMonitorName{}
+	monitors := []string{}
 	for name, _ := range l.logs {
-		monitors = append(monitors, name)
+		monitors = append(monitors, string(name))
 	}
 	return monitors
 }
@@ -142,11 +146,7 @@ func main() {
 
 	onCheck := func(name enum.TrafficMonitorName, err error) {
 		log := logs.Get(name)
-		if err != nil {
-			log.Add(fmt.Sprintf("%v DEBUG invalid: %v\n", time.Now(), err))
-		} else {
-			log.Add(fmt.Sprintf("%v DEBUG valid\n", time.Now()))
-		}
+		log.SetErrored(err != nil)
 	}
 
 	go tmcheck.AllMonitorsCRStatesOfflineValidator(toClient, *interval, *includeOffline, *grace, onErr, onResumeSuccess, onCheck)
@@ -165,36 +165,40 @@ func serve(logs Logs, toURI string) error {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Traffic Monitor Offline Validator</title>
-<style type="text/css">body{margin:40px auto;line-height:1.6;font-size:18px;color:#444;padding:0 2px}h1,h2,h3{line-height:1.2}</style>`)
+<style type="text/css">body{margin:40px auto;line-height:1.6;font-size:18px;color:#444;padding:0 8px 0 8px}h1,h2,h3{line-height:1.2}span{padding:0px 4px 0px 4px;}</style>`)
 
 		fmt.Fprintf(w, `<p>%s`, toURI)
 
-		fmt.Fprintf(w, `<table style="width:100%%"><tr>`)
+		fmt.Fprintf(w, `<table style="width:100%%">`)
 
 		monitors := logs.GetMonitors()
+		sort.Strings(monitors) // sort, so they're always in the same order in the webpage
 		for _, monitor := range monitors {
-			fmt.Fprintf(w, `<td>`)
+			fmt.Fprintf(w, `</tr>`)
 
-			log := logs.Get(monitor)
+			log := logs.Get(enum.TrafficMonitorName(monitor))
 
-			fmt.Fprintf(w, `<p>%s`, monitor)
-			if log.GetErrored() {
-				fmt.Fprintf(w, `<h1 style="color:red">Invalid</h1>`)
+			fmt.Fprintf(w, `<td><span>%s</span></td>`, monitor)
+			errored, lastCheck := log.GetErrored()
+			if errored {
+				fmt.Fprintf(w, `<td><span style="color:red">Invalid</span></td>`)
 			} else {
-				fmt.Fprintf(w, `<h1 style="color:limegreen">Valid</h1>`)
+				fmt.Fprintf(w, `<td><span style="color:limegreen">Valid</span></td>`)
 			}
+			fmt.Fprintf(w, `<td><span>as of %v</span></td>`, lastCheck)
 
-			fmt.Fprintf(w, `<pre>`)
+			fmt.Fprintf(w, `<td><span style="font-family:monospace">`)
 			logCopy := log.Get()
-			for _, msg := range logCopy {
-				fmt.Fprintf(w, "%s\n", msg)
+			firstMsg := ""
+			if len(logCopy) > 0 {
+				firstMsg = logCopy[0]
 			}
-			fmt.Fprintf(w, `</pre>`)
+			fmt.Fprintf(w, "%s\n", firstMsg)
+			fmt.Fprintf(w, `</span></td>`)
 
-			fmt.Fprintf(w, `</td>`)
+			fmt.Fprintf(w, `</tr>`)
 		}
-
-		fmt.Fprintf(w, `</tr></table>`)
+		fmt.Fprintf(w, `</table>`)
 	})
 	return http.ListenAndServe(":80", nil)
 }
