@@ -209,10 +209,8 @@ func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool)
 			continue
 		}
 
-		fqdn := fmt.Sprintf("%s.%s", server.HostName, server.DomainName)
-		if err := ValidateOfflineStatesWithCRConfig(fqdn, crConfig.CRConfig, toClient); err != nil {
-			errs[enum.TrafficMonitorName(server.HostName)] = err
-		}
+		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
+		errs[enum.TrafficMonitorName(server.HostName)] = ValidateOfflineStatesWithCRConfig(uri, crConfig.CRConfig, toClient)
 	}
 	return errs, nil
 }
