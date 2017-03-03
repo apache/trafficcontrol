@@ -142,8 +142,7 @@ func ValidateCRStates(crstates *peer.Crstates, crconfig *crconfig.CRConfig) erro
 	return nil
 }
 
-// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
-func CRStatesOfflineValidator(
+type ValidatorFunc func(
 	tmURI string,
 	toClient *to.Session,
 	interval time.Duration,
@@ -151,11 +150,33 @@ func CRStatesOfflineValidator(
 	onErr func(error),
 	onResumeSuccess func(),
 	onCheck func(error),
+)
+
+type AllValidatorFunc func(
+	toClient *to.Session,
+	interval time.Duration,
+	includeOffline bool,
+	grace time.Duration,
+	onErr func(enum.TrafficMonitorName, error),
+	onResumeSuccess func(enum.TrafficMonitorName),
+	onCheck func(enum.TrafficMonitorName, error),
+)
+
+// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
+func Validator(
+	tmURI string,
+	toClient *to.Session,
+	interval time.Duration,
+	grace time.Duration,
+	onErr func(error),
+	onResumeSuccess func(),
+	onCheck func(error),
+	validator func(tmURI string, toClient *to.Session) error,
 ) {
 	invalid := false
 	invalidStart := time.Time{}
 	for {
-		err := ValidateOfflineStates(tmURI, toClient)
+		err := validator(tmURI, toClient)
 
 		if err != nil && !invalid {
 			invalid = true
@@ -180,14 +201,26 @@ func CRStatesOfflineValidator(
 	}
 }
 
+// CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
+func CRStatesOfflineValidator(
+	tmURI string,
+	toClient *to.Session,
+	interval time.Duration,
+	grace time.Duration,
+	onErr func(error),
+	onResumeSuccess func(),
+	onCheck func(error),
+) {
+	Validator(tmURI, toClient, interval, grace, onErr, onResumeSuccess, onCheck, ValidateOfflineStates)
+}
+
 // CRConfigOrError contains a CRConfig or an error. Union types? Monads? What are those?
 type CRConfigOrError struct {
 	CRConfig *crconfig.CRConfig
 	Err      error
 }
 
-// ValidateOfflineStates validates that no OFFLINE or ADMIN_DOWN caches in the given Traffic Ops' CRConfig are marked Available in the given Traffic Monitor's CRStates.
-func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
+func GetMonitors(toClient *to.Session, includeOffline bool) ([]to.Server, error) {
 	trafficMonitorType := "RASCAL"
 	monitorTypeQuery := map[string][]string{"type": []string{trafficMonitorType}}
 	servers, err := toClient.ServersByType(monitorTypeQuery)
@@ -197,6 +230,15 @@ func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool)
 
 	if !includeOffline {
 		servers = FilterOfflines(servers)
+	}
+	return servers, nil
+}
+
+// ValidateOfflineStates validates that no OFFLINE or ADMIN_DOWN caches in the given Traffic Ops' CRConfig are marked Available in the given Traffic Monitor's CRStates.
+func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
+	servers, err := GetMonitors(toClient, includeOffline)
+	if err != nil {
+		return nil, err
 	}
 
 	crConfigs := GetCRConfigs(GetCDNs(servers), toClient)
@@ -215,8 +257,7 @@ func ValidateAllMonitorsOfflineStates(toClient *to.Session, includeOffline bool)
 	return errs, nil
 }
 
-// AllMonitorsCRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `enum.TrafficMonitorName` will be empty.
-func AllMonitorsCRStatesOfflineValidator(
+func AllValidator(
 	toClient *to.Session,
 	interval time.Duration,
 	includeOffline bool,
@@ -224,12 +265,13 @@ func AllMonitorsCRStatesOfflineValidator(
 	onErr func(enum.TrafficMonitorName, error),
 	onResumeSuccess func(enum.TrafficMonitorName),
 	onCheck func(enum.TrafficMonitorName, error),
+	validator func(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error),
 ) {
 	invalid := map[enum.TrafficMonitorName]bool{}
 	invalidStart := map[enum.TrafficMonitorName]time.Time{}
 	metaFail := false
 	for {
-		tmErrs, err := ValidateAllMonitorsOfflineStates(toClient, includeOffline)
+		tmErrs, err := validator(toClient, includeOffline)
 		if err != nil {
 			onErr("", fmt.Errorf("Error validating monitors: %v", err))
 			time.Sleep(interval)
@@ -264,6 +306,19 @@ func AllMonitorsCRStatesOfflineValidator(
 
 		time.Sleep(interval)
 	}
+}
+
+// AllMonitorsCRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `enum.TrafficMonitorName` will be empty.
+func AllMonitorsCRStatesOfflineValidator(
+	toClient *to.Session,
+	interval time.Duration,
+	includeOffline bool,
+	grace time.Duration,
+	onErr func(enum.TrafficMonitorName, error),
+	onResumeSuccess func(enum.TrafficMonitorName),
+	onCheck func(enum.TrafficMonitorName, error),
+) {
+	AllValidator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck, ValidateAllMonitorsOfflineStates)
 }
 
 // FilterOfflines returns only servers which are REPORTED or ONLINE
