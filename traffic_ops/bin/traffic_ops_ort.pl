@@ -24,7 +24,6 @@ use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
-use Data::Dumper;
 
 $| = 1;
 my $date           = `/bin/date`;
