@@ -27,6 +27,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/tmcheck"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"io"
 	"net/http"
 	"sort"
 	"sync"
@@ -109,6 +110,30 @@ func (l Logs) GetMonitors() []string {
 	return monitors
 }
 
+func startValidator(validator tmcheck.AllValidatorFunc, toClient *to.Session, interval time.Duration, includeOffline bool, grace time.Duration) Logs {
+	logs := NewLogs()
+
+	onErr := func(name enum.TrafficMonitorName, err error) {
+		log := logs.Get(name)
+		log.Add(fmt.Sprintf("%v ERROR %v\n", time.Now(), err))
+		log.SetErrored(true)
+	}
+
+	onResumeSuccess := func(name enum.TrafficMonitorName) {
+		log := logs.Get(name)
+		log.Add(fmt.Sprintf("%v INFO State Valid\n", time.Now()))
+		log.SetErrored(false)
+	}
+
+	onCheck := func(name enum.TrafficMonitorName, err error) {
+		log := logs.Get(name)
+		log.SetErrored(err != nil)
+	}
+
+	go validator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck)
+	return logs
+}
+
 func main() {
 	toURI := flag.String("to", "", "The Traffic Ops URI, whose CRConfig to validate")
 	toUser := flag.String("touser", "", "The Traffic Ops user")
@@ -130,33 +155,48 @@ func main() {
 		return
 	}
 
-	logs := NewLogs()
+	crStatesOfflineLogs := startValidator(tmcheck.AllMonitorsCRStatesOfflineValidator, toClient, *interval, *includeOffline, *grace)
+	peerPollerLogs := startValidator(tmcheck.PeerPollersAllValidator, toClient, *interval, *includeOffline, *grace)
 
-	onErr := func(name enum.TrafficMonitorName, err error) {
-		log := logs.Get(name)
-		log.Add(fmt.Sprintf("%v ERROR %v\n", time.Now(), err))
-		log.SetErrored(true)
-	}
-
-	onResumeSuccess := func(name enum.TrafficMonitorName) {
-		log := logs.Get(name)
-		log.Add(fmt.Sprintf("%v INFO State Valid\n", time.Now()))
-		log.SetErrored(false)
-	}
-
-	onCheck := func(name enum.TrafficMonitorName, err error) {
-		log := logs.Get(name)
-		log.SetErrored(err != nil)
-	}
-
-	go tmcheck.AllMonitorsCRStatesOfflineValidator(toClient, *interval, *includeOffline, *grace, onErr, onResumeSuccess, onCheck)
-
-	if err := serve(logs, *toURI); err != nil {
+	if err := serve(*toURI, crStatesOfflineLogs, peerPollerLogs); err != nil {
 		fmt.Printf("Serve error: %v\n", err)
 	}
 }
 
-func serve(logs Logs, toURI string) error {
+func printLogs(logs Logs, w io.Writer) {
+	fmt.Fprintf(w, `<table style="width:100%%">`)
+
+	monitors := logs.GetMonitors()
+	sort.Strings(monitors) // sort, so they're always in the same order in the webpage
+	for _, monitor := range monitors {
+		fmt.Fprintf(w, `</tr>`)
+
+		log := logs.Get(enum.TrafficMonitorName(monitor))
+
+		fmt.Fprintf(w, `<td><span>%s</span></td>`, monitor)
+		errored, lastCheck := log.GetErrored()
+		if errored {
+			fmt.Fprintf(w, `<td><span style="color:red">Invalid</span></td>`)
+		} else {
+			fmt.Fprintf(w, `<td><span style="color:limegreen">Valid</span></td>`)
+		}
+		fmt.Fprintf(w, `<td><span>as of %v</span></td>`, lastCheck)
+
+		fmt.Fprintf(w, `<td><span style="font-family:monospace">`)
+		logCopy := log.Get()
+		firstMsg := ""
+		if len(logCopy) > 0 {
+			firstMsg = logCopy[0]
+		}
+		fmt.Fprintf(w, "%s\n", firstMsg)
+		fmt.Fprintf(w, `</span></td>`)
+
+		fmt.Fprintf(w, `</tr>`)
+	}
+	fmt.Fprintf(w, `</table>`)
+}
+
+func serve(toURI string, crStatesOfflineLogs Logs, peerPollerLogs Logs) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Content-Type", "text/html")
@@ -167,38 +207,16 @@ func serve(logs Logs, toURI string) error {
 <title>Traffic Monitor Offline Validator</title>
 <style type="text/css">body{margin:40px auto;line-height:1.6;font-size:18px;color:#444;padding:0 8px 0 8px}h1,h2,h3{line-height:1.2}span{padding:0px 4px 0px 4px;}</style>`)
 
+		fmt.Fprintf(w, `<h1>Traffic Monitor Validator</h1>`)
+
 		fmt.Fprintf(w, `<p>%s`, toURI)
 
-		fmt.Fprintf(w, `<table style="width:100%%">`)
+		fmt.Fprintf(w, `<h2>CRStates Offline</h2>`)
+		printLogs(crStatesOfflineLogs, w)
 
-		monitors := logs.GetMonitors()
-		sort.Strings(monitors) // sort, so they're always in the same order in the webpage
-		for _, monitor := range monitors {
-			fmt.Fprintf(w, `</tr>`)
+		fmt.Fprintf(w, `<h2>Peer Poller</h2>`)
+		printLogs(peerPollerLogs, w)
 
-			log := logs.Get(enum.TrafficMonitorName(monitor))
-
-			fmt.Fprintf(w, `<td><span>%s</span></td>`, monitor)
-			errored, lastCheck := log.GetErrored()
-			if errored {
-				fmt.Fprintf(w, `<td><span style="color:red">Invalid</span></td>`)
-			} else {
-				fmt.Fprintf(w, `<td><span style="color:limegreen">Valid</span></td>`)
-			}
-			fmt.Fprintf(w, `<td><span>as of %v</span></td>`, lastCheck)
-
-			fmt.Fprintf(w, `<td><span style="font-family:monospace">`)
-			logCopy := log.Get()
-			firstMsg := ""
-			if len(logCopy) > 0 {
-				firstMsg = logCopy[0]
-			}
-			fmt.Fprintf(w, "%s\n", firstMsg)
-			fmt.Fprintf(w, `</span></td>`)
-
-			fmt.Fprintf(w, `</tr>`)
-		}
-		fmt.Fprintf(w, `</table>`)
 	})
 	return http.ListenAndServe(":80", nil)
 }
