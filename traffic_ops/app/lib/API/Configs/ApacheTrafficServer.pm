@@ -96,7 +96,7 @@ sub get_config_metadata {
 
 
 
-	foreach my $config_file ( keys $data_obj->{'config_files'} ) {
+	foreach my $config_file ( keys %{ $data_obj->{'config_files'} } ) {
 		$data_obj->{'config_files'}->{$config_file}->{'scope'} = $self->get_scope($config_file);
 		my $scope = $data_obj->{'config_files'}->{$config_file}->{'scope'};
 		my $scope_id;
