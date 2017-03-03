@@ -909,10 +909,6 @@ sub check_syncds_state {
 						if ( $dispersion > 0 ) {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
 							( $dispersion > 0 ) && &sleep_timer($dispersion);
-							#for ( my $i = $dispersion; $i > 0; $i-- ) {
-							#	( $log_level >> $WARN ) && print ".";
-							#	sleep 1;
-							#}
 						}
 	
 						( $log_level >> $WARN ) && print "\n";
@@ -947,10 +943,6 @@ sub check_syncds_state {
 						if ( $dispersion > 0 ) {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
 							( $dispersion > 0 ) && &sleep_timer($dispersion);
-							#for ( my $i = $dispersion; $i > 0; $i-- ) {
-							#	( $log_level >> $WARN ) && print ".";
-							#	sleep 1;
-							#}
 						}
 	
 						( $log_level >> $WARN ) && print "\n";
@@ -1712,14 +1704,14 @@ sub get_cfg_file_list {
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $url = "$tm_host/ort/$host_name/ort1";
+	my $url = "$tm_host/api/1.2/server/$host_name/configfiles/ats";
 
 	my $result = &lwp_get($url);
 
 	my $ort_ref = decode_json($result);
-	$profile_name = $ort_ref->{'profile'}->{'name'};
+	$profile_name = $ort_ref->{'info'}->{'profile_name'};
 	( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
-	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
+	$cdn_name = $ort_ref->{'info'}->{'cdn_name'};
 	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	if ( $script_mode == $REVALIDATE ) {
 		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
@@ -1728,6 +1720,7 @@ sub get_cfg_file_list {
 				( $log_level >> $INFO )
 					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+				$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
 				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
 			}
 		}
@@ -1738,6 +1731,7 @@ sub get_cfg_file_list {
 			( $log_level >> $INFO )
 				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
 			$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+			$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
 			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
 		}
 	}
@@ -2426,11 +2420,17 @@ sub validate_result {
 
 sub set_url {
 	my $filename = shift;
+	
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
+	my $URI = $cfg_file_tracker->{$filename}->{'API_URI'};
+	if ( !defined($URI) ) {
+		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+	}
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
-	return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+	#return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+	return $traffic_ops_host . $URI; 
 }
 
 sub scrape_unencode_text {
