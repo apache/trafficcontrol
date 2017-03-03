@@ -35,6 +35,7 @@ under the License.
         <table id="serversTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
+                <th>Update?</th>
                 <th>hostName</th>
                 <th>domainName</th>
                 <th>cdn</th>
@@ -52,6 +53,10 @@ under the License.
             </thead>
             <tbody>
             <tr ng-repeat="server in servers" ng-class="{'active': server.updPending}">
+                <td class="update-column">
+                    <i class="fa fa-flag" ng-show="server.updPending"></i>
+                    <i class="fa fa-ban" ng-show="!server.updPending"></i>
+                </td>
                 <td>{{server.hostName}}</td>
                 <td>{{server.domainName}}</td>
                 <td>{{server.cdnName}}</td>
