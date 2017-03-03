@@ -24,8 +24,8 @@ under the License.
             <li class="active">{{profileName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" ng-click="viewParams()">View Parameters &nbsp;&nbsp;<i class="fa fa-sticky-note"></i></button>
-            <button class="btn btn-primary" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
+            <button class="btn btn-primary" title="View Parameters" ng-click="viewParams()"><i class="fa fa-clone"></i></button>
+            <button class="btn btn-primary" title="View Servers" ng-click="viewServers()"><i class="fa fa-server"></i></button>
 
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">

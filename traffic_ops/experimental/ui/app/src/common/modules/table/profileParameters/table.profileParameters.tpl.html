@@ -25,8 +25,8 @@ under the License.
             <li class="active">Parameters</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="addParameter()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Parameter To Profile</button>
+            <button class="btn btn-primary" title="Add Parameter" ng-click="addParameter()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -48,7 +48,7 @@ under the License.
                 <td>{{parameter.name}}</td>
                 <td>{{parameter.configFile}}</td>
                 <td>{{parameter.value}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove from Profile" ng-click="removeParameter()"><i class="fa fa-trash-o"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Remove Parameter" ng-click="removeParameter()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>
         </table>
