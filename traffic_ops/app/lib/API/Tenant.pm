@@ -48,7 +48,7 @@ sub index {
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
-				"active"       => $row->active,
+				"active"       => \$row->active,
 				"parentId"     => $row->parent_id,
 			}
 		);
@@ -68,7 +68,7 @@ sub show {
 			@data, {
 				"id"           => $row->id,
 				"name"         => $row->name,
-				"active"       => $row->active,
+				"active"       => \$row->active,
 				"parentId"     => $row->parent_id,
 			}
 		);
@@ -132,7 +132,7 @@ sub update {
 		my $response;
 		$response->{id}          = $rs->id;
 		$response->{name}        = $rs->name;
-		$response->{active}      = $rs->active;
+		$response->{active}      = \$rs->active;
 		$response->{parentId}    = $rs->parent_id;
 		$response->{lastUpdated} = $rs->last_updated;
 		&log( $self, "Updated Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
@@ -186,7 +186,7 @@ sub create {
 		my $response;
 		$response->{id}          	= $rs->id;
 		$response->{name}        	= $rs->name;
-		$response->{active}        	= $rs->active;
+		$response->{active}        	= \$rs->active;
 		$response->{parentId}           = $rs->parent_id;
 		$response->{lastUpdated} 	= $rs->last_updated;
 
@@ -212,6 +212,28 @@ sub delete {
 	my $tenant = $self->db->resultset('Tenant')->find( { id => $id } );
 	if ( !defined($tenant) ) {
 		return $self->not_found();
+	}	
+	my $name = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('name')->single();
+	
+	my $existing_child = $self->db->resultset('Tenant')->search( { parent_id => $id } )->get_column('name')->first();
+	if ($existing_child) {
+		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
+	}
+
+	#The order of the below tests is intentional - allowing UT to cover all cases - TODO(nirs) remove this comment when a full "tenancy" UT is added, including permissions and such (no use in putting effort into it yet)
+	my $existing_ds = $self->db->resultset('Deliveryservice')->search( { tenant_id => $id })->get_column('xml_id')->first();
+	if ($existing_ds) {
+		return $self->alert("Tenant '$name' is assign with delivery-services(s): e.g. '$existing_ds'. Please update/delete these delivery-services and retry.");
+	}
+
+	my $existing_cdn = $self->db->resultset('Cdn')->search( { tenant_id => $id })->get_column('name')->first();
+	if ($existing_cdn) {
+		return $self->alert("Tenant '$name' is assign with CDNs(s): e.g. '$existing_cdn'. Please update/delete these CDNs and retry.");
+	}
+
+	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id })->get_column('username')->first();
+	if ($existing_user) {
+		return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");
 	}
 
 	my $rs = $tenant->delete();
