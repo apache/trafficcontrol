@@ -130,6 +130,7 @@ sub delivery_services {
 					"remapText"                => $row->remap_text,
 					"signed"                   => \$row->signed,
 					"sslKeyVersion"            => $row->ssl_key_version,
+					"tenantId"		   => $row->tenant_id,
 					"trRequestHeaders"         => $row->tr_request_headers,
 					"trResponseHeaders"        => $row->tr_response_headers,
 					"type"                     => $row->type->name,
@@ -509,6 +510,16 @@ sub _check_params {
 		$transformed_params->{logsEnabled} = 0;
 	}
 
+	if (defined($ds_id)) {
+		#update
+		#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+		$transformed_params->{tenantId} = exists($params->{tenantId}) ? $params->{tenantId}  :  undef;
+	} else {
+		#create	
+		#setting tenant_id to the runing user if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+		$transformed_params->{tenantId} = exists($params->{tenantId}) ? $params->{tenantId}  :  current_user_tenant ($self);
+	}
+
 	return ($transformed_params, undef);
 }
 
@@ -564,6 +575,7 @@ sub new_value {
 			tr_request_headers     => $params->{trRequestHeaders},
 			tr_response_headers    => $params->{trResponseHeaders},
 			logs_enabled           => $transformed_params->{logsEnabled},
+			tenant_id              => $transformed_params->{tenantId},
 		};
 
 	return $value;
@@ -623,6 +635,7 @@ sub get_response {
 		$response->{initialDispersion}      = $rs->initial_dispersion;
 		$response->{dnsBypassCname}         = $rs->dns_bypass_cname;
 		$response->{regionalGeoBlocking}    = $rs->regional_geo_blocking;
+		$response->{tenantId}               = $rs->tenant_id;
 		$response->{trRequestHeaders}       = $rs->tr_request_headers;
 		$response->{logsEnabled}            = $rs->logs_enabled==1 ? "true" : "false";
 	}
