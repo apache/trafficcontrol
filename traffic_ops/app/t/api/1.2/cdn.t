@@ -45,12 +45,21 @@ sub run_ut {
 		->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Tenant $tenant_name: Should login?';
 	
 	$t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 100 )
-	    ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	    ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    	    ->json_is( "/response/0/tenantId", undef)
+    	    ->json_is( "/response/2/name", "cdn-root" )
+	    ->json_is( "/response/2/tenantId", 10**9 );
 	
 	$t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 )
 	    ->json_is( "/response/0/name", "cdn1" )
+	    ->json_is( "/response/0/tenantId", undef)
 	    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
-	
+
+	$t->get_ok("/api/1.2/cdns/300")->status_is(200)->json_is( "/response/0/id", 300 )
+	    ->json_is( "/response/0/name", "cdn-root" )
+	    ->json_is( "/response/0/tenantId", 10**9)
+	    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 	ok $t->post_ok('/api/1.2/cdns/100/queue_update' => {Accept => 'application/json'} => json => {
 	            "action" => "queue" })
 	        ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -85,6 +94,12 @@ sub run_ut {
 	            , 'Tenant $tenant_name: Do the cdn queue update details return?';
 	
 	my $cdn_id = &get_cdn_id('cdn_test');
+
+	#verify retrieved data in show
+	$t->get_ok("/api/1.2/cdns/".$cdn_id)->status_is(200)
+	    ->json_is( "/response/0/name", "cdn_test" )
+	    ->json_is( "/response/0/tenantId", $tenant_id )
+	    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 	ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => json => {
         	"name" => "cdn_test2", "dnssecEnabled" => "true", "tenantId" => $tenant_id
