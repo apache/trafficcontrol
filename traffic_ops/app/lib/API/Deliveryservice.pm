@@ -246,7 +246,7 @@ sub update {
 	}
 	
 	#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; #$self->db->resultset('Deliveryservice')->find( { xml_id => $xml_id } )->get_column('tenant_id')->single();
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
 
 	my $values = {
 		active                      => $params->{active},
@@ -398,7 +398,7 @@ sub create {
 	}
 	
 	#setting tenant_id to the user id if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  current_user_tenant ($self);
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
 
 	my $values = {
 		active                      => $params->{active},

@@ -517,7 +517,7 @@ sub _check_params {
 	} else {
 		#create	
 		#setting tenant_id to the runing user if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-		$transformed_params->{tenantId} = exists($params->{tenantId}) ? $params->{tenantId}  :  current_user_tenant ($self);
+		$transformed_params->{tenantId} = exists($params->{tenantId}) ? $params->{tenantId}  :  $self->current_user_tenant();
 	}
 
 	return ($transformed_params, undef);
