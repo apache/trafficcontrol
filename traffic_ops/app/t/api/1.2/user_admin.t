@@ -62,6 +62,7 @@ sub run_ut {
         	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/username" =>  $addedUserName )
 		->json_is( "/response/email" =>  $addedUserEmail)
+		->json_is( "/response/tenantId" =>  $tenant_id) #tenant Id not set - getting the tenant id from the user
         	    , 'Failed adding user?';
 
 	#same name again - fail
