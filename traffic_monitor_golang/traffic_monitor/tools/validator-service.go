@@ -182,14 +182,16 @@ func printLogs(logs Logs, w io.Writer) {
 		}
 		fmt.Fprintf(w, `<td><span>as of %v</span></td>`, lastCheck)
 
-		fmt.Fprintf(w, `<td><span style="font-family:monospace">`)
-		logCopy := log.Get()
-		firstMsg := ""
-		if len(logCopy) > 0 {
-			firstMsg = logCopy[0]
+		if errored {
+			fmt.Fprintf(w, `<td><span style="font-family:monospace">`)
+			logCopy := log.Get()
+			firstMsg := ""
+			if len(logCopy) > 0 {
+				firstMsg = logCopy[0]
+			}
+			fmt.Fprintf(w, "%s\n", firstMsg)
+			fmt.Fprintf(w, `</span></td>`)
 		}
-		fmt.Fprintf(w, "%s\n", firstMsg)
-		fmt.Fprintf(w, `</span></td>`)
 
 		fmt.Fprintf(w, `</tr>`)
 	}
