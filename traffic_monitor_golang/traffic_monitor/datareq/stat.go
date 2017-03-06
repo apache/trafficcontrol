@@ -99,7 +99,7 @@ func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration,
 	s.MemTotalBytes = memStats.TotalAlloc
 	s.MemSysBytes = memStats.Sys
 
-	oldestPolledPeer, oldestPolledPeerTime := oldestPeerPollTime(peerStates.GetQueryTimes()) // map[enum.TrafficMonitorName]time.Time)
+	oldestPolledPeer, oldestPolledPeerTime := oldestPeerPollTime(peerStates.GetQueryTimes(), peerStates.GetPeersOnline())
 	s.OldestPolledPeer = string(oldestPolledPeer)
 	s.OldestPolledPeerMs = time.Now().Sub((oldestPolledPeerTime)).Nanoseconds() / util.MillisecondsPerNanosecond
 
@@ -145,11 +145,14 @@ func getCacheTimePercentile(lastHealthTimes map[enum.CacheName]time.Duration, pe
 	return times[n]
 }
 
-func oldestPeerPollTime(peerTimes map[enum.TrafficMonitorName]time.Time) (enum.TrafficMonitorName, time.Time) {
+func oldestPeerPollTime(peerTimes map[enum.TrafficMonitorName]time.Time, peerOnline map[enum.TrafficMonitorName]bool) (enum.TrafficMonitorName, time.Time) {
 	now := time.Now()
 	oldestTime := now
 	oldestPeer := enum.TrafficMonitorName("")
 	for p, t := range peerTimes {
+		if !peerOnline[p] {
+			continue
+		}
 		if oldestTime.After(t) {
 			oldestTime = t
 			oldestPeer = p

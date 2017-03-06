@@ -49,17 +49,20 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 		HandleErr(errorCount, path, err)
 		return []byte(err.Error()), http.StatusBadRequest
 	}
-	bytes, err := json.Marshal(createAPIPeerStates(peerStates.GetCrstates(), filter, params))
+	bytes, err := json.Marshal(createAPIPeerStates(peerStates.GetCrstates(), peerStates.GetPeersOnline(), filter, params))
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, filter *PeerStateFilter, params url.Values) APIPeerStates {
+func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, peersOnline map[enum.TrafficMonitorName]bool, filter *PeerStateFilter, params url.Values) APIPeerStates {
 	apiPeerStates := APIPeerStates{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
 	}
 
 	for peer, state := range peerStates {
+		if !peersOnline[peer] {
+			continue
+		}
 		if !filter.UsePeer(peer) {
 			continue
 		}

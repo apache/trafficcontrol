@@ -189,16 +189,36 @@ type CRStatesPeersThreadsafe struct {
 	crStates   map[enum.TrafficMonitorName]Crstates
 	peerStates map[enum.TrafficMonitorName]bool
 	peerTimes  map[enum.TrafficMonitorName]time.Time
+	peerOnline map[enum.TrafficMonitorName]bool
+	timeout    *time.Duration
 	m          *sync.RWMutex
 }
 
 // NewCRStatesPeersThreadsafe creates a new CRStatesPeers object safe for multiple goroutine readers and a single writer.
 func NewCRStatesPeersThreadsafe() CRStatesPeersThreadsafe {
+	timeout := time.Hour // default to a large timeout
 	return CRStatesPeersThreadsafe{
 		m:          &sync.RWMutex{},
+		timeout:    &timeout,
+		peerOnline: map[enum.TrafficMonitorName]bool{},
 		crStates:   map[enum.TrafficMonitorName]Crstates{},
 		peerStates: map[enum.TrafficMonitorName]bool{},
 		peerTimes:  map[enum.TrafficMonitorName]time.Time{},
+	}
+}
+
+func (t *CRStatesPeersThreadsafe) SetTimeout(timeout time.Duration) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	*t.timeout = timeout
+}
+
+func (t *CRStatesPeersThreadsafe) SetPeers(newPeers map[enum.TrafficMonitorName]struct{}) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	for peer, _ := range t.crStates {
+		_, ok := newPeers[peer]
+		t.peerOnline[peer] = ok
 	}
 }
 
@@ -221,12 +241,27 @@ func copyPeerTimes(a map[enum.TrafficMonitorName]time.Time) map[enum.TrafficMoni
 	return m
 }
 
+func copyPeerAvailable(a map[enum.TrafficMonitorName]bool) map[enum.TrafficMonitorName]bool {
+	m := make(map[enum.TrafficMonitorName]bool, len(a))
+	for k, v := range a {
+		m[k] = v
+	}
+	return m
+}
+
 // GetPeerAvailability returns the state of the given peer
 func (t *CRStatesPeersThreadsafe) GetPeerAvailability(peer enum.TrafficMonitorName) bool {
 	t.m.RLock()
-	availability := t.peerStates[peer]
+	availability := t.peerStates[peer] && t.peerOnline[peer] && time.Since(t.peerTimes[peer]) < *t.timeout
 	t.m.RUnlock()
 	return availability
+}
+
+// GetPeersOnline return a map of peers which are marked ONLINE in the latest CRConfig from Traffic Ops. This is NOT guaranteed to actually _contain_ all OFFLINE monitors returned by other functions, such as `GetPeerAvailability` and `GetQueryTimes`, but bool defaults to false, so the value of any key is guaranteed to be correct.
+func (t *CRStatesPeersThreadsafe) GetPeersOnline() map[enum.TrafficMonitorName]bool {
+	t.m.RLock()
+	defer t.m.RUnlock()
+	return copyPeerAvailable(t.peerOnline)
 }
 
 // GetQueryTimes returns the last query time of all peers
