@@ -38,6 +38,7 @@ import (
 func StartMonitorConfigManager(
 	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
 	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
@@ -49,6 +50,7 @@ func StartMonitorConfigManager(
 	go monitorConfigListen(monitorConfig,
 		monitorConfigPollChan,
 		localStates,
+		peerStates,
 		statURLSubscriber,
 		healthURLSubscriber,
 		peerURLSubscriber,
@@ -133,6 +135,7 @@ func monitorConfigListen(
 	monitorConfigTS threadsafe.TrafficMonitorConfigMap,
 	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
 	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
@@ -204,6 +207,7 @@ func monitorConfigListen(
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout}
 		}
 
+		peerSet := map[enum.TrafficMonitorName]struct{}{}
 		for _, srv := range monitorConfig.TrafficMonitor {
 			if srv.HostName == staticAppData.Hostname {
 				continue
@@ -214,11 +218,14 @@ func monitorConfigListen(
 			// TODO: the URL should be config driven. -jse
 			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
 			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
+			peerSet[enum.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
 		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: statPollInterval}
 		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: healthPollInterval}
 		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: peerPollInterval}
+		peerStates.SetTimeout((peerPollInterval + cfg.HTTPTimeout) * 2)
+		peerStates.SetPeers(peerSet)
 
 		for cacheName := range localStates.GetCaches() {
 			if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {
