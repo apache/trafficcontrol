@@ -193,7 +193,7 @@ my $header_comment = &get_header_comment($traffic_ops_host);
 my $ats_uid          = getpwnam("ats");
 
 #### If this is a syncds run, check to see if we can bail.
-my $syncds_update = '0';
+my $syncds_update = 0;
 if ( $script_mode == $REVALIDATE ) {
 	if ( defined $traffic_ops_host ) {
 		($syncds_update) = &check_revalidate_state();
@@ -751,7 +751,7 @@ sub check_revalidate_state {
 	my $syncds_update = 0;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Checking revalidate state.\n";
-	if ( $script_mode == $REVALIDATE || $sleep_override == '1' ) {
+	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
 
 		my $url     = "$traffic_ops_host\/update/$hostname_short";
@@ -1407,8 +1407,8 @@ sub lwp_get {
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
-			if ( $url =~ m/configfiles\/ats/) {
-				return $response->code;
+			if ( $url =~ m/configfiles\/ats/ && $response->code == 404) {
+					return $response->code;
 			}
 			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
@@ -1701,15 +1701,16 @@ sub get_cfg_file_list {
 
 	my $result = &lwp_get($url);
 
-	if ($result =~ "404") {
+	if ($result == 404) {
 		$api_in_use = 0;
+		( $log_level >> $INFO ) && printf("INFO Traffic Ops version does not support config files API. Reverting to UI route.\n");
 		$url = "$tm_host/ort/$host_name/ort1";
 		$result = &lwp_get($url);
 	}
 
 	my $ort_ref = decode_json($result);
 	
-	if ($api_in_use == '1') {
+	if ($api_in_use == 1) {
 		$profile_name = $ort_ref->{'info'}->{'profile_name'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
 		$cdn_name = $ort_ref->{'info'}->{'cdn_name'};
@@ -1728,7 +1729,7 @@ sub get_cfg_file_list {
 				( $log_level >> $INFO )
 					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
-				if ($api_in_use == '1') {
+				if ($api_in_use == 1) {
 					$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
 				}
 				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
@@ -1741,7 +1742,7 @@ sub get_cfg_file_list {
 			( $log_level >> $INFO )
 				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
 			$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
-			if ($api_in_use == '1') {
+			if ($api_in_use == 1) {
 				$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
 			}
 			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
@@ -2435,7 +2436,7 @@ sub set_url {
 	
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
 	my $URI;
-	if ( $api_in_use == '1' && defined($cfg_file_tracker->{$filename}->{'API_URI'}) ) {
+	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'API_URI'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'API_URI'};
 	}
 	else {
