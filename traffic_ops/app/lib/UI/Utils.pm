@@ -442,7 +442,6 @@ sub verify_tenancy {
 
 sub current_user_tenant {
     my $self = shift;
-    my $username = shift;
     return $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('tenant_id')->single();
 }    
 
