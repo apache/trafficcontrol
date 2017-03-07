@@ -35,9 +35,11 @@ RUN	yum -y install \
 	yum -y clean all
 ###
 
-WORKDIR /trafficcontrol
-CMD mkdir -p dist && \
-	./build/build.sh traffic_monitor_golang 2>&1 | \
-	tee ./dist/build-traffic_monitor_golang.log
+CMD set -x; cp -a /trafficcontrol /tmp/. && \
+	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
+	./build/build.sh traffic_monitor_golang 2>&1 | tee ./dist/build-traffic_monitor_golang.log && \
+	mkdir -p /trafficcontrol/dist && \
+	cp dist/*traffic_monitor_golang* /trafficcontrol/dist
+
 
 # vi:syntax=Dockerfile
