@@ -18,6 +18,14 @@
 version: '2'
 
 services:
+  source:
+    image: trafficcontrol_tarball
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-source
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol
+
   traffic_monitor_build:
     image: traffic_monitor_builder
     build:

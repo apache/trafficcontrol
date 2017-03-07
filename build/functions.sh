@@ -103,7 +103,7 @@ function checkEnvironment {
 
 	# verify required tools available in path -- extra tools required by subsystem are passed in
 	for pgm in git rpmbuild "$@"; do
-		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
+		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; }
 	done
 	# verify git version
 	requiredGitVersion=1.7.12
