@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-# Some misc subs to help with testing.
 #
 use warnings;
 use strict;
@@ -31,15 +29,14 @@ use Test::More;
 use List::Compare;
 
 my $config;
-my $ref_db_file  = "/tmp/to_ref.mysql";
 my $tmp_dir_base = "/tmp/files";
 my $tmp_dir      = $tmp_dir_base . "/ref";
 my $CURL_OPTS;
 my $cookie;
 
-my $gen_crconfig = 1; # TODO parameter
-
 &configure( $ARGV[1] );
+
+my $perform_snapshot = $config->{perform_snapshot};
 
 if ( $ARGV[0] eq "getref" ) {
 	&get_ref();
@@ -52,47 +49,6 @@ elsif ( $ARGV[0] eq "compare" ) {
 }
 else {
 	print "Help\n";
-}
-
-if (0) {
-	&build_rpms();
-	&build_runner_containers();
-	&load_mysql_database();
-	&pg_migrate();
-
-	# get a cookie from the reference system; cookie and CURL_OPTs are globals
-	#	if ( !defined( $config->{ref_to_passwd} ) ) {
-	#		$config->{ref_to_passwd} = &get_to_passwd( $config->{ref_to_user} );
-	#	}
-	#	my $to_login = $config->{ref_to_user} . ":" . $config->{ref_to_passwd};
-	#	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
-	#	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
-	#
-	#	&get_files( $config->{ref_to_url} );
-	#	&get_crconfigs( $config->{ref_to_url} );
-	#
-## start riak; it needs to be available at 127.0.0.1:8088
-## update server set status=1 where type=41;
-## insert into server (host_name, domain_name, type, ip_address, ip_gateway, ip_netmask, profile, tcp_port,interface_name, phys_location, cachegroup,status, cdn_id) values ('riak-local', 'cdnlab.comcast.net', 41, '127.0.0.1', '127.0.0.2', '255.255.255.0', 51, 8088,'eth0', 1, 1, 2, 2);
-## /etc/hosts: 127.0.0.1   localhost riak-local.cdnlab.comcast.net
-	#
-	#	# start morbo like export `MOJO_MODE=test 	./bin/start.pl`
-	#	# get a cookie from the system we're testing; cookie and CURL_OPTs are globals
-	#
-	#	if ( !defined( $config->{to_passwd} ) ) {
-	#		$config->{to_passwd} = &get_to_passwd( $config->{to_user} );
-	#	}
-	#	my $to_login = $config->{to_user} . ":" . $config->{to_passwd};
-	#	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
-	#	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
-	#
-	#	$tmp_dir = $tmp_dir_base . "/new";
-	#	&get_files( $config->{to_url} );
-	#	&get_crconfigs( $config->{to_url} );
-	#
-	#	#
-	#	&compare_all_files();
-	#
 }
 
 sub get_ref {
@@ -130,8 +86,6 @@ sub get_new {
 sub do_the_compare {
 	&compare_all_files();
 }
-#
-#&compare_files( "/tmp/files/ref/odol-atsec-uta-14/parent.config", "/tmp/files/new/odol-atsec-uta-14/parent.config" );
 
 done_testing();
 exit(0);
@@ -263,10 +217,6 @@ sub compare_files {
 	}
 }
 
-sub copy_riak_config {
-
-}
-
 sub get_crconfigs {
 	my $to_url = shift;
 
@@ -279,7 +229,7 @@ sub get_crconfigs {
 		next unless $cdn->{name} ne "ALL";
 		my $dir = $tmp_dir . '/cdn-' . $cdn->{name};
 		system( 'mkdir -p ' . $dir );
-		if ($gen_crconfig) {
+		if ($perform_snapshot) {
 			print "Generating CRConfig for " . $cdn->{name};
 			my $start = [gettimeofday];
 			&curl_me( $to_url . "/tools/write_crconfig/" . $cdn->{name} );
@@ -390,52 +340,6 @@ sub get_files_new {
 	}
 }
 
-sub load_mysql_database {
-	my $cmd  = "mysql ";
-	my $args = "-h " . $config->{mysql_db_host} . " -u " . $config->{mysql_dbadmin_user} . " -p" . $config->{mysql_dbadmin_passwd};
-	$cmd .= $args;
-	my $bash_cmd = "echo drop database " . $config->{mysql_db_name} . " | " . $cmd;
-	print $bash_cmd . "\n";
-	system($bash_cmd );
-	$bash_cmd = "echo create database " . $config->{mysql_db_name} . " | " . $cmd;
-	print $bash_cmd . "\n";
-	system($bash_cmd );
-	$bash_cmd = $cmd . " " . $config->{mysql_db_name} . " < " . $ref_db_file;
-	print $bash_cmd . "\n";
-	system($bash_cmd );
-}
-
-# perform the migration from mysql -> postgres
-sub pg_migrate {
-
-	my $drop_cmd = "echo drop database " . $config->{pg_db_name} . " | psql postgres";
-	print $drop_cmd . "\n";
-	system($drop_cmd);
-
-	my $cr_cmd = "echo create database " . $config->{pg_db_name} . " | psql postgres";
-	print $cr_cmd . "\n";
-	system($cr_cmd);
-
-	my $cmd = "pgloader  --cast 'type tinyint to smallint drop typemod' --cast 'type varchar to text drop typemod'";
-	$cmd .= " --cast 'type double to numeric drop typemod'";
-	my $args =
-		  " mysql://"
-		. $config->{mysql_dbadmin_user} . ":"
-		. $config->{mysql_dbadmin_passwd} . "@"
-		. $config->{mysql_db_host} . ":"
-		. $config->{mysql_db_port};
-	$args .= "/" . $config->{mysql_db_name};
-	$args .= " postgresql://" . "/" . $config->{pg_db_name};    # TODO add username / passwd if you have it.
-	$cmd  .= $args;
-	print $cmd . "\n";
-	system($cmd);
-	chdir( $config->{working_dir} . "/traffic_ops/app" ) || die "can't chdir to " . $config->{working_dir} . "/traffic_ops/app";
-	$cmd = "psql " . $config->{pg_db_name} . "< db/convert_bools.sql";
-	system($cmd);
-	$cmd = "goose -env=" . $config->{goose_env} . " up";
-	system($cmd);
-}
-
 sub get_to_passwd {
 	my $user = shift;
 
@@ -445,59 +349,6 @@ sub get_to_passwd {
 	ReadMode(0);           # back to normal
 	print "\n";
 	return $passwd;
-}
-
-# TODO JvD: finish
-sub get_reference_database {
-
-	#"https://tm.comcast.net/dbdump?filename=to-backup-ipcdn-tools-03.cdnlab.comcast.net-20170114222140.mysql
-
-}
-
-# TODO - need to get postgres container
-sub start_runner_containers {
-
-	#docker run --name my-traffic-vault --hostname my-traffic-vault --net cdnet --env ADMIN_PASS=riakadminsecret --env USER_PASS=marginallylesssecret
-	# --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000
-	# --env TRAFFIC_OPS_USER=superroot --env TRAFFIC_OPS_PASS=supersecreterpassward --env DOMAIN=cdnet --detach traffic_vault:1.6.0
-	# at some point you'll have to have done `docker network create cdnet`
-	my $tv_args = " --name traffic-vault --hostname traffic-vault --net cdnet --env ADMIN_PASS=riakadminsecret";
-	$tv_args .= " --env USER_PASS=marginallylesssecret --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver";
-	$tv_args .= " --env CERT_COMPANY=NotComcast --env TRAFFIC_OPS_URI=http://my-traffic-ops:3000 --env TRAFFIC_OPS_USER=superroot";
-	$tv_args .= " --env TRAFFIC_OPS_PASS=supersecreterpassward --env DOMAIN=cdnet --detach traffic_vault:" . $config->{git_branch};
-
-	my $to_args =
-		" --name traffic-ops --hostname my-traffic-ops --net cdnet --publish 443:443 --env MYSQL_IP=my-traffic-ops-mysql --env MYSQL_PORT=3306 --env MYSQL_ROOT_PASS=secretrootpass --env MYSQL_TRAFFIC_OPS_PASS=supersecretpassword --env ADMIN_USER=superroot --env ADMIN_PASS=supersecreterpassward --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_VAULT_PASS=marginallylesssecret --env DOMAIN=cdnet --detach traffic_ops:1.5.1"
-
-}
-
-sub build_rpms {
-	my $dir = $config->{working_dir};
-	chdir($dir) || die( "Can't chdir to " . $dir );
-
-	$ENV{'BRANCH'}  = $config->{git_branch};
-	$ENV{'GITREPO'} = $config->{git_repo};
-
-	foreach my $builder (qw/traffic_monitor_build traffic_ops_build traffic_portal_build traffic_router_build traffic_stats_build/) {
-		system( "docker-compose -f infrastructure/docker/build/docker-compose.yml up " . $builder );
-	}
-}
-
-sub build_runner_containers {
-	foreach my $runner (qw/traffic_monitor traffic_ops traffic_router traffic_stats/) {
-		my $dir = $config->{working_dir} . "/infrastructure/docker/" . $runner;
-		chdir($dir) || die( "Can't chdir to " . $dir );
-		my $rpm_filename = $runner . "*" . "el7.x86_64.rpm";
-		my $rpm          = $config->{working_dir} . "/infrastructure/docker/build/artifacts/" . $rpm_filename;
-		my $cp_cmd       = "cp " . $rpm . " .";
-		print $cp_cmd . " \n";
-		system($cp_cmd);
-		my $branch     = $config->{git_branch};
-		my $args       = " --rm --build-arg RPM=" . $rpm_filename . " --tag " . $runner . ":" . $branch . " .";
-		my $dbuild_cmd = "docker build " . $args;
-		print $dbuild_cmd. "\n";
-		system($dbuild_cmd );
-	}
 }
 
 # read the config json.
@@ -512,12 +363,7 @@ sub configure {
 	};
 
 	my $json = JSON->new;
-
-	#print Dumper($config);
 	$config = $json->decode($json_text);
-
-	#print Dumper($config);
-
 }
 
 ## rest is from other scripts, should probably be replaced by something better.
