@@ -35,9 +35,11 @@ RUN	yum -y install \
 	yum -y clean all
 ###
 
-WORKDIR /trafficcontrol
-CMD mkdir -p dist && \
-	./build/build.sh traffic_stats 2>&1 | \
-	tee ./dist/build-traffic_stats.log
+CMD set -x; cp -a /trafficcontrol /tmp/. && \
+	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
+	./build/build.sh traffic_stats 2>&1 | tee ./dist/build-traffic_stats.log && \
+	mkdir -p /trafficcontrol/dist && \
+	cp dist/*traffic_stats* /trafficcontrol/dist
+
 
 # vi:syntax=Dockerfile
