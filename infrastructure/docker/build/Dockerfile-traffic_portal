@@ -47,9 +47,11 @@ RUN	echo '{ "allow_root": true }' > /root/.bowerrc
 
 ###
 
-WORKDIR /trafficcontrol
-CMD mkdir -p dist && \
-	./build/build.sh traffic_portal 2>&1 | \
-	tee ./dist/build-traffic_portal.log
+CMD set -x; cp -a /trafficcontrol /tmp/. && \
+	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
+	./build/build.sh traffic_portal 2>&1 | tee ./dist/build-traffic_portal.log && \
+	mkdir -p /trafficcontrol/dist && \
+	cp dist/*traffic_portal* /trafficcontrol/dist
+
 
 # vi:syntax=Dockerfile

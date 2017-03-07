@@ -48,9 +48,10 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --set javac /opt/java/bin/javac && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 
-WORKDIR /trafficcontrol
-CMD mkdir -p dist && \
-	./build/build.sh traffic_monitor 2>&1 | \
-	tee ./dist/build-traffic_monitor.log
+CMD set -x; cp -a /trafficcontrol /tmp/. && \
+	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
+	./build/build.sh traffic_monitor 2>&1 | tee ./dist/build-traffic_monitor.log && \
+	mkdir -p /trafficcontrol/dist && \
+	cp dist/*traffic_monitor* /trafficcontrol/dist
 
 # vi:syntax=Dockerfile
