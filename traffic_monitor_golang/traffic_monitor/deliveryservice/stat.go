@@ -129,7 +129,7 @@ func addAvailableData(dsStats dsdata.Stats, crStates peer.Crstates, serverCacheg
 	for dsName, ds := range crStates.Deliveryservice {
 		stat, ok := dsStats.DeliveryService[dsName]
 		if !ok {
-			log.Warnf("CreateStats not adding disabledLocations for '%s': not found in Stats\n", dsName)
+			log.Infof("CreateStats not adding disabledLocations for '%s': not found in Stats\n", dsName)
 			continue // TODO log warning? Error?
 		}
 
@@ -162,9 +162,9 @@ func addLastStat(lastData dsdata.LastStatData, newStat int64, newStatTime time.T
 
 	if newStat < lastData.Stat {
 		// if a new stat comes in lower than current, assume rollover, set the 'last stat' to the new one, but leave PerSec what it was (not negative).
+		err := fmt.Errorf("new stat '%d'@'%v' value less than last stat '%d'@'%v'", newStat, newStatTime, lastData.Stat, lastData.Time)
 		lastData.Stat = newStat
 		lastData.Time = newStatTime
-		err := fmt.Errorf("new stat '%d'@'%v' value less than last stat '%d'@'%v'", newStat, newStatTime, lastData.Stat, lastData.Time)
 		return lastData, err
 	}
 
