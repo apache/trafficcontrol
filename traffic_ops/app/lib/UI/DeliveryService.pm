@@ -1056,6 +1056,7 @@ sub create {
 				remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
+				tenant_id => current_user_tenant($self),#Tenancy is not dealt by the UI for now. getting the tenancy from the user
 			}
 		);
 		$insert->insert();

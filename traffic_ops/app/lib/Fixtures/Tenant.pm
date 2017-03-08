@@ -1,4 +1,4 @@
-package Fixtures::Cdn;
+package Fixtures::Tenant;
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,30 +20,13 @@ use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
 	## id => 1
-	cdn1_cdn_name => {
-		new   => 'Cdn',
+	root_tenant_name => {
+		new   => 'Tenant',
 		using => {
-			id          => 100,
-			name        => 'cdn1',
-			tenant_id   => undef,
-		},
-	},
-	## id => 2
-	cdn2_cdn_name => {
-		new   => 'Cdn',
-		using => {
-			id          => 200,
-			name        => 'cdn2',
-			tenant_id   => undef,
-		},
-	},
-	## id => 3
-	cdn_root_cdn_name => {
-		new   => 'Cdn',
-		using => {
-			id          => 300,
-			name        => 'cdn-root',
-			tenant_id   => 10**9,
+			id          => 10**9, #a large number not to confuse the id sequence
+			name        => 'root',
+			active      => 1,
+			parent_id   => undef,
 		},
 	},
 );

@@ -139,6 +139,12 @@ __PACKAGE__->table("tm_user");
   data_type: 'timestamp with time zone'
   is_nullable: 1
 
+=head2 tenant_id
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -196,6 +202,8 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "registration_sent",
   { data_type => "timestamp with time zone", is_nullable => 1 },
+  "tenant_id",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -212,7 +220,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54541_tmuser_email_unique>
+=head2 C<idx_89765_tmuser_email_unique>
 
 =over 4
 
@@ -222,9 +230,9 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54541_tmuser_email_unique", ["email"]);
+__PACKAGE__->add_unique_constraint("idx_89765_tmuser_email_unique", ["email"]);
 
-=head2 C<idx_54541_username_unique>
+=head2 C<idx_89765_username_unique>
 
 =over 4
 
@@ -234,7 +242,7 @@ __PACKAGE__->add_unique_constraint("idx_54541_tmuser_email_unique", ["email"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54541_username_unique", ["username"]);
+__PACKAGE__->add_unique_constraint("idx_89765_username_unique", ["username"]);
 
 =head1 RELATIONS
 
@@ -318,9 +326,29 @@ __PACKAGE__->belongs_to(
   },
 );
 
+=head2 tenant
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:SGrZkCGhmXed7UzWMLYfOg
+Type: belongs_to
+
+Related object: L<Schema::Result::Tenant>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "tenant",
+  "Schema::Result::Tenant",
+  { id => "tenant_id" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-02-19 10:20:47
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2lI3iG0t7INKH+xQq+lo9g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

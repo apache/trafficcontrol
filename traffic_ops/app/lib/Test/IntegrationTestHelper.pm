@@ -58,6 +58,7 @@ use Fixtures::Integration::Server;
 use Fixtures::Integration::Staticdnsentry;
 use Fixtures::Integration::StatsSummary;
 use Fixtures::Integration::Status;
+use Fixtures::Integration::Tenant;
 use Fixtures::Integration::TmUser;
 use Fixtures::Integration::ToExtension;
 use Fixtures::Integration::Type;
@@ -134,6 +135,7 @@ sub load_core_data {
 	$self->reset_sequence_id();
 
 	diag "Initializing DB:";
+	$self->load_all_fixtures( Fixtures::Integration::Tenant->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Type->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Role->new($schema_values) );
@@ -193,6 +195,7 @@ sub unload_core_data {
 	$self->teardown( $schema, 'Division' );
 	$self->teardown( $schema, 'Snapshot' );
 	$self->teardown( $schema, 'Cdn' );
+	$self->teardown( $schema, 'Tenant' );
 }
 
 1;
