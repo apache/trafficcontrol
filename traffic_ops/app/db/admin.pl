@@ -155,6 +155,18 @@ sub parse_dbconf_yml_pg_driver {
 	$db_password = $hash->{password};
 }
 
+sub get_psql_uri {
+	my $db_name = shift;
+
+	my $uri = sprintf 'postgresql://%s:%s@%s:%s', $db_username, $db_password, $host_ip, $host_port;
+
+	if ( defined $db_name ) {
+		$uri .= "/$db_name";
+	}
+
+	return $uri;
+}
+
 sub migrate {
 	my ($command) = @_;
 
@@ -166,14 +178,16 @@ sub migrate {
 
 sub seed {
 	print "Seeding database.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/seeds.sql") != 0 ) {
+	my $uri = get_psql_uri($db_name);
+	if ( system("psql $uri -e < db/seeds.sql") != 0 ) {
 		die "Can't seed database\n";
 	}
 }
 
 sub load_schema {
 	print "Creating database tables.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql") != 0 ) {
+	my $uri = get_psql_uri($db_name);
+	if ( system("psql $uri -e < db/create_tables.sql") != 0 ) {
 		die "Can't create database tables\n";
 	}
 }
@@ -186,7 +200,8 @@ sub dropdb {
 
 sub createdb {
 	createuser();
-	my $db_exists = `psql -h $host_ip -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
+	my $uri = get_psql_uri();
+	my $db_exists = `psql $uri -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ($db_exists) {
 		print "Database $db_name already exists\n";
 		return;
@@ -198,14 +213,15 @@ sub createdb {
 }
 
 sub createuser {
-	my $user_exists = `psql -h $host_ip -p $host_port postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
+	my $uri = get_psql_uri();
+	my $user_exists = `psql $uri postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
 	if ($user_exists) {
 		print "Role $db_username already exists\n";
 		return;
 	}
 
 	my $cmd = "CREATE USER $db_username WITH SUPERUSER CREATEROLE CREATEDB ENCRYPTED PASSWORD '$db_password'";
-	if ( system(qq{psql -h $host_ip -p $host_port -tAc "$cmd"}) != 0 ) {
+	if ( system(qq{psql $uri -tAc "$cmd"}) != 0 ) {
 		die "Can't create user $db_username\n";
 	}
 }
@@ -217,7 +233,8 @@ sub dropuser {
 }
 
 sub showusers {
-	if ( system("psql -h $host_ip -p $host_port -ec '\\du';") != 0 ) {
+	my $uri = get_psql_uri();
+	if ( system("psql $uri -ec '\\du';") != 0 ) {
 		die "Can't show users";
 	}
 }
