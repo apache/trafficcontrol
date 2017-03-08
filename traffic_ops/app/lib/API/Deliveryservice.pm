@@ -93,12 +93,11 @@ sub index {
 				"missLat"                  => defined($row->miss_lat) ? 0.0 + $row->miss_lat : undef,
 				"missLat"                  => defined($row->miss_long) ? 0.0 + $row->miss_long : undef,
 				"multiSiteOrigin"          => \$row->multi_site_origin,
-				"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $row->org_server_fqdn,
 				"originShield"             => $row->origin_shield,
-				"profileId"                => $row->profile->id,
-				"profileName"              => $row->profile->name,
-				"profileDescription"       => $row->profile->description,
+				"profileId"                => defined($row->profile) ? $row->profile->id : undef,
+				"profileName"              => defined($row->profile) ? $row->profile->name : undef,
+				"profileDescription"       => defined($row->profile) ? $row->profile->description : undef,
 				"protocol"                 => $row->protocol,
 				"qstringIgnore"            => $row->qstring_ignore,
 				"rangeRequestHandling"     => $row->range_request_handling,
@@ -190,7 +189,6 @@ sub show {
 				"missLat"                  => defined($row->miss_lat) ? 0.0 + $row->miss_lat : undef,
 				"missLat"                  => defined($row->miss_long) ? 0.0 + $row->miss_long : undef,
 				"multiSiteOrigin"          => \$row->multi_site_origin,
-				"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $row->org_server_fqdn,
 				"originShield"             => $row->origin_shield,
 				"profileId"                => $row->profile->id,
@@ -225,7 +223,6 @@ sub update {
 	}
 
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
-
 	if ( !$is_valid ) {
 		return $self->alert($result);
 	}
@@ -275,7 +272,6 @@ sub update {
 		miss_lat                    => $params->{missLat},
 		miss_long                   => $params->{missLong},
 		multi_site_origin           => $params->{multiSiteOrigin},
-		multi_site_origin_algorithm => $params->{multiSiteOriginAlgorithm},
 		org_server_fqdn             => $params->{orgServerFqdn},
 		origin_shield               => $params->{originShield},
 		profile                     => $params->{profileId},
@@ -338,7 +334,6 @@ sub update {
 				"missLat"                  => 0.0 + $rs->miss_lat,
 				"missLong"                 => 0.0 + $rs->miss_long,
 				"multiSiteOrigin"          => $rs->multi_site_origin,
-				"multiSiteOriginAlgorithm" => $rs->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $rs->org_server_fqdn,
 				"originShield"             => $rs->origin_shield,
 				"profileId"                => $rs->profile->id,
@@ -421,7 +416,6 @@ sub create {
 		miss_lat                    => $params->{missLat},
 		miss_long                   => $params->{missLong},
 		multi_site_origin           => $params->{multiSiteOrigin},
-		multi_site_origin_algorithm => $params->{multiSiteOriginAlgorithm},
 		org_server_fqdn             => $params->{orgServerFqdn},
 		origin_shield               => $params->{originShield},
 		profile                     => $params->{profileId},
@@ -494,7 +488,6 @@ sub create {
 				"missLat"                  => $insert->miss_lat,
 				"missLong"                 => $insert->miss_long,
 				"multiSiteOrigin"          => $insert->multi_site_origin,
-				"multiSiteOriginAlgorithm" => $insert->multi_site_origin_algorithm,
 				"orgServerFqdn"            => $insert->org_server_fqdn,
 				"originShield"             => $insert->origin_shield,
 				"profileId"                => $insert->profile->id,
@@ -607,7 +600,6 @@ sub get_deliveryservices_by_serverId {
 					"missLat"                  => $row->miss_lat,
 					"missLong"                 => $row->miss_long,
 					"multiSiteOrigin"          => \$row->multi_site_origin,
-					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 					"orgServerFqdn"            => $row->org_server_fqdn,
 					"originShield"             => $row->origin_shield,
 					"profileId"                => $row->profile->id,
@@ -682,7 +674,6 @@ sub get_deliveryservices_by_userId {
 					"missLat"                  => $row->miss_lat,
 					"missLong"                 => $row->miss_long,
 					"multiSiteOrigin"          => \$row->multi_site_origin,
-					"multiSiteOriginAlgorithm" => $row->multi_site_origin_algorithm,
 					"orgServerFqdn"            => $row->org_server_fqdn,
 					"originShield"             => $row->origin_shield,
 					"profileId"                => $row->profile->id,

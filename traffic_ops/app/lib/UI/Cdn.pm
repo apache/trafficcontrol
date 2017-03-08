@@ -79,6 +79,8 @@ sub update {
         cdn_data    => {
             id   => $id,
             name => $self->param('cdn_data.name'),
+            domain_name => $self->param('cdn_data.domain_name'),
+            dnssec_enabled => $self->param('cdn_data.dnssec_enabled'),
         }
     );
 
@@ -107,14 +109,22 @@ sub update {
 sub create {
     my $self = shift;
     my $name = $self->param('cdn_data.name');
+    my $dnssec_enabled = defined($self->param('cdn_data.dnssec_enabled')) ? $self->param('cdn_data.dnssec_enabled') : 0;
+    my $domain_name = $self->param('cdn_data.domain_name');
     my $data = $self->get_cdns();
     my $cdns = $data->{'cdn'};
+
+    foreach my $f ($self->param) {
+      print $f . " => " . Dumper($self->param($f)) . "\n";
+    }
 
     if ( !$self->isValidCdn() ) {
         $self->stash(
             fbox_layout => 1,
             cdn_data    => {
                 name => $name,
+                domain_name => $domain_name,
+                dnssec_enabled => $dnssec_enabled,
             }
         );
         return $self->render('cdn/add');
@@ -125,6 +135,8 @@ sub create {
             fbox_layout => 1,
             cdn_data    => {
                 name => $name,
+                domain_name => $domain_name,
+                dnssec_enabled => $dnssec_enabled,
             }
         );
         return $self->render('cdn/add');
@@ -136,7 +148,7 @@ sub create {
         return $self->redirect_to( '/cdn/edit/' . $new_id );
     }
     else {
-        my $insert = $self->db->resultset('Cdn')->create( { name => $name } );
+        my $insert = $self->db->resultset('Cdn')->create( { name => $name, domain_name => $domain_name, dnssec_enabled => $dnssec_enabled } );
         $insert->insert();
         $new_id = $insert->id;
     }
@@ -455,9 +467,10 @@ sub adeliveryservice {
         # This will be undefined for 'Steering' delivery services
         my $org_server_fqdn = defined($row->org_server_fqdn) ? $row->org_server_fqdn : "";
 
+        my $ptext = defined($row->profile) ? $row->profile->name : "-";
         my $line = [
             $row->id,                       $row->xml_id,                $org_server_fqdn,                "dummy",
-            $cdn_name,                      $row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },
+            $cdn_name,                      $ptext,                      $row->ccr_dns_ttl,                    $yesno{ $row->active },
             $row->type->name,               $row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,
             $geo_limits{ $row->geo_limit }, $protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling,
             $row->http_bypass_fqdn,         $row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,
@@ -596,7 +609,7 @@ sub acdn {
 
     $rs = $self->db->resultset('Cdn')->search(undef);
     while ( my $row = $rs->next ) {
-        my @line = [ $row->id, $row->name, $yesno{ $row->dnssec_enabled }, $row->last_updated ];
+        my @line = [ $row->id, $row->name, $row->domain_name, $yesno{ $row->dnssec_enabled }, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );
@@ -690,11 +703,11 @@ sub aprofile {
     my $self = shift;
     my %data = ( "aaData" => [] );
 
-    my $rs = $self->db->resultset('Profile')->search(undef);
+    my $rs = $self->db->resultset('Profile')->search(undef, { prefetch => ['cdn'] } );
 
     while ( my $row = $rs->next ) {
-
-        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->last_updated ];
+        my $ctext = defined( $row->cdn ) ? $row->cdn->name : "-";
+        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );

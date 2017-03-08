@@ -124,7 +124,6 @@ sub gen_crconfig_json {
 
     # These params should have consistent values across all profiles used by servers in this CDN:
     my %requested_param_names = (
-        'domain_name'       => 1,
         'tld.soa.admin'     => 1,
         'tld.soa.expire'    => 1,
         'tld.soa.minimum'   => 1,
@@ -167,8 +166,8 @@ sub gen_crconfig_json {
         return undef, $msg;
     }
 
-    $data_obj->{'config'}->{'domain_name'} = $param_values->{'domain_name'};
-    $ccr_domain_name = $param_values->{'domain_name'};
+    $ccr_domain_name = $self->db->resultset('Cdn')->search( { id => $cdn_id } )->get_column('domain_name')->single();
+    $data_obj->{'config'}->{'domain_name'} = $ccr_domain_name;
     $cdn_soa_admin   = $param_values->{'tld.soa.admin'};
     $cdn_soa_expire  = $param_values->{'tld.soa.expire'};
     $cdn_soa_minimum = $param_values->{'tld.soa.minimum'};
@@ -273,7 +272,7 @@ sub gen_crconfig_json {
     my $regexps;
     my $rs_ds = $self->db->resultset('Deliveryservice')->search(
         {
-            'me.profile' => { -in => \@{ $profile_cache->{'CCR'} } },
+			'me.cdn_id' => $cdn_id,
             'active'     => 1
         },
         { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] }

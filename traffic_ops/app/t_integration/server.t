@@ -32,10 +32,13 @@ no warnings 'once';
 use warnings 'all';
 use constant TEST_FILE => "/tmp/test.csv";
 
-
 my $api_version = '1.1';
-ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+
+$t->post_ok( '/login', => form => { u => 'admin', p => 'password' } )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# # ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+# 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 my $json = JSON->new->allow_nonref;
 $t->get_ok( '/api/' . $api_version . '/servers.json' )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -166,72 +169,74 @@ foreach my $server ( @{ $servers->{response} } ) {
 	}
 }
 
-sub build_tmpfile {
-	my ($contents) = @_;
-	unlink TEST_FILE;
-	write_file( TEST_FILE, $contents );
-}
+# TODO JvD: the below tests have been removed from master, but I'm not sure they should be? 
+# sub build_tmpfile {
+# 	my ($contents) = @_;
+# 	unlink TEST_FILE;
+# 	write_file( TEST_FILE, $contents );
+# }
 
-# Header
-my $header =
-	"host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason";
+# # Header
+# my $header =
+# 	"host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason";
 
-#----------------------------
-# Good Test
-my $content = join( "\n",
-	$header,
-	"good-host,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
-);
+# #----------------------------
+# # Good Test
+# my $content = join( "\n",
+# 	$header,
+# 	"good-host,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,1,us-il-chicago,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
+# );
 
-&build_tmpfile($content);
-my $asset = Mojo::Asset::File->new( path => TEST_FILE );
+# &build_tmpfile($content);
+# my $asset = Mojo::Asset::File->new( path => TEST_FILE );
 
-$t->post_ok(
-	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
-	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+# $t->post_ok(
+# 	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+# 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-#----------------------------
-# Bad 'Type' look for -BAD
-$content = join( "\n",
-	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
-);
+# #----------------------------
+# # Bad 'Type' look for -BAD
+# $content = join( "\n",
+# 	$header,
+# 	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+# );
 
-&build_tmpfile($content);
-$t->post_ok(
-	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
-	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+# &build_tmpfile($content);
+# $t->post_ok(
+# 	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+# 	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-#----------------------------
-# Bad 'Profile' look for -BAD
-$content = join( "\n",
-	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago,plocation-chi-1,rack33,EDGE,1-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
-);
+# #----------------------------
+# # Bad 'Profile' look for -BAD
+# $content = join( "\n",
+# 	$header,
+# 	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,2,us-il-chicago,plocation-chi-1,rack33,EDGE,1-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+# );
 
-&build_tmpfile($content);
-$t->post_ok(
-	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
-	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+# &build_tmpfile($content);
+# $t->post_ok(
+# 	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+# 	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-#----------------------------
-# Bad 'Cache Group' look for -BAD
-$content = join( "\n",
-	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
-);
+# #----------------------------
+# # Bad 'Cache Group' look for -BAD
+# $content = join( "\n",
+# 	$header,
+# 	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+# );
 
-#----------------------------
-# Bad 'Physical Location' look for -BAD
-$content = join( "\n",
-	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
-);
+# #----------------------------
+# # Bad 'Physical Location' look for -BAD
+# $content = join( "\n",
+# 	$header,
+# 	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+# );
 
-&build_tmpfile($content);
-$t->post_ok(
-	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
-	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+# &build_tmpfile($content);
+# $t->post_ok(
+# 	'/uploadhandlercsv' => form => { 'file-0' => { name => 'file-0', asset => $asset, filename => basename(TEST_FILE), content => $asset->slurp } } )
+# 	->json_has("[EXCEPTION_ERROR]")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+# ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 done_testing();

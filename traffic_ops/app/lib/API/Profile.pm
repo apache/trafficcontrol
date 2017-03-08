@@ -37,6 +37,8 @@ sub index {
 					"id" => $row->profile->id,
 					"name" => $row->profile->name,
 					"description" => $row->profile->description,
+					"cdn" => $row->profile->cdn,
+					"type" => $row->profile->type,
 					"lastUpdated" => $row->profile->last_updated
 				}
 			);
@@ -49,6 +51,8 @@ sub index {
 					"id"          => $row->id,
 					"name"        => $row->name,
 					"description" => $row->description,
+					"cdn"         => defined($row->cdn) ? $row->cdn->name : "-",
+					"type"        => $row->type,
 					"lastUpdated" => $row->last_updated
 				}
 			);
@@ -149,10 +153,14 @@ sub create {
 		return $self->alert("a profile with the exact same description already exists.");
 	}
 
+	my $cdn = $params->{cdn};
+	my $type = $params->{type};
 	my $insert = $self->db->resultset('Profile')->create(
 		{
 			name        => $name,
 			description => $description,
+			cdn         => $cdn,
+			type        => $type,
 		}
 	);
 	$insert->insert();
@@ -164,6 +172,8 @@ sub create {
 	$response->{id}          = $new_id;
 	$response->{name}        = $name;
 	$response->{description} = $description;
+	$response->{cdn}         = $cdn;
+	$response->{type}        = $type;
 	return $self->success($response);
 }
 
@@ -196,10 +206,14 @@ sub copy {
 	my $profile_copy_from_id = $row1->id;
 	my $description          = $row1->description;
 
+	my $cdn = $row1->cdn;
+	my $type = $row1->type;
 	my $insert = $self->db->resultset('Profile')->create(
 		{
 			name        => $name,
 			description => $description,
+			cdn         => $cdn,
+			type        => $type,
 		}
 	);
 	$insert->insert();
@@ -271,9 +285,13 @@ sub update {
 		}
 	}
 
+	my $cdn = $params->{cdn};
+	my $type = $params->{type};
 	my $values = {
 		name        => $name,
-		description => $description
+		description => $description,
+		cdn         => $cdn,
+		type        => $type,
 	};
 
 	my $rs = $profile->update($values);
@@ -282,6 +300,8 @@ sub update {
 		$response->{id}          = $id;
 		$response->{name}        = $name;
 		$response->{description} = $description;
+		$response->{cdn}         = $cdn;
+		$response->{type}        = $type;
 		&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
 		return $self->success( $response, "Profile was updated: " . $id );
 	}

@@ -167,29 +167,6 @@
 			setup_form('fast');
 		}, "json");
 
-		$.get("/datadomains", function(data){
-			$.each(data, function(idx, val) {
-				if(data[idx].profile_id == "<%= $ds->profile->id %>") {
-					$("#profile").append("<option value=" + data[idx].profile_id + " selected=\"selected\">" + data[idx].profile_name +
-					" (" + data[idx].profile_description + ")</option>");
-				} else {
-					$("#profile").append("<option value=" + data[idx].profile_id + ">" + data[idx].profile_name +
-					" (" + data[idx].profile_description + ")</option>");
-				}
-			});
-		}, "json");
-
-		$.get("/api/1.2/cdns.json", function(data){
-			var response = data['response'];
-			$.each(response, function(idx, val) {
-				if (response[idx].name == "<%= $ds->cdn->name %>") {
-					$("#cdn").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name + "</option>");
-				} else {
-					$("#cdn").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
-				}
-			});
-		}, "json");
-
 			$('#type').change(function() {
 				show_hide_bypass_rows('slow');
 			});
