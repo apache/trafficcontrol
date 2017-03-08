@@ -37,10 +37,10 @@ sub index {
 		push(
 			@data, {
 				"id"            => $row->id,
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated" 	=> $row->last_updated,
-				"name"          => $row->name,
-				"domainName"    => $row->domain_name
 			}
 		);
 	}
@@ -57,10 +57,10 @@ sub show {
 		push(
 			@data, {
 				"id"            => $row->id,
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated" 	=> $row->last_updated,
-				"name"          => $row->name,
-				"domainName"    => $row->domain_name
 			}
 		);
 	}
@@ -77,10 +77,10 @@ sub name {
 		push(
 			@data, {
 				"id"            => $row->id,
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated"   => $row->last_updated,
-				"name"          => $row->name,
-				"domainName"    => $row->domain_name
 			}
 		);
 	}
@@ -159,10 +159,6 @@ sub update {
 		return $self->not_found();
 	}
 
-	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format.");
-	}
-
 	if ( !defined( $params->{name} ) ) {
 		return $self->alert("Name is required.");
 	}
@@ -171,22 +167,32 @@ sub update {
 		return $self->alert("dnssecEnabled is required.");
 	}
 
+	if ( !defined( $params->{domainName} ) ) {
+		return $self->alert("Domain Name is required.");
+	}
+
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
 	if ( $existing && $existing->id != $cdn->id ) {
-		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
+	}
+
+	$existing = $self->db->resultset('Cdn')->search( { domain_name => $params->{domainName} } )->single();
+	if ( $existing && $existing->id != $cdn->id ) {
+		return $self->alert( "a cdn with domain name " . $params->{domainName} . " already exists." );
 	}
 
 	my $values = {
 		name => $params->{name},
 		dnssec_enabled => $params->{dnssecEnabled},
+		domain_name => $params->{domainName},
 	};
 
 	my $rs = $cdn->update($values);
 	if ( $rs ) {
 		my $response;
-		$response->{id}            = $rs->id;
-		$response->{name}          = $rs->name;
+		$response->{id}            	= $rs->id;
+		$response->{name}          	= $rs->name;
+		$response->{domainName}		= $rs->domain_name;
 		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "CDN update was successful." );

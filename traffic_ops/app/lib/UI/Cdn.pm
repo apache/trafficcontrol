@@ -114,10 +114,6 @@ sub create {
     my $data = $self->get_cdns();
     my $cdns = $data->{'cdn'};
 
-    foreach my $f ($self->param) {
-      print $f . " => " . Dumper($self->param($f)) . "\n";
-    }
-
     if ( !$self->isValidCdn() ) {
         $self->stash(
             fbox_layout => 1,

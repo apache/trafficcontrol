@@ -30,16 +30,17 @@ sub index {
 	my $parameter_id = $self->param('param');
 
 	if ( defined $parameter_id ) {
-		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ], order_by => $orderby }  );
+		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ] }  );
 		while ( my $row = $rs->next ) {
 			push(
 				@data, {
-					"id" => $row->profile->id,
-					"name" => $row->profile->name,
-					"description" => $row->profile->description,
-					"cdn" => $row->profile->cdn,
-					"type" => $row->profile->type,
-					"lastUpdated" => $row->profile->last_updated
+					"id" 			=> $row->profile->id,
+					"name" 			=> $row->profile->name,
+					"description" 	=> $row->profile->description,
+					"cdn" 			=> defined($row->profile->cdn) ? $row->profile->cdn->id : undef,
+					"cdnName" 		=> defined($row->profile->cdn) ? $row->profile->cdn->name : undef,
+					"type" 			=> $row->profile->type,
+					"lastUpdated" 	=> $row->profile->last_updated
 				}
 			);
 		}
@@ -51,7 +52,8 @@ sub index {
 					"id"          => $row->id,
 					"name"        => $row->name,
 					"description" => $row->description,
-					"cdn"         => defined($row->cdn) ? $row->cdn->name : "-",
+					"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+					"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
 					"type"        => $row->type,
 					"lastUpdated" => $row->last_updated
 				}
@@ -107,7 +109,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Profile")->search( { id => $id } );
+	my $rs_data = $self->db->resultset("Profile")->search( { 'me.id' => $id }, { prefetch => [ 'cdn' ] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -115,6 +117,9 @@ sub show {
 				"id"          => $row->id,
 				"name"        => $row->name,
 				"description" => $row->description,
+				"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+				"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
+				"type"        => $row->type,
 				"lastUpdated" => $row->last_updated
 			}
 		);
@@ -141,6 +146,10 @@ sub create {
 	my $description = $params->{description};
 	if ( !defined($description) || $description eq "" ) {
 		return $self->alert("profile 'description' is required.");
+	}
+
+	if ( !defined( $params->{type} ) ) {
+		return $self->alert("Profile type is required.");
 	}
 
 	my $existing_profile = $self->db->resultset('Profile')->search( { name => $name } )->get_column('name')->single();
@@ -283,6 +292,10 @@ sub update {
 		if ($existing) {
 			return $self->alert("a profile with the exact same description already exists.");
 		}
+	}
+
+	if ( !defined( $params->{type} ) ) {
+		return $self->alert("Profile type is required.");
 	}
 
 	my $cdn = $params->{cdn};
