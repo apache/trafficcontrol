@@ -1506,10 +1506,12 @@ sub ssl_multicert_dot_config {
 	my $protocol_search = '> 0';
 	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ 'server.id' => $server->id, 'me.protocol' => \$protocol_search ] },
 		{ join => { deliveryservice_servers => { server => undef } }, } );
+	#get the domain_name from the first result since it should all be the same CDN
+	#TODO, the domain_name param needs to be a field on the CDN and not a param
+	my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_list[0]->id );
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
-		my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $ds, $domain_name, $ds->protocol );
 
