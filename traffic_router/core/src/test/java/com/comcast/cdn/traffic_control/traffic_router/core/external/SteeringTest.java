@@ -15,10 +15,13 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -375,5 +378,82 @@ public class SteeringTest {
 		}
 
 		return stringBuilder.toString();
+	}
+
+	@Test
+	public void itUsesMultiLocationFormatResponse() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=true");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=TRUE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=TruE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=T");
+
+		for (final String path : paths) {
+			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+			httpGet.addHeader("Host", "tr.client-steering-test-1.thecdn.example.com");
+
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpGet);
+				String location1 = ".client-steering-target-2.thecdn.example.com:8090" + path;
+				String location2 = ".client-steering-target-1.thecdn.example.com:8090" + path;
+
+				assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+				assertThat(response.getFirstHeader("Location").getValue(), endsWith(location1));
+
+				HttpEntity entity = response.getEntity();
+				ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+				assertThat(entity.getContent(), not(nullValue()));
+
+				JsonNode json = objectMapper.readTree(entity.getContent());
+
+				assertThat(json.has("locations"), equalTo(true));
+				assertThat(json.get("locations").size(), equalTo(2));
+				assertThat(json.get("locations").get(0).asText(), equalTo(response.getFirstHeader("Location").getValue()));
+				assertThat(json.get("locations").get(1).asText(), endsWith(location2));
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+	}
+
+	@Test
+	public void itUsesMultiLocationFormatResponseWithout302() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=false");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=FALSE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=FalsE");
+
+		for (final String path : paths) {
+			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+			httpGet.addHeader("Host", "tr.client-steering-test-1.thecdn.example.com");
+
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpGet);
+				String location1 = ".client-steering-target-2.thecdn.example.com:8090" + path;
+				String location2 = ".client-steering-target-1.thecdn.example.com:8090" + path;
+
+				assertThat("Failed getting 200 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(200));
+
+				HttpEntity entity = response.getEntity();
+				ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+				assertThat(entity.getContent(), not(nullValue()));
+
+				JsonNode json = objectMapper.readTree(entity.getContent());
+
+				assertThat(json.has("locations"), equalTo(true));
+				assertThat(json.get("locations").size(), equalTo(2));
+				assertThat(json.get("locations").get(0).asText(), endsWith(location1));
+				assertThat(json.get("locations").get(1).asText(), endsWith(location2));
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
 	}
 }

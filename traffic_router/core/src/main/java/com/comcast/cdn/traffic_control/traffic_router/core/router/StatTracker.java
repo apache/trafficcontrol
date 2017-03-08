@@ -110,7 +110,7 @@ public class StatTracker {
 		}
 
 		public enum ResultDetails {
-			NO_DETAILS, DS_NOT_FOUND, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND,
+			NO_DETAILS, DS_NOT_FOUND, DS_TLS_MISMATCH, DS_NO_BYPASS, DS_BYPASS, DS_CZ_ONLY, DS_CLIENT_GEO_UNSUPPORTED, GEO_NO_CACHE_FOUND,
 			REGIONAL_GEO_NO_RULE, REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE, REGIONAL_GEO_ALTERNATE_WITH_CACHE
 		}
 
@@ -120,7 +120,7 @@ public class StatTracker {
 		ResultType result = ResultType.ERROR;
 		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
 		Geolocation resultLocation;
-		
+
 		Geolocation clientGeolocation; // the GEO info always retrieved from GEO DB, not from Cache Location
 		boolean isClientGeolocationQueried;
 

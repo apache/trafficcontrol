@@ -33,23 +33,26 @@ public class ConsistentHasher {
 		return selectHashables(hashables, dispersion, s).get(0);
 	}
 
-	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final Dispersion dispersion, final String s) {
+	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final String s) {
+		return selectHashables(hashables, null, s);
+	}
 
+	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final Dispersion dispersion, final String s) {
 		final SortedMap<Double, T> sortedHashables = sortHashables(hashables, s);
 		final List<T> selectedHashables = new ArrayList<T>();
 
 		for (final T hashable : sortedHashables.values()) {
-			if (selectedHashables.size() >= dispersion.getLimit()) {
+			if (dispersion != null && selectedHashables.size() >= dispersion.getLimit()) {
 				break;
 			}
 
 			selectedHashables.add(hashable);
 		}
-		if (dispersion.isShuffled()) {
+		if (dispersion != null && dispersion.isShuffled()) {
 			Collections.shuffle(selectedHashables);
 		}
 
-		return (dispersion.getLimit() <= selectedHashables.size()) ? selectedHashables.subList(0, dispersion.getLimit()) : selectedHashables;
+		return (dispersion != null && dispersion.getLimit() <= selectedHashables.size()) ? selectedHashables.subList(0, dispersion.getLimit()) : selectedHashables;
 	}
 
 	private <T extends Hashable> SortedMap<Double, T> sortHashables(final List<T> hashables, final String s) {

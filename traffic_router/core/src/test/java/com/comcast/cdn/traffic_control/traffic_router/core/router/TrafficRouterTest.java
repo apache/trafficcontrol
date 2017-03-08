@@ -92,6 +92,7 @@ public class TrafficRouterTest {
 
         when(trafficRouter.route(any(DNSRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.route(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();
+        when(trafficRouter.singleRoute(any(HTTPRequest.class), any(Track.class))).thenCallRealMethod();
         when(trafficRouter.selectDeliveryService(any(Request.class), anyBoolean())).thenReturn(deliveryService);
         when(trafficRouter.consistentHashDeliveryService(any(DeliveryService.class), anyString(), anyString())).thenCallRealMethod();
     }
