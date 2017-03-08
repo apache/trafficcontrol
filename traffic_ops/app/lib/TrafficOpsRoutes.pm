@@ -557,6 +557,13 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
 
+	# -- TENANTS
+	$r->get("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#index', namespace => $namespace );
+	$r->get( "/api/$version/tenants/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Tenant#show', namespace => $namespace );
+	$r->put("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#update', namespace => $namespace );
+	$r->post("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#create', namespace => $namespace );
+	$r->delete("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#delete', namespace => $namespace );
+
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#index', namespace => $namespace );
 	$r->get( "/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Division#show', namespace => $namespace );
@@ -711,6 +718,8 @@ sub api_routes {
 	$r->get("/api/$version/users")->over( authenticated => 1 )->to( 'User#index', namespace => $namespace );
 	$r->get( "/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'User#show', namespace => $namespace );
 	$r->put("/api/$version/users/:id")->over( authenticated => 1 )->to( 'User#update', namespace => $namespace );
+	$r->post("/api/$version/users")->over( authenticated => 1 )->to( 'User#create', namespace => $namespace );
+	
 
     # get all deliveryservices assigned to a user (from deliveryservice_tmuser table)
     $r->get( "/api/$version/users/:id/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );

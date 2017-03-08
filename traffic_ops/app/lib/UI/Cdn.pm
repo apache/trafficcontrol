@@ -59,7 +59,7 @@ sub view {
     &stash_role($self);
     $self->stash( fbox_layout => 1, cdn_data => $data );
 
-    if ( $mode eq "edit" and $self->stash('priv_level') > 20 ) {
+    if ( $mode eq "edit" and $self->stash('priv_level') > 20 and verify_tenancy($self, $data->tenant_id)) {
         $self->render( template => 'cdn/edit' );
     }
     else {
@@ -136,7 +136,9 @@ sub create {
         return $self->redirect_to( '/cdn/edit/' . $new_id );
     }
     else {
-        my $insert = $self->db->resultset('Cdn')->create( { name => $name } );
+        my $insert = $self->db->resultset('Cdn')->create( { name => $name, 
+        						    tenant_id => current_user_tenant($self), #Tenancy is not dealt by the UI for now. getting the tenancy from the user
+        						  } );
         $insert->insert();
         $new_id = $insert->id;
     }

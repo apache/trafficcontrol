@@ -37,6 +37,7 @@ use Fixtures::ProfileParameter;
 use Fixtures::Role;
 use Fixtures::Server;
 use Fixtures::Status;
+use Fixtures::Tenant;
 use Fixtures::TmUser;
 use Fixtures::Type;
 use Fixtures::Division;
@@ -63,6 +64,12 @@ use constant STEERING_PASSWORD_1 => 'password';
 
 use constant STEERING_USER_2 => 'steering2';
 use constant STEERING_PASSWORD_2 => 'password';
+
+use constant ADMIN_ROOT_USER          => 'admin-root';
+use constant ADMIN_ROOT_USER_PASSWORD => 'password';
+
+use constant PORTAL_ROOT_USER          => 'portal-root';
+use constant PORTAL_ROOT_USER_PASSWORD => 'password';
 
 sub load_all_fixtures {
 	my $self    = shift;
@@ -103,6 +110,7 @@ sub load_core_data {
 
 	$self->reset_sequence_id();
 
+        $self->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -153,6 +161,7 @@ sub unload_core_data {
 	$self->teardown($schema, 'Status');
 	$self->teardown( $schema, 'Snapshot' );
 	$self->teardown($schema, 'Cdn');
+	$self->teardown($schema, 'Tenant');
 }
 
 sub teardown {
