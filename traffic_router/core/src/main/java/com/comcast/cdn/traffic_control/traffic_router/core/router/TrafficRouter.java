@@ -290,7 +290,7 @@ public class TrafficRouter {
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
-		
+
 		if (caches == null || caches.isEmpty()) {
 			track.setResultDetails(ResultDetails.GEO_NO_CACHE_FOUND);
 		}
@@ -322,6 +322,7 @@ public class TrafficRouter {
 
 		if (caches != null) {
 			track.setResult(ResultType.CZ);
+			track.setClientGeolocation(cacheLocation.getGeolocation());
 			result.setAddresses(inetRecordsFromCaches(ds, caches, request));
 			return result;
 		}
@@ -439,23 +440,64 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
+		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
+		final HTTPRouteResult routeResult = new HTTPRouteResult(true);
+		final List<DeliveryService> deliveryServices = getDeliveryServices(request, track);
+
+		if (deliveryServices == null) {
+			return null;
+		}
+
+		for (final DeliveryService deliveryService : deliveryServices) {
+			if (deliveryService.isRegionalGeoEnabled()) {
+				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + deliveryService.getId());
+				continue;
+			}
+
+			if (deliveryService.isAvailable()) {
+				final List<Cache> caches = selectCaches(request, deliveryService, track);
+				routeResult.addDeliveryService(deliveryService);
+
+				if (caches != null && !caches.isEmpty()) {
+					final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
+					routeResult.addUrl(new URL(deliveryService.createURIString(request, cache)));
+				}
+			}
+		}
+
+		if (routeResult.getUrls().isEmpty()) {
+			routeResult.addUrl(entryDeliveryService.getFailureHttpResponse(request, track));
+		}
+
+		return routeResult;
+	}
+
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
+		if (isMultiRouteRequest(request)) {
+			return multiRoute(request, track);
+		} else {
+			return singleRoute(request, track);
+		}
+	}
+
+	public HTTPRouteResult singleRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService deliveryService = getDeliveryService(request, track);
 
 		if (deliveryService == null) {
 			return null;
 		}
 
-		final HTTPRouteResult routeResult = new HTTPRouteResult();
-
-		routeResult.setDeliveryService(deliveryService);
+		final HTTPRouteResult routeResult = new HTTPRouteResult(false);
 
 		if (!deliveryService.isAvailable()) {
 			routeResult.setUrl(deliveryService.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
+
+		routeResult.setDeliveryService(deliveryService);
 
 		final List<Cache> caches = selectCaches(request, deliveryService, track);
 
@@ -470,6 +512,7 @@ public class TrafficRouter {
 			routeResult.setUrl(deliveryService.getFailureHttpResponse(request, track));
 			return routeResult;
 		}
+
 		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
 
 		if (deliveryService.isRegionalGeoEnabled()) {
@@ -479,7 +522,28 @@ public class TrafficRouter {
 
 		final String uriString = deliveryService.createURIString(request, cache);
 		routeResult.setUrl(new URL(uriString));
+
 		return routeResult;
+	}
+
+	private List<DeliveryService> getDeliveryServices(final HTTPRequest request, final Track track) {
+		final List<DeliveryService> deliveryServices = consistentHashMultiDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath());
+
+		if (deliveryServices == null || deliveryServices.isEmpty()) {
+			track.setResult(ResultType.DS_MISS);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
+		for (final DeliveryService deliveryService : deliveryServices) {
+			if (isTlsMismatch(request, deliveryService)) {
+				track.setResult(ResultType.ERROR);
+				track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
+				return null;
+			}
+		}
+
+		return deliveryServices;
 	}
 
 	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
@@ -492,18 +556,25 @@ public class TrafficRouter {
 			return null;
 		}
 
-		if (request.isSecure() && !deliveryService.isSslEnabled()) {
+		if (isTlsMismatch(request, deliveryService)) {
 			track.setResult(ResultType.ERROR);
-			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
 			return null;
 		}
 
-		if (!request.isSecure() && !deliveryService.isAcceptHttp()) {
-			track.setResult(ResultType.ERROR);
-			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
-			return null;
-		}
 		return deliveryService;
+	}
+
+	private boolean isTlsMismatch(final HTTPRequest request, final DeliveryService deliveryService) {
+		if (request.isSecure() && !deliveryService.isSslEnabled()) {
+			return true;
+		}
+
+		if (!request.isSecure() && !deliveryService.isAcceptHttp()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	protected NetworkNode getNetworkNode(final String ip) {
@@ -522,9 +593,10 @@ public class TrafficRouter {
 			return null;
 		}
 
+		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		CacheLocation cacheLocation = networkNode.getCacheLocation();
 
-		if (cacheLocation != null) {
+		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			return cacheLocation;
 		}
 
@@ -534,7 +606,6 @@ public class TrafficRouter {
 
 		// find CacheLocation
 		cacheLocation = getCacheRegister().getCacheLocationById(networkNode.getLoc());
-		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 			networkNode.setCacheLocation(cacheLocation);
 			return cacheLocation;
@@ -598,12 +669,52 @@ public class TrafficRouter {
 		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
 	}
 
+	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {
+		return deliveryService != null && steeringRegistry.has(deliveryService.getId());
+	}
+
+	private boolean isMultiRouteRequest(final HTTPRequest request) {
+		final DeliveryService deliveryService = cacheRegister.getDeliveryService(request, true);
+
+		if (deliveryService == null || !isSteeringDeliveryService(deliveryService)) {
+			return false;
+		}
+
+		return steeringRegistry.get(deliveryService.getId()).isClientSteering();
+	}
+
+	public List<DeliveryService> consistentHashMultiDeliveryService(final DeliveryService deliveryService, final String requestPath) {
+		if (deliveryService == null) {
+			return null;
+		}
+
+		final List<DeliveryService> deliveryServices = new ArrayList<DeliveryService>();
+
+		if (!isSteeringDeliveryService(deliveryService)) {
+			deliveryServices.add(deliveryService);
+			return deliveryServices;
+		}
+
+		final Steering steering = steeringRegistry.get(deliveryService.getId());
+		final List<SteeringTarget> steeringTargets = consistentHasher.selectHashables(steering.getTargets(), requestPath);
+
+		for (final SteeringTarget steeringTarget : steeringTargets) {
+			final DeliveryService target = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
+
+			if (target != null) {
+				deliveryServices.add(target);
+			}
+		}
+
+		return deliveryServices;
+	}
+
 	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath, final String xtcSteeringOption) {
 		if (deliveryService == null) {
 			return null;
 		}
 
-		if (!steeringRegistry.has(deliveryService.getId())) {
+		if (!isSteeringDeliveryService(deliveryService)) {
 			return deliveryService;
 		}
 
@@ -644,7 +755,7 @@ public class TrafficRouter {
 		final List<CacheLocation> orderedLocations = orderCacheLocations(cacheLocations, clientLocation);
 
 		for (final CacheLocation cacheLocation : orderedLocations) {
-			if (! getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
+			if (!getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
 				return cacheLocation;
 			}
 		}

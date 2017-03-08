@@ -23,6 +23,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.log4j.Logger;
+import org.apache.wicket.ajax.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -39,6 +40,7 @@ import java.util.Set;
 
 public class RouterFilter extends OncePerRequestFilter {
 	private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
+	public static final String REDIRECT_QUERY_PARAM = "trred";
 
 	@Autowired
 	private TrafficRouterManager trafficRouterManager;
@@ -77,51 +79,34 @@ public class RouterFilter extends OncePerRequestFilter {
 
 	private void writeHttpResponse(final HttpServletResponse response, final HttpServletRequest httpServletRequest,
 	                               final HTTPRequest request, final StatTracker.Track track, final HTTPAccessRecord httpAccessRecord) throws IOException {
-		final String format = httpServletRequest.getParameter("format");
 		final HTTPAccessRecord.Builder httpAccessRecordBuilder = new HTTPAccessRecord.Builder(httpAccessRecord);
-		DeliveryService deliveryService = null;
+		HTTPRouteResult routeResult = null;
+
 		try {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
-			final HTTPRouteResult routeResult = trafficRouter.route(request, track);
+			routeResult = trafficRouter.route(request, track);
 
-			if (routeResult != null) {
-				deliveryService = routeResult.getDeliveryService();
-			}
-
-			if (routeResult == null || routeResult.getUrl() == null) {
+			if (routeResult == null || routeResult.getUrls().isEmpty()) {
 				setErrorResponseCode(response, httpAccessRecordBuilder, routeResult);
+			} else if (routeResult.isMultiRouteRequest()) {
+				setMultiResponse(routeResult, httpServletRequest, response, httpAccessRecordBuilder);
 			} else {
-				final URL location = routeResult.getUrl();
-				final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
-
-				for (final String key : responseHeaders.keySet()) {
-					response.addHeader(key, responseHeaders.get(key));
-				}
-
-				httpAccessRecordBuilder.responseURL(location);
-
-				if("json".equals(format)) {
-					response.setContentType("application/json"); // "text/plain"
-					response.getWriter().println("{\"location\": \""+location.toString()+"\" }");
-					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
-				} else {
-					httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
-					response.sendRedirect(location.toString());
-				}
+				setSingleResponse(routeResult, httpServletRequest, response, httpAccessRecordBuilder);
 			}
 		} catch (final IOException e) {
 			httpAccessRecordBuilder.responseCode(-1);
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 			throw e;
-		} catch (GeolocationException e) {
+		} catch (GeolocationException | JSONException e) {
 			httpAccessRecordBuilder.responseCode(-1);
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 		} finally {
 			final Set<String> requestHeaders = trafficRouterManager.getTrafficRouter().getRequestHeaders();
-			if (deliveryService != null) {
-				requestHeaders.addAll(deliveryService.getRequestHeaders());
+
+			if (routeResult != null && routeResult.getRequestHeaders() != null) {
+				requestHeaders.addAll(routeResult.getRequestHeaders());
 			}
 
 			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, requestHeaders);
@@ -136,12 +121,67 @@ public class RouterFilter extends OncePerRequestFilter {
 		}
 	}
 
-	private void setErrorResponseCode(final HttpServletResponse response,
-	                                  final HTTPAccessRecord.Builder httpAccessRecordBuilder, final HTTPRouteResult routeResult) throws IOException {
+	private void setMultiResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException, JSONException {
+		for (final DeliveryService deliveryService : routeResult.getDeliveryServices()) {
+			final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
 
-		if (routeResult != null && routeResult.getResponseCode() > 0) {
-			httpAccessRecordBuilder.responseCode(routeResult.getResponseCode());
-			response.sendError(routeResult.getResponseCode());
+			for (final String key : responseHeaders.keySet()) {
+				// if two DSs append the same header, the last one wins; no way around it unless we enforce unique response headers between subordinate DSs
+				response.addHeader(key, responseHeaders.get(key));
+			}
+		}
+
+		final String redirect = httpServletRequest.getParameter(REDIRECT_QUERY_PARAM);
+
+		response.setContentType("application/json");
+		response.getWriter().println(routeResult.toMultiLocationJSONString());
+		httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+
+		// don't actually parse the boolean value; trred would always be false unless the query param is "true"
+		if ("false".equalsIgnoreCase(redirect)) {
+			response.setStatus(HttpServletResponse.SC_OK);
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+		} else {
+			response.setHeader("Location", routeResult.getUrl().toString());
+			response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
+			httpAccessRecordBuilder.responseURL(routeResult.getUrl());
+		}
+	}
+
+	private void setSingleResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException, JSONException {
+		final String redirect = httpServletRequest.getParameter(REDIRECT_QUERY_PARAM);
+		final String format = httpServletRequest.getParameter("format");
+		final DeliveryService deliveryService = routeResult.getDeliveryService();
+		final URL location = routeResult.getUrl();
+		final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
+
+		for (final String key : responseHeaders.keySet()) {
+			response.addHeader(key, responseHeaders.get(key));
+		}
+
+		httpAccessRecordBuilder.responseURL(location);
+
+		if ("false".equalsIgnoreCase(redirect)) {
+			response.setContentType("application/json");
+			response.getWriter().println(routeResult.toMultiLocationJSONString());
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+		} else if ("json".equals(format)) {
+			response.setContentType("application/json");
+			response.getWriter().println(routeResult.toLocationJSONString());
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+		} else {
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
+			response.sendRedirect(location.toString());
+		}
+	}
+
+	private void setErrorResponseCode(final HttpServletResponse response,
+	                                  final HTTPAccessRecord.Builder httpAccessRecordBuilder, final HTTPRouteResult result) throws IOException {
+
+		if (result != null && result.getResponseCode() > 0) {
+			httpAccessRecordBuilder.responseCode(result.getResponseCode());
+			response.sendError(result.getResponseCode());
 			return;
 		}
 

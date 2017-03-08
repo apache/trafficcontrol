@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 public class DefaultHashable implements Hashable {
+	private static final int DEFAULT_HASH_COUNT = 1000;
 	private Double[] hashes;
 
 	@Override
@@ -31,8 +32,9 @@ public class DefaultHashable implements Hashable {
 	public DefaultHashable generateHashes(final String hashId, final int hashCount) {
 		final TreeSet<Double> hashSet = new TreeSet<Double>();
 		final MD5HashFunction hashFunction = new MD5HashFunction();
+		final int count = (hashCount > 0) ? hashCount : DEFAULT_HASH_COUNT;
 
-		for (int i = 0; i < hashCount; i++) {
+		for (int i = 0; i < count; i++) {
 			hashSet.add(hashFunction.hash(hashId + "--" + i));
 		}
 

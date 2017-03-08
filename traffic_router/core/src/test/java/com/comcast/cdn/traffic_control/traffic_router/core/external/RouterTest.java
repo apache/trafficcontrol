@@ -50,8 +50,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -109,9 +111,15 @@ public class RouterTest {
 			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
 		}
 
-		JsonNode steeringNode = objectMapper.readTree(inputStream).get("response").get(0);
+		Set<String> steeringDeliveryServices = new HashSet<String>();
+		JsonNode steeringData = objectMapper.readTree(inputStream).get("response");
+		Iterator<JsonNode> elements = steeringData.elements();
 
-		String steeringDeliveryServiceId = steeringNode.get("deliveryService").asText();
+		while (elements.hasNext()) {
+			JsonNode ds = elements.next();
+			String dsId = ds.get("deliveryService").asText();
+			steeringDeliveryServices.add(dsId);
+		}
 
 		resourcePath = "publish/CrConfig.json";
 		inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
@@ -127,7 +135,7 @@ public class RouterTest {
 		while (deliveryServices.hasNext()) {
 			String dsId = deliveryServices.next();
 
-			if (dsId.equals(steeringDeliveryServiceId)) {
+			if (steeringDeliveryServices.contains(dsId)) {
 				continue;
 			}
 
@@ -222,7 +230,9 @@ public class RouterTest {
 
 	@After
 	public void after() throws IOException {
-	 	httpClient.close();
+		if (httpClient != null) {
+			httpClient.close();
+		}
 	}
 
 	@Test
