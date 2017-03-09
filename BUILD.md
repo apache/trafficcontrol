@@ -25,6 +25,7 @@ Create and run new build containers:
 > $ docker-compose -f infrastructure/docker/build/docker-compose.yml up [ container name ...] 
 
 Container names can be one or more of these:
+* `source`  (builds only the source tarball)
 * `traffic_monitor_build`
 * `traffic_ops_build`
 * `traffic_portal_build`
@@ -33,4 +34,4 @@ Container names can be one or more of these:
 
 If no component names are provided on the command line, all components will be built.
 
-All rpms are copied to the following directory:  `infrastructure/docker/build/artifacts`.
+All rpms are copied to `dist` at the top level of the `incubator-trafficcontrol` directory.
