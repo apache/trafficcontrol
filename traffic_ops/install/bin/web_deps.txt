@@ -14,19 +14,19 @@
 #
 #Mod name 			, Version 	, CDN URL 																											, Cmprs , Filename 									, Source Dir (archives) 						, Output Dir
 DataTables 			, 1.10.4	, https://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js														, none	, jquery.dataTables.min.js 					, . 											, ../../app/public/js/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox-buttons.js 				, fancyapps-fancyBox-18d1712/source/helpers/ 	, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, fancybox_loading@2x.gif 					, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, fancybox_loading.gif 						, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, fancybox_buttons.png 						, fancyapps-fancyBox-18d1712/source/helpers/ 	, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox-thumbs.js 				, fancyapps-fancyBox-18d1712/source/helpers/ 	, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox-buttons.css				, fancyapps-fancyBox-18d1712/source/helpers/ 	, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox-thumbs.css 				, fancyapps-fancyBox-18d1712/source/helpers/ 	, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, fancybox_sprite@2x.png 					, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox.css 						, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox-media.js 					, fancyapps-fancyBox-18d1712/source/helpers/	, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, fancybox_overlay.png 						, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, fancybox_sprite.png 						, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
-fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancyBox/zipball/v2.1.5 																, zip 	, jquery.fancybox.js 						, fancyapps-fancyBox-18d1712/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox-buttons.js 				, fancybox-2.1.5/source/helpers/ 	, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, fancybox_loading@2x.gif 					, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, fancybox_loading.gif 						, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, fancybox_buttons.png 						, fancybox-2.1.5/source/helpers/ 	, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox-thumbs.js 				, fancybox-2.1.5/source/helpers/ 	, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox-buttons.css				, fancybox-2.1.5/source/helpers/ 	, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox-thumbs.css 				, fancybox-2.1.5/source/helpers/ 	, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, fancybox_sprite@2x.png 					, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox.css 						, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox-media.js 					, fancybox-2.1.5/source/helpers/	, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, fancybox_overlay.png 						, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, fancybox_sprite.png 						, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
+fancybox 			, 2.1.4 	, https://github.com/fancyapps/fancybox/archive/v2.1.5.zip 																, zip 	, jquery.fancybox.js 						, fancybox-2.1.5/source/ 			, ../../app/public/js/fancybox/
 jquery				, 1.11.2	, https://code.jquery.com/jquery-1.11.2.min.js																		, none	, jquery-1.11.2.min.js						, .												, ../../app/public/js/
 jquery-ui 			, 1.11.4 	, https://code.jquery.com/ui/1.11.4/jquery-ui.min.js 																, none 	, jquery-ui.min.js 							, . 											, ../../app/public/js/
 jquery-ui-dark-hive	, 1.7.3 	, https://code.jquery.com/ui/1.7.3/themes/dark-hive/jquery-ui.css 													, none 	, jquery-ui.css 							, . 											, ../../app/public/css/
