@@ -196,7 +196,7 @@ sub is_valid {
 		$self->field('steering.target_id_2_weight')->is_equal( "", "Error: \"$tid2_weight\" is not a valid integer of 0 or greater." );
 	}
 
-	return $self->valid();
+	return $self->valid;
 }
 
 sub get_ds_profile {
