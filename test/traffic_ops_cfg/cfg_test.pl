@@ -72,7 +72,7 @@ sub get_new {
 		$config->{to_passwd} = &get_to_passwd( $config->{to_user} );
 	}
 	my $to_login = $config->{to_user} . ":" . $config->{to_passwd};
-	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
+	$cookie = &get_cookie( $config->{to_url}, $to_login );
 	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
 
 	$tmp_dir = $tmp_dir_base . "/new";
