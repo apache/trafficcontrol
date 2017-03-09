@@ -116,7 +116,7 @@ sub update {
 					weight          => $targets->{$target},
 				}
 			);
-			print STDERR Dumper($targets);
+
 			$insert->insert();
 		}
 
@@ -128,19 +128,16 @@ sub update {
 		$self->redirect_to("/ds/$ds_id/steering");
 	}
 	else {
-		print STDERR "problem!!!\n";
 		&stash_role($self);
 		my $target_name_1;
 		my $target_name_2;
 		my $target_id_1_weight;
 		my $target_id_2_weight;
 		if ($tid1 ) {
-			print STDERR Dumper($tid1);
 			$target_name_1 = $self->get_ds_name($tid1);
 			$target_id_1_weight = $self->get_target_weight( $ds_id, $tid1 );
 		}
 		if ($tid2 ) {
-			print STDERR Dumper($tid2);
 			$target_name_2 = $self->get_ds_name($tid2);
 			$target_id_2_weight = $self->get_target_weight( $ds_id, $tid2 );
 		}
