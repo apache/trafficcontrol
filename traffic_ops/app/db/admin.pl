@@ -193,7 +193,9 @@ sub load_schema {
 }
 
 sub dropdb {
-	if ( system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;") != 0 ) {
+	my $uri = get_psql_uri();
+	my $cmd = "DROP DATABASE IF EXISTS '$db_name';";
+	if ( system(qq{psql $uri -tAec "$cmd"}) != 0 ) {
 		die "Can't drop db $db_name\n";
 	}
 }
@@ -207,7 +209,8 @@ sub createdb {
 		return;
 	}
 
-	if ( system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name;") != 0 ) {
+	my $cmd = "CREATE DATABASE '$db_name';";
+	if ( system(qq{psql $uri -tAec "$cmd"}) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
 }
@@ -227,7 +230,9 @@ sub createuser {
 }
 
 sub dropuser {
-	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_username;") != 0 ) {
+	my $uri = get_psql_uri();
+	my $cmd = "DROP ROLE '$db_username';";
+	if ( system(qq{psql $uri -tAec "$cmd"}) != 0 ) {
 		die "Can't drop user $db_username\n";
 	}
 }
