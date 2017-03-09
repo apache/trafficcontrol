@@ -46,7 +46,7 @@ $t->get_ok("/api/1.1/cachegroupparameters.json")->status_is(200)->or( sub { diag
   ->json_is( '/response/cachegroupParameters/0/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/0/parameter', "60" )
   ->json_is( '/response/cachegroupParameters/1/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/0/parameter', "60" )
   ->json_is( '/response/cachegroupParameters/1/cachegroup', 'mid-northeast-group' )->json_is( '/response/cachegroupParameters/1/parameter', "61" )
-  ->json_is( '/response/cachegroupParameters/2/cachegroup', 'mid-northwest-group' )->json_is( '/response/cachegroupParameters/2/parameter', "60" );
+  ->json_is( '/response/cachegroupParameters/2/cachegroup', 'mid-northwest-group' )->json_is( '/response/cachegroupParameters/2/parameter', "61" );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

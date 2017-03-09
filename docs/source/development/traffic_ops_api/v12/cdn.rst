@@ -38,6 +38,8 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
+  | ``domainName``    | string | TLD of the CDN.                                 |
+  +-------------------+--------+-------------------------------------------------+
   | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
   +-------------------+--------+-------------------------------------------------+
   | ``lastUpdated``   | string |                                                 |
@@ -49,13 +51,15 @@ CDN
      "response": [
            {
               "id": "1"
-              "name": "over-the-top",
+              "name": "cdn1",
+              "domainName": "cdn1.foo.com",
               "dnssecEnabled": false,
               "lastUpdated": "2014-10-02 08:22:43"
            },
            {
               "id": "2"
               "name": "cdn2",
+              "domainName": "cdn2.foo.com",
               "dnssecEnabled": true,
               "lastUpdated": "2014-10-02 08:22:43"
            }
@@ -87,6 +91,8 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
+  | ``domainName``    | string | TLD of the CDN.                                 |
+  +-------------------+--------+-------------------------------------------------+
   | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
   +-------------------+--------+-------------------------------------------------+
   | ``lastUpdated``   | string |                                                 |
@@ -99,6 +105,7 @@ CDN
            {
               "id": "2"
               "name": "cdn2",
+              "domainName": "cdn2.foo.com",
               "dnssecEnabled": false,
               "lastUpdated": "2014-10-02 08:22:43"
            }
@@ -130,6 +137,8 @@ CDN
   +-------------------+--------+-------------------------------------------------+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
+  | ``domainName``    | string | TLD of the CDN.                                 |
+  +-------------------+--------+-------------------------------------------------+
   | ``dnssecEnabled`` |  bool  | DNSSEC enabled.                                 |
   +-------------------+--------+-------------------------------------------------+
   | ``lastUpdated``   | string |                                                 |
@@ -142,6 +151,7 @@ CDN
            {
               "id": "2"
               "name": "cdn2",
+              "domainName": "cdn2.foo.com",
               "dnssecEnabled": false,
               "lastUpdated": "2014-10-02 08:22:43"
            }
@@ -165,16 +175,19 @@ CDN
   +===================+========+=================================================+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` |  int   | Whether dnssec is enabled.                      |
-  |                   |        | - 0: disabled                                   |
-  |                   |        | - 1: enabled                                    |
+  | ``domainName``    | string | TLD of the CDN.                                 |
+  +-------------------+--------+-------------------------------------------------+
+  | ``dnssecEnabled`` |  bool  | Whether dnssec is enabled.                      |
+  |                   |        | - false: disabled                               |
+  |                   |        | - true: enabled                                 |
   +-------------------+--------+-------------------------------------------------+
 
   **Request Example** ::
 
     {
         "name": "cdn_test",
-        "dnssecEnabled": 0
+        "domainName": "cdn3.foo.com",
+        "dnssecEnabled": true
     }
 
   **Response Properties**
@@ -184,11 +197,13 @@ CDN
   +====================+========+=================================================+
   | ``response``       |  hash  | The details of the creation, if success.        |
   +--------------------+--------+-------------------------------------------------+
-  | ``>name``          | string | CDN name.                                       |
-  +--------------------+--------+-------------------------------------------------+
   | ``>id``            |  int   | CDN id.                                         |
   +--------------------+--------+-------------------------------------------------+
+  | ``>name``          | string | CDN name.                                       |
+  +--------------------+--------+-------------------------------------------------+
   | ``>dnssecEnabled`` | string | Whether dnssec is enabled.                      |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>domainName``    | string | TLD of the CDN.                                 |
   +--------------------+--------+-------------------------------------------------+
   | ``alerts``         | array  | A collection of alert messages.                 |
   +--------------------+--------+-------------------------------------------------+
@@ -202,9 +217,10 @@ CDN
 
     {
         "response":{
-            "name": "cdn_test",
             "id": 3
-            "dnssecEnabled": 0
+            "name": "cdn_test",
+            "domainName": "cdn3.foo.com",
+            "dnssecEnabled": true
         },
         "alerts":[
             {
@@ -239,9 +255,11 @@ CDN
   +===================+========+=================================================+
   | ``name``          | string | CDN name.                                       |
   +-------------------+--------+-------------------------------------------------+
-  | ``dnssecEnabled`` | int    | Whether dnssec is enabled.                      |
-  |                   |        | - 0: disabled                                   |
-  |                   |        | - 1: enabled                                    |
+  | ``domainName``    | string | TLD of the CDN.                                 |
+  +-------------------+--------+-------------------------------------------------+
+  | ``dnssecEnabled`` |  bool  | Whether dnssec is enabled.                      |
+  |                   |        | - false: disabled                               |
+  |                   |        | - true: enabled                                 |
   +-------------------+--------+-------------------------------------------------+
 
 
@@ -249,7 +267,8 @@ CDN
 
     {
         "name": "cdn_test2",
-        "dnssecEnabled": 0
+        "domainName": "cdn3.foo.com",
+        "dnssecEnabled": false
     }
 
   **Response Properties**
@@ -263,7 +282,9 @@ CDN
   +--------------------+--------+-------------------------------------------------+
   | ``>id``            |  int   | CDN id.                                         |
   +--------------------+--------+-------------------------------------------------+
-  | ``>dnssecEnabled`` | string | Whether dnssec is enabled.                      |
+  | ``>domainName``    | string | TLD of the CDN.                                 |
+  +--------------------+--------+-------------------------------------------------+
+  | ``>dnssecEnabled`` |  bool  | Whether dnssec is enabled.                      |
   +--------------------+--------+-------------------------------------------------+
   | ``alerts``         | array  | A collection of alert messages.                 |
   +--------------------+--------+-------------------------------------------------+
@@ -276,9 +297,10 @@ CDN
 
     {
         "response":{
+            "id": 3,
             "name": "cdn_test2",
-            "id": 3
-            "dnssecEnabled": 0
+            "domainName": "cdn3.foo.com",
+            "dnssecEnabled": false
         },
         "alerts":[
             {
