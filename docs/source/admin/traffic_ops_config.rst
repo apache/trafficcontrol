@@ -29,7 +29,7 @@ Content Delivery Networks
 
 Profile Parameters
 ======================
-Many of the settings for the different servers in a Traffic Control CDN are controlled by parameters in the parameter view of Traffic Ops. Parameters are grouped in profiles and profiles are assigned to a server. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings. To make life easier, Traffic Ops allows for duplication, comparison, import and export of Profiles. Traffic Ops also has a "Global profile" - the parameters in this profile are going to be applied to all servers in the Traffic Ops instance, or apply to Traffic Ops themselves. These parameters are:
+Many of the settings for the different servers in a Traffic Control CDN are controlled by parameters in the parameter view of Traffic Ops. Parameters are grouped in profiles and profiles are assigned to a server or a deliveryservice. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings. To make life easier, Traffic Ops allows for duplication, comparison, import and export of Profiles. Traffic Ops also has a "Global profile" - the parameters in this profile are going to be applied to all servers in the Traffic Ops instance, or apply to Traffic Ops themselves. These parameters are:
 
 
 .. index::
@@ -90,9 +90,9 @@ Below is a list of cache parameters that are likely to need changes from the def
 | allow_ip6                | astats.config     | This is a comma separated  list of IPv6 CIDR blocks that will have access to the astats statistics on the caches.       |
 |                          |                   | The Traffic Monitor IP addresses have to be included in this, if they are using IPv6 to monitor the caches.             |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
-| Drive_Prefix             | storage.config    | JvD/Jeff to supply blurb                                                                                                |
+| Drive_Prefix             | storage.config    | The device path start of the disks. For example, if you have ``/dev/sda`` through ``/dev/sdf`` set this to ``/dev/sd``  |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
-| Drive_Letters            | storage.config    | JvD/Jeff to supply blurb                                                                                                |
+| Drive_Letters            | storage.config    | The letter part of the disks, in the same example as above set this to ``a,b,c,d,e,f``                                  |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | purge_allow_ip           | ip_allow.config   | The IP address range that is allowed to execute the PURGE method on the caches (not related to :ref:`rl-purge`)         |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+

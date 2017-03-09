@@ -47,6 +47,18 @@ __PACKAGE__->table("profile");
   is_nullable: 1
   original: {default_value => \"now()"}
 
+=head2 type
+
+  data_type: 'enum'
+  extra: {custom_type_name => "profile_type",list => ["ATS_PROFILE","TR_PROFILE","TM_PROFILE","TS_PROFILE","TP_PROFILE","INFLUXDB_PROFILE","RIAK_PROFILE","SPLUNK_PROFILE","DS_PROFILE","ORG_PROFILE","KAFKA_PROFILE","LOGSTASH_PROFILE","ES_PROFILE","UNK_PROFILE"]}
+  is_nullable: 0
+
+=head2 cdn
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -68,6 +80,32 @@ __PACKAGE__->add_columns(
     is_nullable   => 1,
     original      => { default_value => \"now()" },
   },
+  "type",
+  {
+    data_type => "enum",
+    extra => {
+      custom_type_name => "profile_type",
+      list => [
+        "ATS_PROFILE",
+        "TR_PROFILE",
+        "TM_PROFILE",
+        "TS_PROFILE",
+        "TP_PROFILE",
+        "INFLUXDB_PROFILE",
+        "RIAK_PROFILE",
+        "SPLUNK_PROFILE",
+        "DS_PROFILE",
+        "ORG_PROFILE",
+        "KAFKA_PROFILE",
+        "LOGSTASH_PROFILE",
+        "ES_PROFILE",
+        "UNK_PROFILE",
+      ],
+    },
+    is_nullable => 0,
+  },
+  "cdn",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -84,7 +122,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54441_name_unique>
+=head2 C<idx_101371_name_unique>
 
 =over 4
 
@@ -94,9 +132,29 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54441_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_101371_name_unique", ["name"]);
 
 =head1 RELATIONS
+
+=head2 cdn
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Cdn>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "cdn",
+  "Schema::Result::Cdn",
+  { id => "cdn" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "RESTRICT",
+    on_update     => "RESTRICT",
+  },
+);
 
 =head2 deliveryservices
 
@@ -144,8 +202,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:tmTPl52VUdJsn+y6JuSLlw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-01-02 16:07:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:1LR3Lov3kmopJD1mJF08EQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

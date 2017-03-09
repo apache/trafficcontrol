@@ -214,14 +214,8 @@ sub register {
 			my $self = shift || confess($no_instance_message);
 			my $ds_id = shift || confess("Please supply a delivery service id!");
 
-			my $cdn_domain = $self->db->resultset('Parameter')->search(
-				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $ds_id ] },
-				{
-					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-					distinct => 1
-				}
-			)->get_column('value')->single();
-
+			my $cdn_id = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('cdn_id')->single();
+			my $cdn_domain = $self->db->resultset('Cdn')->search( { id =>  $cdn_id } )->get_column('domain_name')->single();
 			return $cdn_domain;
 		}
 	);
@@ -231,14 +225,9 @@ sub register {
 			my $self = shift || confess($no_instance_message);
 			my $profile_id = shift || confess("Please Supply a profile id");
 
-			return $self->db->resultset('Parameter')->search(
-				{
-					'Name'                       => 'domain_name',
-					'Config_file'                => 'CRConfig.json',
-					'profile_parameters.profile' => $profile_id,
-				},
-				{ join => 'profile_parameters', }
-			)->get_column('value')->single();
+			my $cdn_id = $self->db->resultset('Profile')->search( { id => $profile_id } )->get_column('cdn')->single();
+			my $cdn_domain = $self->db->resultset('Cdn')->search( { id =>  $cdn_id } )->get_column('domain_name')->single();
+			return $cdn_domain;
 		}
 	);
 

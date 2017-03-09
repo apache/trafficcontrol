@@ -47,7 +47,7 @@
 		<% } %>
 		%= label_for 'cdn' => '* CDN', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.cdn_id')->select(class => 'field', id => 'cdn', name => 'ds.cdn_id');
+		%= field('ds.cdn_id')->select( \@{$cdns} );
 		<% } else { %>
 		%= field('ds.cdn.name')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
@@ -366,34 +366,13 @@
 			<% } %>
 		<% } %>
 	</div><br>
-	<div class="block form-row" id="multi_site_origin_algorithm_row">
-		<% unless (field('ds.multi_site_origin_algorithm')->valid) { %>
-			<span class="field-with-error"><%= field('ds.multi_site_origin_algorithm')->error %></span>
-		<% } %>
-		%= label_for 'multi_site_origin_algorithm' => 'Multi Site Origin Algorithm', class => 'label'
-		<% if ($priv_level >= 20) { %>
-		%= field('ds.multi_site_origin_algorithm')->select([['Consistent hash' => 0], ['Primary/backup' => 1], ['Strict round-robin' => 2], ['IP based round-robin' => 3], ['Latch on failover' => 4]]);
-		<% } else { %>
-			<% if ($ds->multi_site_origin_algorithm == 1) { %>
-				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Primary/backup', readonly => 'readonly');
-			<% } elsif ($ds->multi_site_origin_algorithm == 2) { %>
-				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Strict round-robin', readonly => 'readonly');
-			<% } elsif ($ds->multi_site_origin_algorithm == 3) { %>
-  			        %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'IP based round-robin', readonly => 'readonly');
-			<% } elsif ($ds->multi_site_origin_algorithm == 4) { %>
-				%= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Latch on failover', readonly => 'readonly');                        
-			<% } else { %>
-                %= field('ds.multi_site_origin_algorithm')->text(class => 'field', value =>  'Consistent hash', readonly => 'readonly');
-			<% } %>
-		<% } %>
-	</div>
 	<div class="block form-row" id="profile_row">
 		<% unless (field('ds.profile')->valid) { %>
 			<span class="field-with-error"><%= field('ds.profile')->error %></span>
 		<% } %>
-		%= label_for 'profile' => '* CCR profile', class => 'label'
+		%= label_for 'profile' => '* Delivery Service profile', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.profile')->select(class => 'field', id => 'profile', name => 'ds.profile');
+		%= field('ds.profile')->select( \@{$profiles} );
 		<% } else { %>
 		%= field('ds.profile.name')->text(class => 'field', readonly => 'readonly');
 		<% }  %>

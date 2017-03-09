@@ -45,5 +45,5 @@ All caches (and other servers) are assigned a Profile in Traffic Ops.
 
 |arrow| Profile
 ---------------
-  A Profile is a set of configuration settings and parameters, applied to a server. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings, and bundled into groups using Profiles. Traffic Ops allows for duplication, comparison, import and export of Profiles. 
+  A Profile is a set of configuration settings and parameters, applied to a server or deliveryservice. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings, and bundled into groups using Profiles. Traffic Ops allows for duplication, comparison, import and export of Profiles. 
 

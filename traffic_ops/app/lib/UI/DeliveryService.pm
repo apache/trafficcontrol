@@ -41,20 +41,23 @@ sub index {
 	&navbarpage($self);
 }
 
+
 sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_ds =
-		$self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', { 'type' => undef }, { 'profile' => undef } ] } );
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type', 'profile' ] } );
 	my $data = $rs_ds->single;
-	my $action;
+
 	my $regexp_set   = &get_regexp_set( $self, $id );
 	my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 	my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
+
+	$self->stash_profile_selector('DS_PROFILE', defined($data->profile) ? $data->profile->id : undef);
+	$self->stash_cdn_selector($data->cdn->id);
 	&stash_role($self);
 	$self->stash(
 		ds           => $data,
@@ -71,15 +74,8 @@ sub edit {
 sub get_cdn_domain {
 	my $self       = shift;
 	my $id         = shift;
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{
-			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-			distinct => 1
-		}
-	)->get_column('value')->single();
-	# Always return a lowercase FQDN.
-	return lc($cdn_domain);
+
+	return $self->db->resultset('Deliveryservice')->search( { id => $id }, { prefetch => ['cdn']} )->get_column('domain_name')->single();
 }
 
 sub get_example_urls {
@@ -237,7 +233,6 @@ sub read {
 				"dns_bypass_ttl"              => $row->dns_bypass_ttl,
 				"org_server_fqdn"             => $row->org_server_fqdn,
 				"multi_site_origin"           => \$row->multi_site_origin,
-				"multi_site_origin_algorithm" => \$row->multi_site_origin_algorithm,
 				"ccr_dns_ttl"                 => $row->ccr_dns_ttl,
 				"type"                        => $row->type->id,
 				"cdn_name"                    => $cdn_name,
@@ -346,8 +341,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
 	}
 
-	my $profile_id = $self->param('ds.profile');
-	my $cdn_domain = $self->get_cdn_domain_by_profile_id($profile_id);
+	# my $profile_id = $self->param('ds.profile.id');
+	my $cdn_domain = $self->db->resultset('Cdn')->search( { id => $cdn_id } )->get_column('domain_name')->single();
 
 	my $match_one = 0;
 	my $dbl_check = {};
@@ -787,6 +782,9 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
+#	foreach my $f ($self->param) {
+#		print $f . " => " . $self->param($f) . "\n";
+#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
 
@@ -804,11 +802,10 @@ sub update {
 			geo_provider                => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
-			multi_site_origin_algorithm => $self->paramAsScalar('ds.multi_site_origin_algorithm'),
 			ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 			type                        => $self->typeid(),
 			cdn_id                      => $self->paramAsScalar('ds.cdn_id'),
-			profile                     => $self->paramAsScalar('ds.profile'),
+			profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
 			global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
 			global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
 			miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
@@ -850,7 +847,7 @@ sub update {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
 		}
 
-		# print Dumper( \%hash );
+		#print Dumper( \%hash );
 		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
 		$update->update( \%hash );
 		$update->update();
@@ -1010,6 +1007,7 @@ sub create {
 	}
 
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
+		#print "CDN:$cdn_id\n";
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
@@ -1028,7 +1026,6 @@ sub create {
 				dns_bypass_ttl              => $self->paramAsScalar('ds.dns_bypass_ttl'),
 				org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 				multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
-				multi_site_origin_algorithm => $self->paramAsScalar('ds.multi_site_origin_algorithm'),
 				ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 				type                        => $self->paramAsScalar('ds.type'),
 				cdn_id                      => $cdn_id,
@@ -1112,7 +1109,6 @@ sub create {
 			);
 			$insert->insert();
 			my $new_re_id = $insert->id;
-
 			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
 				{
 					regex           => $new_re_id,
@@ -1133,6 +1129,7 @@ sub create {
 		my $cdn_rs = $self->db->resultset('Cdn')->search( { id => $cdn_id } )->single();
 		my $dnssec_enabled = $cdn_rs->dnssec_enabled;
 
+
 		if ( $dnssec_enabled == 1 ) {
 			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
 			$self->create_dnssec_keys( $cdn_rs->name, $self->param('ds.xml_id'), $new_id );
@@ -1143,7 +1140,7 @@ sub create {
 	else {
 		my $selected_type    = $self->param('ds.type');
 		my $selected_profile = $self->param('ds.profile');
-		my $selected_cdn     = $self->param('ds.cdn');
+		my $selected_cdn     = $self->param('ds.cdn_id');
 		&stash_role($self);
 		$self->stash(
 			ds               => {},
@@ -1240,6 +1237,9 @@ sub get_key_ttl {
 # for the add delivery service view
 sub add {
 	my $self = shift;
+
+	$self->stash_profile_selector('DS_PROFILE');
+	$self->stash_cdn_selector();
 	&stash_role($self);
 	$self->stash(
 		fbox_layout      => 1,
