@@ -48,7 +48,7 @@ public class HTTPRouteResult implements RouteResult {
 	}
 
 	public URL getUrl() {
-		return (!urls.isEmpty()) ? urls.get(0) : null;
+		return !urls.isEmpty() ? urls.get(0) : null;
 	}
 
 	public void setUrl(final URL url) {
@@ -65,7 +65,7 @@ public class HTTPRouteResult implements RouteResult {
 	}
 
 	public DeliveryService getDeliveryService() {
-		return (!deliveryServices.isEmpty()) ? deliveryServices.get(0) : null;
+		return !deliveryServices.isEmpty() ? deliveryServices.get(0) : null;
 	}
 
 	public void setDeliveryService(final DeliveryService deliveryService) {

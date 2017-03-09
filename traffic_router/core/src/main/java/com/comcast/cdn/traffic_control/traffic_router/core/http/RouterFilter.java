@@ -152,27 +152,31 @@ public class RouterFilter extends OncePerRequestFilter {
 	private void setSingleResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException, JSONException {
 		final String redirect = httpServletRequest.getParameter(REDIRECT_QUERY_PARAM);
 		final String format = httpServletRequest.getParameter("format");
-		final DeliveryService deliveryService = routeResult.getDeliveryService();
 		final URL location = routeResult.getUrl();
-		final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
 
-		for (final String key : responseHeaders.keySet()) {
-			response.addHeader(key, responseHeaders.get(key));
+		if (routeResult.getDeliveryService() != null) {
+			final DeliveryService deliveryService = routeResult.getDeliveryService();
+			final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
+
+			for (final String key : responseHeaders.keySet()) {
+				response.addHeader(key, responseHeaders.get(key));
+			}
 		}
-
-		httpAccessRecordBuilder.responseURL(location);
 
 		if ("false".equalsIgnoreCase(redirect)) {
 			response.setContentType("application/json");
 			response.getWriter().println(routeResult.toMultiLocationJSONString());
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+			httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
 		} else if ("json".equals(format)) {
 			response.setContentType("application/json");
 			response.getWriter().println(routeResult.toLocationJSONString());
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
+			httpAccessRecordBuilder.responseURL(location);
 		} else {
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
 			response.sendRedirect(location.toString());
+			httpAccessRecordBuilder.responseURL(location);
 		}
 	}
 
