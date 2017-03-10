@@ -111,6 +111,7 @@ public class RouterFilter extends OncePerRequestFilter {
 			final Map<String,String> accessRequestHeaders = new HttpAccessRequestHeaders().makeMap(httpServletRequest, requestHeaders);
 
 			final HTTPAccessRecord access = httpAccessRecordBuilder.resultType(track.getResult())
+				.resultDetails(track.getResultDetails())
 				.resultLocation(track.getResultLocation())
 				.requestHeaders(accessRequestHeaders)
 				.regionalGeoResult(track.getRegionalGeoResult())
