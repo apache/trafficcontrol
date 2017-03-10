@@ -1,5 +1,17 @@
-How To Contribute
+Contributing to Traffic Control
 =================
+Thanks again for your time and interest in this project! 
+
+The following document is a set of guidelines to streamline the contribution process for our contributors. Please feel free to suggest changes to this document in a pull request!
+
+Things to know before getting started
+-------------------------------------
+Code of Conduct
+Please review the code of conduct. By participating, you agree to it and are expected to follow this code. Please report any issues or unnacceptable behavior to [admin email]
+
+Pull Request Process
+-------------------------------------
+-------------------------------------
 
 We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://issues.apache.org/jira/browse/TC) and discussing it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
