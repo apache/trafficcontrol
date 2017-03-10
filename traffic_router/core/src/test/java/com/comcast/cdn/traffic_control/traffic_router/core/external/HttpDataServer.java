@@ -53,11 +53,14 @@ public class HttpDataServer implements HttpHandler {
 //		}
 //	}
 
-	public void start(int port) throws IOException {
+	public void start(int port) throws IOException, InterruptedException {
+		int s = 30;
 		httpServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), port),10);
 		httpServer.createContext("/", this);
 		httpServer.start();
-		System.out.println(">>>>>>>>>>>>> Started Fake Http Data Server at " + port);
+		System.out.println(">>>>>>>>>>>>> Started Fake Http Data Server at " + port + "; sleeping for " + s + "s");
+
+		Thread.sleep(s * 1000L);
 	}
 
 	public void stop() {
