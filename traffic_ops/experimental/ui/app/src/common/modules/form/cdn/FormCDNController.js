@@ -21,12 +21,6 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
 
     $scope.cdn = cdn;
 
-    $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 }
-    ];
-
-    $scope.labelize = stringUtils.labelize;
-
     $scope.falseTrue = [
         { value: false, label: 'false' },
         { value: true, label: 'true' }
