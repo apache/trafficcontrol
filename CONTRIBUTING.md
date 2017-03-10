@@ -1,16 +1,16 @@
 Contributing to Traffic Control
 =================
+
 Thanks again for your time and interest in this project! 
 
 The following document is a set of guidelines to streamline the contribution process for our contributors. Please feel free to suggest changes to this document in a pull request!
 
 Things to know before getting started
 -------------------------------------
-Code of Conduct
-Please review the code of conduct. By participating, you agree to it and are expected to follow this code. Please report any issues or unnacceptable behavior to [admin email]
+#### Code of Conduct
+Please review the [code of conduct](). By participating, you agree to it and are expected to follow this code. Please report any issues or unnacceptable behavior to [admin email]
 
 Pull Request Process
--------------------------------------
 -------------------------------------
 
 We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://issues.apache.org/jira/browse/TC) and discussing it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
@@ -19,13 +19,12 @@ Once your issue has been approved and you're ready to start slinging code, we ha
 
 Remember, your code doesn't have to be perfect. Hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
 
-Making a pull request
----------------------
+#### Making a pull request
 If you've never made a pull request, it's super-easy. Github has a great tutorial [here](https://help.github.com/articles/using-pull-requests/). In a nutshell, you click the _fork_ button to make a fork, clone it and make your change, then click the green _New pull request_ button on your repository's Github page and follow the instructions. That's it! We'll look at it and get back to you.
 
 Guidelines
 ----------
-Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://github.com/Comcast/traffic_control/wiki/Traffic-Ops-API-Guidelines-v1.x).
+Following the project conventions will make the pull request process go faster and smoother. If making changes to the Traffic Ops API, please consult the [Traffic Ops API Guidelines](https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
 
 #### Create an issue
 
