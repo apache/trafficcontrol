@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+# Files are relative to this script directory.
+SELF="${BASH_SOURCE[0]}"
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+COMPOSE_FILE=./infrastructure/docker/build/docker-compose.yml
+
+# Check for dependencies
+if ! which docker-compose >/dev/null 2>&1; then
+	echo "Error: docker-compose is required for a docker build." >&2
+	exit 1
+fi
+
+# Parse command line arguments
+verbose=0
+while getopts lvq? opt; do
+	case $opt in
+		\?)
+			echo "Usage: $SELF [options] [projects]"
+			echo "	-q	Quiet mode. Supresses output."
+			echo "	-v	Verbose mode. Lists all build output."
+			echo "	-l	List available projects."
+			echo
+			echo "	If no projects are listed, all projects will be packaged."
+			echo "	Valid projects:"
+			$SELF -l | sed "s/^/		- /"
+			exit 0
+			;;
+		q)
+			exec >/dev/null 2>&1
+			;;
+		v)
+			verbose=1
+			;;
+		l)
+			docker-compose -f $COMPOSE_FILE config --services
+			exit $?
+			;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+# If no specific packages are listed, run them all.
+if (( ! "$#" )); then
+	set -- `$SELF -l`
+fi
+
+# Build each project in turn.
+failure=0
+badproj=""
+while (( "$#" )); do
+	echo Building $1.
+	(
+		if (( "$verbose" == 0 )); then
+			exec >/dev/null 2>&1
+		fi
+		docker-compose -f $COMPOSE_FILE build $1 || exit 1
+		docker-compose -f $COMPOSE_FILE run --rm $1 || exit 1
+	) || {
+		# Don't totally bail out, but make note of the failures.
+		failure=1
+		badproj="$badproj $1"
+	}
+	shift
+done
+
+if (( $failure )); then
+	echo "Failed to build$badproj."
+fi
+
+exit $failure
