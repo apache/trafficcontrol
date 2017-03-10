@@ -1453,7 +1453,7 @@
         {
             "config_file": "package",
             "name": "trafficserver",
-            "value": "5.3.2-744.31aba39.el6.x86_64"
+            "value": "5.3.2-758.ce6de0c.el6.x86_64"
         },
         {
             "config_file": "records.config",
@@ -1493,6 +1493,6 @@
     ],
     "profile": {
         "description": "TrafficServer Mid profile",
-        "name": "TrafficServer_Mid"
+        "name": "MID1_CDN_532"
     }
 }
