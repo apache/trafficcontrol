@@ -442,8 +442,15 @@ public class TrafficRouter {
 
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
+
+		if (isTlsMismatch(request, entryDeliveryService)) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
+			return null;
+		}
+
 		final HTTPRouteResult routeResult = new HTTPRouteResult(true);
-		final List<DeliveryService> deliveryServices = getDeliveryServices(request, track);
+		final List<DeliveryService> deliveryServices = getDeliveryServices(request, track, entryDeliveryService);
 
 		if (deliveryServices == null) {
 			return null;
@@ -526,8 +533,8 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
-	private List<DeliveryService> getDeliveryServices(final HTTPRequest request, final Track track) {
-		final List<DeliveryService> deliveryServices = consistentHashMultiDeliveryService(cacheRegister.getDeliveryService(request, true), request.getPath());
+	private List<DeliveryService> getDeliveryServices(final HTTPRequest request, final Track track, final DeliveryService entryDeliveryService) {
+		final List<DeliveryService> deliveryServices = consistentHashMultiDeliveryService(entryDeliveryService, request.getPath());
 
 		if (deliveryServices == null || deliveryServices.isEmpty()) {
 			track.setResult(ResultType.DS_MISS);
