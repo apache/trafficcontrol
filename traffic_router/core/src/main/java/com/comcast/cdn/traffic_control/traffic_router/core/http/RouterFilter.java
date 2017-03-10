@@ -23,7 +23,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -98,7 +97,7 @@ public class RouterFilter extends OncePerRequestFilter {
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
 			throw e;
-		} catch (GeolocationException | JSONException e) {
+		} catch (final GeolocationException e) {
 			httpAccessRecordBuilder.responseCode(-1);
 			httpAccessRecordBuilder.responseURL(null);
 			httpAccessRecordBuilder.rerr(e.getMessage());
@@ -121,7 +120,7 @@ public class RouterFilter extends OncePerRequestFilter {
 		}
 	}
 
-	private void setMultiResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException, JSONException {
+	private void setMultiResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException {
 		for (final DeliveryService deliveryService : routeResult.getDeliveryServices()) {
 			final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
 
@@ -149,7 +148,7 @@ public class RouterFilter extends OncePerRequestFilter {
 		}
 	}
 
-	private void setSingleResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException, JSONException {
+	private void setSingleResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException {
 		final String redirect = httpServletRequest.getParameter(REDIRECT_QUERY_PARAM);
 		final String format = httpServletRequest.getParameter("format");
 		final URL location = routeResult.getUrl();
