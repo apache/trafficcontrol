@@ -4,9 +4,8 @@ This test allows you to compare all generated config files and CDN snapshots (CR
 
 *Prerequisites*
 
-1. Make sure the data in your databases are synced to avoid getting false positives.
-2. Queue updates for all servers in both instances.
-3. Modify test.config with proper settings. Set perform_snapshot=1 if you want to force a snapshot in both instances.
+1. Make sure the data in your 2 Traffic Ops databases are synced to avoid getting false positives.
+2. Modify test.config with proper settings. Set perform_snapshot=1 if you want to force a snapshot in both Traffic Ops instances.
 
 *Running the Test*
 
