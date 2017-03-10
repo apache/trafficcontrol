@@ -1402,7 +1402,7 @@
         },
         {
             "config_file": "traffic_ops_ort_syncds.cron",
-            "name": "location_old",
+            "name": "location",
             "value": "/etc/cron.d"
         },
         {
