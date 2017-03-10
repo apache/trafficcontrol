@@ -91,15 +91,10 @@ public abstract class AbstractServiceUpdater {
 	};
 
 	public void init() {
-		if (dataBaseURL == null) {
-			LOGGER.warn("[" + getClass().getSimpleName() + "] Unable to fetch external resource; init() called with a null databaseUrl");
-			return;
-		}
-
 		final long pollingInterval = getPollingInterval();
 		final Date nextFetchDate = new Date(System.currentTimeMillis() + pollingInterval);
 		LOGGER.info("[" + getClass().getSimpleName() + "] Fetching external resource " + dataBaseURL + " at interval: " + pollingInterval + " : " + TimeUnit.MILLISECONDS + " next update occurrs at " + nextFetchDate);
-		scheduledService = executorService.scheduleWithFixedDelay(updater, 0, pollingInterval, TimeUnit.MILLISECONDS); // start immediately with pollingInterval fixed delay
+		scheduledService = executorService.scheduleWithFixedDelay(updater, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
