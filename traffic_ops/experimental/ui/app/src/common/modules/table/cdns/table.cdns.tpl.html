@@ -34,12 +34,14 @@ under the License.
             <thead>
                 <tr class="headings">
                     <th>name</th>
+                    <th>domainName</th>
                     <th>dnssecEnabled</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in cdns">
                     <td>{{cdn.name}}</td>
+                    <td>{{cdn.domainName}}</td>
                     <td>{{cdn.dnssecEnabled}}</td>
                 </tr>
             </tbody>
