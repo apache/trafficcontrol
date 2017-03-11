@@ -225,6 +225,11 @@ For the modernizr component:
 @docs/source/_themes/sphinx_rtd_theme/static/js/modernizr.min.js
 ./licenses/MIT-modernizr
 
+For the modernizr component:
+@docs/source/_themes/sphinx_rtd_theme/static/js/modernizr.min.js
+
+Modernizr 2.6.2 (Custom Build) | MIT & BSD
+
 For the fontawesome component:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/FontAwesome.otf
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/fontawesome-webfont.*
