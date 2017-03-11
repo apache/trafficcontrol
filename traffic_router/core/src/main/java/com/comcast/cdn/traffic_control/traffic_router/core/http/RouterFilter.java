@@ -85,7 +85,7 @@ public class RouterFilter extends OncePerRequestFilter {
 			final TrafficRouter trafficRouter = trafficRouterManager.getTrafficRouter();
 			routeResult = trafficRouter.route(request, track);
 
-			if (routeResult == null || routeResult.getUrls().isEmpty()) {
+			if (routeResult == null || routeResult.getUrl() == null) {
 				setErrorResponseCode(response, httpAccessRecordBuilder, routeResult);
 			} else if (routeResult.isMultiRouteRequest()) {
 				setMultiResponse(routeResult, httpServletRequest, response, httpAccessRecordBuilder);
@@ -174,8 +174,8 @@ public class RouterFilter extends OncePerRequestFilter {
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
 			httpAccessRecordBuilder.responseURL(location);
 		} else {
-			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
 			response.sendRedirect(location.toString());
+			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
 			httpAccessRecordBuilder.responseURL(location);
 		}
 	}
