@@ -31,19 +31,23 @@ $(function () {
 
 <body>
 %= include 'navbar'
-			<div id=accordion>
-					<h3><a href="#">Download a database dump</a></h3>
-					<div>
-						<script>
-							function downloadsqlfunction() {
-								window.location = "/dbdump?filename=" + $('#filename').val();
-							}
-						</script>
-						Filename: <input id="filename" value="<%= $filename %>" size=70/>
-						<br>
-						<br>
-						<button class="button" type="button" onclick="downloadsqlfunction()">Download DB dump</button>
-					</div>
-			</div>
-	</body>
+	<div id=accordion>
+			<h3><a href="#">Download a database dump</a></h3>
+			<% if ($priv_level >= 20) { %>
+				<div>
+					<script>
+						function downloadsqlfunction() {
+							window.location = "/dbdump?filename=" + $('#filename').val();
+						}
+					</script>
+					Filename: <input id="filename" value="<%= $filename %>" size=70/>
+					<br>
+					<br>
+					<button class="button" type="button" onclick="downloadsqlfunction()">Download DB dump</button>
+				</div>
+			<% } else { %>
+				<h2> This operation is for ADMINS only!!!!</h2>
+			<% } %>
+	</div>
+</body>
 </html>

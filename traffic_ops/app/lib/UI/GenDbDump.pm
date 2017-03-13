@@ -17,6 +17,7 @@ package UI::GenDbDump;
 #
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use UI::Utils;
 
 sub dbdump {
 	my $self = shift;
@@ -30,6 +31,10 @@ sub dbdump {
 	my $ok = open my $fh, '-|', "pg_dump $uri -C --column-insert";
 	if (! $ok ) {
 		$self->internal_server_error( { Error => "Error dumping database" } );	
+		return;
+	}
+	if ( !&is_oper($self) ) {
+		$self->internal_server_error( { Error => "Insufficient permissions for DB Dump. Admin access is required." } );	
 		return;
 	}
 
