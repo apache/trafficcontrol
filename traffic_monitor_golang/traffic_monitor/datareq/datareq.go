@@ -208,15 +208,17 @@ func WrapAgeErr(errorCount threadsafe.Uint, f func() ([]byte, time.Time, error),
 	}
 }
 
-// WrapUnpolledCheck wraps an http.HandlerFunc, returning ServiceUnavailable if any caches are unpolled; else, calling the wrapped func.
+// WrapUnpolledCheck wraps an http.HandlerFunc, returning ServiceUnavailable if all caches have't been polled; else, calling the wrapped func. Once all caches have been polled, we never return a 503 again, even if the CRConfig has been changed and new, unpolled caches exist. This is because, before those new caches existed in the CRConfig, they weren't being routed to, so it doesn't break anything to continue not routing to them until they're polled, while still serving polled caches as available. Whereas, on startup, if we were to return data with some caches unpolled, we would be telling clients that existing, potentially-available caches are unavailable, simply because we hadn't polled them yet.
 func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount threadsafe.Uint, f http.HandlerFunc) http.HandlerFunc {
+	polledAll := false
 	return func(w http.ResponseWriter, r *http.Request) {
-		if unpolledCaches.Any() {
+		if !polledAll && unpolledCaches.Any() {
 			HandleErr(errorCount, r.URL.EscapedPath(), fmt.Errorf("service still starting, some caches unpolled: %v", unpolledCaches.UnpolledCaches()))
 			w.WriteHeader(http.StatusServiceUnavailable)
 			log.Write(w, []byte("Service Unavailable"), r.URL.EscapedPath())
 			return
 		}
+		polledAll = true
 		f(w, r)
 	}
 }
