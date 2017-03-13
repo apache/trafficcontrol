@@ -40,6 +40,7 @@ import java.util.Set;
 public class RouterFilter extends OncePerRequestFilter {
 	private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
 	public static final String REDIRECT_QUERY_PARAM = "trred";
+	private static final String HEAD = "HEAD";
 
 	@Autowired
 	private TrafficRouterManager trafficRouterManager;
@@ -133,9 +134,11 @@ public class RouterFilter extends OncePerRequestFilter {
 
 		final String redirect = httpServletRequest.getParameter(REDIRECT_QUERY_PARAM);
 
-		response.setContentType("application/json");
-		response.getWriter().println(routeResult.toMultiLocationJSONString());
-		httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+		if (!HEAD.equals(httpServletRequest.getMethod())) {
+			response.setContentType("application/json");
+			response.getWriter().println(routeResult.toMultiLocationJSONString());
+			httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+		}
 
 		// don't actually parse the boolean value; trred would always be false unless the query param is "true"
 		if ("false".equalsIgnoreCase(redirect)) {
@@ -164,15 +167,21 @@ public class RouterFilter extends OncePerRequestFilter {
 		}
 
 		if ("false".equalsIgnoreCase(redirect)) {
-			response.setContentType("application/json");
-			response.getWriter().println(routeResult.toMultiLocationJSONString());
+			if (!HEAD.equals(httpServletRequest.getMethod())) {
+				response.setContentType("application/json");
+				response.getWriter().println(routeResult.toMultiLocationJSONString());
+				httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
+			}
+
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
-			httpAccessRecordBuilder.responseURLs(routeResult.getUrls());
 		} else if ("json".equals(format)) {
-			response.setContentType("application/json");
-			response.getWriter().println(routeResult.toLocationJSONString());
+			if (!HEAD.equals(httpServletRequest.getMethod())) {
+				response.setContentType("application/json");
+				response.getWriter().println(routeResult.toLocationJSONString());
+				httpAccessRecordBuilder.responseURL(location);
+			}
+
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_OK);
-			httpAccessRecordBuilder.responseURL(location);
 		} else {
 			response.sendRedirect(location.toString());
 			httpAccessRecordBuilder.responseCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
