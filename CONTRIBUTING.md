@@ -1,4 +1,4 @@
-Contributing to Traffic Control
+**Contributing to Traffic Control**
 =================
 
 Thanks again for your time and interest in this project! 
@@ -10,7 +10,10 @@ Things to know before getting started
 #### Code of Conduct
 Please review the [code of conduct](). By participating, you agree to it and are expected to follow this code. Please report any issues or unnacceptable behavior to [admin email]
 
-Pull Request Process
+#### Design Decisions
+
+
+How to Contribute
 -------------------------------------
 
 We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://issues.apache.org/jira/browse/TC) and discussing it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
@@ -55,7 +58,6 @@ We're in the process of adding more tests and testing frameworks, so if a testin
 #### Commit messages
 
 Try to make your commit messages follow [git best practices](http://chris.beams.io/posts/git-commit/).
-
 1. Separate subject from body with a blank line
 2. Limit the subject line to 50 characters
 3. Capitalize the subject line
@@ -64,7 +66,7 @@ Try to make your commit messages follow [git best practices](http://chris.beams.
 6. Wrap the body at 72 characters
 7. Use the body to explain what and why vs. how
 
-This make it easier for people to read and understand what each commit does, on both the command line interface and Github.com.
+This makes it easier for people to read and understand what each commit does, on both the command line interface and Github.com.
 
 ---
 
