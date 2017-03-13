@@ -132,8 +132,6 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -227,7 +225,6 @@ Delivery Service
             "missLat": "41.881944",
             "missLong": "-87.627778",
             "multiSiteOrigin": false,
-            "multiSiteOriginAlgorithm": null,
             "orgServerFqdn": "http://baz.boo.net",
             "originShield": null,
             "profileDescription": "Content Router for over-the-top",
@@ -364,8 +361,6 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
-  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -462,7 +457,6 @@ Delivery Service
             "missLat": "41.881944",
             "missLong": "-87.627778",
             "multiSiteOrigin": false,
-            "multiSiteOriginAlgorithm": null,
             "orgServerFqdn": "http://baz.boo.net",
             "originShield": null,
             "profileDescription": "Content Router for over-the-top",

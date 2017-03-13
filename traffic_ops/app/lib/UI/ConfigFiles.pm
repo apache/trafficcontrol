@@ -186,7 +186,7 @@ sub ds_data {
 	if ( $server->type->name =~ m/^MID/ ) {
 
 		# the mids will do all deliveryservices in this CDN
-		my $domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name', '' );
+		my $domain = $self->get_cdn_domain_by_profile_id( $server->profile->id );
 		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
 	}
 	else {
@@ -212,7 +212,7 @@ sub ds_data {
 		my $cacheurl                    = $row->cacheurl;
 		my $remap_text                  = $row->remap_text;
 		my $multi_site_origin           = $row->multi_site_origin;
-		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
+		my $multi_site_origin_algorithm = 0;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -249,7 +249,7 @@ sub ds_data {
 				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
@@ -257,6 +257,7 @@ sub ds_data {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
 					#add the second with https
 					my $map_from2 = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
@@ -291,6 +292,13 @@ sub ds_data {
 		if ( defined($cacheurl) ) {
 			my $fname = "cacheurl_" . $ds_xml_id . ".config";
 			$dsinfo->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+		}
+
+		if ( defined( $row->profile ) ) {
+			my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $row->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+			while ( my $prow = $dsparamrs->next ) {
+				$dsinfo->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+			}
 		}
 
 		$j++;
@@ -370,7 +378,7 @@ sub parent_data {
 	}
 
 	# get the server's cdn domain
-	my $server_domain = $self->profile_param_value( $server->profile->id, 'CRConfig.json', 'domain_name' );
+	my $server_domain = $self->get_cdn_domain_by_profile_id( $server->profile->id );
 
 	my %profile_cache;
 	my %deliveryservices;
@@ -380,25 +388,26 @@ sub parent_data {
 	$self->cachegroup_profiles( \@secondary_parent_cachegroup_ids, \%profile_cache, \%deliveryservices );
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
-			my $pid            = $row->profile->id;
-			my $ds_domain      = $profile_cache{$pid}->{domain_name};
-			my $weight         = $profile_cache{$pid}->{weight};
-			my $port           = $profile_cache{$pid}->{port};
-			my $use_ip_address = $profile_cache{$pid}->{use_ip_address};
-			my $rank           = $profile_cache{$pid}->{rank};
-			my $primary_parent         = $server->cachegroup->parent_cachegroup_id // -1;
-			my $secondary_parent      = $server->cachegroup->secondary_parent_cachegroup_id // -1;
+			my $pid              = $row->profile->id;
+			my $ds_domain        = $profile_cache{$pid}->{domain_name};
+			my $weight           = $profile_cache{$pid}->{weight};
+			my $port             = $profile_cache{$pid}->{port};
+			my $use_ip_address   = $profile_cache{$pid}->{use_ip_address};
+			my $rank             = $profile_cache{$pid}->{rank};
+			my $primary_parent   = $server->cachegroup->parent_cachegroup_id // -1;
+			my $secondary_parent = $server->cachegroup->secondary_parent_cachegroup_id // -1;
+
 			if ( defined($ds_domain) && defined($server_domain) && $ds_domain eq $server_domain ) {
 				my %p = (
-					host_name      => $row->host_name,
-					port           => defined($port) ? $port : $row->tcp_port,
-					domain_name    => $row->domain_name,
-					weight         => $weight,
-					use_ip_address => $use_ip_address,
-					rank           => $rank,
-					ip_address     => $row->ip_address,
-					primary_parent         => ( $primary_parent == $row->cachegroup->id ) ? 1 : 0,
-					secondary_parent      => ( $secondary_parent == $row->cachegroup->id ) ? 1 : 0,
+					host_name        => $row->host_name,
+					port             => defined($port) ? $port : $row->tcp_port,
+					domain_name      => $row->domain_name,
+					weight           => $weight,
+					use_ip_address   => $use_ip_address,
+					rank             => $rank,
+					ip_address       => $row->ip_address,
+					primary_parent   => ( $primary_parent == $row->cachegroup->id ) ? 1 : 0,
+					secondary_parent => ( $secondary_parent == $row->cachegroup->id ) ? 1 : 0,
 				);
 				push @{ $parent_info{$prefix} }, \%p;
 			}
@@ -424,7 +433,7 @@ sub cachegroup_profiles {
 		cachegroup => { -in => $ids }
 	);
 
-	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
+	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile', 'cdn' ] } );
 
 	while ( my $row = $rs_parent->next ) {
 
@@ -447,11 +456,11 @@ sub cachegroup_profiles {
 
 			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
 			$profile_cache->{$pid} = {
-				domain_name    => $self->profile_param_value( $pid, 'CRConfig.json', 'domain_name',    undef ),
-				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' ),
-				port           => $self->profile_param_value( $pid, 'parent.config', 'port',           undef ),
+				domain_name    => $row->cdn->domain_name,
+				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight', '0.999' ),
+				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
-				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank',           1 ),
+				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
 			};
 		}
 	}
@@ -478,9 +487,9 @@ sub ip_allow_data {
 
 	# default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
 	my $coalesce_masklen_v4 = 24;
-	my $coalesce_number_v4 = 5;
+	my $coalesce_number_v4  = 5;
 	my $coalesce_masklen_v6 = 48;
-	my $coalesce_number_v6 = 5;
+	my $coalesce_number_v6  = 5;
 	my $rs_parameter =
 		$self->db->resultset('ProfileParameter')->search( { profile => $server->profile->id }, { prefetch => [ "parameter", "profile" ] } );
 
@@ -491,16 +500,16 @@ sub ip_allow_data {
 			$ipallow->[$i]->{method} = "ALL";
 			$i++;
 		}
-		elsif ($row->parameter->name eq 'coalesce_masklen_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_masklen_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_masklen_v4 = $row->parameter->value;
 		}
-		elsif ($row->parameter->name eq 'coalesce_number_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_number_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_number_v4 = $row->parameter->value;
 		}
-		elsif ($row->parameter->name eq 'coalesce_masklen_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_masklen_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_masklen_v6 = $row->parameter->value;
 		}
-		elsif ($row->parameter->name eq 'coalesce_number_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_number_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_number_v6 = $row->parameter->value;
 		}
 	}
@@ -551,7 +560,7 @@ sub ip_allow_data {
 
 		# compact, coalesce and compact combined list again
 		my @compacted_list = NetAddr::IP::Compact(@allowed_netaddrips);
-		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4 , $coalesce_number_v4, @allowed_netaddrips );
+		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4, $coalesce_number_v4, @allowed_netaddrips );
 		my @combined_list  = NetAddr::IP::Compact( @allowed_netaddrips, @{$coalesced_list} );
 		foreach my $net (@combined_list) {
 			my $range = $net->range();
@@ -564,7 +573,7 @@ sub ip_allow_data {
 
 		# now add IPv6. TODO JvD: paremeterize support enabled on/ofd and /48 and number 5
 		my @compacted__ipv6_list = NetAddr::IP::Compact(@allowed_ipv6_netaddrips);
-		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( $coalesce_masklen_v6 , $coalesce_number_v6, @allowed_ipv6_netaddrips );
+		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( $coalesce_masklen_v6, $coalesce_number_v6, @allowed_ipv6_netaddrips );
 		my @combined_ipv6_list   = NetAddr::IP::Compact( @allowed_ipv6_netaddrips, @{$coalesced_ipv6_list} );
 		foreach my $net (@combined_ipv6_list) {
 			my $range = $net->range();
@@ -809,9 +818,9 @@ sub hosting_dot_config {
 	my $file = shift;
 	my $data = shift;
 
-	my $server = $self->server_data($id);
-	my $storage_data   = $self->param_data( $server, "storage.config" );
-	my $text   = $self->header_comment( $server->host_name );
+	my $server       = $self->server_data($id);
+	my $storage_data = $self->param_data( $server, "storage.config" );
+	my $text         = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
@@ -839,7 +848,7 @@ sub hosting_dot_config {
 			}
 		}
 	}
-	my $disk_volume = 1; # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
+	my $disk_volume = 1;    # note this will actually be the RAM (RAM_Drive_Prefix) volume if there is no Drive_Prefix parameter.
 	$text .= "hostname=*   volume=" . $disk_volume . "\n";
 
 	return $text;
@@ -955,7 +964,7 @@ sub remap_dot_config {
 			if ( $remap->{type} =~ /LIVE/ && $remap->{type} !~ /NATNL/ ) {
 				next;    # Live local delivery services skip mids
 			}
-			if ( defined( $remap->{org} ) && defined( $mid_remap{$remap->{org} } ) ) {
+			if ( defined( $remap->{org} ) && defined( $mid_remap{ $remap->{org} } ) ) {
 				next;    # skip remap rules from extra HOST_REGEXP entries
 			}
 
@@ -1084,9 +1093,15 @@ sub parent_dot_config {
 
 	my $server      = $self->server_data($id);
 	my $server_type = $server->type->name;
-	my $parent_qstring;
+
+	my $ats_ver =
+		$self->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	my $ats_major_version = substr( $ats_ver, 0, 1 );
+
 	my $pinfo;
-	my $text        = $self->header_comment( $server->host_name );
+	my $text = $self->header_comment( $server->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server);
 	}
@@ -1096,16 +1111,24 @@ sub parent_dot_config {
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origin;
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $xml_id                      = $ds->{ds_xml_id};
-			my $os                          = $ds->{origin_shield};
-			$parent_qstring 		= "ignore";
-			my $multi_site_origin           = defined( $ds->{multi_site_origin} ) ? $ds->{multi_site_origin} : 0;
-			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
+			my $xml_id                             = $ds->{ds_xml_id};
+			my $os                                 = $ds->{origin_shield};
+			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
+			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 0;
+			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'};
+			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'};
+			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
+			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
-			my $org_uri = URI->new($ds->{org});
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
+			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
+				$parent_qstring = 'consider';
+			}
+			my $org_uri = URI->new( $ds->{org} );
 
 			# Don't duplicate origin line if multiple seen
-			next if ( grep( /^$org_uri$/, @unique_origin));
+			next if ( grep( /^$org_uri$/, @unique_origin ) );
 			push @unique_origin, $org_uri;
 
 			if ( defined($os) ) {
@@ -1124,15 +1147,13 @@ sub parent_dot_config {
 					$pinfo = $self->parent_data($server);
 				}
 
-
 				my @ranked_parents = ();
-				if ( exists( $pinfo->{$org_uri->host} ) ) {
-					@ranked_parents = sort by_parent_rank @{ $pinfo->{$org_uri->host} };
+				if ( exists( $pinfo->{ $org_uri->host } ) ) {
+					@ranked_parents = sort by_parent_rank @{ $pinfo->{ $org_uri->host } };
 				}
 				else {
 					$self->app->log->debug( "BUG: Did not match an origin: " . $org_uri );
 				}
-
 
 				my @parent_info;
 				my @secondary_parent_info;
@@ -1141,7 +1162,7 @@ sub parent_dot_config {
 					if ( $parent->{primary_parent} ) {
 						push @parent_info, format_parent_info($parent);
 					}
-					elsif ($parent ->{secondary_parent} ) {
+					elsif ( $parent->{secondary_parent} ) {
 						push @secondary_parent_info, format_parent_info($parent);
 					}
 					else {
@@ -1159,47 +1180,28 @@ sub parent_dot_config {
 					my %seen;
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
 				}
-                                my $parents = 'parent="' . join( '', @parent_info ) . '' . join ( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
-				my $mso_algorithm = "";
-				if ( $multi_site_origin_algorithm == 0 ) {
-					$mso_algorithm = "consistent_hash";
-					if ( $ds->{qstring_ignore} == 0 ) {
-						$parent_qstring = "consider";
-					}
+				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+
+				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
+
+				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
+					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
 				}
-				elsif ( $multi_site_origin_algorithm == 1 ) {
-					$mso_algorithm = "false";
-				}
-				elsif ( $multi_site_origin_algorithm == 2 ) {
-					$mso_algorithm = "strict";
-				}
-				elsif ( $multi_site_origin_algorithm == 3 ) {
-					$mso_algorithm = "true";
-				}
-				elsif ( $multi_site_origin_algorithm == 4 ) {
-					$mso_algorithm = "latched";
-				}
-				else {
-					$mso_algorithm = "consistent_hash";
-				}
-				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false\n";
+				$text .= "\n";
 			}
 		}
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
-		$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
+		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		return $text;
 	}
-	else {
-
-		#"True" Parent
+	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
 		$pinfo = $self->parent_data($server);
-
 		my %done = ();
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			my $org = $remap->{org};
-			$parent_qstring = "ignore";
 			next if !defined $org || $org eq "";
 			next if $done{$org};
 			my $org_uri = URI->new($org);
@@ -1207,7 +1209,9 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				if ( $remap->{qstring_ignore} == 0 ) {
+				my $qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
+				if ( $remap->{qstring_ignore} == 0 && !defined($qsh) ) {
 					$parent_qstring = "consider";
 				}
 
@@ -1233,7 +1237,12 @@ sub parent_dot_config {
 				}
 				my $round_robin = 'round_robin=consistent_hash';
 				my $go_direct   = 'go_direct=false';
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
+				$text
+					.= "dest_domain="
+					. $org_uri->host
+					. " port="
+					. $org_uri->port
+					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 			}
 			$done{$org} = 1;
 		}
@@ -1309,7 +1318,8 @@ sub regex_revalidate_dot_config {
 
 	my %regex_time;
 	$max_days =
-		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
+		->first;
 	my $max_hours = $max_days * 24;
 	my $min_hours = 1;
 
@@ -1504,14 +1514,16 @@ sub ssl_multicert_dot_config {
 
 	# get a list of delivery services for the server
 	my $protocol_search = '> 0';
-	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ 'server.id' => $server->id, 'me.protocol' => \$protocol_search ] },
-		{ join => { deliveryservice_servers => { server => undef } }, } );
-	#get the domain_name from the first result since it should all be the same CDN
-	#TODO, the domain_name param needs to be a field on the CDN and not a param
-	my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_list[0]->id );
+	my @ds_list         = $self->db->resultset('Deliveryservice')->search(
+		{ -and => [ 'server.id' => $server->id, 'me.protocol' => \$protocol_search ] },
+		{ prefetch => ['cdn'], join => { deliveryservice_servers => { server => undef } }, }
+	);
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
+		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
+		my $data         = $rs_ds->single;
+		my $domain_name  = $ds->cdn->domain_name;
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $ds, $domain_name, $ds->protocol );
 

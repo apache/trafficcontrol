@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use Safe;
+use DBI;
 use POSIX;
 use File::Basename qw{dirname};
 use File::Path qw{make_path};
@@ -85,10 +86,6 @@ my $outputConfigFile = "/opt/traffic_ops/install/bin/configuration_file.json";
 my $inputFile = "";
 my $automatic = 0;
 my $defaultInputs;
-
-sub getDbDriver {
-    return "pg";
-}
 
 sub getInstallPath {
     my $relPath = shift;
@@ -186,8 +183,8 @@ sub generateDbConf {
     # No YAML library installed, but this is a simple file..
     open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
     print $fh "production:\n";
-    print $fh "    driver: ", getDbDriver() . "\n";
-    print $fh "    open: tcp:$dbconf{hostname}:$dbconf{port}*$dbconf{dbname}/$dbconf{user}/$dbconf{password}\n";
+    print $fh "    driver: $dbconf{type}\n";
+    print $fh "    open: host=$dbconf{hostname} port=$dbconf{port} user=$dbconf{user} password=$dbconf{password} dbname=$dbconf{dbname} sslmode=disable\n";
     close $fh;
 
     return \%todbconf;
@@ -270,17 +267,7 @@ sub generateOpenSSLConf {
     my $userInput = shift;
     my $fileName  = shift;
 
-    if ( !defined $userInput->{$fileName} ) {
-        InstallUtils::logger( "No OpenSSL Configuration - questions will be asked", "info" );
-
-        # write an empty config so openssl does not use an old file
-        InstallUtils::writeJson( $fileName, my %emptyConfig );
-        return;
-    }
-
     my %config = getConfig( $userInput, $fileName );
-
-    InstallUtils::writeJson( $fileName, \%config );
     return \%config;
 }
 
@@ -384,7 +371,7 @@ sub getDefaults {
     return {
         $databaseConfFile => [
             {
-                "Database type" => "pg",
+                "Database type" => "Pg",
                 "config_var"    => "type"
             },
             {
@@ -396,7 +383,7 @@ sub getDefaults {
                 "config_var"                          => "hostname"
             },
             {
-                "Database port number" => "3306",
+                "Database port number" => "5432",
                 "config_var"           => "port"
             },
             {
@@ -408,7 +395,6 @@ sub getDefaults {
                 "config_var"                             => "password",
                 "hidden"                                 => "true"
             }
-
         ],
         $dbConfFile => [
             {
@@ -568,8 +554,22 @@ sub getDefaults {
 sub setupDatabase {
     my $todbconf     = shift;
     my $opensslconf  = shift;
-    my $genCert      = shift;
     my $setupMaxmind = shift;
+    my $databaseConfFile = shift;
+
+    my $dbconf = InstallUtils::readJson( $databaseConfFile );
+
+    my $dsn = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbconf->{"dbname"} );
+    my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
+    if ($dbh) {
+        InstallUtils::logger("Database connection succeeded", "info");
+        # Success!
+        $dbh->disconnect();
+    }
+    else {
+        InstallUtils::logger("Error connecting to database", "error");
+        exit(-1)
+    }
 
     InstallUtils::logger( "Setting up database", "info" );
     chdir("/opt/traffic_ops/app");
@@ -600,7 +600,7 @@ sub setupDatabase {
         InstallUtils::logger( "Failed to copy coverage zone file", "error" );
     }
 
-    if ( lc $genCert =~ /^y(?:es)?/ ) {
+    if ( lc $opensslconf->{"genCert"} =~ /^y(?:es)?/ ) {
         if ( -x "/usr/bin/openssl" ) {
             InstallUtils::logger( "Installing SSL Certificates", "info" );
             $result = GenerateCert::createCert($opensslconf);
@@ -662,8 +662,9 @@ sub main {
 
     InstallUtils::initLogger( $debug, $logFile );
 
+    print("unzipping log\n");
     if ( -f "$logFile.gz" ) {
-        InstallUtils::execCommand( "/bin/gunzip", "$logFile.gz" );
+        InstallUtils::execCommand( "/bin/gunzip", "-f", "$logFile.gz" );
     }
 
     InstallUtils::logger( "Starting postinstall", "info" );
@@ -687,7 +688,7 @@ sub main {
         return;
     }
 
-    InstallUtils::logger( "Postinstall " . ( defined $reconfigure ? "in" : "not" ) . " in reconfigure mode", "info" );
+    InstallUtils::logger( "Postinstall " . ( $reconfigure ? "" : "not " ) . "in reconfigure mode", "info" );
 
     InstallUtils::rotateLog($cpanLogFile);
 
@@ -761,12 +762,7 @@ sub main {
 
     # if reconfigure is set then setup the database
     if ($reconfigure) {
-        if ($automatic) {
-            setupDatabase( $todbconf, $opensslConfFile, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
-        }
-        else {
-            setupDatabase( $todbconf, 0, $opensslconf->{"genCert"}, $todbconf->{"maxmind"} );
-        }
+        setupDatabase( $todbconf, $opensslconf, $todbconf->{"maxmind"}, $databaseConfFile );
     }
 
     InstallUtils::logger( "Starting Traffic Ops", "info" );
