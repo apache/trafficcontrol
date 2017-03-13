@@ -108,7 +108,7 @@ type Router struct {
 	APIPortTime   time.Time
 	FQDN          *string `json:"fqdn,omitempty"`
 	FQDNTime      time.Time
-	HTTPSPort     *int `json:"httpsPort,string,omitempty"`
+	HTTPSPort     *int `json:"httpsPort,omitempty"`
 	HTTPSPortTime time.Time
 	IP            *string `json:"ip,omitempty"`
 	IPTime        time.Time
@@ -116,7 +116,7 @@ type Router struct {
 	IP6Time       time.Time
 	Location      *string `json:"location,omitempty"`
 	LocationTime  time.Time
-	Port          *int `json:"port,string,omitempty"`
+	Port          *int `json:"port,omitempty"`
 	PortTime      time.Time
 	Profile       *string `json:"profile,omitempty"`
 	ProfileTime   time.Time
@@ -137,7 +137,7 @@ type Server struct {
 	HashCountTime        time.Time           `json:"-"`
 	HashId               *string             `json:"hashId,omitempty"`
 	HashIdTime           time.Time           `json:"-"`
-	HttpsPort            *int                `json:"httpsPort,string,omitempty"`
+	HttpsPort            *int                `json:"httpsPort,omitempty"`
 	HttpsPortTime        time.Time           `json:"-"`
 	InterfaceName        *string             `json:"interfaceName,omitempty"`
 	InterfaceNameTime    time.Time           `json:"-"`
@@ -147,7 +147,7 @@ type Server struct {
 	Ip6Time              time.Time           `json:"-"`
 	LocationId           *string             `json:"locationId,omitempty"`
 	LocationIdTime       time.Time           `json:"-"`
-	Port                 *int                `json:"port,string,omitempty"`
+	Port                 *int                `json:"port,omitempty"`
 	PortTime             time.Time           `json:"-"`
 	Profile              *string             `json:"profile,omitempty"`
 	ProfileTime          time.Time           `json:"-"`
@@ -207,7 +207,7 @@ type DeliveryServiceProtocol struct {
 type Monitor struct {
 	FQDN          *string   `json:"fqdn,omitempty"`
 	FQDNTime      time.Time `json:"-"`
-	HTTPSPort     *int      `json:"httpsPort,string,omitempty"`
+	HTTPSPort     *int      `json:"httpsPort,omitempty"`
 	HTTPSPortTime time.Time `json:"-"`
 	IP            *string   `json:"ip,omitempty"`
 	IPTime        time.Time `json:"-"`
@@ -215,7 +215,7 @@ type Monitor struct {
 	IP6Time       time.Time `json:"-"`
 	Location      *string   `json:"location,omitempty"`
 	LocationTime  time.Time `json:"-"`
-	Port          *int      `json:"port,string,omitempty"`
+	Port          *int      `json:"port,omitempty"`
 	PortTime      time.Time `json:"-"`
 	Profile       *string   `json:"profile,omitempty"`
 	ProfileTime   time.Time `json:"-"`
