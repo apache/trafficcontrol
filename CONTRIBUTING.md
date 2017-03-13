@@ -1,12 +1,3 @@
-<!-- 
-Still missing from this page:
-1. Issue and Pull Requests Labels. What needs to be filled out when creating new issues
-2. 
-
-
-
---> 
-
 **Contributing to Traffic Control**
 =================
 
