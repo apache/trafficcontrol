@@ -32,6 +32,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // CacheStatus contains summary stat data about the given cache.
@@ -56,8 +57,19 @@ type CacheStatus struct {
 	ConnectionCount        *int64   `json:"connection_count,omitempty"`
 }
 
-func srvAPICacheStates(toData todata.TODataThreadsafe, statInfoHistory threadsafe.ResultInfoHistory, statResultHistory threadsafe.ResultStatHistory, healthHistory threadsafe.ResultHistory, lastHealthDurations threadsafe.DurationMap, localStates peer.CRStatesThreadsafe, lastStats threadsafe.LastStats, localCacheStatus threadsafe.CacheAvailableStatus, statMaxKbpses threadsafe.CacheKbpses) ([]byte, error) {
-	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus, statMaxKbpses))
+func srvAPICacheStates(
+	toData todata.TODataThreadsafe,
+	statInfoHistory threadsafe.ResultInfoHistory,
+	statResultHistory threadsafe.ResultStatHistory,
+	healthHistory threadsafe.ResultHistory,
+	lastHealthDurations threadsafe.DurationMap,
+	localStates peer.CRStatesThreadsafe,
+	lastStats threadsafe.LastStats,
+	localCacheStatus threadsafe.CacheAvailableStatus,
+	statMaxKbpses threadsafe.CacheKbpses,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
+) ([]byte, error) {
+	return json.Marshal(createCacheStatuses(toData.Get().ServerTypes, statInfoHistory.Get(), statResultHistory.Get(), healthHistory.Get(), lastHealthDurations.Get(), localStates.Get().Caches, lastStats.Get(), localCacheStatus, statMaxKbpses, monitorConfig.Get().TrafficServer))
 }
 
 func createCacheStatuses(
@@ -70,27 +82,32 @@ func createCacheStatuses(
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
+	servers map[string]to.TrafficServer,
 ) map[enum.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[enum.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy() // TODO test whether copy is necessary
 	maxKbpses := statMaxKbpses.Get()
 
-	for cacheName, cacheType := range cacheTypes {
-		infoHistory, ok := statInfoHistory[cacheName]
-		if !ok {
+	for cacheNameStr, serverInfo := range servers {
+		cacheName := enum.CacheName(cacheNameStr)
+		status, statusPoller := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
+
+		cacheTypeStr := ""
+		if cacheType, ok := cacheTypes[cacheName]; !ok {
+			log.Infof("Error getting cache type for %v: not in types\n", cacheName)
+		} else {
+			cacheTypeStr = string(cacheType)
+		}
+
+		loadAverage := 0.0
+		if infoHistory, ok := statInfoHistory[cacheName]; !ok {
 			log.Infof("createCacheStatuses stat info history missing cache %s\n", cacheName)
-			continue
-		}
-
-		if len(infoHistory) < 1 {
+		} else if len(infoHistory) < 1 {
 			log.Infof("createCacheStatuses stat info history empty for cache %s\n", cacheName)
-			continue
+		} else {
+			loadAverage = infoHistory[0].Vitals.LoadAvg
 		}
-
-		log.Debugf("createCacheStatuses NOT empty for cache %s\n", cacheName)
-
-		loadAverage := &infoHistory[0].Vitals.LoadAvg
 
 		healthQueryTime, err := latestQueryTimeMS(cacheName, lastHealthDurations)
 		if err != nil {
@@ -141,31 +158,9 @@ func createCacheStatuses(
 			connections = &connectionsVal
 		}
 
-		var status *string
-		var statusPoller *string
-		statusVal, ok := localCacheStatus[cacheName]
-		if !ok {
-			log.Infof("cache not in statuses %s\n", cacheName)
-		} else {
-			statusString := statusVal.Status + " - "
-
-			// this should match the event string, use as the default if possible
-			if statusVal.Why != "" {
-				statusString = statusVal.Why
-			} else if statusVal.Available {
-				statusString += "available"
-			} else {
-				statusString += fmt.Sprintf("unavailable (%s)", statusVal.Why)
-			}
-
-			status = &statusString
-			statusPoller = &statusVal.Poller
-		}
-
-		cacheTypeStr := string(cacheType)
 		statii[cacheName] = CacheStatus{
 			Type:                   &cacheTypeStr,
-			LoadAverage:            loadAverage,
+			LoadAverage:            &loadAverage,
 			QueryTimeMilliseconds:  &healthQueryTime,
 			StatTimeMilliseconds:   &statTime,
 			HealthTimeMilliseconds: &healthTime,
@@ -174,11 +169,36 @@ func createCacheStatuses(
 			BandwidthKbps:          kbps,
 			BandwidthCapacityKbps:  maxKbps,
 			ConnectionCount:        connections,
-			Status:                 status,
-			StatusPoller:           statusPoller,
+			Status:                 &status,
+			StatusPoller:           &statusPoller,
 		}
 	}
 	return statii
+}
+
+func cacheStatusAndPoller(server enum.CacheName, serverInfo to.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
+	switch status := enum.CacheStatusFromString(serverInfo.Status); status {
+	case enum.CacheStatusAdminDown:
+		fallthrough
+	case enum.CacheStatusOnline:
+		fallthrough
+	case enum.CacheStatusOffline:
+		return status.String(), ""
+	}
+
+	statusVal, ok := localCacheStatus[server]
+	if !ok {
+		log.Infof("cache not in statuses %s\n", server)
+		return "ERROR - not in statuses", ""
+	}
+
+	if statusVal.Why != "" {
+		return statusVal.Why, statusVal.Poller
+	}
+	if statusVal.Available {
+		return fmt.Sprintf("%s - available", statusVal.Status), statusVal.Poller
+	}
+	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller
 }
 
 func createCacheConnections(statResultHistory cache.ResultStatHistory) map[enum.CacheName]int64 {
