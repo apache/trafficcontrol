@@ -11,14 +11,14 @@ Things to know before getting started
 Please review the [code of conduct](). By participating, you agree to it and are expected to follow this code. Please report any issues or unnacceptable behavior to [admin email]
 
 #### Design Decisions
-
+When we need to make changes to the project, we first discuss it on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We document our decisions as well as brainstorm project related ideas in the [wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home).
 
 How to Contribute
 -------------------------------------
 
 We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://issues.apache.org/jira/browse/TC) and discussing it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-Once your issue has been approved and you're ready to start slinging code, we have a few [guidelines](https://github.com/apache/incubator-trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
+Once your issue has been approved and you're ready to start slinging code, we have a few [guidelines](https://github.com/at9418/incubator-trafficcontrol/edit/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
 
 Remember, your code doesn't have to be perfect. Hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
 
