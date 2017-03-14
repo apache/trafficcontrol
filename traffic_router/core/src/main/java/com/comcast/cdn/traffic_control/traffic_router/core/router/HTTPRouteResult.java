@@ -81,33 +81,9 @@ public class HTTPRouteResult implements RouteResult {
 		this.responseCode = rc;
 	}
 
-	/*
-	public JSONObject toJSON() throws JSONException {
-		final JSONObject jo = new JSONObject();
-		jo.put("location", getUrl().toString());
-
-		return jo;
-	}
-	*/
-
 	public String toLocationJSONString() {
 		return "{\"location\": \"" + getUrl().toString() + "\" }";
 	}
-
-	/*
-	public JSONObject toJSON() throws JSONException {
-		final JSONObject jo = new JSONObject();
-		final JSONArray locations = new JSONArray();
-
-		for (final URL url : urls) {
-			locations.put(url);
-		}
-
-		jo.put("locations", locations);
-
-		return jo;
-	}
-	*/
 
 	public String toMultiLocationJSONString() {
 		final StringJoiner joiner = new StringJoiner("\",\"");

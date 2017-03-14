@@ -118,7 +118,7 @@ public class StatTracker {
 		RouteType routeType;
 		String fqdn;
 		ResultType result = ResultType.ERROR;
-		ResultDetails resultDetails = ResultDetails.NO_DETAILS;
+		ResultDetails resultDetails;
 		Geolocation resultLocation;
 
 		Geolocation clientGeolocation; // the GEO info always retrieved from GEO DB, not from Cache Location
