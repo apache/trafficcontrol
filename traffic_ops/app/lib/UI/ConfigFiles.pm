@@ -1187,7 +1187,7 @@ sub parent_dot_config {
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
 					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
 					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
-				} 
+				}
 				$text .= "\n";
 			}
 		}
@@ -1521,11 +1521,9 @@ sub ssl_multicert_dot_config {
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
-		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
-		my $data         = $rs_ds->single;
 		my $domain_name  = $ds->cdn->domain_name;
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
+		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $ds, $domain_name, $ds->protocol );
 
 		#first one is the one we want
 		my $hostname = $example_urls[0];
