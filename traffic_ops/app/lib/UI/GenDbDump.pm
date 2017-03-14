@@ -23,6 +23,11 @@ sub dbdump {
 	my $self = shift;
 	my $filename = $self->param('filename');
 
+	if ( !&is_oper($self) ) {
+		$self->internal_server_error( { Error => "Insufficient permissions for DB Dump. Admin access is required." } );	
+		return;
+	}
+
 	my ($db_name, $host, $port) = $Schema::dsn =~ /:database=([^;]*);host=([^;]+);port=(\d+)/;
 	my $db_user = $Schema::user;
 	my $db_pass = $Schema::pass;
@@ -31,10 +36,6 @@ sub dbdump {
 	my $ok = open my $fh, '-|', "pg_dump $uri -C --column-insert";
 	if (! $ok ) {
 		$self->internal_server_error( { Error => "Error dumping database" } );	
-		return;
-	}
-	if ( !&is_oper($self) ) {
-		$self->internal_server_error( { Error => "Insufficient permissions for DB Dump. Admin access is required." } );	
 		return;
 	}
 
