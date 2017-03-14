@@ -53,6 +53,10 @@ var FormProfileController = function(profile, $scope, $location, formUtils, loca
         $location.path($location.path() + '/servers');
     };
 
+    $scope.viewDeliveryServices = function() {
+        $location.path($location.path() + '/delivery-services');
+    };
+
     $scope.cloneProfile = function() {
         alert('not hooked up yet: cloneProfile');
     };
