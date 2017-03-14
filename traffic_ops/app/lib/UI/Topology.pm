@@ -515,7 +515,7 @@ sub gen_crconfig_json {
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttls'} = {
             'A'    => "$ds_ttl",
             'AAAA' => "$ds_ttl",
-			 'NS'   => $tld_ttls_ns,
+            'NS'   => $tld_ttls_ns,
             'SOA'  => $tld_ttls_soa
         };
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'minimum'} = $cdn_soa_minimum;
