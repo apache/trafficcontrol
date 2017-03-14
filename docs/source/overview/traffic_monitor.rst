@@ -22,7 +22,7 @@
 
 Traffic Monitor
 ===============
-Traffic Monitor is a Java/Tomcat application that monitors the caches in a CDN for a variety of metrics. These metrics are for use in determining the overall health of a given cache and the related delivery services. A given CDN can operate a number of Traffic Monitors, from a number of geographically diverse locations, to prevent false positives caused by network problems at a given site.
+Traffic Monitor is an HTTP service that monitors the caches in a CDN for a variety of metrics. These metrics are for use in determining the overall health of a given cache and the related delivery services. A given CDN can operate a number of Traffic Monitors, from a number of geographically diverse locations, to prevent false positives caused by network problems at a given site.
 
 Traffic Monitors operate independently, but use the state of other Traffic Monitors in conjunction with their own state, to provide a consistent view of CDN cache health to upstream applications such as Traffic Router. Health Protocol governs the cache and Delivery Service availability. 
 

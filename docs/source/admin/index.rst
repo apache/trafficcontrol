@@ -40,6 +40,7 @@ Once everything is installed, you will need to configure the servers to talk to 
   traffic_ops_extensions.rst
   traffic_portal.rst
   traffic_monitor.rst
+  traffic_monitor_golang.rst
   traffic_router.rst
   traffic_stats.rst
   traffic_server.rst

@@ -16,6 +16,11 @@
 ******************************
 Traffic Monitor Administration
 ******************************
+
+.. _rl-tm-java:
+
+* These instructions are for the Java Traffic Monitor, for the Golang beta, see :ref:`rl-tm-golang`.
+
 Installing Traffic Monitor
 ==========================
 The following are requirements to ensure an accurate set up:
