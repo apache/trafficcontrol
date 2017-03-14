@@ -34,7 +34,7 @@ sub add {
 	&stash_role($self);
 
 	#get key data from keystore
-	my $response_container = $self->riak_get( 'ssl', "$xml_id-latest");
+	my $response_container = $self->riak_get( 'ssl', "ds_$ds_id-latest");
 	my $get_keys = $response_container->{'response'};
 	if ( $get_keys->is_success() ) {
 		my $keys = decode_json( $get_keys->content );
@@ -72,6 +72,34 @@ sub add {
 			xml_id      => $xml_id,
 			fbox_layout => 1
 		);
+	}
+}
+
+sub update_sslkey {
+	my $self = shift;
+	my $ds_id = shift;
+	my $xml_id = shift;
+	my $hostname = shift;
+	my $response_container = $self->riak_get( 'ssl', "ds_$ds_id-latest");
+	my $response = $response_container->{'response'};
+
+	if ( $response->is_success() ) {
+		my $record = decode_json( $response->content );
+		$record->{deliveryservice} = $xml_id;
+		$record->{hostname} = $hostname;
+		my $key = "ds_$ds_id";
+		my $version = $record->{version};
+
+		$response_container = $self->riak_put( 'ssl', "$key-$version", encode_json($record) );
+		$response = $response_container->{'response'};
+		if ( !$response->is_success() ) {
+			$self->app->log->warn("SSL keys for '$key-$version' could not be updated.  Response was " . $response_container->{_content});
+		}
+		$response_container = $self->riak_put( 'ssl', "$key-latest", encode_json($record) );
+		$response = $response_container->{'response'};
+		if ( !$response->is_success() ) {
+			$self->app->log->warn("SSL keys for '$key-latest' could not be updated.  Response was " . $response_container->{_content});
+		}
 	}
 }
 
@@ -128,7 +156,7 @@ sub create {
 	if ( $self->is_valid() ) {
 		my $response_container;
 		my $record = {
-			key => $xml_id,
+			key => "ds_$id",
 			version => $version,
 			hostname => defined($hostname) ? $hostname : $self->get_hostname($id, $data),
 			cdn => defined($cdn) ? $cdn : $data->cdn->name,

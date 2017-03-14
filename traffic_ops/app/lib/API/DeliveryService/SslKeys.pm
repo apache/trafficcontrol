@@ -111,7 +111,7 @@ sub generate {
 
 sub view_by_xml_id {
 	my $self    = shift;
-	my $key     = $self->param('xmlid');
+	my $xml_id     = $self->param('xmlid');
 	my $version = $self->param('version');
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
@@ -120,12 +120,23 @@ sub view_by_xml_id {
 		if ( !$version ) {
 			$version = 'latest';
 		}
-		$key = "$key-$version";
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
+		if (!$ds) {
+			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+		}
+		my $ds_id = $ds->id;
+		my $key = "ds_$ds_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
-			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		if ($response->is_success()) {
+			my $ssl_keys = decode_json( $response->content );
+			$ssl_keys->{certificate}->{csr} = decode_base64($ssl_keys->{certificate}->{csr}),
+			$ssl_keys->{certificate}->{crt} = decode_base64($ssl_keys->{certificate}->{crt}),
+			$ssl_keys->{certificate}->{key} = decode_base64($ssl_keys->{certificate}->{key}),
+			$self->success( $ssl_keys )
+		} else {
+			$self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		}
 	}
 }
 
@@ -161,23 +172,29 @@ sub view_by_hostname {
 			return $self->alert( { Error => " - A delivery service does not exist for a host with hostanme of $key" } );
 		}
 
-		my $xml_id = $ds->xml_id;
+		my $ds_id = $ds->id;
 
 		if ( !$version ) {
 			$version = 'latest';
 		}
-		$key = "$xml_id-$version";
+		$key = "ds_$ds_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
-			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		if ($response->is_success()) {
+			my $ssl_keys = decode_json( $response->content );
+			$ssl_keys->{certificate}->{csr} = decode_base64($ssl_keys->{certificate}->{csr}),
+			$ssl_keys->{certificate}->{crt} = decode_base64($ssl_keys->{certificate}->{crt}),
+			$ssl_keys->{certificate}->{key} = decode_base64($ssl_keys->{certificate}->{key}),
+			$self->success( $ssl_keys )
+		} else {
+			$self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		}
 	}
 }
 
 sub delete {
 	my $self    = shift;
-	my $key     = $self->param('xmlid');
+	my $xml_id     = $self->param('xmlid');
 	my $version = $self->param('version');
 	my $response_container;
 	my $response;
@@ -185,6 +202,12 @@ sub delete {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
+		if (!$ds) {
+			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+		}
+		my $ds_id = $ds->id;
+		my $key = "ds_$ds_id";
 		if ($version) {
 			$key = $key . "-" . $version;
 			$self->app->log->info("deleting key_type = ssl, key = $key");
@@ -201,8 +224,8 @@ sub delete {
 
 		# $self->app->log->info("delete rc = $rc");
 		if ( $response->is_success() ) {
-			&log( $self, "Deleted ssl keys for Delivery Service $key", "APICHANGE" );
-			return $self->success("Successfully deleted ssl keys for $key");
+			&log( $self, "Deleted ssl keys for Delivery Service $xml_id", "APICHANGE" );
+			return $self->success("Successfully deleted ssl keys for $xml_id");
 		}
 		else {
 			return $self->alert( $response->content );
