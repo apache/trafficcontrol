@@ -511,10 +511,11 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'missLocation'}->{'long'} = $row->miss_long + 0;
         }
 
+        my $ds_ttl = $row->ccr_dns_ttl;
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ttls'} = {
-            'A'    => $row->ccr_dns_ttl,
-            'AAAA' => $row->ccr_dns_ttl,
-            'NS'   => $tld_ttls_ns,
+            'A'    => "$ds_ttl",
+            'AAAA' => "$ds_ttl",
+			 'NS'   => $tld_ttls_ns,
             'SOA'  => $tld_ttls_soa
         };
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'minimum'} = $cdn_soa_minimum;
