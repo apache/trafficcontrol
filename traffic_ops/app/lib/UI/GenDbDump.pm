@@ -24,7 +24,7 @@ sub dbdump {
 	my $filename = $self->param('filename');
 
 	if ( !&is_oper($self) ) {
-		$self->internal_server_error( { Error => "Insufficient permissions for DB Dump. Admin access is required." } );	
+		$self->internal_server_error( { Error => "Insufficient permissions for DB Dump. Admin or Operations access is required." } );	
 		return;
 	}
 
