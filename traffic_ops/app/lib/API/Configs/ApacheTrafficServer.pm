@@ -326,10 +326,10 @@ sub server_data {
 
 	#if an ID is passed, look up by ID.  Otherwise, look up by hostname.
 	if ( $id =~ /^\d+$/ ) {
-		$server_obj = $self->db->resultset('Server')->search( { id => $id } )->first;
+		$server_obj = $self->db->resultset('Server')->search( { 'me.id' => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
 	}
 	else {
-		$server_obj = $self->db->resultset('Server')->search( { host_name => $id } )->first;
+		$server_obj = $self->db->resultset('Server')->search( { host_name => $id }, { prefetch => [ 'profile', 'type', 'cachegroup', 'cdn' ] } )->single;
 	}
 
 	return $server_obj;
@@ -490,14 +490,14 @@ sub cdn_ds_data {
 				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == HTTP ) {
+				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $hname . $re . $ds_domain . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTP_AND_HTTPS ) {
+				elsif ( $protocol == 2 ) {
 
 					#add the first one with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -509,14 +509,14 @@ sub cdn_ds_data {
 			}
 			else {
 				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == HTTP ) {
+				if ( $protocol == 0 ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTP_AND_HTTPS ) {
+				elsif ( $protocol == 2 ) {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -557,6 +557,12 @@ sub cdn_ds_data {
 			my $fname = "cacheurl_" . $ds_xml_id . ".config";
 			$dsinfo->{dslist}->[$j]->{"cacheurl_file"} = $fname;
 		}
+		if ( defined( $row->profile ) ) {
+			my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $row->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+			while ( my $prow = $dsparamrs->next ) {
+				$dsinfo->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+			}
+		}
 
 		$j++;
 	}
@@ -578,7 +584,7 @@ sub ds_data {
 	if ( $server_obj->type->name =~ m/^MID/ ) {
 
 		# the mids will do all deliveryservices in this CDN
-		my $domain = $self->profile_param_value( $server_obj->profile->id, 'CRConfig.json', 'domain_name', '' );
+		my $domain = $self->get_cdn_domain_by_profile_id( $server_obj->profile->id );
 		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
 	}
 	else {
@@ -604,7 +610,7 @@ sub ds_data {
 		my $cacheurl                    = $dsinfo->cacheurl;
 		my $remap_text                  = $dsinfo->remap_text;
 		my $multi_site_origin           = $dsinfo->multi_site_origin;
-		my $multi_site_origin_algorithm = $dsinfo->multi_site_origin_algorithm;
+		my $multi_site_origin_algorithm = 0;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $dsinfo->pattern;
@@ -619,14 +625,14 @@ sub ds_data {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == HTTP ) {
+				if ( $protocol == 0 ) {
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $hname . $re . $ds_domain . "/";
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTP_AND_HTTPS ) {
+				elsif ( $protocol == 2 ) {
 
 					#add the first one with http
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -638,14 +644,14 @@ sub ds_data {
 			}
 			else {
 				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == HTTP ) {
+				if ( $protocol == 0 ) {
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
+				elsif ( $protocol == 1 || $protocol == 3 ) {
 					$map_from = "https://" . $host_re . "/";
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == HTTP_AND_HTTPS ) {
+				elsif ( $protocol == 2 ) {
 
 					#add the first with http
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -684,6 +690,12 @@ sub ds_data {
 		if ( defined($cacheurl) ) {
 			my $fname = "cacheurl_" . $ds_xml_id . ".config";
 			$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+		}
+		if ( defined( $dsinfo->profile ) ) {
+			my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+			while ( my $prow = $dsparamrs->next ) {
+				$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+			}
 		}
 
 		$j++;
@@ -990,13 +1002,13 @@ sub header_rewrite_dot_config {
 	my $ds_xml_id = undef;
 	if ( $filename =~ /^hdr_rw_mid_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id } )->single();
 		my $actions = $ds->mid_header_rewrite;
 		$text .= $actions . "\n";
 	}
 	elsif ( $filename =~ /^hdr_rw_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id } )->single();
 		my $actions = $ds->edge_header_rewrite;
 		$text .= $actions . "\n";
 	}
@@ -1053,7 +1065,7 @@ sub regex_remap_dot_config {
 
 	if ( $filename =~ /^regex_remap_(.*)\.config$/ ) {
 		my $ds_xml_id = $1;
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id }, { prefetch => [ 'type', 'profile' ] } )->first();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_id } )->single();
 		$text .= $ds->regex_remap . "\n";
 	}
 
@@ -1167,9 +1179,9 @@ sub ssl_multicert_dot_config {
 	foreach my $ds (@ds_list) {
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
-		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } );
+		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
 		my $data         = $rs_ds->first;
-		my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+		my $domain_name  = $ds->cdn->domain_name,
 		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
 
@@ -1296,9 +1308,9 @@ sub ip_allow_data {
 
 	# default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
 	my $coalesce_masklen_v4 = 24;
-	my $coalesce_number_v4 = 5;
+	my $coalesce_number_v4  = 5;
 	my $coalesce_masklen_v6 = 48;
-	my $coalesce_number_v6 = 5;
+	my $coalesce_number_v6  = 5;
 	my $rs_parameter =
 		$self->db->resultset('ProfileParameter')->search( { profile => $server_obj->profile->id }, { prefetch => [ "parameter", "profile" ] } );
 
@@ -1309,16 +1321,16 @@ sub ip_allow_data {
 			$ipallow->[$i]->{method} = "ALL";
 			$i++;
 		}
-		elsif ($row->parameter->name eq 'coalesce_masklen_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_masklen_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_masklen_v4 = $row->parameter->value;
 		}
-		elsif ($row->parameter->name eq 'coalesce_number_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_number_v4' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_number_v4 = $row->parameter->value;
 		}
-		elsif ($row->parameter->name eq 'coalesce_masklen_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_masklen_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_masklen_v6 = $row->parameter->value;
 		}
-		elsif ($row->parameter->name eq 'coalesce_number_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
+		elsif ( $row->parameter->name eq 'coalesce_number_v6' && $row->parameter->config_file eq 'ip_allow.config' ) {
 			$coalesce_number_v6 = $row->parameter->value;
 		}
 	}
@@ -1370,7 +1382,7 @@ sub ip_allow_data {
 
 		# compact, coalesce and compact combined list again
 		my @compacted_list = NetAddr::IP::Compact(@allowed_netaddrips);
-		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4 , $coalesce_number_v4, @allowed_netaddrips );
+		my $coalesced_list = NetAddr::IP::Coalesce( $coalesce_masklen_v4, $coalesce_number_v4, @allowed_netaddrips );
 		my @combined_list  = NetAddr::IP::Compact( @allowed_netaddrips, @{$coalesced_list} );
 		foreach my $net (@combined_list) {
 			my $range = $net->range();
@@ -1383,7 +1395,7 @@ sub ip_allow_data {
 
 		# now add IPv6. TODO JvD: paremeterize support enabled on/ofd and /48 and number 5
 		my @compacted__ipv6_list = NetAddr::IP::Compact(@allowed_ipv6_netaddrips);
-		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( $coalesce_masklen_v6 , $coalesce_number_v6, @allowed_ipv6_netaddrips );
+		my $coalesced_ipv6_list  = NetAddr::IP::Coalesce( $coalesce_masklen_v6, $coalesce_number_v6, @allowed_ipv6_netaddrips );
 		my @combined_ipv6_list   = NetAddr::IP::Compact( @allowed_ipv6_netaddrips, @{$coalesced_ipv6_list} );
 		foreach my $net (@combined_ipv6_list) {
 			my $range = $net->range();
@@ -1474,7 +1486,7 @@ sub cachegroup_profiles {
 		cachegroup => { -in => $ids }
 	);
 
-	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile' ] } );
+	my $rs_parent = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cachegroup', 'status', 'type', 'profile', 'cdn' ] } );
 
 	while ( my $row = $rs_parent->next ) {
 
@@ -1497,11 +1509,11 @@ sub cachegroup_profiles {
 
 			# assign $ds_domain, $weight and $port, and cache the results %profile_cache
 			$profile_cache->{$pid} = {
-				domain_name    => $self->profile_param_value( $pid, 'CRConfig.json', 'domain_name',    undef ),
-				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight',         '0.999' ),
-				port           => $self->profile_param_value( $pid, 'parent.config', 'port',           undef ),
+				domain_name    => $row->cdn->domain_name,
+				weight         => $self->profile_param_value( $pid, 'parent.config', 'weight', '0.999' ),
+				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
-				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank',           1 ),
+				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
 			};
 		}
 	}
@@ -1528,7 +1540,7 @@ sub parent_data {
 	}
 
 	# get the server's cdn domain
-	my $server_domain = $self->profile_param_value( $server_obj->profile->id, 'CRConfig.json', 'domain_name' );
+	my $server_domain = $self->get_cdn_domain_by_profile_id( $server_obj->profile->id );
 
 	my %profile_cache;
 	my %deliveryservices;
@@ -1588,7 +1600,13 @@ sub parent_dot_config {
 	my $data;
 
 	my $server_type = $server_obj->type->name;
-	my $parent_qstring;
+
+	my $ats_ver =
+		$self->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	my $ats_major_version = substr( $ats_ver, 0, 1 );
+
 	my $parent_info;
 	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
@@ -1598,10 +1616,20 @@ sub parent_dot_config {
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
 		foreach my $ds ( @{ $data->{dslist} } ) {
-			my $origin_shield     = $ds->{origin_shield};
-			$parent_qstring = "ignore";
-			my $multi_site_origin           = defined( $ds->{multi_site_origin} )           ? $ds->{multi_site_origin}           : 0;
-			my $multi_site_origin_algorithm = defined( $ds->{multi_site_origin_algorithm} ) ? $ds->{multi_site_origin_algorithm} : 0;
+			my $xml_id                             = $ds->{ds_xml_id};
+			my $origin_shield                      = $ds->{origin_shield};
+			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
+			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 0;
+			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'};
+			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'};
+			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
+			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
+
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
+			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
+				$parent_qstring = 'consider';
+			}
 
 			my $org_uri = URI->new( $ds->{org} );
 
@@ -1660,47 +1688,29 @@ sub parent_dot_config {
 				}
 
 				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
-				my $mso_algorithm = "";
-				if ( $multi_site_origin_algorithm == CONSISTENT_HASH ) {
-					$mso_algorithm = "consistent_hash";
-					if ( $ds->{qstring_ignore} == 0 ) {
-						$parent_qstring = "consider";
-					}
+
+				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
+
+				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
+					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
 				}
-				elsif ( $multi_site_origin_algorithm == PRIMARY_BACKUP ) {
-					$mso_algorithm = "false";
-				}
-				elsif ( $multi_site_origin_algorithm == STRICT_ROUND_ROBIN ) {
-					$mso_algorithm = "strict";
-				}
-				elsif ( $multi_site_origin_algorithm == IP_ROUND_ROBIN ) {
-					$mso_algorithm = "true";
-				}
-				elsif ( $multi_site_origin_algorithm == LATCH_ON_FAILOVER ) {
-					$mso_algorithm = "latched";
-				}
-				else {
-					$mso_algorithm = "consistent_hash";
-				}
-				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false\n";
+				$text .= "\n";
 			}
 		}
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
-		$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
+		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 
 		return $text;
 	}
-	else {
+	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
 
-		#"True" Parent
 		$parent_info = $self->parent_data($server_obj);
-
 		my %done = ();
 
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			my $org = $ds->{org};
-			$parent_qstring = "ignore";
 			next if !defined $org || $org eq "";
 			next if $done{$org};
 			my $org_uri = URI->new($org);
@@ -1708,7 +1718,9 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				if ( $ds->{qstring_ignore} == 0 ) {
+				my $qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
+				if ( $ds->{qstring_ignore} == 0 && !defined($qsh) ) {
 					$parent_qstring = "consider";
 				}
 
