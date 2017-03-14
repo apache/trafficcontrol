@@ -1508,22 +1508,24 @@ sub ssl_multicert_dot_config {
 		{ join => { deliveryservice_servers => { server => undef } }, } );
 	#get the domain_name from the first result since it should all be the same CDN
 	#TODO, the domain_name param needs to be a field on the CDN and not a param
-	my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_list[0]->id );
-	foreach my $ds (@ds_list) {
-		my $ds_id        = $ds->id;
-		my $xml_id       = $ds->xml_id;
-		my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-		my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $ds, $domain_name, $ds->protocol );
+	if (@ds_list > 0) {
+		my $domain_name  = UI::DeliveryService::get_cdn_domain( $self, $ds_list[0]->id );
+		foreach my $ds (@ds_list) {
+			my $ds_id        = $ds->id;
+			my $xml_id       = $ds->xml_id;
+			my $ds_regexes   = UI::DeliveryService::get_regexp_set( $self, $ds_id );
+			my @example_urls = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $ds, $domain_name, $ds->protocol );
 
-		#first one is the one we want
-		my $hostname = $example_urls[0];
-		$hostname =~ /(https?:\/\/)(.*)/;
-		my $new_host = $2;
-		my $key_name = "$new_host.key";
-		$new_host =~ tr/./_/;
-		my $cer_name = $new_host . "_cert.cer";
+			#first one is the one we want
+			my $hostname = $example_urls[0];
+			$hostname =~ /(https?:\/\/)(.*)/;
+			my $new_host = $2;
+			my $key_name = "$new_host.key";
+			$new_host =~ tr/./_/;
+			my $cer_name = $new_host . "_cert.cer";
 
-		$text .= "ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
+			$text .= "ssl_cert_name=$cer_name\t ssl_key_name=$key_name\n";
+		}
 	}
 	return $text;
 }
