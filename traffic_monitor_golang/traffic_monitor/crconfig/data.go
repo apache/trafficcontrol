@@ -168,7 +168,7 @@ type DeliveryService struct {
 	GeoLocationProviderTime time.Time                `json:"-"`
 	MatchSets               []MatchSet               `json:"matchSets,omitempty"`
 	MatchSetsTime           time.Time                `json:"-"`
-	MissLocation            *LatLon                  `json:"missLocation,omitempty"`
+	MissLocation            *LatitudeLongitude       `json:"missLocation,omitempty"`
 	MissLocationTime        time.Time                `json:"-"`
 	Protocol                *DeliveryServiceProtocol `json:"protocol,omitempty"`
 	ProtocolTime            time.Time                `json:"-"`
@@ -180,7 +180,7 @@ type DeliveryService struct {
 	SoaTime                 time.Time                `json:"-"`
 	SSLEnabled              *bool                    `json:"sslEnabled,string,omitempty"`
 	SSLEnabledTime          time.Time                `json:"-"`
-	TTL                     *int                     `json:"ttl,string,omitempty"`
+	TTL                     *int                     `json:"ttl,omitempty"`
 	TTLTime                 time.Time                `json:"-"`
 	TTLs                    *TTL                     `json:"ttls,omitempty"`
 	TTLsTime                time.Time                `json:"-"`
@@ -188,10 +188,6 @@ type DeliveryService struct {
 type Dispersion struct {
 	Limit    int  `json:"limit,omitempty"`
 	Shuffled bool `json:"shuffled,string,omitempty"`
-}
-type LatLon struct {
-	Lat float64 `json:"lat,string"`
-	Lon float64 `json:"lon,string"`
 }
 
 type LatitudeLongitude struct {
