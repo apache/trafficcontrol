@@ -123,7 +123,7 @@ sub get_example_urls {
 					$url = $scheme . '://' . $re->{pattern};
 					push( @example_urls, $url );
 					if ($scheme2) {
-						$url = $scheme . '://' . $re->{pattern};
+						$url = $scheme2 . '://' . $re->{pattern};
 						push( @example_urls, $url );
 					}
 				}
