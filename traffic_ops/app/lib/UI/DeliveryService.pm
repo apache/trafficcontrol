@@ -23,6 +23,7 @@ use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
+use UI::SslKeys;
 
 sub index {
 	my $self = shift;
@@ -152,12 +153,7 @@ sub get_example_urls {
 				}
 			}
 			elsif ( $re->{type} eq 'PATH_REGEXP' ) {
-				if ( defined( $example_urls[ $re->{set_number} ] ) ) {
-					$example_urls[ $re->{set_number} ] .= $re->{pattern};
-				}
-				else {
-					$example_urls[ $re->{set_number} ] = $re->{pattern};
-				}
+				push(@example_urls, $re->{pattern});
 			}
 		}
 	}
@@ -846,8 +842,11 @@ sub update {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
 		}
 
+		my $upd_ssl = 0;
 		#print Dumper( \%hash );
 		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+		$upd_ssl = 1 if $update->xml_id ne $hash{xml_id};
+		my $old_hostname = UI::SslKeys::get_hostname($self, $id, $update);
 		$update->update( \%hash );
 		$update->update();
 		&log( $self, "Update deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
@@ -920,6 +919,10 @@ sub update {
 				$delete_re->delete();
 			}
 		}
+
+		my $new_hostname = UI::SslKeys::get_hostname($self, $id, $update);
+		$upd_ssl = 1 if $old_hostname ne $new_hostname;
+		UI::SslKeys::update_sslkey($self, $id, $hash{xml_id}, $new_hostname) if $upd_ssl;
 
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
 		$self->header_rewrite(
