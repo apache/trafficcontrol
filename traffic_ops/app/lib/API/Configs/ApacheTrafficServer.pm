@@ -490,14 +490,14 @@ sub cdn_ds_data {
 				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == 0 ) {
+				if ( $protocol == HTTP ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $hname . $re . $ds_domain . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first one with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -509,14 +509,14 @@ sub cdn_ds_data {
 			}
 			else {
 				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == 0 ) {
+				if ( $protocol == HTTP ) {
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $host_re . "/";
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first with http
 					$dsinfo->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -625,14 +625,14 @@ sub ds_data {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
-				if ( $protocol == 0 ) {
+				if ( $protocol == HTTP ) {
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $hname . $re . $ds_domain . "/";
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first one with http
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
@@ -644,14 +644,14 @@ sub ds_data {
 			}
 			else {
 				my $map_from = "http://" . $host_re . "/";
-				if ( $protocol == 0 ) {
+				if ( $protocol == HTTP ) {
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 1 || $protocol == 3 ) {
+				elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
 					$map_from = "https://" . $host_re . "/";
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 				}
-				elsif ( $protocol == 2 ) {
+				elsif ( $protocol == HTTP_AND_HTTPS ) {
 
 					#add the first with http
 					$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
