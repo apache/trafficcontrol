@@ -40,7 +40,7 @@ Many of the settings for the different servers in a Traffic Control CDN are cont
 +==========================+===============+=======================================================================================================================================+
 | tm.url                   | global        | The URL where this Traffic Ops instance is being served from.                                                                         |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| tm.cache.url             | global        | Not Requred. The URL where the Traffic Ops Config file cache instance is being served from.  Requires Traffic Ops 2.1 and above.      |
+| tm.cache.url             | global        | Not required. The URL where the Traffic Ops Config file cache instance is being served from.  Requires Traffic Ops 2.1 and above.      |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | tm.toolname              | global        | The name of the Traffic Ops tool. Usually "Traffic Ops". Used in the About screen and in the comments headers of the files generated. |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
