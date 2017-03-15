@@ -17,18 +17,18 @@
  * under the License.
  */
 
-var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, locationUtils) {
+var TableParameterCacheGroupsController = function(parameter, cacheGroups, $scope, $state, locationUtils) {
 
 	$scope.parameter = parameter;
 
-	$scope.parameterProfiles = parameterProfiles;
+	$scope.cacheGroups = cacheGroups;
 
-	$scope.addProfile = function() {
-		alert('not hooked up yet: add profile to parameter');
+	$scope.addCacheGroup = function() {
+		alert('not hooked up yet: add cg to parameter');
 	};
 
-	$scope.removeProfile = function() {
-		alert('not hooked up yet: remove profile from parameter');
+	$scope.removeCacheGroup = function() {
+		alert('not hooked up yet: remove cg from parameter');
 	};
 
 	$scope.refresh = function() {
@@ -38,7 +38,7 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#parameterProfilesTable').dataTable({
+		$('#cacheGroupsTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 100
 		});
@@ -46,5 +46,5 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', 'locationUtils'];
-module.exports = TableParameterProfilesController;
+TableParameterCacheGroupsController.$inject = ['parameter', 'cacheGroups', '$scope', '$state', 'locationUtils'];
+module.exports = TableParameterCacheGroupsController;
