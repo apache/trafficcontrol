@@ -63,8 +63,8 @@ sub get_config_metadata {
 
 	my %condition = ( 'me.host_name' => $host_name );
 	my $rs_server = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
-	my $tm_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm.url', config_file => 'global' ] } )->get_column('value')->first();
-	my $tm_cache_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm_cache.url', config_file => 'global' ] } )->get_column('value')->first();
+	my $to_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm.url', config_file => 'global' ] } )->get_column('value')->first();
+	my $to_cache_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm_cache.url', config_file => 'global' ] } )->get_column('value')->first();
 	my $cdn_name = $server_obj->cdn->name;
 	my $server = $rs_server->next;
 	if ($server) {
@@ -75,9 +75,9 @@ sub get_config_metadata {
 		$data_obj->{'info'}->{'profile_id'}		= $server->profile->id;
 		$data_obj->{'info'}->{'cdn_name'}		= $cdn_name;
 		$data_obj->{'info'}->{'cdn_id'}			= $server->cdn->id;
-		$data_obj->{'info'}->{'tm_url'}			= $tm_url;
+		$data_obj->{'info'}->{'to_url'}			= $to_url;
 		if ( $tm_cache_url ) {
-			$data_obj->{'info'}->{'tm_cache_url'}	= $tm_cache_url;
+			$data_obj->{'info'}->{'to_cache_url'}	= $to_cache_url;
 		}
 
 		#$data_obj->{'profile'}->{'name'}   = $server->profile->name;
