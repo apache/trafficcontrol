@@ -86,21 +86,38 @@ func StartOpsConfigManager(
 
 	// TODO remove change subscribers, give Threadsafes directly to the things that need them. If they only set vars, and don't actually do work on change.
 	go func() {
+		handleErr := func(err error) {
+			errorCount.Inc()
+			log.Errorf("OpsConfigManager: %v\n", err)
+		}
+
 		httpServer := srvhttp.Server{}
 
 		for newOpsConfig := range opsConfigChannel {
-			var err error
+			// TODO config? parameter?
+			useCache := false
+			trafficOpsRequestTimeout := time.Second * time.Duration(10)
+			realToSession, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
+			if err != nil {
+				handleErr(fmt.Errorf("instantiating Session with traffic_ops: %s\n", err))
+				continue
+			}
+
+			if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
+				handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
+			} else {
+				if newOpsConfig.CdnName != "" && newOpsConfig.CdnName != cdn {
+					log.Warnf("%s Traffic Ops CDN '%s' doesn't match config CDN '%s' - using Traffic Ops CDN\n", staticAppData.Hostname, cdn, newOpsConfig.CdnName)
+				}
+				newOpsConfig.CdnName = cdn
+			}
+
 			opsConfig.Set(newOpsConfig)
 
 			listenAddress := ":80" // default
 
 			if newOpsConfig.HttpListener != "" {
 				listenAddress = newOpsConfig.HttpListener
-			}
-
-			handleErr := func(err error) {
-				errorCount.Inc()
-				log.Errorf("OpsConfigManager: %v\n", err)
 			}
 
 			endpoints := datareq.MakeDispatchMap(
@@ -127,25 +144,16 @@ func StartOpsConfigManager(
 				unpolledCaches,
 				monitorConfig,
 			)
-			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir)
-			if err != nil {
-				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
+
+			if err := httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir); err != nil {
+				handleErr(fmt.Errorf("creating HTTP server: %s\n", err))
 				continue
 			}
 
-			// TODO config? parameter?
-			useCache := false
-			trafficOpsRequestTimeout := time.Second * time.Duration(10)
-
-			realToSession, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
-			if err != nil {
-				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
-				continue
-			}
 			toSession.Set(realToSession)
 
 			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
-				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
+				handleErr(fmt.Errorf("getting Traffic Ops data: %v\n", err))
 				continue
 			}
 
@@ -161,4 +169,21 @@ func StartOpsConfigManager(
 	}()
 
 	return opsConfig
+}
+
+// getMonitorCDN returns the CDN of a given Traffic Monitor.
+// TODO change to get by name, when Traffic Ops supports querying a single server.
+func getMonitorCDN(toc *to.Session, monitorHostname string) (string, error) {
+	servers, err := toc.Servers()
+	if err != nil {
+		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
+	}
+
+	for _, server := range servers {
+		if server.HostName != monitorHostname {
+			continue
+		}
+		return server.CDNName, nil
+	}
+	return "", fmt.Errorf("no monitor named %v found in Traffic Ops", monitorHostname)
 }
