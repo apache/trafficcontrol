@@ -76,7 +76,9 @@ sub get_config_metadata {
 		$data_obj->{'info'}->{'cdn_name'}		= $cdn_name;
 		$data_obj->{'info'}->{'cdn_id'}			= $server->cdn->id;
 		$data_obj->{'info'}->{'tm_url'}			= $tm_url;
-		$data_obj->{'info'}->{'tm_cache_url'}	= $tm_cache_url;
+		if ( $tm_cache_url ) {
+			$data_obj->{'info'}->{'tm_cache_url'}	= $tm_cache_url;
+		}
 
 		#$data_obj->{'profile'}->{'name'}   = $server->profile->name;
 		#$data_obj->{'profile'}->{'id'}     = $server->profile->id;
