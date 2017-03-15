@@ -62,6 +62,8 @@ given ( $ARGV[1] ) {
 }
 
 my $traffic_ops_host = undef;
+my $tm_url = undef;
+my $tm_cache_url = undef;
 my $TM_LOGIN         = undef;
 
 if ( defined( $ARGV[2] ) ) {
@@ -136,6 +138,7 @@ my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
 my $api_in_use = 1;
+my $cache_in_use = 1;
 my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
@@ -333,7 +336,7 @@ sub process_cfg_file {
 	my $result = ( defined( $cfg_file_tracker->{$cfg_file}->{'contents'} ) ) ? $cfg_file_tracker->{$cfg_file}->{'contents'} : undef;
 
 	my $return_code = 0;
-	my $url;
+	my $uri;
 
 	return $CFG_FILE_ALREADY_PROCESSED
 		if ( defined( $cfg_file_tracker->{$cfg_file}->{'audit_complete'} ) && $cfg_file_tracker->{$cfg_file}->{'audit_complete'} > 0 );
@@ -344,13 +347,13 @@ sub process_cfg_file {
 
 	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
 
-	$url = &set_url($cfg_file);
+	$uri = &set_uri($cfg_file);
 
 	&smart_mkdir($config_dir);
 
-	$result = &lwp_get($url) if ( !defined($result) && defined($url) );
+	$result = &lwp_get($uri) if ( !defined($result) && defined($uri) );
 
-	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$url, \$result ) );
+	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
@@ -685,10 +688,10 @@ sub update_trops {
 	}
 	if ($update_result) {
 		#need to know if reval_pending is supported
-		my $url     = "$traffic_ops_host\/update/$hostname_short";
-		my $upd_ref = &lwp_get($url);
+		my $uri     = "/update/$hostname_short";
+		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
 		}
 		my $upd_json = decode_json($upd_ref);
@@ -726,11 +729,11 @@ sub update_trops {
 sub send_update_to_trops {
 	my $status = shift;
 	my $reval_status = shift;
-	my $url    = "$traffic_ops_host\/update/$hostname_short";
+	my $uri    = "/update/$hostname_short";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
 
 	my %headers = ( 'Cookie' => $cookie );
-
+	my $url = $traffic_ops_host . $uri;
 	my $response = $lwp_conn->post( $url, [ 'updated' => $status, 'reval_updated' => $reval_status ], %headers );
 
 	&check_lwp_response_code($response, $ERROR);
@@ -754,17 +757,17 @@ sub check_revalidate_state {
 	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
 
-		my $url     = "$traffic_ops_host\/update/$hostname_short";
-		my $upd_ref = &lwp_get($url);
+		my $uri     = "/update/$hostname_short";
+		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
 		}
 
 		my $upd_json = decode_json($upd_ref);
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
 		if ( !defined($reval_pending) ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.\n";
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.\n";
 			return($UPDATE_TROPS_NOTNEEDED);
 		}
 
@@ -774,7 +777,7 @@ sub check_revalidate_state {
 
 			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
 			if ( !defined($parent_reval_pending) ) {
-				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.  Unable to continue!\n";
+				( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an parent_reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.  Unable to continue!\n";
 				return($UPDATE_TROPS_NOTNEEDED);
 			}
 			if ( $parent_reval_pending == 1 ) {
@@ -790,9 +793,9 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("$traffic_ops_host\/datastatus");
+		my $stj = &lwp_get("/datastatus");
 		if ( $stj =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "Statuses URL: $url returned $stj! Skipping creation of status file.\n";
+			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
 
 		my $statuses = decode_json($stj);
@@ -840,8 +843,8 @@ sub check_syncds_state {
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
 		## need to check if revalidation is being used first.
-		my $url     = "$traffic_ops_host\/update/$hostname_short";
-		my $upd_ref = &lwp_get($url);
+		my $uri     = "/update/$hostname_short";
+		my $upd_ref = &lwp_get($uri);
 		my $upd_json = decode_json($upd_ref);
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
 		if (defined($reval_pending) ) {
@@ -852,21 +855,21 @@ sub check_syncds_state {
 		}
 		( $dispersion > 0 ) && &sleep_timer($random_duration);
 
-		$upd_ref = &lwp_get($url);
+		$upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
 		}
 
 		$upd_json = decode_json($upd_ref);
 		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
 		if ( !defined($upd_pending) ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an upd_pending key.\n";
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an upd_pending key.\n";
 			if ( $script_mode != $SYNCDS ) {
 				return $syncds_update;
 			}
 			else {
-				( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+				( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
 				exit 1;
 			}
 		}
@@ -878,12 +881,12 @@ sub check_syncds_state {
 			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
 			if ( !defined($parent_pending) ) {
-				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_pending key.\n";
+				( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an parent_pending key.\n";
 				if ( $script_mode != $SYNCDS ) {
 					return $syncds_update;
 				}
 				else {
-					( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+					( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
 					exit 1;
 				}
 			}
@@ -897,15 +900,15 @@ sub check_syncds_state {
 						}
 	
 						( $log_level >> $WARN ) && print "\n";
-						$upd_ref = &lwp_get($url);
+						$upd_ref = &lwp_get($uri);
 						if ( $upd_ref =~ m/^\d{3}$/ ) {
-							( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 							exit 1;
 						}
 						$upd_json = decode_json($upd_ref);
 						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 						if ( !defined($parent_pending) ) {
-							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
 						}
 						if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
 							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
@@ -931,15 +934,15 @@ sub check_syncds_state {
 						}
 	
 						( $log_level >> $WARN ) && print "\n";
-						$upd_ref = &lwp_get($url);
+						$upd_ref = &lwp_get($uri);
 						if ( $upd_ref =~ m/^\d{3}$/ ) {
-							( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 							exit 1;
 						}
 						$upd_json = decode_json($upd_ref);
 						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 						if ( !defined($parent_pending) ) {
-							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
+							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
 						}
 						if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
 							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
@@ -964,9 +967,9 @@ sub check_syncds_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("$traffic_ops_host\/datastatus");
+		my $stj = &lwp_get("/datastatus");
 		if ( $stj =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "Statuses URL: $url returned $stj! Skipping creation of status file.\n";
+			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
 
 		my $statuses = decode_json($stj);
@@ -1391,7 +1394,7 @@ sub check_this_plugin {
 }
 
 sub lwp_get {
-	my $url           = shift;
+	my $uri           = shift;
 	my $retry_counter = $retries;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
@@ -1402,24 +1405,32 @@ sub lwp_get {
 
 	while( $retry_counter > 0 ) {
 
-		$response = $lwp_conn->get($url, %headers);
+		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		my $request = $traffic_ops_host . $uri;
+
+		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
-			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
-			if ( $url =~ m/configfiles\/ats/ && $response->code == 404) {
+			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
+			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
 					return $response->code;
+			}
+			if ( $cache_in_use == 1 ) {
+				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Cache.  Reverting to primary Traffic Ops host.\n";
+				$traffic_ops_host = $tm_url;
+				$cache_in_use = 0;
 			}
 			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( $url =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
-			( $log_level >> $FATAL ) && print "FATAL result for $url is: ..." . $response->content . "...\n";
+		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
 			exit 1;
 		}
 		else {
-			( $log_level >> $DEBUG ) && print "DEBUG result for $url is: ..." . $response->content . "...\n";
+			( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response->content . "...\n";
 			last;
 		}
 
@@ -1427,7 +1438,7 @@ sub lwp_get {
 
 	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
 
-	&eval_json($response) if ( $url =~ m/\.json$/ );
+	&eval_json($response) if ( $uri =~ m/\.json$/ );
 
 	return $response_content;
 
@@ -1697,20 +1708,31 @@ sub get_cfg_file_list {
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $url = "$tm_host/api/1.2/server/$host_name/configfiles/ats";
+	my $uri = "/api/1.2/server/$host_name/configfiles/ats";
 
-	my $result = &lwp_get($url);
+	my $result = &lwp_get($uri);
 
 	if ($result == 404) {
 		$api_in_use = 0;
 		( $log_level >> $INFO ) && printf("INFO Traffic Ops version does not support config files API. Reverting to UI route.\n");
-		$url = "$tm_host/ort/$host_name/ort1";
-		$result = &lwp_get($url);
+		$uri = "/ort/$host_name/ort1";
+		$result = &lwp_get($uri);
 	}
 
 	my $ort_ref = decode_json($result);
 	
 	if ($api_in_use == 1) {
+		$tm_url = $ort_ref->{'info'}->{'tm_url'};
+		$tm_url =~ s/\/*$//g;
+		$traffic_ops_host = $tm_url;
+		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $tm_url\n");
+		$tm_cache_url = $ort_ref->{'info'}->{'tm_cache_url'};
+		if ( $tm_cache_url ) {
+			$tm_cache_url =~ s/\/*$//g;
+			$traffic_ops_host = $tm_cache_url;
+			$cache_in_use = 1;
+			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Cache URL from Traffic Ops: $tm_cache_url\n");
+		}
 		$profile_name = $ort_ref->{'info'}->{'profile_name'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
 		$cdn_name = $ort_ref->{'info'}->{'cdn_name'};
@@ -1761,8 +1783,8 @@ sub get_header_comment {
 	my $to_host = shift;
 	my $toolname;
 
-	my $url    = "$to_host/api/1.1/system/info.json";
-	my $result = &lwp_get($url);
+	my $uri    = "/api/1.1/system/info.json";
+	my $result = &lwp_get($uri);
 
 	my $result_ref = decode_json($result);
 	if ( defined( $result_ref->{'response'}->{'parameters'}->{'tm.toolname'} ) ) {
@@ -1928,8 +1950,8 @@ sub process_packages {
 	my $tm_host   = shift;
 
 	my $proceed = 0;
-	my $url     = "$tm_host/ort/$host_name/packages";
-	my $result  = &lwp_get($url);
+	my $uri     = "/ort/$host_name/packages";
+	my $result  = &lwp_get($uri);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^(\d){3}$/ ) {
 		my %package_map;
@@ -2176,8 +2198,8 @@ sub process_chkconfig {
 	my $tm_host   = shift;
 
 	my $proceed = 0;
-	my $url     = "$tm_host/ort/$host_name/chkconfig";
-	my $result  = &lwp_get($url);
+	my $uri     = "/ort/$host_name/chkconfig";
+	my $result  = &lwp_get($uri);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^\d{3}$/ ) {
 		my @chkconfig_list = @{ decode_json($result) };
@@ -2431,7 +2453,7 @@ sub validate_result {
 	}
 }
 
-sub set_url {
+sub set_uri {
 	my $filename = shift;
 	
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
@@ -2446,7 +2468,7 @@ sub set_url {
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
 	#return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
-	return $traffic_ops_host . $URI; 
+	return $URI; 
 }
 
 sub scrape_unencode_text {
@@ -2785,14 +2807,14 @@ sub adv_processing_ssl {
 	my @db_file_lines = @{ $_[0] };
 	if (@db_file_lines > 1) { #header line is always present, so look for 2 lines or more
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
-		my $url = $traffic_ops_host . "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
-		my $result = &lwp_get($url);
+		my $uri = "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
+		my $result = &lwp_get($uri);
 		if ( $result =~ m/^\d{3}$/ ) {
 			if ( $script_mode == $REPORT ) {
-				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
+				( $log_level >> $ERROR ) && print "ERROR SSL URL: $uri returned $result.\n";
 				return 1;
 			} else {
-				( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
+				( $log_level >> $FATAL ) && print "FATAL SSL URL: $uri returned $result. Exiting.\n";
 				exit 1;
 			}
 		}
