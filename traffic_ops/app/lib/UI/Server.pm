@@ -927,58 +927,19 @@ sub readupdate {
 	}
 
 	while ( my $row = $rs_servers->next ) {
-		if ( $parent_pending{ $row->host_name } && $parent_reval_pending{ $row->host_name } ) {
-			push(
-				@data, {
-					host_name      => $row->host_name,
-					upd_pending    => \$row->upd_pending,
-					reval_pending  => \$row->reval_pending,
-					host_id        => $row->id,
-					status         => $row->status->name,
-					parent_pending => \1,
-					parent_reval_pending => \1
-				}
-			);
-		}
-		elsif ( $parent_reval_pending{ $row->host_name } ) {
-			push(
-				@data, {
-					host_name      => $row->host_name,
-					upd_pending    => \$row->upd_pending,
-					reval_pending  => \$row->reval_pending,
-					host_id        => $row->id,
-					status         => $row->status->name,
-					parent_pending => \0,
-					parent_reval_pending => \1
-				}
-			);
-		}
-		elsif ( $parent_pending{ $row->host_name } ) {
-			push(
-				@data, {
-					host_name      => $row->host_name,
-					upd_pending    => \$row->upd_pending,
-					reval_pending  => \$row->reval_pending,
-					host_id        => $row->id,
-					status         => $row->status->name,
-					parent_pending => \1,
-					parent_reval_pending => \0
-				}
-			);
-		}
-		else {
-			push(
-				@data, {
-					host_name      => $row->host_name,
-					upd_pending    => \$row->upd_pending,
-					reval_pending  => \$row->reval_pending,
-					host_id        => $row->id,
-					status         => $row->status->name,
-					parent_pending => \0,
-					parent_reval_pending => \0
-				}
-			);
-		}
+		my $parent_pending_flag = $parent_pending{ $row->host_name } ? 1 : 0;
+		my $parent_reval_pending_flag = $parent_reval_pending{ $row->host_name } ? 1 : 0;
+		push(
+			@data, {
+				host_name      => $row->host_name,
+				upd_pending    => \$row->upd_pending,
+				reval_pending  => \$row->reval_pending,
+				host_id        => $row->id,
+				status         => $row->status->name,
+				parent_pending => \$parent_pending_flag,
+				parent_reval_pending => \$parent_reval_pending_flag
+			}
+		);
 	}
 
 	$self->render( json => \@data );
@@ -1021,7 +982,8 @@ sub postupdate {
 
 	my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
 
-	if ( defined($use_reval_pending) && $use_reval_pending == 1 ) {
+	#Parameters don't have boolean options at this time, so we're going to compare against the default string value of 0.
+	if ( defined($use_reval_pending) && $use_reval_pending ne '0' ) {
 		$update_server->update( { upd_pending => $updated } );
 		$update_server->update( { reval_pending => $reval_updated } );
 	}
