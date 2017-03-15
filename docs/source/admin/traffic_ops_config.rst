@@ -40,7 +40,8 @@ Many of the settings for the different servers in a Traffic Control CDN are cont
 +==========================+===============+=======================================================================================================================================+
 | tm.url                   | global        | The URL where this Traffic Ops instance is being served from.                                                                         |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
-| tm.cache.url             | global        | Not Requred. The URL where the Traffic Ops Config file cache instance is being served from.  Requires Traffic Ops 2.1 and above.      |+--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
+| tm.cache.url             | global        | Not Requred. The URL where the Traffic Ops Config file cache instance is being served from.  Requires Traffic Ops 2.1 and above.      |
++--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | tm.toolname              | global        | The name of the Traffic Ops tool. Usually "Traffic Ops". Used in the About screen and in the comments headers of the files generated. |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | tm.infourl               | global        | This is the "for more information go here" URL, which is visible in the About page.                                                   |
@@ -152,9 +153,9 @@ Content Purge is controlled by the following parameters in the profile of the ca
 | regex_revalidate     | plugin.config           | The config to be used for regex_revalidate.      | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_                                              |
 |                      |                         | For example: --config regex_revalidate.config    |                                                                                                                                                         |
 +----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-| use_reval_pending    | global                  | Configures Traffic Ops to use separate reval_pending flag for each cache.  When this flag is in use ORT will check for a new regex_revalidate.config every 60 seconds in syncds mode during                |
-|                      |                         | the dispersal timer.  This will also allow ORT to be run in revalidate mode, which will check for and clear the reval_pending flag.  This can be set to run via cron task.                                 |
-|                      |                         | This value is set to 0 by default.  Enable with a value of 1.  Use of this feature requires Traffic Ops 2.1 and above.                                                                                     |
+| use_reval_pending    | global                  | Configures Traffic Ops to use separate           | When this flag is in use ORT will check for a new regex_revalidate.config every 60 seconds in syncds mode during the dispersal timer. This will         |
+|                      |                         | reval_pending flag for each cache.               | also allow ORT to be run in revalidate mode, which will check for and clear the reval_pending flag.  This can be set to run via cron task.              |
+|                      |                         |                                                  | This value is set to 0 by default.  Enable with a value of 1.  Use of this feature requires Traffic Ops 2.1 and above.                                  |
 +----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
