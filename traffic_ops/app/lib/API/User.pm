@@ -178,7 +178,6 @@ sub update {
 		phone_number 			=> $params->{phoneNumber},
 		postal_code 			=> $params->{postalCode},
 		public_ssh_key 			=> $params->{publicSshKey},
-		registration_sent 		=> $params->{registrationSent},
 		role 					=> $params->{role},
 		state_or_province 		=> $params->{stateOrProvince},
 		username 				=> $params->{username},
