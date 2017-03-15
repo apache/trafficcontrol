@@ -7,7 +7,10 @@ are automatically loaded into the image used to build each component.
 
 ### Requirements
 - `docker` (https://docs.docker.com/engine/installation/)
-- `docker-compose` (https://docs.docker.com/compose/install/)
+- `docker-compose` (https://docs.docker.com/compose/install/) (optional, but recommended)
+
+If `docker-compose` is not available, the `pkg` script will automatically download
+and run it in a container. This is noticeably slower than running it natively.
 
 ### Steps
 
