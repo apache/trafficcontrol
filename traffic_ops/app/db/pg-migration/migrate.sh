@@ -92,6 +92,7 @@ function clean() {
   echo $separator
 
   # Powerdown the containers (to remove them)
+  docker-compose -p $docker_project -f waiter.yml down --remove-orphans
   docker-compose -p $docker_project -f mysql-to-postgres.yml down --remove-orphans
   docker-compose -p $docker_project -f convert.yml down --remove-orphans
 
