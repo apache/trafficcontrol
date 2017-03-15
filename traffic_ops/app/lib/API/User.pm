@@ -228,6 +228,116 @@ sub update {
 
 }
 
+# Create
+sub create {
+	my $self = shift;
+	my $params = $self->req->json;
+	
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $name = $params->{username};
+	if ( !defined($name) ) {
+		return $self->alert("Username is required.");
+	}
+	
+	my $existing = $self->db->resultset('TmUser')->search( { username => $name } )->single();
+	if ($existing) {
+		return $self->alert("A user with username \"$name\" already exists.");
+	}
+
+
+	if ( !defined($params->{fullName}) ) {
+		return $self->alert("full-name is required.");
+	}
+
+	if ( !defined($params->{email}) ) {
+		return $self->alert("email is required.");
+	}
+	
+	if ( !defined($params->{localPassword}) ) {
+		return $self->alert("local-password is required.");
+	}
+
+	if ( !defined($params->{confirmLocalPassword}) ) {
+		return $self->alert("confirm-local-password is required.");
+	}
+
+	if ($params->{localPassword} ne $params->{confirmLocalPassword}){
+		return $self->alert("local-password and confirmed-local-password mismatch.");
+	}
+	
+	if ( !defined($params->{role}) ) {
+		return $self->alert("role is required.");
+	}
+	
+	my $values = {
+		address_line1 			=> defined_or_default($params->{addressLine1}, ""),
+		address_line2 			=> defined_or_default($params->{addressLine2}, ""),
+		city 				=> defined_or_default($params->{city}, ""),
+		company 			=> defined_or_default($params->{company}, ""),
+		country 			=> defined_or_default($params->{country}, ""),
+		email 				=> $params->{email},
+		full_name 			=> $params->{fullName},
+		new_user 			=> ( $params->{newUser} ) ? 1 : 0,
+		phone_number 			=> defined_or_default($params->{phoneNumber}, ""),
+		postal_code 			=> defined_or_default($params->{postalCode}, ""),
+		public_ssh_key 			=> defined_or_default($params->{publicSshKey}, ""),
+		registration_sent 		=> defined_or_default( $params->{registrationSent}, undef),
+		role 				=> $params->{role},
+		state_or_province 		=> defined_or_default($params->{stateOrProvince}, ""),
+		username 			=> $params->{username},
+		new_user            		=> defined_or_default($params->{newUser}, 0),		
+		uid                  		=> defined_or_default($params->{uid}, 0),		
+		gid                  		=> defined_or_default($params->{gid}, 0),
+		local_passwd         		=> sha1_hex($params->{localPassword} ),
+		confirm_local_passwd 		=> sha1_hex($params->{confirmLocalPassword} ),
+
+	};
+	
+	my ( $is_valid, $result ) = $self->is_valid($values);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+	
+	my $insert = $self->db->resultset('TmUser')->create($values);
+	my $rs = $insert->insert();
+
+	if ($rs) {
+		my $response;
+		$response->{addressLine1}        	= $rs->address_line1;
+		$response->{addressLine2} 		= $rs->address_line2;
+		$response->{city} 			= $rs->city;
+		$response->{company} 			= $rs->company;
+		$response->{country} 			= $rs->country;
+		$response->{email} 			= $rs->email;
+		$response->{fullName} 			= $rs->full_name;
+		$response->{gid}          		= $rs->gid;
+		$response->{id}          		= $rs->id;
+		$response->{lastUpdated} 		= $rs->last_updated;
+		$response->{newUser} 			= \$rs->new_user;
+		$response->{phoneNumber} 		= $rs->phone_number;
+		$response->{postalCode} 		= $rs->postal_code;
+		$response->{publicSshKey} 		= $rs->public_ssh_key;
+		$response->{registrationSent} 		= \$rs->registration_sent;
+		$response->{role} 			= $rs->role->id;
+		$response->{roleName} 			= $rs->role->name;
+		$response->{stateOrProvince} 		= $rs->state_or_province;
+		$response->{uid} 			= $rs->uid;
+		$response->{username} 			= $rs->username;
+
+		&log( $self, "Adding User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "User creation was successful." );
+	}
+	else {
+		return $self->alert("User creation failed.");
+	}
+}
+
+
 # Reset the User Profile password
 sub reset_password {
 	my $self     = shift;
