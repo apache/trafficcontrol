@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $scope, $state, locationUtils, cdnService) {
+var TableCDNServersController = function(cdn, servers, $scope, $state, locationUtils, serverUtils, cdnService) {
 
 	$scope.cdn = cdn;
 
@@ -49,6 +49,10 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.isOffline = serverUtils.isOffline;
+
+	$scope.offlineReason = serverUtils.offlineReason;
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -60,5 +64,5 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', 'locationUtils', 'cdnService'];
+TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'cdnService'];
 module.exports = TableCDNServersController;

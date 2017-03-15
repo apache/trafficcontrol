@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils) {
+var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils, serverUtils) {
 
 	$scope.physLocation = physLocation;
 
@@ -31,6 +31,10 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.isOffline = serverUtils.isOffline;
+
+	$scope.offlineReason = serverUtils.offlineReason;
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
 module.exports = TablePhysLocationServersController;

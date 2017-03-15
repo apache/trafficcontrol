@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, locationUtils) {
+var TableServersController = function(servers, $scope, $state, locationUtils, serverUtils) {
 
     $scope.servers = servers;
 
@@ -37,6 +37,10 @@ var TableServersController = function(servers, $scope, $state, locationUtils) {
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.isOffline = serverUtils.isOffline;
+
+    $scope.offlineReason = serverUtils.offlineReason;
+
     angular.element(document).ready(function () {
         $('#serversTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -46,5 +50,5 @@ var TableServersController = function(servers, $scope, $state, locationUtils) {
 
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', 'locationUtils'];
+TableServersController.$inject = ['servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
 module.exports = TableServersController;
