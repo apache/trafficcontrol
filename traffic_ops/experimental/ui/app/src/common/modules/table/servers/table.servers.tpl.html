@@ -71,7 +71,10 @@ under the License.
                 <td>{{server.physLocation}}</td>
                 <td>{{server.ipAddress}}</td>
                 <td>{{server.ip6Address}}</td>
-                <td>{{server.status}}</td>
+                <td>
+                    <span ng-show="!isOffline(server.status)">{{server.status}}</span>
+                    <span ng-show="isOffline(server.status)" uib-popover="{{offlineReason(server)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{server.status}}</span>
+                </td>
                 <td>{{server.profile}}</td>
                 <td>{{server.iloIpAddress}}</td>
                 <td>{{server.iloIpGateway}}</td>
