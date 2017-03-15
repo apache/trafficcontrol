@@ -18,7 +18,7 @@ func main() {
 	help := flag.Bool("help", false, "Usage info")
 	helpBrief := flag.Bool("h", false, "Usage info")
 	flag.Parse()
-	if *help || *helpBrief {
+	if *help || *helpBrief || *toURI == "" {
 		fmt.Printf("Usage: ./nagios-validate-offline -to https://traffic-ops.example.net -touser bill -topass thelizard -includeOffline true\n")
 		return
 	}
