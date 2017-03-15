@@ -62,14 +62,14 @@ given ( $ARGV[1] ) {
 }
 
 my $traffic_ops_host = undef;
-my $tm_url = undef;
-my $tm_cache_url = undef;
+my $to_url = undef;
+my $to_cache_url = undef;
 my $TM_LOGIN         = undef;
 
 if ( defined( $ARGV[2] ) ) {
 	if ( $ARGV[2] !~ /^https*:\/\/.*$/ ) {
 		&usage();
-	}
+	
 	else {
 		$traffic_ops_host = $ARGV[2];
 		$traffic_ops_host =~ s/\/*$//g;
@@ -1418,7 +1418,7 @@ sub lwp_get {
 			}
 			if ( $cache_in_use == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Cache.  Reverting to primary Traffic Ops host.\n";
-				$traffic_ops_host = $tm_url;
+				$traffic_ops_host = $to_url;
 				$cache_in_use = 0;
 			}
 			sleep 2**( $retries - $retry_counter );
@@ -1722,16 +1722,16 @@ sub get_cfg_file_list {
 	my $ort_ref = decode_json($result);
 	
 	if ($api_in_use == 1) {
-		$tm_url = $ort_ref->{'info'}->{'tm_url'};
-		$tm_url =~ s/\/*$//g;
-		$traffic_ops_host = $tm_url;
-		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $tm_url\n");
-		$tm_cache_url = $ort_ref->{'info'}->{'tm_cache_url'};
-		if ( $tm_cache_url ) {
-			$tm_cache_url =~ s/\/*$//g;
-			$traffic_ops_host = $tm_cache_url;
+		$to_url = $ort_ref->{'info'}->{'to_url'};
+		$to_url =~ s/\/*$//g;
+		$traffic_ops_host = $to_url;
+		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $to_url\n");
+		$to_cache_url = $ort_ref->{'info'}->{'to_cache_url'};
+		if ( $to_cache_url ) {
+			$to_cache_url =~ s/\/*$//g;
+			$traffic_ops_host = $to_cache_url;
 			$cache_in_use = 1;
-			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Cache URL from Traffic Ops: $tm_cache_url\n");
+			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Cache URL from Traffic Ops: $to_cache_url\n");
 		}
 		$profile_name = $ort_ref->{'info'}->{'profile_name'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
