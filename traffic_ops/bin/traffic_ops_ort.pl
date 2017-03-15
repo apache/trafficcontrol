@@ -69,7 +69,7 @@ my $TM_LOGIN         = undef;
 if ( defined( $ARGV[2] ) ) {
 	if ( $ARGV[2] !~ /^https*:\/\/.*$/ ) {
 		&usage();
-	
+	}
 	else {
 		$traffic_ops_host = $ARGV[2];
 		$traffic_ops_host =~ s/\/*$//g;

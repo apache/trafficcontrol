@@ -926,14 +926,17 @@ sub readupdate {
 		}
 	}
 
+	my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
+
 	while ( my $row = $rs_servers->next ) {
 		my $parent_pending_flag = $parent_pending{ $row->host_name } ? 1 : 0;
 		my $parent_reval_pending_flag = $parent_reval_pending{ $row->host_name } ? 1 : 0;
+		my $reval_pending_flag = ($use_reval_pending) && $use_reval_pending ne '0' ? \$row->reval_pending : undef;
 		push(
 			@data, {
 				host_name      => $row->host_name,
 				upd_pending    => \$row->upd_pending,
-				reval_pending  => \$row->reval_pending,
+				reval_pending  => $reval_pending_flag,
 				host_id        => $row->id,
 				status         => $row->status->name,
 				parent_pending => \$parent_pending_flag,
