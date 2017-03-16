@@ -195,27 +195,23 @@ my $header_comment = &get_header_comment($traffic_ops_host);
 
 my $ats_uid          = getpwnam("ats");
 
+if ( !defined $traffic_ops_host ) {
+	print "FATAL Could not resolve Traffic Ops host!\n";
+	exit 1;
+}
+
 #### If this is a syncds run, check to see if we can bail.
 my $syncds_update = 0;
+
 if ( $script_mode == $REVALIDATE ) {
-	if ( defined $traffic_ops_host ) {
-		($syncds_update) = &check_revalidate_state();
-		if ( $syncds_update < 1 ) {
-			exit 1;
-		}
-	}
-	else {
-		print "FATAL Could not resolve Traffic Ops host!\n";
+	( $syncds_update ) = &check_revalidate_state();
+	if ( $syncds_update < 1 ) {
 		exit 1;
 	}
 }
 else {
-	if ( defined $traffic_ops_host ) {
-		($syncds_update) = &check_syncds_state();
-	}
-	else {
-		print "FATAL Could not resolve Traffic Ops host!\n";
-		exit 1;
+	( $syncds_update ) = &check_syncds_state();
+	if ( $syncds_update < 1 ) {
 	}
 }
 
@@ -250,7 +246,7 @@ foreach my $file ( keys ( %{$cfg_file_tracker} ) ) {
 			&touch_file('remap.config');
 			last;
 		}
-	}	
+	}
 }
 
 if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->{'change_applied'} ) {
@@ -262,7 +258,6 @@ if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->
 		$traffic_line_needed++;
 	}
 }
-
 
 &start_restart_services();
 
@@ -316,7 +311,7 @@ sub usage {
 	print "\t<Mode> = report - prints config differences and exits.\n";
 	print "\t<Mode> = badass - attempts to fix all config differences that it can.\n";
 	print "\t<Mode> = syncds - syncs delivery services with what is configured in Traffic Ops.\n";
-	print "\t<Mode> = revalidate - checks for updated revalidations in Traffic Ops and applies them.  Requires Traffic Ops 1.2.\n";
+	print "\t<Mode> = revalidate - checks for updated revalidations in Traffic Ops and applies them.  Requires Traffic Ops 2.1.\n";
 	print "\n";
 	print "\t<Log_Level> => ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE\n";
 	print "\n";
@@ -793,7 +788,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("/datastatus");
+		my $stj = &lwp_get("/api/1.2/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
@@ -816,7 +811,7 @@ sub check_revalidate_state {
 			( $log_level >> $ERROR ) && print "ERROR status file $status_file does not exist.\n";
 		}
 
-		for my $status ( @{$statuses} ) {
+		for my $status ( @{$statuses->{'response'}} ) {
 			next if ( $status->{name} eq $my_status );
 			my $other_status = $status_dir . "/" . $status->{name};
 
@@ -899,7 +894,6 @@ sub check_syncds_state {
 							( $dispersion > 0 ) && &sleep_timer($dispersion);
 						}
 	
-						( $log_level >> $WARN ) && print "\n";
 						$upd_ref = &lwp_get($uri);
 						if ( $upd_ref =~ m/^\d{3}$/ ) {
 							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -932,8 +926,6 @@ sub check_syncds_state {
 							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
 							( $dispersion > 0 ) && &sleep_timer($dispersion);
 						}
-	
-						( $log_level >> $WARN ) && print "\n";
 						$upd_ref = &lwp_get($uri);
 						if ( $upd_ref =~ m/^\d{3}$/ ) {
 							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -967,7 +959,7 @@ sub check_syncds_state {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("/datastatus");
+		my $stj = &lwp_get("/api/1.2/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
@@ -990,7 +982,7 @@ sub check_syncds_state {
 			( $log_level >> $ERROR ) && print "ERROR status file $status_file does not exist.\n";
 		}
 
-		for my $status ( @{$statuses} ) {
+		for my $status ( @{$statuses->{'response'}} ) {
 			next if ( $status->{name} eq $my_status );
 			my $other_status = $status_dir . "/" . $status->{name};
 
@@ -1029,12 +1021,12 @@ sub sleep_timer {
 	
 	my $proper_script_mode = $script_mode; 
 	
-	if ( $reval_in_use == 1 ) {
+	if ( $reval_in_use == 1 && $proper_script_mode != $BADASS ) {
 		( $log_level >> $WARN ) && print "WARN Performing a revalidation check before sleeping... \n";
 		&revalidate_while_sleeping();
 		( $log_level >> $WARN ) && print "WARN Revalidation check complete.\n";
 	}
-	if ( $duration < $reval_clock || $reval_in_use == 0 ) {
+	if ( $duration < $reval_clock || $reval_in_use == 0 || $script_mode == $BADASS ) {
 		( $log_level >> $WARN ) && print "WARN Sleeping for $duration seconds: ";
 	}
 	else {
@@ -1712,7 +1704,7 @@ sub get_cfg_file_list {
 
 	my $result = &lwp_get($uri);
 
-	if ($result == 404) {
+	if ($result eq '404') {
 		$api_in_use = 0;
 		( $log_level >> $INFO ) && printf("INFO Traffic Ops version does not support config files API. Reverting to UI route.\n");
 		$uri = "/ort/$host_name/ort1";
@@ -1783,7 +1775,7 @@ sub get_header_comment {
 	my $to_host = shift;
 	my $toolname;
 
-	my $uri    = "/api/1.1/system/info.json";
+	my $uri    = "/api/1.2/system/info.json";
 	my $result = &lwp_get($uri);
 
 	my $result_ref = decode_json($result);
@@ -2467,7 +2459,6 @@ sub set_uri {
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
-	#return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	return $URI; 
 }
 
