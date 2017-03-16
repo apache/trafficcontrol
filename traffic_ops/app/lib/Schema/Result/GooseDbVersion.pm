@@ -25,25 +25,24 @@ __PACKAGE__->table("goose_db_version");
 
 =head2 id
 
-  data_type: 'bigint'
+  data_type: 'integer'
   is_auto_increment: 1
   is_nullable: 0
   sequence: 'goose_db_version_id_seq'
 
 =head2 version_id
 
-  data_type: 'numeric'
+  data_type: 'bigint'
   is_nullable: 0
 
 =head2 is_applied
 
   data_type: 'boolean'
-  default_value: false
   is_nullable: 0
 
 =head2 tstamp
 
-  data_type: 'timestamp with time zone'
+  data_type: 'timestamp'
   default_value: current_timestamp
   is_nullable: 1
   original: {default_value => \"now()"}
@@ -53,18 +52,18 @@ __PACKAGE__->table("goose_db_version");
 __PACKAGE__->add_columns(
   "id",
   {
-    data_type         => "bigint",
+    data_type         => "integer",
     is_auto_increment => 1,
     is_nullable       => 0,
     sequence          => "goose_db_version_id_seq",
   },
   "version_id",
-  { data_type => "numeric", is_nullable => 0 },
+  { data_type => "bigint", is_nullable => 0 },
   "is_applied",
-  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
+  { data_type => "boolean", is_nullable => 0 },
   "tstamp",
   {
-    data_type     => "timestamp with time zone",
+    data_type     => "timestamp",
     default_value => \"current_timestamp",
     is_nullable   => 1,
     original      => { default_value => \"now()" },
@@ -84,8 +83,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:kNbDG4yXcgqGB2dRrmtF6A
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-03-16 16:59:01
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2Wz488ewfMFOofpvcO6l7g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
