@@ -406,10 +406,10 @@ sub replaceNamedLookupValues {
 	$paramHashRef->{'type'} = $typeHashRef->{ $paramHashRef->{'type'} };
 
 	#  }
-	#  if ($paramHashRef->{'profile'} !~ /^[+-]?\d+$/) {
-	$paramHashRef->{'profile'} = $profileHashRef->{ $paramHashRef->{'profile'} };
+	if ($paramHashRef->{'profile'} !~ /^[+-]?\d+$/) {
+		$paramHashRef->{'profile'} = $profileHashRef->{ $paramHashRef->{'profile'} };
 
-	#  }
+	}
 	#  if ($paramHashRef->{'phys_location'} !~ /^[+-]?\d+$/) {
 	$paramHashRef->{'phys_location'} = $physLocationHashRef->{ $paramHashRef->{'phys_location'} };
 
