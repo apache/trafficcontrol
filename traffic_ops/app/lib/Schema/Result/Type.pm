@@ -89,20 +89,6 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key("id");
 
-=head1 UNIQUE CONSTRAINTS
-
-=head2 C<idx_54562_name_unique>
-
-=over 4
-
-=item * L</name>
-
-=back
-
-=cut
-
-__PACKAGE__->add_unique_constraint("idx_54562_name_unique", ["name"]);
-
 =head1 RELATIONS
 
 =head2 cachegroups
@@ -211,8 +197,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JIvzUMeCc2ZVQpQLxITmHQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-03-16 16:59:01
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:bVZ5hEoIxEeHxgJ3AO9ndw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
