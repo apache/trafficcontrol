@@ -20,16 +20,20 @@ name: dbconf.yml
 development:
   driver: postgres
   open: host=127.0.0.1 port=5432 user=to_development password=twelve dbname=to_development sslmode=disable
+  admin: user= password=
 
 test:
   driver: postgres
   open: host=127.0.0.1 port=5432 user=to_test password=twelve dbname=to_test sslmode=disable
+  admin: user= password=
 
 integration:
   driver: postgres
   open: host=127.0.0.1 port=5432 user=to_integration password=twelve dbname=to_integration sslmode=disable
+  admin: user= password=
 
 production:
   driver: postgres
   open: host=127.0.0.1 port=5432 user=traffic_ops password=twelve dbname=traffic_ops sslmode=disable
+  admin: user= password=
 

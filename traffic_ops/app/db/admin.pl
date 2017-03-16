@@ -30,10 +30,12 @@ use YAML qw(LoadFile);
 use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
 my $usage = "\n"
-	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [arguments]\t\n\n"
+	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [--force] [arguments]\t\n\n"
 	. "Example:  $PROGRAM_NAME --env=test reset\n\n"
 	. "Purpose:  This script is used to manage database. The environments are\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
+	. "  --force: Using this flag will proceed to perform tasks without asking.\n"
+    . "           The default is to ask to proceed.\n\n"
 	. "arguments:   \n\n"
 	. "createdb  - Execute db 'createdb' the database for the current environment.\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
@@ -51,16 +53,28 @@ my $usage = "\n"
 
 my $environment = 'development';
 my $db_protocol;
+my $db_admin_username;  # For the Postgres DB Admin User
+my $db_admin_password;  # For the Postgres DB Admin User Password.
+
+# If force is 0; the script will ask to proceed. 1 will not ask and proceed.
+# This is to add protection since this script is dangerous and we should
+# protect an existing database from a potentially a catastrophic change.
+my $force = 0;
 
 # This is defaulted to 'to_development' so
 # you don't have to specify --env=development for dev workstations
-my $db_name     = 'to_development';
-my $db_username = 'to_development';
-my $db_password = '';
-my $host_ip     = '';
-my $host_port   = '';
-GetOptions( "env=s" => \$environment );
+my $db_conf_path      = 'db/dbconf.yml';
+my $db_name           = 'to_development';
+my $db_username       = 'to_development';
+my $db_password       = '';
+my $host_ip           = '';
+my $host_port         = '';
+GetOptions("env=s" => \$environment, "force" => \$force);
 $ENV{'MOJO_MODE'} = $environment;
+
+if (!$force) {
+	ask_user_to_proceed();
+}
 
 parse_dbconf_yml_pg_driver();
 
@@ -134,11 +148,31 @@ else {
 
 exit(0);
 
+sub ask_user_to_proceed {
+	print "\nWARNING: If you have an existing database, this script can cause catastrophic damage "
+		. "to your database.\n\nAre you sure you want to proceed? ('Yes' to proceed): ";
+	my $proceed = <STDIN>;
+	chomp($proceed);
+	if ($proceed ne "Yes") {
+		# If not "Yes", exit.
+		print "Exiting.\n";
+		exit 1;
+	}
+}
+
 sub parse_dbconf_yml_pg_driver {
-	my $db_conf       = LoadFile('db/dbconf.yml');
+	my $db_conf       = LoadFile($db_conf_path);
 	my $db_connection = $db_conf->{$environment};
+
+	# let's make sure the environment specified or set is actually configured in the confiration file.
+	if (!defined $db_connection) {
+		die "An invalid environment [$environment] has been specified.  This enviornment is not configured " .
+				"in the configuration file [$db_conf_path].";
+	}
+
 	$db_protocol = $db_connection->{driver};
 	my $open = $db_connection->{open};
+	my $creds = $db_connection->{admin};
 
 	# Goose requires the 'open' line in the dbconf file to be a scalar.
 	# example:
@@ -153,15 +187,51 @@ sub parse_dbconf_yml_pg_driver {
 	$db_name     = $hash->{dbname};
 	$db_username = $hash->{user};
 	$db_password = $hash->{password};
+
+	# Load the db admin credentials. Parts of this script require the
+	# postgres admin user to function properly.
+	# This script requires the 'admin' line in the dbconf file to be a scalar.
+	# example:
+	#		admin: user=postgres password=postgres123
+	# Also, by default the line in the dbconf is set to
+	#		admin: user= password=
+	# This is to ensure the user fills in the fields, since,
+	# the values will be undef.
+	$creds = join "\n", map { s/=/ : /; $_ } split " ", $creds;
+	my $acreds = Load $creds;
+
+	$db_admin_username = $acreds->{user};
+	$db_admin_password = $acreds->{password};
+
+	if (!defined $db_admin_username || !defined $db_admin_password) {
+		die "FATAL: The database admin credentials 'user' and/or 'password' needs to be configured for environment "
+				. "[$environment] for the [admin] key in the configuration file [$db_conf_path].";
+	}
+}
+
+sub set_default {
+	my $variable = shift;
+	my $default = shift;
+
+	my $retval = $default;
+	if (defined $variable) {
+		$retval = $variable;
+	}
+
+	return $retval;
 }
 
 sub get_psql_uri {
-	my $db_name = shift;
+	my $dbuser = set_default(shift, $db_username);
+	my $dbpasswd = set_default(shift, $db_password);
+	my $dbname = set_default(shift, $db_name);
+    my $dbhost = set_default(shift, $host_ip);
+	my $dbport = set_default(shift, $host_port);
 
-	my $uri = sprintf 'postgresql://%s:%s@%s:%s', $db_username, $db_password, $host_ip, $host_port;
+	my $uri = sprintf 'postgresql://%s:%s@%s:%s', $dbuser, $dbpasswd, $dbhost, $dbport;
 
-	if ( defined $db_name ) {
-		$uri .= "/$db_name";
+	if ( defined $dbname ) {
+		$uri .= "/$dbname";
 	}
 
 	return $uri;
@@ -178,7 +248,7 @@ sub migrate {
 
 sub seed {
 	print "Seeding database.\n";
-	my $uri = get_psql_uri($db_name);
+	my $uri = get_psql_uri();
 	if ( system("psql $uri -e < db/seeds.sql") != 0 ) {
 		die "Can't seed database\n";
 	}
@@ -186,15 +256,15 @@ sub seed {
 
 sub load_schema {
 	print "Creating database tables.\n";
-	my $uri = get_psql_uri($db_name);
+	my $uri = get_psql_uri();
 	if ( system("psql $uri -e < db/create_tables.sql") != 0 ) {
 		die "Can't create database tables\n";
 	}
 }
 
 sub dropdb {
-	my $uri = get_psql_uri();
-	my $cmd = "DROP DATABASE IF EXISTS '$db_name';";
+	my $uri = get_psql_uri($db_admin_username, $db_admin_password, 'postgres');
+	my $cmd = "DROP DATABASE IF EXISTS $db_name;";
 	if ( system(qq{psql $uri -tAec "$cmd"}) != 0 ) {
 		die "Can't drop db $db_name\n";
 	}
@@ -202,22 +272,22 @@ sub dropdb {
 
 sub createdb {
 	createuser();
-	my $uri = get_psql_uri();
+	my $uri = get_psql_uri($db_admin_username, $db_admin_password, 'postgres');
 	my $db_exists = `psql $uri -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ($db_exists) {
 		print "Database $db_name already exists\n";
 		return;
 	}
 
-	my $cmd = "CREATE DATABASE '$db_name';";
+	my $cmd = "CREATE DATABASE $db_name;";
 	if ( system(qq{psql $uri -tAec "$cmd"}) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
 }
 
 sub createuser {
-	my $uri = get_psql_uri();
-	my $user_exists = `psql $uri postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
+	my $uri = get_psql_uri($db_admin_username, $db_admin_password, 'postgres');
+	my $user_exists = `psql $uri -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
 	if ($user_exists) {
 		print "Role $db_username already exists\n";
 		return;
@@ -230,8 +300,8 @@ sub createuser {
 }
 
 sub dropuser {
-	my $uri = get_psql_uri();
-	my $cmd = "DROP ROLE '$db_username';";
+	my $uri = get_psql_uri($db_admin_username, $db_admin_password, 'postgres');
+	my $cmd = "DROP ROLE $db_username;";
 	if ( system(qq{psql $uri -tAec "$cmd"}) != 0 ) {
 		die "Can't drop user $db_username\n";
 	}
