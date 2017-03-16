@@ -211,8 +211,6 @@ if ( $script_mode == $REVALIDATE ) {
 }
 else {
 	( $syncds_update ) = &check_syncds_state();
-	if ( $syncds_update < 1 ) {
-	}
 }
 
 
