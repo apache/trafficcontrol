@@ -194,7 +194,7 @@ $t->post_ok(
 # Bad 'Type' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1,rack33,EDGE-BAD,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
 );
 
 &build_tmpfile($content);
@@ -206,7 +206,7 @@ $t->post_ok(
 # Bad 'Profile' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago,plocation-chi-1,rack33,EDGE,1-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago,plocation-chi-1,rack33,EDGE,1-BAD,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
 );
 
 &build_tmpfile($content);
@@ -218,14 +218,14 @@ $t->post_ok(
 # Bad 'Cache Group' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_2,us-il-chicago-BAD,plocation-chi-1,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
 );
 
 #----------------------------
 # Bad 'Physical Location' look for -BAD
 $content = join( "\n",
 	$header,
-	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66\n"
+	"atsec-chi-09,chi.kabletown.net,bond0,10.10.2.200,255.255.255.0,10.10.2.254,2033:D0D0:3300::2:1A/64,2033:D0D0:3300::2:1,9000,cdn_number_1,us-il-chicago,plocation-chi-1-BAD,rack33,EDGE,1,80,10.10.33.1,255.255.255.0,10.10.33.44,10.254.254.12,255.255.255.0,10.254.254.1,user,passwd,router_33,port_66,443,N/A\n"
 );
 
 &build_tmpfile($content);
