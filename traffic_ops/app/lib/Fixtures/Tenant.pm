@@ -19,7 +19,6 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-	## id => 1
 	root_tenant_name => {
 		new   => 'Tenant',
 		using => {
