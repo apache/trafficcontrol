@@ -37,7 +37,9 @@ else
 	projects=(tarball)
 	for p in "${projects_to_build[@]}"; do
 	  p=${p%%/*}
-	  projects+=($p)
+		if [[ $p != "traffic_monitor_golang" ]]; then
+			projects+=($p)
+		fi
 	done
 fi
 
