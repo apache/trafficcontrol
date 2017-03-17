@@ -30,12 +30,15 @@ use YAML qw(LoadFile);
 use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
 my $usage = "\n"
-	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [--force] [arguments]\t\n\n"
-	. "Example:  $PROGRAM_NAME --env=test reset\n\n"
+	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [--force] --admuser "
+    . "(Postgres Admin User) --admpwd (Postgres Admin Password) [arguments]\t\n\n"
+	. "Example:  $PROGRAM_NAME --env=test --admuser=postgres --admpwd=postgres123 reset\n\n"
 	. "Purpose:  This script is used to manage database. The environments are\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
-	. "  --force: Using this flag will proceed to perform tasks without asking.\n"
-    . "           The default is to ask to proceed.\n\n"
+	. "    --admuser: The Postgres DB admin user that has postgres superuser privledges.\n"
+	. "    --admpwd: The password for the Postgres DB admin user.\n"
+	. "    --force: Using this flag will proceed to perform tasks without asking.\n"
+    . "             The default is to ask to proceed.\n\n"
 	. "arguments:   \n\n"
 	. "createdb  - Execute db 'createdb' the database for the current environment.\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
@@ -56,6 +59,13 @@ my $db_protocol;
 my $db_admin_username;  # For the Postgres DB Admin User
 my $db_admin_password;  # For the Postgres DB Admin User Password.
 
+# supplied command-line "argument", e.g. setup, etc., that requires the admin credentials.
+my @requires_admin = qw(createdb dropdb createuser dropuser reset setup);
+
+# supplied command-line "argument", e.g. setup, etc., that we need to ask to proceed.
+my @ask_user = qw(createdb dropdb createuser dropuser reset setup upgrade migrate down
+	              redo seed load_schema reverse_schema);
+
 # If force is 0; the script will ask to proceed. 1 will not ask and proceed.
 # This is to add protection since this script is dangerous and we should
 # protect an existing database from a potentially a catastrophic change.
@@ -69,18 +79,30 @@ my $db_username       = 'to_development';
 my $db_password       = '';
 my $host_ip           = '';
 my $host_port         = '';
-GetOptions("env=s" => \$environment, "force" => \$force);
+GetOptions("env=s" => \$environment,
+	       "force" => \$force,
+	       "admuser=s" => \$db_admin_username,
+	       "admpwd=s" => \$db_admin_password);
 $ENV{'MOJO_MODE'} = $environment;
-
-if (!$force) {
-	ask_user_to_proceed();
-}
 
 parse_dbconf_yml_pg_driver();
 
 STDERR->autoflush(1);
 my $argument = shift(@ARGV);
 if ( defined($argument) ) {
+	if ($argument ~~ @requires_admin) {
+		if (!defined $db_admin_username || !defined $db_admin_password) {
+			print "FATAL: The database admin credentials needs to be supplied on the command-line.\n" . $usage;
+			exit 1;
+		}
+	}
+
+	if ($argument ~~ @ask_user) {
+		if (!$force) {
+			ask_user_to_proceed();
+		}
+	}
+
 	if ( $argument eq 'createdb' ) {
 		createdb();
 	}
@@ -149,8 +171,8 @@ else {
 exit(0);
 
 sub ask_user_to_proceed {
-	print "\nWARNING: If you have an existing database, this script can cause catastrophic damage "
-		. "to your database.\n\nAre you sure you want to proceed? ('Yes' to proceed): ";
+	print "\nWARNING: This action is making changes to your database.\n\nAre you sure you want to "
+	      . "proceed? ('Yes' to proceed): ";
 	my $proceed = <STDIN>;
 	chomp($proceed);
 	if ($proceed ne "Yes") {
@@ -172,7 +194,6 @@ sub parse_dbconf_yml_pg_driver {
 
 	$db_protocol = $db_connection->{driver};
 	my $open = $db_connection->{open};
-	my $creds = $db_connection->{admin};
 
 	# Goose requires the 'open' line in the dbconf file to be a scalar.
 	# example:
@@ -187,26 +208,6 @@ sub parse_dbconf_yml_pg_driver {
 	$db_name     = $hash->{dbname};
 	$db_username = $hash->{user};
 	$db_password = $hash->{password};
-
-	# Load the db admin credentials. Parts of this script require the
-	# postgres admin user to function properly.
-	# This script requires the 'admin' line in the dbconf file to be a scalar.
-	# example:
-	#		admin: user=postgres password=postgres123
-	# Also, by default the line in the dbconf is set to
-	#		admin: user= password=
-	# This is to ensure the user fills in the fields, since,
-	# the values will be undef.
-	$creds = join "\n", map { s/=/ : /; $_ } split " ", $creds;
-	my $acreds = Load $creds;
-
-	$db_admin_username = $acreds->{user};
-	$db_admin_password = $acreds->{password};
-
-	if (!defined $db_admin_username || !defined $db_admin_password) {
-		die "FATAL: The database admin credentials 'user' and/or 'password' needs to be configured for environment "
-				. "[$environment] for the [admin] key in the configuration file [$db_conf_path].";
-	}
 }
 
 sub set_default {
