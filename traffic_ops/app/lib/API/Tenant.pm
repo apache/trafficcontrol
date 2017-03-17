@@ -110,6 +110,10 @@ sub update {
 		return $self->alert("Parent Id is required.");
 	}
 	
+	if ( !defined( $params->{active} ) ) {
+		return $self->alert("Active field is required.");
+	}
+
 	my $is_active = $params->{active};
 	
 	if ( !$params->{active} && $self->isRootTenant($id)) {

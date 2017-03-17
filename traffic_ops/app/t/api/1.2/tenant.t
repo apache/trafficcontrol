@@ -102,13 +102,27 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 
 #cannot change tenant parent to undef
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
-			"name" => "tenantC", 
-		})->status_is(400);
+			"name" => "tenantC", "active" => 1})
+			->json_is( "/alerts/0/text" => "Parent Id is required.")
+			->status_is(400);
+
+#cannot skip "active" field on "put"
+ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
+			"name" => "tenantC", "parentId" => $root_tenant_id})
+			->json_is( "/alerts/0/text" => "Active field is required.")
+			->status_is(400);
+
+#cannot skip "name" field on "put"
+ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
+			"active" => 1, "parentId" => $root_tenant_id})
+			->json_is( "/alerts/0/text" => "Tenant name is required.")
+			->status_is(400);
 
 #cannot change root-tenant to inactive
 ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
-			"name" => "root", "active" => 0, "parentId" => undef  
-		})->status_is(400);
+			"name" => "root", "active" => 0, "parentId" => undef})
+			->json_is( "/alerts/0/text" => "Root user cannot be in-active.")
+			->status_is(400);
 
 #adding a child tenant
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
