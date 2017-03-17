@@ -505,7 +505,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	if err != nil {
 		errHndlr(err, ERROR)
 	} else {
-		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05", lastSummaryTimeStr)
+		lastSummaryTime, err := time.Parse("2006-01-02 15:04:05+00", lastSummaryTimeStr)
 		if err != nil {
 			errHndlr(err, ERROR)
 		} else {
