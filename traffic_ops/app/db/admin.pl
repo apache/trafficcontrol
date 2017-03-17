@@ -30,8 +30,8 @@ use YAML qw(LoadFile);
 use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
 my $usage = "\n"
-	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [--force] --admuser "
-    . "(Postgres Admin User) --admpwd (Postgres Admin Password) [arguments]\t\n\n"
+	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [--force] [--admuser "
+    . "(Postgres Admin User)] [--admpwd (Postgres Admin Password)] [arguments]\t\n\n"
 	. "Example:  $PROGRAM_NAME --env=test --admuser=postgres --admpwd=postgres123 reset\n\n"
 	. "Purpose:  This script is used to manage database. The environments are\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
@@ -92,7 +92,8 @@ my $argument = shift(@ARGV);
 if ( defined($argument) ) {
 	if ($argument ~~ @requires_admin) {
 		if (!defined $db_admin_username || !defined $db_admin_password) {
-			print "FATAL: The database admin credentials needs to be supplied on the command-line.\n" . $usage;
+			print "FATAL: The database admin credentials needs to be supplied for "
+                  . "the [$argument] action.\n" . $usage;
 			exit 1;
 		}
 	}
