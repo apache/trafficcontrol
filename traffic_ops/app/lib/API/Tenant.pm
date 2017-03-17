@@ -220,22 +220,6 @@ sub delete {
 		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
 	}
 
-	#The order of the below tests is intentional - allowing UT to cover all cases - TODO(nirs) remove this comment when a full "tenancy" UT is added, including permissions and such (no use in putting effort into it yet)
-	#TODO(nirs) - add back when making available: my $existing_ds = $self->db->resultset('Deliveryservice')->search( { tenant_id => $id })->get_column('xml_id')->first();
-	#TODO(nirs) - add back when making available: if ($existing_ds) {
-	#TODO(nirs) - add back when making available: 	return $self->alert("Tenant '$name' is assign with delivery-services(s): e.g. '$existing_ds'. Please update/delete these delivery-services and retry.");
-	#TODO(nirs) - add back when making available: }
-
-	#TODO(nirs) - add back when making available: my $existing_cdn = $self->db->resultset('Cdn')->search( { tenant_id => $id })->get_column('name')->first();
-	#TODO(nirs) - add back when making available: if ($existing_cdn) {
-	#TODO(nirs) - add back when making available: 	return $self->alert("Tenant '$name' is assign with CDNs(s): e.g. '$existing_cdn'. Please update/delete these CDNs and retry.");
-	#TODO(nirs) - add back when making available: }
-
-	#TODO(nirs) - add back when making available: my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id })->get_column('username')->first();
-	#TODO(nirs) - add back when making available: if ($existing_user) {
-	#TODO(nirs) - add back when making available: 	return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");
-	#TODO(nirs) - add back when making available: }
-
 	my $rs = $tenant->delete();
 	if ($rs) {
 		return $self->success_message("Tenant deleted.");
