@@ -284,7 +284,7 @@ sub create {
 		phone_number 			=> defined_or_default($params->{phoneNumber}, ""),
 		postal_code 			=> defined_or_default($params->{postalCode}, ""),
 		public_ssh_key 			=> defined_or_default($params->{publicSshKey}, ""),
-		registration_sent 		=> defined_or_default( $params->{registrationSent}, undef),
+		registration_sent 		=> undef,
 		role 				=> $params->{role},
 		state_or_province 		=> defined_or_default($params->{stateOrProvince}, ""),
 		username 			=> $params->{username},
