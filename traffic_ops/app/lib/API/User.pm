@@ -288,8 +288,8 @@ sub create {
 		role 				=> $params->{role},
 		state_or_province 		=> defined_or_default($params->{stateOrProvince}, ""),
 		username 			=> $params->{username},
-		uid                  		=> defined_or_default($params->{uid}, 0),		
-		gid                  		=> defined_or_default($params->{gid}, 0),
+		uid                  		=> 0,		
+		gid                  		=> 0,
 		local_passwd         		=> sha1_hex($params->{localPassword} ),
 		confirm_local_passwd 		=> sha1_hex($params->{confirmLocalPassword} ),
 
