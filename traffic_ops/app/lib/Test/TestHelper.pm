@@ -65,6 +65,12 @@ use constant STEERING_PASSWORD_1 => 'password';
 use constant STEERING_USER_2 => 'steering2';
 use constant STEERING_PASSWORD_2 => 'password';
 
+use constant ADMIN_ROOT_USER          => 'admin-root';
+use constant ADMIN_ROOT_USER_PASSWORD => 'password';
+
+use constant PORTAL_ROOT_USER          => 'portal-root';
+use constant PORTAL_ROOT_USER_PASSWORD => 'password';
+
 sub load_all_fixtures {
 	my $self    = shift;
 	my $fixture = shift;
