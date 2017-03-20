@@ -1,3 +1,4 @@
+use utf8;
 
 #
 #
@@ -21,13 +22,13 @@ package Schema::Result::DeliveryServiceInfoForCdnList;
 # this view returns the regexp set for a delivery services, ordered by type, set_number.
 # to use, do
 #
-# $rs = $self->db->resultset('DeliveryServiceInfoForCdnList')->search({}, { bind => [ $id ]});
+# $rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search({}, { bind => [ $domain ]});
 #
-# where $id is the CDN id.
+# where $id is the deliveryservice id.
 
 use strict;
 use warnings;
-use utf8;
+
 use base 'DBIx::Class::Core';
 
 __PACKAGE__->table_class('DBIx::Class::ResultSource::View');
@@ -37,7 +38,7 @@ __PACKAGE__->table("DeliveryServiceInfoForCdnList:");
 __PACKAGE__->result_source_instance->is_virtual(1);
 
 __PACKAGE__->result_source_instance->view_definition( "
-SELECT DISTINCT
+SELECT
     deliveryservice.xml_id,
     deliveryservice.id AS ds_id,
     deliveryservice.dscp,
@@ -45,44 +46,40 @@ SELECT DISTINCT
     deliveryservice.qstring_ignore,
     deliveryservice.org_server_fqdn,
     deliveryservice.multi_site_origin,
-    deliveryservice.multi_site_origin_algorithm,
     deliveryservice.range_request_handling,
     deliveryservice.origin_shield,
     regex.pattern,
     retype.name AS re_type,
     dstype.name AS ds_type,
-    parameter.value AS domain_name,
+    cdn.name AS domain_name,
     deliveryservice_regex.set_number,
     deliveryservice.edge_header_rewrite,
     deliveryservice.mid_header_rewrite,
     deliveryservice.regex_remap,
     deliveryservice.cacheurl,
     deliveryservice.remap_text,
-    deliveryservice.protocol
+    deliveryservice.protocol,
+    deliveryservice.profile
 FROM
     deliveryservice
-        JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
-        JOIN regex ON deliveryservice_regex.regex = regex.id
-        JOIN type as retype ON regex.type = retype.id
-        JOIN type as dstype ON deliveryservice.type = dstype.id
-        JOIN profile_parameter ON deliveryservice.profile = profile_parameter.profile
-        JOIN parameter ON parameter.id = profile_parameter.parameter
-        JOIN deliveryservice_server ON deliveryservice_server.deliveryservice = deliveryservice.id
-        JOIN server ON deliveryservice_server.server = server.id
-WHERE 
+    JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
+    JOIN regex ON deliveryservice_regex.regex = regex.id
+    JOIN type as retype ON regex.type = retype.id
+    JOIN type as dstype ON deliveryservice.type = dstype.id
+    JOIN cdn ON cdn.id = deliveryservice.cdn_id
+WHERE
     deliveryservice.cdn_id = ? 
     AND parameter.name = 'domain_name'
-ORDER BY 
-    ds_id, 
-    re_type , 
-    deliveryservice_regex.set_number"
+ORDER BY
+    ds_id,
+    re_type,
+    set_number"
 );
 
 __PACKAGE__->add_columns(
 	"xml_id",          { data_type => "varchar", is_nullable => 0, size => 45 },
 	"org_server_fqdn", { data_type => "varchar", is_nullable => 0, size => 45 },
 	"multi_site_origin",           { data_type => "integer", is_nullable => 0 },
-	"multi_site_origin_algorithm", { data_type => "tinyint", is_nullable => 1 },
 	"ds_id",                       { data_type => "integer", is_nullable => 0 },
 	"dscp",                        { data_type => "integer", is_nullable => 0 },
 	"signed",                      { data_type => "integer", is_nullable => 0 },
@@ -100,6 +97,7 @@ __PACKAGE__->add_columns(
 	"protocol",                    { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"range_request_handling",      { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"profile",                     { data_type => "integer", is_nullable => 1},
 );
 
 1;
