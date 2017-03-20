@@ -68,7 +68,7 @@ FROM
     JOIN type as dstype ON deliveryservice.type = dstype.id
     JOIN cdn ON cdn.id = deliveryservice.cdn_id
 WHERE
-    cdn.domain_name = ?
+    cdn.name = ?
     AND deliveryservice.id in (
         SELECT
             deliveryservice_server.deliveryservice

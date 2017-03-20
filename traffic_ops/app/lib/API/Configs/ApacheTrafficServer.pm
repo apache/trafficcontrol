@@ -452,11 +452,12 @@ sub profile_param_value {
 #gets the delivery service data for an entire CDN.
 sub cdn_ds_data {
 	my $self = shift;
-	my $id   = shift;
+	my $cdn_obj   = shift;
 	my $dsinfo;
 
-	my $rs;
-	$rs = $self->db->resultset('DeliveryServiceInfoForCdnList')->search( {}, { bind => [$id] } );
+	my $rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$cdn_obj->name] } );
+
+	print STDERR Dumper($cdn_obj->name);
 	my $j = 0;
 	while ( my $row = $rs->next ) {
 		my $org_server                  = $row->org_server_fqdn;
@@ -476,7 +477,6 @@ sub cdn_ds_data {
 		my $cacheurl                    = $row->cacheurl;
 		my $remap_text                  = $row->remap_text;
 		my $multi_site_origin           = $row->multi_site_origin;
-		my $multi_site_origin_algorithm = $row->multi_site_origin_algorithm;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -545,7 +545,6 @@ sub cdn_ds_data {
 		$dsinfo->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
 		$dsinfo->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
 		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"} = $multi_site_origin_algorithm;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -1042,7 +1041,7 @@ sub cacheurl_dot_config {
 		}
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
-		my $data = $self->cdn_ds_data( $cdn_obj->id );
+		my $data = $self->cdn_ds_data( $cdn_obj );
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{qstring_ignore} == 1 ) {
 				my $org = $remap->{org};
