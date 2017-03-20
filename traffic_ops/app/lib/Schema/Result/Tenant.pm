@@ -148,9 +148,24 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 tm_users
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-03-13 09:41:00
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:a816RdXB0mjimo2LvnqX/Q
+Type: has_many
+
+Related object: L<Schema::Result::TmUser>
+
+=cut
+
+__PACKAGE__->has_many(
+  "tm_users",
+  "Schema::Result::TmUser",
+  { "foreign.tenant_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-03-20 09:11:40
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:W4nbCNSj6N1gMar0mRvQ5Q
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
