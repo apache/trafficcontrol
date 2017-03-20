@@ -384,6 +384,7 @@ sub rascal_hosts_by_cdn {
 
 sub exec_command {
 	my ( $class, $command, @args ) = @_;
+	$SIG{CHLD} = 'DEFAULT';
 	my $pid    = fork();
 	my $result = 0;
 
