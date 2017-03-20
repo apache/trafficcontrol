@@ -457,7 +457,6 @@ sub cdn_ds_data {
 
 	my $rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$cdn_obj->name] } );
 
-	print STDERR Dumper($cdn_obj->name);
 	my $j = 0;
 	while ( my $row = $rs->next ) {
 		my $org_server                  = $row->org_server_fqdn;
@@ -1042,11 +1041,15 @@ sub cacheurl_dot_config {
 	}
 	elsif ( $filename eq "cacheurl.config" ) {    # this is the global drop qstring w cacheurl use case
 		my $data = $self->cdn_ds_data( $cdn_obj );
+		my $last_org = '';
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			if ( $remap->{qstring_ignore} == 1 ) {
 				my $org = $remap->{org};
-				$org =~ /(https?:\/\/)(.*)/;
-				$text .= "$1(" . $2 . "/[^?]+)(?:\\?|\$)  $1\$1\n";
+				if ( $last_org ne $org ){
+					$org =~ /(https?:\/\/)(.*)/;
+					$text .= "$1(" . $2 . "/[^?]+)(?:\\?|\$)  $1\$1\n";
+				}
+				$last_org = $org;
 			}
 		}
 
