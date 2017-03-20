@@ -25,6 +25,7 @@ my %definition_for = (
 			id          => 100,
 			name        => 'cdn1',
 			domain_name => 'cdn1.kabletown.net',
+			tenant_id   => undef,
 		},
 	},
 	cdn2_cdn_name => {
@@ -33,6 +34,17 @@ my %definition_for = (
 			id          => 200,
 			name        => 'cdn2',
 			domain_name => 'cdn2.kabletown.net',
+			tenant_id   => undef,
+		},
+	},
+	## id => 3
+	cdn_root_cdn_name => {
+		new   => 'Cdn',
+		using => {
+			id          => 300,
+			name        => 'cdn-root',
+			domain_name => 'cdn3.kabletown.net',
+			tenant_id   => 10**9,
 		},
 	},
 );

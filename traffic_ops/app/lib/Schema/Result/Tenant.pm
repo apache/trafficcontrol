@@ -113,6 +113,21 @@ __PACKAGE__->add_unique_constraint("tenant_name_key", ["name"]);
 
 =head1 RELATIONS
 
+=head2 cdns
+
+Type: has_many
+
+Related object: L<Schema::Result::Cdn>
+
+=cut
+
+__PACKAGE__->has_many(
+  "cdns",
+  "Schema::Result::Cdn",
+  { "foreign.tenant_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 parent
 
 Type: belongs_to
