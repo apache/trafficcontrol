@@ -40,6 +40,7 @@ sub index {
 				"name"          => $row->name,
 				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
+				"tenantId"      => $row->tenant_id,
 				"lastUpdated" 	=> $row->last_updated,
 			}
 		);
@@ -60,6 +61,7 @@ sub show {
 				"name"          => $row->name,
 				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
+				"tenantId"      => $row->tenant_id,
 				"lastUpdated" 	=> $row->last_updated,
 			}
 		);
@@ -80,6 +82,7 @@ sub name {
 				"name"          => $row->name,
 				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
+				"tenantId"      => $row->tenant_id,
 				"lastUpdated"   => $row->last_updated,
 			}
 		);
@@ -123,10 +126,14 @@ sub create {
 		return $self->alert( "a cdn with domain " . $params->{domainName} . " already exists." );
 	}
 
+	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
+
 	my $values = {
 		name => $params->{name},
 		dnssec_enabled => $params->{dnssecEnabled},
 		domain_name => $params->{domainName},
+		tenant_id => $tenant_id,
 	};
 
 	my $insert = $self->db->resultset('Cdn')->create($values);
@@ -138,6 +145,7 @@ sub create {
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
 		$response->{domainName}    = $rs->domain_name;
+		$response->{tenantId}      = $rs->tenant_id;
 		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
 		return $self->success( $response, "cdn was created." );
@@ -181,12 +189,17 @@ sub update {
 		return $self->alert( "a cdn with domain name " . $params->{domainName} . " already exists." );
 	}
 
+	#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
+
 	my $values = {
 		name => $params->{name},
 		dnssec_enabled => $params->{dnssecEnabled},
 		domain_name => $params->{domainName},
+		tenant_id => $tenant_id,
 	};
 
+	
 	my $rs = $cdn->update($values);
 	if ( $rs ) {
 		my $response;
@@ -194,6 +207,7 @@ sub update {
 		$response->{name}          	= $rs->name;
 		$response->{domainName}		= $rs->domain_name;
 		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
+		$response->{tenantId}      = $rs->tenant_id;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "CDN update was successful." );
 	}
