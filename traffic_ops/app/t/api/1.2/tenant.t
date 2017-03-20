@@ -152,6 +152,16 @@ ok $t->delete_ok('/api/1.2/tenants/' . $tenantE_id)->status_is(200)->or( sub { d
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantD_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+#TODO(nirs): move to a "tenancy" UT when written
+
+#TODO(nirs): move to a "tenancy" UT when written
+#cannot delete a tenant that have a cdn
+ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
+	->json_is( "/alerts/0/text" => "Tenant 'root' is assign with CDNs(s): e.g. 'cdn-root'. Please update/delete these CDNs and retry." )
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->delete_ok('/api/1.2/cdns/' . 300)->status_is(200)
+
 #cannot delete a tenant that have a user
 ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
 	->json_is( "/alerts/0/text" => "Tenant 'root' is assign with user(s): e.g. 'admin-root'. Please update these users and retry." )

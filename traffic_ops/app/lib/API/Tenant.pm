@@ -224,6 +224,11 @@ sub delete {
 		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
 	}
 
+	#The order of the below tests is intentional - allowing UT to cover all cases - TODO(nirs) remove this comment when a full "tenancy" UT is added, including permissions and such (no use in putting effort into it yet)
+	my $existing_cdn = $self->db->resultset('Cdn')->search( { tenant_id => $id })->get_column('name')->first();
+	if ($existing_cdn) {
+		return $self->alert("Tenant '$name' is assign with CDNs(s): e.g. '$existing_cdn'. Please update/delete these CDNs and retry.");
+
 	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id }, {order_by => 'me.username' })->get_column('username')->first();
 	if ($existing_user) {
 		return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");
