@@ -134,7 +134,7 @@ $(function () {
 			function() { 
 				edgeHealthTable.fnReloadAjax();
 			}, 
-			10000
+			30000
 		);
 
 		// Set the mouseover descriptions of the table headers - prolly should do this smarter, but this works for now.
