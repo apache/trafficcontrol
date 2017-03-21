@@ -110,6 +110,15 @@ sub startup {
 	my $static = Mojolicious::Static->new;
 	push @{ $static->paths }, 'public';
 
+	# Make sure static files are cached
+	$self->hook(
+		after_static => sub {
+			my $self = shift;
+			$self->res->headers->cache_control('max-age=3600, must-revalidate')
+				if $self->res->code;
+		}
+	);
+
 	if ( $mode ne 'test' ) {
 		$access_control_allow_origin = $config->{'cors'}{'access_control_allow_origin'};
 		if ( defined($access_control_allow_origin) ) {
