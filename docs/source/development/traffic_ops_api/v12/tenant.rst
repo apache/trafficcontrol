@@ -42,7 +42,9 @@ Tenants
   +----------------------+--------+-------------------------------------------------+
   |``active``            |  bool  | Active or inactive                              |
   +----------------------+--------+-------------------------------------------------+
-  |``parentId``          |  int   | Parent tenant                                   |
+  |``parentId``          |  int   | Parent tenant ID                                |
+  +----------------------+--------+-------------------------------------------------+
+  |``parentName``        | string | Parent tenant name                              |
   +----------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -54,12 +56,14 @@ Tenants
            "name": "root",
            "active": true,
            "parentId": null,
+           "parentName": null,
         },
         {
            "id": 2
            "name": "tenant-a",
            "active": true,
            "parentId": 1
+           "parentName": "root"
         }
      ]
     }
@@ -86,7 +90,9 @@ Tenants
   +----------------------+--------+-------------------------------------------------+
   |``active``            |  bool  | Active or inactive                              |
   +----------------------+--------+-------------------------------------------------+
-  |``parentId``          |  int   | Parent tenant                                   |
+  |``parentId``          |  int   | Parent tenant ID                                |
+  +----------------------+--------+-------------------------------------------------+
+  |``parentName``        | string | Parent tenant name                              |
   +----------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -98,6 +104,7 @@ Tenants
            "name": "tenant-a",
            "active": true,
            "parentId": 1,
+           "parentName": "root"
         }
      ]
     }
@@ -154,7 +161,9 @@ Tenants
   +----------------------+--------+-------------------------------------------------+
   |``active``            |  bool  | Active or inactive                              |
   +----------------------+--------+-------------------------------------------------+
-  |``parentId``          |  int   | Parent tenant                                   |
+  |``parentId``          |  int   | Parent tenant ID                                |
+  +----------------------+--------+-------------------------------------------------+
+  |``parentName``        | string | Parent tenant name                              |
   +----------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -165,6 +174,7 @@ Tenants
 			"name": "my-tenant",
 			"active": true,
 			"parentId": 1,
+			"parentName": "root",
 			"lastUpdated": "2014-03-18 08:57:39"
 		},
 		"alerts": [
@@ -218,7 +228,9 @@ Tenants
   +----------------------+--------+-------------------------------------------------+
   |``active``            |  bool  | Active or inactive                              |
   +----------------------+--------+-------------------------------------------------+
-  |``parentId``          |  int   | Parent tenant                                   |
+  |``parentId``          |  int   | Parent tenant ID                                |
+  +----------------------+--------+-------------------------------------------------+
+  |``parentName``        | string | Parent tenant name                              |
   +----------------------+--------+-------------------------------------------------+
 
   **Response Example** ::
@@ -229,6 +241,7 @@ Tenants
 			"name": "your-tenant",
 			"active": false,
 			"parentId": 2,
+			"parentName": "my-tenant",
 			"lastUpdated": "2014-03-18 08:57:39"
 		},
 		"alerts": [
