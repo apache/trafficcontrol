@@ -39,9 +39,15 @@ sub isRootTenant {
 
 sub index {
 	my $self 	= shift;
-
-	my @data;
+	my @data = ();
+	my %idnames;
 	my $orderby = $self->param('orderby') || "name";
+
+	my $rs_data = $self->db->resultset("Tenant")->search();
+	while ( my $row = $rs_data->next ) {
+		$idnames{ $row->id } = $row->name;
+	}
+
 	my $rs_data = $self->db->resultset("Tenant")->search( undef, {order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -50,6 +56,7 @@ sub index {
 				"name"         => $row->name,
 				"active"       => \$row->active,
 				"parentId"     => $row->parent_id,
+				"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
 			}
 		);
 	}
@@ -61,8 +68,15 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	my @data = ();
+	my %idnames;
+
+	my $rs_idnames = $self->db->resultset("Tenant")->search( undef, { columns => [qw/id name/] } );
+	while ( my $row = $rs_idnames->next ) {
+		$idnames{ $row->id } = $row->name;
+	}
+
+	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
@@ -70,6 +84,7 @@ sub show {
 				"name"         => $row->name,
 				"active"       => \$row->active,
 				"parentId"     => $row->parent_id,
+				"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
 			}
 		);
 	}
@@ -133,11 +148,19 @@ sub update {
 
 	my $rs = $tenant->update($values);
 	if ($rs) {
+		my %idnames;
 		my $response;
+
+		my $rs_idnames = $self->db->resultset("Tenant")->search( undef, { columns => [qw/id name/] } );
+		while ( my $row = $rs_idnames->next ) {
+			$idnames{ $row->id } = $row->name;
+		}
+
 		$response->{id}          = $rs->id;
 		$response->{name}        = $rs->name;
 		$response->{active}      = $rs->active;
 		$response->{parentId}    = $rs->parent_id;
+		$response->{parentName}  = ( defined $rs->parent_id ) ? $idnames{ $rs->parent_id } : undef;
 		$response->{lastUpdated} = $rs->last_updated;
 		&log( $self, "Updated Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "Tenant update was successful." );
@@ -187,11 +210,19 @@ sub create {
 	my $insert = $self->db->resultset('Tenant')->create($values);
 	my $rs = $insert->insert();
 	if ($rs) {
+		my %idnames;
 		my $response;
+
+		my $rs_idnames = $self->db->resultset("Tenant")->search( undef, { columns => [qw/id name/] } );
+		while ( my $row = $rs_idnames->next ) {
+			$idnames{ $row->id } = $row->name;
+		}
+
 		$response->{id}          	= $rs->id;
 		$response->{name}        	= $rs->name;
 		$response->{active}        	= $rs->active;
 		$response->{parentId}		= $rs->parent_id;
+		$response->{parentName}  	= ( defined $rs->parent_id ) ? $idnames{ $rs->parent_id } : undef;
 		$response->{lastUpdated} 	= $rs->last_updated;
 
 		&log( $self, "Created Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
