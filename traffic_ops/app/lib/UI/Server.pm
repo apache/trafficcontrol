@@ -131,7 +131,7 @@ sub getserverdata {
 		cg.name AS cachegroup,
 		pl.name AS phys_location,
 		sv.guid AS guid,
-		sv.rack AS _rack,
+		sv.rack AS rack,
 		tp.name AS type,
 		st.name AS status,
 		sv.offline_reason AS offline_reason,
