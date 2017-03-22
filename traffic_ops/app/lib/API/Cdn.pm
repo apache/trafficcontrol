@@ -421,40 +421,34 @@ sub get_traffic_monitor_config {
 		push( @{ $data_obj->{'deliveryServices'} }, $delivery_service );
 	}
 
-	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'cdn.name' => $cdn_name },
-		{
-			prefetch => [ 'type',      'status',      'cachegroup', 'profile',        'cdn' ],
-			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
-		}
-	);
+	my $rs_caches = $self->db->resultset('ServersForCdn')->search( {}, { bind => [$cdn_name] } );
 
 	while ( my $row = $rs_caches->next ) {
-		if ( $row->type->name eq "RASCAL" ) {
+		if ( $row->type eq "RASCAL" ) {
 			my $traffic_monitor;
 			$traffic_monitor->{'hostName'}   = $row->host_name;
 			$traffic_monitor->{'fqdn'}       = $row->host_name . "." . $row->domain_name;
-			$traffic_monitor->{'status'}     = $row->status->name;
-			$traffic_monitor->{'cachegroup'} = $row->cachegroup->name;
+			$traffic_monitor->{'status'}     = $row->status;
+			$traffic_monitor->{'cachegroup'} = $row->cachegroup;
 			$traffic_monitor->{'port'}       = int( $row->tcp_port );
 			$traffic_monitor->{'ip'}         = $row->ip_address;
 			$traffic_monitor->{'ip6'}        = $row->ip6_address;
-			$traffic_monitor->{'profile'}    = $row->profile->name;
+			$traffic_monitor->{'profile'}    = $row->profile;
 			push( @{ $data_obj->{'trafficMonitors'} }, $traffic_monitor );
 
 		}
-		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
+		elsif ( $row->type =~ m/^EDGE/ || $row->type =~ m/^MID/ ) {
 			my $traffic_server;
-			$traffic_server->{'cachegroup'}    = $row->cachegroup->name;
+			$traffic_server->{'cachegroup'}    = $row->cachegroup;
 			$traffic_server->{'hostName'}      = $row->host_name;
 			$traffic_server->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
 			$traffic_server->{'port'}          = int( $row->tcp_port );
 			$traffic_server->{'interfaceName'} = $row->interface_name;
-			$traffic_server->{'status'}        = $row->status->name;
+			$traffic_server->{'status'}        = $row->status;
 			$traffic_server->{'ip'}            = $row->ip_address;
 			$traffic_server->{'ip6'}           = ( $row->ip6_address || "" );
-			$traffic_server->{'profile'}       = $row->profile->name;
-			$traffic_server->{'type'}          = $row->type->name;
+			$traffic_server->{'profile'}       = $row->profile;
+			$traffic_server->{'type'}          = $row->type;
 			$traffic_server->{'hashId'}        = $row->xmpp_id;
 			push( @{ $data_obj->{'trafficServers'} }, $traffic_server );
 		}
