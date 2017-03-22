@@ -113,38 +113,40 @@ sub getserverdata {
 	my $dbh = $self->db->storage->dbh;
 	$orderby = $dbh->quote_identifier($orderby);
 	my $qry = 'SELECT
-cdn.name,
-sv.id,
-sv.host_name,
-sv.domain_name,
-sv.tcp_port,
-sv.https_port,
-sv.xmpp_id,
-sv.interface_name,
-sv.ip_address,
-sv.ip_netmask,
-sv.ip_gateway,
-sv.ip6_address,
-sv.ip6_gateway,
-sv.interface_mtu,
-cg.name,
-pl.name,
-sv.guid,
-sv.rack,
-tp.name,
-st.name,
-sv.offline_reason,
-pf.name,
-sv.mgmt_ip_address,
-sv.mgmt_ip_netmask,
-sv.mgmt_ip_gateway,
-sv.ilo_ip_address,
-sv.ilo_ip_netmask,
-sv.ilo_ip_gateway,
-sv.ilo_username,
-sv.router_host_name,
-sv.router_port_name,
-sv.last_updated
+cdn.name AS cdn_name,
+sv.id AS id,
+sv.host_name AS host_name,
+sv.domain_name AS domain_name,
+sv.tcp_port AS tcp_port,
+sv.https_port AS https_port,
+sv.xmpp_id AS xmpp_id,
+\'**********\' AS xmpp_passwd,
+sv.interface_name AS interface_name,
+sv.ip_address AS ip_address,
+sv.ip_netmask AS ip_netmask,
+sv.ip_gateway AS ip_gateway,
+sv.ip6_address AS ip6_address,
+sv.ip6_gateway AS ip6_gateway,
+sv.interface_mtu AS interface_mtu,
+cg.name AS cachegroup,
+pl.name AS phys_location,
+sv.guid AS guid,
+sv.rack AS _rack,
+tp.name AS type,
+st.name AS status,
+sv.offline_reason AS offline_reason,
+pf.name AS profile,
+sv.mgmt_ip_address AS mgmt_ip_address,
+sv.mgmt_ip_netmask AS mgmt_ip_netmask,
+sv.mgmt_ip_gateway AS mgmt_ip_gateway,
+sv.ilo_ip_address AS ilo_ip_address,
+sv.ilo_ip_netmask AS ilo_ip_netmask,
+sv.ilo_ip_gateway AS ilo_ip_gateway,
+sv.ilo_username AS ilo_username,
+\'**********\' AS ilo_password,
+sv.router_host_name AS router_host_name,
+sv.router_port_name AS router_port_name,
+sv.last_updated AS last_updated
 FROM server sv
 LEFT JOIN cdn cdn ON cdn.id = sv.cdn_id
 LEFT JOIN type tp ON tp.id = sv.type
@@ -156,112 +158,8 @@ ORDER BY sv.'.$orderby.';';
 	my $stmt = $dbh->prepare($qry);
 	$stmt->execute();
 
-	my $cdn_name;
-	my $sv_id;
-	my $sv_host_name;
-	my $sv_domain_name;
-	my $sv_tcp_port;
-	my $sv_https_port;
-	my $sv_xmpp_id;
-	my $sv_interface_name;
-	my $sv_ip_address;
-	my $sv_ip_netmask;
-	my $sv_ip_gateway;
-	my $sv_ip6_address;
-	my $sv_ip6_gateway;
-	my $sv_interface_mtu;
-	my $cg_name;
-	my $pl_name;
-	my $sv_guid;
-	my $sv_rack;
-	my $tp_name;
-	my $st_name;
-	my $sv_offline_reason;
-	my $pf_name;
-	my $sv_mgmt_ip_address;
-	my $sv_mgmt_ip_netmask;
-	my $sv_mgmt_ip_gateway;
-	my $sv_ilo_ip_address;
-	my $sv_ilo_ip_netmask;
-	my $sv_ilo_ip_gateway;
-	my $sv_ilo_username;
-	my $sv_router_host_name;
-	my $sv_router_port_name;
-	my $sv_last_updated;
-	$stmt->bind_columns(
-		\$cdn_name,
-		\$sv_id,
-		\$sv_host_name,
-		\$sv_domain_name,
-		\$sv_tcp_port,
-		\$sv_https_port,
-		\$sv_xmpp_id,
-		\$sv_interface_name,
-		\$sv_ip_address,
-		\$sv_ip_netmask,
-		\$sv_ip_gateway,
-		\$sv_ip6_address,
-		\$sv_ip6_gateway,
-		\$sv_interface_mtu,
-		\$cg_name,
-		\$pl_name,
-		\$sv_guid,
-		\$sv_rack,
-		\$tp_name,
-		\$st_name,
-		\$sv_offline_reason,
-		\$pf_name,
-		\$sv_mgmt_ip_address,
-		\$sv_mgmt_ip_netmask,
-		\$sv_mgmt_ip_gateway,
-		\$sv_ilo_ip_address,
-		\$sv_ilo_ip_netmask,
-		\$sv_ilo_ip_gateway,
-		\$sv_ilo_username,
-		\$sv_router_host_name,
-		\$sv_router_port_name,
-		\$sv_last_updated
-	);
-
-	while ( my $row = $stmt->fetch() ) {
-		push(
-			@data, {
-				"id"               => $sv_id,
-				"host_name"        => $sv_host_name,
-				"domain_name"      => $sv_domain_name,
-				"tcp_port"         => $sv_tcp_port,
-				"https_port"       => $sv_https_port,
-				"xmpp_id"          => $sv_xmpp_id,
-				"xmpp_passwd"      => "**********",
-				"interface_name"   => $sv_interface_name,
-				"ip_address"       => $sv_ip_address,
-				"ip_netmask"       => $sv_ip_netmask,
-				"ip_gateway"       => $sv_ip_gateway,
-				"ip6_address"      => $sv_ip6_address,
-				"ip6_gateway"      => $sv_ip6_gateway,
-				"interface_mtu"    => $sv_interface_mtu,
-				"cdn"              => $cdn_name,
-				"cachegroup"       => $cg_name,
-				"phys_location"    => $pl_name,
-				"guid"             => $sv_guid,
-				"rack"             => $sv_rack,
-				"type"             => $tp_name,
-				"status"           => $st_name,
-				"offline_reason"   => $sv_offline_reason,
-				"profile"          => $pf_name,
-				"mgmt_ip_address"  => $sv_mgmt_ip_address,
-				"mgmt_ip_netmask"  => $sv_mgmt_ip_netmask,
-				"mgmt_ip_gateway"  => $sv_mgmt_ip_gateway,
-				"ilo_ip_address"   => $sv_ilo_ip_address,
-				"ilo_ip_netmask"   => $sv_ilo_ip_netmask,
-				"ilo_ip_gateway"   => $sv_ilo_ip_gateway,
-				"ilo_username"     => $sv_ilo_username,
-				"ilo_password"     => "**********",
-				"router_host_name" => $sv_router_host_name,
-				"router_port_name" => $sv_router_port_name,
-				"last_updated"     => $sv_last_updated,
-			}
-		);
+	while ( my $row = $stmt->fetchrow_hashref() ) {
+		push( @data, $row );
 	}
 	return ( \@data );
 }
