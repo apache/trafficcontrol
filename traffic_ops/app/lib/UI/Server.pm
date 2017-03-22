@@ -113,48 +113,48 @@ sub getserverdata {
 	my $dbh = $self->db->storage->dbh;
 	$orderby = $dbh->quote_identifier($orderby);
 	my $qry = 'SELECT
-cdn.name AS cdn_name,
-sv.id AS id,
-sv.host_name AS host_name,
-sv.domain_name AS domain_name,
-sv.tcp_port AS tcp_port,
-sv.https_port AS https_port,
-sv.xmpp_id AS xmpp_id,
-\'**********\' AS xmpp_passwd,
-sv.interface_name AS interface_name,
-sv.ip_address AS ip_address,
-sv.ip_netmask AS ip_netmask,
-sv.ip_gateway AS ip_gateway,
-sv.ip6_address AS ip6_address,
-sv.ip6_gateway AS ip6_gateway,
-sv.interface_mtu AS interface_mtu,
-cg.name AS cachegroup,
-pl.name AS phys_location,
-sv.guid AS guid,
-sv.rack AS _rack,
-tp.name AS type,
-st.name AS status,
-sv.offline_reason AS offline_reason,
-pf.name AS profile,
-sv.mgmt_ip_address AS mgmt_ip_address,
-sv.mgmt_ip_netmask AS mgmt_ip_netmask,
-sv.mgmt_ip_gateway AS mgmt_ip_gateway,
-sv.ilo_ip_address AS ilo_ip_address,
-sv.ilo_ip_netmask AS ilo_ip_netmask,
-sv.ilo_ip_gateway AS ilo_ip_gateway,
-sv.ilo_username AS ilo_username,
-\'**********\' AS ilo_password,
-sv.router_host_name AS router_host_name,
-sv.router_port_name AS router_port_name,
-sv.last_updated AS last_updated
-FROM server sv
-LEFT JOIN cdn cdn ON cdn.id = sv.cdn_id
-LEFT JOIN type tp ON tp.id = sv.type
-LEFT JOIN status st ON st.id = sv.status
-LEFT JOIN cachegroup cg ON cg.id = sv.cachegroup
-LEFT JOIN profile pf ON pf.id = sv.profile
-LEFT JOIN phys_location pl ON pl.id = sv.phys_location
-ORDER BY sv.'.$orderby.';';
+		cdn.name AS cdn_name,
+		sv.id AS id,
+		sv.host_name AS host_name,
+		sv.domain_name AS domain_name,
+		sv.tcp_port AS tcp_port,
+		sv.https_port AS https_port,
+		sv.xmpp_id AS xmpp_id,
+		\'**********\' AS xmpp_passwd,
+		sv.interface_name AS interface_name,
+		sv.ip_address AS ip_address,
+		sv.ip_netmask AS ip_netmask,
+		sv.ip_gateway AS ip_gateway,
+		sv.ip6_address AS ip6_address,
+		sv.ip6_gateway AS ip6_gateway,
+		sv.interface_mtu AS interface_mtu,
+		cg.name AS cachegroup,
+		pl.name AS phys_location,
+		sv.guid AS guid,
+		sv.rack AS _rack,
+		tp.name AS type,
+		st.name AS status,
+		sv.offline_reason AS offline_reason,
+		pf.name AS profile,
+		sv.mgmt_ip_address AS mgmt_ip_address,
+		sv.mgmt_ip_netmask AS mgmt_ip_netmask,
+		sv.mgmt_ip_gateway AS mgmt_ip_gateway,
+		sv.ilo_ip_address AS ilo_ip_address,
+		sv.ilo_ip_netmask AS ilo_ip_netmask,
+		sv.ilo_ip_gateway AS ilo_ip_gateway,
+		sv.ilo_username AS ilo_username,
+		\'**********\' AS ilo_password,
+		sv.router_host_name AS router_host_name,
+		sv.router_port_name AS router_port_name,
+		sv.last_updated AS last_updated
+		FROM server sv
+		LEFT JOIN cdn cdn ON cdn.id = sv.cdn_id
+		LEFT JOIN type tp ON tp.id = sv.type
+		LEFT JOIN status st ON st.id = sv.status
+		LEFT JOIN cachegroup cg ON cg.id = sv.cachegroup
+		LEFT JOIN profile pf ON pf.id = sv.profile
+		LEFT JOIN phys_location pl ON pl.id = sv.phys_location
+		ORDER BY sv.'.$orderby.';';
 	my $stmt = $dbh->prepare($qry);
 	$stmt->execute();
 
