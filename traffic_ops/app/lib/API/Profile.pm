@@ -25,9 +25,12 @@ use JSON;
 
 sub index {
 	my $self = shift;
-	my @data;
 	my $orderby = $self->param('orderby') || "me.name";
 	my $parameter_id = $self->param('param');
+	my $cdn_id = $self->param('cdn');
+
+	my @data;
+	my %criteria;
 
 	if ( defined $parameter_id ) {
 		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ] }  );
@@ -45,7 +48,10 @@ sub index {
 			);
 		}
 	} else {
-		my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+		if ( defined $cdn_id ) {
+			$criteria{'cdn'} = $cdn_id;
+		}
+		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => $orderby } );
 		while ( my $row = $rs_data->next ) {
 			push(
 				@data, {
