@@ -20,15 +20,15 @@
 var TenantService = function(Restangular, messageModel) {
 
     this.getTenants = function(queryParams) {
-        return Restangular.all('tenant').getList(queryParams);
+        return Restangular.all('tenants').getList(queryParams);
     };
 
     this.getTenant = function(id) {
-        return Restangular.one("tenant", id).get();
+        return Restangular.one("tenants", id).get();
     };
 
     this.createTenant = function(tenant) {
-        return Restangular.service('tenant').post(tenant)
+        return Restangular.service('tenants').post(tenant)
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
@@ -52,7 +52,7 @@ var TenantService = function(Restangular, messageModel) {
     };
 
     this.deleteTenant = function(id) {
-        return Restangular.one("tenant", id).remove()
+        return Restangular.one("tenants", id).remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Tenant deleted' } ], true);
