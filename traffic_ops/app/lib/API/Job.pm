@@ -79,50 +79,42 @@ sub create {
 	my $self = shift;
 
 	my $ds_id      = $self->req->json->{dsId};
-	my $agent      = $self->req->json->{agent};
-	my $keyword    = $self->req->json->{keyword};
 	my $regex      = $self->req->json->{regex};
 	my $ttl        = $self->req->json->{ttl};
 	my $start_time = $self->req->json->{startTime};
-	my $asset_type = $self->req->json->{assetType};
 
-	if ( !&is_admin($self) && !&is_oper($self) ) {
+	my ( $is_valid, $result ) = $self->is_valid( { dsId => $ds_id, regex => $regex, startTime => $start_time, ttl => $ttl } );
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
 
-		# not admin or operations -- only an assigned user can purge
+	if ( !&is_oper($self) ) {
+
+		# if not ops or higher -- invalidate content (purge) requests can only be performed against assigned delivery services
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
-		my $tm_user_id = $tm_user->id;
+		my $tm_user_id = (defined($tm_user)) ? $tm_user->id : undef;
 
-		if ( defined($ds_id) ) {
+		# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
+		my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
+		my $count = $dbh->count();
 
-			# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
-			my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
-			my $count = $dbh->count();
-
-			if ( $count == 0 ) {
-			    $self->forbidden("Forbidden. Delivery service not assigned to user.");
-				return;
-			}
+		if ( $count == 0 ) {
+			return $self->forbidden("Forbidden. Delivery service not assigned to user.");
 		}
 	}
 
 	# Just pass "true" in the urgent key to make it urgent.
 	my $urgent = $self->req->json->{urgent};
 
-	my ( $is_valid, $result ) = $self->is_valid( { dsId => $ds_id, regex => $regex, startTime => $start_time, ttl => $ttl } );
-	if ($is_valid) {
-		my $new_id = $self->create_new_job( $ds_id, $regex, $start_time, $ttl, 'PURGE', $urgent );
-		if ($new_id) {
-			my $saved_job = $self->db->resultset("Job")->find( { id => $new_id } );
-			my $asset_url = $saved_job->asset_url;
-			&log( $self, "Invalidate content request submitted for " . $asset_url, "APICHANGE" );
-			return $self->success_message( "Invalidate content request submitted for: " . $asset_url . " (" . $saved_job->parameters . ")" );
-		}
-		else {
-			return $self->alert( { "Error creating invalidate content request" . $ds_id } );
-		}
+	my $new_id = $self->create_new_job( $ds_id, $regex, $start_time, $ttl, 'PURGE', $urgent );
+	if ($new_id) {
+		my $saved_job = $self->db->resultset("Job")->find( { id => $new_id } );
+		my $asset_url = $saved_job->asset_url;
+		&log( $self, "Invalidate content request submitted for " . $asset_url, "APICHANGE" );
+		return $self->success_message( "Invalidate content request submitted for: " . $asset_url . " (" . $saved_job->parameters . ")" );
 	}
 	else {
-		return $self->alert($result);
+		return $self->alert( { "Error creating invalidate content request" . $ds_id } );
 	}
 }
 
@@ -150,14 +142,15 @@ sub is_valid {
 			startTime => sub {
 				my $value  = shift;
 				my $params = shift;
-				if ( defined( $params->{'ttl'} ) ) {
+				if ( defined( $params->{'startTime'} ) ) {
 					return $self->is_valid_date_format($value);
 				}
 			},
+
 			startTime => sub {
 				my $value  = shift;
 				my $params = shift;
-				if ( defined( $params->{'ttl'} ) ) {
+				if ( defined( $params->{'startTime'} ) ) {
 					return $self->is_more_than_two_days($value);
 				}
 			},
