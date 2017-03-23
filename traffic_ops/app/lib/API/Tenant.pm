@@ -136,7 +136,7 @@ sub update {
 		my $response;
 		$response->{id}          = $rs->id;
 		$response->{name}        = $rs->name;
-		$response->{active}      = \$rs->active;
+		$response->{active}      = $rs->active;
 		$response->{parentId}    = $rs->parent_id;
 		$response->{lastUpdated} = $rs->last_updated;
 		&log( $self, "Updated Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
@@ -190,8 +190,8 @@ sub create {
 		my $response;
 		$response->{id}          	= $rs->id;
 		$response->{name}        	= $rs->name;
-		$response->{active}        	= \$rs->active;
-		$response->{parentId}           = $rs->parent_id;
+		$response->{active}        	= $rs->active;
+		$response->{parentId}		= $rs->parent_id;
 		$response->{lastUpdated} 	= $rs->last_updated;
 
 		&log( $self, "Created Tenant name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
