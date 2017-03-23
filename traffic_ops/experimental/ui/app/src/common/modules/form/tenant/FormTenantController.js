@@ -17,15 +17,21 @@
  * under the License.
  */
 
-var FormTenantController = function(tenant, $scope, formUtils, stringUtils, locationUtils) {
+var FormTenantController = function(tenant, $scope, formUtils, locationUtils, tenantService) {
 
-    $scope.tenant = angular.copy(tenant);
+    var getTenants = function() {
+        tenantService.getTenants()
+            .then(function(result) {
+                $scope.tenants = result;
+            });
+    };
 
-    $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 }
+    $scope.tenant = tenant;
+
+    $scope.falseTrue = [
+        { value: false, label: 'false' },
+        { value: true, label: 'true' }
     ];
-
-    $scope.labelize = stringUtils.labelize;
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -33,7 +39,12 @@ var FormTenantController = function(tenant, $scope, formUtils, stringUtils, loca
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getTenants();
+    };
+    init();
+
 };
 
-FormTenantController.$inject = ['tenant', '$scope', 'formUtils', 'stringUtils', 'locationUtils'];
+FormTenantController.$inject = ['tenant', '$scope', 'formUtils', 'locationUtils', 'tenantService'];
 module.exports = FormTenantController;

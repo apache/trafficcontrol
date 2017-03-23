@@ -239,6 +239,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/serverDeliveryServices').name,
         require('./common/modules/table/statuses').name,
         require('./common/modules/table/statusServers').name,
+        require('./common/modules/table/tenants').name,
         require('./common/modules/table/types').name,
         require('./common/modules/table/typeCacheGroups').name,
         require('./common/modules/table/typeDeliveryServices').name,
