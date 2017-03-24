@@ -31,12 +31,14 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // StartMonitorConfigManager runs the monitor config manager goroutine, and returns the threadsafe data which it sets.
 func StartMonitorConfigManager(
-	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
+	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
@@ -45,6 +47,8 @@ func StartMonitorConfigManager(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
+	toSession towrap.ITrafficOpsSession,
+	toData todata.TODataThreadsafe,
 ) threadsafe.TrafficMonitorConfigMap {
 	monitorConfig := threadsafe.NewTrafficMonitorConfigMap()
 	go monitorConfigListen(monitorConfig,
@@ -57,6 +61,8 @@ func StartMonitorConfigManager(
 		cachesChangeSubscriber,
 		cfg,
 		staticAppData,
+		toSession,
+		toData,
 	)
 	return monitorConfig
 }
@@ -133,7 +139,7 @@ func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cf
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
 func monitorConfigListen(
 	monitorConfigTS threadsafe.TrafficMonitorConfigMap,
-	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
+	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
@@ -142,6 +148,8 @@ func monitorConfigListen(
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
+	toSession towrap.ITrafficOpsSession,
+	toData todata.TODataThreadsafe,
 ) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -154,8 +162,12 @@ func monitorConfigListen(
 
 	logMissingHeartbeatParam := true
 
-	for monitorConfig := range monitorConfigPollChan {
+	for pollerMonitorCfg := range monitorConfigPollChan {
+		monitorConfig := pollerMonitorCfg.Cfg
+		cdn := pollerMonitorCfg.CDN
 		monitorConfigTS.Set(monitorConfig)
+		toData.Update(toSession, cdn)
+
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
 		peerURLs := map[string]poller.PollConfig{}

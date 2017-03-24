@@ -87,6 +87,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		cachesChanged,
 		cfg,
 		staticAppData,
+		toSession,
+		toData,
 	)
 
 	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)
