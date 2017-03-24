@@ -97,10 +97,15 @@ type FilePoller struct {
 	NotificationChannel chan int
 }
 
+type MonitorCfg struct {
+	CDN string
+	Cfg to.TrafficMonitorConfigMap
+}
+
 type MonitorConfigPoller struct {
 	Session          towrap.ITrafficOpsSession
 	SessionChannel   chan towrap.ITrafficOpsSession
-	ConfigChannel    chan to.TrafficMonitorConfigMap
+	ConfigChannel    chan MonitorCfg
 	OpsConfigChannel chan handler.OpsConfig
 	Interval         time.Duration
 	OpsConfig        handler.OpsConfig
@@ -112,7 +117,7 @@ func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 	return MonitorConfigPoller{
 		Interval:         interval,
 		SessionChannel:   make(chan towrap.ITrafficOpsSession),
-		ConfigChannel:    make(chan to.TrafficMonitorConfigMap),
+		ConfigChannel:    make(chan MonitorCfg),
 		OpsConfigChannel: make(chan handler.OpsConfig),
 	}
 }
@@ -144,7 +149,7 @@ func (p MonitorConfigPoller) Poll() {
 					log.Errorf("MonitorConfigPoller: %s\n %v\n", err, monitorConfig)
 				} else {
 					log.Debugln("MonitorConfigPoller: fetched monitorConfig")
-					p.ConfigChannel <- *monitorConfig
+					p.ConfigChannel <- MonitorCfg{CDN: p.OpsConfig.CdnName, Cfg: *monitorConfig}
 				}
 			} else {
 				log.Warnln("MonitorConfigPoller: skipping this iteration, Session is nil")
