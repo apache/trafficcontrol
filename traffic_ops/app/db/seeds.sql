@@ -42,6 +42,11 @@ insert into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb
 
 -- statuses
 insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('OFFLINE', 'Edge: Puts server in traffic router config file in this state, but traffic router will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('ONLINE', 'Edge: Puts server in traffic router config file in this state, and traffic router will always route traffic to it. Mid: Server will be included in parent.config files for its edges') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('REPORTED', 'Edge: Puts server in traffic router config file in this state, and traffic router will adhere to the health protocol. Mid: N/A for now') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('ADMIN_DOWN', 'Temporary down. Edge: XMPP client will send status OFFLINE to traffic router, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('CCR_IGNORE', 'Edge: traffic ops will not include caches in this state in traffic router config files. Mid: N/A for now') ON CONFLICT DO NOTHING;
 
 -- job agents
 insert into job_agent (name, description, active) values ('dummy','Description of Purge Agent','1') ON CONFLICT DO NOTHING;
