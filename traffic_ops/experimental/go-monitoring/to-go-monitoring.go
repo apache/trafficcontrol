@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie"
 	"github.com/lib/pq"
 	"net/http"
 	"strings"
@@ -40,6 +41,8 @@ type Args struct {
 	DBServer string
 	DBDB     string
 	DBSSL    bool
+	Auth     bool
+	TOSecret string
 }
 
 // getFlags parses and returns the command line arguments. The returned error
@@ -52,6 +55,8 @@ func getFlags() (Args, error) {
 	flag.StringVar(&args.DBServer, "server", "", "the database server IP or FQDN, without scheme")
 	flag.StringVar(&args.DBDB, "db", "", "the database name")
 	flag.BoolVar(&args.DBSSL, "ssl", true, "whether to require or disable SSL connecting to the database")
+	flag.StringVar(&args.TOSecret, "secret", "", "the Traffic Ops secret, used to authenticate mojolicious cookies")
+	flag.BoolVar(&args.Auth, "authenticate", true, "whether to authenticate requests, requiring valid Traffic Ops cookies")
 	flag.Parse()
 	if args.HTTPPort == "" {
 		return args, fmt.Errorf("missing port")
@@ -67,6 +72,9 @@ func getFlags() (Args, error) {
 	}
 	if args.DBDB == "" {
 		return args, fmt.Errorf("missing database")
+	}
+	if args.Auth && args.TOSecret == "" {
+		return args, fmt.Errorf("missing secret")
 	}
 	return args, nil
 }
@@ -116,12 +124,12 @@ type Profile struct {
 }
 
 type Monitoring struct {
-	TrafficServers   []Cache           `json:trafficServers`
-	TrafficMonitors  []Monitor         `json:trafficMonitors`
-	Cachegroups      []Cachegroup      `json:cacheGroups`
-	Profiles         []Profile         `json:profiles`
-	DeliveryServices []DeliveryService `json:deliveryServices`
-	Config           map[string]string `json:config`
+	TrafficServers   []Cache           `json:"trafficServers"`
+	TrafficMonitors  []Monitor         `json:"trafficMonitors"`
+	Cachegroups      []Cachegroup      `json:"cacheGroups"`
+	Profiles         []Profile         `json:"profiles"`
+	DeliveryServices []DeliveryService `json:"deliveryServices"`
+	Config           map[string]string `json:"config"`
 }
 
 type MonitoringResponse struct {
@@ -428,30 +436,60 @@ func getMonitoringJson(cdnName string, db *sql.DB) (*MonitoringResponse, error) 
 	return &resp, nil
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	handleErr := func(err error) {
+// authenticate attempts to authenticate the given request, looking for an auth cookie, using the auth settings in args. Returns nil if authentication succeeds, or a descriptive error if authentication fails (which should NOT be returned to clients, for security reasons).
+func authenticate(r *http.Request, args Args) error {
+	if !args.Auth {
+		return nil
+	}
+
+	cookie, err := r.Cookie(tocookie.Name)
+	if err != nil {
+		return fmt.Errorf("getting cookie: %v", err)
+	}
+	if cookie == nil {
+		return fmt.Errorf("no auth cookie")
+	}
+
+	if _, err := tocookie.Parse(args.TOSecret, cookie.Value); err != nil {
+		return fmt.Errorf("parsing cookie: %v", err)
+	}
+	return nil
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, args Args) {
+	start := time.Now()
+	defer func() {
+		now := time.Now()
+		fmt.Printf("%v %v served %v in %v\n", now, r.RemoteAddr, r.URL.Path, now.Sub(start))
+	}()
+
+	handleErr := func(err error, status int) {
 		fmt.Printf("%v %v error %v\n", time.Now(), r.RemoteAddr, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Internal Server Error")
+		w.WriteHeader(status)
+		fmt.Fprintf(w, http.StatusText(status))
+	}
+
+	if err := authenticate(r, args); err != nil {
+		handleErr(err, http.StatusUnauthorized)
+		return
 	}
 
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) < 5 {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "404 Not Found")
+		handleErr(fmt.Errorf("nonexistent path requested: '%v'", r.URL.Path), http.StatusNotFound)
 		return
 	}
 	cdnName := pathParts[4]
 
 	resp, err := getMonitoringJson(cdnName, db)
 	if err != nil {
-		handleErr(err)
+		handleErr(err, http.StatusInternalServerError)
 		return
 	}
 
 	respBts, err := json.Marshal(resp)
 	if err != nil {
-		handleErr(err)
+		handleErr(err, http.StatusInternalServerError)
 		return
 	}
 
@@ -480,7 +518,7 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		rootHandler(w, r, db)
+		rootHandler(w, r, db, args)
 	})
 
 	if err := http.ListenAndServe(":"+args.HTTPPort, nil); err != nil {
