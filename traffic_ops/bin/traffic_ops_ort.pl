@@ -319,10 +319,10 @@ sub usage {
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
 	print "\n\t[optional flags]:\n";
-	print "\t   dispersion=<time>\t=> wait a random number between 0 and <time> before starting. Default = 300.\n";
-	print "\t   login_dispersion=<time>\t=> wait a random number between 0 and <time> before login. Default = 0.\n";
-	print "\t   retries=<number>\t=> retry connection to Traffic Ops URL <number> times. Default = 3.\n";
-	print "\t   wait_for_parents=<0|1>\t=> do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
+	print "\t   dispersion=<time>        => wait a random number between 0 and <time> before starting. Default = 300.\n";
+	print "\t   login_dispersion=<time>  => wait a random number between 0 and <time> before login. Default = 0.\n";
+	print "\t   retries=<number>         => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
+	print "\t   wait_for_parents=<0|1>   => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1014,6 +1014,18 @@ sub check_syncds_state {
 		}
 	}
 	return ($syncds_update);
+}
+
+sub sleep_rand {
+	my $duration = int( rand(shift) );
+
+	( $log_level >> $WARN ) && print "WARN Sleeping for $duration seconds: ";
+
+	for ( my $i = $duration; $i > 0; $i-- ) {
+		( $log_level >> $WARN ) && print ".";
+		sleep 1;
+	}
+	( $log_level >> $WARN ) && print "\n";
 }
 
 sub sleep_timer {
