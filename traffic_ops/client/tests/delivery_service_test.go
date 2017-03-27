@@ -29,11 +29,7 @@ func TestDeliveryServices(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for DeliveryServices")
 
@@ -69,11 +65,7 @@ func TestDeliveryServicesUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for DeliveryServices")
 
@@ -90,11 +82,7 @@ func TestDeliveryService(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryService")
 
@@ -122,11 +110,7 @@ func TestDeliveryServiceUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryService")
 
@@ -143,11 +127,7 @@ func TestCreateDeliveryService(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request to create a DeliveryService")
 
@@ -170,11 +150,7 @@ func TestCreateDeliveryServiceUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request to create a DeliveryService")
 
@@ -191,11 +167,7 @@ func TestUpdateDeliveryService(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request to update a DeliveryService")
 
@@ -218,11 +190,7 @@ func TestUpdateDeliveryServiceUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request to update a DeliveryService")
 
@@ -239,11 +207,7 @@ func TestDeleteDeliveryService(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request to delete a DeliveryService")
 
@@ -266,11 +230,7 @@ func TestDeleteDeliveryServiceUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request to delete a DeliveryService")
 
@@ -287,11 +247,7 @@ func TestDeliveryServiceState(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceState")
 
@@ -319,11 +275,7 @@ func TestDeliveryServiceStateUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceState")
 
@@ -340,11 +292,7 @@ func TestDeliveryServiceHealth(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceHealth")
 
@@ -378,11 +326,7 @@ func TestDeliveryServiceHealthUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceHealth")
 
@@ -399,11 +343,7 @@ func TestDeliveryServiceCapacity(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceCapacity")
 
@@ -437,11 +377,7 @@ func TestDeliveryServiceCapacityUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceCapacity")
 
@@ -458,11 +394,7 @@ func TestDeliveryServiceRouting(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceRouting")
 
@@ -484,11 +416,7 @@ func TestDeliveryServiceRoutingUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceRouting")
 
@@ -505,11 +433,7 @@ func TestDeliveryServiceServer(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceServer")
 
@@ -543,11 +467,7 @@ func TestDeliveryServiceServerUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceServer")
 
@@ -564,11 +484,7 @@ func TestDeliveryServiceSSLKeysByID(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceSSLKeysByID")
 
@@ -596,11 +512,7 @@ func TestDeliveryServiceSSLKeysByIDUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceSSLKeysByID")
 
@@ -617,11 +529,7 @@ func TestDeliveryServiceSSLKeysByHostname(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceSSLKeysByHostname")
 
@@ -649,11 +557,7 @@ func TestDeliveryServiceSSLKeysByHostnameUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for a DeliveryServiceSSLKeysByHostname")
 

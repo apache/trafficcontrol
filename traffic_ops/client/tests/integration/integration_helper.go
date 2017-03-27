@@ -118,7 +118,7 @@ func Request(to traffic_ops.Session, method, path string, body []byte) (*http.Re
 		}
 	}
 
-	resp, err := to.UserAgent.Do(req)
+	resp, err := to.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}

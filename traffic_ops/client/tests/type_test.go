@@ -29,11 +29,7 @@ func TestTypes(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for Types")
 
@@ -75,11 +71,7 @@ func TestTypesUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for Types")
 
