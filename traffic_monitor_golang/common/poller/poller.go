@@ -110,6 +110,7 @@ type MonitorConfigPoller struct {
 	ConfigChannel    chan MonitorCfg
 	OpsConfigChannel chan handler.OpsConfig
 	Interval         time.Duration
+	IntervalChan     chan time.Duration
 	OpsConfig        handler.OpsConfig
 }
 
@@ -121,6 +122,7 @@ func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 		SessionChannel:   make(chan towrap.ITrafficOpsSession),
 		ConfigChannel:    make(chan MonitorCfg),
 		OpsConfigChannel: make(chan handler.OpsConfig),
+		IntervalChan:     make(chan time.Duration),
 	}
 }
 
@@ -143,6 +145,18 @@ func (p MonitorConfigPoller) Poll() {
 		case session := <-p.SessionChannel:
 			log.Infof("MonitorConfigPoller: received new session: %v\n", session)
 			p.Session = session
+		case i := <-p.IntervalChan:
+			if i == p.Interval {
+				continue
+			}
+			log.Infof("MonitorConfigPoller: received new interval: %v\n", i)
+			if i < 0 {
+				log.Errorf("MonitorConfigPoller: received negative interval: %v; ignoring\n", i)
+				continue
+			}
+			p.Interval = i
+			tick.Stop()
+			tick = time.NewTicker(p.Interval)
 		case <-tick.C:
 			if p.Session != nil && p.OpsConfig.CdnName != "" {
 				monitorConfig, err := p.Session.TrafficMonitorConfigMap(p.OpsConfig.CdnName)

@@ -84,6 +84,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel,
+		monitorConfigPoller.IntervalChan,
 		cachesChanged,
 		cfg,
 		staticAppData,
