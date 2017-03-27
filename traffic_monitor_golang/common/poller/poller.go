@@ -71,6 +71,7 @@ func NewHTTP(
 	counters fetcher.Counters,
 	fetchHandler handler.Handler,
 	noSleep bool,
+	userAgent string,
 ) HttpPoller {
 	var tickChan chan uint64
 	if tick {
@@ -84,9 +85,10 @@ func NewHTTP(
 			noSleep:  noSleep,
 		},
 		FetcherTemplate: fetcher.HttpFetcher{
-			Handler:  fetchHandler,
-			Client:   httpClient,
-			Counters: counters,
+			Handler:   fetchHandler,
+			Client:    httpClient,
+			Counters:  counters,
+			UserAgent: userAgent,
 		},
 	}
 }
