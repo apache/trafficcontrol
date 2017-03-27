@@ -36,6 +36,73 @@ import (
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
+type PollIntervals struct {
+	Health time.Duration
+	Peer   time.Duration
+	Stat   time.Duration
+	TO     time.Duration
+}
+
+// getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, stat, and TrafficOps poll intervals
+func getIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config, logMissingParams bool) (PollIntervals, error) {
+	intervals := PollIntervals{}
+	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
+	if !peerPollIntervalExists {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config missing 'peers.polling.interval', not setting config changes.\n")
+	}
+	peerPollIntervalInt, peerPollIntervalIsInt := peerPollIntervalI.(float64)
+	if !peerPollIntervalIsInt {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config 'peers.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", peerPollIntervalI, peerPollIntervalI)
+	}
+	intervals.Peer = trafficOpsPeerPollIntervalToDuration(int(peerPollIntervalInt))
+
+	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["health.polling.interval"]
+	if !statPollIntervalExists {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
+	}
+	statPollIntervalInt, statPollIntervalIsInt := statPollIntervalI.(float64)
+	if !statPollIntervalIsInt {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config 'health.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", statPollIntervalI, statPollIntervalI)
+	}
+	intervals.Stat = trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
+
+	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
+	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
+	if !healthPollIntervalExists {
+		if logMissingParams {
+			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
+		}
+		healthPollIntervalInt = statPollIntervalInt
+	} else if !healthPollIntervalIsInt {
+		log.Warnf("Traffic Ops Monitor config 'heartbeat.polling.interval' value '%v' type %T is not an integer, using health for heartbeat\n", statPollIntervalI, statPollIntervalI)
+		healthPollIntervalInt = statPollIntervalInt
+	}
+	intervals.Health = trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
+
+	toPollIntervalI, toPollIntervalExists := monitorConfig.Config["tm.polling.interval"]
+	toPollIntervalInt, toPollIntervalIsInt := toPollIntervalI.(float64)
+	intervals.TO = cfg.MonitorConfigPollingInterval
+	if !toPollIntervalExists {
+		if logMissingParams {
+			log.Warnf("Traffic Ops Monitor config missing 'tm.polling.interval', using config value '%v'\n", cfg.MonitorConfigPollingInterval)
+		}
+	} else if !toPollIntervalIsInt {
+		log.Warnf("Traffic Ops Monitor config 'tm.polling.interval' value '%v' type %T is not an integer, using config value '%v'\n", toPollIntervalI, toPollIntervalI, cfg.MonitorConfigPollingInterval)
+	} else {
+		intervals.TO = trafficOpsTOPollIntervalToDuration(int(toPollIntervalInt))
+	}
+
+	multiplyByRatio := func(i time.Duration) time.Duration {
+		return time.Duration(float64(i) * PollIntervalRatio)
+	}
+
+	intervals.TO = multiplyByRatio(intervals.TO)
+	intervals.Health = multiplyByRatio(intervals.Health)
+	intervals.Peer = multiplyByRatio(intervals.Peer)
+	intervals.Stat = multiplyByRatio(intervals.Stat)
+	return intervals, nil
+}
+
 // StartMonitorConfigManager runs the monitor config manager goroutine, and returns the threadsafe data which it sets.
 func StartMonitorConfigManager(
 	monitorConfigPollChan <-chan poller.MonitorCfg,
@@ -44,6 +111,7 @@ func StartMonitorConfigManager(
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
+	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
@@ -58,6 +126,7 @@ func StartMonitorConfigManager(
 		statURLSubscriber,
 		healthURLSubscriber,
 		peerURLSubscriber,
+		toIntervalSubscriber,
 		cachesChangeSubscriber,
 		cfg,
 		staticAppData,
@@ -91,49 +160,14 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 	return time.Duration(t) * time.Millisecond
 }
 
+// trafficOpsTOPollIntervalToDuration takes the int from Traffic Ops, which is in milliseconds, and returns a time.Duration
+// TODO change Traffic Ops Client API to a time.Duration
+func trafficOpsTOPollIntervalToDuration(t int) time.Duration {
+	return time.Duration(t) * time.Millisecond
+}
+
 // PollIntervalRatio is the ratio of the configuration interval to poll. The configured intervals are 'target' times, so we actually poll at some small fraction less, in attempt to make the actual poll marginally less than the target.
 const PollIntervalRatio = float64(0.97) // TODO make config?
-
-// getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
-func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config, logMissingHeartbeatParam bool) (time.Duration, time.Duration, time.Duration, error) {
-	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
-	if !peerPollIntervalExists {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'peers.polling.interval', not setting config changes.\n")
-	}
-	peerPollIntervalInt, peerPollIntervalIsInt := peerPollIntervalI.(float64)
-	if !peerPollIntervalIsInt {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'peers.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", peerPollIntervalI, peerPollIntervalI)
-	}
-	peerPollInterval := trafficOpsPeerPollIntervalToDuration(int(peerPollIntervalInt))
-
-	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["health.polling.interval"]
-	if !statPollIntervalExists {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
-	}
-	statPollIntervalInt, statPollIntervalIsInt := statPollIntervalI.(float64)
-	if !statPollIntervalIsInt {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'health.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", statPollIntervalI, statPollIntervalI)
-	}
-	statPollInterval := trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
-
-	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
-	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
-	if !healthPollIntervalExists {
-		if logMissingHeartbeatParam {
-			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
-		}
-		healthPollIntervalInt = statPollIntervalInt
-	} else if !healthPollIntervalIsInt {
-		log.Warnf("Traffic Ops Monitor config 'heartbeat.polling.interval' value '%v' type %T is not an integer, using health for heartbeat\n", statPollIntervalI, statPollIntervalI)
-		healthPollIntervalInt = statPollIntervalInt
-	}
-	healthPollInterval := trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
-
-	healthPollInterval = time.Duration(float64(healthPollInterval) * PollIntervalRatio)
-	peerPollInterval = time.Duration(float64(peerPollInterval) * PollIntervalRatio)
-	statPollInterval = time.Duration(float64(statPollInterval) * PollIntervalRatio)
-	return healthPollInterval, peerPollInterval, statPollInterval, nil
-}
 
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
@@ -145,6 +179,7 @@ func monitorConfigListen(
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
+	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
 	staticAppData config.StaticAppData,
@@ -160,7 +195,7 @@ func monitorConfigListen(
 		os.Exit(1) // The Monitor can't run without a MonitorConfigManager
 	}()
 
-	logMissingHeartbeatParam := true
+	logMissingIntervalParams := true
 
 	for pollerMonitorCfg := range monitorConfigPollChan {
 		monitorConfig := pollerMonitorCfg.Cfg
@@ -173,9 +208,8 @@ func monitorConfigListen(
 		peerURLs := map[string]poller.PollConfig{}
 		caches := map[string]string{}
 
-		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg, logMissingHeartbeatParam)
-		logMissingHeartbeatParam = false // only log the heartbeat parameter missing once
-
+		intervals, err := getIntervals(monitorConfig, cfg, logMissingIntervalParams)
+		logMissingIntervalParams = false // only log missing parameters once
 		if err != nil {
 			log.Errorf("monitor config error getting polling intervals, can't poll: %v", err)
 			continue
@@ -233,10 +267,11 @@ func monitorConfigListen(
 			peerSet[enum.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: statPollInterval}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: healthPollInterval}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: peerPollInterval}
-		peerStates.SetTimeout((peerPollInterval + cfg.HTTPTimeout) * 2)
+		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat}
+		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health}
+		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer}
+		toIntervalSubscriber <- intervals.TO
+		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)
 
 		for cacheName := range localStates.GetCaches() {
