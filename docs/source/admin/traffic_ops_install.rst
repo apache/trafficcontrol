@@ -429,7 +429,7 @@ Self-signed Certificate (Development)
 Certificate from Certificate Authority (Production)
 ===================================================
 
-.. Note:: You will need to know the appropriate answers below when generating the certificate request file `trafficopss.csr` below.
+.. Note:: You will need to know the appropriate answers when generating the certificate request file `trafficopss.csr` below.
 
     Example Procedure::
 
