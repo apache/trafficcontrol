@@ -15,10 +15,13 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE server ADD COLUMN reval_pending boolean NOT NULL DEFAULT false;
+ALTER TABLE server DROP COLUMN IF EXISTS reval_pendings;
+delete from profile_parameter where parameter = (select id from parameter where name = 'use_reval_pending');
+delete from parameter where name = 'use_reval_pending';
+ALTER TABLE server ADD COLUMN IF NOT EXISTS reval_pending boolean NOT NULL DEFAULT false;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE server DROP COLUMN reval_pending;
+ALTER TABLE server DROP COLUMN IF EXISTS reval_pending;
 delete from profile_parameter where parameter = (select id from parameter where name = 'use_reval_pending');	
 delete from parameter where name = 'use_reval_pending';
