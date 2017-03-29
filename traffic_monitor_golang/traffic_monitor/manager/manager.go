@@ -21,25 +21,29 @@ package manager
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
+
+	"github.com/davecheney/gmx"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
+	simplepoller "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
-	"github.com/davecheney/gmx"
 )
 
 //
 // Start starts the poller and handler goroutines
 //
-func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData) {
+func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
 	counters := fetcher.Counters{
 		Success: gmx.NewCounter("fetchSuccess"),
@@ -154,7 +158,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		cfg,
 	)
 
+	if err := startMonitorConfigFilePoller(trafficMonitorConfigFileName); err != nil {
+		return fmt.Errorf("starting monitor config file poller: %v", err)
+	}
+
 	healthTickListener(cacheHealthPoller.TickChan, healthIteration)
+	return nil
 }
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
@@ -162,4 +171,29 @@ func healthTickListener(cacheHealthTick <-chan uint64, healthIteration threadsaf
 	for i := range cacheHealthTick {
 		healthIteration.Set(i)
 	}
+}
+
+func startMonitorConfigFilePoller(filename string) error {
+	onChange := func(bytes []byte, err error) {
+		if err != nil {
+			log.Errorf("monitor config file poll, polling file '%v': %v", filename, err)
+			return
+		}
+
+		cfg, err := config.LoadBytes(bytes)
+		if err != nil {
+			log.Errorf("monitor config file poll, loading bytes '%v' from '%v': %v", string(bytes), filename, err)
+			return
+		}
+
+		eventW, errW, warnW, infoW, debugW, err := config.GetLogWriters(cfg)
+		if err != nil {
+			log.Errorf("monitor config file poll, getting log writers '%v': %v", filename, err)
+			return
+		}
+		log.Init(eventW, errW, warnW, infoW, debugW)
+	}
+
+	_, err := simplepoller.File(filename, onChange)
+	return err
 }

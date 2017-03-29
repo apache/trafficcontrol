@@ -20,14 +20,11 @@ package poller
  */
 
 import (
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
 	"sync/atomic"
 	"time"
-
-	"gopkg.in/fsnotify.v1"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
@@ -91,12 +88,6 @@ func NewHTTP(
 			UserAgent: userAgent,
 		},
 	}
-}
-
-type FilePoller struct {
-	File                string
-	ResultChannel       chan interface{}
-	NotificationChannel chan int
 }
 
 type MonitorCfg struct {
@@ -331,38 +322,6 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 		}
 		ThreadSleep(p.Next.Sub(time.Now()))
 		go poll(p)
-	}
-}
-
-func (p FilePoller) Poll() {
-	// initial read before watching for changes
-	contents, err := ioutil.ReadFile(p.File)
-
-	if err != nil {
-		log.Errorf("reading %s: %s\n", p.File, err)
-		os.Exit(1) // TODO: this is a little drastic -jse
-	} else {
-		p.ResultChannel <- contents
-	}
-
-	watcher, _ := fsnotify.NewWatcher()
-	watcher.Add(p.File)
-
-	for {
-		select {
-		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				contents, err := ioutil.ReadFile(p.File)
-
-				if err != nil {
-					log.Errorf("opening %s: %s\n", p.File, err)
-				} else {
-					p.ResultChannel <- contents
-				}
-			}
-		case err := <-watcher.Errors:
-			log.Errorln(time.Now(), "error:", err)
-		}
 	}
 }
 

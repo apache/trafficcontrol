@@ -22,8 +22,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"runtime"
 
@@ -39,42 +37,6 @@ var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevi
 
 // BuildTimestamp is the time the app was built. The app SHOULD always be built with this set via the `-X` flag.
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
-
-func getLogWriter(location string) (io.WriteCloser, error) {
-	switch location {
-	case config.LogLocationStdout:
-		return log.NopCloser(os.Stdout), nil
-	case config.LogLocationStderr:
-		return log.NopCloser(os.Stderr), nil
-	case config.LogLocationNull:
-		return log.NopCloser(ioutil.Discard), nil
-	default:
-		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	}
-}
-func getLogWriters(eventLoc, errLoc, warnLoc, infoLoc, debugLoc string) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
-	eventW, err := getLogWriter(eventLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
-	}
-	errW, err := getLogWriter(errLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
-	}
-	warnW, err := getLogWriter(warnLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
-	}
-	infoW, err := getLogWriter(infoLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
-	}
-	debugW, err := getLogWriter(debugLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
-	}
-	return eventW, errW, warnW, infoW, debugW, nil
-}
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -101,7 +63,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	eventW, errW, warnW, infoW, debugW, err := getLogWriters(cfg.LogLocationEvent, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug)
+	eventW, errW, warnW, infoW, debugW, err := config.GetLogWriters(cfg)
 	if err != nil {
 		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
 		os.Exit(1)
@@ -110,5 +72,9 @@ func main() {
 
 	log.Infof("Starting with config %+v\n", cfg)
 
-	manager.Start(*opsConfigFile, cfg, staticData)
+	err = manager.Start(*opsConfigFile, cfg, staticData, *configFileName)
+	if err != nil {
+		fmt.Printf("Error starting service: failed to start managers: %v\n", err)
+		os.Exit(1)
+	}
 }
