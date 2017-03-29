@@ -40,19 +40,19 @@ var GitRevision = "No Git Revision Specified. Please build with '-X main.GitRevi
 // BuildTimestamp is the time the app was built. The app SHOULD always be built with this set via the `-X` flag.
 var BuildTimestamp = "No Build Timestamp Specified. Please build with '-X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
 
-func getLogWriter(location string) (io.Writer, error) {
+func getLogWriter(location string) (io.WriteCloser, error) {
 	switch location {
 	case config.LogLocationStdout:
-		return os.Stdout, nil
+		return log.NopCloser(os.Stdout), nil
 	case config.LogLocationStderr:
-		return os.Stderr, nil
+		return log.NopCloser(os.Stderr), nil
 	case config.LogLocationNull:
-		return ioutil.Discard, nil
+		return log.NopCloser(ioutil.Discard), nil
 	default:
 		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	}
 }
-func getLogWriters(eventLoc, errLoc, warnLoc, infoLoc, debugLoc string) (io.Writer, io.Writer, io.Writer, io.Writer, io.Writer, error) {
+func getLogWriters(eventLoc, errLoc, warnLoc, infoLoc, debugLoc string) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
 	eventW, err := getLogWriter(eventLoc)
 	if err != nil {
 		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
