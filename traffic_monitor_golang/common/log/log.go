@@ -28,19 +28,37 @@ import (
 )
 
 var (
-	Debug   *log.Logger
-	Info    *log.Logger
-	Warning *log.Logger
-	Error   *log.Logger
-	Event   *log.Logger
+	Debug       *log.Logger
+	Info        *log.Logger
+	Warning     *log.Logger
+	Error       *log.Logger
+	Event       *log.Logger
+	debugCloser io.Closer
+	infoCloser  io.Closer
+	warnCloser  io.Closer
+	errCloser   io.Closer
+	eventCloser io.Closer
 )
 
-func Init(eventW, errW, warnW, infoW, debugW io.Writer) {
-	Debug = log.New(debugW, "DEBUG: ", log.Lshortfile)
-	Info = log.New(infoW, "INFO: ", log.Lshortfile)
-	Warning = log.New(warnW, "WARNING: ", log.Lshortfile)
-	Error = log.New(errW, "ERROR: ", log.Lshortfile)
-	Event = log.New(eventW, "", 0)
+func initLogger(logger **log.Logger, oldLogCloser *io.Closer, newLogWriter io.WriteCloser, logPrefix string, logFlags int) {
+	if *logger != nil {
+		(*logger).SetOutput(newLogWriter)
+	} else {
+		*logger = log.New(newLogWriter, logPrefix, logFlags)
+	}
+	if *oldLogCloser != nil {
+		(*oldLogCloser).Close()
+	}
+	*oldLogCloser = newLogWriter
+}
+
+// Init initailizes the logs with the given io.WriteClosers. If `Init` was previously called, existing loggers are Closed. If you have loggers which are not Closers or which must not be Closed, wrap them with `log.NopCloser`.
+func Init(eventW, errW, warnW, infoW, debugW io.WriteCloser) {
+	initLogger(&Debug, &debugCloser, debugW, "DEBUG: ", log.Lshortfile)
+	initLogger(&Info, &infoCloser, infoW, "INFO: ", log.Lshortfile)
+	initLogger(&Warning, &warnCloser, warnW, "WARNING: ", log.Lshortfile)
+	initLogger(&Error, &errCloser, errW, "ERROR: ", log.Lshortfile)
+	initLogger(&Event, &eventCloser, eventW, "", 0)
 }
 
 const timeFormat = time.RFC3339Nano
@@ -109,4 +127,14 @@ func Writef(w io.Writer, b []byte, contextFormat string, v ...interface{}) {
 		Errorf(contextFormat, v...)
 		Errorf(": %v", err)
 	}
+}
+
+type nopCloser struct {
+	io.Writer
+}
+
+func (nopCloser) Close() error { return nil }
+
+func NopCloser(w io.Writer) io.WriteCloser {
+	return nopCloser{w}
 }
