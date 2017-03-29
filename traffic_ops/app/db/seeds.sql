@@ -27,6 +27,7 @@ insert into role (id, name, description, priv_level) values (8, 'steering', 'Rol
 insert into type (name, description, use_in_table) values ('ANY_MAP', 'No Content Routing - arbitrary remap at the edge, no Traffic Router config', 'deliveryservice') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('ORG_LOC', 'Origin Logical Site', 'cachegroup') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('STEERING', 'Steering Delivery Service', 'deliveryservice') ON CONFLICT DO NOTHING;
+insert into type (name, description, use_in_table) values ('CLIENT_STEERING', 'Client-Controlled Steering Delivery Service', 'deliveryservice') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('STEERING_REGEXP', 'Steering target filter regular expression', 'regex') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension') ON CONFLICT DO NOTHING;
 insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension') ON CONFLICT DO NOTHING;
@@ -41,6 +42,11 @@ insert into type (name, description, use_in_table) values ('TRAFFIC_PORTAL', 'tr
 insert into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb server', 'server') ON CONFLICT DO NOTHING;
 
 -- statuses
+insert into status (name, description) values ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('ONLINE', 'Server is online.') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('REPORTED', 'Server is online and reporeted in the health protocol.') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT DO NOTHING;
+insert into status (name, description) values ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT DO NOTHING;
 insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT DO NOTHING;
 
 -- job agents
