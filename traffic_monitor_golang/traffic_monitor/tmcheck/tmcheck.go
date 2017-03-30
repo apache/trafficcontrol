@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
@@ -40,6 +41,7 @@ const RequestTimeout = time.Second * time.Duration(30)
 const TrafficMonitorCRStatesPath = "/publish/CrStates"
 const TrafficMonitorDSStatsPath = "/publish/DsStats"
 const TrafficMonitorConfigDocPath = "/publish/ConfigDoc"
+const TrafficMonitorStatsPath = "/publish/Stats"
 
 func getClient() *http.Client {
 	return &http.Client{
@@ -89,7 +91,7 @@ func GetCRStates(uri string) (*peer.Crstates, error) {
 	return &states, nil
 }
 
-// GetCRStates gets the CRStates from the given Traffic Monitor.
+// GetDSStats gets the DSStats from the given Traffic Monitor.
 func GetDSStats(uri string) (*dsdata.StatsOld, error) {
 	resp, err := getClient().Get(uri)
 	if err != nil {
@@ -105,6 +107,24 @@ func GetDSStats(uri string) (*dsdata.StatsOld, error) {
 		return nil, fmt.Errorf("unmarshalling: %v", err)
 	}
 	return &dsStats, nil
+}
+
+// GetStats gets the stats from the given Traffic Monitor.
+func GetStats(uri string) (*datareq.Stats, error) {
+	resp, err := getClient().Get(uri)
+	if err != nil {
+		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
+	}
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
+	}
+
+	stats := datareq.JSONStats{}
+	if err := json.Unmarshal(respBytes, &stats); err != nil {
+		return nil, fmt.Errorf("unmarshalling: %v", err)
+	}
+	return &stats.Stats, nil
 }
 
 type ValidatorFunc func(
