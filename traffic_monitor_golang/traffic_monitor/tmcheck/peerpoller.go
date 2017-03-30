@@ -20,44 +20,21 @@
 package tmcheck
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-	"io/ioutil"
 	"time"
 )
 
 const PeerPollMax = time.Duration(10) * time.Second
 
-const TrafficMonitorStatsPath = "/publish/Stats"
-
-// TrafficMonitorStatsJSON represents the JSON returned by Traffic Monitor's Stats endpoint. This currently only contains the Oldest Polled Peer Time member, as needed by this library.
-type TrafficMonitorStatsJSON struct {
-	Stats TrafficMonitorStats `json:"stats"`
-}
-
-// TrafficMonitorStats represents the internal JSON object returned by Traffic Monitor's Stats endpoint. This currently only contains the Oldest Polled Peer Time member, as needed by this library.
-type TrafficMonitorStats struct {
-	OldestPolledPeerTime int `json:"Oldest Polled Peer Time (ms)"`
-}
-
 func GetOldestPolledPeerTime(uri string) (time.Duration, error) {
-	resp, err := getClient().Get(uri + TrafficMonitorStatsPath)
+	stats, err := GetStats(uri + TrafficMonitorStatsPath)
 	if err != nil {
-		return time.Duration(0), fmt.Errorf("reading reply from %v: %v\n", uri, err)
-	}
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return time.Duration(0), fmt.Errorf("reading reply from %v: %v\n", uri, err)
+		return time.Duration(0), fmt.Errorf("getting stats: %v", err)
 	}
 
-	stats := TrafficMonitorStatsJSON{}
-	if err := json.Unmarshal(respBytes, &stats); err != nil {
-		return time.Duration(0), fmt.Errorf("unmarshalling: %v", err)
-	}
-
-	oldestPolledPeerTime := time.Duration(stats.Stats.OldestPolledPeerTime) * time.Millisecond
+	oldestPolledPeerTime := time.Duration(stats.OldestPolledPeerMs) * time.Millisecond
 
 	return oldestPolledPeerTime, nil
 }
