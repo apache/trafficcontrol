@@ -157,8 +157,9 @@ func main() {
 
 	crStatesOfflineLogs := startValidator(tmcheck.AllMonitorsCRStatesOfflineValidator, toClient, *interval, *includeOffline, *grace)
 	peerPollerLogs := startValidator(tmcheck.PeerPollersAllValidator, toClient, *interval, *includeOffline, *grace)
+	dsStatsLogs := startValidator(tmcheck.AllMonitorsDSStatsValidator, toClient, *interval, *includeOffline, *grace)
 
-	if err := serve(*toURI, crStatesOfflineLogs, peerPollerLogs); err != nil {
+	if err := serve(*toURI, crStatesOfflineLogs, peerPollerLogs, dsStatsLogs); err != nil {
 		fmt.Printf("Serve error: %v\n", err)
 	}
 }
@@ -198,7 +199,7 @@ func printLogs(logs Logs, w io.Writer) {
 	fmt.Fprintf(w, `</table>`)
 }
 
-func serve(toURI string, crStatesOfflineLogs Logs, peerPollerLogs Logs) error {
+func serve(toURI string, crStatesOfflineLogs Logs, peerPollerLogs Logs, dsStatsLogs Logs) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Content-Type", "text/html")
@@ -212,13 +213,19 @@ func serve(toURI string, crStatesOfflineLogs Logs, peerPollerLogs Logs) error {
 		fmt.Fprintf(w, `<h1>Traffic Monitor Validator</h1>`)
 
 		fmt.Fprintf(w, `<p>%s`, toURI)
+		fmt.Fprintf(w, `<p>%s`, time.Now())
 
 		fmt.Fprintf(w, `<h2>CRStates Offline</h2>`)
+		fmt.Fprintf(w, `<h3>validates all OFFLINE and ADMIN_DOWN caches in the CRConfig are Unavailable</h3>`)
 		printLogs(crStatesOfflineLogs, w)
 
 		fmt.Fprintf(w, `<h2>Peer Poller</h2>`)
+		fmt.Fprintf(w, `<h3>validates all peers in the CRConfig have been polled within the last %v</h3>`, tmcheck.PeerPollMax)
 		printLogs(peerPollerLogs, w)
 
+		fmt.Fprintf(w, `<h2>Delivery Services</h2>`)
+		fmt.Fprintf(w, `<h3>validates all Delivery Services in the CRConfig exist in DsStats</h3>`)
+		printLogs(dsStatsLogs, w)
 	})
 	return http.ListenAndServe(":80", nil)
 }
