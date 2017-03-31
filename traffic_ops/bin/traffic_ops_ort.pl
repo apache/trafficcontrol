@@ -1739,7 +1739,7 @@ sub get_cfg_file_list {
 			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
 			delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
 		}
-		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
+		foreach my $cfg_file ( sort keys %{ $ort_ref->{'config_files'} } ) {
 			my $fname_on_disk = &get_filename_on_disk($cfg_file);
 			( $log_level >> $INFO )
 				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
