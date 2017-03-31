@@ -1735,9 +1735,8 @@ sub get_cfg_file_list {
 		}
 	}
 	else {
-		printf( "INFO Reval in use status: $reval_in_use \n" );
 		if ( $reval_in_use == 1 ) {
-			printf( "INFO Instant Invalidate is in use.  Skipping regex_revalidate.config. \n" );
+			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
 			delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
 		}
 		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
