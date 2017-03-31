@@ -1690,7 +1690,7 @@ sub get_cfg_file_list {
 
 	if ($result eq '404') {
 		$api_in_use = 0;
-		( $log_level >> $INFO ) && printf("INFO Traffic Ops version does not support config files API. Reverting to UI route.\n");
+		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Reverting to UI route.\n");
 		$uri = "/ort/$host_name/ort1";
 		$result = &lwp_get($uri);
 	}
