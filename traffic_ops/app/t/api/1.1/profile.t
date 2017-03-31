@@ -39,7 +39,7 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.1/profiles.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+$t->get_ok("/api/1.1/profiles.json?orderby=name")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/0/name", "CCR1" )->json_is( "/response/0/description", "ccr description" )
 	->json_is( "/response/1/name", "CCR2" )->json_is( "/response/1/description", "ccr description" )
 	->json_is( "/response/2/name", "EDGE1" )->json_is( "/response/2/description", "edge description" )
