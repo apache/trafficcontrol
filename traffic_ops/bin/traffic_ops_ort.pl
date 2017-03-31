@@ -886,70 +886,35 @@ sub check_syncds_state {
 					exit 1;
 				}
 			}
-			if ( defined($parent_reval_pending) ) {
-				if ( ( $parent_pending == 1 || $parent_reval_pending == 1 ) && $wait_for_parents == 1 ) {
-					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
-					if ( $script_mode == $SYNCDS ) {
-						if ( $dispersion > 0 ) {
-							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							( $dispersion > 0 ) && &sleep_timer($dispersion);
-						}
-	
-						$upd_ref = &lwp_get($uri);
-						if ( $upd_ref =~ m/^\d{3}$/ ) {
-							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-							exit 1;
-						}
-						$upd_json = decode_json($upd_ref);
-						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-						if ( !defined($parent_pending) ) {
-							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
-						}
-						if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
-							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-							exit 1;
-	
-						}
-						else {
-							( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						}
+			if ( $parent_pending == 1 && $wait_for_parents == 1 && $reval_in_use == 0) {
+				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
+				if ( $script_mode == $SYNCDS ) {
+					if ( $dispersion > 0 ) {
+						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						( $dispersion > 0 ) && &sleep_timer($dispersion);
 					}
-				}			
-				else {
-					( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
+					$upd_ref = &lwp_get($uri);
+					if ( $upd_ref =~ m/^\d{3}$/ ) {
+						( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
+						exit 1;
+					}
+					$upd_json = decode_json($upd_ref);
+					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+					if ( !defined($parent_pending) ) {
+						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
+					}
+					if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
+						( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+						exit 1;
+
+					}
+					else {
+						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
+					}
 				}
-			}
+			}			
 			else {
-				if ( $parent_pending == 1 && $wait_for_parents == 1 ) {
-					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
-					if ( $script_mode == $SYNCDS ) {
-						if ( $dispersion > 0 ) {
-							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							( $dispersion > 0 ) && &sleep_timer($dispersion);
-						}
-						$upd_ref = &lwp_get($uri);
-						if ( $upd_ref =~ m/^\d{3}$/ ) {
-							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-							exit 1;
-						}
-						$upd_json = decode_json($upd_ref);
-						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-						if ( !defined($parent_pending) ) {
-							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
-						}
-						if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
-							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-							exit 1;
-	
-						}
-						else {
-							( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						}
-					}
-				}			
-				else {
-					( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
-				}
+				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
@@ -1770,6 +1735,11 @@ sub get_cfg_file_list {
 		}
 	}
 	else {
+		printf( "INFO Reval in use status: $reval_in_use \n" );
+		if ( $reval_in_use == 1 ) {
+			printf( "INFO Instant Invalidate is in use.  Skipping regex_revalidate.config. \n" );
+			delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
+		}
 		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
 			my $fname_on_disk = &get_filename_on_disk($cfg_file);
 			( $log_level >> $INFO )
