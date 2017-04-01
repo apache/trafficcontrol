@@ -126,7 +126,7 @@ sub create {
 		return $self->alert( "a cdn with domain " . $params->{domainName} . " already exists." );
 	}
 
-	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	#setting tenant_id to the user's tenant if tenant is not set.
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
 
 	my $values = {
@@ -189,7 +189,7 @@ sub update {
 		return $self->alert( "a cdn with domain name " . $params->{domainName} . " already exists." );
 	}
 
-	#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	#setting tenant_id to undef if tenant is not set.
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
 
 	my $values = {
