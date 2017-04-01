@@ -145,6 +145,7 @@ my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+my $server_ipv4;
 
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
@@ -350,6 +351,10 @@ sub process_cfg_file {
 	$result = &lwp_get($uri) if ( !defined($result) && defined($uri) );
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
+
+	if ( $cfg_file =~ m/hdr\_rw\_(.*)\.config$/ ) {
+		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
+	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
@@ -1725,7 +1730,7 @@ sub get_cfg_file_list {
 
 	if ($result eq '404') {
 		$api_in_use = 0;
-		( $log_level >> $INFO ) && printf("INFO Traffic Ops version does not support config files API. Reverting to UI route.\n");
+		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Reverting to UI route.\n");
 		$uri = "/ort/$host_name/ort1";
 		$result = &lwp_get($uri);
 	}
@@ -1748,6 +1753,8 @@ sub get_cfg_file_list {
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
 		$cdn_name = $ort_ref->{'info'}->{'cdn_name'};
 		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
+		$server_ipv4 = $ort_ref->{'info'}->{'server_ipv4'};
+		( $log_level >> $INFO ) && printf("INFO Found server_ipv4 from Traffic Ops: $server_ipv4\n");
 	}
 	else {
 		$profile_name = $ort_ref->{'profile'}->{'name'};
