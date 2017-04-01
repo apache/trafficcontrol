@@ -79,7 +79,7 @@ sub run_ut {
 			->json_is( "/response/username", $login_user )
 			->json_is( "/response/tenantId", $tenant_id);
 
-		#removed the tenant
+		#cannot removed the tenant on current user
 		$t->post_ok( '/api/1.2/user/current/update',
 			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => undef} } )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -87,17 +87,8 @@ sub run_ut {
 		#verify tenancy	
 		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/username", $login_user )
-			->json_is( "/response/tenantId", undef);
-	
-		#putting the tenant back the update with no "tenant" removed the tenant
-		$t->post_ok( '/api/1.2/user/current/update',
-			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id} } )
-			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
-		#verify tenancy	
-		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-			->json_is( "/response/username", $login_user )
 			->json_is( "/response/tenantId", $tenant_id);
+	
 	}
 	
 	# Ensure unique emails
