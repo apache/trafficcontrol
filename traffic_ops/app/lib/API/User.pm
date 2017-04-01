@@ -161,7 +161,7 @@ sub update {
 		return $self->not_found();
 	}
 
-	#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	#setting tenant_id to undef if tenant is not set. 
  	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
  	
 	my $values = {
@@ -385,8 +385,7 @@ sub update_current {
 		if ( defined( $user->{"username"} ) ) {
 			$db_user->{"username"} = $user->{"username"};
 		}
-		if ( exists( $user->{"tenantId"} ) ) {
-		        #if value is not set, it will be kept as is. Keeping consistency. Using "exists" and not "defined" to allow data clearing
+		if ( defined( $user->{"tenantId"} ) ) {
  			$db_user->{"tenant_id"} = $user->{"tenantId"};
  		}
 		if ( defined( $user->{"public_ssh_key"} ) ) {
@@ -490,8 +489,6 @@ sub is_valid {
 				}
 			},
 			
-			#TODO(nirs) MAYBE when tenancy is not optional, add a tenant not null check
-
 		]
 	};
 
