@@ -451,11 +451,11 @@ sub _check_params {
 
 	if (defined($ds_id)) {
 		#update
-		#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+		#setting tenant_id to undef if tenant is not set. 
 		$transformed_params->{tenantId} = exists($params->{tenantId}) ? $params->{tenantId}  :  undef;
 	} else {
 		#create	
-		#setting tenant_id to the runing user if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+		#setting tenant_id to the runing user if tenant is not set. 
 		$transformed_params->{tenantId} = exists($params->{tenantId}) ? $params->{tenantId}  :  $self->current_user_tenant();
 	}
 
