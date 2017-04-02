@@ -288,7 +288,7 @@ sub update {
 		}
 	}
 	
-	#setting tenant_id to undef if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	#setting tenant_id to undef if tenant is not set. 
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
 
 	my $values = {
@@ -460,7 +460,7 @@ sub create {
 		return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
 	}
 	
-	#setting tenant_id to the user id if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	#setting tenant_id to the user id if tenant is not set. 
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
 
 	my $values = {
