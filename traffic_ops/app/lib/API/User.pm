@@ -272,6 +272,9 @@ sub create {
 		return $self->alert("role is required.");
 	}
 	
+	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
+
 	my $values = {
 		address_line1 			=> defined_or_default($params->{addressLine1}, ""),
 		address_line2 			=> defined_or_default($params->{addressLine2}, ""),
@@ -292,6 +295,7 @@ sub create {
 		gid                  		=> 0,
 		local_passwd         		=> sha1_hex($params->{localPassword} ),
 		confirm_local_passwd 		=> sha1_hex($params->{confirmLocalPassword} ),
+		tenant_id			=> $tenant_id,		
 
 	};
 	
@@ -326,6 +330,7 @@ sub create {
 		$response->{stateOrProvince} 		= $rs->state_or_province;
 		$response->{uid} 			= $rs->uid;
 		$response->{username} 			= $rs->username;
+		$response->{tenantId} 			= $rs->tenant_id;
 
 		&log( $self, "Adding User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
