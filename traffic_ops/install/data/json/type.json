@@ -1,21 +1,5 @@
-{"name":"EDGE","description":"Edge Cache","use_in_table":"server"}
-{"name":"MID","description":"Mid Tier Cache","use_in_table":"server"}
-{"name":"ORG","description":"Origin","use_in_table":"server"}
-{"name":"CCR","description":"Kabletown Content Router","use_in_table":"server"}
-{"name":"EDGE_LOC","description":"Edge Logical Location","use_in_table":"cachegroup"}
-{"name":"MID_LOC","description":"Mid Logical Location","use_in_table":"cachegroup"}
-{"name":"HTTP","description":"HTTP Content Routing","use_in_table":"deliveryservice"}
-{"name":"DNS","description":"DNS Content Routing","use_in_table":"deliveryservice"}
-{"name":"HTTP_NO_CACHE","description":"HTTP Content Routing, no caching","use_in_table":"deliveryservice"}
-{"name":"HTTP_LIVE","description":"HTTP Content routing cache in RAM","use_in_table":"deliveryservice"}
-{"name":"RASCAL","description":"Rascal health polling & reporting","use_in_table":"server"}
-{"name":"HOST_REGEXP","description":"Host header regular expression","use_in_table":"regex"}
-{"name":"PATH_REGEXP","description":"URL path regular expression","use_in_table":"regex"}
-{"name":"HEADER_REGEXP","description":"HTTP header regular expression","use_in_table":"regex"}
-{"name":"A_RECORD","description":"Static DNS A entry","use_in_table":"staticdnsentry"}
-{"name":"AAAA_RECORD","description":"Static DNS AAAA entry","use_in_table":"staticdnsentry"}
-{"name":"CNAME_RECORD","description":"Static DNS CNAME entry","use_in_table":"staticdnsentry"}
-{"name":"HTTP_LIVE_NATNL","description":"HTTP Content routing, RAM cache, National","use_in_table":"deliveryservice"}
-{"name":"REDIS","description":"Redis stats gateway","use_in_table":"server"}
-{"name":"DNS_LIVE_NATNL","description":"DNS Content routing, RAM cache, National","use_in_table":"deliveryservice"}
-{"name":"DNS_LIVE","description":"DNS Content routing, RAM cache, Local","use_in_table":"deliveryservice"}
+{
+
+}
+
+

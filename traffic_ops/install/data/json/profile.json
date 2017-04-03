@@ -1,9 +1,3 @@
-{"name":"CCR_CDN","description":"Kabletown Content Router for cdn1"}
-{"name":"RASCAL_CDN","description":"Traffic Monitor profile for cdn1"}
-{"name":"HOSTMON","description":"Hostmon pipe host "}
-{"name":"EDGE1_CDN_520","description":"Dell R720xd, Edge, CDN, ATS v5.2.0"}
-{"name":"RIAK_ALL","description":"Riak profile for all CDNs"}
-{"name":"GLOBAL","description":"Global Traffic Ops profile, DO NOT DELETE"}
-{"name":"TRAFFIC_STATS","description":"Traffic_Stats profile"}
-{"name":"INFLUXDB","description":"InfluxDb profile"}
-{"name":"MID1_CDN_421","description":"Dell R720xd, Mid, CDN, ATS v4.2.1"}
+{
+
+}
