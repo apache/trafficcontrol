@@ -45,6 +45,9 @@ sub run_ut {
 
 	Test::TestHelper->load_core_data($schema);
 
+	my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
+	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "null";
+
 	# Verify the user
 	ok my $user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Does the portal user exist?';
 	
@@ -59,6 +62,7 @@ sub run_ut {
         	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/username" =>  $addedUserName )
 		->json_is( "/response/email" =>  $addedUserEmail)
+		->json_is( "/response/tenantId" =>  $tenant_id) #tenant Id not set - getting the tenant id from the user
         	    , 'Failed adding user?';
 
 	#same name again - fail
@@ -81,6 +85,31 @@ sub run_ut {
 	       
 	my $userid = $schema->resultset('TmUser')->find( { username => $addedUserName } )->id, 'Does the portal user exist?';
 	       
+	if (defined($tenant_id)){
+		#verify the update with no "tenant" removed the tenant
+		$t->put_ok( '/api/1.2/users/'.$userid,
+			json => { "username" => $addedUserName."1", "fullName"=>"full name", "email" => $addedUserEmail."1", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4} )
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/alerts/0/text", "User update was successful." )
+			->json_is( "/response/tenantId", undef);
+			
+		#putting the tenant back the tenant
+		$t->put_ok( '/api/1.2/users/'.$userid,
+			json => { "username" => $addedUserName."2", "tenantId" => $tenant_id, "fullName"=>"full name", "email" => $addedUserEmail."2", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4} )
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/tenantId", $tenant_id)
+			->json_is( "/alerts/0/text", "User update was successful." );
+		
+	
+		#removed the tenant explicitly
+		$t->put_ok( '/api/1.2/users/'.$userid,
+	 	json => {  "username" => $addedUserName."3", "tenantId" => undef, "fullName"=>"full name", "email" => $addedUserEmail."3", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4} )
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/alerts/0/text", "User update was successful." )
+			->json_is( "/response/tenantId", undef);
+			
+	}
+	       
 	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 }
 
@@ -89,6 +118,7 @@ my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD);
 
 $dbh->disconnect();
 done_testing();
