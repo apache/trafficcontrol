@@ -67,6 +67,8 @@ sub get_config_metadata {
 	my $tm_cache_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm_cache.url', config_file => 'global' ] } )->get_column('value')->first();
 	my $cdn_name = $server_obj->cdn->name;
 	my $server = $rs_server->next;
+	my $config_file_obj;
+	my @config_files;
 	if ($server) {
 
 		$data_obj->{'info'}->{'server_name'}	= $server_obj->host_name;
@@ -92,29 +94,36 @@ sub get_config_metadata {
 		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 		while ( my $param = $rs_param->next ) {
 			if ( $param->name eq 'location' ) {
-				$data_obj->{'config_files'}->{ $param->config_file }->{'location'} = $param->value;
+				$config_file_obj->{ $param->config_file }->{'name'} = $param->config_file;
+				$config_file_obj->{ $param->config_file }->{'location'} = $param->value;
+
 			}
 		}
 	}
 
 
 
-	foreach my $config_file ( keys %{ $data_obj->{'config_files'} } ) {
-		$data_obj->{'config_files'}->{$config_file}->{'scope'} = $self->get_scope($config_file);
-		my $scope = $data_obj->{'config_files'}->{$config_file}->{'scope'};
+	foreach my $config_file ( keys %{ $config_file_obj } ) {
+		my $scope = $self->get_scope($config_file);
 		my $scope_id;
 		if ( $scope eq 'cdn' ) {
-			$scope_id = $server->cdn->id;
+			$scope_id = $server->cdn->name;
 		}
 		elsif ( $scope eq 'profile' ) {
-			$scope_id = $server->profile->id;
+			$scope_id = $server->profile->name;
 		}
 		else {
-			$scope_id = $server_obj->id;
+			$scope_id = $server_obj->host_name;
 		}
-		$data_obj->{'config_files'}->{$config_file}->{'API_URI'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		$config_file_obj->{$config_file}->{'API_URI'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		$config_file_obj->{$config_file}->{'scope'} = $scope;
 	}
 
+	foreach my $config_file ( keys %{ $config_file_obj } ) {
+		push ( @config_files, $config_file_obj->{$config_file} );
+	}
+
+	$data_obj->{'config_files'} = \@config_files;
 	my $file_contents = encode_json($data_obj);
 
 	return $self->render( text => $file_contents, format => 'txt' );

@@ -1736,6 +1736,8 @@ sub get_cfg_file_list {
 	}
 
 	my $ort_ref = decode_json($result);
+	my @cf = $ort_ref->{'config_files'};
+	
 	
 	if ($api_in_use == 1) {
 		$to_url = $ort_ref->{'info'}->{'to_url'};
@@ -1763,29 +1765,29 @@ sub get_cfg_file_list {
 		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	}
 	if ( $script_mode == $REVALIDATE ) {
-		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-			if ( $cfg_file eq "regex_revalidate.config" ) {
-				my $fname_on_disk = &get_filename_on_disk($cfg_file);
+		foreach my $cfg_file ( @cf ) {
+			if ( $cfg_file->{'name'} eq "regex_revalidate.config" ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'name'} );
 				( $log_level >> $INFO )
-					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'name'}, $cfg_file->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
 				if ($api_in_use == 1) {
-					$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
+					$cfg_files->{$fname_on_disk}->{'API_URI'} = $cfg_file->{'API_URI'};
 				}
-				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'name'};
 			}
 		}
 	}
 	else {
-		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-			my $fname_on_disk = &get_filename_on_disk($cfg_file);
+		foreach my $cfg_file ( @cf ) {
+			my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'name'} );
 			( $log_level >> $INFO )
-				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-			$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'name'}, $cfg_file->{'location'} );
+			$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
 			if ($api_in_use == 1) {
-				$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
+				$cfg_files->{$fname_on_disk}->{'API_URI'} = $cfg_file->{'API_URI'};
 			}
-			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'name'};
 		}
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
