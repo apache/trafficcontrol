@@ -1,0 +1,135 @@
+#!/usr/bin/perl
+
+package main;
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+use English;
+use Getopt::Long;
+use DBI;
+use Schema;
+
+use YAML;
+use YAML qw(LoadFile);
+use DBIx::Class::Schema::Loader qw/make_schema_at/;
+
+
+#TEMPLATE TO BE CHANGED BY THE USER
+#################################################################################################
+# Environment: If not set by command-line, the below variable setting will take effect. 
+my $default_environment = '';
+if ($default_environment eq "") {
+	$default_environment = $ENV{'MOJO_MODE'};
+}
+
+# The tenant user to be created: If not set by command-line, the below variable setting will take effect. 
+my $default_tenant_name = 'root';
+#################################################################################################
+#DONE TEMPLATE TO BE CHANGED BY THE USER
+
+my $usage = "\n"
+	. "Usage:  $PROGRAM_NAME [--env <environment>] --username <username> [--tenant-name <tenant-name>]\t\n\n"
+	. "Example:  $PROGRAM_NAME  --env production --username admin1 --tenant-name root\n\n"
+	. "Purpose:  This script allows the assignment a user tenant.\n"
+	. "          It is required in order to set the tenancy of the initial admin user of a root tenant\n"
+	. "          (If no such user exists the tenant practically cannot be used).\n\n"
+	. "Options:   \n"
+	. "env  - The environment (development|test|production|integration) to execute the operation on.\n"
+	. "       If not set, '$default_environment' is used (value is 'MOJO_MODE' env var dependent).\n"
+	. "username  - The username of the tenant to which tenancy is set. This user must be already exists.\n"
+	. "tenant-name  - The tenant name of the tenant to assign the user to.\n"
+	. "               If not set, '$default_tenant_name' is used.\n"
+	. "               If the tenant does not exists, a new root tenant is created with the specified name.\n"
+	. "\n\n";
+
+
+#parameters retrival
+my $help = 0;
+my $environment = '';
+my $user_name = '';
+my $tenant_name = '';
+
+GetOptions( "help|?", \$help, "env:s", \$environment, "username:s", \$user_name, "tenant-name:s", \$tenant_name );
+
+if ($help) {
+	print $usage and exit(0);
+}
+
+# get environment name
+if ($environment eq "") {
+	$environment =  $default_environment;
+}
+if ($environment eq "") {
+	print STDERR $usage;
+	print STDERR "No environment specified!\n" and exit(1);
+}
+$ENV{'MOJO_MODE'} = $environment;
+
+if ($user_name eq "") {
+	print STDERR $usage;
+	print STDERR "No username specified!\n" and exit(1);
+}
+
+# get tenant name
+if ($tenant_name eq "") {
+	$tenant_name =  $default_tenant_name;
+}
+if ($tenant_name eq "") {
+	print STDERR $usage;
+	print STDERR "No tenant-name specified!\n" and exit(1);
+}
+
+#DB connection
+my $dbh    = Schema->database_handle;
+my $schema = Schema->connect_to_database;
+
+
+#validity checks
+my $user_data = $schema->resultset('TmUser')->search({ username => $user_name })->single;
+if (!defined($user_data)) {
+	print STDERR "User '$user_name' does not exists!\n" and exit(1);
+}
+
+#actual work
+
+#Create the tenant if needed
+my $tenant = $schema->resultset('Tenant')->search( {name =>  $tenant_name} )->single;
+if (defined($tenant)){
+	print STDERR "Tenant '$tenant_name' already exists. No need to create.\n";
+}
+else{
+	my $tenant_values = {
+			name => $tenant_name,
+			active => 1,
+			parent_id => undef
+			};
+		
+	my $insert = $schema->resultset('Tenant')->create($tenant_values)->insert();
+	if (! $insert) {
+		print STDERR "Failed creating tenant '$tenant_name'!\n" and exit;
+	}
+	print STDERR "Tenant '$tenant_name' was created.\n";
+	$tenant = $schema->resultset('Tenant')->search( {name =>  $tenant_name} )->single;
+}
+
+#update the user tenancy
+my $user = $schema->resultset('TmUser')->find( { id => $user_data->id } );
+my $rc = $user->update({tenant_id=>$tenant->id});
+
+if (! $rc) {
+	print STDERR "Failed setting tenant '$tenant_name' to user '$user_name'!\n" and exit(1);
+}
+print STDERR "User '$user_name' tenancy was set.\n";
+exit(0);
