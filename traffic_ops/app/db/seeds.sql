@@ -76,12 +76,12 @@ insert into type (name, description, use_in_table) values ('AAAA_RECORD', 'Stati
 insert into type (name, description, use_in_table) values ('CNAME_RECORD', 'Static DNS CNAME entry', 'staticdnsentry') ON CONFLICT DO NOTHING;
 
 -- statuses
-insert into status (name, description) values ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT DO NOTHING;
-insert into status (name, description) values ('ONLINE', 'Server is online.') ON CONFLICT DO NOTHING;
-insert into status (name, description) values ('REPORTED', 'Server is online and reporeted in the health protocol.') ON CONFLICT DO NOTHING;
-insert into status (name, description) values ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT DO NOTHING;
-insert into status (name, description) values ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT DO NOTHING;
-insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT DO NOTHING;
+insert into status (id, name, description) values (1, 'OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT DO NOTHING;
+insert into status (id, name, description) values (2, 'ONLINE', 'Server is online.') ON CONFLICT DO NOTHING;
+insert into status (id, name, description) values (3, 'REPORTED', 'Server is online and reporeted in the health protocol.') ON CONFLICT DO NOTHING;
+insert into status (id, name, description) values (4, 'ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT DO NOTHING;
+insert into status (id, name, description) values (5, 'CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT DO NOTHING;
+insert into status (id, name, description) values (6, 'PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT DO NOTHING;
 
 -- job agents
 insert into job_agent (name, description, active) values ('dummy', 'Description of Purge Agent', '1') ON CONFLICT DO NOTHING;
