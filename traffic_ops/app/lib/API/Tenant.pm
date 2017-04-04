@@ -255,10 +255,11 @@ sub delete {
 		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
 	}
 
-	#The order of the below tests is intentional - allowing UT to cover all cases - TODO(nirs) remove this comment when a full "tenancy" UT is added, including permissions and such (no use in putting effort into it yet)
+	#The order of the below tests is intentional
 	my $existing_ds = $self->db->resultset('Deliveryservice')->search( { tenant_id => $id })->get_column('xml_id')->first();
 	if ($existing_ds) {
 		return $self->alert("Tenant '$name' is assign with delivery-services(s): e.g. '$existing_ds'. Please update/delete these delivery-services and retry.");
+	}
 
 	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id }, {order_by => 'me.username' })->get_column('username')->first();
 	if ($existing_user) {
