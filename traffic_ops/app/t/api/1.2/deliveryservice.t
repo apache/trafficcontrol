@@ -41,7 +41,7 @@ my $login_password = shift;
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-my $tenant_id = undef;#user does not have tenancy currently
+my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
 my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "null";
 
 ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password } )->status_is(302)
@@ -451,6 +451,7 @@ my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD);
 
 $dbh->disconnect();
 done_testing();

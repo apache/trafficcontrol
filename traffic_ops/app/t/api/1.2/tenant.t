@@ -158,6 +158,7 @@ ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->delete_ok('/api/1.2/deliveryservices/' . 2100)->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #cannot delete a tenant that have a user
 ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
