@@ -27,6 +27,7 @@ my %definition_for = (
 		using => {
 			id                   => 100,
 			username             => 'admin',
+			tenant_id            => undef,
 			role                 => 4,
 			uid                  => '1',
 			gid                  => '1',
@@ -51,6 +52,7 @@ my %definition_for = (
 		using => {
 			id                   => 200,
 			username             => 'portal',
+			tenant_id            => undef,
 			role                 => 6,
 			uid                  => '1',
 			gid                  => '1',
@@ -75,6 +77,7 @@ my %definition_for = (
 		using => {
 			id                   => 300,
 			username             => 'codebig',
+			tenant_id            => undef,
 			role                 => 6,
 			uid                  => '1',
 			gid                  => '1',
@@ -99,6 +102,7 @@ my %definition_for = (
 		using => {
 			id                   => 400,
 			username             => 'migration',
+			tenant_id            => undef,
 			role                 => 5,
 			uid                  => '1',
 			gid                  => '1',
@@ -123,6 +127,7 @@ my %definition_for = (
 		using => {
 			id                   => 500,
 			username             => 'federation',
+			tenant_id            => undef,
 			role                 => 7,
 			uid                  => '1',
 			gid                  => '1',
@@ -147,6 +152,7 @@ my %definition_for = (
 		using => {
 			id                   => 600,
 			username             => 'steering1',
+			tenant_id            => undef,
 			role                 => 7,
 			uid                  => '1',
 			gid                  => '1',
@@ -171,6 +177,7 @@ my %definition_for = (
 		using => {
 			id                   => 700,
 			username             => 'steering2',
+			tenant_id            => undef,
 			role                 => 7,
 			uid                  => '1',
 			gid                  => '1',
@@ -190,6 +197,59 @@ my %definition_for = (
 			registration_sent    => '1999-01-01 00:00:00',
 		},
 	},
+	
+	admin_root => {
+		new   => 'TmUser',
+		using => {
+			id                   => 800,
+			username             => 'admin-root',
+			tenant_id            => 10**9,
+			role                 => 4,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The Admin User for the "root" tenant',
+			email                => 'admin-root@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line1',
+			address_line2        => 'address_line2',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '111-111-1111',
+			postal_code          => '80122',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+	
+	portal_root => {
+		new   => 'TmUser',
+		using => {
+			id                   => 900,
+			username             => 'portal-root',
+			tenant_id            => 10**9,
+			role                 => 6,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The Portal User for the "root" tenant',
+			email                => 'portal-root@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line3',
+			address_line2        => 'address_line4',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '222-222-2222',
+			postal_code          => '80122',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+
 );
 
 sub get_definition {

@@ -97,7 +97,8 @@ sub index {
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
-				"username"        => $row->username
+				"username"        => $row->username,
+				"tenantId"        => $row->tenant_id
 			}
 		);
 	}
@@ -132,7 +133,8 @@ sub show {
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
-				"username"        => $row->username
+				"username"        => $row->username,
+				"tenantId"        => $row->tenant_id
 			}
 		);
 	}
@@ -159,6 +161,9 @@ sub update {
 		return $self->not_found();
 	}
 
+	#setting tenant_id to undef if tenant is not set. 
+ 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
+ 	
 	my $values = {
 		address_line1 			=> $params->{addressLine1},
 		address_line2 			=> $params->{addressLine2},
@@ -174,7 +179,9 @@ sub update {
 		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
 		role 					=> $params->{role},
 		state_or_province 		=> $params->{stateOrProvince},
-		username 				=> $params->{username}
+		username 				=> $params->{username},
+		tenant_id 				=> $tenant_id
+		
 	};
 
 	if ( defined($params->{localPasswd}) && $params->{localPasswd} ne '' ) {
@@ -207,6 +214,7 @@ sub update {
 		$response->{stateOrProvince} 		= $rs->state_or_province;
 		$response->{uid} 					= $rs->uid;
 		$response->{username} 				= $rs->username;
+		$response->{tenantId} 				= $rs->tenant_id;
 
 		&log( $self, "Updated User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -277,6 +285,7 @@ sub current {
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
+				"tenantId"	  => $self->current_user_tenant(),
 				"publicSshKey"  => "",
 				"role"            => $role,
 				"uid"             => "0",
@@ -321,6 +330,7 @@ sub current {
 					"phoneNumber"     => $row->phone_number,
 					"postalCode"      => $row->postal_code,
 					"country"         => $row->country,
+					"tenantId"        => $row->tenant_id,
 				}
 			);
 		}
@@ -375,6 +385,9 @@ sub update_current {
 		if ( defined( $user->{"username"} ) ) {
 			$db_user->{"username"} = $user->{"username"};
 		}
+		if ( defined( $user->{"tenantId"} ) ) {
+ 			$db_user->{"tenant_id"} = $user->{"tenantId"};
+ 		}
 		if ( defined( $user->{"public_ssh_key"} ) ) {
 			$db_user->{"public_ssh_key"} = $user->{"public_ssh_key"};
 		}
@@ -475,7 +488,7 @@ sub is_valid {
 					return $self->is_username_taken( $value, $params );
 				}
 			},
-
+			
 		]
 	};
 

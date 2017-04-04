@@ -22,7 +22,6 @@ package manager
 import (
 	"crypto/tls"
 	"net/http"
-	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
@@ -37,23 +36,10 @@ import (
 	"github.com/davecheney/gmx"
 )
 
-// StaticAppData encapsulates data about the app available at startup
-type StaticAppData struct {
-	StartTime      time.Time
-	GitRevision    string
-	FreeMemoryMB   uint64
-	Version        string
-	WorkingDir     string
-	Name           string
-	BuildTimestamp string
-	Hostname       string
-	UserAgent      string
-}
-
 //
 // Start starts the poller and handler goroutines
 //
-func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
+func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData) {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
 	counters := fetcher.Counters{
 		Success: gmx.NewCounter("fetchSuccess"),
@@ -74,12 +60,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -89,19 +75,22 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
 	cachesChanged := make(chan struct{})
+	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,
 		localStates,
+		peerStates,
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel,
 		cachesChanged,
 		cfg,
 		staticAppData,
+		toSession,
+		toData,
 	)
 
-	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
 	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)
 
 	StartPeerManager(

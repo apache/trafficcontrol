@@ -29,6 +29,34 @@
           "weight": "45000"
         }
       ]
+    },
+    {
+      "deliveryService": "client-steering-test-1",
+      "targets": [
+        {
+          "deliveryService": "client-steering-target-1",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "client-steering-target-2",
+          "weight": "5000"
+        }
+      ],
+      "clientSteering": true
+    },
+    {
+      "deliveryService": "client-steering-test-2",
+      "targets": [
+        {
+          "deliveryService": "client-steering-target-3",
+          "weight": "5000"
+        },
+        {
+          "deliveryService": "client-steering-target-4",
+          "weight": "5000"
+        }
+      ],
+      "clientSteering": true
     }
   ]
 }

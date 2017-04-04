@@ -21,13 +21,13 @@ package manager
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
@@ -36,32 +36,6 @@ import (
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
-
-// OpsConfigThreadsafe provides safe access for multiple reader goroutines and a single writer to a stored OpsConfig object.
-// This could be made lock-free, if the performance was necessary
-type OpsConfigThreadsafe struct {
-	opsConfig *handler.OpsConfig
-	m         *sync.RWMutex
-}
-
-// NewOpsConfigThreadsafe returns a new single-writer-multiple-reader OpsConfig
-func NewOpsConfigThreadsafe() OpsConfigThreadsafe {
-	return OpsConfigThreadsafe{m: &sync.RWMutex{}, opsConfig: &handler.OpsConfig{}}
-}
-
-// Get gets the internal OpsConfig object. This MUST NOT be modified. If modification is necessary, copy the object.
-func (o *OpsConfigThreadsafe) Get() handler.OpsConfig {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return *o.opsConfig
-}
-
-// Set sets the internal OpsConfig object. This MUST NOT be called from multiple goroutines.
-func (o *OpsConfigThreadsafe) Set(newOpsConfig handler.OpsConfig) {
-	o.m.Lock()
-	*o.opsConfig = newOpsConfig
-	o.m.Unlock()
-}
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.
 // Note the OpsConfigManager is in charge of the httpServer, because ops config changes trigger server changes. If other things needed to trigger server restarts, the server could be put in its own goroutine with signal channels
@@ -81,17 +55,17 @@ func StartOpsConfigManager(
 	lastStats threadsafe.LastStats,
 	dsStats threadsafe.DSStatsReader,
 	events health.ThreadsafeEvents,
-	staticAppData StaticAppData,
+	staticAppData config.StaticAppData,
 	healthPollInterval time.Duration,
-	lastHealthDurations DurationMapThreadsafe,
+	lastHealthDurations threadsafe.DurationMap,
 	fetchCount threadsafe.Uint,
 	healthIteration threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	unpolledCaches threadsafe.UnpolledCaches,
-	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	cfg config.Config,
-) OpsConfigThreadsafe {
+) threadsafe.OpsConfig {
 
 	opsConfigFileChannel := make(chan interface{})
 	opsConfigFilePoller := poller.FilePoller{
@@ -108,14 +82,36 @@ func StartOpsConfigManager(
 	go opsConfigFileHandler.Listen()
 	go opsConfigFilePoller.Poll()
 
-	opsConfig := NewOpsConfigThreadsafe()
+	opsConfig := threadsafe.NewOpsConfig()
 
 	// TODO remove change subscribers, give Threadsafes directly to the things that need them. If they only set vars, and don't actually do work on change.
 	go func() {
+		handleErr := func(err error) {
+			errorCount.Inc()
+			log.Errorf("OpsConfigManager: %v\n", err)
+		}
+
 		httpServer := srvhttp.Server{}
 
 		for newOpsConfig := range opsConfigChannel {
-			var err error
+			// TODO config? parameter?
+			useCache := false
+			trafficOpsRequestTimeout := time.Second * time.Duration(10)
+			realToSession, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
+			if err != nil {
+				handleErr(fmt.Errorf("instantiating Session with traffic_ops: %s\n", err))
+				continue
+			}
+
+			if cdn, err := getMonitorCDN(realToSession, staticAppData.Hostname); err != nil {
+				handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
+			} else {
+				if newOpsConfig.CdnName != "" && newOpsConfig.CdnName != cdn {
+					log.Warnf("%s Traffic Ops CDN '%s' doesn't match config CDN '%s' - using Traffic Ops CDN\n", staticAppData.Hostname, cdn, newOpsConfig.CdnName)
+				}
+				newOpsConfig.CdnName = cdn
+			}
+
 			opsConfig.Set(newOpsConfig)
 
 			listenAddress := ":80" // default
@@ -124,12 +120,7 @@ func StartOpsConfigManager(
 				listenAddress = newOpsConfig.HttpListener
 			}
 
-			handleErr := func(err error) {
-				errorCount.Inc()
-				log.Errorf("OpsConfigManager: %v\n", err)
-			}
-
-			endpoints := MakeDispatchMap(
+			endpoints := datareq.MakeDispatchMap(
 				opsConfig,
 				toSession,
 				localStates,
@@ -153,25 +144,16 @@ func StartOpsConfigManager(
 				unpolledCaches,
 				monitorConfig,
 			)
-			err = httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir)
-			if err != nil {
-				handleErr(fmt.Errorf("MonitorConfigPoller: error creating HTTP server: %s\n", err))
+
+			if err := httpServer.Run(endpoints, listenAddress, cfg.ServeReadTimeout, cfg.ServeWriteTimeout, cfg.StaticFileDir); err != nil {
+				handleErr(fmt.Errorf("creating HTTP server: %s\n", err))
 				continue
 			}
 
-			// TODO config? parameter?
-			useCache := false
-			trafficOpsRequestTimeout := time.Second * time.Duration(10)
-
-			realToSession, err := to.LoginWithAgent(newOpsConfig.Url, newOpsConfig.Username, newOpsConfig.Password, newOpsConfig.Insecure, staticAppData.UserAgent, useCache, trafficOpsRequestTimeout)
-			if err != nil {
-				handleErr(fmt.Errorf("MonitorConfigPoller: error instantiating Session with traffic_ops: %s\n", err))
-				continue
-			}
 			toSession.Set(realToSession)
 
 			if err := toData.Fetch(toSession, newOpsConfig.CdnName); err != nil {
-				handleErr(fmt.Errorf("Error getting Traffic Ops data: %v\n", err))
+				handleErr(fmt.Errorf("getting Traffic Ops data: %v\n", err))
 				continue
 			}
 
@@ -187,4 +169,21 @@ func StartOpsConfigManager(
 	}()
 
 	return opsConfig
+}
+
+// getMonitorCDN returns the CDN of a given Traffic Monitor.
+// TODO change to get by name, when Traffic Ops supports querying a single server.
+func getMonitorCDN(toc *to.Session, monitorHostname string) (string, error) {
+	servers, err := toc.Servers()
+	if err != nil {
+		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
+	}
+
+	for _, server := range servers {
+		if server.HostName != monitorHostname {
+			continue
+		}
+		return server.CDNName, nil
+	}
+	return "", fmt.Errorf("no monitor named %v found in Traffic Ops", monitorHostname)
 }

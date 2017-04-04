@@ -39,7 +39,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
-	"name" => "CCR_CREATE", "description" => "CCR_CREATE description" })->status_is(200)
+	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => 100, "type" => 'TR_PROFILE' })->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "CCR_CREATE" )
 	->json_is( "/response/description" => "CCR_CREATE description" )
@@ -72,7 +72,9 @@ my $profile_id = &get_profile_id('CCR_CREATE');
 
 ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
         "name" => "CCR_UPDATE",
-        "description" => "CCR_UPDATE description"
+        "description" => "CCR_UPDATE description",
+        "cdn" => 100,
+        "type" => "TR_PROFILE"
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/id" => "$profile_id")

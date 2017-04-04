@@ -183,7 +183,7 @@ ok $t->post_ok(
 		'ds.qstring_ignore'              => '1',
 		'ds.signed'                      => '1',
 		'ds.type'                        => '9',
-		'ds.xml_id'                      => 'tst_xml_id_2',
+		'ds.xml_id'                      => 'tst_xml_id_3',
 		'ds.protocol'                    => '0',
 		'ds.edge_header_rewrite'         => '',
 		'ds.mid_header_rewrite'          => '',
@@ -201,7 +201,7 @@ ok $t->post_ok(
 		'ds.regional_geo_blocking'       => '0',
 		'ds.geolimit_redirect_url'       => 'http://knutsel3.com',
 	}
-)->status_is(200), "create HTTP_NO_CACHE deliveryservice";
+)->status_is(302), "create HTTP_NO_CACHE deliveryservice";
 
 #add - validate 200 response (data is actually added to DB when create is called)
 ok $t->get_ok('/ds/add')->status_is(200), "validate add screen";

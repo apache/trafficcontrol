@@ -26,21 +26,24 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
-	'0' => {
+	'cd1' => {
 		new => 'Cdn',
+
 		using => {
+			id => 1,
 			name => 'cdn_number_1',
 			dnssec_enabled => '0',
+			domain_name => 'cdn1.kabletown.net',
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},
-	## id => 2
-	'1' => {
+	'cdn2' => {
 		new => 'Cdn',
 		using => {
+			id => 2,
 			name => 'cdn_number_2',
 			dnssec_enabled => '0',
+			domain_name => 'cdn2.kabletown.net',
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},

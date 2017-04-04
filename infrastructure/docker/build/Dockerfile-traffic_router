@@ -18,18 +18,18 @@ FROM centos:7
 
 MAINTAINER Dan Kirkwood
 
+# top level of trafficcontrol directory must be mounted as a volume:
+# docker run --volume /trafficcontrol:$(pwd) ...
+VOLUME /trafficcontrol
+
+### Common for all sub-component builds
 RUN	yum -y install \
 		epel-release \
 		git \
 		rpm-build && \
 	yum -y clean all
 
-ENV GITREPO https://github.com/apache/incubator-trafficcontrol
-ENV BRANCH master
-
-WORKDIR /repo
-
-### traffic_router specific
+### traffic_router specific requirements
 RUN	yum -y install \
 		which
 
@@ -47,10 +47,10 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 ###
 
-VOLUME ./artifacts:/artifacts
-
-ADD run-build.sh .
-
-CMD ./run-build.sh traffic_router 2>&1 | tee /artifacts/build-traffic_router.log
+CMD set -x; cp -a /trafficcontrol /tmp/. && \
+	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
+	./build/build.sh traffic_router 2>&1 | tee ./dist/build-traffic_router.log && \
+	mkdir -p /trafficcontrol/dist && \
+	cp dist/*traffic_router* /trafficcontrol/dist
 
 # vi:syntax=Dockerfile

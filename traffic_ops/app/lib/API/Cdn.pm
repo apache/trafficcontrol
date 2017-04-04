@@ -37,9 +37,10 @@ sub index {
 		push(
 			@data, {
 				"id"            => $row->id,
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated" 	=> $row->last_updated,
-				"name"          => $row->name
 			}
 		);
 	}
@@ -56,9 +57,10 @@ sub show {
 		push(
 			@data, {
 				"id"            => $row->id,
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated" 	=> $row->last_updated,
-				"name"          => $row->name
 			}
 		);
 	}
@@ -75,9 +77,10 @@ sub name {
 		push(
 			@data, {
 				"id"            => $row->id,
+				"name"          => $row->name,
+				"domainName"    => $row->domain_name,
 				"dnssecEnabled" => \$row->dnssec_enabled,
 				"lastUpdated"   => $row->last_updated,
-				"name"          => $row->name
 			}
 		);
 	}
@@ -104,15 +107,26 @@ sub create {
 		return $self->alert("dnssecEnabled is required.");
 	}
 
+	if ( !defined( $params->{domainName} ) ) {
+		return $self->alert("Domain Name is required.");
+	}
+
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
 	if ($existing) {
 		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
 	}
 
+	$existing = $self->db->resultset('Cdn')->search( { domain_name => $params->{domainName} } )->single();
+	if ($existing) {
+		$self->app->log->error( "a cdn with domain name '" . $params->{domainName} . "' already exists." );
+		return $self->alert( "a cdn with domain " . $params->{domainName} . " already exists." );
+	}
+
 	my $values = {
 		name => $params->{name},
 		dnssec_enabled => $params->{dnssecEnabled},
+		domain_name => $params->{domainName},
 	};
 
 	my $insert = $self->db->resultset('Cdn')->create($values);
@@ -123,6 +137,7 @@ sub create {
 		my $response;
 		$response->{id}            = $rs->id;
 		$response->{name}          = $rs->name;
+		$response->{domainName}    = $rs->domain_name;
 		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Created CDN with id: " . $rs->id . " and name: " . $rs->name, "APICHANGE" );
 		return $self->success( $response, "cdn was created." );
@@ -144,10 +159,6 @@ sub update {
 		return $self->not_found();
 	}
 
-	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format.");
-	}
-
 	if ( !defined( $params->{name} ) ) {
 		return $self->alert("Name is required.");
 	}
@@ -156,22 +167,32 @@ sub update {
 		return $self->alert("dnssecEnabled is required.");
 	}
 
+	if ( !defined( $params->{domainName} ) ) {
+		return $self->alert("Domain Name is required.");
+	}
+
 	my $existing = $self->db->resultset('Cdn')->search( { name => $params->{name} } )->single();
 	if ( $existing && $existing->id != $cdn->id ) {
-		$self->app->log->error( "a cdn with name '" . $params->{name} . "' already exists." );
 		return $self->alert( "a cdn with name " . $params->{name} . " already exists." );
+	}
+
+	$existing = $self->db->resultset('Cdn')->search( { domain_name => $params->{domainName} } )->single();
+	if ( $existing && $existing->id != $cdn->id ) {
+		return $self->alert( "a cdn with domain name " . $params->{domainName} . " already exists." );
 	}
 
 	my $values = {
 		name => $params->{name},
 		dnssec_enabled => $params->{dnssecEnabled},
+		domain_name => $params->{domainName},
 	};
 
 	my $rs = $cdn->update($values);
 	if ( $rs ) {
 		my $response;
-		$response->{id}            = $rs->id;
-		$response->{name}          = $rs->name;
+		$response->{id}            	= $rs->id;
+		$response->{name}          	= $rs->name;
+		$response->{domainName}		= $rs->domain_name;
 		$response->{dnssecEnabled} = \$rs->dnssec_enabled;
 		&log( $self, "Updated CDN name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
 		return $self->success( $response, "CDN update was successful." );
@@ -400,44 +421,34 @@ sub get_traffic_monitor_config {
 		push( @{ $data_obj->{'deliveryServices'} }, $delivery_service );
 	}
 
-	my $rs_caches = $self->db->resultset('Server')->search(
-		{ 'cdn.name' => $cdn_name },
-		{
-			prefetch => [ 'type',      'status',      'cachegroup', 'profile',        'cdn' ],
-			columns  => [ 'host_name', 'domain_name', 'tcp_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
-		}
-	);
-
-	while ( my $row = $rs_caches->next ) {
-		if ( $row->type->name eq "RASCAL" ) {
-			my $traffic_monitor;
-			$traffic_monitor->{'hostName'}   = $row->host_name;
-			$traffic_monitor->{'fqdn'}       = $row->host_name . "." . $row->domain_name;
-			$traffic_monitor->{'status'}     = $row->status->name;
-			$traffic_monitor->{'cachegroup'} = $row->cachegroup->name;
-			$traffic_monitor->{'port'}       = int( $row->tcp_port );
-			$traffic_monitor->{'ip'}         = $row->ip_address;
-			$traffic_monitor->{'ip6'}        = $row->ip6_address;
-			$traffic_monitor->{'profile'}    = $row->profile->name;
-			push( @{ $data_obj->{'trafficMonitors'} }, $traffic_monitor );
-
-		}
-		elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
-			my $traffic_server;
-			$traffic_server->{'cachegroup'}    = $row->cachegroup->name;
-			$traffic_server->{'hostName'}      = $row->host_name;
-			$traffic_server->{'fqdn'}          = $row->host_name . "." . $row->domain_name;
-			$traffic_server->{'port'}          = int( $row->tcp_port );
-			$traffic_server->{'interfaceName'} = $row->interface_name;
-			$traffic_server->{'status'}        = $row->status->name;
-			$traffic_server->{'ip'}            = $row->ip_address;
-			$traffic_server->{'ip6'}           = ( $row->ip6_address || "" );
-			$traffic_server->{'profile'}       = $row->profile->name;
-			$traffic_server->{'type'}          = $row->type->name;
-			$traffic_server->{'hashId'}        = $row->xmpp_id;
-			push( @{ $data_obj->{'trafficServers'} }, $traffic_server );
-		}
-
+        my $caches_query = 'SELECT
+                              me.host_name as hostName,
+                              CONCAT(me.host_name, \'.\', me.domain_name) as fqdn,
+                              status.name as status,
+                              cachegroup.name as cachegroup,
+                              me.tcp_port as port,
+                              me.ip_address as ip,
+                              me.ip6_address as ip6,
+                              profile.name as profile,
+                              me.interface_name as interfaceName,
+                              type.name as type,
+                              me.xmpp_id as hashId
+                            FROM server me
+                              JOIN type type ON type.id = me.type
+                              JOIN status status ON status.id = me.status
+                              JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
+                              JOIN profile profile ON profile.id = me.profile
+                              JOIN cdn cdn ON cdn.id = me.cdn_id
+                            WHERE cdn.name = ?;';
+	my $dbh = $self->db->storage->dbh;
+	my $caches_servers = $dbh->selectall_arrayref( $caches_query, {Columns=>{}}, ($cdn_name) );
+	foreach (@{ $caches_servers }) {
+			if ( $_->{'type'} eq "RASCAL" ) {
+					push( @{ $data_obj->{'trafficMonitors'} }, $_ );
+			}
+			elsif ( $_->{'type'} =~ m/^EDGE/ || $_->{'type'} =~ m/^MID/ ) {
+					push( @{ $data_obj->{'trafficServers'} }, $_ );
+			}
 	}
 
 	my $rs_loc = $self->db->resultset('Server')->search(
@@ -627,11 +638,9 @@ sub gen_traffic_router_config {
 		'profile_parameters.profile' => $ccr_profile_id,
 		'config_file'                => 'CRConfig.json'
 	);
+	$ccr_domain_name = $self->db->resultset('Cdn')->search({ 'name' => $cdn_name})->get_column('domain_name')->single();
 	my $rs_config = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 	while ( my $row = $rs_config->next ) {
-		if ( $row->name eq 'domain_name' ) {
-			$ccr_domain_name = $row->value;
-		}
 		if ( $row->name eq 'tld.soa.admin' ) {
 			$cdn_soa_admin = $row->value;
 		}
@@ -1039,23 +1048,15 @@ sub domains {
 	my $self = shift;
 	my @data;
 
-	my @ccrprofs = $self->db->resultset('Profile')->search( { name => { -like => 'CCR%' } } )->get_column('id')->all();
-	my $rs_pp = $self->db->resultset('ProfileParameter')->search(
-		{
-			profile                 => { -in => \@ccrprofs },
-			'parameter.name'        => 'domain_name',
-			'parameter.config_file' => 'CRConfig.json'
-		},
-		{ prefetch => [ 'parameter', 'profile' ] }
-	);
-	while ( my $row = $rs_pp->next ) {
+	my $rs = $self->db->resultset('Profile')->search( { 'me.name' => { -like => 'CCR%' } }, { prefetch => ['cdn'] } );
+	while ( my $row = $rs->next ) {
 		push(
 			@data, {
-				"domainName"         => $row->parameter->value,
-				"parameterId"        => $row->parameter->id,
-				"profileId"          => $row->profile->id,
-				"profileName"        => $row->profile->name,
-				"profileDescription" => $row->profile->description,
+				"domainName"         => $row->cdn->domain_name,
+				"parameterId"        => -1,  # it's not a parameter anymore
+				"profileId"          => $row->id,
+				"profileName"        => $row->name,
+				"profileDescription" => $row->description,
 			}
 		);
 
@@ -1113,6 +1114,7 @@ sub refresh_keys {
 	while ( my $row = $rs_data->next ) {
 		if ( $row->dnssec_enabled == 1 ) {
 			my $cdn_name = $row->name;
+			my $cdn_domain_name = $row->domain_name;
 			my $keys;
 			my $response_container = $self->riak_get( "dnssec", $cdn_name );
 			my $get_keys = $response_container->{'response'};
@@ -1212,7 +1214,7 @@ sub refresh_keys {
 					my $ds_id = $ds->id;
 
 					#create the ds domain name for dnssec keys
-					my $domain_name = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+					my $domain_name = $cdn_domain_name;
 					my $deliveryservice_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 					my $rs_ds = $self->db->resultset('Deliveryservice')
 						->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );

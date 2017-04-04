@@ -321,7 +321,7 @@ sub processCSV {
 							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 						$processCSVErrors
 							.= "</li><ul><li style='color:blue;'>"
-							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
+							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason]"
 							. "</li></ul>";
 					}
 					else {
@@ -361,7 +361,7 @@ sub processCSV {
 						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 					$processCSVErrors
 						.= "</li><ul><li style='color:blue;'>"
-						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
+						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason]"
 						. "</li></ul>";
 				}
 				else {
@@ -453,7 +453,7 @@ sub processSynchronizeCSV {
 							. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 						$processCSVErrors
 							.= "</li><ul><li style='color:blue;'>"
-							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
+							. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason]"
 							. "</li></ul>";
 					}
 					else {
@@ -507,7 +507,7 @@ sub processSynchronizeCSV {
 						. "] PLEASE FIX EACH LINE AND ENSURE AN ITEM COUNT = " . $correctCount . ".";
 					$processCSVErrors
 						.= "</li><ul><li style='color:blue;'>"
-						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,offline_reason]"
+						. "[host,domain,int,ip4,subnet,gw,ip6,gw6,mtu,cdn,cachegroup,phys_loc,rack,type,prof,port,1g_ip,1g_subnet,1g_gw,ilo_ip,ilo_subnet,ilo_gw,ilo_user,ilo_pwd,r_host,r_port,https_port,offline_reason]"
 						. "</li></ul>";
 				}
 				else {

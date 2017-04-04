@@ -802,7 +802,7 @@ static void load_config_file(config_holder_t *config_holder) {
 		oldconfig = __sync_lock_test_and_set(confp, newconfig);
 		if (oldconfig) {
 			TSDebug(PLUGIN_TAG, "scheduling free: %p (%p)", oldconfig, newconfig);
-			free_cont = TSContCreate(free_handler, NULL);
+			free_cont = TSContCreate(free_handler, TSMutexCreate());
 			TSContDataSet(free_cont, (void *) oldconfig);
 			TSContSchedule(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
 		}

@@ -35,7 +35,7 @@
 					<h1>Steering Information:</h1>
 					<form method="post" action="/ds/<%= $steering->{ds_id} %>/steering/update" id="steering_form">
 						<div class="block">
-							%= label_for 'steering.ds_name' => 'DeliveryService Name:', class => 'label', style=>"width:150px;"
+							%= label_for 'steering.ds_name' => 'Steering Delivery Service: ', class => 'label', style=>"width:150px;"
 							%= field('steering.ds_name')->text(class => 'readonly_field', id => 'ds_name', name => 'steering.ds_name', readonly => 'readonly');
 						</div><br><br>
 						<div>
@@ -44,26 +44,44 @@
 							<% } %>
 							%= label_for 'steering.target_name_1' => 'Target Name:', class => 'label', style=>"width:150px;"
 							<select style="max-width:250px" name="steering.target_id_1">
-								<% if (defined($steering->{target_name_1})) { %>
+								<% if (defined($steering->{target_id_1})) { %>
 								<option value="<%=$steering->{target_id_1}%>" selected><%=$steering->{target_name_1}%></option>
+								<% } else { %>
+								<option value="" selected></option>
 								<% } %>
 								% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) {
 								<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
 								% }
 							</select>
 						</div><br>
+						<div>
+							<% unless (field('steering.target_id_1_weight')->valid) { %>
+							<span class="field-with-error"><%= field('steering.target_id_1_weight')->error %></span><br><br>
+							<% } %>
+							%= label_for 'steering.target_id_1_weight' => 'Target Weight (0 is default): ', class => 'label'
+									%= field('steering.target_id_1_weight')->text(class => 'field', id => 'steering.target_id_1_weight', style => 'width:60px', name => 'steering.target_id_1_weight');
+						</div><br>
 					</div>
 					<div>
 						%= label_for 'steering.target_name_2' => 'Target Name:', class => 'label', style=>"width:150px;"
 						<select style="max-width:250px" name="steering.target_id_2">
-							<% if (defined($steering->{target_name_2})) { %>
+							<% if (defined($steering->{target_id_2})) { %>
 							<option value="<%=$steering->{target_id_2}%>" selected><%=$steering->{target_name_2}%></option>
+							<% } else { %>
+							<option value="" selected></option>
 							<% } %>
 							% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) {
 							<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
 							% }
 						</select>
 					</div><br>
+						<div>
+							<% unless (field('steering.target_id_2_weight')->valid) { %>
+							<span class="field-with-error"><%= field('steering.target_id_2_weight')->error %></span><br><br>
+							<% } %>
+							%= label_for 'steering.target_id_2_weight' => 'Target Weight (0 is default): ', class => 'label'
+									%= field('steering.target_id_2_weight')->text(class => 'field', id => 'steering.target_id_2_weight', style => 'width:60px', name => 'steering.target_id_2_weight');
+						</div><br>
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
 							<% if ($priv_level >= 20) { %>  <!-- operations and admins only!! -->

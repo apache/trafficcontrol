@@ -20,8 +20,10 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
@@ -50,17 +52,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.isIn;
 import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 @Category(ExternalTest.class)
@@ -68,7 +72,7 @@ import static org.junit.Assert.fail;
 public class RouterTest {
 	private CloseableHttpClient httpClient;
 	private final String cdnDomain = ".thecdn.example.com";
-	
+
 	private String deliveryServiceId;
 	private String deliveryServiceDomain;
 	private List<String> validLocations = new ArrayList<>();
@@ -109,9 +113,15 @@ public class RouterTest {
 			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
 		}
 
-		JsonNode steeringNode = objectMapper.readTree(inputStream).get("response").get(0);
+		Set<String> steeringDeliveryServices = new HashSet<String>();
+		JsonNode steeringData = objectMapper.readTree(inputStream).get("response");
+		Iterator<JsonNode> elements = steeringData.elements();
 
-		String steeringDeliveryServiceId = steeringNode.get("deliveryService").asText();
+		while (elements.hasNext()) {
+			JsonNode ds = elements.next();
+			String dsId = ds.get("deliveryService").asText();
+			steeringDeliveryServices.add(dsId);
+		}
 
 		resourcePath = "publish/CrConfig.json";
 		inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
@@ -127,7 +137,7 @@ public class RouterTest {
 		while (deliveryServices.hasNext()) {
 			String dsId = deliveryServices.next();
 
-			if (dsId.equals(steeringDeliveryServiceId)) {
+			if (steeringDeliveryServices.contains(dsId)) {
 				continue;
 			}
 
@@ -163,6 +173,7 @@ public class RouterTest {
 				int port = cacheNode.get("port").asInt();
 				String portText = (port == 80) ? "" : ":" + port;
 				validLocations.add("http://" + cacheId + "." + deliveryServiceDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78");
+				validLocations.add("http://" + cacheId + "." + deliveryServiceDomain + portText + "/stuff?fakeClientIpAddress=12.34.56.78&format=json");
 			}
 
 			if (cacheNode.get("deliveryServices").has(httpsOnlyId)) {
@@ -222,7 +233,9 @@ public class RouterTest {
 
 	@After
 	public void after() throws IOException {
-	 	httpClient.close();
+		if (httpClient != null) {
+			httpClient.close();
+		}
 	}
 
 	@Test
@@ -446,7 +459,7 @@ public class RouterTest {
 		} catch (SSLHandshakeException e) {
 			// Expected, this means we're doing the right thing
 		}
-		
+
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
 		HttpPost httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-2");
 		httpClient.execute(httpPost).close();
@@ -543,6 +556,48 @@ public class RouterTest {
 				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
 				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
 			));
+		}
+	}
+
+	@Test
+	public void itDoesUseLocationFormatResponse() throws IOException, InterruptedException {
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78&format=json");
+		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+
+			HttpEntity entity = response.getEntity();
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+			assertThat(entity.getContent(), not(nullValue()));
+			System.out.println(entity.getContent());
+
+			JsonNode json = objectMapper.readTree(entity.getContent());
+			System.out.println(json);
+
+			assertThat(json.has("location"), equalTo(true));
+			assertThat(json.get("location").asText(), isIn(validLocations));
+			assertThat(json.get("location").asText(), Matchers.startsWith("http://"));
+		} finally {
+			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itDoesNotUseLocationFormatResponseForHead() throws IOException, InterruptedException {
+		HttpHead httpHead = new HttpHead("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78&format=json");
+		httpHead.addHeader("Host", "tr." + deliveryServiceId + ".bar");
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpHead);
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+			assertThat("Failed getting null body for HEAD request", response.getEntity(), nullValue());
+		} finally {
+			if (response != null) response.close();
 		}
 	}
 

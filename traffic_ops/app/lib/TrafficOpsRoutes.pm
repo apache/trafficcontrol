@@ -376,9 +376,6 @@ sub api_routes {
 	my $version   = shift;
 	my $namespace = shift;
 
-	# -- API DOCS
-	$r->get("/api/$version/docs")->to( 'ApiDocs#index', namespace => $namespace );
-
 	# -- ASNS (CRANS)
 	$r->get("/api/1.1/asns")->over( authenticated => 1 )->to( 'Asn#v11_index', namespace => $namespace );
 	$r->get("/api/1.2/asns")->over( authenticated => 1 )->to( 'Asn#index',     namespace => $namespace );
@@ -474,6 +471,12 @@ sub api_routes {
 	$r->get("/api/$version/logs/:days/days")->over( authenticated => 1 )->to( 'ChangeLog#index', namespace => $namespace );
 	$r->get("/api/$version/logs/newcount")->over( authenticated => 1 )->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
+	# -- CONFIG FILES
+	$r->get("/api/$version/server/#id/configfiles/ats")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_config_metadata', namespace => 'API::Configs' );
+	$r->get("/api/$version/profile/#id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_profile_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/server/#id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_server_config', namespace => 'API::Configs' );
+	$r->get("/api/$version/cdn/#id/configfiles/ats/#filename")->over( authenticated => 1 )->to ( 'ApacheTrafficServer#get_cdn_config', namespace => 'API::Configs' );
+
 	# -- DELIVERYSERVICES
 	# -- DELIVERYSERVICES: CRUD
 	$r->get("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#index', namespace => $namespace );
@@ -553,6 +556,13 @@ sub api_routes {
 	# -- DELIVERYSERVICES: SERVERS
 	# Supports ?orderby=key
 	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
+
+	# -- TENANTS
+	$r->get("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#index', namespace => $namespace );
+	$r->get( "/api/$version/tenants/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Tenant#show', namespace => $namespace );
+	$r->put("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#update', namespace => $namespace );
+	$r->post("/api/$version/tenants")->over( authenticated => 1 )->to( 'Tenant#create', namespace => $namespace );
+	$r->delete("/api/$version/tenants/:id")->over( authenticated => 1 )->to( 'Tenant#delete', namespace => $namespace );
 
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#index', namespace => $namespace );

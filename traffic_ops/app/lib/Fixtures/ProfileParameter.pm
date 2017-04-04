@@ -19,48 +19,6 @@ use namespace::autoclean;
 use Digest::SHA1 qw(sha1_hex);
 
 my %definition_for = (
-    domain_name => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 100,
-            parameter => 3,
-        },
-    },
-    domain_name2 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 200,
-            parameter => 3,
-        },
-    },
-    domain_name3 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 300,
-            parameter => 3,
-        },
-    },
-    domain_name5 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 500,
-            parameter => 3,
-        },
-    },
-    domain_name6 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 600,
-            parameter => 3,
-        },
-    },
-    domain_name7 => {
-        new   => 'ProfileParameter',
-        using => {
-            profile   => 700,
-            parameter => 3,
-        },
-    },
     rascal_properties1 => {
         new   => 'ProfileParameter',
         using => {
