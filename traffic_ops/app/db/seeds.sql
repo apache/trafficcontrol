@@ -15,8 +15,8 @@
 
 -- roles
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('read-only user', 'Block all access', 10) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('operations', 'Block all access', 20) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('admin', 'super-user', 30) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('migrations', 'database migrations user - DO NOT REMOVE', 20) ON CONFLICT (name) DO NOTHING;
