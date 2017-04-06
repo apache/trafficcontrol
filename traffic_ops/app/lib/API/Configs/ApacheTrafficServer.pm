@@ -159,7 +159,6 @@ sub get_server_config {
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename ); }
-	elsif ( $filename eq "cache.config" ) { $file_contents = $self->cache_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "packages" ) {
 		$file_contents = $self->get_package_versions( $server_obj, $filename );
 		$file_contents = encode_json($file_contents);
@@ -254,6 +253,7 @@ sub get_profile_config {
 	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename ); }
 	elsif ( $filename eq "12M_facts" ) { $file_contents = $self->facts( $profile_obj, $filename ); }
 	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "cache.config" ) { $file_contents = $self->cache_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
@@ -297,12 +297,12 @@ sub get_scope {
 	elsif ( $fname eq "parent.config" )           { $scope = 'server' }
 	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'server' }
 	elsif ( $fname eq "hosting.config" )          { $scope = 'server' }
-	elsif ( $fname eq "cache.config" )            { $scope = 'server' }
 	elsif ( $fname eq "packages" )                { $scope = 'server' }
 	elsif ( $fname eq "chkconfig" )               { $scope = 'server' }
 	elsif ( $fname eq "12M_facts" )               { $scope = 'profile' }
 	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profile' }
 	elsif ( $fname eq "astats.config" )           { $scope = 'profile' }
+	elsif ( $fname eq "cache.config" )            { $scope = 'profile' }
 	elsif ( $fname eq "drop_qstring.config" )     { $scope = 'profile' }
 	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profile' }
 	elsif ( $fname eq "plugin.config" )           { $scope = 'profile' }
@@ -1507,11 +1507,12 @@ sub url_sig_dot_config {
 
 sub cache_dot_config {
 	my $self       = shift;
-	my $server_obj = shift;
+	my $profile_obj = shift;
 	my $filename   = shift;
+	
 
-	my $text = $self->header_comment( $server_obj->host_name );
-	my $data = $self->ds_data($server_obj);
+	my $text = $self->header_comment( $profile_obj->name );
+	my $data = $self->profile_ds_data($profile_obj);
 
 	foreach my $ds ( @{ $data->{dslist} } ) {
 		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
@@ -1520,6 +1521,14 @@ sub cache_dot_config {
 			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
 		}
 	}
+
+	#remove duplicate lines, since we're looking up by profile
+	my @lines = split(/\n/,$text);
+	
+	my %seen;
+	@lines = grep { !$seen{$_}++ } @lines;
+
+	$text = join("\n",@lines);
 
 	return $text;
 }
