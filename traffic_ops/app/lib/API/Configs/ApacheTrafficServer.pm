@@ -438,6 +438,9 @@ sub profile_param_data {
 		if ( defined( $data->{$key} ) ) {
 			$key .= "__" . $row->parameter->id;
 		}
+		if ( $value =~ /^STRING __HOSTNAME__$/ ) {
+			$value = "STRING " . "__FULL_HOSTNAME__";
+		}
 		$data->{$key} = $value;
 	}
 	return $data;
