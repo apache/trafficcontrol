@@ -65,7 +65,7 @@ given ( $ARGV[1] ) {
 
 my $traffic_ops_host = undef;
 my $to_url = undef;
-my $to_cache_url = undef;
+my $to_rev_proxy_url = undef;
 my $TM_LOGIN         = undef;
 
 if ( defined( $ARGV[2] ) ) {
@@ -140,11 +140,13 @@ my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
 my $api_in_use = 1;
-my $cache_in_use = 1;
+my $rev_proxy_in_use = 1;
 my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+my $server_ipv4;
+my $server_tcp_port;
 
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
@@ -350,6 +352,16 @@ sub process_cfg_file {
 	$result = &lwp_get($uri) if ( !defined($result) && defined($uri) );
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
+
+	# Process __SERVER_TCP_PORT__, __HOSTNAME__, and __CACHE_IPV4__ values from traffic ops API.
+	if ( $server_tcp_port != 80 ) {
+		$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
+	}
+	else {
+		$result =~ s/:__SERVER_TCP_PORT__//g;
+	}
+	$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
+	$result =~ s/__HOSTNAME__/$hostname_short/g;
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
@@ -1386,10 +1398,10 @@ sub lwp_get {
 			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
 					return $response->code;
 			}
-			if ( $cache_in_use == 1 ) {
+			if ( $rev_proxy_in_use == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Cache.  Reverting to primary Traffic Ops host.\n";
 				$traffic_ops_host = $to_url;
-				$cache_in_use = 0;
+				$rev_proxy_in_use = 0;
 			}
 			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
@@ -1696,23 +1708,28 @@ sub get_cfg_file_list {
 	}
 
 	my $ort_ref = decode_json($result);
+	my @cf = $ort_ref->{'configFiles'};
 	
 	if ($api_in_use == 1) {
-		$to_url = $ort_ref->{'info'}->{'to_url'};
+		$to_url = $ort_ref->{'info'}->{'toUrl'};
 		$to_url =~ s/\/*$//g;
 		$traffic_ops_host = $to_url;
 		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $to_url\n");
-		$to_cache_url = $ort_ref->{'info'}->{'to_cache_url'};
-		if ( $to_cache_url ) {
-			$to_cache_url =~ s/\/*$//g;
-			$traffic_ops_host = $to_cache_url;
-			$cache_in_use = 1;
-			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Cache URL from Traffic Ops: $to_cache_url\n");
+		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
+		if ( $to_rev_proxy_url ) {
+			$to_rev_proxy_url =~ s/\/*$//g;
+			$traffic_ops_host = $to_rev_proxy_url;
+			$rev_proxy_in_use = 1;
+			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
 		}
-		$profile_name = $ort_ref->{'info'}->{'profile_name'};
+		$profile_name = $ort_ref->{'info'}->{'profileName'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
-		$cdn_name = $ort_ref->{'info'}->{'cdn_name'};
+		$cdn_name = $ort_ref->{'info'}->{'cdnName'};
 		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
+		$server_tcp_port = $ort_ref->{'info'}->{'serverTcpPort'};
+		( $log_level >> $INFO ) && printf("INFO Found cache server tcp port from Traffic Ops: $server_tcp_port\n");
+		$server_ipv4 = $ort_ref->{'info'}->{'serverIpv4'};
+		( $log_level >> $INFO ) && printf("INFO Found cache server ipv4 from Traffic Ops: $server_ipv4\n");
 	}
 	else {
 		$profile_name = $ort_ref->{'profile'}->{'name'};
@@ -1721,16 +1738,16 @@ sub get_cfg_file_list {
 		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	}
 	if ( $script_mode == $REVALIDATE ) {
-		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-			if ( $cfg_file eq "regex_revalidate.config" ) {
-				my $fname_on_disk = &get_filename_on_disk($cfg_file);
+		foreach my $cfg_file ( @cf ) {
+			if ( $cfg_file->{'name'} eq "regex_revalidate.config" ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'name'} );
 				( $log_level >> $INFO )
-					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'name'}, $cfg_file->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
 				if ($api_in_use == 1) {
-					$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
+					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
 				}
-				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
 			}
 		}
 	}
@@ -1738,16 +1755,17 @@ sub get_cfg_file_list {
 		if ( $reval_in_use == 1 ) {
 			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
 			delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
+			my @cf = $ort_ref->{'configFiles'};
 		}
-		foreach my $cfg_file ( sort keys %{ $ort_ref->{'config_files'} } ) {
-			my $fname_on_disk = &get_filename_on_disk($cfg_file);
+		foreach my $cfg_file ( @cf ) {
+			my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'name'} );
 			( $log_level >> $INFO )
-				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-			$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'name'}, $cfg_file->{'location'} );
+			$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
 			if ($api_in_use == 1) {
-				$cfg_files->{$fname_on_disk}->{'API_URI'} = $ort_ref->{'config_files'}->{$cfg_file}->{'API_URI'};
+				$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
 			}
-			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
 		}
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
@@ -2438,8 +2456,8 @@ sub set_uri {
 	
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
 	my $URI;
-	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'API_URI'}) ) {
-		$URI = $cfg_file_tracker->{$filename}->{'API_URI'};
+	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
+		$URI = $cfg_file_tracker->{$filename}->{'apiUri'};
 	}
 	else {
 		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
