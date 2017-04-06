@@ -64,7 +64,7 @@ sub get_config_metadata {
 	my %condition = ( 'me.host_name' => $host_name );
 	my $rs_server = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'cdn', 'profile' ] } );
 	my $tm_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm.url', config_file => 'global' ] } )->get_column('value')->first();
-	my $tm_rev_proxy_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm_rev_proxy.url', config_file => 'global' ] } )->get_column('value')->first();
+	my $tm_rev_proxy_url = $self->db->resultset('Parameter')->search( { -and => [ name => 'tm.rev_proxy.url', config_file => 'global' ] } )->get_column('value')->first();
 	my $cdn_name = $server_obj->cdn->name;
 	my $server = $rs_server->next;
 	my $config_file_obj;
@@ -95,7 +95,7 @@ sub get_config_metadata {
 		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 		while ( my $param = $rs_param->next ) {
 			if ( $param->name eq 'location' ) {
-				$config_file_obj->{ $param->config_file }->{'name'} = $param->config_file;
+				$config_file_obj->{ $param->config_file }->{'fnameOnDisk'} = $param->config_file;
 				$config_file_obj->{ $param->config_file }->{'location'} = $param->value;
 
 			}
