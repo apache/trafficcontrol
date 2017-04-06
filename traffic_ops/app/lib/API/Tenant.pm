@@ -44,14 +44,16 @@ sub index {
 	my $orderby = $self->param('orderby') || "name";
 	my $rs_data = $self->db->resultset("Tenant")->search( undef, {order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"id"           => $row->id,
-				"name"         => $row->name,
-				"active"       => \$row->active,
-				"parentId"     => $row->parent_id,
-			}
-		);
+		if (verify_tenancy_for_read($self, $row->id)) {
+			push(
+				@data, {
+					"id"           => $row->id,
+					"name"         => $row->name,
+					"active"       => \$row->active,
+					"parentId"     => $row->parent_id,
+				}
+			);
+		}
 	}
 	$self->success( \@data );
 }
@@ -64,14 +66,16 @@ sub show {
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"id"           => $row->id,
-				"name"         => $row->name,
-				"active"       => \$row->active,
-				"parentId"     => $row->parent_id,
-			}
-		);
+		if (verify_tenancy_for_read($self, $row->id)) {
+			push(
+				@data, {
+					"id"           => $row->id,
+					"name"         => $row->name,
+					"active"       => \$row->active,
+					"parentId"     => $row->parent_id,
+				}
+			);
+		}
 	}
 	$self->success( \@data );
 }
@@ -107,6 +111,8 @@ sub update {
 	}	
 
 	if ( !defined( $params->{parentId}) && !$self->isRootTenant($id) ) {
+		# Cannot turn a simple tenant to a root tenant.
+		# Practically there is no problem with doing so, but it is to risky to be done by mistake. 
 		return $self->alert("Parent Id is required.");
 	}
 	
@@ -117,14 +123,25 @@ sub update {
 	my $is_active = $params->{active};
 	
 	if ( !$params->{active} && $self->isRootTenant($id)) {
-		return $self->alert("Root user cannot be in-active.");
+		return $self->alert("Root tenant cannot be in-active.");
 	}
-	
 
-	if ( !defined($params->{parentId}) && !isRootTenant($id) ) {
-		return $self->alert("Only the \"root\" tenant can have no parent.");
+	#this is a write operation, allowed only by parents of the tenant (which are the owners of the resource of type tenant)	
+	my $current_resource_tenancy = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('parent_id')->single();
+	if (!defined($current_resource_tenancy)) {
+		#no parent - the tenant is its-own owner
+		$current_resource_tenancy = $id;
 	}
-	
+	if (!verify_tenancy_for_write($current_resource_tenancy)) {
+		return $self->alert("Current parent tenant is not under user's tenancy.");
+	}
+
+	if (!verify_tenancy_for_write($self, $params->{parentId})) {
+		return $self->alert("Parent tenant to be set is not under user's tenancy.");
+	}
+
+
+	#operation	
 	my $values = {
 		name      => $params->{name},
 		active    => $params->{active},
@@ -162,9 +179,15 @@ sub create {
 		return $self->alert("Tenant name is required.");
 	}
 
+	#not allowing to create additional root tenants.
+	#there is no real problem with that, but no real use also
 	my $parent_id = $params->{parentId};
 	if ( !defined($parent_id) ) {
 		return $self->alert("Parent Id is required.");
+	}
+
+	if (!verify_tenancy_for_write($self, $params->{parentId})) {
+		return $self->alert("Parent tenant to be set is not under user's tenancy.");
 	}
 
 	my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
@@ -217,14 +240,20 @@ sub delete {
 	if ( !defined($tenant) ) {
 		return $self->not_found();
 	}	
-	my $name = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('name')->single();
+
+	my $parent_tenant = $tenant->parent_id;
+	if (!verify_tenancy_for_write($self, $parent_tenant)) {
+		return $self->alert("Parent tenant is not under user's tenancy.");
+	}
+
+	my $name = $tenant->name;
 	
 	my $existing_child = $self->db->resultset('Tenant')->search( { parent_id => $id } )->get_column('name')->first();
 	if ($existing_child) {
 		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
 	}
 
-	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id })->get_column('username')->first();
+	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id }, {order_by => 'me.username' })->get_column('username')->first();
 	if ($existing_user) {
 		return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");
 	}

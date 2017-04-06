@@ -35,7 +35,7 @@ my $t      = Test::Mojo->new('TrafficOps');
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_ROOT_USER, p => Test::TestHelper::ADMIN_ROOT_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 #verifying the basic cfg
@@ -121,7 +121,7 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 #cannot change root-tenant to inactive
 ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
 			"name" => "root", "active" => 0, "parentId" => undef})
-			->json_is( "/alerts/0/text" => "Root user cannot be in-active.")
+			->json_is( "/alerts/0/text" => "Root tenant cannot be in-active.")
 			->status_is(400);
 
 #adding a child tenant
