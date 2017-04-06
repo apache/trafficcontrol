@@ -70,6 +70,7 @@ sub get_config_metadata {
 	if ($server) {
 
 		$data_obj->{'info'}->{'server_name'}	= $server_obj->host_name;
+		$data_obj->{'info'}->{'server_ipv4'}	= $server_obj->ip_address;
 		$data_obj->{'info'}->{'server_id'}		= $server_obj->id;
 		$data_obj->{'info'}->{'profile_name'}	= $server->profile->name;
 		$data_obj->{'info'}->{'profile_id'}		= $server->profile->id;
@@ -146,7 +147,6 @@ sub get_server_config {
 	my $file_contents;
 	if ( $filename eq "12M_facts" ) { $file_contents = $self->facts( $server_obj, $filename ); }
 	elsif ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename ); }
-	elsif ( $filename =~ /hdr_rw_.*\.config/ ) { $file_contents = $self->header_rewrite_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_server_config( $server_obj, $filename ); }
@@ -205,6 +205,7 @@ sub get_cdn_config {
 	my $file_contents;
 	if ( $filename eq "bg_fetch.config" ) { $file_contents = $self->bg_fetch_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename =~ /cacheurl.*\.config/ ) { $file_contents = $self->cacheurl_dot_config( $cdn_obj, $filename ); }
+	elsif ( $filename =~ /hdr_rw_.*\.config/ ) { $file_contents = $self->header_rewrite_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename =~ /regex_remap_.*\.config/ ) { $file_contents = $self->regex_remap_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename ); }
@@ -288,7 +289,6 @@ sub get_scope {
 	elsif ( $fname eq "records.config" )          { $scope = 'server' }
 	elsif ( $fname eq "remap.config" )            { $scope = 'server' }
 	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'server' }
-	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'server' }
 	elsif ( $fname eq "hosting.config" )          { $scope = 'server' }
 	elsif ( $fname eq "cache.config" )            { $scope = 'server' }
 	elsif ( $fname eq "packages" )                { $scope = 'server' }
@@ -304,6 +304,7 @@ sub get_scope {
 	elsif ( $fname eq "volume.config" )           { $scope = 'profile' }
 	elsif ( $fname eq "bg_fetch.config" )         { $scope = 'cdn' }
 	elsif ( $fname =~ /cacheurl.*\.config/ )      { $scope = 'cdn' }
+	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'cdn' }
 	elsif ( $fname =~ /regex_remap_.*\.config/ )  { $scope = 'cdn' }
 	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdn' }
 	elsif ( $fname =~ /set_dscp_.*\.config/ )     { $scope = 'cdn' }
@@ -995,10 +996,10 @@ sub bg_fetch_dot_config {
 
 sub header_rewrite_dot_config {
 	my $self     = shift;
-	my $server_obj  = shift;
+	my $cdn_obj  = shift;
 	my $filename = shift;
 
-	my $text      = $self->header_comment( $server_obj->host_name );
+	my $text      = $self->header_comment( $cdn_obj->name );
 	my $ds_xml_id = undef;
 	if ( $filename =~ /^hdr_rw_mid_(.*)\.config$/ ) {
 		$ds_xml_id = $1;
@@ -1014,8 +1015,10 @@ sub header_rewrite_dot_config {
 	}
 
 	$text =~ s/\s*__RETURN__\s*/\n/g;
-	my $ipv4 = $server_obj->ip_address;
-	$text =~ s/__CACHE_IPV4__/$ipv4/g;
+
+	#do the following text replacement at the ORT level for cacheability
+	# my $ipv4 = $server_obj->ip_address;
+	# $text =~ s/__CACHE_IPV4__/$ipv4/g;
 
 	return $text;
 }

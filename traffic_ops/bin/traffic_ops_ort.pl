@@ -145,6 +145,7 @@ my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+my $server_ipv4;
 
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
@@ -350,6 +351,10 @@ sub process_cfg_file {
 	$result = &lwp_get($uri) if ( !defined($result) && defined($uri) );
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
+
+	if ( $cfg_file =~ m/hdr\_rw\_(.*)\.config$/ ) {
+		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
+	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
@@ -886,70 +891,35 @@ sub check_syncds_state {
 					exit 1;
 				}
 			}
-			if ( defined($parent_reval_pending) ) {
-				if ( ( $parent_pending == 1 || $parent_reval_pending == 1 ) && $wait_for_parents == 1 ) {
-					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
-					if ( $script_mode == $SYNCDS ) {
-						if ( $dispersion > 0 ) {
-							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							( $dispersion > 0 ) && &sleep_timer($dispersion);
-						}
-	
-						$upd_ref = &lwp_get($uri);
-						if ( $upd_ref =~ m/^\d{3}$/ ) {
-							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-							exit 1;
-						}
-						$upd_json = decode_json($upd_ref);
-						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-						if ( !defined($parent_pending) ) {
-							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
-						}
-						if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
-							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-							exit 1;
-	
-						}
-						else {
-							( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						}
+			if ( $parent_pending == 1 && $wait_for_parents == 1 && $reval_in_use == 0) {
+				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
+				if ( $script_mode == $SYNCDS ) {
+					if ( $dispersion > 0 ) {
+						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						( $dispersion > 0 ) && &sleep_timer($dispersion);
 					}
-				}			
-				else {
-					( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
+					$upd_ref = &lwp_get($uri);
+					if ( $upd_ref =~ m/^\d{3}$/ ) {
+						( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
+						exit 1;
+					}
+					$upd_json = decode_json($upd_ref);
+					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+					if ( !defined($parent_pending) ) {
+						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
+					}
+					if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
+						( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+						exit 1;
+
+					}
+					else {
+						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
+					}
 				}
-			}
+			}			
 			else {
-				if ( $parent_pending == 1 && $wait_for_parents == 1 ) {
-					( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
-					if ( $script_mode == $SYNCDS ) {
-						if ( $dispersion > 0 ) {
-							( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-							( $dispersion > 0 ) && &sleep_timer($dispersion);
-						}
-						$upd_ref = &lwp_get($uri);
-						if ( $upd_ref =~ m/^\d{3}$/ ) {
-							( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-							exit 1;
-						}
-						$upd_json = decode_json($upd_ref);
-						$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-						if ( !defined($parent_pending) ) {
-							( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
-						}
-						if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
-							( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-							exit 1;
-	
-						}
-						else {
-							( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-						}
-					}
-				}			
-				else {
-					( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
-				}
+				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
@@ -1725,7 +1695,7 @@ sub get_cfg_file_list {
 
 	if ($result eq '404') {
 		$api_in_use = 0;
-		( $log_level >> $INFO ) && printf("INFO Traffic Ops version does not support config files API. Reverting to UI route.\n");
+		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Reverting to UI route.\n");
 		$uri = "/ort/$host_name/ort1";
 		$result = &lwp_get($uri);
 	}
@@ -1748,6 +1718,8 @@ sub get_cfg_file_list {
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
 		$cdn_name = $ort_ref->{'info'}->{'cdn_name'};
 		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
+		$server_ipv4 = $ort_ref->{'info'}->{'server_ipv4'};
+		( $log_level >> $INFO ) && printf("INFO Found server_ipv4 from Traffic Ops: $server_ipv4\n");
 	}
 	else {
 		$profile_name = $ort_ref->{'profile'}->{'name'};
@@ -1770,7 +1742,11 @@ sub get_cfg_file_list {
 		}
 	}
 	else {
-		foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
+		if ( $reval_in_use == 1 ) {
+			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
+			delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
+		}
+		foreach my $cfg_file ( sort keys %{ $ort_ref->{'config_files'} } ) {
 			my $fname_on_disk = &get_filename_on_disk($cfg_file);
 			( $log_level >> $INFO )
 				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
