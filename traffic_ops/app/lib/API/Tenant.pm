@@ -225,7 +225,7 @@ sub delete {
 	}
 
 	#The order of the below tests is intentional
-	my $existing_cdn = $self->db->resultset('Cdn')->search( { tenant_id => $id })->get_column('name')->first();
+	my $existing_cdn = $self->db->resultset('Cdn')->search( { tenant_id => $id }, {order_by => 'me.name' })->get_column('name')->first();
 	if ($existing_cdn) {
 		return $self->alert("Tenant '$name' is assign with CDNs(s): e.g. '$existing_cdn'. Please update/delete these CDNs and retry.");
 	}
