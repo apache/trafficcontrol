@@ -256,7 +256,7 @@ sub delete {
 	}
 
 	#The order of the below tests is intentional
-	my $existing_ds = $self->db->resultset('Deliveryservice')->search( { tenant_id => $id })->get_column('xml_id')->first();
+	my $existing_ds = $self->db->resultset('Deliveryservice')->search( { tenant_id => $id }, {order_by => 'me.xml_id' })->get_column('xml_id')->first();
 	if ($existing_ds) {
 		return $self->alert("Tenant '$name' is assign with delivery-services(s): e.g. '$existing_ds'. Please update/delete these delivery-services and retry.");
 	}
