@@ -69,7 +69,7 @@ sub index {
 
 	my $dbh;
 	if ( defined $username ) {
-		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ { 'role' => undef }, 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 	else {
 		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
@@ -98,6 +98,7 @@ sub index {
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
 				"username"        => $row->username,
+				"tenant"          => defined ($row->tenant) ? $row->tenant->name : "N/A",
 				"tenantId"        => $row->tenant_id
 			}
 		);
@@ -109,7 +110,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' ] } );
+	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' , 'tenant'] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -134,6 +135,7 @@ sub show {
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
 				"username"        => $row->username,
+				"tenant"          => defined ($row->tenant) ? $row->tenant->name : "N/A",
 				"tenantId"        => $row->tenant_id
 			}
 		);
@@ -216,6 +218,7 @@ sub update {
 		$response->{username} 				= $rs->username;
 		$response->{tenantId} 				= $rs->tenant_id;
 
+
 		&log( $self, "Updated User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
 		return $self->success( $response, "User update was successful." );
@@ -281,11 +284,14 @@ sub current {
 
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
+		my $user_tenant_id = $self->current_user_tenant();
+		my $user_tenant = defined($user_tenant_id) ? $self->db->resultset('Tenant')->search( { id => $user_tenant_id } )->get_column('name')->single : "N/A";
 		push(
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
-				"tenantId"	  => $self->current_user_tenant(),
+				"tenantId"	  => $user_tenant_id,
+				"tenant"          => $user_tenant,
 				"publicSshKey"  => "",
 				"role"            => $role,
 				"uid"             => "0",
@@ -330,6 +336,7 @@ sub current {
 					"phoneNumber"     => $row->phone_number,
 					"postalCode"      => $row->postal_code,
 					"country"         => $row->country,
+					"tenant"          => defined ($row->tenant) ? $row->tenant->name : "N/A",
 					"tenantId"        => $row->tenant_id,
 				}
 			);
