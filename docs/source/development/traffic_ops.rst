@@ -603,9 +603,11 @@ API 1.2 Reference
 .. toctree:: 
   :maxdepth: 1
 
+  traffic_ops_api/v12/api_capability
   traffic_ops_api/v12/asn
   traffic_ops_api/v12/cachegroup
   traffic_ops_api/v12/cache_stats
+  traffic_ops_api/v12/capability
   traffic_ops_api/v12/cdn
   traffic_ops_api/v12/changelog
   traffic_ops_api/v12/deliveryservice
