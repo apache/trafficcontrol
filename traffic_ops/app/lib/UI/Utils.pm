@@ -445,7 +445,19 @@ sub verify_tenancy {
 		#user tenant is in-active - cannot do any operation
 		return 0;
 	}
-	
+
+	if ($user_tenant == $resource_tenant) {
+	    #resource has same tenancy of the user, operations are allowed
+	    return 1;
+	}
+
+	#for effeciency working against the DB, read the entire DB at once and scan this data
+	my $parents_dict = {};
+	my $tenants_table = $self->db->resultset("Tenant")->search( undef);
+	while ( my $row = $tenants_table->next ) {
+		$parents_dict {$row->id} = $row->parent_id;
+	}
+
 	for (my $depth = 0; $depth < 100; $depth++) {
 	
 		if (!defined($resource_tenant)){
@@ -454,11 +466,11 @@ sub verify_tenancy {
 		}
 
         	if ($user_tenant == $resource_tenant) {
-		    #resource has same/child tenancy of the user, operations are allowed
+		    #resource has child tenancy of the user, operations are allowed
         	    return 1;
 		}
 		
-		$resource_tenant = $self->db->resultset('Tenant')->search( { id => $resource_tenant } )->get_column('parent_id')->single();
+		$resource_tenant = $parents_dict {$resource_tenant};
 	};
 	
 	#not found - recursion limit
