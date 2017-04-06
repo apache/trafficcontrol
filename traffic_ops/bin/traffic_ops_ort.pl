@@ -1739,10 +1739,10 @@ sub get_cfg_file_list {
 	}
 	if ( $script_mode == $REVALIDATE ) {
 		foreach my $cfg_file ( @cf ) {
-			if ( $cfg_file->{'name'} eq "regex_revalidate.config" ) {
-				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'name'} );
+			if ( $cfg_file->{'fnameOnDisk'} eq "regex_revalidate.config" ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
 				( $log_level >> $INFO )
-					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'name'}, $cfg_file->{'location'} );
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
 				if ($api_in_use == 1) {
 					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
@@ -1758,9 +1758,9 @@ sub get_cfg_file_list {
 			my @cf = $ort_ref->{'configFiles'};
 		}
 		foreach my $cfg_file ( @cf ) {
-			my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'name'} );
+			my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
 			( $log_level >> $INFO )
-				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'name'}, $cfg_file->{'location'} );
+				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
 			$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
 			if ($api_in_use == 1) {
 				$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
