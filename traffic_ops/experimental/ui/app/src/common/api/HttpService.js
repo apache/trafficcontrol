@@ -23,12 +23,14 @@ var HttpService = function($http, $q) {
         var deferred = $q.defer();
 
         $http.get(resource)
-            .success(function(result) {
-                deferred.resolve(result);
-            })
-            .error(function(fault) {
-                deferred.reject(fault);
-            });
+            .then(
+                function(result) {
+                    deferred.resolve(result);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
         return deferred.promise;
     };
@@ -37,12 +39,14 @@ var HttpService = function($http, $q) {
         var deferred = $q.defer();
 
         $http.post(resource, payload)
-            .success(function(result) {
-                deferred.resolve(result);
-            })
-            .error(function(fault) {
-                deferred.reject(fault);
-            });
+            .then(
+                function(result) {
+                    deferred.resolve(result);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
         return deferred.promise;
     };
@@ -51,12 +55,14 @@ var HttpService = function($http, $q) {
         var deferred = $q.defer();
 
         $http.put(resource, payload)
-            .success(function(result) {
-                deferred.resolve(result.response);
-            })
-            .error(function(fault) {
-                deferred.reject(fault);
-            });
+            .then(
+                function(result) {
+                    deferred.resolve(result.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
         return deferred.promise;
     };
@@ -65,12 +71,14 @@ var HttpService = function($http, $q) {
         var deferred = $q.defer();
 
         $http.delete(resource)
-            .success(function(result) {
-                deferred.resolve(result.response);
-            })
-            .error(function(fault) {
-                deferred.reject(fault);
-            });
+            .then(
+                function(result) {
+                    deferred.resolve(result.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
         return deferred.promise;
     };
