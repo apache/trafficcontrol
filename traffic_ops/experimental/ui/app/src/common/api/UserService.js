@@ -34,11 +34,11 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
                     }
                 );
         } else {
-            $http.get(ENV.api['root'] + "user/current.json")
+            $http.get(ENV.api['root'] + "user/current")
                 .then(
                     function(result) {
-                        userModel.setUser(result.response);
-                        deferred.resolve(result.response);
+                        userModel.setUser(result.data.response);
+                        deferred.resolve(result.data.response);
                     },
                     function(fault) {
                         deferred.reject(fault);
