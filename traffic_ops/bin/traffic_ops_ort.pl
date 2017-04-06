@@ -25,6 +25,7 @@ use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
 
+
 $| = 1;
 my $date           = `/bin/date`;
 chomp($date);
@@ -140,11 +141,13 @@ my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
 my $api_in_use = 1;
-my $rev_proxy_in_use = 1;
+my $rev_proxy_in_use = 0;
 my $lwp_conn                   = &setup_lwp();
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+my $hostname_full = `/bin/hostname`;
+chomp($hostname_full);
 my $server_ipv4;
 my $server_tcp_port;
 
@@ -353,7 +356,7 @@ sub process_cfg_file {
 
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
 
-	# Process __SERVER_TCP_PORT__, __HOSTNAME__, and __CACHE_IPV4__ values from traffic ops API.
+	# Process __SERVER_TCP_PORT__, __HOSTNAME__, __FULL_HOSTNAME__ and __CACHE_IPV4__ values from traffic ops API.
 	if ( $server_tcp_port != 80 ) {
 		$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
 	}
@@ -362,6 +365,7 @@ sub process_cfg_file {
 	}
 	$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
 	$result =~ s/__HOSTNAME__/$hostname_short/g;
+	$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
@@ -1399,7 +1403,7 @@ sub lwp_get {
 					return $response->code;
 			}
 			if ( $rev_proxy_in_use == 1 ) {
-				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Cache.  Reverting to primary Traffic Ops host.\n";
+				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
 				$traffic_ops_host = $to_url;
 				$rev_proxy_in_use = 0;
 			}
@@ -1708,7 +1712,7 @@ sub get_cfg_file_list {
 	}
 
 	my $ort_ref = decode_json($result);
-	my @cf = $ort_ref->{'configFiles'};
+	#my @cf = $ort_ref->{'configFiles'};
 	
 	if ($api_in_use == 1) {
 		$to_url = $ort_ref->{'info'}->{'toUrl'};
@@ -1738,7 +1742,7 @@ sub get_cfg_file_list {
 		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
 	}
 	if ( $script_mode == $REVALIDATE ) {
-		foreach my $cfg_file ( @cf ) {
+		foreach my $cfg_file ( @{$ort_ref->{'configFiles'}} ) {
 			if ( $cfg_file->{'fnameOnDisk'} eq "regex_revalidate.config" ) {
 				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
 				( $log_level >> $INFO )
