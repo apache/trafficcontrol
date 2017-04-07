@@ -34,7 +34,7 @@ package InstallUtils;
 # under the License.
 
 
-use Term::ReadPassword;
+use Term::ReadKey;
 use JSON;
 use IO::Pipe;
 use base qw{ Exporter };
@@ -172,25 +172,27 @@ sub promptUser {
     }
 
     if ( defined $noEcho && $noEcho ) {
-        my $response = read_password('');
-        if ( ( !defined $response || $response eq '' ) && ( defined $defaultValue && $defaultValue ne '' ) ) {
-            $response = $defaultValue;
-        }
-        return $response;
+        # Set echo mode to off via ReadMode 2
+        ReadMode 2;
     }
-    else {
-        $| = 1;
-        $_ = <STDIN>;
-        chomp;
 
-        if ("$defaultValue") {
-            return $_ ? $_ : $defaultValue;
-        }
-        else {
-            return $_;
-        }
-        return $_;
+    $| = 1;
+    $_ = <STDIN>;
+    chomp;
+
+    if ( defined $noEcho && $noEcho ) {
+        # Set echo mode to on via ReadMode 1
+        ReadMode 1;
+        # Print extra line because echo mode was off during the STDIN
+        print "\n";
     }
+
+    if ("$defaultValue") {
+        return $_ ? $_ : $defaultValue;
+    }
+
+    # If we have gotten here, return what is left
+    return $_;
 }
 
 sub promptRequired {
