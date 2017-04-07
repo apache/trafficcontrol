@@ -1,19 +1,8 @@
 # Traffic Portal Installation
 
-### 1. Build w/ Docker
+### 1. Build RPM w/ Docker
 
-* Download Traffic Control repo
-
-    ```
-    $ git clone https://github.com/apache/incubator-trafficcontrol.git
-    ```
-
-* Build the RPM
-
-    ```
-    $ cd traffic_control/build
-    $ ./docker-build.sh -r https://github.com/apache/incubator-trafficcontrol.git -b master traffic_portal
-    ```
+* See https://github.com/apache/incubator-trafficcontrol/blob/master/BUILD.md
 
 ### 2. Install
 

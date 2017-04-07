@@ -88,6 +88,10 @@ var CacheGroupService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
+    this.getParameterCacheGroups = function(paramId) {
+        // todo: this needs an api: /parameters/:id/cachegroups
+        return Restangular.one('parameters', paramId).getList('cachegroups');
+    };
 
 };
 

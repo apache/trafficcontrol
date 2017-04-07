@@ -38,7 +38,7 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#parametersTable').dataTable({
+		$('#parameterProfilesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 100
 		});

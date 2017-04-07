@@ -23,8 +23,8 @@ under the License.
             <li class="active">Tenants</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="createTenant()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Tenant</button>
+            <button class="btn btn-primary" ng-click="createTenant()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -34,11 +34,17 @@ under the License.
             <thead>
             <tr class="headings">
                 <th>id</th>
+                <th>name</th>
+                <th>active</th>
+                <th>parent</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editTenant(tenant.id)" ng-repeat="tenant in tenants">
                 <td>{{tenant.id}}</td>
+                <td>{{tenant.name}}</td>
+                <td>{{tenant.active}}</td>
+                <td>{{tenant.parentId}}</td>
             </tr>
             </tbody>
         </table>

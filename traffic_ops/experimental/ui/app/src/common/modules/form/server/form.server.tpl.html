@@ -44,14 +44,227 @@ under the License.
     <div class="x_content">
         <br>
         <form name="serverForm" class="form-horizontal form-label-left" novalidate>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm[prop.name]), 'has-feedback': hasError(serverForm[prop.name])}" ng-repeat="prop in props">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.hostName), 'has-feedback': hasError(serverForm.hostName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Hostname *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="server[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" ng-pattern="prop.pattern" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm[prop.name], 'pattern')">{{prop.invalidMsg}}</small>
-                    <span ng-show="hasError(serverForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <input id="hostName" name="hostName" type="text" class="form-control" ng-model="server.hostName" ng-required="true" ng-maxlength="45" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.hostName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.hostName, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.hostName, 'pattern')">No Spaces</small>
+                    <span ng-show="hasError(serverForm.hostName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.domainName), 'has-feedback': hasError(serverForm.domainName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Domain name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="domainName" name="domainName" type="text" class="form-control" ng-model="server.domainName" ng-required="true" ng-maxlength="45" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.domainName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.domainName, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.domainName, 'pattern')">No Spaces</small>
+                    <span ng-show="hasError(serverForm.domainName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.tcpPort), 'has-feedback': hasError(serverForm.tcpPort)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">TCP Port</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="tcpPort" name="tcpPort" type="text" class="form-control" ng-model="server.tcpPort" ng-maxlength="10" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.tcpPort, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.tcpPort, 'pattern')">Number</small>
+                    <span ng-show="hasError(serverForm.tcpPort)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.xmppId), 'has-feedback': hasError(serverForm.xmppId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">XMPP ID</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="xmppId" name="xmppId" type="text" class="form-control" ng-model="server.xmppId" ng-maxlength="256" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.xmppId, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.xmppId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.xmppPasswd), 'has-feedback': hasError(serverForm.xmppPasswd)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">XMPP Password</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="xmppPasswd" name="xmppPasswd" type="text" class="form-control" ng-model="server.xmppPasswd" ng-maxlength="45" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.xmppPasswd, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.xmppPasswd)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.interfaceName), 'has-feedback': hasError(serverForm.interfaceName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Interface Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="interfaceName" name="interfaceName" type="text" class="form-control" ng-model="server.interfaceName" ng-required="true" ng-maxlength="45" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceName, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.interfaceName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipAddress), 'has-feedback': hasError(serverForm.ipAddress)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IP Address *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ipAddress" name="ipAddress" type="text" class="form-control" ng-model="server.ipAddress" ng-required="true" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipAddress, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.ipAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipNetmask), 'has-feedback': hasError(serverForm.ipNetmask)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IP Netmask *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ipNetmask" name="ipNetmask" type="text" class="form-control" ng-model="server.ipNetmask" ng-required="true" ng-maxlength="45" ng-pattern="validations.ipRegex" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipNetmask, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.ipNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ipGateway), 'has-feedback': hasError(serverForm.ipGateway)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IP Gateway *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ipGateway" name="ipGateway" type="text" class="form-control" ng-model="server.ipGateway" ng-required="true" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ipGateway, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.ipGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Address), 'has-feedback': hasError(serverForm.ip6Address)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Address</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ip6Address" name="ip6Address" type="text" class="form-control" ng-model="server.ip6Address" ng-maxlength="50" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ip6Address, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.ip6Address)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.ip6Gateway), 'has-feedback': hasError(serverForm.ip6Gateway)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Gateway</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ip6Gateway" name="ip6Gateway" type="text" class="form-control" ng-model="server.ip6Gateway" ng-maxlength="50" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.ip6Gateway, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.ip6Gateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.interfaceMtu), 'has-feedback': hasError(serverForm.interfaceMtu)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Interface MTU *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="interfaceMtu" name="interfaceMtu" type="text" class="form-control" ng-model="server.interfaceMtu" ng-required="true" ng-maxlength="11" ng-pattern="/(^1500$|^9000$)/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'pattern')">1500 or 9000</small>
+                    <span ng-show="hasError(serverForm.interfaceMtu)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.rack), 'has-feedback': hasError(serverForm.rack)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Rack</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="rack" name="rack" type="text" class="form-control" ng-model="server.rack" ng-maxlength="64" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.rack, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.rack)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.offlineReason), 'has-feedback': hasError(serverForm.offlineReason)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Offline Reason</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="server.offlineReason" ng-maxlength="256" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.offlineReason, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.offlineReason)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.mgmtIpAddress), 'has-feedback': hasError(serverForm.mgmtIpAddress)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Address</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="mgmtIpAddress" name="mgmtIpAddress" type="text" class="form-control" ng-model="server.mgmtIpAddress" ng-maxlength="50" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.mgmtIpAddress, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.mgmtIpAddress, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.mgmtIpAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.mgmtIpNetmask), 'has-feedback': hasError(serverForm.mgmtIpNetmask)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Netmask</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="mgmtIpNetmask" name="mgmtIpNetmask" type="text" class="form-control" ng-model="server.mgmtIpNetmask" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.mgmtIpNetmask, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.mgmtIpNetmask, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.mgmtIpNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.mgmtIpGateway), 'has-feedback': hasError(serverForm.mgmtIpGateway)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Gateway</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="mgmtIpGateway" name="mgmtIpGateway" type="text" class="form-control" ng-model="server.mgmtIpGateway" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.mgmtIpGateway, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.mgmtIpGateway, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.mgmtIpGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.iloIpAddress), 'has-feedback': hasError(serverForm.iloIpAddress)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">ILO IP Address</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="iloIpAddress" name="iloIpAddress" type="text" class="form-control" ng-model="server.iloIpAddress" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloIpAddress, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloIpAddress, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.iloIpAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.iloIpNetmask), 'has-feedback': hasError(serverForm.iloIpNetmask)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">ILO IP Netmask</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="iloIpNetmask" name="iloIpNetmask" type="text" class="form-control" ng-model="server.iloIpNetmask" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloIpNetmask, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloIpNetmask, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.iloIpNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.iloIpGateway), 'has-feedback': hasError(serverForm.iloIpGateway)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">ILO IP Gateway</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="iloIpGateway" name="iloIpGateway" type="text" class="form-control" ng-model="server.iloIpGateway" ng-maxlength="45" ng-pattern="ipRegex()" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloIpGateway, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloIpGateway, 'pattern')">Invalid</small>
+                    <span ng-show="hasError(serverForm.iloIpGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.iloUsername), 'has-feedback': hasError(serverForm.iloUsername)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">ILO Username</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="iloUsername" name="iloUsername" type="text" class="form-control" ng-model="server.iloUsername" ng-maxlength="45" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloUsername, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloUsername, 'pattern')">No Spaces</small>
+                    <span ng-show="hasError(serverForm.iloUsername)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.iloPassword), 'has-feedback': hasError(serverForm.iloPassword)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">ILO Password</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="iloPassword" name="iloPassword" type="text" class="form-control" ng-model="server.iloPassword" ng-maxlength="45" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.iloPassword, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.iloPassword)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.routerHostName), 'has-feedback': hasError(serverForm.routerHostName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Router Hostname</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="routerHostName" name="routerHostName" type="text" class="form-control" ng-model="server.routerHostName" ng-maxlength="256" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.routerHostName, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.routerHostName, 'pattern')">No Spaces</small>
+                    <span ng-show="hasError(serverForm.routerHostName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.routerPortName), 'has-feedback': hasError(serverForm.routerPortName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Router Port Name</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="routerPortName" name="routerPortName" type="text" class="form-control" ng-model="server.routerPortName" ng-maxlength="256" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.routerPortName, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(serverForm.routerPortName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.httpsPort), 'has-feedback': hasError(serverForm.httpsPort)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">HTTPS Port</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="httpsPort" name="httpsPort" type="text" class="form-control" ng-model="server.httpsPort" ng-maxlength="10" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.httpsPort, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.httpsPort, 'pattern')">Number</small>
+                    <span ng-show="hasError(serverForm.httpsPort)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.cdn), 'has-feedback': hasError(serverForm.cdn)}">

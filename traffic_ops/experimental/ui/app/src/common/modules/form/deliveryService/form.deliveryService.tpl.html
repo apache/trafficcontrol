@@ -24,18 +24,19 @@ under the License.
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" ng-click="assignServers()">Assign Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
-            <button class="btn btn-primary" ng-click="viewRegexes()">Edit Regexes &nbsp;&nbsp;<i class="fa fa-edit"></i></button>
+            <button class="btn btn-primary" title="Assign Caches" ng-click="assignServers()"><i class="fa fa-server"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
-                    <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                    <li role="menuitem"><a ng-click="viewRegexes()">Edit Delivery Service Regexes</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="invalidateContent()">Invalidate Content</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="cachegroupHealth()">View Cachegroup Health</a></li>
                     <li role="menuitem"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>
@@ -282,12 +283,11 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">CCR Profile *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles" required>
+                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
                         <option value="">Select...</option>
                     </select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.profile, 'required')">Required</small>
                 </div>
             </div>
 

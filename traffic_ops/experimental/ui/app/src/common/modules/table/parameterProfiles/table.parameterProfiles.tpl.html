@@ -25,8 +25,8 @@ under the License.
             <li class="active">Profiles</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="addProfile()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Profile to Param</button>
+            <button class="btn btn-primary" title="Add Profile" ng-click="addProfile()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -44,7 +44,7 @@ under the License.
             <tr ng-repeat="parameterProfile in parameterProfiles">
                 <td>{{parameterProfile.name}}</td>
                 <td>{{parameterProfile.description}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove from Parameter" ng-click="removeProfile()"><i class="fa fa-trash-o"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Remove Profile" ng-click="removeProfile()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>
         </table>

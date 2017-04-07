@@ -17,15 +17,33 @@
  * under the License.
  */
 
-var FormProfileController = function(profile, $scope, $location, formUtils, stringUtils, locationUtils) {
+var FormProfileController = function(profile, $scope, $location, formUtils, locationUtils, cdnService) {
+
+    var getCDNs = function() {
+        cdnService.getCDNs()
+            .then(function(result) {
+                $scope.cdns = result;
+            });
+    };
 
     $scope.profile = profile;
 
-    $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 }
+    $scope.types = [
+        { value: 'ATS_PROFILE' },
+        { value: 'TR_PROFILE' },
+        { value: 'TM_PROFILE' },
+        { value: 'TS_PROFILE' },
+        { value: 'TP_PROFILE' },
+        { value: 'INFLUXDB_PROFILE' },
+        { value: 'RIAK_PROFILE' },
+        { value: 'SPLUNK_PROFILE' },
+        { value: 'DS_PROFILE' },
+        { value: 'ORG_PROFILE' },
+        { value: 'KAFKA_PROFILE' },
+        { value: 'LOGSTASH_PROFILE' },
+        { value: 'ES_PROFILE' },
+        { value: 'UNK_PROFILE' }
     ];
-
-    $scope.labelize = stringUtils.labelize;
 
     $scope.viewParams = function() {
         $location.path($location.path() + '/parameters');
@@ -33,6 +51,10 @@ var FormProfileController = function(profile, $scope, $location, formUtils, stri
 
     $scope.viewServers = function() {
         $location.path($location.path() + '/servers');
+    };
+
+    $scope.viewDeliveryServices = function() {
+        $location.path($location.path() + '/delivery-services');
     };
 
     $scope.cloneProfile = function() {
@@ -49,7 +71,12 @@ var FormProfileController = function(profile, $scope, $location, formUtils, stri
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
+    var init = function () {
+        getCDNs();
+    };
+    init();
+
 };
 
-FormProfileController.$inject = ['profile', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
+FormProfileController.$inject = ['profile', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService'];
 module.exports = FormProfileController;

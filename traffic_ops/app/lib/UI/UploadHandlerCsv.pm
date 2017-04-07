@@ -326,6 +326,7 @@ sub processCSV {
 					}
 					else {
 						my $paramHashRef = &getParamHashRef( \@p, $lineNumber );
+						$paramHashRef = &replaceNamedLookupValues( $paramHashRef, $cdnHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
 
 						# print Dumper($paramHashRef);
 						$processCSVErrors .= &UI::Server::check_server_input( $self, $paramHashRef );
@@ -366,6 +367,7 @@ sub processCSV {
 				}
 				else {
 					my $paramHashRef = &getParamHashRef( \@p, $lineNumber );
+					$paramHashRef = &replaceNamedLookupValues( $paramHashRef, $cdnHashRef, $cachegroupHashRef, $typeHashRef, $profileHashRef, $physLocationHashRef );
 					$processCSVErrors .= &UI::Server::check_server_input( $self, $paramHashRef );
 					my $enteredCdn          = $p[9];
 					my $enteredCachegroup   = $p[10];
@@ -404,10 +406,10 @@ sub replaceNamedLookupValues {
 	$paramHashRef->{'type'} = $typeHashRef->{ $paramHashRef->{'type'} };
 
 	#  }
-	#  if ($paramHashRef->{'profile'} !~ /^[+-]?\d+$/) {
-	$paramHashRef->{'profile'} = $profileHashRef->{ $paramHashRef->{'profile'} };
+	if ($paramHashRef->{'profile'} !~ /^[+-]?\d+$/) {
+		$paramHashRef->{'profile'} = $profileHashRef->{ $paramHashRef->{'profile'} };
 
-	#  }
+	}
 	#  if ($paramHashRef->{'phys_location'} !~ /^[+-]?\d+$/) {
 	$paramHashRef->{'phys_location'} = $physLocationHashRef->{ $paramHashRef->{'phys_location'} };
 

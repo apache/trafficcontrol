@@ -219,12 +219,12 @@ sub delete {
 	}	
 	my $name = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('name')->single();
 	
-	my $existing_child = $self->db->resultset('Tenant')->search( { parent_id => $id } )->get_column('name')->first();
+	my $existing_child = $self->db->resultset('Tenant')->search( { parent_id => $id }, {order_by => 'me.name' } )->get_column('name')->first();
 	if ($existing_child) {
 		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
 	}
 
-	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id })->get_column('username')->first();
+	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id }, {order_by => 'me.username' })->get_column('username')->first();
 	if ($existing_user) {
 		return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");
 	}
