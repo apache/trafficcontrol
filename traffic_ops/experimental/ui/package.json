@@ -9,7 +9,6 @@
     "devDependencies": {
         "morgan": "1.7.0",
         "errorhandler": "1.4.3",
-        "connect-modrewrite": "0.8.5",
         "connect-timeout": "1.7.0",
         "ssl-root-cas": "1.1.10",
         "express": "4.13.4",
@@ -29,9 +28,7 @@
         "grunt-contrib-watch": "0.6.1",
         "grunt-express-server": "0.5.2",
         "grunt-html2js": "0.3.5",
-        "grunt-install-dependencies": "0.2.0",
         "grunt-newer": "1.1.2",
-        "grunt-ng-constant": "2.0.1",
         "grunt-rev": "0.1.0",
         "grunt-usemin": "3.0.0",
         "grunt-wiredep": "2.0.0",

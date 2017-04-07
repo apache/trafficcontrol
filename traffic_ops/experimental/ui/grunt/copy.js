@@ -61,24 +61,6 @@ module.exports = {
             {
                 expand: true,
                 dot: true,
-                cwd: '<%= globalConfig.srcserverdir %>',
-                dest: '<%= globalConfig.distdir %>/server',
-                src: [
-                    'server.js'
-                ]
-            },
-            {
-                expand: true,
-                dot: true,
-                cwd: '<%= globalConfig.srcdir %>',
-                dest: '<%= globalConfig.distdir %>',
-                src: [
-                    'package.json'
-                ]
-            },
-            {
-                expand: true,
-                dot: true,
                 cwd: '<%= globalConfig.srcdir %>',
                 dest: '<%= globalConfig.distdir %>/public',
                 src: [

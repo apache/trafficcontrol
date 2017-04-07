@@ -25,22 +25,11 @@ var constants = require('constants'),
     fs = require('fs'),
     morgan = require('morgan'),
     errorhandler = require('errorhandler'),
-    modRewrite = require('connect-modrewrite'),
     timeout = require('connect-timeout');
 
-var config;
-
-try {
-    // this should exist in prod environment. no need to create this file in dev as it will use the fallback (see catch)
-    config = require('/etc/traffic_ops_v2/conf/config');
-}
-catch(e) {
-    // this is used for dev environment
-    config = require('../conf/config');
-}
-
-var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' });
-var useSSL = config.useSSL;
+var config = require('../conf/config'),
+    logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
+    useSSL = config.useSSL;
 
 // Disable for self-signed certs in dev/test
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
@@ -60,10 +49,6 @@ app.all ("/*", function (req, res, next) {
     }
 });
 
-app.use(modRewrite([
-        '^/api/(.*?)\\?(.*)$ ' + config.api.base_url + '/api/$1?$2&api_key=' + config.api.key + ' [P]', // match /api/{version}/foos?active=true and replace with api.base_url/api/{version}/foos?active=true&api_key=api.key
-        '^/api/(.*)$ ' + config.api.base_url + '/api/$1?api_key=' + config.api.key + ' [P]' // match /api/{version}/foos and replace with api.base_url/api/{version}/foos?api_key=api.key
-]));
 app.use(express.static(config.files.static));
 app.use(morgan('combined', {
     stream: logStream,
@@ -72,14 +57,10 @@ app.use(morgan('combined', {
 app.use(errorhandler());
 app.use(timeout(config.timeout));
 
-if (app.get('env') === 'dev') {
-    app.use(require('connect-livereload')({
-        port: 35728,
-        excludeList: ['.woff', '.flv']
-    }));
-} else {
-    app.set('env', "production");
-}
+app.use(require('connect-livereload')({
+    port: 35728,
+    excludeList: ['.woff', '.flv']
+}));
 
 // Enable reverse proxy support in Express. This causes the
 // the "X-Forwarded-Proto" header field to be trusted so its
@@ -112,6 +93,6 @@ if (useSSL) {
     sslOptions.agent = new https.Agent(sslOptions);
 }
 
-console.log("Traffic Ops Port         : %s", config.port);
-console.log("Traffic Ops Proxy Port   : %s", config.proxyPort);
-console.log("Traffic Ops SSL Port     : %s", config.sslPort);
+console.log("Traffic Ops UI Port         : %s", config.port);
+console.log("Traffic Ops UI Proxy Port   : %s", config.proxyPort);
+console.log("Traffic Ops UI SSL Port     : %s", config.sslPort);
