@@ -17,6 +17,7 @@
  * under the License.
  */
 
+// this is the config that is consumed by server.js when running in dev mode
 module.exports = {
     timeout: '120s',
     useSSL: false, // set to true if using ssl
@@ -29,10 +30,6 @@ module.exports = {
         ca:     [
             '/path/to/ssl-bundle.crt'
         ]
-    },
-    api: {
-        base_url: 'http://localhost:3000',
-        key: ''
     },
     files: {
         static: './app/dist/public/'
