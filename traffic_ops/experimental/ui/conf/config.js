@@ -17,7 +17,7 @@
  * under the License.
  */
 
-// this is the config that is consumed by server.js when running in dev mode
+// this is the config that is consumed by server.js
 module.exports = {
     timeout: '120s',
     useSSL: false, // set to true if using ssl
