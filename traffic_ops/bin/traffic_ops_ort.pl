@@ -1712,7 +1712,6 @@ sub get_cfg_file_list {
 	}
 
 	my $ort_ref = decode_json($result);
-	#my @cf = $ort_ref->{'configFiles'};
 	
 	if ($api_in_use == 1) {
 		$to_url = $ort_ref->{'info'}->{'toUrl'};
@@ -1758,18 +1757,37 @@ sub get_cfg_file_list {
 	else {
 		if ( $reval_in_use == 1 ) {
 			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
-			delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
-			my @cf = $ort_ref->{'configFiles'};
-		}
-		foreach my $cfg_file ( @cf ) {
-			my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
-			( $log_level >> $INFO )
-				&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
-			$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
-			if ($api_in_use == 1) {
-				$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+			if ( $api_in_use == 1 ) {
+				my @new = grep { $_->{'fnameOnDisk'} ne 'regex_revalidate.config' } @{$ort_ref->{'configFiles'}};
+				$ort_ref->{'configFiles'} = \@new;
 			}
-			$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+			else {
+				delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
+			}
+		}
+		if ( $api_in_use == 1 ) {
+			foreach my $cfg_file (@{$ort_ref->{'configFiles'}} ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
+				( $log_level >> $INFO )
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
+				if ($api_in_use == 1) {
+					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+				}
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+			}
+		}
+		else {
+			foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file );
+				( $log_level >> $INFO )
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+				if ($api_in_use == 1) {
+					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+				}
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+			}
 		}
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
