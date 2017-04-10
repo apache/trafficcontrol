@@ -1442,9 +1442,13 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLat                | yes      | The latitude to use when the client cannot be found in the CZF or the Geo lookup.                       |
+  | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
+  |                        |          |                                                                                                         |
+  |                        |          | - e.g 39.7391500, 45 or 0                                                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLong               | yes      | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                      |
+  | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
+  |                        |          |                                                                                                         |
+  |                        |          | - e.g -104.9847000, 45 or 0                                                                             |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1508,8 +1512,8 @@ SSL Keys
         "ipv6RoutingEnabled": false,
         "logsEnabled": false,
         "multiSiteOrigin": false,
-        "missLat": 45,
-        "missLong": 45,
+        "missLat": 39.7391500,
+        "missLong": -104.9847000,
         "qstringIgnore": 0,
         "rangeRequestHandling": 0,
         "regionalGeoBlocking": false,
