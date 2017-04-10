@@ -28,8 +28,16 @@ var constants = require('constants'),
     modRewrite = require('connect-modrewrite'),
     timeout = require('connect-timeout');
 
-var config = require('./conf/config'),
-    logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
+var config;
+
+try {
+    config = require('/opt/traffic_ops_ui/conf/config');
+}
+catch(e) {
+    config = require('./conf/config');
+}
+
+var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
     useSSL = config.useSSL;
 
 // Disable for self-signed certs in dev/test
