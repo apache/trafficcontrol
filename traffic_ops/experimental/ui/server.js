@@ -31,7 +31,7 @@ var constants = require('constants'),
 var config;
 
 try {
-    config = require('/opt/traffic_ops_ui/conf/config');
+    config = require('/etc/traffic_ops_ui/conf/config');
 }
 catch(e) {
     config = require('./conf/config');
