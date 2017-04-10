@@ -23,6 +23,6 @@
 
 angular.module('config', [])
 
-.constant('ENV', { api: { root:'http://localhost:3000/api/1.2/' } })
+.constant('ENV', { api: { root:'/api/1.2/' } })
 
 ;
