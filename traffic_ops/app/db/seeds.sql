@@ -14,10 +14,10 @@
 */
 
 -- cdns
-insert into cdn (name, dnssec_enabled) values ('ALL', false) ON CONFLICT (name) DO NOTHING;
+insert into cdn (name, dnssec_enabled, domain_name) values ('ALL', false, '-') ON CONFLICT (name) DO NOTHING;
 
 -- job agents
-insert into job_agent (name, description, active) values ('dummy', 'Description of Purge Agent', true) ON CONFLICT (name) DO NOTHING;
+insert into job_agent (name, description, active) values ('dummy', 'Description of Purge Agent', 1) ON CONFLICT (name) DO NOTHING;
 
 -- job statuses
 insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT (name) DO NOTHING;
