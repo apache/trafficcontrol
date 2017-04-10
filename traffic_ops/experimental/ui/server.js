@@ -57,10 +57,14 @@ app.use(morgan('combined', {
 app.use(errorhandler());
 app.use(timeout(config.timeout));
 
-app.use(require('connect-livereload')({
-    port: 35728,
-    excludeList: ['.woff', '.flv']
-}));
+if (app.get('env') === 'dev') {
+    app.use(require('connect-livereload')({
+        port: 35728,
+        excludeList: ['.woff', '.flv']
+    }));
+} else {
+    app.set('env', 'production');
+}
 
 // Enable reverse proxy support in Express. This causes the
 // the "X-Forwarded-Proto" header field to be trusted so its
