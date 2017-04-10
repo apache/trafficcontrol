@@ -27,7 +27,7 @@ var constants = require('constants'),
     errorhandler = require('errorhandler'),
     timeout = require('connect-timeout');
 
-var config = require('../conf/config'),
+var config = require('./conf/config'),
     logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
     useSSL = config.useSSL;
 
