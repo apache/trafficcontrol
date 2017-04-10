@@ -20,5 +20,5 @@
 module.exports = angular.module('trafficOps.utils', [])
     .service('formUtils', require('./FormUtils'))
     .service('locationUtils', require('./LocationUtils'))
-    .service('serverUtils', require('./serverUtils'))
+    .service('serverUtils', require('./ServerUtils'))
     .service('stringUtils', require('./StringUtils'));
