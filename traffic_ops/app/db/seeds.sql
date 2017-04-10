@@ -95,6 +95,9 @@ insert into role (name, description, priv_level) values ('migrations', 'database
 insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
 
+-- tenants
+insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
+
 -- types
 -- delivery service types
 insert into type (name, description, use_in_table) values ('HTTP', 'HTTP Content Routing', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
