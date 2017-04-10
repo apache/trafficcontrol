@@ -25,6 +25,7 @@ var constants = require('constants'),
     fs = require('fs'),
     morgan = require('morgan'),
     errorhandler = require('errorhandler'),
+    modRewrite = require('connect-modrewrite'),
     timeout = require('connect-timeout');
 
 var config = require('./conf/config'),
