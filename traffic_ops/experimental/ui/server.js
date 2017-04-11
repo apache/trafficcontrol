@@ -111,6 +111,5 @@ if (useSSL) {
     sslOptions.agent = new https.Agent(sslOptions);
 }
 
-console.log("Traffic Ops UI Port         : %s", config.port);
-console.log("Traffic Ops UI Proxy Port   : %s", config.proxyPort);
-console.log("Traffic Ops UI SSL Port     : %s", config.sslPort);
+console.log("Traffic Ops UI Port         : %s", config.port + " | 80");
+console.log("Traffic Ops UI SSL Port     : %s", config.sslPort + " | 443");
