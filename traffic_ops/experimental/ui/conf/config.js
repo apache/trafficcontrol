@@ -23,7 +23,6 @@ module.exports = {
     useSSL: false, // set to true if using ssl
     port: 8080,
     sslPort: 8443,
-    proxyPort: 8009,
     ssl: {
         key:    '/path/to/ssl.key',
         cert:   '/path/to/ssl.crt',
