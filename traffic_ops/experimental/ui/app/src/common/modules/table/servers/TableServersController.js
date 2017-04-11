@@ -17,9 +17,27 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, locationUtils, serverUtils) {
+var TableServersController = function(servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService) {
 
     $scope.servers = servers;
+
+    var queueServerUpdates = function(cdnId) {
+        cdnService.queueServerUpdates(cdnId)
+            .then(
+                function() {
+                    $scope.refresh();
+                }
+            );
+    };
+
+    var clearServerUpdates = function(cdnId) {
+        cdnService.clearServerUpdates(cdnId)
+            .then(
+                function() {
+                    $scope.refresh();
+                }
+            );
+    };
 
     $scope.editServer = function(id) {
         locationUtils.navigateToPath('/configure/servers/' + id);
@@ -28,6 +46,57 @@ var TableServersController = function(servers, $scope, $state, locationUtils, se
     $scope.createServer = function() {
         locationUtils.navigateToPath('/configure/servers/new');
     };
+
+    $scope.confirmQueueServerUpdates = function() {
+        var params = {
+            title: 'Queue Server Updates',
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdnId) {
+            queueServerUpdates(cdnId);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    $scope.confirmClearServerUpdates = function() {
+        var params = {
+            title: 'Clear Server Updates',
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdnId) {
+            clearServerUpdates(cdnId);
+        }, function () {
+            // do nothing
+        });
+    };
+
 
     $scope.uploadServerCSV = function() {
         alert('not hooked up yet: uploadServerCSV');
@@ -50,5 +119,5 @@ var TableServersController = function(servers, $scope, $state, locationUtils, se
 
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
+TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService'];
 module.exports = TableServersController;
