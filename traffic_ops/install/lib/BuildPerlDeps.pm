@@ -30,7 +30,7 @@ sub build {
     my $opt_i       = shift;
     my $cpanLogFile = shift;
 
-    my @dependencies = ( "expat-devel", "mod_ssl", "mkisofs", "libpcap", "libpcap-devel", "libcurl", "libcurl-devel", "mysql-server", "mysql-devel", "openssl", "openssl-devel", "cpan", "gcc", "make", "pkgconfig", "automake", "autoconf", "libtool", "gettext", "libidn-devel" );
+    my @dependencies = ( "expat-devel", "mod_ssl", "mkisofs", "libpcap", "libpcap-devel", "libcurl", "libcurl-devel", "openssl", "openssl-devel", "cpan", "gcc", "make", "pkgconfig", "automake", "autoconf", "libtool", "gettext", "libidn-devel" );
 
     my $msg = << 'EOF';
 
