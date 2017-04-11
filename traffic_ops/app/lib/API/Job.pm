@@ -38,6 +38,67 @@ use UI::Tools;
 use Data::Dumper;
 
 sub index {
+	my $self    = shift;
+	my $ds_id   = $self->param('dsId');
+	my $user_id = $self->param('userId');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my %criteria;
+	if ( defined $ds_id ) {
+		$criteria{'job_deliveryservice'} = $ds_id;
+	}
+	if ( defined $user_id ) {
+		$criteria{'job_user'} = $user_id;
+	}
+
+	my @data;
+	my $jobs = $self->db->resultset("Job")->search( \%criteria, { prefetch => [ 'job_deliveryservice', 'job_user' ], order_by => 'me.start_time DESC' } );
+	while ( my $job = $jobs->next ) {
+		push(
+			@data, {
+				"id"              => $job->id,
+				"assetUrl"        => $job->asset_url,
+				"deliveryService" => $job->job_deliveryservice->xml_id,
+				"keyword"         => $job->keyword,
+				"parameters"      => $job->parameters,
+				"startTime"       => $job->start_time,
+				"createdBy"       => $job->job_user->username,
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $jobs = $self->db->resultset("Job")->search( { 'me.id' => $id }, { prefetch => [ 'job_deliveryservice', 'job_user' ] } );
+	my @data = ();
+	while ( my $job = $jobs->next ) {
+		push(
+			@data, {
+				"id"              => $job->id,
+				"keyword"         => $job->keyword,
+				"assetUrl"        => $job->asset_url,
+				"parameters"      => $job->parameters,
+				"startTime"       => $job->start_time,
+				"deliveryService" => $job->job_deliveryservice->xml_id,
+				"createdBy"       => $job->job_user->username,
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub get_current_user_jobs {
 	my $self = shift;
 
 	my $response = [];
@@ -45,26 +106,26 @@ sub index {
 	my $ds_id    = $self->param('dsId');
 	my $keyword  = $self->param('keyword') || 'PURGE';
 
-	my $dbh;
+	my $jobs;
 	if ( defined($ds_id) ) {
-		$dbh = $self->db->resultset('Job')->search(
+		$jobs = $self->db->resultset('Job')->search(
 			{ keyword  => $keyword, 'job_user.username'     => $username, 'job_deliveryservice.id' => $ds_id },
 			{ prefetch => [         { 'job_deliveryservice' => undef } ], join                     => 'job_user' }
 		);
-		my $row_count = $dbh->count();
-		if ( defined($dbh) && ( $row_count > 0 ) ) {
-			my @data = $self->job_ds_data($dbh);
+		my $job_count = $jobs->count();
+		if ( defined($jobs) && ( $job_count > 0 ) ) {
+			my @data = $self->job_ds_data($jobs);
 			my $rh   = new Utils::Helper::ResponseHelper();
 			$response = $rh->camelcase_response_keys(@data);
 		}
 	}
 	else {
-		$dbh =
+		$jobs =
 			$self->db->resultset('Job')
 			->search( { keyword => $keyword, 'job_user.username' => $username }, { prefetch => [ { 'job_user' => undef } ], join => 'job_user' } );
-		my $row_count = $dbh->count();
-		if ( defined($dbh) && ( $row_count > 0 ) ) {
-			my @data = $self->job_data($dbh);
+		my $job_count = $jobs->count();
+		if ( defined($jobs) && ( $job_count > 0 ) ) {
+			my @data = $self->job_data($jobs);
 			my $rh   = new Utils::Helper::ResponseHelper();
 			$response = $rh->camelcase_response_keys(@data);
 		}
@@ -75,7 +136,7 @@ sub index {
 
 # Creates a purge job based upon the Deliveryservice (ds_id) instead
 # of the ds_xml_id like the UI does.
-sub create {
+sub create_current_user_job {
 	my $self = shift;
 
 	my $ds_id      = $self->req->json->{dsId};
@@ -195,11 +256,12 @@ sub is_valid_date_format {
 }
 
 sub is_ttl_in_range {
-	my $self  = shift;
-	my $value = shift;
+	my $self      = shift;
+	my $value     = shift;
 	my $min_hours = 1;
 	my $max_days =
-		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')->first;
+		$self->db->resultset('Parameter')->search( { name => "maxRevalDurationDays" }, { config_file => "regex_revalidate.config" } )->get_column('value')
+		->first;
 	my $max_hours = $max_days * 24;
 
 	if ( !defined $value or $value eq '' ) {
