@@ -59,13 +59,13 @@ my $post_install_cfg = "/opt/traffic_ops/install/data/json/post_install.json";
 my $logFile = "/var/log/traffic_ops/postinstall.log";
 
 # debug mode
-my $debug = 0;
+my $debug = 1;
 
 # log file for cpan output
 my $cpanLogFile = "/var/log/traffic_ops/cpan.log";
 
 # whether or not to reconfigure traffic ops
-my $reconfigure = 0;
+my $reconfigure = 1;
 
 # used to check for .reconfigure_defaults file for backwards compatability
 my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
@@ -180,10 +180,16 @@ sub generateDbConf {
     # broken out into separate file/config area
     my %todbconf = getConfig( $userInput, $toDBFileName );
 
+    # Check if the Postgres db is used and set the driver to be "postgres"
+    my $dbDriver = $dbconf{type};
+    if ( $dbconf{type} eq "Pg" ) {
+        $dbDriver = "postgres";
+    }
+
     # No YAML library installed, but this is a simple file..
     open( my $fh, '>', $toDBFileName ) or errorOut("Can't write to $toDBFileName!");
     print $fh "production:\n";
-    print $fh "    driver: $dbconf{type}\n";
+    print $fh "    driver: $dbDriver\n";
     print $fh "    open: host=$dbconf{hostname} port=$dbconf{port} user=$dbconf{user} password=$dbconf{password} dbname=$dbconf{dbname} sslmode=disable\n";
     close $fh;
 
@@ -398,7 +404,7 @@ sub getDefaults {
         ],
         $dbConfFile => [
             {
-                "Database server root (admin) user" => "root",
+                "Database server root (admin) user" => "postgres",
                 "config_var"                        => "dbAdminUser"
             },
             {
@@ -552,26 +558,35 @@ sub getDefaults {
 # opensslconf: The openssl configuration if any
 
 sub setupDatabase {
-    my $todbconf     = shift;
-    my $opensslconf  = shift;
-    my $setupMaxmind = shift;
+    my $todbconf         = shift;
+    my $opensslconf      = shift;
+    my $setupMaxmind     = shift;
     my $databaseConfFile = shift;
 
-    my $dbconf = InstallUtils::readJson( $databaseConfFile );
+    my $dbconf = InstallUtils::readJson($databaseConfFile);
 
-    my $dsn = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbconf->{"dbname"} );
+    # Check if the Postgres db is used and set the admin database to be "postgres"
+    my $dbName = $dbconf{type};
+    if ( $dbconf{type} eq "Pg" ) {
+        $dbName = "postgres";
+    }
+
+    my $dsn = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbName );
     my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
     if ($dbh) {
-        InstallUtils::logger("Database connection succeeded", "info");
+        InstallUtils::logger( "Database connection succeeded", "info" );
+
         # Success!
         $dbh->disconnect();
     }
     else {
-        InstallUtils::logger("Error connecting to database", "error");
-        exit(-1)
+        InstallUtils::logger( "Error connecting to database", "error" );
+        exit(-1);
     }
 
     InstallUtils::logger( "Setting up database", "info" );
+    $ENV{PGUSER}     = $todbconf->{"dbAdminUser"};
+    $ENV{PGPASSWORD} = $todbconf->{"dbAdminPw"};
     chdir("/opt/traffic_ops/app");
     my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
 
@@ -763,6 +778,16 @@ sub main {
     # if reconfigure is set then setup the database
     if ($reconfigure) {
         setupDatabase( $todbconf, $opensslconf, $todbconf->{"maxmind"}, $databaseConfFile );
+
+        ## Create the tm_user
+        my $dbconf      = InstallUtils::readJson($databaseConfFile);
+        my $dsn         = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbconf->{"dbname"} );
+        my $dbh         = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
+        my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
+        my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
+
+        $dbh->do("insert into tm_user (username, role, local_passwd) values $sub_string");
+
     }
 
     InstallUtils::logger( "Starting Traffic Ops", "info" );

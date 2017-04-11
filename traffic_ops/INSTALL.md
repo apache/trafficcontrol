@@ -21,7 +21,13 @@ Instructions are here: https://yum.postgresql.org/
 
 ### on the host:
 
-   $ sudo yum install postgresql96-server
+    $ sudo su -
+    # yum install postgresql96-server
+    $ su - postgres
+    $ /usr/pgsql-9.6/bin/initdb -A md5 -W #-W forces the user to provide a superuser (postgres) password
+    $ exit
+    # systemctl start postgresql-9.6
+    # systemctl status postgresql-9.6
 
 ### -or- in a container
 
@@ -67,9 +73,9 @@ Run migration from existing mysql-based `traffic_ops`
 
     $ sudo yum install traffic_ops
 
-## Install `go` and `gcc` (required for `goose` and some `Perl` modules)
+## Install `go` and `git` (required for `goose` and some `Perl` modules)
 
-    $ sudo yum install go gcc
+    $ sudo yum install git go
     
 ## Install Perl modules
 
@@ -85,40 +91,19 @@ We need to tell carton where it is so the `DBD::Pg` module is installed correctl
 
 ## Install goose
 
-    $ sudo GOPATH=/tmp GOBIN=/usr/local/bin go get bitbucket.org/liamstask/goose/cmd/goose
+    $ sudo GOPATH=/usr/local go get bitbucket.org/liamstask/goose/cmd/goose
 
 
-## Modify `traffic_ops` configuration
-
-- `/opt/traffic_ops/app/db`
-   - `dbconf.yml` 
-      - modify "production" line to match user/pass from env file above
-- `/opt/traffic_ops/app/conf`
-   - `cdn.conf` 
-      - set workers to desired value (96 is far too high for dev environment -- 15 is suggested)
-      - change `to.base_url` to appropriate FQDN or IP address
-   - `ldap.conf`
-      - add ldap server credentials if needed
-   - `production/database.conf`
-      - modify to match user/pass from env file above
-   - `production/riak.conf`, `production/influxdb.conf`
-      - add appropriate user/password
-   - `production/log4perl.conf`
-      - if logging data needed,  change ERROR to DEBUG on first line
-
-## Initialize the db
-
-    $ cd /opt/traffic_ops/app
-    $ PERL5LIB=$(pwd)/lib:$(pwd)/local/lib/perl5 db/admin.pl --env=production setup
-    
 ## Install any extensions needed
 
    - install in /opt/traffic_ops_extensions
    
 ## Install `openssl` certs (or use this to generate them)
 
-   - `sudo /opt/traffic_ops/install/bin/generateCert`
-   
-## Install web dependencies
+   $ sudo /opt/traffic_ops/install/bin/generateCert
 
-   - `sudo /opt/traffic_ops/install/bin/download_web_deps`
+## as the root user run postinstall
+    $ sudo su -
+    # export POSTGRES_HOME=/usr/pgsql-9.6
+    # export GOPATH=/usr/local
+    # /opt/traffic_ops/install/bin/postinstall
