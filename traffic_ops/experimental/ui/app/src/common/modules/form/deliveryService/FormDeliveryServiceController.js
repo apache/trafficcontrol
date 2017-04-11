@@ -134,8 +134,8 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
         alert('not hooked up yet: cachegroupHealth for DS');
     };
 
-    $scope.invalidateContent = function() {
-        alert('not hooked up yet: invalidateContent for DS');
+    $scope.viewJobs = function() {
+        $location.path($location.path() + '/jobs');
     };
 
     $scope.manageSslKeys = function() {
