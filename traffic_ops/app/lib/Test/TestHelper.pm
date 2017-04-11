@@ -31,6 +31,7 @@ use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
 use Fixtures::Cachegroup;
 use Fixtures::EdgeCachegroup;
+use Fixtures::Job;
 use Fixtures::Profile;
 use Fixtures::Parameter;
 use Fixtures::ProfileParameter;
@@ -131,6 +132,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::DeliveryserviceRegex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceServer->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Job->new($schema_values) );
 }
 
 sub unload_core_data {
