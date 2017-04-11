@@ -31,7 +31,7 @@ module.exports = angular.module('trafficOps.private.admin.profiles.deliveryServi
 								return profileService.getProfile($stateParams.profileId);
 							},
 							deliveryServices: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices({ profileId: $stateParams.profileId });
+								return deliveryServiceService.getDeliveryServices({ profile: $stateParams.profileId });
 							}
 						}
 					}
