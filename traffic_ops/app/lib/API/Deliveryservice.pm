@@ -30,17 +30,21 @@ use UI::DeliveryService;
 use Validate::Tiny ':all';
 
 sub index {
-	my $self         = shift;
-	my $orderby      = $self->param('orderby') || "xml_id";
-	my $cdn_id		 = $self->param('cdn');
-	my $type_id 	 = $self->param('type');
-	my $logs_enabled = $self->param('logsEnabled');
-	my $current_user = $self->current_user()->{username};
+	my $self			= shift;
+	my $orderby			= $self->param('orderby') || "xml_id";
+	my $cdn_id			= $self->param('cdn');
+	my $profile_id		= $self->param('profile');
+	my $type_id			= $self->param('type');
+	my $logs_enabled	= $self->param('logsEnabled');
+	my $current_user	= $self->current_user()->{username};
 	my @data;
 
 	my %criteria;
 	if ( defined $cdn_id ) {
 		$criteria{'cdn_id'} = $cdn_id;
+	}
+	if ( defined $profile_id ) {
+		$criteria{'profile'} = $profile_id;
 	}
 	if ( defined $type_id ) {
 		$criteria{'type'} = $type_id;

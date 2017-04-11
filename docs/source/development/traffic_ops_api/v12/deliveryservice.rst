@@ -39,6 +39,8 @@ Delivery Service
   +=================+==========+===================================================+
   | ``cdn``         | no       | Filter delivery services by CDN ID.               |
   +-----------------+----------+---------------------------------------------------+
+  | ``profile``     | no       | Filter delivery services by Profile ID.           |
+  +-----------------+----------+---------------------------------------------------+
   | ``type``        | no       | Filter delivery services by Type ID.              |
   +-----------------+----------+---------------------------------------------------+
   | ``logsEnabled`` | no       | Filter by logs enabled (true|false).              |
