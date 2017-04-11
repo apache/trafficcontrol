@@ -18,21 +18,53 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 use POSIX qw(strftime);
 
-my $now = strftime( "%Y-%m-%d %H:%M:%S", gmtime() );
 my %definition_for = (
-	admin_job1 => {
+	job1 => {
 		new   => 'Job',
 		using => {
+			id					=> 100,
 			agent               => 1,
 			keyword             => 'PURGE',
 			parameters          => 'TTL:48h',
-			asset_url           => 'http://cdn2.edge/foo1/.*',
+			asset_url           => 'http://cdn2.edge/job1/.*',
 			asset_type          => 'file',
 			status              => 1,
-			start_time          => $now,
+			start_time          => strftime( "%Y-%m-%d %H:%M:%S", gmtime( time() - 1000 ) ),
 			job_user            => 100,
 			job_deliveryservice => 100,
-			entered_time        => $now
+			entered_time        => strftime( "%Y-%m-%d %H:%M:%S", gmtime( time() - 1000 ) ),
+		},
+	},
+	job2 => {
+		new   => 'Job',
+		using => {
+			id					=> 200,
+			agent               => 1,
+			keyword             => 'PURGE',
+			parameters          => 'TTL:48h',
+			asset_url           => 'http://cdn2.edge/job2/.*',
+			asset_type          => 'file',
+			status              => 1,
+			start_time          => strftime( "%Y-%m-%d %H:%M:%S", gmtime( time() - 500 ) ),
+			job_user            => 100,
+			job_deliveryservice => 200,
+			entered_time        => strftime( "%Y-%m-%d %H:%M:%S", gmtime( time() - 500 ) ),
+		},
+	},
+	job3 => {
+		new   => 'Job',
+		using => {
+			id					=> 300,
+			agent               => 1,
+			keyword             => 'PURGE',
+			parameters          => 'TTL:48h',
+			asset_url           => 'http://cdn2.edge/job3/.*',
+			asset_type          => 'file',
+			status              => 1,
+			start_time          => strftime( "%Y-%m-%d %H:%M:%S", gmtime( time() - 200 ) ),
+			job_user            => 200,
+			job_deliveryservice => 100,
+			entered_time        => strftime( "%Y-%m-%d %H:%M:%S", gmtime( time() - 200 ) ),
 		},
 	},
 );
@@ -43,8 +75,7 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
+	return keys %definition_for;
 }
 
 __PACKAGE__->meta->make_immutable;

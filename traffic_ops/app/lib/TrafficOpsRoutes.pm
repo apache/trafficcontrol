@@ -585,6 +585,10 @@ sub api_routes {
 	$r->get("/api/$version/hwinfo/dtdata")->over( authenticated => 1 )->to( 'HwInfo#data', namespace => $namespace );
 	$r->get("/api/$version/hwinfo")->over( authenticated => 1 )->to( 'HwInfo#index', namespace => $namespace );
 
+	# -- JOBS
+	$r->get("/api/$version/jobs")->over( authenticated => 1 )->to( 'Job#index', namespace => $namespace );
+	$r->get("/api/$version/jobs/:id")->over( authenticated => 1 )->to( 'Job#show', namespace => $namespace );
+
 	# -- PARAMETERS
 	# Supports ?orderby=key
 	$r->get("/api/$version/parameters")->over( authenticated => 1 )->to( 'Parameter#index', namespace => $namespace );
@@ -744,8 +748,8 @@ sub api_routes {
 		->to( 'User#get_available_deliveryservices', namespace => $namespace );
 
 	# -- USERS: JOBS
-	$r->get("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#index', namespace => $namespace );
-	$r->post("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#create', namespace => $namespace );
+	$r->get("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#get_current_user_jobs', namespace => $namespace );
+	$r->post("/api/$version/user/current/jobs")->over( authenticated => 1 )->to( 'Job#create_current_user_job', namespace => $namespace );
 
 	# -- RIAK
 	# -- RIAK: KEYS
