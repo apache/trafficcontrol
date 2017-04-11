@@ -566,8 +566,8 @@ sub setupDatabase {
     my $dbconf = InstallUtils::readJson($databaseConfFile);
 
     # Check if the Postgres db is used and set the admin database to be "postgres"
-    my $dbName = $dbconf{type};
-    if ( $dbconf{type} eq "Pg" ) {
+    my $dbName = $dbconf->{type};
+    if ( $dbconf->{type} eq "Pg" ) {
         $dbName = "postgres";
     }
 
