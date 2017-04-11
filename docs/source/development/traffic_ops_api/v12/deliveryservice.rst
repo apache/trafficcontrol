@@ -126,9 +126,13 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``missLat``              | float  | The latitude to use when the client cannot be found in the CZF or the Geo lookup.                                                    |
+  | ``missLat``              | float  | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                 |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - e.g 39.7391500 or null                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``missLong``             | float  | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
+  | ``missLong``             | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - e.g -104.9847000 or null                                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -216,8 +220,8 @@ Delivery Service
             "longDesc2": "",
             "maxDnsAnswers": "0",
             "midHeaderRewrite": null,
-            "missLat": "41.881944",
-            "missLong": "-87.627778",
+            "missLat": "39.7391500",
+            "missLong": "-104.9847000",
             "multiSiteOrigin": false,
             "orgServerFqdn": "http://baz.boo.net",
             "originShield": null,
@@ -351,9 +355,13 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``missLat``              | float  | The latitude to use when the client cannot be found in the CZF or the Geo lookup.                                                    |
+  | ``missLat``              | float  | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                 |
+  |                                   |                                                                                                                                      |
+  |                          |        | - e.g 39.7391500 or null                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``missLong``             | float  | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
+  | ``missLong``             | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - e.g -104.9847000 or null                                                                                                           |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -448,8 +456,8 @@ Delivery Service
             ],
             "maxDnsAnswers": "0",
             "midHeaderRewrite": null,
-            "missLat": "41.881944",
-            "missLong": "-87.627778",
+            "missLat": "39.7391500",
+            "missLong": "-104.9847000",
             "multiSiteOrigin": false,
             "orgServerFqdn": "http://baz.boo.net",
             "originShield": null,
@@ -1444,11 +1452,11 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
   |                        |          |                                                                                                         |
-  |                        |          | - e.g 39.7391500, 45 or 0                                                                               |
+  |                        |          | - e.g 39.7391500 or null                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
   |                        |          |                                                                                                         |
-  |                        |          | - e.g -104.9847000, 45 or 0                                                                             |
+  |                        |          | - e.g -104.9847000 or null                                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1557,8 +1565,8 @@ SSL Keys
             "longDesc2": "",
             "maxDnsAnswers": "0",
             "midHeaderRewrite": null,
-            "missLat": "41.881944",
-            "missLong": "-87.627778",
+            "missLat": "39.7391500",
+            "missLong": "-104.9847000",
             "multiSiteOrigin": false,
             "orgServerFqdn": "http://baz.boo.net",
             "originShield": null,
@@ -1680,9 +1688,13 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLat                | yes      | The latitude to use when the client cannot be found in the CZF or the Geo lookup.                       |
+  | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
+  |                        |          |                                                                                                         |
+  |                        |          | - e.g 39.7391500 or null                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLong               | yes      | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                      |
+  | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
+  |                        |          |                                                                                                         |
+  |                        |          | - e.g -104.9847000 or null                                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -1746,8 +1758,8 @@ SSL Keys
         "ipv6RoutingEnabled": false,
         "logsEnabled": false,
         "multiSiteOrigin": false,
-        "missLat": 45,
-        "missLong": 45,
+        "missLat": 39.7391500,
+        "missLong": -104.9847000,
         "qstringIgnore": 0,
         "rangeRequestHandling": 0,
         "regionalGeoBlocking": false,
@@ -1791,8 +1803,8 @@ SSL Keys
             "longDesc2": "",
             "maxDnsAnswers": "0",
             "midHeaderRewrite": null,
-            "missLat": "41.881944",
-            "missLong": "-87.627778",
+            "missLat": "39.7391500",
+            "missLong": "-104.9847000",
             "multiSiteOrigin": false,
             "orgServerFqdn": "http://baz.boo.net",
             "originShield": null,
