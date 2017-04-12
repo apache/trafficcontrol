@@ -737,14 +737,14 @@ sub main {
     # check the input config file against the defaults to check for missing questions
     sanityCheckConfig($userInput) if ( $inputFile ne "" );
 
-    chdir("/opt/traffic_ops/install/bin");
-
     # if reconfigure is set then rebuild the perl deps
     if ($reconfigure) {
         my $rc = BuildPerlDeps::build( 1, $cpanLogFile );
         if ( $rc != 0 ) {
             errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
         }
+
+	chdir("/opt/traffic_ops/install/bin");
         $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
         if ( $rc != 0 ) {
             errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
@@ -755,6 +755,8 @@ sub main {
         if ( $rc != 0 ) {
             errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
         }
+
+	chdir("/opt/traffic_ops/install/bin");
         $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
         if ( $rc != 0 ) {
             errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
