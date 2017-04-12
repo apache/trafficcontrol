@@ -14,9 +14,8 @@
 # limitations under the License.
 #
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/local/lib/perl5);
 $ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
-$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
 
 use strict;
 use warnings;
@@ -814,6 +813,8 @@ sub main {
     if ( $custom_profile =~ /^y(?:es)?/ ) {
         ProfileCleanup::add_custom_profiles( $custom_profile_dir, $adminconf, $parameters->{"tm.url"} );
     }
+
+    InstallUtils::execCommand("/bin/chown -R trafops:trafops /opt/traffic_ops");
 
     InstallUtils::logger("Postinstall complete");
 

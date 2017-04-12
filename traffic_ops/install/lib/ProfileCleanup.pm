@@ -179,6 +179,9 @@ sub profiles_exist {
     InstallUtils::logger( "Checking profiles at $tmurl using username " . $config->{"username"}, "info" );
 
     my $uri = $parameters->{'tm.url'};
+
+    # This module gets installed during BuildPerlDeps portion, so require here when it's available.
+    require 'LWP/Protocol/https.pm';
     my $toCookie = get_traffic_ops_cookie( $parameters->{'tm.url'}, $config->{"username"}, $config->{"password"} );
 
     my $profileEndpoint = "/api/1.2/profiles.json";

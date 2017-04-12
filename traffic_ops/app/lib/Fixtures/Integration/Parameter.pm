@@ -4382,7 +4382,7 @@ use namespace::autoclean;
 		new => 'Parameter',
 		using => {
 			name => 'trafficserver',
-			value => '4.2.1-6.el6.x86_64',
+			value => '5.3.2-761.el6.x86_64',
 			config_file => 'package',
 			last_updated => '2015-12-10 15:43:46',
 		},
@@ -4392,7 +4392,7 @@ use namespace::autoclean;
 		new => 'Parameter',
 		using => {
 			name => 'trafficserver',
-			value => '4.0.2-2.el6.x86_64',
+			value => '5.3.2-761.el6.x86_64',
 			config_file => 'package',
 			last_updated => '2015-12-10 15:43:46',
 		},
@@ -4404,7 +4404,7 @@ use namespace::autoclean;
 			name => 'trafficserver',
 			config_file => 'package',
 			last_updated => '2015-12-10 15:43:46',
-			value => '3.2.0-4812.el6.x86_64',
+			value => '5.3.2-761.el6.x86_64',
 		},
 	},
 	## id => 440

@@ -18,8 +18,6 @@ package GenerateCert;
 
 use strict;
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_ops/app/lib);
-
 use base qw{ Exporter };
 our @EXPORT_OK = qw{ createCert };
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );

@@ -41,27 +41,26 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 # Check ATS config metadata
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/servers/100/configfiles/ats")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 
 # Check server routes
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/12M_facts")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/ip_allow.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/crontab_root")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/remap.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/parent.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/cache.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats/hosting.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/12M_facts")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/ip_allow.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/remap.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/parent.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/cache.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/hosting.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 
 # Check CDN routes
-ok $t->get_ok("/api/1.2/cdn/cdn1/configfiles/ats/cacheurl.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/cdn/cdn1/configfiles/ats/regex_revalidate.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/cdns/cdn1/configfiles/ats/cacheurl.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/cdns/cdn1/configfiles/ats/regex_revalidate.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 
 # Check profile routes
-ok $t->get_ok("/api/1.2/profile/100/configfiles/ats/50-ats.rules")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/profile/100/configfiles/ats/drop_qstring.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/profile/100/configfiles/ats/volume.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/profile/100/configfiles/ats/astats.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/profile/100/configfiles/ats/storage.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/50-ats.rules")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/drop_qstring.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/volume.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/astats.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/storage.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 
 
 # Count the 'response number'
