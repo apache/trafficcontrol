@@ -41,7 +41,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 # Check ATS config metadata
-ok $t->get_ok("/api/1.2/server/100/configfiles/ats")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/servers/100/configfiles/ats")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 
 # Check server routes
 ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/12M_facts")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
