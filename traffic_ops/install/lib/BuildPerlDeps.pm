@@ -13,8 +13,6 @@
 # limitations under the License.
 #
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_ops/app/lib);
-
 package BuildPerlDeps;
 
 use strict;
@@ -80,21 +78,6 @@ EOF
     $result = InstallUtils::execCommand( "/usr/local/bin/carton", "install" );
     if ( $result != 0 ) {
         errorOut("Failure to build required perl modules, check the output and correct the problem");
-    }
-
-    if ( !-s "/opt/traffic_ops/lib/perl5" ) {
-        InstallUtils::logger( "Linking perl libraries...", "info" );
-        if ( !-d "/opt/traffic_ops/lib" ) {
-            mkdir("/opt/traffic_ops/lib");
-        }
-        symlink( "/opt/traffic_ops/app/local/lib/perl5", "/opt/traffic_ops/lib/perl5" );
-        InstallUtils::execCommand( "/bin/chown", "-R", "trafops:trafops", "/opt/traffic_ops/lib" );
-    }
-    InstallUtils::logger( "Installing perl scripts", "info" );
-    chdir("/opt/traffic_ops/app/local/bin");
-    my $rc = InstallUtils::execCommand( "/bin/cp", "-R", ".", "/opt/traffic_ops/app/bin" );
-    if ( $rc != 0 ) {
-        InstallUtils::logger( "Failed to copy perl scripts to /opt/traffic_ops/app/bin", "error" );
     }
 
     return 0;
