@@ -14,9 +14,10 @@
 # limitations under the License.
 #
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/install/lib/perl5 /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
-$ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
-$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/install/lib/perl5:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib";
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/lib /opt/traffic_ops/app/local/lib/perl5);
+
+$ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5:$ENV{PERL5LIB}";
+$ENV{PATH}     = "/usr/local/bin:/opt/traffic_ops/install/bin:$ENV{PATH}";
 
 use strict;
 use warnings;
