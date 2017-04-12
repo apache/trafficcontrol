@@ -25,7 +25,11 @@ import org.xbill.DNS.Section;
 import org.xbill.DNS.WireParseException;
 
 import java.net.InetAddress;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public abstract class AbstractProtocol implements Protocol {
     private static final Logger ACCESS = Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access");
@@ -34,6 +38,7 @@ public abstract class AbstractProtocol implements Protocol {
     protected boolean shutdownRequested;
     private ExecutorService executorService;
     private NameServer nameServer;
+    private int taskTimeout = 5000; // default
 
     /**
      * Gets executorService.
@@ -138,9 +143,18 @@ public abstract class AbstractProtocol implements Protocol {
      * @param job
      *            the handler to be executed
      */
-    protected void submit(final Runnable job) {
-        executorService.submit(job);
-    }
+	protected void submit(final Runnable job) {
+		final Future<?> handler = executorService.submit(job);
+		executorService.submit(new Runnable() {
+			public void run() {
+				try {
+					handler.get(getTaskTimeout(), TimeUnit.MILLISECONDS);
+				} catch (InterruptedException | ExecutionException | TimeoutException e) {
+					handler.cancel(true);
+				}
+			}
+		});
+	}
 
     private Message createServerFail(final Message query) {
         final Message response = new Message();
@@ -155,4 +169,12 @@ public abstract class AbstractProtocol implements Protocol {
         response.getHeader().setRcode(Rcode.SERVFAIL);
         return response;
     }
+
+	public int getTaskTimeout() {
+		return taskTimeout;
+	}
+
+	public void setTaskTimeout(final int taskTimeout) {
+		this.taskTimeout = taskTimeout;
+	}
 }

@@ -18,9 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.channels.Channels;
 
 import org.apache.log4j.Logger;
 import org.xbill.DNS.Message;
@@ -28,6 +30,7 @@ import org.xbill.DNS.WireParseException;
 
 public class TCP extends AbstractProtocol {
     private static final Logger LOGGER = Logger.getLogger(TCP.class);
+    private int readTimeout = 3000; // default
 
     private ServerSocket serverSocket;
 
@@ -87,11 +90,12 @@ public class TCP extends AbstractProtocol {
         @SuppressWarnings("PMD.EmptyCatchBlock")
         public void run() {
             try {
+                socket.setSoTimeout(getReadTimeout());
                 final InetAddress client = socket.getInetAddress();
 
-                final DataInputStream is = new DataInputStream(socket.getInputStream());
+                final InputStream iis = Channels.newInputStream(Channels.newChannel(socket.getInputStream()));
+                final DataInputStream is = new DataInputStream(iis);
                 final DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-
                 final int length = is.readUnsignedShort();
                 final byte[] request = new byte[length];
                 is.readFully(request);
@@ -121,5 +125,16 @@ public class TCP extends AbstractProtocol {
 		} catch (IOException e) {
 			LOGGER.warn("error on shutdown", e);
 		}
-    }
+	}
+
+
+	public int getReadTimeout() {
+		return readTimeout;
+	}
+
+	public void setReadTimeout(final int readTimeout) {
+		this.readTimeout = readTimeout;
+	}
+
+
 }

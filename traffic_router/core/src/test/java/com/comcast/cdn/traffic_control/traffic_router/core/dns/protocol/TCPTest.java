@@ -19,7 +19,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -130,11 +129,12 @@ public class TCPTest {
         final DataOutputStream dos = new DataOutputStream(baos);
         dos.writeShort(wireRequest.length);
         dos.write(wireRequest);
+        in = new ByteArrayInputStream(baos.toByteArray());
+        when(socket.getInputStream()).thenReturn(in);
 
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         when(socket.getOutputStream()).thenReturn(out);
-
         handler.run();
         assertThat(out.toByteArray().length, equalTo(0));
     }
@@ -146,6 +146,13 @@ public class TCPTest {
         final Name name = Name.fromString("www.foo.bar.");
         final Record question = Record.newRecord(name, Type.A, DClass.IN);
         final Message request = Message.newQuery(question);
+
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final DataOutputStream dos = new DataOutputStream(baos);
+        dos.writeShort(request.toWire().length);
+        dos.write(request.toWire());
+        in = new ByteArrayInputStream(baos.toByteArray());
+        when(socket.getInputStream()).thenReturn(in);
 
         final Message response = new Message();
         response.setHeader(request.getHeader());
