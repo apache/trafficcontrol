@@ -107,10 +107,10 @@ sub get_config_metadata {
 	foreach my $config_file ( keys %{ $config_file_obj } ) {
 		my $scope = $self->get_scope($config_file);
 		my $scope_id;
-		if ( $scope eq 'cdn' ) {
+		if ( $scope eq 'cdns' ) {
 			$scope_id = $server->cdn->name;
 		}
-		elsif ( $scope eq 'profile' ) {
+		elsif ( $scope eq 'profiles' ) {
 			$scope_id = $server->profile->name;
 		}
 		else {
@@ -143,7 +143,7 @@ sub get_server_config {
 	}
 
 	##check the scope - is this the correct route?
-	if ( $scope ne 'server' ) {
+	if ( $scope ne 'servers' ) {
 		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
@@ -197,7 +197,7 @@ sub get_cdn_config {
 	}
 
 	##check the scope - is this the correct route?
-	if ( $scope ne 'cdn' ) {
+	if ( $scope ne 'cdns' ) {
 		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
@@ -238,7 +238,7 @@ sub get_profile_config {
 	}
 
 	##check the scope - is this the correct route?
-	if ( $scope ne 'profile' ) {
+	if ( $scope ne 'profiles' ) {
 		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
@@ -293,37 +293,37 @@ sub get_scope {
 	my $fname = shift;
 	my $scope;
 
-	if ( $fname eq "ip_allow.config" )            { $scope = 'server' }
-	elsif ( $fname eq "parent.config" )           { $scope = 'server' }
-	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'server' }
-	elsif ( $fname eq "hosting.config" )          { $scope = 'server' }
-	elsif ( $fname eq "packages" )                { $scope = 'server' }
-	elsif ( $fname eq "chkconfig" )               { $scope = 'server' }
-	elsif ( $fname eq "12M_facts" )               { $scope = 'profile' }
-	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profile' }
-	elsif ( $fname eq "astats.config" )           { $scope = 'profile' }
-	elsif ( $fname eq "cache.config" )            { $scope = 'profile' }
-	elsif ( $fname eq "drop_qstring.config" )     { $scope = 'profile' }
-	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profile' }
-	elsif ( $fname eq "plugin.config" )           { $scope = 'profile' }
-	elsif ( $fname eq "records.config" )          { $scope = 'profile' }
-	elsif ( $fname eq "remap.config" )            { $scope = 'profile' }
-	elsif ( $fname eq "storage.config" )          { $scope = 'profile' }
-	elsif ( $fname eq "sysctl.conf" )             { $scope = 'profile' }
-	elsif ( $fname =~ /url_sig_.*\.config/ )      { $scope = 'profile' }
-	elsif ( $fname eq "volume.config" )           { $scope = 'profile' }
-	elsif ( $fname eq "bg_fetch.config" )         { $scope = 'cdn' }
-	elsif ( $fname =~ /cacheurl.*\.config/ )      { $scope = 'cdn' }
-	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'cdn' }
-	elsif ( $fname =~ /regex_remap_.*\.config/ )  { $scope = 'cdn' }
-	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdn' }
-	elsif ( $fname =~ /set_dscp_.*\.config/ )     { $scope = 'cdn' }
-	elsif ( $fname eq "ssl_multicert.config" )    { $scope = 'cdn' }
+	if ( $fname eq "ip_allow.config" )            { $scope = 'servers' }
+	elsif ( $fname eq "parent.config" )           { $scope = 'servers' }
+	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'servers' }
+	elsif ( $fname eq "hosting.config" )          { $scope = 'servers' }
+	elsif ( $fname eq "packages" )                { $scope = 'servers' }
+	elsif ( $fname eq "chkconfig" )               { $scope = 'servers' }
+	elsif ( $fname eq "12M_facts" )               { $scope = 'profiles' }
+	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profiles' }
+	elsif ( $fname eq "astats.config" )           { $scope = 'profiles' }
+	elsif ( $fname eq "cache.config" )            { $scope = 'profiles' }
+	elsif ( $fname eq "drop_qstring.config" )     { $scope = 'profiles' }
+	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profiles' }
+	elsif ( $fname eq "plugin.config" )           { $scope = 'profiles' }
+	elsif ( $fname eq "records.config" )          { $scope = 'profiles' }
+	elsif ( $fname eq "remap.config" )            { $scope = 'profiles' }
+	elsif ( $fname eq "storage.config" )          { $scope = 'profiles' }
+	elsif ( $fname eq "sysctl.conf" )             { $scope = 'profiles' }
+	elsif ( $fname =~ /url_sig_.*\.config/ )      { $scope = 'profiles' }
+	elsif ( $fname eq "volume.config" )           { $scope = 'profiles' }
+	elsif ( $fname eq "bg_fetch.config" )         { $scope = 'cdns' }
+	elsif ( $fname =~ /cacheurl.*\.config/ )      { $scope = 'cdns' }
+	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'cdns' }
+	elsif ( $fname =~ /regex_remap_.*\.config/ )  { $scope = 'cdns' }
+	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdns' }
+	elsif ( $fname =~ /set_dscp_.*\.config/ )     { $scope = 'cdns' }
+	elsif ( $fname eq "ssl_multicert.config" )    { $scope = 'cdns' }
 	else {
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
 		if ( !defined($scope) ) {
 			$self->app->log->error("Filename not found.  Setting Server scope.");
-			$scope = 'server';
+			$scope = 'servers';
 		}
 	}
 
