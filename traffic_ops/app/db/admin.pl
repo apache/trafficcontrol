@@ -29,6 +29,9 @@ use YAML;
 use YAML qw(LoadFile);
 use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
+use Env;
+use Env qw(HOME);
+
 my $usage = "\n"
 	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [arguments]\t\n\n"
 	. "Example:  $PROGRAM_NAME --env=test reset\n\n"
@@ -55,7 +58,8 @@ my $db_protocol;
 # This is defaulted to 'to_development' so
 # you don't have to specify --env=development for dev workstations
 my $db_name     = 'to_development';
-my $db_username = 'to_development';
+my $db_super_user = 'postgres';
+my $db_user = 'traffic_ops';
 my $db_password = '';
 my $host_ip     = '';
 my $host_port   = '';
@@ -63,6 +67,8 @@ GetOptions( "env=s" => \$environment );
 $ENV{'MOJO_MODE'} = $environment;
 
 parse_dbconf_yml_pg_driver();
+update_pgpass($db_super_user, $db_password);
+update_pgpass($db_user, $db_password);
 
 STDERR->autoflush(1);
 my $argument = shift(@ARGV);
@@ -83,6 +89,10 @@ if ( defined($argument) ) {
 		showusers();
 	}
 	elsif ( $argument eq 'reset' ) {
+        print "db_name: $db_name\n";
+        print "db_user $db_user\n";
+        print "db_super_user $db_super_user\n";
+		createuser();
 		dropdb();
 		createdb();
 		load_schema();
@@ -150,9 +160,32 @@ sub parse_dbconf_yml_pg_driver {
 
 	$host_ip     = $hash->{host};
 	$host_port   = $hash->{port};
-	$db_name     = $hash->{dbname};
-	$db_username = $hash->{user};
+	$db_super_user = $hash->{user};
 	$db_password = $hash->{password};
+	$db_name     = $hash->{dbname};
+}
+
+sub update_pgpass {
+
+	my ($username, $password) = @_;
+
+	my $rfh;  # read file handle
+	my $pgpass = "$HOME/.pgpass";
+	my $wfh;  # write file handle
+	open($wfh, '>>', $pgpass) or die "Could not open file '$pgpass' $!";
+	open($rfh, '<', $pgpass) or die "Could not open file '$pgpass' $!";
+	my $user_plus_password = "$username:$password";
+	my $foo = sprintf("%s:%s\n", $username, $password);
+	if (! grep{/$user_plus_password/} <$rfh>){
+	  print $wfh "*:*:*:$user_plus_password\n";
+	  print "Updated $HOME/.pgpass\n";
+	}
+
+	# tighten the permission for security and Postgres
+	chmod 0600, $wfh or die "Couldn't chmod $wfh $!";
+
+	close $wfh;
+	close $rfh;
 }
 
 sub migrate {
@@ -166,53 +199,51 @@ sub migrate {
 
 sub seed {
 	print "Seeding database.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/seeds.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds.sql") != 0 ) {
 		die "Can't seed database\n";
 	}
 }
 
 sub load_schema {
 	print "Creating database tables.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/create_tables.sql") != 0 ) {
 		die "Can't create database tables\n";
 	}
 }
 
 sub dropdb {
-	if ( system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;") != 0 ) {
+	print "Dropping database: $db_name\n";
+	if ( system("dropdb -h $host_ip -p $host_port -U $db_super_user -e --if-exists $db_name;") != 0 ) {
 		die "Can't drop db $db_name\n";
 	}
 }
 
 sub createdb {
 	createuser();
-	my $db_exists = `psql -h $host_ip -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
+	my $db_exists = `psql -h $host_ip -U $db_user -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ($db_exists) {
 		print "Database $db_name already exists\n";
 		return;
 	}
-
-	if ( system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name;") != 0 ) {
+    my $cmd = "createdb -h $host_ip -p $host_port -U $db_super_user --owner $db_user $db_name;";
+	if ( system($cmd) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
+
 }
 
 sub createuser {
-	my $user_exists = `psql -h $host_ip -p $host_port postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
-	if ($user_exists) {
-		print "Role $db_username already exists\n";
-		return;
-	}
+	my $user_exists = `psql -h $host_ip -p $host_port -U $db_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
 
-	my $cmd = "CREATE USER $db_username WITH SUPERUSER CREATEROLE CREATEDB ENCRYPTED PASSWORD '$db_password'";
-	if ( system(qq{psql -h $host_ip -p $host_port -tAc "$cmd"}) != 0 ) {
-		die "Can't create user $db_username\n";
+	my $cmd = "CREATE USER $db_user WITH CREATEDB ENCRYPTED PASSWORD '$db_password'";
+	if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
+		#die "Can't create user $db_user\n";
 	}
 }
 
 sub dropuser {
-	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_username;") != 0 ) {
-		die "Can't drop user $db_username\n";
+	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_user;") != 0 ) {
+		die "Can't drop user $db_user\n";
 	}
 }
 
