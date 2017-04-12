@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-use lib qw(/opt/traffic_ops/install/lib);
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/local/lib/perl5);
 $ENV{PATH}     = "/opt/traffic_ops/install/bin:$ENV{PATH}";
 
 use strict;
