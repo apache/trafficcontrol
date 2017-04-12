@@ -1700,7 +1700,7 @@ sub get_cfg_file_list {
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $uri = "/api/1.2/server/$host_name/configfiles/ats";
+	my $uri = "/api/1.2/servers/$host_name/configfiles/ats";
 
 	my $result = &lwp_get($uri);
 
