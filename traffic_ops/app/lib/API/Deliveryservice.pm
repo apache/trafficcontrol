@@ -61,9 +61,12 @@ sub index {
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search( \%criteria, { prefetch => [ 'cdn', 'profile', 'type' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
+
+		# build example urls for each delivery service
+		my @example_urls = ();
 		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
-		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
+		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
 			@data, {
@@ -143,8 +146,10 @@ sub show {
 
 	my $rs = $self->db->resultset("Deliveryservice")->search( { id => $id } );
 	while ( my $row = $rs->next ) {
-		my $ds_regexes = $row->deliveryservice_regexes;
+
+		# build the matchlist (the list of ds regexes and their type)
 		my @matchlist  = ();
+		my $ds_regexes = $row->deliveryservice_regexes;
 
 		while ( my $ds_regex = $ds_regexes->next ) {
 			push(
@@ -156,9 +161,11 @@ sub show {
 			);
 		}
 
+		# build example urls for the delivery service
+		my @example_urls = ();
 		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
-		my @example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
+		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
 			@data, {
@@ -307,61 +314,82 @@ sub update {
 		&UI::DeliveryService::regex_remap( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
 		&UI::DeliveryService::cacheurl( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
 
+		# build example urls
+		my @example_urls  = ();
+		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $rs->id );
+		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
+		@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
+
+		# build the matchlist (the list of ds regexes and their type)
+		my @matchlist  = ();
+		my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $rs->id }, { prefetch => [ { 'regex' => 'type' } ] } );
+		while ( my $ds_regex = $ds_regexes->next ) {
+			push(
+				@matchlist, {
+					type      => $ds_regex->regex->type->name,
+					pattern   => $ds_regex->regex->pattern,
+					setNumber => $ds_regex->set_number
+				}
+			);
+		}
+
 		my @response;
 		push(
 			@response, {
-				"active"               => $rs->active,
-				"cacheurl"             => $rs->cacheurl,
-				"ccrDnsTtl"            => $rs->ccr_dns_ttl,
-				"cdnId"                => $rs->cdn->id,
-				"cdnName"              => $rs->cdn->name,
-				"checkPath"            => $rs->check_path,
-				"displayName"          => $rs->display_name,
-				"dnsBypassCname"       => $rs->dns_bypass_cname,
-				"dnsBypassIp"          => $rs->dns_bypass_ip,
-				"dnsBypassIp6"         => $rs->dns_bypass_ip6,
-				"dnsBypassTtl"         => $rs->dns_bypass_ttl,
-				"dscp"                 => $rs->dscp,
-				"edgeHeaderRewrite"    => $rs->edge_header_rewrite,
-				"geoLimitRedirectURL"  => $rs->geolimit_redirect_url,
-				"geoLimit"             => $rs->geo_limit,
-				"geoLimitCountries"    => $rs->geo_limit_countries,
-				"geoProvider"          => $rs->geo_provider,
-				"globalMaxMbps"        => $rs->global_max_mbps,
-				"globalMaxTps"         => $rs->global_max_tps,
-				"httpBypassFqdn"       => $rs->http_bypass_fqdn,
-				"id"                   => $rs->id,
-				"infoUrl"              => $rs->info_url,
-				"initialDispersion"    => $rs->initial_dispersion,
-				"ipv6RoutingEnabled"   => $rs->ipv6_routing_enabled,
-				"lastUpdated"          => $rs->last_updated,
-				"logsEnabled"          => $rs->logs_enabled,
-				"longDesc"             => $rs->long_desc,
-				"longDesc1"            => $rs->long_desc_1,
-				"longDesc2"            => $rs->long_desc_2,
-				"maxDnsAnswers"        => $rs->max_dns_answers,
-				"midHeaderRewrite"     => $rs->mid_header_rewrite,
-				"missLat"              => defined( $rs->miss_lat ) ? 0.0 + $rs->miss_lat : undef,
-				"missLong"             => defined( $rs->miss_long ) ? 0.0 + $rs->miss_long : undef,
-				"multiSiteOrigin"      => $rs->multi_site_origin,
-				"orgServerFqdn"        => $rs->org_server_fqdn,
-				"originShield"         => $rs->origin_shield,
-				"profileId"            => defined( $rs->profile ) ? $rs->profile->id : undef,
-				"profileName"          => defined( $rs->profile ) ? $rs->profile->name : undef,
-				"profileDescription"   => defined( $rs->profile ) ? $rs->profile->description : undef,
-				"protocol"             => $rs->protocol,
-				"qstringIgnore"        => $rs->qstring_ignore,
-				"rangeRequestHandling" => $rs->range_request_handling,
-				"regexRemap"           => $rs->regex_remap,
-				"regionalGeoBlocking"  => $rs->regional_geo_blocking,
-				"remapText"            => $rs->remap_text,
-				"signed"               => $rs->signed,
-				"sslKeyVersion"        => $rs->ssl_key_version,
-				"trRequestHeaders"     => $rs->tr_request_headers,
-				"trResponseHeaders"    => $rs->tr_response_headers,
-				"type"                 => $rs->type->name,
-				"typeId"               => $rs->type->id,
-				"xmlId"                => $rs->xml_id
+				"active"                   => $rs->active,
+				"cacheurl"                 => $rs->cacheurl,
+				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
+				"cdnId"                    => $rs->cdn->id,
+				"cdnName"                  => $rs->cdn->name,
+				"checkPath"                => $rs->check_path,
+				"displayName"              => $rs->display_name,
+				"dnsBypassCname"           => $rs->dns_bypass_cname,
+				"dnsBypassIp"              => $rs->dns_bypass_ip,
+				"dnsBypassIp6"             => $rs->dns_bypass_ip6,
+				"dnsBypassTtl"             => $rs->dns_bypass_ttl,
+				"dscp"                     => $rs->dscp,
+				"edgeHeaderRewrite"        => $rs->edge_header_rewrite,
+				"exampleURLs"              => \@example_urls,
+				"geoLimitRedirectURL"      => $rs->geolimit_redirect_url,
+				"geoLimit"                 => $rs->geo_limit,
+				"geoLimitCountries"        => $rs->geo_limit_countries,
+				"geoProvider"              => $rs->geo_provider,
+				"globalMaxMbps"            => $rs->global_max_mbps,
+				"globalMaxTps"             => $rs->global_max_tps,
+				"httpBypassFqdn"           => $rs->http_bypass_fqdn,
+				"id"                       => $rs->id,
+				"infoUrl"                  => $rs->info_url,
+				"initialDispersion"        => $rs->initial_dispersion,
+				"ipv6RoutingEnabled"       => $rs->ipv6_routing_enabled,
+				"lastUpdated"              => $rs->last_updated,
+				"logsEnabled"              => $rs->logs_enabled,
+				"longDesc"                 => $rs->long_desc,
+				"longDesc1"                => $rs->long_desc_1,
+				"longDesc2"                => $rs->long_desc_2,
+				"matchList"                => \@matchlist,
+				"maxDnsAnswers"            => $rs->max_dns_answers,
+				"midHeaderRewrite"         => $rs->mid_header_rewrite,
+				"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
+				"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
+				"multiSiteOrigin"          => $rs->multi_site_origin,
+				"orgServerFqdn"            => $rs->org_server_fqdn,
+				"originShield"             => $rs->origin_shield,
+				"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
+				"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
+				"profileDescription"       => defined($rs->profile) ? $rs->profile->description : undef,
+				"protocol"                 => $rs->protocol,
+				"qstringIgnore"            => $rs->qstring_ignore,
+				"rangeRequestHandling"     => $rs->range_request_handling,
+				"regexRemap"               => $rs->regex_remap,
+				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
+				"remapText"                => $rs->remap_text,
+				"signed"                   => $rs->signed,
+				"sslKeyVersion"            => $rs->ssl_key_version,
+				"trRequestHeaders"         => $rs->tr_request_headers,
+				"trResponseHeaders"        => $rs->tr_response_headers,
+				"type"                     => $rs->type->name,
+				"typeId"                   => $rs->type->id,
+				"xmlId"                    => $rs->xml_id
 			}
 		);
 
@@ -462,61 +490,82 @@ sub create {
 		# create a default deliveryservice_regex in the format .*\.xml-id\..*
 		$self->create_default_ds_regex( $insert->id, '.*\.' . $insert->xml_id . '\..*' );
 
+		# build example urls
+		my @example_urls  = ();
+		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $insert->id );
+		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $insert->id );
+		@example_urls = &UI::DeliveryService::get_example_urls( $self, $insert->id, $regexp_set, $insert, $cdn_domain, $insert->protocol );
+
+		# build the matchlist (the list of ds regexes and their type)
+		my @matchlist  = ();
+		my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $insert->id }, { prefetch => [ { 'regex' => 'type' } ] } );
+		while ( my $ds_regex = $ds_regexes->next ) {
+			push(
+				@matchlist, {
+					type      => $ds_regex->regex->type->name,
+					pattern   => $ds_regex->regex->pattern,
+					setNumber => $ds_regex->set_number
+				}
+			);
+		}
+
 		my @response;
 		push(
 			@response, {
-				"active"               => $insert->active,
-				"cacheurl"             => $insert->cacheurl,
-				"ccrDnsTtl"            => $insert->ccr_dns_ttl,
-				"cdnId"                => $insert->cdn->id,
-				"cdnName"              => $insert->cdn->name,
-				"checkPath"            => $insert->check_path,
-				"displayName"          => $insert->display_name,
-				"dnsBypassCname"       => $insert->dns_bypass_cname,
-				"dnsBypassIp"          => $insert->dns_bypass_ip,
-				"dnsBypassIp6"         => $insert->dns_bypass_ip6,
-				"dnsBypassTtl"         => $insert->dns_bypass_ttl,
-				"dscp"                 => $insert->dscp,
-				"edgeHeaderRewrite"    => $insert->edge_header_rewrite,
-				"geoLimitRedirectURL"  => $insert->geolimit_redirect_url,
-				"geoLimit"             => $insert->geo_limit,
-				"geoLimitCountries"    => $insert->geo_limit_countries,
-				"geoProvider"          => $insert->geo_provider,
-				"globalMaxMbps"        => $insert->global_max_mbps,
-				"globalMaxTps"         => $insert->global_max_tps,
-				"httpBypassFqdn"       => $insert->http_bypass_fqdn,
-				"id"                   => $insert->id,
-				"infoUrl"              => $insert->info_url,
-				"initialDispersion"    => $insert->initial_dispersion,
-				"ipv6RoutingEnabled"   => $insert->ipv6_routing_enabled,
-				"lastUpdated"          => $insert->last_updated,
-				"logsEnabled"          => $insert->logs_enabled,
-				"longDesc"             => $insert->long_desc,
-				"longDesc1"            => $insert->long_desc_1,
-				"longDesc2"            => $insert->long_desc_2,
-				"maxDnsAnswers"        => $insert->max_dns_answers,
-				"midHeaderRewrite"     => $insert->mid_header_rewrite,
-				"missLat"              => defined( $insert->miss_lat ) ? 0.0 + $insert->miss_lat : undef,
-				"missLong"             => defined( $insert->miss_long ) ? 0.0 + $insert->miss_long : undef,
-				"multiSiteOrigin"      => $insert->multi_site_origin,
-				"orgServerFqdn"        => $insert->org_server_fqdn,
-				"originShield"         => $insert->origin_shield,
-				"profileId"            => defined( $insert->profile ) ? $insert->profile->id : undef,
-				"profileName"          => defined( $insert->profile ) ? $insert->profile->name : undef,
-				"profileDescription"   => defined( $insert->profile ) ? $insert->profile->description : undef,
-				"protocol"             => $insert->protocol,
-				"qstringIgnore"        => $insert->qstring_ignore,
-				"rangeRequestHandling" => $insert->range_request_handling,
-				"regexRemap"           => $insert->regex_remap,
-				"regionalGeoBlocking"  => $insert->regional_geo_blocking,
-				"remapText"            => $insert->remap_text,
-				"signed"               => $insert->signed,
-				"sslKeyVersion"        => $insert->ssl_key_version,
-				"trRequestHeaders"     => $insert->tr_request_headers,
-				"trResponseHeaders"    => $insert->tr_response_headers,
-				"type"                 => $insert->type->name,
-				"typeId"               => $insert->type->id,
-				"xmlId"                => $insert->xml_id
+				"active"                   => $insert->active,
+				"cacheurl"                 => $insert->cacheurl,
+				"ccrDnsTtl"                => $insert->ccr_dns_ttl,
+				"cdnId"                    => $insert->cdn->id,
+				"cdnName"                  => $insert->cdn->name,
+				"checkPath"                => $insert->check_path,
+				"displayName"              => $insert->display_name,
+				"dnsBypassCname"           => $insert->dns_bypass_cname,
+				"dnsBypassIp"              => $insert->dns_bypass_ip,
+				"dnsBypassIp6"             => $insert->dns_bypass_ip6,
+				"dnsBypassTtl"             => $insert->dns_bypass_ttl,
+				"dscp"                     => $insert->dscp,
+				"edgeHeaderRewrite"        => $insert->edge_header_rewrite,
+				"exampleURLs"              => \@example_urls,
+				"geoLimitRedirectURL"      => $insert->geolimit_redirect_url,
+				"geoLimit"                 => $insert->geo_limit,
+				"geoLimitCountries"        => $insert->geo_limit_countries,
+				"geoProvider"              => $insert->geo_provider,
+				"globalMaxMbps"            => $insert->global_max_mbps,
+				"globalMaxTps"             => $insert->global_max_tps,
+				"httpBypassFqdn"           => $insert->http_bypass_fqdn,
+				"id"                       => $insert->id,
+				"infoUrl"                  => $insert->info_url,
+				"initialDispersion"        => $insert->initial_dispersion,
+				"ipv6RoutingEnabled"       => $insert->ipv6_routing_enabled,
+				"lastUpdated"              => $insert->last_updated,
+				"logsEnabled"              => $insert->logs_enabled,
+				"longDesc"                 => $insert->long_desc,
+				"longDesc1"                => $insert->long_desc_1,
+				"longDesc2"                => $insert->long_desc_2,
+				"matchList"                => \@matchlist,
+				"maxDnsAnswers"            => $insert->max_dns_answers,
+				"midHeaderRewrite"         => $insert->mid_header_rewrite,
+				"missLat"                  => defined($insert->miss_lat) ? 0.0 + $insert->miss_lat : undef,
+				"missLong"                 => defined($insert->miss_long) ? 0.0 + $insert->miss_long : undef,
+				"multiSiteOrigin"          => $insert->multi_site_origin,
+				"orgServerFqdn"            => $insert->org_server_fqdn,
+				"originShield"             => $insert->origin_shield,
+				"profileId"                => defined($insert->profile) ? $insert->profile->id : undef,
+				"profileName"              => defined($insert->profile) ? $insert->profile->name : undef,
+				"profileDescription"       => defined($insert->profile) ? $insert->profile->description : undef,
+				"protocol"                 => $insert->protocol,
+				"qstringIgnore"            => $insert->qstring_ignore,
+				"rangeRequestHandling"     => $insert->range_request_handling,
+				"regexRemap"               => $insert->regex_remap,
+				"regionalGeoBlocking"      => $insert->regional_geo_blocking,
+				"remapText"                => $insert->remap_text,
+				"signed"                   => $insert->signed,
+				"sslKeyVersion"            => $insert->ssl_key_version,
+				"trRequestHeaders"         => $insert->tr_request_headers,
+				"trResponseHeaders"        => $insert->tr_response_headers,
+				"type"                     => $insert->type->name,
+				"typeId"                   => $insert->type->id,
+				"xmlId"                    => $insert->xml_id
 			}
 		);
 
