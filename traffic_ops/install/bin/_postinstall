@@ -33,7 +33,6 @@ use Scalar::Util qw(looks_like_number);
 use Getopt::Long;
 
 use InstallUtils qw{ :all };
-use BuildPerlDeps qw{ :all };
 use GenerateCert qw{ :all };
 use ProfileCleanup qw{ :all };
 
@@ -739,11 +738,6 @@ sub main {
 
     # if reconfigure is set then rebuild the perl deps
     if ($reconfigure) {
-        my $rc = BuildPerlDeps::build( 1, $cpanLogFile );
-        if ( $rc != 0 ) {
-            errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
-        }
-
 	chdir("/opt/traffic_ops/install/bin");
         $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
         if ( $rc != 0 ) {
@@ -751,11 +745,6 @@ sub main {
         }
     }
     else {
-        my $rc = BuildPerlDeps::build();
-        if ( $rc != 0 ) {
-            errorOut("Failed to install perl dependencies, check the console output and rerun postinstall once you've resolved the error");
-        }
-
 	chdir("/opt/traffic_ops/install/bin");
         $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
         if ( $rc != 0 ) {
