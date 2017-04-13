@@ -41,14 +41,14 @@ my $usage = "\n"
 	. "createdb  - Execute db 'createdb' the database for the current environment.\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
 	. "down  - Roll back a single migration from the current version.\n"
-	. "createuser  - Execute 'createuser' the user for the current environment.\n"
-	. "dropuser  - Execute 'dropuser' the user for the current environment.\n"
-	. "showusers  - Execute sql to show all of the user for the current environment.\n"
+	. "create_superuser  - Execute 'create_superuser' the user for the current environment (postgres).\n"
+	. "create_user  - Execute 'create_user' the user for the current environment (traffic_ops).\n"
+	. "drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).\n"
+	. "show_users  - Execute sql to show all of the user for the current environment.\n"
 	. "redo  - Roll back the most recently applied migration, then run it again.\n"
 	. "reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.\n"
 	. "reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.\n"
 	. "seed  - Execute sql from db/seeds.sql for loading static data.\n"
-	. "setup  - Execute db dropdb, createdb, load_schema, migrate, seed on the database for the current environment.\n"
 	. "status  - Print the status of all migrations.\n"
 	. "upgrade  - Execute migrate then seed on the database for the current environment.\n";
 
@@ -67,8 +67,6 @@ GetOptions( "env=s" => \$environment );
 $ENV{'MOJO_MODE'} = $environment;
 
 parse_dbconf_yml_pg_driver();
-update_pgpass($db_super_user, $db_password);
-update_pgpass($db_user, $db_password);
 
 STDERR->autoflush(1);
 my $argument = shift(@ARGV);
@@ -79,34 +77,26 @@ if ( defined($argument) ) {
 	elsif ( $argument eq 'dropdb' ) {
 		dropdb();
 	}
-	elsif ( $argument eq 'createuser' ) {
-		createuser();
+	elsif ( $argument eq 'create_superuser' ) {
+		create_superuser();
 	}
-	elsif ( $argument eq 'dropuser' ) {
-		dropuser();
+	elsif ( $argument eq 'create_user' ) {
+		create_user();
 	}
-	elsif ( $argument eq 'showusers' ) {
-		showusers();
+	elsif ( $argument eq 'drop_user' ) {
+		drop_user();
+	}
+	elsif ( $argument eq 'show_users' ) {
+		show_users();
 	}
 	elsif ( $argument eq 'reset' ) {
-        print "db_name: $db_name\n";
-        print "db_user $db_user\n";
-        print "db_super_user $db_super_user\n";
-		createuser();
+		create_user();
 		dropdb();
 		createdb();
 		load_schema();
 		migrate('up');
 	}
 	elsif ( $argument eq 'upgrade' ) {
-		migrate('up');
-		seed();
-	}
-	elsif ( $argument eq 'setup' ) {
-		createuser();
-		dropdb();
-		createdb();
-		load_schema();
 		migrate('up');
 		seed();
 	}
@@ -165,29 +155,6 @@ sub parse_dbconf_yml_pg_driver {
 	$db_name     = $hash->{dbname};
 }
 
-sub update_pgpass {
-
-	my ($username, $password) = @_;
-
-	my $rfh;  # read file handle
-	my $pgpass = "$HOME/.pgpass";
-	my $wfh;  # write file handle
-	open($wfh, '>>', $pgpass) or die "Could not open file '$pgpass' $!";
-	open($rfh, '<', $pgpass) or die "Could not open file '$pgpass' $!";
-	my $user_plus_password = "$username:$password";
-	my $foo = sprintf("%s:%s\n", $username, $password);
-	if (! grep{/$user_plus_password/} <$rfh>){
-	  print $wfh "*:*:*:$user_plus_password\n";
-	  print "Updated $HOME/.pgpass\n";
-	}
-
-	# tighten the permission for security and Postgres
-	chmod 0600, $wfh or die "Couldn't chmod $wfh $!";
-
-	close $wfh;
-	close $rfh;
-}
-
 sub migrate {
 	my ($command) = @_;
 
@@ -219,7 +186,7 @@ sub dropdb {
 }
 
 sub createdb {
-	createuser();
+	create_user();
 	my $db_exists = `psql -h $host_ip -U $db_user -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ($db_exists) {
 		print "Database $db_name already exists\n";
@@ -232,22 +199,47 @@ sub createdb {
 
 }
 
-sub createuser {
+sub create_user {
 	my $user_exists = `psql -h $host_ip -p $host_port -U $db_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
 
 	my $cmd = "CREATE USER $db_user WITH CREATEDB ENCRYPTED PASSWORD '$db_password'";
 	if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
-		#die "Can't create user $db_user\n";
+		die "Can't create user $db_user\n";
 	}
+	update_pgpass($db_user, $db_password);
 }
 
-sub dropuser {
+sub create_superuser {
+
+	system('stty', '-echo');  # Disable echoing
+	print "Set a password for the 'postgres' superuser: ";
+	my $db_super_user_password = <STDIN>; 
+	chomp $db_super_user_password; 
+	exit 0 if ($db_super_user_password eq ""); # If empty string, exit.
+
+    my $cmd;
+	my $user_exists = `psql -h $host_ip -p $host_port -U $db_super_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_super_user'"`;
+    if  ( $user_exists ) {
+   	   $cmd = "ALTER ROLE $db_super_user WITH ENCRYPTED PASSWORD '$db_super_user_password'";
+	   if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
+		 die "Can't alter user $db_super_user\n";
+	   }
+    } else {
+   	   $cmd = "CREATE USER $db_super_user WITH CREATEDB ENCRYPTED PASSWORD '$db_super_user_password'";
+	   if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
+		 die "Can't create user $db_super_user\n";
+	   }
+    }
+	update_pgpass($db_super_user, $db_super_user_password);
+}
+
+sub drop_user {
 	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_user;") != 0 ) {
 		die "Can't drop user $db_user\n";
 	}
 }
 
-sub showusers {
+sub show_users {
 	if ( system("psql -h $host_ip -p $host_port -ec '\\du';") != 0 ) {
 		die "Can't show users";
 	}
@@ -268,3 +260,27 @@ sub reverse_schema {
 		[ $dsn, $user, $pass ],
 	);
 }
+
+sub update_pgpass {
+
+	my ($username, $password) = @_;
+
+	my $rfh;  # read file handle
+	my $pgpass = "$HOME/.pgpass";
+	my $wfh;  # write file handle
+	open($wfh, '>>', $pgpass) or die "Could not open file '$pgpass' $!";
+	open($rfh, '<', $pgpass) or die "Could not open file '$pgpass' $!";
+	my $user_plus_password = "$username:$password";
+	my $foo = sprintf("%s:%s\n", $username, $password);
+	if (! grep{/$user_plus_password/} <$rfh>){
+	  print $wfh "*:*:*:$user_plus_password\n";
+	  print "Updated $HOME/.pgpass\n";
+	}
+
+	# tighten the permission for security and Postgres
+	chmod 0600, $wfh or die "Couldn't chmod $wfh $!";
+
+	close $wfh;
+	close $rfh;
+}
+
