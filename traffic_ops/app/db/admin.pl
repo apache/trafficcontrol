@@ -39,7 +39,7 @@ my $usage = "\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
 	. "NOTE: \n"
 	. "Postgres Superuser: The 'postgres' superuser needs to be created to run $PROGRAM_NAME and setup databases.\n"
-	. "If the 'postgres' superuser hasn't been created or password has been set then run the following commands accordingly. \n\n"
+	. "If the 'postgres' superuser has not been created or password has not been set then run the following commands accordingly. \n\n"
 	. "Create the 'postgres' user (if not created):\n"
 	. "     \$ createuser postgres\n\n"
 	. "Set the 'postgres' user password:\n"
@@ -223,7 +223,6 @@ sub create_user {
 	if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
 		die "Can't create user $db_user\n";
 	}
-	update_pgpass($db_user, $db_password);
 }
 
 sub drop_user {
@@ -252,28 +251,5 @@ sub reverse_schema {
 		},
 		[ $dsn, $user, $pass ],
 	);
-}
-
-sub update_pgpass {
-
-	my ($username, $password) = @_;
-
-	my $rfh;  # read file handle
-	my $pgpass = "$HOME/.pgpass";
-	my $wfh;  # write file handle
-	open($wfh, '>>', $pgpass) or die "Could not open file '$pgpass' $!";
-	open($rfh, '<', $pgpass) or die "Could not open file '$pgpass' $!";
-	my $user_plus_password = "$username:$password";
-	my $foo = sprintf("%s:%s\n", $username, $password);
-	if (! grep{/$user_plus_password/} <$rfh>){
-	  print $wfh "*:*:*:$user_plus_password\n";
-	  print "Updated $HOME/.pgpass\n";
-	}
-
-	# tighten the permission for security and Postgres
-	chmod 0600, $wfh or die "Couldn't chmod $wfh $!";
-
-	close $wfh;
-	close $rfh;
 }
 
