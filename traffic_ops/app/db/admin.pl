@@ -207,7 +207,7 @@ sub createdb {
 		print "Database $db_name already exists\n";
 		return;
 	}
-    my $cmd = "createdb -h $host_ip -p $host_port -U $db_super_user --owner $db_user $db_name;";
+    my $cmd = "createdb -h $host_ip -p $host_port -U $db_user --owner $db_user $db_name;";
 	if ( system($cmd) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
