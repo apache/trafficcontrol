@@ -23,11 +23,13 @@ cpanm Carton
 # carton installs all the perl dependencies in cpanfile
 cd /opt/traffic_ops/app
 
-export POSTGRES_HOME=/usr/pgsql-9.6
-export GOPATH=/usr/local
-export PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5
+export POSTGRES_HOME=${POSTGRES_HOME:-/usr/pgsql-9.6}
 /usr/local/bin/carton
 
+export GOPATH=${GOPATH:-/usr/local}
+go get bitbucket.org/liamstask/goose/cmd/goose
+
+export PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5
 /opt/traffic_ops/install/bin/_postinstall "$@"
 
 # should all be owned by trafops user
