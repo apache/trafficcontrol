@@ -17,6 +17,11 @@
 # make sure installed with proper permissions
 umask 022
 
+# go and git are required, but don't want to stomp on those if already installed
+for p in git go; do
+	type $p >/dev/null 2>&1 || { echo >&2 "postinstall requires $p but it's not installed.  Aborting."; exit 1; }
+done
+
 # install carton first
 cpanm Carton
 
