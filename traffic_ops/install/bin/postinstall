@@ -819,6 +819,7 @@ sub main {
     }
 
     InstallUtils::execCommand("/bin/chown -R trafops:trafops /opt/traffic_ops");
+    InstallUtils::execCommand("/bin/chmod -R a+rX /opt/traffic_ops");
 
     InstallUtils::logger("Postinstall complete");
 
