@@ -202,7 +202,6 @@ sub dropdb {
 }
 
 sub createdb {
-	create_user();
 	my $db_exists = `psql -h $host_ip -U $db_user -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ($db_exists) {
 		print "Database $db_name already exists\n";
@@ -216,11 +215,14 @@ sub createdb {
 }
 
 sub create_user {
-	my $user_exists = `psql -h $host_ip -p $host_port -U $db_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
+	print "Creating user: $db_user\n";
+	my $user_exists = `psql -h $host_ip -p $host_port -U $db_super_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
 
-	my $cmd = "CREATE USER $db_user WITH LOGIN ENCRYPTED PASSWORD '$db_password'";
-	if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
-		die "Can't create user $db_user\n";
+	if (!$user_exists) {
+		my $cmd = "CREATE USER $db_user WITH CREATEDB CREATEROLE LOGIN ENCRYPTED PASSWORD '$db_password'";
+		if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
+			die "Can't create user $db_user\n";
+		}
 	}
 }
 
