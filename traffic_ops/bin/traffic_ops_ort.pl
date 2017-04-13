@@ -357,15 +357,17 @@ sub process_cfg_file {
 	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
 
 	# Process __SERVER_TCP_PORT__, __HOSTNAME__, __FULL_HOSTNAME__ and __CACHE_IPV4__ values from traffic ops API.
-	if ( $server_tcp_port != 80 ) {
-		$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
+	if ( $api_in_use == 1 ) {
+		if ( $server_tcp_port != 80 ) {
+			$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
+		}
+		else {
+			$result =~ s/:__SERVER_TCP_PORT__//g;
+		}
+		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
+		$result =~ s/__HOSTNAME__/$hostname_short/g;
+		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
 	}
-	else {
-		$result =~ s/:__SERVER_TCP_PORT__//g;
-	}
-	$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
-	$result =~ s/__HOSTNAME__/$hostname_short/g;
-	$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
