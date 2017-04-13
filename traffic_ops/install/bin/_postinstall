@@ -739,14 +739,14 @@ sub main {
     # if reconfigure is set then rebuild the perl deps
     if ($reconfigure) {
 	chdir("/opt/traffic_ops/install/bin");
-        $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+        my $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
         if ( $rc != 0 ) {
             errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
         }
     }
     else {
 	chdir("/opt/traffic_ops/install/bin");
-        $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+        my $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
         if ( $rc != 0 ) {
             errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
         }
