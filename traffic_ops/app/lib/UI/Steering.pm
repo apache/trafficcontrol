@@ -26,6 +26,7 @@ use Scalar::Util qw(looks_like_number);
 use JSON;
 use POSIX qw(strftime);
 use Date::Parse;
+use Data::Dumper;
 
 sub index {
 	my $self  = shift;
@@ -41,16 +42,23 @@ sub index {
 		while ( my $row = $st_rs->next ) {
 			$steering_targets{ $row->target } = $row->weight;
 		}
+		my $i = 0;
 		my @keys = sort keys %steering_targets;
-		$steering->{'target_id_1'}     = $keys[0];
-		$steering->{'target_id_2'}     = $keys[1];
-		$steering->{'target_name_1'}   = $self->get_ds_name( $keys[0] );
-		$steering->{'target_name_2'}   = $self->get_ds_name( $keys[1] );
-		$steering->{'target_id_1_weight'}   = $self->get_target_weight( $ds_id, $keys[0] );
-		$steering->{'target_id_2_weight'}   = $self->get_target_weight( $ds_id, $keys[1] );
+		while ( (my $target, my $weight) = each %steering_targets ) {
+			$steering->{"target_id_$i"} = $target;
+			$steering->{"target_name_$i"}   = $self->get_ds_name( $target );
+			$steering->{"target_weight_id_$i"}   = $weight;
+			if (!defined($steering->{"target_weight_id_$i"})) { $steering->{"target_weight_id_$i"} = 0; }
+			$i++;
+		}
 	}
-	if (!defined($steering->{'target_id_1_weight'})) { $steering->{'target_id_1_weight'} = 0; }
-	if (!defined($steering->{'target_id_2_weight'})) { $steering->{'target_id_2_weight'} = 0; }
+	print STDERR Dumper($steering->{'target_id_0'});
+	print STDERR Dumper($steering->{'target_name_0'});
+	print STDERR Dumper($steering->{'target_weight_id_0'});
+	print STDERR Dumper($steering->{'target_id_1'});
+	print STDERR Dumper($steering->{'target_name_1'});
+	print STDERR Dumper($steering->{'target_weight_id_1'});
+
 	
 	$self->stash(
 		steering       => $steering,
