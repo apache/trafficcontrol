@@ -43,7 +43,7 @@ my $usage = "\n"
 	. "Create the 'postgres' user (if not created):\n"
 	. "     \$ createuser postgres\n\n"
 	. "Set the 'postgres' user password:\n"
-	. "     ALTER ROLE postgres WITH ENCRYPTED PASSWORD 'yourpassword'; \n\n"
+	. "     CREATE ROLE postgres WITH CREATEROLE LOGIN ENCRYPTED PASSWORD 'yourpassword'; \n\n"
 	. "Postgres Password: file allows for easy command line access by defaulting the user and password for the database\n"
 	. "without prompts.\n\n"
 	. " Postgres .pgpass file format:\n"
@@ -207,7 +207,7 @@ sub createdb {
 		print "Database $db_name already exists\n";
 		return;
 	}
-    my $cmd = "createdb -h $host_ip -p $host_port -U $db_super_user --owner $db_user $db_name;";
+    my $cmd = "createdb -h $host_ip -p $host_port -U $db_user --owner $db_user $db_name;";
 	if ( system($cmd) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
