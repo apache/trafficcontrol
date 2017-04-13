@@ -37,11 +37,30 @@ my $usage = "\n"
 	. "Example:  $PROGRAM_NAME --env=test reset\n\n"
 	. "Purpose:  This script is used to manage database. The environments are\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
-	. "arguments:   \n\n"
+	. "NOTE: \n"
+	. "Postgres Superuser: The 'postgres' superuser needs to be created to run $PROGRAM_NAME and setup databases.\n"
+	. "If the 'postgres' superuser hasn't been created or password has been set then run the following commands accordingly. \n\n"
+	. "Create the 'postgres' user (if not created):\n"
+	. "     \$ createuser postgres\n\n"
+	. "Set the 'postgres' user password:\n"
+	. "     ALTER ROLE postgres WITH ENCRYPTED PASSWORD 'yourpassword'; \n\n"
+	. "Postgres Password: file allows for easy command line access by defaulting the user and password for the database\n"
+	. "without prompts.\n\n"
+	. " Postgres .pgpass file format:\n"
+	. " hostname:port:database:username:password\n\n"
+	. " ----------------------\n"
+	. " Example Contents\n"
+	. " ----------------------\n"
+	. " *:*:*:postgres:yourpassword \n"
+	. " ----------------------\n\n"
+	. " Save the following example into this file $HOME/.pgpass with the permissions of this file\n"
+	. " so only $USER can read and write.\n\n"
+	. "     \$ chmod 0600 $HOME/.pgpass\n\n"
+	. "===================================================================================================================\n"
+	. "$PROGRAM_NAME arguments:   \n\n"
 	. "createdb  - Execute db 'createdb' the database for the current environment.\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
 	. "down  - Roll back a single migration from the current version.\n"
-	. "create_superuser  - Execute 'create_superuser' the user for the current environment (postgres).\n"
 	. "create_user  - Execute 'create_user' the user for the current environment (traffic_ops).\n"
 	. "drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).\n"
 	. "show_users  - Execute sql to show all of the user for the current environment.\n"
@@ -59,6 +78,7 @@ my $db_protocol;
 # you don't have to specify --env=development for dev workstations
 my $db_name     = 'to_development';
 my $db_super_user = 'postgres';
+my $db_replication_user = 'to_replication';
 my $db_user = 'traffic_ops';
 my $db_password = '';
 my $host_ip     = '';
@@ -76,9 +96,6 @@ if ( defined($argument) ) {
 	}
 	elsif ( $argument eq 'dropdb' ) {
 		dropdb();
-	}
-	elsif ( $argument eq 'create_superuser' ) {
-		create_superuser();
 	}
 	elsif ( $argument eq 'create_user' ) {
 		create_user();
@@ -202,35 +219,11 @@ sub createdb {
 sub create_user {
 	my $user_exists = `psql -h $host_ip -p $host_port -U $db_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
 
-	my $cmd = "CREATE USER $db_user WITH CREATEDB ENCRYPTED PASSWORD '$db_password'";
+	my $cmd = "CREATE USER $db_user WITH LOGIN ENCRYPTED PASSWORD '$db_password'";
 	if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
 		die "Can't create user $db_user\n";
 	}
 	update_pgpass($db_user, $db_password);
-}
-
-sub create_superuser {
-
-	system('stty', '-echo');  # Disable echoing
-	print "Set a password for the 'postgres' superuser: ";
-	my $db_super_user_password = <STDIN>; 
-	chomp $db_super_user_password; 
-	exit 0 if ($db_super_user_password eq ""); # If empty string, exit.
-
-    my $cmd;
-	my $user_exists = `psql -h $host_ip -p $host_port -U $db_super_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_super_user'"`;
-    if  ( $user_exists ) {
-   	   $cmd = "ALTER ROLE $db_super_user WITH ENCRYPTED PASSWORD '$db_super_user_password'";
-	   if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
-		 die "Can't alter user $db_super_user\n";
-	   }
-    } else {
-   	   $cmd = "CREATE USER $db_super_user WITH CREATEDB ENCRYPTED PASSWORD '$db_super_user_password'";
-	   if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
-		 die "Can't create user $db_super_user\n";
-	   }
-    }
-	update_pgpass($db_super_user, $db_super_user_password);
 }
 
 sub drop_user {
