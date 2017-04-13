@@ -609,6 +609,7 @@ sub setupDatabase {
         InstallUtils::logger("Not downloading Maxmind data");
     }
 
+    chdir("/opt/traffic_ops/app/public/routing");
     InstallUtils::logger( "Copying coverage zone file to public dir", "info" );
     $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
     if ( $result != 0 ) {
