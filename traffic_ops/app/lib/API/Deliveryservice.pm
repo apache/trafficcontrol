@@ -446,21 +446,25 @@ sub create {
 
 	my $insert = $self->db->resultset('Deliveryservice')->create($values)->insert();
 	if ($insert) {
+
+		&log( $self, "Created delivery service [ '" . $insert->xml_id . "' ] with id: " . $insert->id, "APICHANGE" );
+
 		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
 		&UI::DeliveryService::header_rewrite( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
 		&UI::DeliveryService::header_rewrite( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
 		&UI::DeliveryService::regex_remap( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
 		&UI::DeliveryService::cacheurl( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
 
+		# create a default deliveryservice_regex in the format .*\.xml-id\..*
+		$self->create_default_ds_regex( $insert->id, '.*\.' . $insert->xml_id . '\..*' );
+
 		# create dnssec keys if necessary
 		my $cdn = $self->db->resultset('Cdn')->search( { id => $params->{cdnId} } )->single();
 		my $dnssec_enabled = $cdn->dnssec_enabled;
 		if ( $dnssec_enabled ) {
 			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id );
+			&log( $self, "Created delivery service dnssec keys for [ '" . $insert->xml_id . "' ]", "APICHANGE" );
 		}
-
-		# create a default deliveryservice_regex in the format .*\.xml-id\..*
-		$self->create_default_ds_regex($insert->id, '.*\.' . $insert->xml_id . '\..*');
 
 		my @response;
 		push(
@@ -520,8 +524,6 @@ sub create {
 				"xmlId"                    => $insert->xml_id
 			}
 		);
-
-		&log( $self, "Created deliveryservice [ '" . $insert->xml_id . "' ] with id: " . $insert->id, "APICHANGE" );
 
 		return $self->success( \@response, "Deliveryservice creation was successful." );
 	}
@@ -1056,7 +1058,7 @@ sub create_default_ds_regex {
 	if ($rs_regex) {
 		# now insert the regex into the deliveryservice_regex table with set number = 0
 		$self->db->resultset('DeliveryserviceRegex')->create( { deliveryservice => $ds_id, regex => $rs_regex->id, set_number => 0 } )->insert();
-		&log( $self, "Default regex created [ " . $rs_regex->pattern . " ] for deliveryservice: " . $ds_id, "APICHANGE" );
+		&log( $self, "Created delivery service regex at position 0 [ " . $rs_regex->pattern . " ] for deliveryservice: " . $ds_id, "APICHANGE" );
 	}
 
 }
