@@ -818,9 +818,6 @@ sub main {
         ProfileCleanup::add_custom_profiles( $custom_profile_dir, $adminconf, $parameters->{"tm.url"} );
     }
 
-    InstallUtils::execCommand("/bin/chown -R trafops:trafops /opt/traffic_ops");
-    InstallUtils::execCommand("/bin/chmod -R a+rX /opt/traffic_ops");
-
     InstallUtils::logger("Postinstall complete");
 
     InstallUtils::execCommand( "/bin/gzip", "$logFile" );
