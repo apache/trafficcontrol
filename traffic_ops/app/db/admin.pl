@@ -78,7 +78,6 @@ my $db_protocol;
 # you don't have to specify --env=development for dev workstations
 my $db_name     = 'to_development';
 my $db_super_user = 'postgres';
-my $db_replication_user = 'to_replication';
 my $db_user = 'traffic_ops';
 my $db_password = '';
 my $host_ip     = '';
