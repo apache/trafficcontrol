@@ -1466,7 +1466,12 @@ sub replace_cfg_file {
 			. $cfg_file_tracker->{$cfg_file}->{'location'}
 			. "/$cfg_file\n";
 		system("/bin/cp $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} $cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file");
-		chown $ats_uid, $ats_uid, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
+		if ( $cfg_file =~ /cron/ ) {
+			chown 0, 0, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
+		}
+		else {
+			chown $ats_uid, $ats_uid, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
+		}
 		$cfg_file_tracker->{$cfg_file}->{'change_applied'}++;
 		( $log_level >> $TRACE ) && print "TRACE Setting change applied for $cfg_file.\n";
 		$return_code = $CFG_FILE_CHANGED;
