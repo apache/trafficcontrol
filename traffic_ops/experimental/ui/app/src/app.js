@@ -64,6 +64,8 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/admin/cdns/new').name,
         require('./modules/private/admin/cdns/profiles').name,
         require('./modules/private/admin/cdns/servers').name,
+        require('./modules/private/admin/changeLogs').name,
+        require('./modules/private/admin/changeLogs/list').name,
         require('./modules/private/admin/divisions').name,
         require('./modules/private/admin/divisions/edit').name,
         require('./modules/private/admin/divisions/list').name,
@@ -224,6 +226,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/cacheGroupParameters').name,
         require('./common/modules/table/cacheGroupServers').name,
         require('./common/modules/table/cacheGroupStaticDnsEntries').name,
+        require('./common/modules/table/changeLogs').name,
         require('./common/modules/table/asns').name,
         require('./common/modules/table/cdns').name,
         require('./common/modules/table/cdnDeliveryServices').name,
@@ -283,6 +286,7 @@ var trafficOps = angular.module('trafficOps', [
             RestangularProvider.setBaseUrl(ENV.api['root']);
 
             RestangularProvider.setResponseInterceptor(function(data, operation, what) {
+
                 if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
                     if (operation == 'getList') {
                         return data.response;
