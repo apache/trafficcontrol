@@ -854,16 +854,43 @@ sub hosting_dot_config {
 	return $text;
 }
 
-sub storage_dot_config_volume_text {
+sub storage_dot_config_letter_to_id_mapping($$) {
+	my $letters              = shift;
+	my $hash_key_ids         = shift;
+	my %mapping;
+
+	if (defined($hash_key_ids)) {
+		@tmp_list = split( /,/, $hash_key_ids);
+
+		# find the minimum of the two list sizes
+		my $limit = (scalar(@postfix) < scalar(@tmp_list)) ? scalar(@postfix) : scalar(@tmp_list);
+
+		for (my $i = 0; $i < $limit; ++$i) {
+			$mapping{$postfix[$i]} = $tmp_list[$i];
+		}
+	}
+
+	return %mapping;
+}
+
+sub storage_dot_config_additional_text {
 	my $prefix  = shift;
 	my $letters = shift;
+	my $hash_key_ids = shift;
 	my $volume  = shift;
 
 	my $text = "";
 	my @postfix = split( /,/, $letters );
+	my %id_to_hash = storage_dot_config_letter_to_id_mapping(
+		$letters, $hash_key_ids
+	);
+
 	foreach my $l ( sort @postfix ) {
 		$text .= $prefix . $l;
 		$text .= " volume=" . $volume;
+		if (defined($id_to_hash{$l})) {
+			$text .= " id=" . $id_to_hash{$l};
+		}
 		$text .= "\n";
 	}
 	return $text;
@@ -880,17 +907,17 @@ sub storage_dot_config {
 
 	my $next_volume = 1;
 	if ( defined( $data->{Drive_Prefix} ) ) {
-		$text .= storage_dot_config_volume_text( $data->{Drive_Prefix}, $data->{Drive_Letters}, $next_volume );
+		$text .= storage_dot_config_additional_text( $data->{Drive_Prefix}, $data->{Drive_Letters}, $data->{Drive_Hash_Id}, $next_volume );
 		$next_volume++;
 	}
 
 	if ( defined( $data->{RAM_Drive_Prefix} ) ) {
-		$text .= storage_dot_config_volume_text( $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters}, $next_volume );
+		$text .= storage_dot_config_additional_text( $data->{RAM_Drive_Prefix}, $data->{RAM_Drive_Letters}, $data->{RAM_Drive_Hash_Id}, $next_volume );
 		$next_volume++;
 	}
 
 	if ( defined( $data->{SSD_Drive_Prefix} ) ) {
-		$text .= storage_dot_config_volume_text( $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters}, $next_volume );
+		$text .= storage_dot_config_additional_text( $data->{SSD_Drive_Prefix}, $data->{SSD_Drive_Letters}, $data->{SSD_Drive_Hash_Id}, $next_volume );
 		$next_volume++;
 	}
 	return $text;
