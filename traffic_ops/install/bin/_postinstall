@@ -588,7 +588,11 @@ sub setupDatabase {
     $ENV{PGUSER}     = $todbconf->{"dbAdminUser"};
     $ENV{PGPASSWORD} = $todbconf->{"dbAdminPw"};
     chdir("/opt/traffic_ops/app");
-    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "setup" );
+    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "reset" );
+
+    if ( $result == 0 ) {
+	    $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "seed" );
+    }
 
     if ( $result != 0 ) {
         errorOut("Database initialization failed");
