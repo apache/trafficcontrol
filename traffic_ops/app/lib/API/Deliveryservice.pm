@@ -512,6 +512,25 @@ sub create {
 			);
 		}
 
+		# build example urls
+		my @example_urls  = ();
+		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $insert->id );
+		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $insert->id );
+		@example_urls = &UI::DeliveryService::get_example_urls( $self, $insert->id, $regexp_set, $insert, $cdn_domain, $insert->protocol );
+
+		# build the matchlist (the list of ds regexes and their type)
+		my @matchlist  = ();
+		my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $insert->id }, { prefetch => [ { 'regex' => 'type' } ] } );
+		while ( my $ds_regex = $ds_regexes->next ) {
+			push(
+				@matchlist, {
+					type      => $ds_regex->regex->type->name,
+					pattern   => $ds_regex->regex->pattern,
+					setNumber => $ds_regex->set_number
+				}
+			);
+		}
+
 		my @response;
 		push(
 			@response, {
