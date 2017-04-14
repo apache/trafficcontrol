@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll, authService, userModel) {
+var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll, $interval, locationUtils, authService, changeLogService, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -28,8 +28,24 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
      */
     $scope.user = angular.copy(userModel.user);
 
+    $scope.newLogCount = 0;
+
+    $scope.changeLogs = [];
+
     $scope.isState = function(state) {
         return $state.current.name.indexOf(state) !== -1;
+    };
+
+    $scope.getChangeLogs = function() {
+        $scope.changeLogs = [];
+        changeLogService.getChangeLogs({ rows: 6 })
+            .then(function(response) {
+                $scope.changeLogs = response;
+            });
+    };
+
+    $scope.getRelativeTime = function(date) {
+        return moment(date).fromNow();
     };
 
     $scope.logout = function() {
@@ -38,6 +54,30 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
 
     $scope.downloadDB = function() {
         alert('not hooked up yet: downloadDB');
+    };
+
+    $scope.navigateToPath = locationUtils.navigateToPath;
+
+    var changeLogInterval,
+        increment = 1;
+
+    var createChangeLogInterval = function() {
+        killChangeLogInterval();
+        changeLogInterval = $interval(function() { getNewLogCount() }, (increment*60*1000)); // every X minutes
+    };
+
+    var killChangeLogInterval = function() {
+        if (angular.isDefined(changeLogInterval)) {
+            $interval.cancel(changeLogInterval);
+            changeLogInterval = undefined;
+        }
+    };
+
+    var getNewLogCount = function() {
+        changeLogService.getNewLogCount()
+            .then(function(result) {
+                $scope.newLogCount = result.data.response.newLogcount;
+            });
     };
 
     var scrollToTop = function() {
@@ -79,16 +119,22 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
         });
     };
 
-    $scope.$on('userModel::userUpdated', function(event) {
+    $scope.$on('userModel::userUpdated', function() {
         $scope.user = angular.copy(userModel.user);
+    });
+
+    $scope.$on('changeLogService::getChangeLogs', function() {
+        $scope.newLogCount = 0;
     });
 
     var init = function () {
         scrollToTop();
         initToggleMenu();
+        getNewLogCount();
+        createChangeLogInterval();
     };
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$log', '$state', '$anchorScroll', 'authService', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$log', '$state', '$anchorScroll', '$interval', 'locationUtils', 'authService', 'changeLogService', 'userModel'];
 module.exports = HeaderController;

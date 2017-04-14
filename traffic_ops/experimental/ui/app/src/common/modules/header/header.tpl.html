@@ -37,24 +37,24 @@ under the License.
             </li>
             <li role="presentation" class="dropdown">
                 <div class="btn-group" uib-dropdown is-open="alerts.isopen">
-                    <button id="alertsButton" type="button" class="btn btn-link" uib-dropdown-toggle>
+                    <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
                         <i class="fa fa-comment-o"></i>
-                        <span class="badge bg-green">6</span>
+                        <span class="badge bg-green">{{newLogCount}}</span>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
-                        <li ng-repeat="i in [1, 2, 3, 4, 5, 6]">
-                            <a>
+                        <li ng-repeat="changeLog in changeLogs">
+                            <a ng-click="$event.stopPropagation()">
                                 <span>
-                                    <span>User Name</span>
-                                    <span class="time">{{i}} mins ago</span>
+                                    <span>{{changeLog.user}}</span>
+                                    <span class="time">{{getRelativeTime(changeLog.lastUpdated)}}</span>
                                 </span>
-                                <span class="message">Contents of Log.message goes here</span>
+                                <span class="message">{{changeLog.message}}</span>
                             </a>
                         </li>
                         <li>
                             <div class="text-center">
                                 <a>
-                                    <strong><a href="javascript:void(0);">See All Change Logs</a></strong>
+                                    <strong><a ng-click="navigateToPath('/admin/change-logs')">See All Change Logs</a></strong>
                                     <i class="fa fa-angle-right"></i>
                                 </a>
                             </div>
