@@ -40,10 +40,10 @@ my $usage = "\n"
 	. "NOTE: \n"
 	. "Postgres Superuser: The 'postgres' superuser needs to be created to run $PROGRAM_NAME and setup databases.\n"
 	. "If the 'postgres' superuser has not been created or password has not been set then run the following commands accordingly. \n\n"
-	. "Create the 'postgres' user (if not created):\n"
-	. "     \$ createuser postgres\n\n"
+	. "Create the 'postgres' user as a super user (if not created):\n"
+	. "     \$ createuser postgres -s -r -d\n\n"
 	. "Set the 'postgres' user password:\n"
-	. "     ALTER ROLE postgres WITH ENCRYPTED PASSWORD 'yourpassword'; \n\n"
+	. "     CREATE ROLE postgres WITH CREATEROLE CREATEDB LOGIN ENCRYPTED PASSWORD 'yourpassword'; \n\n"
 	. "Postgres Password: file allows for easy command line access by defaulting the user and password for the database\n"
 	. "without prompts.\n\n"
 	. " Postgres .pgpass file format:\n"
@@ -52,6 +52,7 @@ my $usage = "\n"
 	. " Example Contents\n"
 	. " ----------------------\n"
 	. " *:*:*:postgres:yourpassword \n"
+	. " *:*:*:traffic_ops:yourpassword \n"
 	. " ----------------------\n\n"
 	. " Save the following example into this file $HOME/.pgpass with the permissions of this file\n"
 	. " so only $USER can read and write.\n\n"
@@ -78,7 +79,7 @@ my $db_protocol;
 # you don't have to specify --env=development for dev workstations
 my $db_name     = 'to_development';
 my $db_super_user = 'postgres';
-my $db_user = 'traffic_ops';
+my $db_user = '';
 my $db_password = '';
 my $host_ip     = '';
 my $host_port   = '';
@@ -166,7 +167,7 @@ sub parse_dbconf_yml_pg_driver {
 
 	$host_ip     = $hash->{host};
 	$host_port   = $hash->{port};
-	$db_super_user = $hash->{user};
+	$db_user = $hash->{user};
 	$db_password = $hash->{password};
 	$db_name     = $hash->{dbname};
 }
@@ -196,13 +197,13 @@ sub load_schema {
 
 sub dropdb {
 	print "Dropping database: $db_name\n";
-	if ( system("dropdb -h $host_ip -p $host_port -U $db_super_user -e --if-exists $db_name;") != 0 ) {
+	if ( system("dropdb -h $host_ip -p $host_port -U $db_user -e --if-exists $db_name;") != 0 ) {
 		die "Can't drop db $db_name\n";
 	}
 }
 
 sub createdb {
-	my $db_exists = `psql -h $host_ip -U $db_user -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
+	my $db_exists = `psql -h $host_ip -U $db_super_user -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
 	if ($db_exists) {
 		print "Database $db_name already exists\n";
 		return;
@@ -219,7 +220,7 @@ sub create_user {
 	my $user_exists = `psql -h $host_ip -p $host_port -U $db_super_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
 
 	if (!$user_exists) {
-		my $cmd = "CREATE USER $db_user WITH CREATEDB CREATEROLE LOGIN ENCRYPTED PASSWORD '$db_password'";
+		my $cmd = "CREATE USER $db_user WITH LOGIN ENCRYPTED PASSWORD '$db_password'";
 		if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
 			die "Can't create user $db_user\n";
 		}
