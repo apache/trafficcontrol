@@ -32,6 +32,8 @@ use Fixtures::Asn;
 use Fixtures::Cachegroup;
 use Fixtures::EdgeCachegroup;
 use Fixtures::Job;
+use Fixtures::JobAgent;
+use Fixtures::JobStatus;
 use Fixtures::Profile;
 use Fixtures::Parameter;
 use Fixtures::ProfileParameter;
@@ -111,7 +113,7 @@ sub load_core_data {
 
 	$self->reset_sequence_id();
 
-        $self->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -132,6 +134,8 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::DeliveryserviceRegex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceServer->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::JobStatus->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::JobAgent->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Job->new($schema_values) );
 }
 
@@ -142,6 +146,8 @@ sub unload_core_data {
 	$self->teardown($schema, 'ToExtension');
 	$self->teardown($schema, 'Staticdnsentry');
 	$self->teardown($schema, 'Job');
+	$self->teardown($schema, 'JobAgent');
+	$self->teardown($schema, 'JobStatus');
 	$self->teardown($schema, 'Log');
 	$self->teardown($schema, 'Asn');
 	$self->teardown($schema, 'DeliveryserviceTmuser');
