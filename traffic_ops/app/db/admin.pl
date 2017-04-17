@@ -181,14 +181,14 @@ sub migrate {
 
 sub seed {
 	print "Seeding database.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_super_user -e < db/seeds.sql") != 0 ) {
 		die "Can't seed database\n";
 	}
 }
 
 sub load_schema {
 	print "Creating database tables.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/create_tables.sql") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_super_user -e < db/create_tables.sql") != 0 ) {
 		die "Can't create database tables\n";
 	}
 }
