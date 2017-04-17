@@ -195,7 +195,7 @@ sub load_schema {
 
 sub dropdb {
 	print "Dropping database: $db_name\n";
-	if ( system("dropdb -h $host_ip -p $host_port -U $db_user -e --if-exists $db_name;") != 0 ) {
+	if ( system("dropdb -h $host_ip -p $host_port -U $db_super_user -e --if-exists $db_name;") != 0 ) {
 		die "Can't drop db $db_name\n";
 	}
 }
@@ -206,7 +206,7 @@ sub createdb {
 		print "Database $db_name already exists\n";
 		return;
 	}
-    my $cmd = "createdb -h $host_ip -p $host_port -U $db_super_user --owner $db_user $db_name;";
+	my $cmd = "createdb -h $host_ip -p $host_port -U $db_super_user -e --owner $db_user $db_name;";
 	if ( system($cmd) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
@@ -219,20 +219,20 @@ sub create_user {
 
 	if (!$user_exists) {
 		my $cmd = "CREATE USER $db_user WITH LOGIN ENCRYPTED PASSWORD '$db_password'";
-		if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -tAc "$cmd"}) != 0 ) {
+		if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -etAc "$cmd"}) != 0 ) {
 			die "Can't create user $db_user\n";
 		}
 	}
 }
 
 sub drop_user {
-	if ( system("dropuser -h $host_ip -p $host_port -i -e $db_user;") != 0 ) {
+	if ( system("dropuser -h $host_ip -p $host_port -U $db_super_user-i -e $db_user;") != 0 ) {
 		die "Can't drop user $db_user\n";
 	}
 }
 
 sub show_users {
-	if ( system("psql -h $host_ip -p $host_port -ec '\\du';") != 0 ) {
+	if ( system("psql -h $host_ip -p $host_port -U $db_super_user -ec '\\du';") != 0 ) {
 		die "Can't show users";
 	}
 }
