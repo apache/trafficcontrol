@@ -122,6 +122,54 @@ my %definition_for = (
 			type => 19,
 		},
 	},
+	hr_target_5 => {
+		new => 'Regex',
+		using => {
+			id      => 1400,
+			pattern => '.*\.target-ds5\..*',
+			type => 19,
+		},
+	},
+	hr_target_6 => {
+		new => 'Regex',
+		using => {
+			id      => 1500,
+			pattern => '.*\.target-ds6\..*',
+			type => 19,
+		},
+	},
+	hr_target_7 => {
+		new => 'Regex',
+		using => {
+			id      => 1600,
+			pattern => '.*\.target-ds7\..*',
+			type => 19,
+		},
+	},
+	hr_target_8 => {
+		new => 'Regex',
+		using => {
+			id      => 1700,
+			pattern => '.*\.target-ds8\..*',
+			type => 19,
+		},
+	},
+	hr_target_9 => {
+		new => 'Regex',
+		using => {
+			id      => 1800,
+			pattern => '.*\.target-ds9\..*',
+			type => 19,
+		},
+	},
+	hr_target_10 => {
+		new => 'Regex',
+		using => {
+			id      => 1900,
+			pattern => '.*\.target-ds10\..*',
+			type => 19,
+		},
+	},
 );
 
 sub get_definition {
