@@ -59,13 +59,17 @@ sub index {
 		$criteria{'me.id'} = { -in => \@ds_ids },;
 	}
 
-	my $rs_data = $self->db->resultset("Deliveryservice")->search( \%criteria, { prefetch => [ 'cdn', 'profile', 'type' ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Deliveryservice")->search(
+		\%criteria,
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ], order_by => 'me.' . $orderby }
+	);
+
 	while ( my $row = $rs_data->next ) {
 
 		# build example urls for each delivery service
 		my @example_urls = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
-		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
+		my $cdn_domain   = $row->cdn->domain_name;
+		my $regexp_set   = $self->get_regexp_set( $row->deliveryservice_regexes );
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
@@ -144,7 +148,10 @@ sub show {
 		return $self->forbidden() if ( !exists( $map{$id} ) );
 	}
 
-	my $rs = $self->db->resultset("Deliveryservice")->search( { id => $id } );
+	my $rs = $self->db->resultset("Deliveryservice")->search(
+		{ 'me.id' => $id },
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ] }
+	);
 	while ( my $row = $rs->next ) {
 
 		# build the matchlist (the list of ds regexes and their type)
@@ -163,8 +170,8 @@ sub show {
 
 		# build example urls for the delivery service
 		my @example_urls = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
-		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
+		my $cdn_domain   = $row->cdn->domain_name;
+		my $regexp_set   = $self->get_regexp_set( $row->deliveryservice_regexes );
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
@@ -316,7 +323,7 @@ sub update {
 
 		# build example urls
 		my @example_urls  = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $rs->id );
+		my $cdn_domain    = $rs->cdn->domain_name;
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
 
@@ -495,7 +502,7 @@ sub create {
 
 		# build example urls
 		my @example_urls  = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $insert->id );
+		my $cdn_domain   = $insert->cdn->domain_name;
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $insert->id );
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $insert->id, $regexp_set, $insert, $cdn_domain, $insert->protocol );
 
@@ -1105,6 +1112,24 @@ sub create_default_ds_regex {
 		&log( $self, "Created delivery service regex at position 0 [ " . $rs_regex->pattern . " ] for deliveryservice: " . $ds_id, "APICHANGE" );
 	}
 
+}
+
+sub get_regexp_set {
+	my $self    	= shift;
+	my @ds_regexes 	= shift;
+
+	my $regexp_set;
+	my $i = 0;
+
+	foreach my $ds_regex (@ds_regexes) {
+		$regexp_set->[$i]->{id}         = $ds_regex->id;
+		$regexp_set->[$i]->{pattern}    = $ds_regex->regex->pattern;
+		$regexp_set->[$i]->{type}    	= $ds_regex->regex->type->name;
+		$regexp_set->[$i]->{set_number} = $ds_regex->set_number;
+		$i++;
+	}
+
+	return $regexp_set;
 }
 
 1;
