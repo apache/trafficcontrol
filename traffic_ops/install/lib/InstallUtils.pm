@@ -50,44 +50,10 @@ sub initLogger {
 }
 
 sub execCommand {
-    my ( $command, @args ) = @_;
-
-    my $pipe = IO::Pipe->new;
-    my $pid;
-    my $result    = 0;
-    my $customLog = "";
-
-    # find log file in args and remove if found
-    # if there is a string in the list of args which starts with 'pi_custom_log=' then remove it from the parameters and use
-    #  it as the log file for the exec
-    foreach my $var (@args) {
-        if ( index( $var, "pi_custom_log=" ) != -1 ) {
-            $customLog = ( split( /=/, $var ) )[1];
-            splice( @args, index( $var, "pi_custom_log=" ), 1 );
-            logger( "Using custom log '$customLog'", "info" );
-        }
-    }
-
-    # create pipe between child and parent and redirect output from child to parent for logging
-    my $child = open READER, '-|';
-    defined $child or die "pipe/fork: $!\n";
-    if ($child) {    #parent
-        while ( $line = <READER> ) {
-
-            # log all output from child pipe
-            if ( $customLog ne "" ) {
-                logger( $line, "info", $customLog );
-            }
-            else {
-                logger( $line, "info" );
-            }
-        }
-    }
-    else {           #child
-                     # redirect stderr to stdout so parent can read
-        open STDERR, '>&STDOUT';
-        exec( $command, @args ) or exit(1);
-    }
+        my ( $cmd, @args ) = @_;
+        system( $cmd, @args );
+        my $result = $? >> 8;
+        return $result;
 }
 
 # log the error and then kill the process
