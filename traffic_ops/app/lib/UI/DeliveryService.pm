@@ -50,7 +50,7 @@ sub edit {
 	my $data = $rs_ds->single;
 
 	my $regexp_set   = &get_regexp_set( $self, $id );
-	my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
+	my $cdn_domain = $data->cdn->domain_name;
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
@@ -69,13 +69,6 @@ sub edit {
 		hidden       => {},               # for form validation purposes
 		mode         => 'edit'            # for form generation
 	);
-}
-
-sub get_cdn_domain {
-	my $self       = shift;
-	my $id         = shift;
-
-	return $self->db->resultset('Deliveryservice')->search( { id => $id }, { prefetch => ['cdn']} )->get_column('domain_name')->single();
 }
 
 sub get_example_urls {
@@ -946,9 +939,9 @@ sub update {
 	}
 	else {
 		&stash_role($self);
-		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
 		my $data = $rs_ds->single;
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
+		my $cdn_domain = $data->cdn->domain_name;
 		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 		my $regexp_set   = &get_regexp_set( $self, $id );
@@ -1007,7 +1000,6 @@ sub create {
 	}
 
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
-		#print "CDN:$cdn_id\n";
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
@@ -1177,13 +1169,12 @@ sub create_dnssec_keys {
 	my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
 
 	#create the ds domain name for dnssec keys
-	my $domain_name             = get_cdn_domain($self, $ds_id);
 	my $deliveryservice_regexes = get_regexp_set($self, $ds_id);
 	my $rs_ds =
-		$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+		$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
 	my $data = $rs_ds->single;
+	my $domain_name = $data->cdn->domain_name;
 	my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
-
 	#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 	my $ds_name = $example_urls[0] . ".";
 	my $length = length($ds_name) - CORE::index( $ds_name, "." );
