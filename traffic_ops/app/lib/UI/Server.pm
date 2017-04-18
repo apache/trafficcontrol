@@ -909,15 +909,15 @@ sub readupdate {
 			if ( $rs_servers->single->type->name =~ m/^EDGE/ ) {
 				my $parent_cg =
 					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
-				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg }, { prefetch => [ 'status'] } );
+				my $rs_parents = $self->db->resultset('Server')->search( { -and => [ cachegroup => $parent_cg, cdn_id => $rs_servers->single->cdn_id ] }, { prefetch => [ 'status'] } );
 				while ( my $prow = $rs_parents->next ) {
 					if (   $prow->upd_pending == 1
-						&& $prow->status->name ne "OFFLINE" && $prow->cdn_id == $rs_servers->single->cdn_id )
+						&& $prow->status->name ne "OFFLINE" )
 					{
 						$parent_pending{ $rs_servers->single->host_name } = 1;
 					}
 					if (   $prow->reval_pending == 1
-						&& $prow->status->name ne "OFFLINE" && $prow->cdn_id == $rs_servers->single->cdn_id )
+						&& $prow->status->name ne "OFFLINE" )
 					{
 						$parent_reval_pending{ $rs_servers->single->host_name } = 1;
 					}
