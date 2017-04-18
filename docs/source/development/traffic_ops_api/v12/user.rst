@@ -446,7 +446,7 @@ Users
 |
 
 
-**GET /api/1.2/user/current.json**
+**GET /api/1.2/user/current**
 
   Retrieves the profile for the authenticated user.
 
@@ -524,7 +524,7 @@ Users
 
 |
   
-**POST /api/1.2/user/current/update**
+**PUT /api/1.2/user/current**
 
   Updates the date for the authenticated user.
 
