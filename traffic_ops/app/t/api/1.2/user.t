@@ -51,6 +51,7 @@ sub run_ut {
 
 	ok my $portal_user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Tenant $tenant_name: Does the portal user exist?';
 
+
 	# Verify the Portal user
 	$t->post_ok( '/api/1.2/user/login', json => { u => $login_user, p => $login_password} )->status_is(200);
 	$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )

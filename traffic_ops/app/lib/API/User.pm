@@ -314,7 +314,7 @@ sub current {
 		return $self->success( @data );
 	}
 	else {
-		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } , { prefetch => [ 'role' , 'tenant'] } );
+		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } , { prefetch => [ 'role' , 'tenant' ] } );
 		while ( my $row = $dbh->next ) {
 			push(
 				@data, {
