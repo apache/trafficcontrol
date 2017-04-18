@@ -912,12 +912,12 @@ sub readupdate {
 				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg }, { prefetch => [ 'status'] } );
 				while ( my $prow = $rs_parents->next ) {
 					if (   $prow->upd_pending == 1
-						&& $prow->status->name ne "OFFLINE" )
+						&& $prow->status->name ne "OFFLINE" && $prow->cdn_id == $rs_servers->single->cdn_id )
 					{
 						$parent_pending{ $rs_servers->single->host_name } = 1;
 					}
 					if (   $prow->reval_pending == 1
-						&& $prow->status->name ne "OFFLINE" )
+						&& $prow->status->name ne "OFFLINE" && $prow->cdn_id == $rs_servers->single->cdn_id )
 					{
 						$parent_reval_pending{ $rs_servers->single->host_name } = 1;
 					}
