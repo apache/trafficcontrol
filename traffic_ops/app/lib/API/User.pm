@@ -69,10 +69,10 @@ sub index {
 
 	my $dbh;
 	if ( defined $username ) {
-		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ { 'role' => undef }, 'tenant' ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 	else {
-		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 
 	while ( my $row = $dbh->next ) {
@@ -98,7 +98,7 @@ sub index {
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
 				"username"        => $row->username,
-				"tenant"          => defined ($row->tenant) ? $row->tenant->name : "N/A",
+				"tenant"          => defined ($row->tenant) ? $row->tenant->name : undef,
 				"tenantId"        => $row->tenant_id
 			}
 		);
@@ -135,7 +135,7 @@ sub show {
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
 				"username"        => $row->username,
-				"tenant"          => defined ($row->tenant) ? $row->tenant->name : "N/A",
+				"tenant"          => defined ($row->tenant) ? $row->tenant->name : undef,
 				"tenantId"        => $row->tenant_id
 			}
 		);
@@ -285,7 +285,7 @@ sub current {
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 		my $user_tenant_id = $self->current_user_tenant();
-		my $user_tenant = defined($user_tenant_id) ? $self->db->resultset('Tenant')->search( { id => $user_tenant_id } )->get_column('name')->single : "N/A";
+		my $user_tenant = defined($user_tenant_id) ? $self->db->resultset('Tenant')->search( { id => $user_tenant_id } )->get_column('name')->single : undef;
 		push(
 			@data, {
 				"id"              => "0",
@@ -314,7 +314,7 @@ sub current {
 		return $self->success( @data );
 	}
 	else {
-		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
+		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } , { prefetch => [ 'role' , 'tenant'] } );
 		while ( my $row = $dbh->next ) {
 			push(
 				@data, {
@@ -336,7 +336,7 @@ sub current {
 					"phoneNumber"     => $row->phone_number,
 					"postalCode"      => $row->postal_code,
 					"country"         => $row->country,
-					"tenant"          => defined ($row->tenant) ? $row->tenant->name : "N/A",
+					"tenant"          => defined ($row->tenant) ? $row->tenant->name : undef,
 					"tenantId"        => $row->tenant_id,
 				}
 			);

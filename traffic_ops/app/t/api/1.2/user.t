@@ -46,7 +46,8 @@ sub run_ut {
 	Test::TestHelper->load_core_data($schema);
 	
 	my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
-	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "N/A";
+	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : undef;
+	my $tenant = defined ($tenant_name) ? $tenant_name : "null";
 
 	ok my $portal_user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Tenant $tenant_name: Does the portal user exist?';
 
@@ -98,15 +99,15 @@ sub run_ut {
 	# Ensure unique emails
 	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => 'testportal1@kabletown.com', tenantId => $tenant_id } } )
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "success" ),
-		"Tenant $tenant_name: Verify that the emails are unique";
+		"Tenant $tenant: Verify that the emails are unique";
 
 	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => '@kabletown.com', tenantId => $tenant_id } } )
 		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
-		"Tenant $tenant_name: Verify that the emails are properly formatted";
+		"Tenant $tenant: Verify that the emails are properly formatted";
 
 	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => '@kabletown.com', tenantId => $tenant_id } } )
 		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
-		"Tenant $tenant_name: Verify that the usernames are unique";
+		"Tenant $tenant: Verify that the usernames are unique";
 
 	$t->post_ok( '/api/1.2/user/current/update', json => { user => { email => 'testportal1@kabletown.com', tenantId => $tenant_id } } )->status_is(400)
 		->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "username is required" );
