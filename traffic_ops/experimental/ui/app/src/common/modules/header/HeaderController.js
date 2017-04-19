@@ -38,7 +38,7 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
 
     $scope.getChangeLogs = function() {
         $scope.changeLogs = [];
-        changeLogService.getChangeLogs({ rows: 6 })
+        changeLogService.getChangeLogs({ limit: 6 })
             .then(function(response) {
                 $scope.changeLogs = response;
             });
