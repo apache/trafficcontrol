@@ -138,7 +138,6 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::JobStatus->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::JobAgent->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Job->new($schema_values) );
-	$self->load_all_fixtures( Fixtures::Log->new($schema_values) );
 }
 
 sub unload_core_data {
@@ -147,7 +146,6 @@ sub unload_core_data {
 
 	$self->teardown($schema, 'ToExtension');
 	$self->teardown($schema, 'Staticdnsentry');
-	$self->teardown($schema, 'Log');
 	$self->teardown($schema, 'Job');
 	$self->teardown($schema, 'JobAgent');
 	$self->teardown($schema, 'JobStatus');

@@ -40,8 +40,13 @@ my $count_response = sub {
     return $t->success( is( scalar(@$r), $count ) );
 };
 
+#unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->teardown( $schema, 'Log' );
+
+#load test data
 Test::TestHelper->load_core_data($schema);
+Test::TestHelper->load_all_fixtures( Fixtures::Log->new( { schema => $schema, no_transactions => 1 } ) );
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
         ->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
