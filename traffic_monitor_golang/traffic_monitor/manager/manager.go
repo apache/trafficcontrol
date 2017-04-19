@@ -22,7 +22,12 @@ package manager
 import (
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/davecheney/gmx"
 
@@ -34,7 +39,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
-	simplepoller "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
@@ -195,6 +199,23 @@ func startMonitorConfigFilePoller(filename string) error {
 		log.Init(eventW, errW, warnW, infoW, debugW)
 	}
 
-	_, err := simplepoller.File(filename, onChange)
-	return err
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	onChange(bytes, nil)
+
+	startSignalFileReloader(filename, unix.SIGHUP, onChange)
+	return nil
+}
+
+// signalFileReloader starts a goroutine which, when the given signal is received, attempts to load the given file and calls the given function with its bytes or error. There is no way to stop the goroutine or stop listening for signals, thus this should not be called if it's ever necessary to stop handling or change the listened file. The initialRead parameter determines whether the given handler is called immediately with an attempted file read (without a signal).
+func startSignalFileReloader(filename string, sig os.Signal, f func([]byte, error)) {
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, sig)
+		for range c {
+			f(ioutil.ReadFile(filename))
+		}
+	}()
 }

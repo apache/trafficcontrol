@@ -22,7 +22,10 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
@@ -30,7 +33,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
-	poller "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
@@ -162,8 +164,15 @@ func StartOpsConfigManager(
 		}
 	}
 
-	_, err := poller.File(opsConfigFile, onChange)
-	return opsConfig, err
+	bytes, err := ioutil.ReadFile(opsConfigFile)
+	if err != nil {
+		return opsConfig, err
+	}
+	onChange(bytes, err)
+
+	startSignalFileReloader(opsConfigFile, unix.SIGHUP, onChange)
+
+	return opsConfig, nil
 }
 
 // getMonitorCDN returns the CDN of a given Traffic Monitor.
