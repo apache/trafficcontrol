@@ -36,7 +36,8 @@ var TablePhysLocationsController = function(physLocations, $scope, $state, locat
     angular.element(document).ready(function () {
         $('#physLocationsTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": -1
+            "iDisplayLength": -1,
+            "aaSorting": []
         });
     });
 
