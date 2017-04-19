@@ -36,7 +36,8 @@ var TableProfileDeliveryServicesController = function(profile, deliveryServices,
 	angular.element(document).ready(function () {
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1
+			"iDisplayLength": -1,
+			"aaSorting": []
 		});
 	});
 
