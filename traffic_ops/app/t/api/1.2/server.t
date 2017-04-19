@@ -40,6 +40,11 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
+ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/ONLINE", 14 )
+		->json_is( "/response/REPORTED", 1 )
+		->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cg2-mid-northwest",
         "shortName" => "cg2_mid",
