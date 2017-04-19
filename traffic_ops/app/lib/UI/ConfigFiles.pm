@@ -1226,6 +1226,10 @@ sub parent_dot_config {
 						push @secondary_parent_info, $ptxt;
 					}
 				}
+				if ( scalar @parent_info == 0  ) {
+					@parent_info = @secondary_parent_info;
+					@secondary_parent_info = ();
+				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 				my $parents = 'parent="' . join( '', @parent_info ) . '"';
