@@ -21,6 +21,10 @@ var TableChangeLogsController = function(changeLogs, $scope, $state, locationUti
 
 	$scope.changeLogs = changeLogs;
 
+	$scope.getRelativeTime = function(date) {
+		return moment(date).fromNow();
+	};
+
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};

@@ -32,18 +32,20 @@ under the License.
         <table id="changeLogsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>time</th>
+                <th>occurred</th>
+                <th>timestamp (UTC)</th>
+                <th>user</th>
                 <th>type</th>
                 <th>message</th>
-                <th>user</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="changeLog in changeLogs">
+                <td>{{getRelativeTime(changeLog.lastUpdated)}}</td>
                 <td>{{changeLog.lastUpdated}}</td>
+                <td>{{changeLog.user}}</td>
                 <td>{{changeLog.level}}</td>
                 <td>{{changeLog.message}}</td>
-                <td>{{changeLog.user}}</td>
             </tr>
             </tbody>
         </table>
