@@ -40,36 +40,36 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cg2-mid-northwest",
         "shortName" => "cg2_mid",
-        "latitude" => "12",
-        "longitude" => "56",
-        "parentCachegroup" => "",
-        "secondaryParentCachegroup" => "",
-        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "latitude" => 12,
+        "longitude" => 56,
+        "typeId" => 6 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cg2-mid-northwest" )
     ->json_is( "/response/shortName" => "cg2_mid")
-    ->json_is( "/response/latitude" => "12")
-    ->json_is( "/response/longitude" => "56")
-    ->json_is( "/response/parentCachegroup" => "")
-    ->json_is( "/response/secondaryParentCachegroup" => "")
+    ->json_is( "/response/latitude" => 12)
+    ->json_is( "/response/longitude" => 56)
+    ->json_is( "/response/parentCachegroupId" => undef)
+    ->json_is( "/response/parentCachegroupName" => undef)
+    ->json_is( "/response/secondaryParentCachegroupId" => undef)
+    ->json_is( "/response/secondaryParentCachegroupName" => undef)
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cg-mid-northeast",
         "shortName" => "mneg",
-        "latitude" => "10",
-        "longitude" => "40",
-        "parentCachegroup" => "",
-        "secondaryParentCachegroup" => "",
-        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "latitude" => 10,
+        "longitude" => 40,
+        "typeId" => 6 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cg-mid-northeast" )
     ->json_is( "/response/shortName" => "mneg")
-    ->json_is( "/response/latitude" => "10")
-    ->json_is( "/response/longitude" => "40")
-    ->json_is( "/response/parentCachegroup" => "")
-    ->json_is( "/response/secondaryParentCachegroup" => "")
+    ->json_is( "/response/latitude" => 10)
+    ->json_is( "/response/longitude" => 40)
+    ->json_is( "/response/parentCachegroupId" => undef)
+    ->json_is( "/response/parentCachegroupName" => undef)
+    ->json_is( "/response/secondaryParentCachegroupId" => undef)
+    ->json_is( "/response/secondaryParentCachegroupName" => undef)
             , 'Does the cache group details return?';
 
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -97,20 +97,20 @@ ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( su
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "edge_atl_group1",
         "shortName" => "eag1",
-        "latitude" => "22",
-        "longitude" => "55",
-        "parentCachegroup" => "",
-        "secondaryParentCachegroup" => "",
-        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "latitude" => 22,
+        "longitude" => 55,
+        "typeId" => 6 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "edge_atl_group1" )
     ->json_is( "/response/shortName" => "eag1")
-    ->json_is( "/response/latitude" => "22")
-    ->json_is( "/response/longitude" => "55")
-    ->json_is( "/response/parentCachegroup" => "")
-    ->json_is( "/response/secondaryParentCachegroup" => "")
+    ->json_is( "/response/latitude" => 22)
+    ->json_is( "/response/longitude" => 55)
+    ->json_is( "/response/parentCachegroupId" => undef)
+    ->json_is( "/response/parentCachegroupName" => undef)
+    ->json_is( "/response/secondaryParentCachegroupId" => undef)
+    ->json_is( "/response/secondaryParentCachegroupName" => undef)
             , 'Does the cache group details return?';
 
 ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
