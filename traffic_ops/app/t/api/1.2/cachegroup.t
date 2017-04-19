@@ -116,21 +116,27 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/secondaryParentCachegroupId" => undef)
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-        "hostName" => "tc1_ats2",
-        "domainName" => "my.domain.com",
-        "cachegroup" => "mid-northeast-group",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "10.74.27.184",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "10.74.27.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "HotAtlanta",
-        "type" => "MID",
-        "profile" => "MID1" })
+my $mid_northeast_group = &get_cg_id('mid-northeast-group');
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+            "cachegroupId" => $mid_northeast_group,
+            "cdnId" => 100,
+            "domainName" => "northbound.com",
+            "hostName" => "tc1_ats2",
+            "interfaceMtu" => 1500,
+            "interfaceName" => "eth0",
+            "ipAddress" => "10.74.27.184",
+            "ipNetmask" => "255.255.255.0",
+            "ipGateway" => "10.74.27.1",
+            "ip6Address" => "2001:852:fe0f:27::2/64",
+            "ip6Gateway" => "2001:852:fe0f:27::1",
+            "physLocationId" => 300,
+            "profileId" => 200,
+            "statusId" => 1,
+            "typeId" => 2,
+            "updPending" => \0,
+        })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "tc1_ats2")
+    ->json_is( "/response/0/hostName" => "tc1_ats2")
             , 'Does the server details return?';
 
 my $necg_id = &get_cg_id('mid-northeast-group');
@@ -213,21 +219,26 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
         "parentCachegroup" => "cache_group_edge_2",
         "typeId" => 5})->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-        "hostName" => "edge_streamer_1",
-        "domainName" => "test.example.com",
-        "cachegroup" => "cache_group_edge_2",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "192.168.100.2",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "192.168.100.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "HotAtlanta",
-        "type" => "EDGE",
-        "profile" => "EDGE1" })
+
+my $cache_group_edge_2_id = &get_cg_id('cache_group_edge_2');
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+            "cachegroupId" => $cache_group_edge_2_id,
+            "cdnId" => 100,
+            "domainName" => "test.example.com",
+            "hostName" => "edge_streamer_1",
+            "interfaceMtu" => 1500,
+            "interfaceName" => "eth0",
+            "ipAddress" => "192.168.100.2",
+            "ipNetmask" => "255.255.255.0",
+            "ipGateway" => "192.168.100.1",
+            "physLocationId" => 300,
+            "profileId" => 100,
+            "statusId" => 1,
+            "typeId" => 1,
+            "updPending" => \0,
+        })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "edge_streamer_1")
+    ->json_is( "/response/0/hostName" => "edge_streamer_1")
             , 'Does the server details return?';
 
 ok $t->delete_ok('/api/1.2/cachegroups/' . $cg_id)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
