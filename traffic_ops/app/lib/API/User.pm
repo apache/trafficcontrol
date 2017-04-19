@@ -284,14 +284,13 @@ sub current {
 
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
-		my $user_tenant_id = $self->current_user_tenant();
-		my $user_tenant = defined($user_tenant_id) ? $self->db->resultset('Tenant')->search( { id => $user_tenant_id } )->get_column('name')->single : undef;
+
 		push(
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
-				"tenantId"	  => $user_tenant_id,
-				"tenant"          => $user_tenant,
+				"tenantId"	  => undef,
+				"tenant"          => undef,
 				"publicSshKey"  => "",
 				"role"            => $role,
 				"uid"             => "0",
