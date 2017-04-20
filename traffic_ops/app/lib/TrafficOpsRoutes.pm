@@ -495,14 +495,17 @@ sub api_routes {
 	$r->get("/api/$version/user/:id/deliveryservices/available" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'User#get_available_deliveryservices', namespace => $namespace );
 
+	# delivery service / server assignments
+	$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )
+		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
+	$r->delete("/api/$version/deliveryservices/:dsId/servers/:id" => [ dsId => qr/\d+/, id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'DeliveryServiceServer#remove_server_from_ds', namespace => $namespace );
+
 	# alternate deliveryservice routes
 	$r->get("/api/$version/deliveryservices/list")->over( authenticated => 1 )->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id/get" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
 		->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices/create")->over( authenticated => 1 )->to( 'Deliveryservice2#create', namespace => $namespace );
 	$r->put("/api/$version/deliveryservices/:id/update")->over( authenticated => 1 )->to( 'Deliveryservice2#update', namespace => $namespace );
-	$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )
-		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: HEALTH
 	$r->get("/api/$version/deliveryservices/:id/health" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Deliveryservice#health', namespace => $namespace );

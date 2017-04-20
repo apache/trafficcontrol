@@ -910,6 +910,37 @@ Server
     }
 
 
+**DELETE /api/1.2/deliveryservices/:dsId/servers/:id**
+
+  Removes a server (cache) from a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Oper (if delivery service is not assigned to user)
+
+  **Request Route Parameters**
+
+  +-----------------+----------+---------------------------------------------------+
+  | Name            | Required | Description                                       |
+  +=================+==========+===================================================+
+  | ``dsId``        | yes      | Delivery service ID.                              |
+  +-----------------+----------+---------------------------------------------------+
+  | ``id``          | yes      | Server (cache) ID.                                |
+  +-----------------+----------+---------------------------------------------------+
+
+   **Response Example** ::
+
+    {
+           "alerts": [
+                     {
+                             "level": "success",
+                             "text": "Server removed from delivery service."
+                     }
+             ],
+    }
+
+|
+
 
 .. _to-api-v12-ds-sslkeys:
 
