@@ -176,4 +176,28 @@ sub assign_ds_to_cachegroup {
 	$self->success( $response, "Delivery services successfully assigned to all the servers of cache group $cg_id" );
 }
 
+sub remove_server_from_ds {
+	my $self     	= shift;
+	my $ds_id  	 	= $self->param('dsId');
+	my $server_id	= $self->param('id');
+
+	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+		$self->forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my $ds_server = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id, server => $server_id }, { prefetch => [ 'deliveryservice', 'server' ] } );
+	if ( !defined($ds_server) ) {
+		return $self->not_found();
+	}
+
+	my $row = $ds_server->next;
+	my $rs = $ds_server->delete();
+	if ($rs) {
+		&log( $self, "Server [ " . $row->server->id . " | " . $row->server->host_name . " ] was removed from deliveryservice [ " . $row->deliveryservice->id . " | " . $row->deliveryservice->xml_id . " ].", "APICHANGE" );
+		return $self->success_message("Server removed from delivery service.");
+	}
+
+	return $self->alert( "Failed to remove server from delivery service." );
+}
+
 1;
