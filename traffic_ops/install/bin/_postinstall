@@ -473,19 +473,19 @@ sub getDefaults {
                 "config_var"                             => "genCert"
             },
             {
-                "Country Name (2 letter code)" => "XX",
+                "Country Name (2 letter code)" => "",
                 "config_var"                   => "country"
             },
             {
-                "State or Province Name (full name)" => "San Jose",
+                "State or Province Name (full name)" => "",
                 "config_var"                         => "state"
             },
             {
-                "Locality Name (eg, city)" => "Default City",
+                "Locality Name (eg, city)" => "",
                 "config_var"               => "locality"
             },
             {
-                "Organization Name (eg, company)" => "Default Company Ltd",
+                "Organization Name (eg, company)" => "",
                 "config_var"                      => "company"
             },
             {
@@ -493,7 +493,7 @@ sub getDefaults {
                 "config_var"                             => "org_unit"
             },
             {
-                "Common Name (eg, your name or your server's hostname)" => "example.com",
+                "Common Name (eg, your name or your server's hostname)" => "",
                 "config_var"                                            => "common_name"
             },
             {
@@ -571,7 +571,7 @@ sub setupDatabase {
         $dbName = "postgres";
     }
 
-    my $dsn = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbName );
+    my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbName, $dbconf->{hostname}, $dbconf->{port} );
     my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
     if ($dbh) {
         InstallUtils::logger( "Database connection succeeded", "info" );
@@ -778,7 +778,7 @@ sub main {
 
         ## Create the tm_user
         my $dbconf      = InstallUtils::readJson($databaseConfFile);
-        my $dsn         = sprintf( "DBI:%s:dbname=%s", $dbconf->{"type"}, $dbconf->{"dbname"} );
+	my $dsn         = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbconf->{dbname}, $dbconf->{hostname}, $dbconf->{port} );
         my $dbh         = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
         my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
         my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
