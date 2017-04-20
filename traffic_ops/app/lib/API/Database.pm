@@ -33,7 +33,7 @@ sub dbdump {
 	my $db_user = $Schema::user;
 	my $db_pass = $Schema::pass;
 
-	my $ok = open my $fh, '-|', "PGPASSWORD=/\"$db_pass/\" pg_dump -b -Fc --no-owner -h $host -p $port -U $db_user";
+	my $ok = open my $fh, '-|', "PGPASSWORD=\"$db_pass\" pg_dump -b -Fc --no-owner -h $host -p $port -U $db_user -d $db_name";
 	if (! $ok ) {
 		$self->internal_server_error( { Error => "Error dumping database" } );	
 		return;
@@ -42,13 +42,11 @@ sub dbdump {
 	# slurp it in..
 	undef $/;
 	my $data = <$fh>;
-	my $zipdata;
-	gzip \$data => \$zipdata;
 
 
 	$self->res->headers->content_type("application/download");
 	$self->res->headers->content_disposition( "attachment; filename=\"" . $filename . "\"" );
-	$self->render( data => $zipdata );
+	$self->render( data => $data );
 	close $fh;
 }
 
@@ -63,7 +61,7 @@ sub get_filename {
     my $host = `hostname`;
     chomp($host);
 
-    my $extension = ".dump.gz";
+    my $extension = ".dump";
     my $filename = "to-backup-" . $host . "-" . $year . $month . $day . $hour . $min . $sec . $extension;
     return $filename;
 }

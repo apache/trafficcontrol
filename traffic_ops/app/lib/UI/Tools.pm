@@ -153,7 +153,7 @@ sub db_dump {
     my $host = `hostname`;
     chomp($host);
 
-    my $extension = ".dump.gz";
+    my $extension = ".dump";
     my $filename = "to-backup-" . $host . "-" . $year . $month . $day . $hour . $min . $sec . $extension;
     $self->stash( filename => $filename );
     &stash_role($self);
