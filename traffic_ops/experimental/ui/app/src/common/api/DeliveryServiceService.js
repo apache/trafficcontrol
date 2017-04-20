@@ -72,6 +72,18 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
         return Restangular.one('users', userId).getList('deliveryservices');
     };
 
+    this.deleteDeliveryServiceServer = function(dsId, serverId) {
+        return Restangular.one('deliveryservices', dsId).one('servers', serverId).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Server removed' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
+            );
+    };
+
 };
 
 DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
