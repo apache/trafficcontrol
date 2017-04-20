@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, locationUtils, serverUtils) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, locationUtils, serverUtils, deliveryServiceService) {
 
 	$scope.deliveryService = deliveryService;
 
@@ -27,8 +27,13 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		alert('not hooked up yet: addServer to ds');
 	};
 
-	$scope.removeServer = function() {
-		alert('not hooked up yet: removeServer from ds');
+	$scope.removeServer = function(dsId, serverId) {
+		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
@@ -51,5 +56,5 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'deliveryServiceService'];
 module.exports = TableDeliveryServiceServersController;
