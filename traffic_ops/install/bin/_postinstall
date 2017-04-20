@@ -497,7 +497,7 @@ sub getDefaults {
                 "config_var"                                            => "common_name"
             },
             {
-                "RSA Passphrase" => "",
+                "RSA Passphrase" => "CHANGEME!!",
                 "config_var"     => "rsaPassword",
                 "hidden"         => "true"
             }
@@ -778,7 +778,7 @@ sub main {
 
         ## Create the tm_user
         my $dbconf      = InstallUtils::readJson($databaseConfFile);
-	my $dsn         = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbconf->{dbname}, $dbconf->{hostname}, $dbconf->{port} );
+        my $dsn         = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbconf->{dbname}, $dbconf->{hostname}, $dbconf->{port} );
         my $dbh         = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
         my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
         my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
