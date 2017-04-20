@@ -20,7 +20,7 @@
 var ChangeLogService = function(Restangular, $rootScope, httpService, ENV) {
 
 	this.getNewLogCount = function() {
-		return httpService.get(ENV.api['root'] + 'logs/newcount');
+		return httpService.get(ENV.api['root'] + 'logs/newcount', { ignoreLoadingBar: true });
 	};
 
 	this.getChangeLogs = function(queryParams) {
