@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll, $interval, locationUtils, authService, changeLogService, userModel) {
+var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll, $interval, locationUtils, authService, changeLogService, trafficOpsService, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -52,8 +52,8 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
         authService.logout();
     };
 
-    $scope.downloadDB = function() {
-        alert('not hooked up yet: downloadDB');
+    $scope.dumpDB = function() {
+        trafficOpsService.dumpDB();
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
@@ -136,5 +136,5 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$log', '$state', '$anchorScroll', '$interval', 'locationUtils', 'authService', 'changeLogService', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$log', '$state', '$anchorScroll', '$interval', 'locationUtils', 'authService', 'changeLogService', 'trafficOpsService', 'userModel'];
 module.exports = HeaderController;

@@ -80,6 +80,39 @@ if (app.get('env') === 'dev') {
     app.set('env', 'production');
 }
 
+// special handling required for dbdump. haven't got this to work yet
+// app.get('/dbdump', function (req, res) {
+//     var port = (useSSL) ? config.sslPort : config.port,
+//         options = {
+//             method: 'GET',
+//             host: 'localhost',
+//             port: port,
+//             path: '/api/1.2/dbdump',
+//             headers: {
+//                 cookie: req.headers['cookie']
+//             }
+//         };
+//
+//     var request = http.request(options, function(response) {
+//         var data = [];
+//         console.log(response.statusCode);
+//         response.on('data', function(chunk) {
+//             data.push(chunk);
+//         });
+//         response.on('end', function() {
+//             data = Buffer.concat(data);
+//             res.writeHead(200, {
+//                 'Content-Type': 'application/download',
+//                 'Content-Disposition': 'attachment; filename=foo.dump.gz',
+//                 'Content-Length': data.length
+//             });
+//             res.end(data);
+//         });
+//     });
+//
+//     request.end();
+// });
+
 // Enable reverse proxy support in Express. This causes the
 // the "X-Forwarded-Proto" header field to be trusted so its
 // value can be used to determine the protocol. See
