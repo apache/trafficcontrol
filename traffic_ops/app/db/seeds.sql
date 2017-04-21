@@ -13,6 +13,9 @@
 	limitations under the License.
 */
 
+
+-- THIS FILE INCLUDES STATIC DATA REQUIRED OF TRAFFIC OPS
+
 -- cdns
 insert into cdn (name, dnssec_enabled, domain_name) values ('ALL', false, '-') ON CONFLICT (name) DO NOTHING;
 
@@ -26,14 +29,6 @@ insert into job_status (name, description) values ('PENDING', 'Job is queued, bu
 insert into parameter (name, config_file, value) values ('ttl_max_hours', 'regex_revalidate.config', '672') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('ttl_min_hours', 'regex_revalidate.config', '48') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('tm.url', 'global', 'https://tm.kabletown.net/') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('tm.infourl', 'global', 'http://docs.cdnl.kabletown.net/traffic_control/html/') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('tm.logourl', 'global', '/images/tc_logo.png') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'kabletown CDN') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('tm.traffic_mon_fwd_proxy', 'global', 'http://tm.kabletown.net:81') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('geolocation.polling.url', 'CRConfig.json', 'http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCity.dat.gz') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('geolocation6.polling.url', 'CRConfig.json', 'http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCityv6.dat.gz') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'bandwidth') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'maxKbps') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'ats.proxy.process.http.current_client_connections') ON CONFLICT (name, config_file, value) DO NOTHING;
@@ -57,14 +52,6 @@ insert into profile (name, description, type) values ('INFLUXDB', 'InfluxDb prof
 insert into profile (name, description, type) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE') ON CONFLICT (name) DO NOTHING;
 
 -- profile_parameters
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = 'https://tm.kabletown.net/') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = 'http://docs.cdnl.kabletown.net/traffic_control/html/') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.logourl' and config_file = 'global' and value = '/images/tc_logo.png') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'kabletown CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.traffic_mon_fwd_proxy' and config_file = 'global' and value = 'http://tm.kabletown.net:81') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = 'http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCity.dat.gz') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = 'http://cdn-tools.cdnl.kabletown.net/cdn/MaxMind/GeoLiteCityv6.dat.gz') ) ON CONFLICT (profile, parameter) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'bandwidth') ) ON CONFLICT (profile, parameter) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'maxKbps') ) ON CONFLICT (profile, parameter) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.http.current_client_connections') ) ON CONFLICT (profile, parameter) DO NOTHING;
@@ -86,14 +73,14 @@ insert into status (name, description) values ('CCR_IGNORE', 'Server is ignored 
 insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
 
 -- roles
-insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('admin', 'super-user', 30) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('migrations', 'database migrations user - DO NOT REMOVE', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
 
 -- tenants
 insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
