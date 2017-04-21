@@ -851,10 +851,8 @@ sub ds_data {
 
 	my $rs_dsinfo;
 	if ( $server_obj->type->name =~ m/^MID/ ) {
-
 		# the mids will do all deliveryservices in this CDN
-		my $domain = $self->get_cdn_domain_by_profile_id( $server_obj->profile->id );
-		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
+		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server_obj->cdn->name ] } );
 	}
 	else {
 		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
