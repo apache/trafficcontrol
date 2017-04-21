@@ -180,10 +180,18 @@ sub migrate {
 }
 
 sub seed {
-	print "Seeding database.\n";
+	print "Seeding database w/ required data.\n";
 	local $ENV{PGPASSWORD} = $db_password;
 	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds.sql") != 0 ) {
-		die "Can't seed database\n";
+		die "Can't seed database w/ required data\n";
+	}
+}
+
+sub seed_demo {
+	print "Seeding database w/ demo data.\n";
+	local $ENV{PGPASSWORD} = $db_password;
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds_demo.sql") != 0 ) {
+		die "Can't seed database w/ demo data\n";
 	}
 }
 
