@@ -2134,7 +2134,7 @@ sub remap_dot_config {
 
 sub build_remap_line {
 	my $self        = shift;
-	my $profile_obj = shift;
+	my $server_obj  = shift;
 	my $pdata       = shift;
 	my $text        = shift;
 	my $data        = shift;
@@ -2150,7 +2150,7 @@ sub build_remap_line {
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
 
-	$map_from =~ s/ccr/__HOSTNAME__/;
+	$map_from =~ s/ccr/$host_name/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
@@ -2169,7 +2169,7 @@ sub build_remap_line {
 		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
 	elsif ( $remap->{qstring_ignore} == 1 ) {
-		my $global_exists = $self->profile_param_value( $profile_obj->id, 'cacheurl.config', 'location', undef );
+		my $global_exists = $self->profile_param_value( $server_obj->id, 'cacheurl.config', 'location', undef );
 		if ($global_exists) {
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
