@@ -159,6 +159,7 @@ sub get_server_config {
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename ); }
+	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "packages" ) {
 		$file_contents = $self->get_package_versions( $server_obj, $filename );
 		$file_contents = encode_json($file_contents);
@@ -258,7 +259,6 @@ sub get_profile_config {
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
-	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
@@ -299,6 +299,7 @@ sub get_scope {
 	elsif ( $fname eq "hosting.config" )          { $scope = 'servers' }
 	elsif ( $fname eq "packages" )                { $scope = 'servers' }
 	elsif ( $fname eq "chkconfig" )               { $scope = 'servers' }
+	elsif ( $fname eq "remap.config" )            { $scope = 'servers' }
 	elsif ( $fname eq "12M_facts" )               { $scope = 'profiles' }
 	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profiles' }
 	elsif ( $fname eq "astats.config" )           { $scope = 'profiles' }
@@ -307,7 +308,6 @@ sub get_scope {
 	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profiles' }
 	elsif ( $fname eq "plugin.config" )           { $scope = 'profiles' }
 	elsif ( $fname eq "records.config" )          { $scope = 'profiles' }
-	elsif ( $fname eq "remap.config" )            { $scope = 'profiles' }
 	elsif ( $fname eq "storage.config" )          { $scope = 'profiles' }
 	elsif ( $fname eq "sysctl.conf" )             { $scope = 'profiles' }
 	elsif ( $fname =~ /url_sig_.*\.config/ )      { $scope = 'profiles' }
@@ -2079,16 +2079,16 @@ sub parent_dot_config {
 
 sub remap_dot_config {
 	my $self       = shift;
-	my $profile_obj = shift;
+	my $server_obj = shift;
 	my $data;
 
-	my $pdata = $self->profile_param_data( $profile_obj->id, 'package' );
-	my $text = $self->header_comment( $profile_obj->name );
+	my $pdata = $self->param_data( $server_obj, 'package' );
+	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
-		$data = $self->profile_ds_data($profile_obj);
+		$data = $self->ds_data($server_obj);
 	}
 
-	if ( $profile_obj->name =~ m/^MID/ ) {
+	if ( $server_obj->type->name =~ m/^MID/ ) {
 		my %mid_remap;
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			if ( $ds->{type} =~ /LIVE/ && $ds->{type} !~ /NATNL/ ) {
@@ -2122,11 +2122,11 @@ sub remap_dot_config {
 	foreach my $ds ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
 			my $map_to = $ds->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
 			my $map_to = $ds->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 	}
 	return $text;
