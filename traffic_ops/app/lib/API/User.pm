@@ -248,14 +248,6 @@ sub create {
 	}
 
 
-	if ( !defined($params->{fullName}) ) {
-		return $self->alert("full-name is required.");
-	}
-
-	if ( !defined($params->{email}) ) {
-		return $self->alert("email is required.");
-	}
-	
 	if ( !defined($params->{localPassword}) ) {
 		return $self->alert("local-password is required.");
 	}
