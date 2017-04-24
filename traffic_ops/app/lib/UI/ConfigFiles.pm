@@ -645,27 +645,45 @@ sub logs_xml_dot_config {
 	my $data   = $self->param_data( $server, $filename );
 	my $text   = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
 
-	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
-	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
-	my $log_object_format               = $data->{"LogObject.Format"}             || "";
-	my $log_object_rolling_enabled      = $data->{"LogObject.RollingEnabled"}     || "";
-	my $log_object_rolling_interval_sec = $data->{"LogObject.RollingIntervalSec"} || "";
-	my $log_object_rolling_offset_hr    = $data->{"LogObject.RollingOffsetHr"}    || "";
-	my $log_object_rolling_size_mb      = $data->{"LogObject.RollingSizeMb"}      || "";
-	my $format                          = $data->{"LogFormat.Format"};
-	$format =~ s/"/\\\"/g;
-	$text .= "<LogFormat>\n";
-	$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
-	$text .= "  <Format = \"" . $format . "\"/>\n";
-	$text .= "</LogFormat>\n";
-	$text .= "<LogObject>\n";
-	$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
-	$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
-	$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
-	$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
-	$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
-	$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
-	$text .= "</LogObject>\n";
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= "<LogFormat>\n";
+			$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
+			$text .= "  <Format = \"" . $format . "\"/>\n";
+			$text .= "</LogFormat>\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "<LogObject>\n";
+			$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
+			$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
+			$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
+			$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
+			$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
+			$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
+			$text .= "  <Header = \"" . $log_object_header . "\"/>\n" if ( length($log_object_header) > 0 );
+			$text .= "</LogObject>\n";
+		}
+	}
 
 	return $text;
 }

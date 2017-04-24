@@ -385,7 +385,8 @@ sub process_cfg_file {
 	my @db_lines_missing   = @{ shift(@return) };
 	my @disk_lines_missing = @{ shift(@return) };
 
-	if ( scalar(@disk_lines_missing) || scalar(@db_lines_missing) ) {
+	if ( ($cfg_file eq "logs_xml.config" && !(@disk_file_lines ~~ @db_file_lines))
+		|| scalar(@disk_lines_missing) || scalar(@db_lines_missing) ) {
 		$cfg_file_tracker->{$cfg_file}->{'change_needed'}++;
 		( $log_level >> $DEBUG ) && print "DEBUG $file needs updated.\n";
 		&backup_file( $cfg_file, \$result );
