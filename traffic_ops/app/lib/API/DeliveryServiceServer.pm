@@ -186,7 +186,7 @@ sub remove_server_from_ds {
 	}
 
 	my $ds_server = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id, server => $server_id }, { prefetch => [ 'deliveryservice', 'server' ] } );
-	if ( !defined($ds_server) ) {
+	if ( $ds_server->count == 0 ) {
 		return $self->not_found();
 	}
 
