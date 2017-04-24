@@ -37,10 +37,13 @@ import (
 )
 
 type PollIntervals struct {
-	Health time.Duration
-	Peer   time.Duration
-	Stat   time.Duration
-	TO     time.Duration
+	Health            time.Duration
+	HealthNoKeepAlive bool
+	Peer              time.Duration
+	PeerNoKeepAlive   bool
+	Stat              time.Duration
+	StatNoKeepAlive   bool
+	TO                time.Duration
 }
 
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, stat, and TrafficOps poll intervals
@@ -91,6 +94,15 @@ func getIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config, l
 	} else {
 		intervals.TO = trafficOpsTOPollIntervalToDuration(int(toPollIntervalInt))
 	}
+
+	getNoKeepAlive := func(param string) bool {
+		keepAliveI, keepAliveExists := monitorConfig.Config[param]
+		keepAliveStr, keepAliveIsStr := keepAliveI.(string)
+		return keepAliveExists && keepAliveIsStr && !strings.HasPrefix(strings.ToLower(keepAliveStr), "t")
+	}
+	intervals.PeerNoKeepAlive = getNoKeepAlive("peer.polling.keepalive")
+	intervals.HealthNoKeepAlive = getNoKeepAlive("health.polling.keepalive")
+	intervals.StatNoKeepAlive = getNoKeepAlive("stat.polling.keepalive")
 
 	multiplyByRatio := func(i time.Duration) time.Duration {
 		return time.Duration(float64(i) * PollIntervalRatio)
@@ -267,9 +279,9 @@ func monitorConfigListen(
 			peerSet[enum.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer}
+		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
+		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
+		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)
