@@ -49,7 +49,7 @@ sub run_ut {
 	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "null";
 
 	# Verify the user
-	ok my $user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Does the portal user exist?';
+	ok my $user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Does the user exist?';
 	
 	ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password} )->status_is(302);
 		
@@ -63,7 +63,7 @@ sub run_ut {
 		->json_is( "/response/username" =>  $addedUserName )
 		->json_is( "/response/email" =>  $addedUserEmail)
 		->json_is( "/response/tenantId" =>  $tenant_id) #tenant Id not set - getting the tenant id from the user
-        	    , 'Failed adding user?';
+        	    , 'Success added user?';
 
 	#same name again - fail
 	ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
