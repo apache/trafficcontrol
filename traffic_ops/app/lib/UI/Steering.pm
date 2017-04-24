@@ -173,10 +173,10 @@ sub is_valid {
 	my $t2_name = $self->param('steering.target_name_2');
 
 	unless ( $t1 eq '' ) {
-		$t1_profile = $self->get_ds_profile( $self->param('steering.target_id_1') );
+		$t1_profile = $self->get_ds_cdn( $self->param('steering.target_id_1') );
 	}
 	unless ( $t2 eq '' ) {
-		$t2_profile = $self->get_ds_profile( $self->param('steering.target_id_2') );
+		$t2_profile = $self->get_ds_cdn( $self->param('steering.target_id_2') );
 	}
 	
 	unless ( $t1 ) {
@@ -199,11 +199,11 @@ sub is_valid {
 	return $self->valid;
 }
 
-sub get_ds_profile {
+sub get_ds_cdn {
 	my $self  = shift;
 	my $ds_id = shift;
-	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['profile'] } )->single();
-	return $ds->profile->name;
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->single();
+	return $ds->cdn_id;
 }
 
 1;
