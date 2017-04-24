@@ -30,3 +30,12 @@ if ($result != 0) {
 else {
 	print "Successfully migrated the database.\n";
 }
+
+$result = InstallUtils::execCommand ("export PATH=/opt/traffic_ops/install/bin:/usr/bin/; export PERL5LIB=/opt/traffic_ops/install/lib:/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib; cd /opt/traffic_ops/app; /usr/bin/perl db/admin.pl --env=production seed_demo");
+
+if ($result != 0) {
+	print "Database demo seeding failed.\n";
+}
+else {
+	print "Successfully seeded the database.\n";
+}

@@ -512,16 +512,8 @@ sub getDefaults {
                 "config_var"                                        => "cdn_name"
             },
             {
-                "Health Polling Interval (milliseconds)" => "8000",
-                "config_var"                             => "health_polling_int"
-            },
-            {
                 "DNS sub-domain for which your CDN is authoritative" => "cdn1.kabletown.net",
                 "config_var"                                         => "dns_subdomain"
-            },
-            {
-                "TLD SOA admin" => "traffic_ops",
-                "config_var"    => "soa_admin"
             },
             {
                 "TrafficServer Drive Prefix" => "/dev/sd",
@@ -534,20 +526,7 @@ sub getDefaults {
             {
                 "TrafficServer RAM Drive Letters (comma separated)" => "0,1,2,3,4,5,6,7",
                 "config_var"                                        => "ram_drive_letters"
-            },
-            {
-                "Health Threshold Load Average" => "25",
-                "config_var"                    => "health_thresh_load_avg"
-            },
-            {
-                "Health Threshold Available Bandwidth in Kbps" => "1750000",
-                "config_var"                                   => "health_thresh_kbps"
-            },
-            {
-                "Traffic Server Health Connection Timeout (milliseconds)" => "2000",
-                "config_var"                                              => "health_connect_timeout"
             }
-
         ]
     };
 }
