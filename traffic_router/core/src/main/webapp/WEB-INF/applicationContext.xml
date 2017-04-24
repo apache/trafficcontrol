@@ -286,7 +286,6 @@
 	<util:list id="staticContentWhiteList" value-type="java.lang.String">
 		<value>/crossdomain.xml</value>
 		<value>/clientaccesspolicy.xml</value>
-		<value>/index.html</value>
 	</util:list>
 
 	<bean name="routerFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter">
