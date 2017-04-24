@@ -105,7 +105,7 @@ sub get_config_metadata {
 
 
 	foreach my $config_file ( keys %{ $config_file_obj } ) {
-		my $scope = $self->get_scope($config_file);
+		my $scope = $self->get_scope($config_file, $server_obj);
 		my $scope_id;
 		if ( $scope eq 'cdns' ) {
 			$scope_id = $server->cdn->name;
@@ -159,7 +159,7 @@ sub get_server_config {
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename ); }
-	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $server_obj, $filename ); }
+	elsif ( $filename eq "remap.config" ) { $file_contents = $self->server_scope_remap_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "packages" ) {
 		$file_contents = $self->get_package_versions( $server_obj, $filename );
 		$file_contents = encode_json($file_contents);
@@ -259,6 +259,7 @@ sub get_profile_config {
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "remap.config" ) { $file_contents = $self->profile_scope_remap_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
@@ -291,34 +292,40 @@ my $separator ||= {
 sub get_scope {
 	my $self  = shift;
 	my $fname = shift;
+	my $server_obj = shift;
 	my $scope;
 
-	if ( $fname eq "ip_allow.config" )            { $scope = 'servers' }
-	elsif ( $fname eq "parent.config" )           { $scope = 'servers' }
-	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'servers' }
-	elsif ( $fname eq "hosting.config" )          { $scope = 'servers' }
-	elsif ( $fname eq "packages" )                { $scope = 'servers' }
-	elsif ( $fname eq "chkconfig" )               { $scope = 'servers' }
-	elsif ( $fname eq "remap.config" )            { $scope = 'servers' }
-	elsif ( $fname eq "12M_facts" )               { $scope = 'profiles' }
-	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profiles' }
-	elsif ( $fname eq "astats.config" )           { $scope = 'profiles' }
-	elsif ( $fname eq "cache.config" )            { $scope = 'profiles' }
-	elsif ( $fname eq "drop_qstring.config" )     { $scope = 'profiles' }
-	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profiles' }
-	elsif ( $fname eq "plugin.config" )           { $scope = 'profiles' }
-	elsif ( $fname eq "records.config" )          { $scope = 'profiles' }
-	elsif ( $fname eq "storage.config" )          { $scope = 'profiles' }
-	elsif ( $fname eq "sysctl.conf" )             { $scope = 'profiles' }
-	elsif ( $fname =~ /url_sig_.*\.config/ )      { $scope = 'profiles' }
-	elsif ( $fname eq "volume.config" )           { $scope = 'profiles' }
-	elsif ( $fname eq "bg_fetch.config" )         { $scope = 'cdns' }
-	elsif ( $fname =~ /cacheurl.*\.config/ )      { $scope = 'cdns' }
-	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'cdns' }
-	elsif ( $fname =~ /regex_remap_.*\.config/ )  { $scope = 'cdns' }
-	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdns' }
-	elsif ( $fname =~ /set_dscp_.*\.config/ )     { $scope = 'cdns' }
-	elsif ( $fname eq "ssl_multicert.config" )    { $scope = 'cdns' }
+	my $type;
+	if ( defined $server_obj ) { $type = $server_obj->type->name; }
+	else { $type = ""; }
+
+	if ( $fname eq "ip_allow.config" )                         { $scope = 'servers' }
+	elsif ( $fname eq "parent.config" )                        { $scope = 'servers' }
+	elsif ( $fname =~ /to_ext_.*\.config/ )                    { $scope = 'servers' }
+	elsif ( $fname eq "hosting.config" )                       { $scope = 'servers' }
+	elsif ( $fname eq "packages" )                             { $scope = 'servers' }
+	elsif ( $fname eq "chkconfig" )                            { $scope = 'servers' }
+	elsif ( $fname eq "remap.config" && $type =~ m/^MID/ )     { $scope = 'servers' }
+	elsif ( $fname eq "remap.config" )                         { $scope = 'profiles' }
+	elsif ( $fname eq "12M_facts" )                            { $scope = 'profiles' }
+	elsif ( $fname eq "50-ats.rules" )                         { $scope = 'profiles' }
+	elsif ( $fname eq "astats.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "cache.config" )                         { $scope = 'profiles' }
+	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
+	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
+	elsif ( $fname eq "plugin.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "records.config" )                       { $scope = 'profiles' }
+	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
+	elsif ( $fname eq "sysctl.conf" )                          { $scope = 'profiles' }
+	elsif ( $fname =~ /url_sig_.*\.config/ )                   { $scope = 'profiles' }
+	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
+	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
+	elsif ( $fname =~ /hdr_rw_.*\.config/ )                    { $scope = 'cdns' }
+	elsif ( $fname =~ /regex_remap_.*\.config/ )               { $scope = 'cdns' }
+	elsif ( $fname eq "regex_revalidate.config" )              { $scope = 'cdns' }
+	elsif ( $fname =~ /set_dscp_.*\.config/ )                  { $scope = 'cdns' }
+	elsif ( $fname eq "ssl_multicert.config" )                 { $scope = 'cdns' }
 	else {
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
 		if ( !defined($scope) ) {
@@ -2077,7 +2084,7 @@ sub parent_dot_config {
 	}
 }
 
-sub remap_dot_config {
+sub server_scope_remap_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $data;
@@ -2132,6 +2139,61 @@ sub remap_dot_config {
 	return $text;
 }
 
+sub profile_scope_remap_dot_config {
+	my $self       = shift;
+	my $profile_obj = shift;
+	my $data;
+
+	my $pdata = $self->profile_param_data( $profile_obj->id, 'package' );
+	my $text = $self->header_comment( $profile_obj->name );
+	if ( !defined($data) ) {
+		$data = $self->profile_ds_data($profile_obj);
+	}
+
+	if ( $profile_obj->name =~ m/^MID/ ) {
+		my %mid_remap;
+		foreach my $ds ( @{ $data->{dslist} } ) {
+			if ( $ds->{type} =~ /LIVE/ && $ds->{type} !~ /NATNL/ ) {
+				next;    # Live local delivery services skip mids
+			}
+			if ( defined( $ds->{org} ) && defined( $mid_remap{ $ds->{org} } ) ) {
+				next;    # skip remap rules from extra HOST_REGEXP entries
+			}
+
+			if ( defined( $ds->{mid_header_rewrite} ) && $ds->{mid_header_rewrite} ne "" ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $ds->{mid_hdr_rw_file};
+			}
+			if ( $ds->{qstring_ignore} == 1 ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			}
+			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
+			}
+			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";
+			}
+		}
+		foreach my $key ( keys %mid_remap ) {
+			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
+		}
+
+		return $text;
+	}
+
+	# mids don't get here.
+	foreach my $ds ( @{ $data->{dslist} } ) {
+		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
+			my $map_to = $ds->{remap_line}->{$map_from};
+			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+		}
+		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
+			my $map_to = $ds->{remap_line2}->{$map_from};
+			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+		}
+	}
+	return $text;
+}
+
 sub build_remap_line {
 	my $self        = shift;
 	my $server_obj  = shift;
@@ -2150,7 +2212,7 @@ sub build_remap_line {
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
 
-	$map_from =~ s/ccr/$host_name/;
+	$map_from =~ s/ccr/__HOSTNAME__/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
