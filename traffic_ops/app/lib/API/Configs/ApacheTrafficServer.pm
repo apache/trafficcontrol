@@ -135,22 +135,23 @@ sub get_server_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
 	my $id       = $self->param('id');
-	my $scope    = $self->get_scope($filename);
 
 	##check user access
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
 
-	##check the scope - is this the correct route?
-	if ( $scope ne 'servers' ) {
-		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
-	}
-
 	##verify that a valid server ID has been used
 	my $server_obj = $self->server_data($id);
 	if ( !defined($server_obj) ) {
 		return $self->not_found();
+	}
+
+	my $scope    = $self->get_scope($filename, $server_obj);
+
+	##check the scope - is this the correct route?
+	if ( $scope ne 'servers' ) {
+		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
 	#generate the config file using the appropriate function
@@ -2129,11 +2130,11 @@ sub server_scope_remap_dot_config {
 	foreach my $ds ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
 			my $map_to = $ds->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $server_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
 			my $map_to = $ds->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $server_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 	}
 	return $text;
@@ -2184,11 +2185,11 @@ sub profile_scope_remap_dot_config {
 	foreach my $ds ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
 			my $map_to = $ds->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $profile_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
 			my $map_to = $ds->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $profile_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 	}
 	return $text;
@@ -2196,7 +2197,7 @@ sub profile_scope_remap_dot_config {
 
 sub build_remap_line {
 	my $self        = shift;
-	my $server_obj  = shift;
+	my $id  		= shift;
 	my $pdata       = shift;
 	my $text        = shift;
 	my $data        = shift;
@@ -2209,7 +2210,6 @@ sub build_remap_line {
 		return $text;
 	}
 
-	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
 
 	$map_from =~ s/ccr/__HOSTNAME__/;
@@ -2231,7 +2231,7 @@ sub build_remap_line {
 		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
 	elsif ( $remap->{qstring_ignore} == 1 ) {
-		my $global_exists = $self->profile_param_value( $server_obj->id, 'cacheurl.config', 'location', undef );
+		my $global_exists = $self->profile_param_value( $id, 'cacheurl.config', 'location', undef );
 		if ($global_exists) {
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
