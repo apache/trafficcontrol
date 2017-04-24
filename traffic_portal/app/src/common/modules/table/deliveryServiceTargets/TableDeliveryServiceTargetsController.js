@@ -24,11 +24,11 @@ var TableDeliveryServiceTargetsController = function(deliveryService, targets, $
 	$scope.targets = targets;
 
 	$scope.editTarget = function(dsId, targetId) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets/' + targetId);
+		locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets/' + targetId);
 	};
 
 	$scope.createTarget = function(dsId) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets/new');
+		locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets/new');
 	};
 
 	$scope.refresh = function() {

@@ -36,6 +36,7 @@ my $t = shift;
 my $schema = shift;
 my $login_user = shift;
 my $login_password = shift;
+my $use_tenancy = shift;
 
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
@@ -53,7 +54,17 @@ my $count_response = sub {
 	return $t->success( is( scalar(@$r), $count ) );
 };
 
-# we will assign 2 more servers to ds 100
+my $useTenancyParamId = &get_param_id('use_tenancy');
+ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+            'value'      => $use_tenancy,
+        })->status_is(200)
+        ->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/response/name" => "use_tenancy" )
+        ->json_is( "/response/configFile" => "global" )
+        ->json_is( "/response/value" => $use_tenancy )
+    , 'Was the disabling paramter set?';
+
+    # we will assign 2 more servers to ds 100
 ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'} => json => {
 			"dsId" => 100,
 			"servers" => [ 1400, 1600 ]
@@ -70,6 +81,7 @@ $t->get_ok('/api/1.2/deliveryservices/100/servers/eligible')->status_is(200)->$c
 # It gets existing delivery services
 ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "steering-ds1" )
+		->json_is( "/response/0/routingName", "foo" )
 		->json_is( "/response/0/logsEnabled", 0 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "steering-ds2" );
@@ -78,17 +90,98 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 		->json_is( "/response/0/xmlId", "test-ds1" )
 		->json_is( "/response/0/logsEnabled", 1 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-        ->json_is( "/response/1/xmlId", defined($tenant_id) ? "test-ds1-root" : "test-ds4" )
-        ->json_is( "/response/1/tenantId", defined($tenant_id) ? $tenant_id : undef );
+        ->json_is( "/response/1/xmlId", defined($tenant_id) ? "test-ds1-root" : ($use_tenancy ? "test-ds4" : "test-ds1-root"));
 
-ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"active" => \0,
+				"cdnId" => 100,
+				"dscp" => 0,
+				"displayName" => "ds_any_map_display_name",
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"logsEnabled" => 0,
+				"regionalGeoBlocking" => 0,
+				"routingName" => "foo",
+				"typeId" => 35,
+				"tenantId" => $tenant_id,
+				"xmlId" => "ds_any_map",
+			})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/active" => 0)
+			->json_is( "/response/0/tenantId" => $tenant_id)
+			->json_is( "/response/0/cdnName" => "cdn1")
+			->json_is( "/response/0/routingName" => "foo")
+			->json_is( "/response/0/displayName" => "ds_any_map_display_name")
+			->json_is( "/response/0/xmlId" => "ds_any_map")
+			->json_is( "/response/0/type" => "ANY_MAP")
+		, 'Is the ANY_MAP delivery service created?';
+
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"active" => \0,
+				"cdnId" => 100,
+				"dscp" => 0,
+				"displayName" => "ds_steering_display_name",
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"ipv6RoutingEnabled" => 0,
+				"logsEnabled" => 0,
+				"protocol" => 1,
+				"regionalGeoBlocking" => 0,
+				"routingName" => "foo",
+				"typeId" => 37,
+				"tenantId" => $tenant_id,
+				"xmlId" => "ds_steering",
+			})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/active" => 0)
+			->json_is( "/response/0/tenantId" => $tenant_id)
+			->json_is( "/response/0/cdnName" => "cdn1")
+			->json_is( "/response/0/routingName" => "foo")
+			->json_is( "/response/0/displayName" => "ds_steering_display_name")
+			->json_is( "/response/0/xmlId" => "ds_steering")
+			->json_is( "/response/0/type" => "STEERING")
+		, 'Is the STEERING delivery service created?';
+
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"active" => \0,
+				"cdnId" => 100,
+				"displayName" => "ds_http_display_name",
+				"dscp" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"initialDispersion" => 0,
+				"ipv6RoutingEnabled" => 0,
+				"logsEnabled" => 0,
+				"missLat" => 45,
+				"missLong" => 45,
+				"multiSiteOrigin" => 0,
+				"orgServerFqdn" => "http://10.75.168.91",
+				"protocol" => 1,
+				"qstringIgnore" => 0,
+				"rangeRequestHandling" => 0,
+				"regionalGeoBlocking" => 0,
+				"routingName" => "foo",
+				"typeId" => 36,
+				"tenantId" => $tenant_id,
+				"xmlId" => "ds_http",
+			})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/active" => 0)
+			->json_is( "/response/0/tenantId" => $tenant_id)
+			->json_is( "/response/0/cdnName" => "cdn1")
+			->json_is( "/response/0/routingName" => "foo")
+			->json_is( "/response/0/displayName" => "ds_http_display_name")
+			->json_is( "/response/0/xmlId" => "ds_http")
+			->json_is( "/response/0/multiSiteOrigin" => 0)
+			->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
+			->json_is( "/response/0/protocol" => 1)
+			->json_is( "/response/0/type" => "HTTP")
+		, 'Is the HTTP delivery service created?';
+
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 			"active" => \0,
 			"cdnId" => 100,
 			"displayName" => "ds_displayname_1",
 			"dscp" => 0,
 			"geoLimit" => 0,
 			"geoProvider" => 0,
-			"initialDispersion" => 1,
 			"ipv6RoutingEnabled" => 0,
 			"logsEnabled" => 0,
 			"missLat" => 45,
@@ -99,7 +192,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 			"qstringIgnore" => 0,
 			"rangeRequestHandling" => 0,
 			"regionalGeoBlocking" => 0,
-			"signed" => 0,
+			"routingName" => "foo",
 			"typeId" => 7,
             "tenantId" => $tenant_id,
             "xmlId" => "ds_1",
@@ -107,24 +200,23 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 		->json_is( "/response/0/active" => 0)
         ->json_is( "/response/0/tenantId" => $tenant_id)
         ->json_is( "/response/0/cdnName" => "cdn1")
+		->json_is( "/response/0/routingName" => "foo")
 		->json_is( "/response/0/displayName" => "ds_displayname_1")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
 		->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 		->json_is( "/response/0/protocol" => 1)
-		->json_is( "/response/0/regionalGeoBlocking" => 0)
 		->json_is( "/response/0/type" => "DNS")
-            , 'Does the deliveryservice details return?';
+            , 'Is the DNS delivery service created?';
 
-my $ds_id = &get_ds_id('ds_1');
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
+	my $ds_id = &get_ds_id('ds_1');
+	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 			"active" => \1,
 			"cdnId" => 100,
             "displayName" => "ds_displayname_11",
 			"dscp" => 1,
 			"geoLimit" => 1,
 			"geoProvider" => 1,
-			"initialDispersion" => 2,
 			"ipv6RoutingEnabled" => 1,
 			"logsEnabled" => 1,
 			"missLat" => 45,
@@ -134,9 +226,10 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 			"protocol" => 2,
 			"qstringIgnore" => 1,
 			"rangeRequestHandling" => 1,
-			"regionalGeoBlocking" => 1,
-			"signed" => 1,
-			"typeId" => 7,
+			"regionalGeoBlocking" => 0,
+			"routingName" => "bar",
+			"tenantId" => $tenant_id,
+            "typeId" => 7,
 			"xmlId" => "ds_1",
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -144,21 +237,21 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 		->json_is( "/response/0/cdnName" => "cdn1")
 		->json_is( "/response/0/displayName" => "ds_displayname_11")
 		->json_is( "/response/0/xmlId" => "ds_1")
+		->json_is( "/response/0/routingName" => "bar")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
 		->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 		->json_is( "/response/0/protocol" => 2)
-		->json_is( "/response/0/regionalGeoBlocking" => 1)
 		->json_is( "/response/0/type" => "DNS")
-            , 'Does the deliveryservice update successfully?';
+            , 'Is the DNS delivery service updated?';
 
 	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 				"active" => \1,
 				"cdnId" => 100,
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
+				"routingName" => "baz",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
-				"initialDispersion" => 2,
 				"ipv6RoutingEnabled" => 1,
 				"logsEnabled" => 1,
 				"missLat" => 45,
@@ -168,9 +261,9 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"protocol" => 2,
 				"qstringIgnore" => 1,
 				"rangeRequestHandling" => 1,
-				"regionalGeoBlocking" => 1,
-				"signed" => 1,
-				"typeId" => 7,
+				"regionalGeoBlocking" => 0,
+				"tenantId" => $tenant_id,
+                "typeId" => 7,
 				"xmlId" => "ds_2",
 			})
 			->json_is( "/alerts/0/text" => "A deliveryservice xmlId is immutable.")
@@ -184,6 +277,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"cdnId" => 100,
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
+				"routingName" => "foo",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"initialDispersion" => 2,
@@ -198,7 +292,8 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"rangeRequestHandling" => 1,
 				"regionalGeoBlocking" => 1,
 				"signed" => 1,
-				"typeId" => 7,
+                "tenantId" => $tenant_id,
+                "typeId" => 7,
 				"xmlId" => "ds_1",
 	})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -210,11 +305,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 		->json_is( "/response/serverNames/0" => "atlanta-edge-01" )->json_is( "/response/serverNames/1" => "atlanta-edge-02" ),
 		'Does the assigned servers return?';
 
-	ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
-		->json_is( "/response/0/xmlId", "steering-ds1" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-		->json_is( "/response/1/xmlId", "steering-ds2" );
-
-	ok $t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 4 : 3);
+	ok $t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 4 : ($use_tenancy ? 3 : 4));
 
 	ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -228,8 +319,9 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 my $schema = Schema->connect_to_database;
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
-run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD);
-run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD);
+run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD, 0);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD, 0);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD, 1);
 
 $dbh->disconnect();
 done_testing();
@@ -244,3 +336,15 @@ sub get_ds_id {
     my $id = $p->[0]->{id};
     return $id;
 }
+
+sub get_param_id {
+    my $name = shift;
+    my $q      = "select id from parameter where name = \'$name\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}
+

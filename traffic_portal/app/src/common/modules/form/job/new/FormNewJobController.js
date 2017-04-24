@@ -34,7 +34,7 @@ var FormNewJobController = function(job, $scope, $controller, jobService, messag
 			.then(
 				function() {
 					messageModel.setMessages([ { level: 'success', text: 'Invalidate Content Job Created' } ], true);
-					locationUtils.navigateToPath('/admin/jobs');
+					locationUtils.navigateToPath('/jobs');
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);

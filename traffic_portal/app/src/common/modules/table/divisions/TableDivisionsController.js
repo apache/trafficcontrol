@@ -22,11 +22,11 @@ var TableDivisionsController = function(divisions, $scope, $state, locationUtils
     $scope.divisions = divisions;
 
     $scope.editDivision = function(id) {
-        locationUtils.navigateToPath('/admin/divisions/' + id);
+        locationUtils.navigateToPath('/divisions/' + id);
     };
 
     $scope.createDivision = function() {
-        locationUtils.navigateToPath('/admin/divisions/new');
+        locationUtils.navigateToPath('/divisions/new');
     };
 
     $scope.refresh = function() {

@@ -24,7 +24,7 @@ var TableCDNProfilesController = function(cdn, profiles, $scope, $state, locatio
 	$scope.profiles = profiles;
 
 	$scope.editProfile = function(id) {
-		locationUtils.navigateToPath('/admin/profiles/' + id);
+		locationUtils.navigateToPath('/profiles/' + id);
 	};
 
 	$scope.refresh = function() {

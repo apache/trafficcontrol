@@ -23,7 +23,6 @@ $ENV{GOPATH} = "/opt/traffic_ops/go";
 use strict;
 use warnings;
 
-use Safe;
 use DBI;
 use POSIX;
 use File::Basename qw{dirname};
@@ -183,22 +182,6 @@ sub generateDbConf {
     return \%todbconf;
 }
 
-sub setCdnConfGoPort {
-    my $cdnConf = shift;
-    if ( exists $cdnConf->{traffic_ops_golang_port} ) {
-        return $cdnConf;
-    }
-
-    my $listen = $cdnConf->{hypnotoad}{listen}[0];
-    my ($port) = $listen =~ /:(\d+)/;
-    $listen =~ s/:$port/:60443/;
-    $listen =~ s{'https://\[::\]}{'https://127.0.0.1};
-
-    $cdnConf->{traffic_ops_golang_port} = $port;
-    $cdnConf->{hypnotoad}{listen} = [ $listen ];
-    return $cdnConf;
-}
-
 # userInput: The entire input config file which is either user input or the defaults
 # fileName: The filename of the output config file
 #
@@ -213,7 +196,7 @@ sub generateCdnConf {
     # First, read existing one -- already loaded with a bunch of stuff
     my $cdnConf;
     if ( -f $fileName ) {
-        $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
+        $cdnConf = InstallUtils::readJson($fileName) or errorOut("Error loading $fileName: $@");
     }
     if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
         my @secrets;
@@ -238,10 +221,9 @@ sub generateCdnConf {
         $cdnConf->{to}{base_url} = $cdnConfiguration{base_url};
     }
 
-    $cdnConf = setCdnConfGoPort($cdnConf);
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
-    InstallUtils::writePerl( $fileName, $cdnConf );
+    InstallUtils::writeJson( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );
 }
 
@@ -467,11 +449,11 @@ sub getDefaults {
                 "config_var"             => "genSecret"
             },
             {
-                "Number of secrets to keep?" => "10",
+                "Number of secrets to keep?" => "1",
                 "config_var"                 => "keepSecrets"
             },
             {
-                "Number of workers?" => "96",
+                "Number of workers?" => "12",
                 "config_var"         => "workers"
             },
             {

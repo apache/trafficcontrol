@@ -388,7 +388,8 @@ sub process_cfg_file {
 	my @db_lines_missing   = @{ shift(@return) };
 	my @disk_lines_missing = @{ shift(@return) };
 
-	if ( scalar(@disk_lines_missing) || scalar(@db_lines_missing) ) {
+	if ( ($cfg_file eq "logs_xml.config" && !(@disk_file_lines ~~ @db_file_lines))
+		|| scalar(@disk_lines_missing) || scalar(@db_lines_missing) ) {
 		$cfg_file_tracker->{$cfg_file}->{'change_needed'}++;
 		( $log_level >> $DEBUG ) && print "DEBUG $file needs updated.\n";
 		&backup_file( $cfg_file, \$result );
@@ -705,7 +706,7 @@ sub update_trops {
 	}
 	if ($update_result) {
 		#need to know if reval_pending is supported
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -774,7 +775,7 @@ sub check_revalidate_state {
 	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
 
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -860,7 +861,7 @@ sub check_syncds_state {
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
 		## need to check if revalidation is being used first.
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		my $upd_json = decode_json($upd_ref);
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
@@ -1074,6 +1075,7 @@ sub process_config_files {
 				|| $file eq "cache.config"
 				|| $file eq "hosting.config"
 				|| $file =~ m/url\_sig\_(.*)\.config$/
+				|| $file =~ m/uri\_signing\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
 				|| $file eq "astats.config"
@@ -1416,7 +1418,7 @@ sub lwp_get {
 			$request = $uri;
 			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
 		}
-		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/) && $rev_proxy_in_use == 1 ) {
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/ || $uri =~ m/uri\_signing/) && $rev_proxy_in_use == 1 ) {
 			$request = $to_url . $uri;
 			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
 		}
@@ -1438,7 +1440,7 @@ sub lwp_get {
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+		elsif ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
 			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
 			exit 1;
 		}
@@ -1520,6 +1522,10 @@ sub process_reload_restarts {
 	( $log_level >> $DEBUG ) && print "DEBUG Applying config for: $cfg_file.\n";
 
 	if ( $cfg_file =~ m/url\_sig\_(.*)\.config/ ) {
+		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
+		$traffic_line_needed++;
+	}
+	elsif ( $cfg_file =~ m/uri\_signing\_(.*)\.config/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
 		$traffic_line_needed++;
 	}
@@ -2898,14 +2904,12 @@ sub adv_processing_ssl {
 			( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
 			my $remap = $keypair->{'key_name'};
 			$remap =~ s/\.key$//;
-			if ($remap !~ /^edge/) {
-				#remove routing name (ccr/tr) and add * for wildcard certs
-				$remap =~ /^(.*?)(\..*)/;
-				$remap = "*$2";
-			}
+			$remap =~ /^(.*?)(\..*)/;
+			# HTTP delivery services use wildcard certs
+			my $wildcard = "*$2";
 			my $found = 0;
 			foreach my $record (@$certs){
-				if ($record->{'hostname'} eq $remap){
+				if ($record->{'hostname'} eq $remap || $record->{'hostname'} eq $wildcard) {
 					$found = 1;
 					my $ssl_key         = decode_base64($record->{'certificate'}->{'key'});
 					my $ssl_cert        = decode_base64($record->{'certificate'}->{'crt'});

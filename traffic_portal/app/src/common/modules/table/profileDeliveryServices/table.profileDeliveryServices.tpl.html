@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/admin/profiles')">Profiles</a></li>
-            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{::profile.name}}</a></li>
+            <li><a ng-click="navigateToPath('/profiles')">Profiles</a></li>
+            <li><a ng-click="navigateToPath('/profiles/' + profile.id)">{{::profile.name}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
@@ -34,40 +34,36 @@ under the License.
         <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>tenant</th>
-                <th>xmlId</th>
-                <th>orgServerFqdn</th>
-                <th>cdn</th>
-                <th>profile</th>
-                <th>ccrDnsTtl</th>
-                <th>active</th>
-                <th>type</th>
-                <th>dscp</th>
-                <th>signed</th>
-                <th>qstringIgnore</th>
-                <th>geoLimit</th>
-                <th>protocol</th>
-                <th>ipv6RoutingEnabled</th>
-                <th>rangeRequestHandling</th>
+                <th>XML ID</th>
+                <th>Tenant</th>
+                <th>Origin Server FQDN</th>
+                <th>Active</th>
+                <th>Type</th>
+                <th>Protocol</th>
+                <th>Profile</th>
+                <th>CDN</th>
+                <th>IPv6 Enabled</th>
+                <th>DSCP</th>
+                <th>Signing Algorithm</th>
+                <th>Qstring Handling</th>
+                <th>Last Updated</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDeliveryService(deliveryService)" ng-repeat="deliveryService in ::deliveryServices">
-                <td>{{::deliveryService.tenant}}</td>
-                <td>{{::deliveryService.xmlId}}</td>
-                <td>{{::deliveryService.orgServerFqdn}}</td>
-                <td>{{::deliveryService.cdnName}}</td>
-                <td>{{::deliveryService.profileName}}</td>
-                <td>{{::deliveryService.ccrDnsTtl}}</td>
-                <td>{{::deliveryService.active}}</td>
-                <td>{{::deliveryService.type}}</td>
-                <td>{{::deliveryService.dscp}}</td>
-                <td>{{::deliveryService.signed}}</td>
-                <td>{{::deliveryService.qstringIgnore}}</td>
-                <td>{{::deliveryService.geoLimit}}</td>
-                <td>{{::deliveryService.protocol}}</td>
-                <td>{{::deliveryService.ipv6RoutingEnabled}}</td>
-                <td>{{::deliveryService.rangeRequestHandling}}</td>
+            <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices">
+                <td>{{::ds.xmlId}}</td>
+                <td>{{::ds.tenant}}</td>
+                <td>{{::ds.orgServerFqdn}}</td>
+                <td>{{::ds.active}}</td>
+                <td>{{::ds.type}}</td>
+                <td>{{::protocol(ds)}}</td>
+                <td>{{::ds.profileName}}</td>
+                <td>{{::ds.cdnName}}</td>
+                <td>{{::ds.ipv6RoutingEnabled}}</td>
+                <td>{{::ds.dscp}}</td>
+                <td>{{::ds.signingAlgorithm}}</td>
+                <td>{{::qstring(ds)}}</td>
+                <td data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
             </tr>
             </tbody>
         </table>

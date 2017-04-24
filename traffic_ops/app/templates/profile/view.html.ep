@@ -71,6 +71,20 @@ function deletefunction() {
 							<td>Type</td>
 							<td class="editable" id="type"><%= $profile->type %></td>
 						</tr>
+						<tr>
+							<td>TR Routing Disabled</td>
+							% if ($profile->routing_disabled == 0) {
+								<td class="editable" id="routing_disabled">No</td>
+							% } else {
+								<td class="editable" id="routing_disabled">Yes</td>
+								<tr>
+									<td><font color="red">WARNING: TR Routing for servers with this profile has been disabled.</font></td>
+								</tr>
+								<tr>
+									<td><font color="red">Requests made to the Traffic Router will not be sent to these hosts!</font></td>
+								</tr>
+							% }
+						</tr>
 					</table>
 					<div id="parameter_link">
 					<br>

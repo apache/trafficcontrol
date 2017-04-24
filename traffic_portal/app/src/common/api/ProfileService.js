@@ -23,8 +23,8 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
         return Restangular.all('profiles').getList(queryParams);
     };
 
-    this.getProfile = function(id) {
-        return Restangular.one("profiles", id).get();
+    this.getProfile = function(id, queryParams) {
+        return Restangular.one("profiles", id).get(queryParams);
     };
 
     this.createProfile = function(profile) {
@@ -32,7 +32,7 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
-                locationUtils.navigateToPath('/admin/profiles');
+                locationUtils.navigateToPath('/profiles');
             },
             function(fault) {
                 messageModel.setMessages(fault.data.alerts, false);
@@ -77,7 +77,7 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
             .then(
                 function(result) {
                     messageModel.setMessages(result.data.alerts, true);
-                    locationUtils.navigateToPath('/admin/profiles/' + result.data.response.id);
+                    locationUtils.navigateToPath('/profiles/' + result.data.response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

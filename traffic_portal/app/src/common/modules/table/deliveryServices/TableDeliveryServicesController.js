@@ -17,30 +17,23 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $uibModal, locationUtils) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $location, $uibModal, dateUtils, deliveryServiceUtils, locationUtils) {
 
-    var protocols = {
-        0: "HTTP",
-        1: "HTTPS",
-        2: "HTTP AND HTTPS",
-        3: "HTTP TO HTTPS"
-    };
+    var protocols = deliveryServiceUtils.protocols;
 
-    var qstrings = {
-        0: "USE",
-        1: "IGNORE",
-        2: "DROP"
-    };
+    var qstrings = deliveryServiceUtils.qstrings;
 
     var createDeliveryService = function(typeName) {
-        var path = '/configure/delivery-services/new?type=' + typeName;
+        var path = '/delivery-services/new?type=' + typeName;
         locationUtils.navigateToPath(path);
     };
 
     $scope.deliveryServices = deliveryServices;
 
+    $scope.getRelativeTime = dateUtils.getRelativeTime;
+
     $scope.editDeliveryService = function(ds) {
-        var path = '/configure/delivery-services/' + ds.id + '?type=' + ds.type;
+        var path = '/delivery-services/' + ds.id + '?type=' + ds.type;
         locationUtils.navigateToPath(path);
     };
 
@@ -81,6 +74,32 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
         });
     };
 
+    $scope.compareDSs = function() {
+        var params = {
+            title: 'Compare Delivery Services',
+            message: "Please select 2 delivery services to compare",
+            label: "xmlId"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
+            controller: 'DialogCompareController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(deliveryServiceService) {
+                    return deliveryServiceService.getDeliveryServices();
+                }
+            }
+        });
+        modalInstance.result.then(function(dss) {
+            $location.path($location.path() + '/compare/' + dss[0].id + '/' + dss[1].id);
+        }, function () {
+            // do nothing
+        });
+    };
+
     angular.element(document).ready(function () {
         $('#deliveryServicesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -91,5 +110,5 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$uibModal', 'locationUtils'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$location', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
 module.exports = TableDeliveryServicesController;

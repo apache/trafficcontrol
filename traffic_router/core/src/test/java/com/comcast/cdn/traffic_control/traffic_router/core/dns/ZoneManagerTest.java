@@ -105,7 +105,7 @@ public class ZoneManagerTest {
 
 			for (int i = 0; i < domains.length(); i++) {
 				final String domain = domains.optString(i);
-				final Name edgeName = new Name(ZoneManager.getDnsRoutingName() + "." + domain + ".");
+				final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
 
 				for (CacheLocation location : cacheRegister.getCacheLocations()) {
 					final List<Cache> caches = trafficRouter.selectCachesByCZ(ds, location);

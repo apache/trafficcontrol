@@ -14,37 +14,7 @@
 # limitations under the License.
 #
 
-GO_DOWNLOADS_URL=https://storage.googleapis.com/golang
-
-GO_TARBALL_VERSION=go1.8.1.linux-amd64.tar.gz
-GO_TARBALL_URL=$GO_DOWNLOADS_URL/$GO_TARBALL_VERSION
-
-GO_TARBALL_VERSION_SHA=a579ab19d5237e263254f1eac5352efcf1d70b9dacadb6d6bb12b0911ede8994
-GO_TARBALL_VERSION_SHA_FILE=$GO_TARBALL_VERSION.sha256
-GO_TARBALL_VERSION_SHA_URL=$GO_DOWNLOADS_URL/$GO_TARBALL_VERSION_SHA_FILE
-INSTALL_DIR=/usr/local
-GOROOT=$INSTALL_DIR/go
-GO_BINARY=$GOROOT/bin/go
-
-# Make sure git is installed before proceeding
-yum -y install git
-
-cd /tmp
-rm $GO_TARBALL_VERSION
-rm $GO_TARBALL_VERSION_SHA_FILE
-curl -O $GO_TARBALL_URL
-curl -O $GO_TARBALL_VERSION_SHA_URL
-
-echo $GO_TARBALL_VERSION_SHA_FILE
-sha256sum -c <(cat $GO_TARBALL_VERSION_SHA_FILE; echo " ./$GO_TARBALL_VERSION")
-
-if [[ $? ]]; then
-    cd /usr/local
-    echo "Extracting go tarball to $INSTALL_DIR/go"
-    tar -zxf /tmp/$GO_TARBALL_VERSION
-else
-    echo "Checksum failed please verify $GO_TARBALL_VERSION against $GO_TARBALL_VERSION_SHA_FILE"
-fi
+GO_BINARY=/usr/local/go/bin/go
 
 echo "Now installing goose"
 export GOPATH=/opt/traffic_ops/go

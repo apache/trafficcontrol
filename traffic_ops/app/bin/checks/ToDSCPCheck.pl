@@ -176,7 +176,7 @@ foreach my $server ( @{$jdataserver} ) {
                      }
                   }
                   if ( $ds->{type} =~ /^DNS/ ) {
-                     $prefix = 'edge';
+                     $prefix = $ds->{routingName};
                   } else {
                      $prefix = $host_name;
                   }

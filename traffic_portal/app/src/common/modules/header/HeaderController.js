@@ -37,9 +37,11 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     };
 
     $scope.getChangeLogs = function() {
+        $scope.loadingChangeLogs = true;
         $scope.changeLogs = [];
         changeLogService.getChangeLogs({ limit: 6 })
             .then(function(response) {
+                $scope.loadingChangeLogs = false;
                 $scope.changeLogs = response;
             });
     };
@@ -101,7 +103,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function(cdn) {
-            $location.path('/admin/cdns/' + cdn.id + '/config/changes');
+            $location.path('/cdns/' + cdn.id + '/config/changes');
         }, function () {
             // do nothing
         });

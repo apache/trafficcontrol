@@ -1,7 +1,11 @@
 {
-  "_comment": "These are the default properties for Traffic Portal. To customize these values, create your own traffic_portal_properties.json and copy to your web root replacing the existing one.",
+  "_comment": "These are the default properties for Traffic Portal. Customize these values to fit your needs.",
   "properties": {
     "name": "Traffic Portal",
+    "api": {
+      "_comment": "This should have the same value found in /etc/traffic_portal/conf/config.js",
+      "baseUrl": "https://localhost:8444/api/"
+    },
     "dashboard": {
       "_comments": "These are configurable properties for the dashboard",
       "autoRefresh": true,
@@ -25,6 +29,12 @@
       },
       "cacheGroupHealth": {
         "refreshRateInMS": 60000
+      }
+    },
+    "snapshot": {
+      "_comments": "These are configurable properties for a cdn snapshot",
+      "diff": {
+        "showUnchanged": true
       }
     },
     "customMenu": {

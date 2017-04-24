@@ -45,6 +45,11 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, form
         { value: 'UNK_PROFILE' }
     ];
 
+    $scope.falseTrue = [
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
+    ];
+
     $scope.viewParams = function() {
         $location.path($location.path() + '/parameters');
     };

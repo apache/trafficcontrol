@@ -59,7 +59,7 @@ Architecture
 ============
 At the highest level, Traffic Monitor polls caches, aggregates their data and availability, and serves it at HTTP JSON endpoints.
 
-In the code, the data flows thru microthread (goroutine) pipelines. All stages of the pipeline are independent running microthreads:sup:`1`. The pipelines are:
+In the code, the data flows thru microthread (goroutine) pipelines. All stages of the pipeline are independent running microthreads [#f1]_ . The pipelines are:
 
 * **stat poll** - polls caches for all statistics data. This should be a slower poll, which gets a lot of data.
 * **health poll** - polls caches for a tiny amount of data, typically system information. This poll is designed to be a heartbeat, determining quickly whether the cache is reachable. Since it's a small amount of data, it should poll more frequently.
@@ -124,7 +124,7 @@ All microthreads in the pipeline are started by ``manager/manager.go:Start()``.
                         |   --------------     --------------  |                                              -----------------------
                         ...                                    ...
 
-:sup:`1`Technically, some stages which are one-to-one simply call the next stage as a function. For example, the Fetcher calls the Handler as a function in the same microthread. But this isn't architecturally significant.
+.. [#f1] Technically, some stages which are one-to-one simply call the next stage as a function. For example, the Fetcher calls the Handler as a function in the same microthread. But this isn't architecturally significant.
 
 
 Stat Pipeline
@@ -147,7 +147,7 @@ Stat Pipeline
 
 * **handler** - ``traffic_monitor/cache/cache.go:Handler.Handle()``. Takes the given result and does all data computation possible with the single result. Currently, this computation primarily involves processing the denormalized ATS data into Go structs, and processing System data into OutBytes, Kbps, etc. Precomputed data is then passed to its result channel, which is picked up by the Manager.
 
-* **manager** - ``traffic_monitor/manager/stat.go:StartStatHistoryManager()``. Takes preprocessed results, and aggregates them. Aggregated results are then placed in shared data structures. The major data aggregated are delivery service statistics, and cache availability data. See :ref:`Aggregated Stat Data` and :ref:`Aggregated Availability Data`.
+* **manager** - ``traffic_monitor/manager/stat.go:StartStatHistoryManager()``. Takes preprocessed results, and aggregates them. Aggregated results are then placed in shared data structures. The major data aggregated are delivery service statistics, and cache availability data. See :ref:`Aggregated Stat Data <agg-stat-data>` and :ref:`Aggregated Availability Data <agg-avail-data>`.
 
 
 Health Pipeline
@@ -169,7 +169,7 @@ Health Pipeline
 
 * **handler** - ``traffic_monitor/cache/cache.go:Handler.Handle()``. Same handler type as the Stat Poller pipeline, but constructed with a flag to not precompute. The health endpoint is of the same form as the stat endpoint, but doesn't return all stat data. So, it doesn't precompute like the Stat Handler, but only processes the system data, and passes the processed result to its result channel, which is picked up by the Manager.
 
-* **manager** - ``traffic_monitor/manager/health.go:StartHealthResultManager()``. Takes preprocessed results, and aggregates them. For the Health pipeline, only health availability data is aggregated. Aggregated results are then placed in shared data structures (lastHealthDurationsThreadsafe, lastHealthEndTimes, etc). See :ref:`Aggregated Availability Data`.
+* **manager** - ``traffic_monitor/manager/health.go:StartHealthResultManager()``. Takes preprocessed results, and aggregates them. For the Health pipeline, only health availability data is aggregated. Aggregated results are then placed in shared data structures (lastHealthDurationsThreadsafe, lastHealthEndTimes, etc). See :ref:`Aggregated Availability Data <agg-avail-data>`.
 
 
 Peer Pipeline
@@ -191,7 +191,7 @@ Peer Pipeline
 
 * **handler** - ``traffic_monitor/cache/peer.go:Handler.Handle()``. Decodes the JSON result into an object, and without further processing passes to its result channel, which is picked up by the Manager.
 
-* **manager** - ``traffic_monitor/manager/peer.go:StartPeerManager()``. Takes JSON peer Traffic Monitor results, and aggregates them. The availability of the Peer Traffic Monitor itself, as well as all cache availability from the given peer result, is stored in the shared ``peerStates`` object. Results are then aggregated via a call to the ``combineState()`` lambda, which signals the State Combiner microthread (which stores the combined availability in the shared object ``combinedStates``; See :ref:`State Combiner`).
+* **manager** - ``traffic_monitor/manager/peer.go:StartPeerManager()``. Takes JSON peer Traffic Monitor results, and aggregates them. The availability of the Peer Traffic Monitor itself, as well as all cache availability from the given peer result, is stored in the shared ``peerStates`` object. Results are then aggregated via a call to the ``combineState()`` lambda, which signals the State Combiner microthread (which stores the combined availability in the shared object ``combinedStates``; See :ref:`State Combiner <state-combiner>`).
 
 
 Monitor Config Pipeline
@@ -232,6 +232,8 @@ Events
 The ``events`` shared data object is passed to each pipeline microthread which needs to signal events. Most of them do. Events are then logged, and visible in the UI as well as an HTTP JSON endpoint. Most events are caches becoming available or unavailable, but include other things such as peer availability changes.
 
 
+.. _state-combiner:
+
 State Combiner
 --------------
 The State Combiner is a microthread started in ``traffic_monitor/manager/manager.go:Start()`` via ``traffic_monitor/manager/statecombiner.go:StartStateCombiner()``, which listens for signals to combine states. It should be signaled by any pipeline which updates the local or peer availability shared data objects, ``localStates`` and ``peerStates``. It holds the threadsafe shared data objects for local states and peer states, so no data is passed or returned, only a signal.
@@ -239,10 +241,14 @@ The State Combiner is a microthread started in ``traffic_monitor/manager/manager
 When a signal is received, it combines the local and peer states optimistically. That is, if a cache is marked available locally or by any peer, that cache is marked available in the combined states. There exists a variable to combine pessimistically, which may be set at compile time (it's unusual for a CDN to operate well with pessimistic cache availability). Combined data is stored in the threadsafe shared data object ``combinedStates``.
 
 
+.. _agg-stat-data:
+
 Aggregated Stat Data
 --------------------
 The Stat pipeline Manager is responsible for aggregating stats from all caches, into delivery services statistics. This is done via a call to ``traffic_monitor/deliveryservice/stat.go:CreateStats()``.
 
+
+.. _agg-avail-data:
 
 Aggregated Availability Data
 ----------------------------
@@ -251,10 +257,12 @@ Both the Stat and Health pipelines aggregate availability data received from cac
 
 HTTP Data Requests
 ------------------
-Data is provided to HTTP requests via the threadsafe shared data objects (see :ref:`Shared Data`). These objects are closed in lambdas created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``. This is called by the Ops Config Manager when it recreates the HTTP server.
+Data is provided to HTTP requests via the threadsafe shared data objects (see :ref:`Shared Data <shared-data>`). These objects are closed in lambdas created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``. This is called by the Ops Config Manager when it recreates the HTTP server.
 
 Each HTTP endpoint is mapped to a function which closes around the shared data objects it needs, and takes the request data it needs (such as query parameters). Each endpoint function resides in its own file in ``traffic_monitor/datareq/``. Because each Go HTTP routing function must be a ``http.HandlerFunc``, wrapper functions take the endpoint functions and return ``http.HandlerFunc`` functions which call them, and which are stored in the dispatch map, to be registered with the HTTP server.
 
+
+.. _shared-data:
 
 Shared Data
 -----------
@@ -267,7 +275,7 @@ Currently, all Threadsafe shared data types use mutexes. In the future, these co
 
 
 Formatting Conventions
-===========================
+======================
 Go code should be formatted with ``gofmt``. See also ``CONTRIBUTING.md``.
 
 Installing The Developer Environment

@@ -24,7 +24,7 @@ var TableTenantUsersController = function(tenant, tenantUsers, $scope, $state, l
 	$scope.tenantUsers = tenantUsers;
 
 	$scope.editUser = function(id) {
-		locationUtils.navigateToPath('/admin/users/' + id);
+		locationUtils.navigateToPath('/users/' + id);
 	};
 
 	$scope.refresh = function() {

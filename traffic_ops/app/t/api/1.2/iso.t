@@ -40,6 +40,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "rootPass" => "password",
             "dhcp" => "yes",
             "interfaceMtu" => 1500,
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "osversionDir is required" )
@@ -51,6 +52,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "rootPass" => "password",
             "dhcp" => "yes",
             "interfaceMtu" => 1500,
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "hostName is required" )
@@ -62,6 +64,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "rootPass" => "password",
             "dhcp" => "yes",
             "interfaceMtu" => 1500,
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "domainName is required" )
@@ -73,6 +76,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "domainName" => "baz.com",
             "dhcp" => "yes",
             "interfaceMtu" => 1500,
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "rootPass is required" )
@@ -84,6 +88,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "domainName" => "baz.com",
             "rootPass" => "password",
             "interfaceMtu" => 1500,
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "dhcp is required" )
@@ -95,6 +100,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "domainName" => "baz.com",
             "rootPass" => "password",
             "dhcp" => "yes",
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "interfaceMtu is required" )
@@ -109,6 +115,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "interfaceMtu" => 1500,
             "ipNetmask" => "255.255.255.255",
             "ipGateway" => "10.10.10.10",
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "ipAddress is required if DHCP is no" )
@@ -123,6 +130,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "interfaceMtu" => 1500,
             "ipAddress" => "10.10.10.10",
             "ipGateway" => "10.10.10.10",
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "ipNetmask is required if DHCP is no" )
@@ -137,6 +145,7 @@ ok $t->post_ok('/api/1.2/isos' => {Accept => 'application/json'} => json => {
             "interfaceMtu" => 1500,
             "ipAddress" => "10.10.10.10",
             "ipNetmask" => "255.255.255.255",
+            "disk" => "bond0",
         })
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/alerts/0/text" => "ipGateway is required if DHCP is no" )

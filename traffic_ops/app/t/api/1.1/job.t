@@ -57,6 +57,18 @@ Test::TestHelper->teardown( $schema, 'Job' );
 my $jobs = Fixtures::Job->new( { schema => $schema, no_transactions => 1 } );
 Test::TestHelper->load_all_fixtures($jobs);
 
+ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_ROOT_USER, p => Test::TestHelper::ADMIN_ROOT_USER_PASSWORD } )->status_is(200),
+	'Log in as admin user?';
+
+#change the use_tenancy parameter to 0 (id from Parameters fixture) to test assigned dses table
+ok $t->put_ok('/api/1.2/parameters/67' => {Accept => 'application/json'} => json =>
+		{
+			'value'       => '0',
+		}
+	)->status_is(200);
+
+ok $t->post_ok('/api/1.1/user/logout')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(200),
 	'Log into the portal user?';
 

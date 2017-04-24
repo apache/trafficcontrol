@@ -22,7 +22,6 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
   :maxdepth: 3
 
   multi_site.rst
-  multi_site_ats5.rst
   dnssec.rst
   federations.rst
   regionalgeo.rst

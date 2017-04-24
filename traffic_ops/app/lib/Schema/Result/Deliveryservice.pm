@@ -46,10 +46,10 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'bigint'
   is_nullable: 0
 
-=head2 signed
+=head2 signing_algorithm
 
-  data_type: 'boolean'
-  default_value: false
+  data_type: 'deliveryservice_signature_type'
+  default_value: null
   is_nullable: 1
 
 =head2 qstring_ignore
@@ -294,6 +294,12 @@ __PACKAGE__->table("deliveryservice");
   is_foreign_key: 1
   is_nullable: 1
 
+=head2 routing_name
+
+  data_type: 'text'
+  default_value: 'ds'
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -310,8 +316,12 @@ __PACKAGE__->add_columns(
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "dscp",
   { data_type => "bigint", is_nullable => 0 },
-  "signed",
-  { data_type => "boolean", default_value => \"false", is_nullable => 1 },
+  "signing_algorithm",
+  {
+    data_type     => "deliveryservice_signature_type",
+    default_value => \"null",
+    is_nullable   => 1,
+  },
   "qstring_ignore",
   { data_type => "smallint", is_nullable => 1 },
   "geo_limit",
@@ -407,6 +417,8 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "tenant_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  "routing_name",
+  { data_type => "text", default_value => "ds", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -425,7 +437,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_89502_ds_id_unique>
+=head2 C<idx_140234_ds_id_unique>
 
 =over 4
 
@@ -435,9 +447,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_89502_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_140234_ds_id_unique", ["id"]);
 
-=head2 C<idx_89502_ds_name_unique>
+=head2 C<idx_140234_ds_name_unique>
 
 =over 4
 
@@ -447,7 +459,7 @@ __PACKAGE__->add_unique_constraint("idx_89502_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_89502_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_140234_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -642,8 +654,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-03-20 18:24:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/w+omk3X6k2RKjoI6IDlFw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-08-09 15:16:31
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:FXNj6wNNq+jajg/rVqOSBw
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

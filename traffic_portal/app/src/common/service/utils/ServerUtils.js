@@ -19,6 +19,14 @@
 
 var ServerUtils = function($window, userModel) {
 
+	this.isCache = function(server) {
+		return server.type && (server.type.indexOf('EDGE') != -1 || server.type == 'MID');
+	};
+
+	this.isEdge = function(server) {
+		return server.type && (server.type.indexOf('EDGE') != -1);
+	};
+
 	this.isOffline = function(status) {
 		return (status == 'OFFLINE' || status == 'ADMIN_DOWN');
 	};
@@ -28,7 +36,9 @@ var ServerUtils = function($window, userModel) {
 	};
 
 	this.ssh = function(ip, $event) {
-		$window.location.href = 'ssh://' + userModel.user.username + '@' + ip;
+		if (ip && ip.length > 0) {
+			$window.location.href = 'ssh://' + userModel.user.username + '@' + ip;
+		}
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 	};
 

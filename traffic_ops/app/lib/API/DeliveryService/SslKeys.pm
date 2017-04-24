@@ -213,9 +213,13 @@ sub view_by_hostname {
 		}
 
 		my $cdn_id = $self->db->resultset('Cdn')->search( { domain_name => $domain_name } )->get_column('id')->single();
+		if (!$cdn_id || $cdn_id == "") {
+			return $self->alert( {Error => " - a cdn does not exist for the domain: $domain_name parsed from hostname: $key" } );
+		}
+
 		my $ds = $self->db->resultset('Deliveryservice')->search( { 'regex.pattern' => "$host_regex", 'cdn_id' => "$cdn_id" }, { join => { deliveryservice_regexes => { regex => undef } } } )->single();
 		if (!$ds) {
-			return $self->alert( { Error => " - A delivery service does not exist for a host with hostanme of $key" } );
+			return $self->alert( { Error => " - A delivery service does not exist for a host with hostname of $key" } );
 		}
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();

@@ -19,10 +19,18 @@ version: '2'
 
 volumes:
   traffic_ops:
+  traffic_ops_golang:
 
 services:
   db:
     image: postgres:9.6
+
+  unit_golang:
+    build:
+      context: ../../../..
+      dockerfile: traffic_ops/app/bin/tests/Dockerfile-golangtest
+    volumes:
+      - traffic_ops_golang:/traffic_ops_golang
 
   unit:
     build:

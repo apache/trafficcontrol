@@ -22,11 +22,11 @@ var TableStatusesController = function(statuses, $scope, $state, locationUtils) 
     $scope.statuses = statuses;
 
     $scope.editStatus = function(id) {
-        locationUtils.navigateToPath('/admin/statuses/' + id);
+        locationUtils.navigateToPath('/statuses/' + id);
     };
 
     $scope.createStatus = function() {
-        locationUtils.navigateToPath('/admin/statuses/new');
+        locationUtils.navigateToPath('/statuses/new');
     };
 
     $scope.refresh = function() {

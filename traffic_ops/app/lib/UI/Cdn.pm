@@ -481,7 +481,7 @@ sub adeliveryservice {
         my $line = [
             $row->id,                       $row->xml_id,                $org_server_fqdn,                "dummy",
             $cdn_name,                      $ptext,                      $row->ccr_dns_ttl,                    $yesno{ $row->active },
-            $row->type->name,               $row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,
+            $row->type->name,               $row->dscp,                  $row->signing_algorithm,              $row->qstring_ignore,
             $geo_limits{ $row->geo_limit }, $protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling,
             $row->http_bypass_fqdn,         $row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,
             0.0 + $row->miss_lat,           0.0 + $row->miss_long,
@@ -722,7 +722,11 @@ sub aprofile {
 
     while ( my $row = $rs->next ) {
         my $ctext = defined( $row->cdn ) ? $row->cdn->name : "-";
-        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $row->last_updated ];
+        my $routing_text = "No";
+        if ( $row->routing_disabled == 1 ) {
+            $routing_text = "Yes";
+        }
+        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $routing_text, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );

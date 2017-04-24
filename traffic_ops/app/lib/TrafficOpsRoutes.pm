@@ -49,8 +49,13 @@ sub define {
 	# 1.2 Routes
 	$version = "1.2";
 	$self->api_routes( $r, $version, $namespace );
+	# Traffic Stats Extension for 1.2
+	$self->traffic_stats_routes( $r, $version );
 
-	# Traffic Stats Extension
+	# 1.3 Routes
+	$version = "1.3";
+	$self->api_routes( $r, $version, $namespace );
+	# Traffic Stats Extension 1.3
 	$self->traffic_stats_routes( $r, $version );
 
 	$self->catch_all( $r, $namespace );
@@ -398,6 +403,10 @@ sub api_routes {
 	$r->put("/api/$version/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#update', namespace => $namespace );
 	$r->delete("/api/$version/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#delete', namespace => $namespace );
 
+	# -- CACHES
+	# pull cache stats from traffic monitor for edges and mids
+	$r->get("/api/$version/caches/stats")->over( authenticated => 1, not_ldap => 1 )->to( 'Cache#get_cache_stats', namespace => $namespace );
+
 	# -- CACHEGROUPS
 	# -- CACHEGROUPS: CRUD
 	# NOTE: any 'trimmed' urls will potentially go away with keys= support
@@ -561,8 +570,6 @@ sub api_routes {
 	$r->get("/api/$version/deliveryservices/:id/urlkeys")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#view_by_id', namespace => 'API::DeliveryService' );
 
-
-
 	# -- DELIVERY SERVICE: REGEXES
 	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceRegexes#all', namespace => $namespace );
 	$r->get("/api/$version/deliveryservices/:dsId/regexes" => [ dsId => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceRegexes#index', namespace => $namespace );
@@ -588,12 +595,39 @@ sub api_routes {
 	$r->delete("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Division#delete', namespace => $namespace );
 	$r->delete("/api/$version/divisions/name/:name")->over( authenticated => 1, not_ldap => 1 )->to( 'Division#delete_by_name', namespace => $namespace );
 
-	# -- FEDERATIONS
-	$r->get("/internal/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#index', namespace => $namespace );
-	$r->get("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#external_index', namespace => $namespace );
-	$r->post("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#add', namespace => $namespace );
-	$r->put("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update', namespace => $namespace );
-	$r->delete("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete', namespace => $namespace );
+	# -- FEDERATIONS MAPPINGS
+	$r->get("/internal/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_all_federation_resolver_mappings', namespace => $namespace );
+
+	# -- FEDERATIONS MAPPINGS (CURRENT USER)
+	$r->get("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_current_user_federation_resolver_mappings', namespace => $namespace );
+	$r->post("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#add_federation_resolver_mappings_for_current_user', namespace => $namespace );
+	$r->put("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update_federation_resolver_mappings_for_current_user', namespace => $namespace );
+	$r->delete("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete_federation_resolver_mappings_for_current_user', namespace => $namespace );
+
+	# -- FEDERATIONS (BY CDN)
+	$r->get("/api/$version/cdns/:name/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_cdn_federations', namespace => $namespace );
+	$r->get("/api/$version/cdns/:name/federations/:fedId")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_cdn_federation', namespace => $namespace );
+	$r->post("/api/$version/cdns/:name/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#create_cdn_federation', namespace => $namespace );
+	$r->put("/api/$version/cdns/:name/federations/:fedId")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update_cdn_federation', namespace => $namespace );
+	$r->delete("/api/$version/cdns/:name/federations/:fedId")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete_cdn_federation', namespace => $namespace );
+
+	# -- FEDERATION_USER
+	$r->get( "/api/$version/federations/:fedId/users" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationUser#index', namespace => $namespace );
+	$r->post( "/api/$version/federations/:fedId/users" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationUser#assign_users_to_federation', namespace => $namespace );
+	$r->delete( "/api/$version/federations/:fedId/users/:userId" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationUser#delete', namespace => $namespace );
+
+	# -- FEDERATION_DELIVERYSERVICE
+	$r->get( "/api/$version/federations/:fedId/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationDeliveryService#index', namespace => $namespace );
+	$r->post( "/api/$version/federations/:fedId/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationDeliveryService#assign_dss_to_federation', namespace => $namespace );
+	$r->delete( "/api/$version/federations/:fedId/deliveryservices/:dsId" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationDeliveryService#delete', namespace => $namespace );
+
+	# -- FEDERATION_FEDERATION RESOLVER
+	$r->get( "/api/$version/federations/:fedId/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationFederationResolver#index', namespace => $namespace );
+	$r->post( "/api/$version/federations/:fedId/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationFederationResolver#assign_fed_resolver_to_federation', namespace => $namespace );
+
+	# -- FEDERATION RESOLVERS
+	$r->post( "/api/$version/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#create', namespace => $namespace );
+	$r->delete( "/api/$version/federation_resolvers/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#delete', namespace => $namespace );
 
 	# -- HARDWARE INFO
 	# Supports: ?orderby=key
@@ -634,6 +668,8 @@ sub api_routes {
 	# -- PARAMETERS: PROFILE PARAMETERS
 	$r->get("/api/$version/profileparameters")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#index', namespace => $namespace );
 	$r->post("/api/$version/profileparameters")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#create', namespace => $namespace );
+	$r->post("/api/$version/profileparameter")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#assign_params_to_profile', namespace => $namespace );
+	$r->post("/api/$version/parameterprofile")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#assign_profiles_to_param', namespace => $namespace );
 	$r->delete("/api/$version/profileparameters/:profile_id/:parameter_id")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'ProfileParameter#delete', namespace => $namespace );
 
@@ -781,6 +817,9 @@ sub api_routes {
 	$r->put("/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'User#update', namespace => $namespace );
 	$r->post("/api/$version/users")->over( authenticated => 1, not_ldap => 1 )->to( 'User#create', namespace => $namespace );
 
+	# -- USERS: REGISTER NEW USER AND SEND REGISTRATION EMAIL
+	$r->post("/api/$version/users/register")->to( 'User#register_user', namespace => $namespace );
+
 	# -- USERS: DELIVERY SERVICE ASSIGNMENTS
 	$r->get( "/api/$version/users/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );
 	$r->get("/api/$version/user/:id/deliveryservices/available" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )
@@ -824,7 +863,7 @@ sub api_routes {
 	$r->post("/api/$version/to_extensions/:id/delete")->over( authenticated => 1, not_ldap => 1 )->to( 'ToExtension#delete', namespace => $namespace );
 
 	# -- MISC
-	# TM Status in use JvD
+	# get_host_stats is very UI specific (i.e. it uses aaData) and should probably be deprecated along with the UI namespace
 	$r->get("/api/$version/traffic_monitor/stats")->over( authenticated => 1, not_ldap => 1 )->to( 'TrafficMonitor#get_host_stats', namespace => $namespace );
 
 	# -- Ping API

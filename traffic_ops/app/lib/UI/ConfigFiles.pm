@@ -197,7 +197,8 @@ sub ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
+		my $signed                      = ( $row->signing_algorithm eq "url_sig" );
+		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
 		my $ds_domain                   = $row->domain_name;
@@ -219,7 +220,7 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
 				my $portstr = "";
 				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
 					$portstr = ":" . $server->tcp_port;
@@ -267,6 +268,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -645,27 +647,45 @@ sub logs_xml_dot_config {
 	my $data   = $self->param_data( $server, $filename );
 	my $text   = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
 
-	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
-	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
-	my $log_object_format               = $data->{"LogObject.Format"}             || "";
-	my $log_object_rolling_enabled      = $data->{"LogObject.RollingEnabled"}     || "";
-	my $log_object_rolling_interval_sec = $data->{"LogObject.RollingIntervalSec"} || "";
-	my $log_object_rolling_offset_hr    = $data->{"LogObject.RollingOffsetHr"}    || "";
-	my $log_object_rolling_size_mb      = $data->{"LogObject.RollingSizeMb"}      || "";
-	my $format                          = $data->{"LogFormat.Format"};
-	$format =~ s/"/\\\"/g;
-	$text .= "<LogFormat>\n";
-	$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
-	$text .= "  <Format = \"" . $format . "\"/>\n";
-	$text .= "</LogFormat>\n";
-	$text .= "<LogObject>\n";
-	$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
-	$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
-	$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
-	$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
-	$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
-	$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
-	$text .= "</LogObject>\n";
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= "<LogFormat>\n";
+			$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
+			$text .= "  <Format = \"" . $format . "\"/>\n";
+			$text .= "</LogFormat>\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "<LogObject>\n";
+			$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
+			$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
+			$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
+			$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
+			$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
+			$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
+			$text .= "  <Header = \"" . $log_object_header . "\"/>\n" if ( length($log_object_header) > 0 );
+			$text .= "</LogObject>\n";
+		}
+	}
 
 	return $text;
 }
@@ -1028,8 +1048,11 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signed} == 1 ) {
+	if ( $remap->{signing_algorithm} eq "url_sig" ) {
 		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+	}
+	elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+		$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
@@ -1122,7 +1145,7 @@ sub parent_dot_config {
 			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
 			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
-			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
 			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
 				$parent_qstring = 'consider';

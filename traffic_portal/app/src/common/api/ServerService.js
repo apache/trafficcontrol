@@ -32,7 +32,7 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
             .then(
                 function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                    locationUtils.navigateToPath('/configure/servers/' + response.id);
+                    locationUtils.navigateToPath('/servers/' + response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -64,6 +64,26 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
             );
     };
 
+    this.getServerConfigFiles = function(id) {
+        return Restangular.one("servers", id).customGET('configfiles/ats');
+    };
+
+    this.getServerConfigFile = function(url) {
+        var request = $q.defer();
+
+        $http.get(url)
+            .then(
+                function(result) {
+                    request.resolve(result.data);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
     this.getDeliveryServiceServers = function(dsId) {
         return Restangular.one('deliveryservices', dsId).getList('servers');
     };
@@ -74,6 +94,18 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
 
     this.getEligibleDeliveryServiceServers = function(dsId) {
         return Restangular.one('deliveryservices', dsId).getList('servers/eligible');
+    };
+
+    this.assignDeliveryServices = function(server, dsIds, replace, delay) {
+        return Restangular.service('servers/' + server.id + '/deliveryservices?replace=' + replace).post( dsIds )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], delay);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     this.queueServerUpdates = function(id) {
@@ -100,10 +132,26 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
             );
     };
 
-    this.getStatusCount = function() {
+    this.getEdgeStatusCount = function() {
         var request = $q.defer();
 
-        $http.get(ENV.api['root'] + "servers/status")
+        $http.get(ENV.api['root'] + "servers/status?type=EDGE")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.getCacheStats = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "caches/stats")
             .then(
                 function(result) {
                     request.resolve(result.data.response);

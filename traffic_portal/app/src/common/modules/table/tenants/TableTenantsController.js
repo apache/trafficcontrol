@@ -22,11 +22,11 @@ var TableTenantsController = function(tenants, $scope, $state, locationUtils) {
     $scope.tenants = tenants;
 
     $scope.editTenant = function(id) {
-        locationUtils.navigateToPath('/admin/tenants/' + id);
+        locationUtils.navigateToPath('/tenants/' + id);
     };
 
     $scope.createTenant = function() {
-        locationUtils.navigateToPath('/admin/tenants/new');
+        locationUtils.navigateToPath('/tenants/new');
     };
 
     $scope.refresh = function() {

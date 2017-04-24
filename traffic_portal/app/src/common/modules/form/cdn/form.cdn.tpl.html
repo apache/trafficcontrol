@@ -20,7 +20,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/admin/cdns')">CDNs</a></li>
+            <li><a ng-click="navigateToPath('/cdns')">CDNs</a></li>
             <li class="active">{{cdnName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
@@ -42,7 +42,7 @@ under the License.
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
-                    <li role="menuitem"><a ng-click="manageSSL()">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
                     <li role="menuitem"><a ng-click="viewProfiles()">View Profiles</a></li>

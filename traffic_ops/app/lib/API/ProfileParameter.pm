@@ -87,6 +87,93 @@ sub create {
 	return $self->success($response, "Profile parameter associations were created.");
 }
 
+sub assign_params_to_profile {
+	my $self 		= shift;
+	my $params 		= $self->req->json;
+	my $profile_id	= $params->{profileId};
+	my $param_ids	= $params->{paramIds};
+	my $replace 	= $params->{replace};
+	my $count		= 0;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $profile = $self->db->resultset('Profile')->find( { id => $profile_id } );
+	if ( !defined($profile) ) {
+		return $self->not_found();
+	}
+
+	if ( ref($param_ids) ne 'ARRAY' ) {
+		return $self->alert("Parameters must be an array");
+	}
+
+	if ( $replace ) {
+		# start fresh and delete existing profile/parameter associations
+		my $delete = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id } );
+		$delete->delete();
+	}
+
+	my @values = ( [ qw( profile parameter ) ]); # column names are required for 'populate' function
+
+	foreach my $param_id (@{ $param_ids }) {
+		push(@values, [ $profile_id, $param_id ]);
+		$count++;
+	}
+
+	$self->db->resultset("ProfileParameter")->populate(\@values);
+
+	my $msg = $count . " parameters were assigned to the " . $profile->name . " profile";
+	&log( $self, $msg, "APICHANGE" );
+
+	my $response = $params;
+	return $self->success($response, $msg);
+}
+
+sub assign_profiles_to_param {
+	my $self 		= shift;
+	my $params 		= $self->req->json;
+	my $param_id	= $params->{paramId};
+	my $profile_ids	= $params->{profileIds};
+	my $replace 	= $params->{replace};
+	my $count		= 0;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $parameter = $self->db->resultset('Parameter')->find( { id => $param_id } );
+	if ( !defined($parameter) ) {
+		return $self->not_found();
+	}
+
+	if ( ref($profile_ids) ne 'ARRAY' ) {
+		return $self->alert("Profiles must be an array");
+	}
+
+	if ( $replace ) {
+		# start fresh and delete existing parameter/profile associations
+		my $delete = $self->db->resultset('ProfileParameter')->search( { parameter => $param_id } );
+		$delete->delete();
+	}
+
+	my @values = ( [ qw( profile parameter ) ]); # column names are required for 'populate' function
+
+	foreach my $profile_id (@{ $profile_ids }) {
+		push(@values, [ $profile_id, $param_id ]);
+		$count++;
+	}
+
+	$self->db->resultset("ProfileParameter")->populate(\@values);
+
+	my $msg = $count . " profiles were assigned to the " . $parameter->name . " parameter";
+	&log( $self, $msg, "APICHANGE" );
+
+	my $response = $params;
+	return $self->success($response, $msg);
+}
+
+
 sub delete {
 	my $self = shift;
 	my $profile_id = $self->param('profile_id');

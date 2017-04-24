@@ -107,10 +107,10 @@ sub get_example_urls {
 				$host =~ s/\.\*//g;
 				$host =~ s/\.//g;
 				if ( $re->{set_number} == 0 ) {
-					$url = $scheme . '://edge.' . $host . "." . $cdn_domain;
+					$url = $scheme . '://' . $data->routing_name . '.' . $host . "." . $cdn_domain;
 					push( @example_urls, $url );
 					if ($scheme2) {
-						$url = $scheme2 . '://edge.' . $host . "." . $cdn_domain;
+						$url = $scheme2 . '://' . $data->routing_name . '.' . $host . "." . $cdn_domain;
 						push( @example_urls, $url );
 					}
 				}
@@ -136,10 +136,10 @@ sub get_example_urls {
 				$host =~ s/\.//g;
 
 				if ( $re->{set_number} == 0 ) {
-					$http_url =  $scheme . '://ccr.' . $host . "." . $cdn_domain;
+					$http_url =  $scheme . '://' . $data->routing_name . '.' . $host . "." . $cdn_domain;
 					push( @example_urls, $http_url );
 					if ($scheme2) {
-						$https_url = $scheme2 . '://ccr.' . $host . "." . $cdn_domain;
+						$https_url = $scheme2 . '://' . $data->routing_name . '.' . $host . "." . $cdn_domain;
 						push( @example_urls, $https_url );
 					}
 				}
@@ -210,7 +210,9 @@ sub read {
 				"xml_id"                      => $row->xml_id,
 				"display_name"                => $row->display_name,
 				"dscp"                        => $row->dscp,
-				"signed"                      => \$row->signed,
+				"routing_name"                => $row->routing_name,
+				"signed"                      => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+				"signing_algorithm"           => $row->signing_algorithm,
 				"qstring_ignore"              => $row->qstring_ignore,
 				"geo_limit"                   => $row->geo_limit,
 				"geo_limit_countries"         => $row->geo_limit_countries,
@@ -317,6 +319,16 @@ sub sanitize_geo_limit_countries {
 	return $geo_limit_countries;
 }
 
+sub sanitize_routing_name {
+	my $routing_name = shift;
+	my $ds_data      = shift;
+	if ( !defined($routing_name) || $routing_name eq '') {
+		# because routingName is optional in the API, use the existing value if it's not defined in the PUT request
+		return !defined($ds_data) ? 'cdn' : $ds_data->routing_name;
+	}
+	return $routing_name;
+}
+
 sub check_deliveryservice_input {
 	my $self   = shift;
 	my $cdn_id = shift;
@@ -420,6 +432,9 @@ sub check_deliveryservice_input {
 	}
 	if ( $self->param('ds.dscp') !~ /^\d+$/ ) {
 		$self->field('ds.dscp')->is_equal( "", $self->param('ds.dscp') . " is not a valid dscp value." );
+	}
+	if ( !&is_hostname( $self->param('ds.routing_name') ) || $self->param('ds.routing_name') =~ /\./ ) {
+		$self->field('ds.routing_name')->is_equal("", $self->param('ds.routing_name') . " is not a valid hostname without periods.");
 	}
 
 	my $org_host_name = $self->param('ds.org_server_fqdn');
@@ -711,13 +726,13 @@ sub cacheurl {
 }
 
 sub url_sig {
-	my $self       = shift;
-	my $ds_id      = shift;
-	my $ds_profile = shift;
-	my $ds_name    = shift;
-	my $signed    = shift;
+	my $self              = shift;
+	my $ds_id             = shift;
+	my $ds_profile        = shift;
+	my $ds_name           = shift;
+	my $signing_algorithm = shift;
 
-	if ( defined($signed) && $signed == 1 ) {
+	if ( $signing_algorithm eq "url_sig" ) {
 		my $fname = "url_sig_" . $ds_name . ".config";
 		my $ats_cfg_loc =
 			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
@@ -777,19 +792,14 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
-#	foreach my $f ($self->param) {
-#		print $f . " => " . $self->param($f) . "\n";
-#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
-
-		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
 			xml_id                      => $self->paramAsScalar('ds.xml_id'),
 			display_name                => $self->paramAsScalar('ds.display_name'),
 			dscp                        => $self->paramAsScalar('ds.dscp'),
-			signed                      => $self->paramAsScalar('ds.signed'),
+			routing_name                => sanitize_routing_name( $self->paramAsScalar('ds.routing_name') ),
 			qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 			geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
@@ -941,7 +951,7 @@ sub update {
 
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
-		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.signed') );
+		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $hash{signing_algorithm} );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -956,6 +966,9 @@ sub update {
 		my $regexp_set   = &get_regexp_set( $self, $id );
 		my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 		my $action;
+
+		$self->stash_profile_selector('DS_PROFILE', defined($data->profile) ? $data->profile->id : undef);
+		$self->stash_cdn_selector($data->cdn->id);
 
 		$self->stash(
 			ds           => $data,
@@ -1015,12 +1028,11 @@ sub create {
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenant_id = $tenant_utils->current_user_tenant();
-		my $insert = $self->db->resultset('Deliveryservice')->create(
-			{
+		my $new_ds = {
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
 				dscp                        => $self->paramAsScalar( 'ds.dscp', 0 ),
-				signed                      => $self->paramAsScalar('ds.signed'),
+				routing_name                => sanitize_routing_name( $self->paramAsScalar('ds.routing_name') ),
 				qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 				geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
@@ -1061,8 +1073,9 @@ sub create {
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
-			}
-		);
+		};
+
+		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);
 		$insert->insert();
 		$new_id = $insert->id;
 		&log( $self, "Create deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
@@ -1139,7 +1152,7 @@ sub create {
 
 		if ( $dnssec_enabled == 1 ) {
 			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
-			my $err = $self->create_dnssec_keys( $cdn_rs->name, $xml_id, $new_id );
+			my $err = $self->create_dnssec_keys( $cdn_rs->name, $xml_id, $new_id, $cdn_rs->domain_name );
 			if ($err ne "") {
 				push( @msgs, "Delivery service $xml_id could not be created because DNSSEC key creation was not successful.  Error was $err" );
 				# #delete DS since DNSSEC key creation was unsuccessful
@@ -1186,10 +1199,11 @@ sub create {
 }
 
 sub create_dnssec_keys {
-	my $self     = shift;
-	my $cdn_name = shift;
-	my $xml_id   = shift;
-	my $ds_id    = shift;
+	my $self            = shift;
+	my $cdn_name        = shift;
+	my $xml_id          = shift;
+	my $ds_id           = shift;
+	my $cdn_domain_name = shift;
 
 	#get keys for cdn
 	my $keys;
@@ -1208,16 +1222,7 @@ sub create_dnssec_keys {
 		my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
 
 		#create the ds domain name for dnssec keys
-		my $deliveryservice_regexes = get_regexp_set($self, $ds_id);
-		my $rs_ds =
-			$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
-		my $data = $rs_ds->single;
-		my $domain_name = $data->cdn->domain_name;
-		my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
-		#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
-		my $ds_name = $example_urls[0] . ".";
-		my $length = length($ds_name) - CORE::index( $ds_name, "." );
-		$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+		my $ds_name = get_ds_domain_name($self, $ds_id, $xml_id, $cdn_domain_name);
 
 		my $inception    = time();
 		my $z_expiration = $inception + ( 86400 * $z_exp_days );
@@ -1241,6 +1246,29 @@ sub create_dnssec_keys {
 		return $err;
 	}
 	return "";
+}
+
+sub get_ds_domain_name {
+	my $self            = shift;
+	my $ds_id           = shift;
+	my $xml_id          = shift;
+	my $cdn_domain_name = shift;
+
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search(
+		{ 'me.xml_id' => $xml_id },
+		{   prefetch =>
+			[ { 'type' => undef }, { 'profile' => undef } ]
+		}
+	);
+	my $ds_data = $rs_ds->single;
+
+	my $deliveryservice_regexes = get_regexp_set($self, $ds_id);
+	my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $ds_data, $cdn_domain_name, $ds_data->protocol );
+	#first one is the one we want.  period at end for dnssec, substring off stuff we don't want
+	my $ds_name = $example_urls[0] . ".";
+	my $length = length($ds_name) - CORE::index( $ds_name, "." );
+	$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+	return $ds_name;
 }
 
 sub get_key_expiration_days {

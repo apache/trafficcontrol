@@ -24,15 +24,19 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestGetMonitoringServers(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	cdn := "mycdn"
@@ -113,10 +117,13 @@ func TestGetMonitoringServers(t *testing.T) {
 }
 
 func TestGetCachegroups(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	cdn := "mycdn"
@@ -238,10 +245,13 @@ func sortDeliveryServices(p []DeliveryService) []DeliveryService {
 }
 
 func TestGetProfiles(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	cache := Cache{
@@ -317,10 +327,10 @@ func TestGetProfiles(t *testing.T) {
 		for paramName, paramVal := range profile.Parameters {
 			val, ok := sqlProfiles[i].Parameters[paramName]
 			if !ok {
-				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: nil", i, paramName, paramVal)
+				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: %v", i, paramName, paramVal, val)
 			}
 			if val != paramVal {
-				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: %v", i, paramName, paramVal)
+				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: %v", i, paramName, paramVal, val)
 			}
 		}
 	}
@@ -331,10 +341,13 @@ func TestGetProfiles(t *testing.T) {
 }
 
 func TestGetDeliveryServices(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	router := Router{
@@ -383,10 +396,13 @@ func TestGetDeliveryServices(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	config := map[string]interface{}{
@@ -415,12 +431,15 @@ func TestGetConfig(t *testing.T) {
 	}
 }
 
-func TestGetMonitoringJson(t *testing.T) {
+func TestGetMonitoringJSON(t *testing.T) {
 	resp := MonitoringResponse{}
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	cdn := "mycdn"
@@ -596,9 +615,9 @@ func TestGetMonitoringJson(t *testing.T) {
 		resp.Response.Config = config
 	}
 
-	sqlResp, err := getMonitoringJson(cdn, db)
+	sqlResp, err := getMonitoringJSON(cdn, db)
 	if err != nil {
-		t.Errorf("getMonitoringJson expected: nil error, actual: %v", err)
+		t.Errorf("getMonitoringJSON expected: nil error, actual: %v", err)
 	}
 
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)
@@ -613,22 +632,22 @@ func TestGetMonitoringJson(t *testing.T) {
 	sqlResp.Response.DeliveryServices = sortDeliveryServices(sqlResp.Response.DeliveryServices)
 
 	if !reflect.DeepEqual(sqlResp.Response.TrafficServers, resp.Response.TrafficServers) {
-		t.Errorf("getMonitoringJson expected TrafficServers: %+v actual: %+v", resp.Response.TrafficServers, sqlResp.Response.TrafficServers)
+		t.Errorf("getMonitoringJSON expected TrafficServers: %+v actual: %+v", resp.Response.TrafficServers, sqlResp.Response.TrafficServers)
 	}
 	if !reflect.DeepEqual(sqlResp.Response.TrafficMonitors, resp.Response.TrafficMonitors) {
-		t.Errorf("getMonitoringJson expected TrafficMonitors: %+v actual: %+v", resp.Response.TrafficMonitors, sqlResp.Response.TrafficMonitors)
+		t.Errorf("getMonitoringJSON expected TrafficMonitors: %+v actual: %+v", resp.Response.TrafficMonitors, sqlResp.Response.TrafficMonitors)
 	}
 	if !reflect.DeepEqual(sqlResp.Response.Cachegroups, resp.Response.Cachegroups) {
-		t.Errorf("getMonitoringJson expected Cachegroups: %+v actual: %+v", resp.Response.Cachegroups, sqlResp.Response.Cachegroups)
+		t.Errorf("getMonitoringJSON expected Cachegroups: %+v actual: %+v", resp.Response.Cachegroups, sqlResp.Response.Cachegroups)
 	}
 	if !reflect.DeepEqual(sqlResp.Response.Profiles, resp.Response.Profiles) {
-		t.Errorf("getMonitoringJson expected Profiles: %+v actual: %+v", resp.Response.Profiles, sqlResp.Response.Profiles)
+		t.Errorf("getMonitoringJSON expected Profiles: %+v actual: %+v", resp.Response.Profiles, sqlResp.Response.Profiles)
 	}
 	if !reflect.DeepEqual(sqlResp.Response.DeliveryServices, resp.Response.DeliveryServices) {
-		t.Errorf("getMonitoringJson expected DeliveryServices: %+v actual: %+v", resp.Response.DeliveryServices, sqlResp.Response.DeliveryServices)
+		t.Errorf("getMonitoringJSON expected DeliveryServices: %+v actual: %+v", resp.Response.DeliveryServices, sqlResp.Response.DeliveryServices)
 	}
 	if !reflect.DeepEqual(sqlResp.Response.Config, resp.Response.Config) {
-		t.Errorf("getMonitoringJson expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Response.Config)
+		t.Errorf("getMonitoringJSON expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Response.Config)
 	}
 
 }

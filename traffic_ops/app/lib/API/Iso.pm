@@ -28,6 +28,7 @@ use File::Path qw(make_path);
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 use Mojolicious::Plugin::Config;
+use Data::Validate::IP qw(is_ipv4 is_ipv6);
 use Validate::Tiny ':all';
 
 my $filebasedir             = "/var/www/files";
@@ -79,18 +80,37 @@ sub generate {
 		return $self->alert($result);
 	}
 
-	my $osversion_dir  = $params->{osversionDir};
-	my $fqdn           = $params->{hostName} . '.' . $params->{domainName};
-	my $rootpass       = $params->{rootPass};
-	my $dhcp           = $params->{dhcp};
-	my $ipaddr         = $params->{ipAddress};
-	my $netmask        = $params->{ipNetmask};
-	my $gateway        = $params->{ipGateway};
-	my $ip6_address    = $params->{ip6Address};
-	my $ip6_gateway    = $params->{ip6Gateway};
-	my $interface_name = $params->{interfaceName};
-	my $interface_mtu  = $params->{interfaceMtu};
-	my $ondisk         = $params->{disk};
+	my $response = $self->generate_iso($params);
+	return $self->success( $response, "Generate ISO was successful." );
+}
+
+sub generate_iso {
+	my $self = shift;
+	my $params = shift;
+
+	my $osversion_dir  	= $params->{osversionDir};
+	my $hostname       	= $params->{hostName};
+	my $domain_name    	= $params->{domainName};
+	my $rootpass       	= $params->{rootPass};
+	my $dhcp           	= $params->{dhcp};
+	my $ipaddr         	= $params->{ipAddress};
+	my $netmask        	= $params->{ipNetmask};
+	my $gateway        	= $params->{ipGateway};
+	my $ip6_address    	= $params->{ip6Address};
+	my $ip6_gateway    	= $params->{ip6Gateway};
+	my $interface_name 	= $params->{interfaceName};
+	my $interface_mtu  	= $params->{interfaceMtu};
+	my $ondisk         	= $params->{disk};
+	my $mgmt_ip_address = $params->{mgmtIpAddress};
+	my $mgmt_ip_netmask = $params->{mgmtIpNetmask};
+	my $mgmt_ip_gateway = $params->{mgmtIpGateway};
+	my $mgmt_interface 	= $params->{mgmtInterface};
+
+	#The API has hostname and domainName, the UI does not
+	my $fqdn = $hostname;
+	if (defined($domain_name)) {
+		$fqdn .= "." . $domain_name
+	}
 
 	# This sets up the "strength" of the hash. So far $1 works (md5). It will produce a sha256 ($5), but it's untested.
 	# PROTIP: Do not put the $ in.
@@ -136,12 +156,24 @@ sub generate {
 	# MTU='1500'
 	# BOND_DEVICE='em0'
 	# BONDOPTS='mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4'
-	my $network_string =
-		"IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$interface_name\"\nMTU=\"$interface_mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$fqdn\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
-
+	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nDEVICE=\"$interface_name\"\nMTU=\"$interface_mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$fqdn\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nDHCP=\"$dhcp\"";
+	if ($interface_name eq 'bond0'){
+		$network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$interface_name\"\nMTU=\"$interface_mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$fqdn\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
+	}
 	# Write out the networking config:
 	open( NF, "> $cfg_dir/network.cfg" ) or die "$cfg_dir/network.cfg: $!";
 	print NF $network_string;
+	close NF;
+
+	#generate and write management network config file if mgmt_IPAddress is defined
+	my $mgmt_network_string = "IPADDR=\"$mgmt_ip_address\"\nNETMASK=\"$mgmt_ip_netmask\"\nGATEWAY=\"$mgmt_ip_gateway\"\nDEVICE=$mgmt_interface";
+	$mgmt_ip_address =~ s/\/.*//g;
+	if (is_ipv6($mgmt_ip_address)) {
+		$mgmt_network_string = "IPV6ADDR=\"$mgmt_ip_address\"\nNETMASK=\"$mgmt_ip_netmask\"\nGATEWAY=\"$mgmt_ip_gateway\"\nDEVICE=$mgmt_interface";
+	}
+
+	open( NF, "> $cfg_dir/mgmt_network.cfg" ) or die "$cfg_dir/mgmt_network.cfg: $!";
+	print NF $mgmt_network_string;
 	close NF;
 
 	my $root_pass_string;
@@ -158,10 +190,6 @@ sub generate {
 	open( DSK, "> $cfg_dir/disk.cfg" ) or die "$cfg_dir/disk.cfg: $!";
 	print DSK "boot_drives=\"$ondisk\"";
 	close DSK;
-
-	my $config_file = $ENV{'MOJO_CONFIG'};
-	my $fh;
-	open( $fh, "<", $config_file ) or die "$config_file: $!";
 
 	my $iso_dir       = "iso";
 	my $config        = $self->app->config;
@@ -203,18 +231,21 @@ sub generate {
 
 	my $iso_url = join( "/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name );
 
-	my $response;
-	$response->{isoURL} = $iso_url;
+	my $response = {
+		isoName => $iso_file_name,
+		isoURL => $iso_url,
+	};
 
-	return $self->success( $response, "Generate ISO was successful." );
+	return $response;
 }
 
 sub is_valid {
 	my $self   = shift;
 	my $params = shift;
+	my $mgmtIpAddress = $params->{mgmtIpAddress};
 
 	my $rules = {
-		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk/],
+		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk mgmtInterface mgmtIpGateway mgmtIpAddress mgmtIpNetmask/],
 
 		# Validation checks to perform
 		checks => [
@@ -224,6 +255,9 @@ sub is_valid {
 			rootPass     => [ is_required("is required") ],
 			dhcp         => [ is_required("is required") ],
 			interfaceMtu => [ is_required("is required") ],
+			disk => [ is_required("is required") ],
+			mgmtInterface => [ is_required_if((defined($mgmtIpAddress) && $mgmtIpAddress ne ""), "- Management interface is required when Management IP is provided") ],
+			mgmtIpGateway => [ is_required_if((defined($mgmtIpAddress) && $mgmtIpAddress ne ""), "- Management gateway is required when Management IP is provided") ],
 			ipAddress    => is_required_if(
 				sub {
 					my $params = shift;

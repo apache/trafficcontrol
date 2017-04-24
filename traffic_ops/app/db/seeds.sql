@@ -31,19 +31,33 @@ insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic 
 
 ---------------------------------
 
--- profiles
+-- global parameters (settings)
 ---------------------------------
-insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'Traffic Ops CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
-
-insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
-
-insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') )         ON CONFLICT (profile, parameter) DO NOTHING;
-
-
-
+DO
+$do$
+BEGIN
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'tm.instance_name' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'Traffic Ops CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'tm.toolname' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'use_tenancy' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'default_geo_miss_latitude' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('default_geo_miss_latitude', 'global', '41.881944');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'default_geo_miss_latitude' and config_file = 'global' and value = '41.881944') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'default_geo_miss_longitude' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('default_geo_miss_longitude', 'global', '-87.627778');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'default_geo_miss_longitude' and config_file = 'global' and value = '-87.627778') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+END
+$do$;
 
 -- profiles
 ---------------------------------
@@ -110,6 +124,8 @@ insert into capability (name, description) values ('ds-security-keys-write', 'Cr
 insert into capability (name, description) values ('ds-stats-read', 'View delivery-service statistics') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-steering-read', 'View delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-steering-write', 'Create, edit or delete delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('ds-steering-target-read', 'View delivery-service steering targets') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('ds-steering-target-write', 'Create, edit or delete delivery-service steering targets') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-read', 'View federation routing') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-write', 'Create, edit or delete federation routing') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('iso-generate', 'Generate ISOs') ON CONFLICT (name) DO NOTHING;
@@ -332,7 +348,8 @@ insert into api_capability (http_method, route, capability) values ('DELETE', '/
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/users', 'user-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 289
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/users/*', 'user-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 290
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/users/*', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
-
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/users', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/users/register', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
 
 -- types
 -- delivery service types
@@ -413,7 +430,7 @@ values (4, 'CHECK_DSCP', 'DSCP', 'ad', '1.0.0', '-', 'ToDSCPCheck.pl', '1', '{ "
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
 values (5, 'OPEN', '', 'ae', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT')) ON CONFLICT DO NOTHING;
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
-values (6, 'OPEN', '', 'af', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT'));
+values (6, 'OPEN', '', 'af', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT')) ON CONFLICT DO NOTHING;
 --
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
 values (7, 'IPV6_PING', '10G6', 'ag', '1.0.0', '-', 'ToPingCheck.pl', '1', '{ "select": "ip6_address", "cron": "0 * * * *" }',

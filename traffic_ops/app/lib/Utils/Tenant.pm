@@ -437,7 +437,6 @@ sub _is_resource_accessable_to_tenant {
         return 1;
     }
 
-    my $user_tenant = $self->current_user_tenant();
     if ( !defined($user_tenant) ) {
 
         #the user has no tenancy, - cannot approach items with tenancy

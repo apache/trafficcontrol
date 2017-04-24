@@ -24,11 +24,11 @@ var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $
 	$scope.regexes = regexes;
 
 	$scope.editRegex = function(dsId, regexId) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/' + regexId);
+		locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes/' + regexId);
 	};
 
 	$scope.createRegex = function(dsId) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes/new');
+		locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes/new');
 	};
 
 	$scope.refresh = function() {

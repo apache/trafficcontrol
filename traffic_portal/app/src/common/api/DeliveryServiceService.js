@@ -32,7 +32,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             .then(
                 function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
-                    locationUtils.navigateToPath('/configure/delivery-services/' + response.id + '?type=' + response.type);
+                    locationUtils.navigateToPath('/delivery-services/' + response.id + '?type=' + response.type);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -83,7 +83,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Steering target updated' } ], false);
-                    locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets');
+                    locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -98,7 +98,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Steering target created' } ], true);
-                    locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets');
+                    locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -111,7 +111,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Steering target deleted' } ], true);
-                    locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets');
+                    locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, true);

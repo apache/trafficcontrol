@@ -42,7 +42,7 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 	};
 
 	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/configure/servers/' + id);
+		locationUtils.navigateToPath('/servers/' + id);
 	};
 
 	$scope.refresh = function() {
