@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, profileParameters, $scope, $state, locationUtils) {
+var TableProfileParametersController = function(profile, profileParameters, $scope, $state, locationUtils, profileParameterService) {
 
 	$scope.profile = profile;
 
@@ -27,8 +27,13 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 		alert('not hooked up yet: add parameter to profile');
 	};
 
-	$scope.removeParameter = function() {
-		alert('not hooked up yet: remove Parameter from profile');
+	$scope.removeParameter = function(paramId) {
+		profileParameterService.unlinkProfileParameter(profile.id, paramId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
@@ -47,5 +52,5 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', '$state', 'locationUtils'];
+TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', '$state', 'locationUtils', 'profileParameterService'];
 module.exports = TableProfileParametersController;
