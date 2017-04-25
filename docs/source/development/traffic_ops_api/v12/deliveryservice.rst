@@ -910,7 +910,7 @@ Server
     }
 
 
-**DELETE /api/1.2/deliveryservices/:dsId/servers/:id**
+**DELETE /api/1.2/deliveryservice_server/:dsId/:serverId**
 
   Removes a server (cache) from a delivery service.
 
@@ -925,7 +925,7 @@ Server
   +=================+==========+===================================================+
   | ``dsId``        | yes      | Delivery service ID.                              |
   +-----------------+----------+---------------------------------------------------+
-  | ``id``          | yes      | Server (cache) ID.                                |
+  | ``serverId``    | yes      | Server (cache) ID.                                |
   +-----------------+----------+---------------------------------------------------+
 
    **Response Example** ::
@@ -934,7 +934,7 @@ Server
            "alerts": [
                      {
                              "level": "success",
-                             "text": "Server removed from delivery service."
+                             "text": "Server unlinked from delivery service."
                      }
              ],
     }
