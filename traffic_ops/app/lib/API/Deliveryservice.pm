@@ -903,10 +903,10 @@ sub state {
 						my $type     = shift(@k);
 						my $location = undef;
 
-						if ( $type eq "DNS" ) {
+						if ( $type =~ /^DNS/ ) {
 							$location = $c->{bypassDestination}->{$type}->{ip};
 						}
-						elsif ( $type eq "HTTP" ) {
+						elsif ( $type =~ /^HTTP/ ) {
 							my $port = ( exists( $c->{bypassDestination}->{$type}->{port} ) ) ? ":" . $c->{bypassDestination}->{$type}->{port} : "";
 							$location = sprintf( "http://%s%s", $c->{bypassDestination}->{$type}->{fqdn}, $port );
 						}
