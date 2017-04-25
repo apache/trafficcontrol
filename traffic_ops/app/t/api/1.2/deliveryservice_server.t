@@ -60,8 +60,8 @@ ok $t->get_ok('/api/1.2/deliveryserviceserver')
      ->json_is( "/response/2/server" => 600 )
             , 'Does the delivery services servers details return?';
 
-ok $t->delete_ok('/api/1.2/deliveryservices/100/servers/100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-ok $t->delete_ok('/api/1.2/deliveryservices/100/servers/100')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->delete_ok('/api/1.2/deliveryservice_server/100/100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->delete_ok('/api/1.2/deliveryservice_server/100/100')->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

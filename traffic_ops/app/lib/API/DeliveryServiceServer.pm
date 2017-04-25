@@ -179,7 +179,7 @@ sub assign_ds_to_cachegroup {
 sub remove_server_from_ds {
 	my $self     	= shift;
 	my $ds_id  	 	= $self->param('dsId');
-	my $server_id	= $self->param('id');
+	my $server_id	= $self->param('serverId');
 
 	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
 		$self->forbidden("Forbidden. Delivery service not assigned to user.");
@@ -193,11 +193,11 @@ sub remove_server_from_ds {
 	my $row = $ds_server->next;
 	my $rs = $ds_server->delete();
 	if ($rs) {
-		&log( $self, "Server [ " . $row->server->id . " | " . $row->server->host_name . " ] was removed from deliveryservice [ " . $row->deliveryservice->id . " | " . $row->deliveryservice->xml_id . " ].", "APICHANGE" );
-		return $self->success_message("Server removed from delivery service.");
+		&log( $self, "Server [ " . $row->server->id . " | " . $row->server->host_name . " ] unlinked from deliveryservice [ " . $row->deliveryservice->id . " | " . $row->deliveryservice->xml_id . " ].", "APICHANGE" );
+		return $self->success_message("Server unlinked from delivery service.");
 	}
 
-	return $self->alert( "Failed to remove server from delivery service." );
+	return $self->alert( "Failed to unlink server from delivery service." );
 }
 
 1;
