@@ -826,7 +826,7 @@ sub update {
 		);
 
 		my $typename = $self->typename();
-		if ( $typename eq "DNS" ) {
+		if ( $typename =~ /^DNS/ ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
