@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceService = function(Restangular, locationUtils, messageModel) {
+var DeliveryServiceService = function(Restangular, locationUtils, httpService, messageModel, ENV) {
 
     this.getDeliveryServices = function(queryParams) {
         return Restangular.all('deliveryservices').getList(queryParams);
@@ -73,10 +73,10 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
     };
 
     this.deleteDeliveryServiceServer = function(dsId, serverId) {
-        return Restangular.one('deliveryservices', dsId).one('servers', serverId).remove()
+        return httpService.delete(ENV.api['root'] + 'deliveryservice_server/' + dsId + '/' + serverId)
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Server removed' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service and server were unlinked.' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, true);
@@ -86,5 +86,5 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
 
 };
 
-DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'httpService', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceService;

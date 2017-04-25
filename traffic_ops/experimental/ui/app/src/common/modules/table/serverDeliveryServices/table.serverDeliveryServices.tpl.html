@@ -33,7 +33,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li><a ng-click="cloneDsAssignments()">Clone Assignments</a></li>
+                    <li><a ng-click="cloneDsAssignments()">Clone Delivery Service Assignments</a></li>
                 </ul>
             </div>
         </div>
@@ -77,7 +77,7 @@ under the License.
                 <td>{{deliveryService.protocol}}</td>
                 <td>{{deliveryService.ipv6RoutingEnabled}}</td>
                 <td>{{deliveryService.rangeRequestHandling}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove Delivery Service" ng-click="removeDeliveryService()"><i class="fa fa-trash-o"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Remove Delivery Service from Server" ng-click="removeDeliveryService(deliveryService.id, server.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>
