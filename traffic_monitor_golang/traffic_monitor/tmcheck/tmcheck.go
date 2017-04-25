@@ -61,6 +61,7 @@ func GetCDN(uri string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("reading reply from %v: %v\n", uri, err)
 	}
+	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("reading reply from %v: %v\n", uri, err)
@@ -79,6 +80,7 @@ func GetCRStates(uri string) (*peer.Crstates, error) {
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
 	}
+	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
@@ -97,6 +99,7 @@ func GetDSStats(uri string) (*dsdata.StatsOld, error) {
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
 	}
+	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
@@ -115,6 +118,7 @@ func GetStats(uri string) (*datareq.Stats, error) {
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
 	}
+	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
