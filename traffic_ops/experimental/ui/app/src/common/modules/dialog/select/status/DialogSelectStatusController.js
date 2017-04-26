@@ -17,24 +17,35 @@
  * under the License.
  */
 
-var DialogSelectController = function(params, collection, $scope, $uibModalInstance) {
+var DialogSelectStatusController = function(statuses, $scope, $uibModalInstance) {
 
-	$scope.params = params;
+	$scope.statuses = statuses;
 
-	$scope.collection = collection;
+	$scope.selectedStatusId = null;
 
-	$scope.selectedItemId = null;
+	$scope.status = {
+		id: null,
+		name: null,
+		offlineReason: null
+	};
 
 	$scope.select = function() {
-		var selectedItem = _.find(collection, function(item){ return parseInt(item.id) == parseInt($scope.selectedItemId) });
-		$uibModalInstance.close(selectedItem);
+		var selectedStatus = _.find(statuses, function(status){ return parseInt(status.id) == parseInt($scope.selectedStatusId) });
+		$scope.status.id = selectedStatus.id;
+		$scope.status.name = selectedStatus.name;
+		$uibModalInstance.close($scope.status);
 	};
 
 	$scope.cancel = function () {
 		$uibModalInstance.dismiss('cancel');
 	};
 
+	$scope.offline = function () {
+		var selectedStatus = _.find(statuses, function(status){ return parseInt(status.id) == parseInt($scope.selectedStatusId) });
+		return selectedStatus && (selectedStatus.name == "ADMIN_DOWN" || selectedStatus.name == "OFFLINE");
+	};
+
 };
 
-DialogSelectController.$inject = ['params', 'collection', '$scope', '$uibModalInstance'];
-module.exports = DialogSelectController;
+DialogSelectStatusController.$inject = ['statuses', '$scope', '$uibModalInstance'];
+module.exports = DialogSelectStatusController;

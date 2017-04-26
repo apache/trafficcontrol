@@ -17,24 +17,5 @@
  * under the License.
  */
 
-var DialogSelectController = function(params, collection, $scope, $uibModalInstance) {
-
-	$scope.params = params;
-
-	$scope.collection = collection;
-
-	$scope.selectedItemId = null;
-
-	$scope.select = function() {
-		var selectedItem = _.find(collection, function(item){ return parseInt(item.id) == parseInt($scope.selectedItemId) });
-		$uibModalInstance.close(selectedItem);
-	};
-
-	$scope.cancel = function () {
-		$uibModalInstance.dismiss('cancel');
-	};
-
-};
-
-DialogSelectController.$inject = ['params', 'collection', '$scope', '$uibModalInstance'];
-module.exports = DialogSelectController;
+module.exports = angular.module('trafficOps.dialog.select.status', [])
+	.controller('DialogSelectStatusController', require('./DialogSelectStatusController'));
