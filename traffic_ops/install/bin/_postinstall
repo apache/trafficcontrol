@@ -405,11 +405,11 @@ sub getDefaults {
         $dbConfFile => [
             {
                 "Database server root (admin) user" => "postgres",
-                "config_var"                        => "dbAdminUser"
+                "config_var"                        => "pgUser"
             },
             {
                 "Password for database server admin" => "",
-                "config_var"                         => "dbAdminPw",
+                "config_var"                         => "pgPassword",
                 "hidden"                             => "true"
             },
             {
@@ -542,16 +542,21 @@ sub setupDatabase {
     my $setupMaxmind     = shift;
     my $databaseConfFile = shift;
 
+    my $result;
+
     my $dbconf = InstallUtils::readJson($databaseConfFile);
 
     # Check if the Postgres db is used and set the admin database to be "postgres"
     my $dbName = $dbconf->{type};
     if ( $dbconf->{type} eq "Pg" ) {
-        $dbName = "postgres";
+        $dbName = "traffic_ops";
     }
 
+    $ENV{PGUSER}     = $todbconf->{"pgUser"};
+    $ENV{PGPASSWORD} = $todbconf->{"pgPassword"};
+
     my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbName, $dbconf->{hostname}, $dbconf->{port} );
-    my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
+    my $dbh = DBI->connect( $dsn, $todbconf->{"pgUser"}, $todbconf->{"pgPassword"} );
     if ($dbh) {
         InstallUtils::logger( "Database connection succeeded", "info" );
 
@@ -564,21 +569,9 @@ sub setupDatabase {
     }
 
     InstallUtils::logger( "Setting up database", "info" );
-    $ENV{PGUSER}     = $todbconf->{"dbAdminUser"};
-    $ENV{PGPASSWORD} = $todbconf->{"dbAdminPw"};
-    chdir("/opt/traffic_ops/app");
-    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "reset" );
-
-    if ( $result == 0 ) {
-	    $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "seed" );
-    }
-
-    if ( $result != 0 ) {
-        errorOut("Database initialization failed");
-    }
-    else {
-        InstallUtils::logger( "Database initialization succeeded", "info" );
-    }
+    invoke_db_admin_pl("load_schema");
+    invoke_db_admin_pl("migrate");
+    invoke_db_admin_pl("seed");
 
     if ( $setupMaxmind =~ /^y(?:es)?/ ) {
         InstallUtils::logger( "Downloading Maxmind data", "info" );
@@ -594,7 +587,7 @@ sub setupDatabase {
 
     chdir("/opt/traffic_ops/app/public/routing");
     InstallUtils::logger( "Copying coverage zone file to public dir", "info" );
-    $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
+    $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/routing/coverage-zone.json .");
     if ( $result != 0 ) {
         InstallUtils::logger( "Failed to copy coverage zone file", "error" );
     }
@@ -620,6 +613,22 @@ sub setupDatabase {
     else {
         InstallUtils::logger( "Not generating openssl certification", "info" );
     }
+}
+
+sub invoke_db_admin_pl {
+    my $action    = shift;
+
+    chdir("/opt/traffic_ops/app");
+    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", $action );
+
+    if ( $result != 0 ) {
+        errorOut("Database $action failed");
+    }
+    else {
+        InstallUtils::logger( "Database $action succeeded", "info" );
+    }
+
+	return $result;
 }
 
 # -cfile     - Input File:       The input config file used to ask and answer questions
@@ -758,7 +767,7 @@ sub main {
         ## Create the tm_user
         my $dbconf      = InstallUtils::readJson($databaseConfFile);
         my $dsn         = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbconf->{dbname}, $dbconf->{hostname}, $dbconf->{port} );
-        my $dbh         = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
+        my $dbh         = DBI->connect( $dsn, $todbconf->{"pgUser"}, $todbconf->{"pgPassword"} );
         my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
         my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
 
