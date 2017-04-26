@@ -41,6 +41,12 @@ sub register {
 				# This is the first child
 				$self->inactivity_timeout(0);
 				POSIX::setsid();
+				open( STDIN, "< /dev/null" )
+					|| confess("Can't read /dev/null: $!");
+				open( STDOUT, "> /dev/null" )
+					|| confess("Can't write to /dev/null: $!");
+				open( STDERR, "> /dev/null" )
+					|| confess("Can't write to /dev/null: $!");
 				# First child forks daemon and exits with a value that signals the parent how the fork went
     			my $pid  = fork();
 
