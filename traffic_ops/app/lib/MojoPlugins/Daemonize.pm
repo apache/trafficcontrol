@@ -75,9 +75,9 @@ sub register {
 				return -1;
 			}
 
-            # Parent: Do not return $pid as this is the pid of the first child, which is not interesting
-            # Return 1 to signal caller that this is the parent
-            return 1;
+			# Parent: Do not return $pid as this is the pid of the first child, which is not interesting
+			# Return 1 to signal caller that this is the parent
+			return 1;
 		}
 	);
 
