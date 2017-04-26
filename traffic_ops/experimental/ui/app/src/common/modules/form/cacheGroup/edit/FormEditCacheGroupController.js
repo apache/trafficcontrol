@@ -92,8 +92,8 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
                 }
             }
         });
-        modalInstance.result.then(function(cdnId) {
-            queueServerUpdates(cacheGroup, cdnId);
+        modalInstance.result.then(function(cdn) {
+            queueServerUpdates(cacheGroup, cdn.id);
         }, function () {
             // do nothing
         });
@@ -117,8 +117,8 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
                 }
             }
         });
-        modalInstance.result.then(function(cdnId) {
-            clearServerUpdates(cacheGroup, cdnId);
+        modalInstance.result.then(function(cdn) {
+            clearServerUpdates(cacheGroup, cdn.id);
         }, function () {
             // do nothing
         });

@@ -24,7 +24,7 @@ under the License.
             <li class="active">{{serverName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-danger" ng-click="offlineServer()">Offline Server &nbsp;&nbsp;<i class="fa fa-warning"></i></button>
+            <button class="btn btn-primary" ng-click="confirmStatusUpdate()">Update Status</button>
             <!--<button class="btn btn-success" ng-click="onlineServer()">Online Server</button>-->
             <button class="btn btn-primary" title="Queue {{server.hostName}} updates" ng-show="!server.updPending" ng-click="queueServerUpdates(server)"><i class="fa fa-flag"></i></button>
             <button class="btn btn-primary" title="Cancel {{server.hostName}} updates" ng-show="server.updPending" ng-click="clearServerUpdates(server)"><i class="fa fa-ban"></i></button>
@@ -44,6 +44,18 @@ under the License.
     <div class="x_content">
         <br>
         <form name="serverForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.status), 'has-feedback': hasError(serverForm.status)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Status *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" ng-disabled="true"></select>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(serverForm.updPending), 'has-feedback': hasError(serverForm.updPending)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Update Pending *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="updPending" name="updPending" type="text" class="form-control" ng-model="server.updPending" ng-disabled="true">
+                </div>
+            </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.hostName), 'has-feedback': hasError(serverForm.hostName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Hostname *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
@@ -303,15 +315,6 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm.status), 'has-feedback': hasError(serverForm.status)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Status *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" required>
-                        <option value="">Select...</option>
-                    </select>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.status, 'required')">Required</small>
-                </div>
-            </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.profile), 'has-feedback': hasError(serverForm.profile)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
@@ -321,14 +324,6 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(serverForm.profile, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm.updPending), 'has-feedback': hasError(serverForm.updPending)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Update Pending *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="updPending" name="updPending" class="form-control" ng-model="server.updPending" ng-options="x.value as x.label for x in falseTrue" required></select>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.updPending, 'required')">Required</small>
-                </div>
-            </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(server)">Delete</button>
                 <button type="button" class="btn btn-success" ng-disabled="serverForm.$pristine || serverForm.$invalid" ng-click="save(server)">{{settings.saveLabel}}</button>
