@@ -24,7 +24,7 @@ sub register {
 
 	$app->renderer->add_helper(
 		# Note: Calling fork_and_daemonize() returns twice: Once for the parent and the other for the daemon (=child).
-		# Caller should check return value: 
+		# Caller should check return value:
 		#  <0 means an error occured
 		#  0 means you are the daemon (=child)
 		#  1 means you are the parent (= original process)
@@ -41,12 +41,6 @@ sub register {
 				# This is the first child
 				$self->inactivity_timeout(0);
 				POSIX::setsid();
-				open( STDIN, "< /dev/null" )
-					|| confess("Can't read /dev/null: $!");
-				open( STDOUT, "> /dev/null" )
-					|| confess("Can't write to /dev/null: $!");
-				open( STDERR, "> /dev/null" )
-					|| confess("Can't write to /dev/null: $!");
 				# First child forks daemon and exits with a value that signals the parent how the fork went
     			my $pid  = fork();
 
@@ -56,7 +50,7 @@ sub register {
 					exit(-1);
 				}
 				if ($pid > 0) {
-					# First child: Fork was OK, exit with 0 
+					# First child: Fork was OK, exit with 0
 					exit(0);
 				}
 				# This is the daemon, return 0 to caller
@@ -75,8 +69,9 @@ sub register {
 				return -1;
 			}
 
-            # Parent: Do not return $pid as this is the pid of the first child, which is not interesting
-			return 0;
+			# Parent: Do not return $pid as this is the pid of the first child, which is not interesting
+			# Return 1 to signal caller that this is the parent
+			return 1;
 		}
 	);
 
