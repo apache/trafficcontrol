@@ -585,9 +585,8 @@ sub setupDatabase {
         InstallUtils::logger("Not downloading Maxmind data");
     }
 
-    chdir("/opt/traffic_ops/app/public");
     InstallUtils::logger( "Copying coverage zone file to public dir", "info" );
-    $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/routing/coverage-zone.json .");
+    $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/routing/coverage-zone.json /opt/traffic_ops/app/public");
     if ( $result != 0 ) {
         InstallUtils::logger( "Failed to copy coverage zone file", "error" );
     }
@@ -771,7 +770,7 @@ sub main {
         my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
         my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
 
-        $dbh->do("insert into tm_user (username, role, local_passwd) values $sub_string");
+        $dbh->do("insert into tm_user (username, role, local_passwd) values $sub_string ON CONFLICT (username) DO NOTHING;");
 
     }
 
