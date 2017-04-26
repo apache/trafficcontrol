@@ -1021,7 +1021,7 @@ sub create {
 				ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 				type                        => $self->paramAsScalar('ds.type'),
 				cdn_id                      => $cdn_id,
-				profile                     => $self->paramAsScalar('ds.profile'),
+				profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
 				global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
 				global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
 				miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
