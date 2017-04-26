@@ -65,8 +65,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
                 }
             }
         });
-        modalInstance.result.then(function(cdnId) {
-            queueServerUpdates(cdnId);
+        modalInstance.result.then(function(cdn) {
+            queueServerUpdates(cdn.id);
         }, function () {
             // do nothing
         });
@@ -90,8 +90,8 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
                 }
             }
         });
-        modalInstance.result.then(function(cdnId) {
-            clearServerUpdates(cdnId);
+        modalInstance.result.then(function(cdn) {
+            clearServerUpdates(cdn.id);
         }, function () {
             // do nothing
         });
