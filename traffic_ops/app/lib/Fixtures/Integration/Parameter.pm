@@ -73,7 +73,7 @@ use namespace::autoclean;
 			name => 'api.port',
 			config_file => 'server.xml',
 			last_updated => '2015-12-10 15:43:48',
-			value => '8080',
+			value => '8081',
 		},
 	},
 	## id => 6
@@ -1983,7 +1983,7 @@ use namespace::autoclean;
 		new => 'Parameter',
 		using => {
 			name => 'CONFIG proxy.config.log.extended2_log_enabled',
-			value => 'INT 0',
+			value => 'INT 1',
 			config_file => 'records.config',
 			last_updated => '2015-12-10 15:43:46',
 		},
@@ -2694,7 +2694,7 @@ use namespace::autoclean;
 			name => 'CONFIG proxy.config.stack_dump_enabled',
 			config_file => 'records.config',
 			last_updated => '2015-12-10 15:43:47',
-			value => 'INT 1',
+			value => 'INT 0',
 		},
 	},
 	## id => 268
@@ -3283,7 +3283,7 @@ use namespace::autoclean;
 		using => {
 			name => 'health.threshold.availableBandwidthInKbps',
 			last_updated => '2015-12-10 15:43:47',
-			value => '1062500',
+			value => '1062501',
 			config_file => 'rascal.properties',
 		},
 	},
@@ -3293,7 +3293,7 @@ use namespace::autoclean;
 		using => {
 			name => 'health.threshold.availableBandwidthInKbps',
 			last_updated => '2015-12-10 15:43:47',
-			value => '1062500',
+			value => '1062502',
 			config_file => 'rascal.properties',
 		},
 	},
@@ -3883,7 +3883,7 @@ use namespace::autoclean;
 		using => {
 			name => 'LogFormat.Name',
 			last_updated => '2015-12-10 15:43:48',
-			value => 'custom_ats_2',
+			value => 'custom_ats_3',
 			config_file => 'logs_xml.config',
 		},
 	},
@@ -3904,7 +3904,7 @@ use namespace::autoclean;
 			name => 'LogObject.Filename',
 			config_file => 'logs_xml.config',
 			last_updated => '2015-12-10 15:43:46',
-			value => 'custom_ats_2',
+			value => 'custom_ats_3',
 		},
 	},
 	## id => 389
@@ -3922,7 +3922,7 @@ use namespace::autoclean;
 		new => 'Parameter',
 		using => {
 			name => 'LogObject.Format',
-			value => 'custom_ats_2',
+			value => 'custom_ats_3',
 			config_file => 'logs_xml.config',
 			last_updated => '2015-12-10 15:43:48',
 		},
@@ -3982,7 +3982,7 @@ use namespace::autoclean;
 		new => 'Parameter',
 		using => {
 			name => 'maxRevalDurationDays',
-			value => '90',
+			value => '60',
 			config_file => 'regex_revalidate.config',
 			last_updated => '2015-12-10 15:43:47',
 		},
@@ -4154,7 +4154,7 @@ use namespace::autoclean;
 			name => 'remap_stats.so',
 			config_file => 'plugin.config',
 			last_updated => '2015-12-10 15:43:46',
-			value => '',
+			value => 'unknown',
 		},
 	},
 	## id => 414
@@ -4253,7 +4253,7 @@ use namespace::autoclean;
 		using => {
 			name => 'tld.ttls.NS',
 			last_updated => '2015-12-10 15:43:46',
-			value => '3600',
+			value => '7200',
 			config_file => 'CRConfig.json',
 		},
 	},
@@ -4264,7 +4264,7 @@ use namespace::autoclean;
 			name => 'tld.ttls.SOA',
 			config_file => 'CRConfig.json',
 			last_updated => '2015-12-10 15:43:48',
-			value => '86400',
+			value => '172800',
 		},
 	},
 	## id => 426
@@ -4392,7 +4392,7 @@ use namespace::autoclean;
 		new => 'Parameter',
 		using => {
 			name => 'trafficserver',
-			value => '5.3.2-761.el6.x86_64',
+			value => '6.2.1-45.el7.x86_64',
 			config_file => 'package',
 			last_updated => '2015-12-10 15:43:46',
 		},
@@ -4404,7 +4404,7 @@ use namespace::autoclean;
 			name => 'trafficserver',
 			config_file => 'package',
 			last_updated => '2015-12-10 15:43:46',
-			value => '5.3.2-761.el6.x86_64',
+			value => '6.2.1-48.el7.x86_64',
 		},
 	},
 	## id => 440
