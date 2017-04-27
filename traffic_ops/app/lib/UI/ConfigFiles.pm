@@ -854,47 +854,50 @@ sub hosting_dot_config {
 	return $text;
 }
 
-sub storage_dot_config_letter_to_id_mapping($$) {
-	my $letters              = shift;
-	my $hash_key_ids         = shift;
-	my %mapping;
-
-	if (defined($hash_key_ids)) {
-		@tmp_list = split( /,/, $hash_key_ids);
-
+sub storage_dot_config_letter_to_id_mapping($$@) {
+	my $letters      = shift;        
+	my $hash_key_ids = shift;        
+	my @postfix      = @_;
+	my %mapping;                                            
+                                                            
+	if (defined($hash_key_ids)) {                           
+		my @tmp_list = split( /,/, $hash_key_ids);          
+                                                            
 		# find the minimum of the two list sizes
-		my $limit = (scalar(@postfix) < scalar(@tmp_list)) ? scalar(@postfix) : scalar(@tmp_list);
-
-		for (my $i = 0; $i < $limit; ++$i) {
-			$mapping{$postfix[$i]} = $tmp_list[$i];
+		my $limit = (scalar(@postfix) < scalar(@tmp_list)) ? scalar(@postfix) : scalar(@tmp_list);    
+		for (my $i = 0; $i < $limit; ++$i) {                
+			if ($tmp_list[$i] ne "") {
+				$mapping{$postfix[$i]} = $tmp_list[$i];
+			}
 		}
 	}
 
 	return %mapping;
 }
 
-sub storage_dot_config_additional_text {
+sub storage_dot_config_additional_text($$$$) {
 	my $prefix  = shift;
-	my $letters = shift;
+	my $letters = shift;     
 	my $hash_key_ids = shift;
 	my $volume  = shift;
 
-	my $text = "";
-	my @postfix = split( /,/, $letters );
+	my $text = "";                       
+	my @postfix = split( /,/, $letters );                    
 	my %id_to_hash = storage_dot_config_letter_to_id_mapping(
-		$letters, $hash_key_ids
+		$letters, $hash_key_ids, @postfix
 	);
 
 	foreach my $l ( sort @postfix ) {
-		$text .= $prefix . $l;
-		$text .= " volume=" . $volume;
-		if (defined($id_to_hash{$l})) {
+		$text .= $prefix . $l;        
+		$text .= " volume=" . $volume; 
+		if (defined($id_to_hash{$l})) {       
 			$text .= " id=" . $id_to_hash{$l};
-		}
+		}             
 		$text .= "\n";
-	}
+	}            
 	return $text;
 }
+
 
 sub storage_dot_config {
 	my $self = shift;
