@@ -87,7 +87,6 @@ body .container.body .main-content {
 
 body.nav-md .container.body .main-content {
   padding: 10px 20px 0;
-  margin-left: 230px;
 }
 
 body.nav-sm .container.body .main-content {
@@ -140,3 +139,10 @@ body.nav-sm .container.body .main-content {
   }
 
 }
+
+@media(min-width:992px) {
+  body.nav-md .container.body .main-content {
+    margin-left: 230px;
+  }
+}
+
