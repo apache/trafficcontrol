@@ -545,16 +545,31 @@ sub setupDatabaseData {
 
     my $result;
 
+    my $q = <<"QUERY";
+    select exists(select 1 from pg_tables where schemaname = 'public' and tablename = 'tm_user')
+QUERY
+
+    my $stmt = $dbh->prepare($q);
+    $stmt->execute(); 
+
+    InstallUtils::logger( "Setting up the database data", "info" );
+    my $tables_found;
+    while ( my $row = $stmt->fetch() ) {
+       $tables_found = $row->[0];
+    }
+    if ($tables_found) {
+       InstallUtils::logger( "Found existing tables skipping table creation", "info" );
+    } else  {
+       invoke_db_admin_pl("load_schema");
+    }
+    invoke_db_admin_pl("migrate");
+    invoke_db_admin_pl("seed");
+
     # Skip the insert if the admin 'username' is already there.
     my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
     my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
 
     $dbh->do("insert into tm_user (username, role, local_passwd) values $sub_string ON CONFLICT (username) DO NOTHING;");
-
-    InstallUtils::logger( "Setting up the database data", "info" );
-    invoke_db_admin_pl("load_schema");
-    invoke_db_admin_pl("migrate");
-    invoke_db_admin_pl("seed");
 
     insert_parameters($dbh, $paramconf);
     insert_profiles($dbh, $paramconf);
@@ -575,7 +590,7 @@ sub invoke_db_admin_pl {
         InstallUtils::logger( "Database $action succeeded", "info" );
     }
 
-	return $result;
+    return $result;
 }
 
 sub setupMaxMind {
