@@ -72,10 +72,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	baseHandler := http.HandlerFunc(handle)
-	remapHandler := grove.NewRemapHandler(baseHandler, remapper)
-	cacheHandler := grove.NewCacheHandler(remapHandler, cache)
-	handler := cacheHandler
+	handler := grove.NewCacheHandler(cache, remapper)
 
 	listen := fmt.Sprintf(":%d", cfg.Port)
 	fmt.Printf("proxy listening on http://%s\n", listen)

@@ -8,45 +8,51 @@ import (
 	"strings"
 )
 
-type remapHandler struct {
-	parent   http.Handler
-	remapper HTTPRequestRemapper
-}
+// type remapHandler struct {
+// 	parent   http.Handler
+// 	remapper HTTPRequestRemapper
+// }
 
-// NewHandler returns an http.Handler objectn, which may be pipelined with other http.Handlers via `http.ListenAndServe`. If you prefer pipelining functions, use `GetHandlerFunc`.
-func NewRemapHandler(parent http.Handler, remapper HTTPRequestRemapper) http.Handler {
-	return &remapHandler{
-		parent:   parent,
-		remapper: remapper,
-	}
-}
+// // NewHandler returns an http.Handler objectn, which may be pipelined with other http.Handlers via `http.ListenAndServe`. If you prefer pipelining functions, use `GetHandlerFunc`.
+// func NewRemapHandler(parent http.Handler, remapper HTTPRequestRemapper) http.Handler {
+// 	return &remapHandler{
+// 		parent:   parent,
+// 		remapper: remapper,
+// 	}
+// }
 
 // NewHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use Java. I mean, `New`.
-func NewRemapHandlerFunc(parent http.HandlerFunc, remapper HTTPRequestRemapper) http.HandlerFunc {
-	handler := NewRemapHandler(parent, remapper)
-	return func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
-	}
-}
+// func NewRemapHandlerFunc(parent http.HandlerFunc, remapper HTTPRequestRemapper)  http.HandlerFunc {
+// 	handler := NewRemapHandler(parent, remapper)
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		handler.ServeHTTP(w, r)
+// 	}
+// }
 
-func (h *remapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r, ok := h.remapper.Remap(r)
-	// TODO configurable remap failure response
-	if !ok {
-		code := http.StatusNotFound
-		w.WriteHeader(code)
-		w.Write([]byte(http.StatusText(code)))
-		return
-	}
-	h.parent.ServeHTTP(w, r)
-}
+// func (h *remapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// 	r, _, ok := h.remapper.Remap(r)
+// 	// TODO configurable remap failure response
+// 	if !ok {
+// 		code := http.StatusNotFound
+// 		w.WriteHeader(code)
+// 		w.Write([]byte(http.StatusText(code)))
+// 		return
+// 	}
+// 	h.parent.ServeHTTP(w, r)
+// }
 
 type HTTPRequestRemapper interface {
-	Remap(*http.Request) (*http.Request, bool)
+	// Remap returns the remapped request, the matched rule name, and whether a match was found.
+	Remap(*http.Request) (*http.Request, string, bool)
+	Rules() []string
 }
 
 type simpleHttpRequestRemapper struct {
 	remapper Remapper
+}
+
+func (hr simpleHttpRequestRemapper) Rules() []string {
+	return hr.remapper.Rules()
 }
 
 func getScheme(r *http.Request) string {
@@ -56,26 +62,26 @@ func getScheme(r *http.Request) string {
 	return "http"
 }
 
-func (hr simpleHttpRequestRemapper) Remap(r *http.Request) (*http.Request, bool) {
+func (hr simpleHttpRequestRemapper) Remap(r *http.Request) (*http.Request, string, bool) {
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
 	oldUri := fmt.Sprintf("%s://%s%s", getScheme(r), r.Host, r.RequestURI)
 	fmt.Printf("DEBUG Remap oldUri: '%v'\n", oldUri)
 	fmt.Printf("DEBUG request: '%+v'\n", r)
-	newUri, ok := hr.remapper.Remap(oldUri)
+	newUri, ruleName, ok := hr.remapper.Remap(oldUri)
 	if !ok {
 		fmt.Printf("DEBUG Remap oldUri: '%v' NOT FOUND\n", oldUri)
-		return r, false
+		return r, "", false
 	}
 	fmt.Printf("DEBUG Remap newURI: '%v'\n", newUri)
 
 	newReq, err := http.NewRequest(r.Method, newUri, nil) // TODO modify given req in-place?
 	if err != nil {
 		fmt.Printf("Error Remap NewRequest: %v\n", err)
-		return r, false
+		return r, "", false
 	}
 	copyHeader(r.Header, &newReq.Header)
-	return newReq, true
+	return newReq, ruleName, true
 }
 
 func copyHeader(source http.Header, dest *http.Header) {
@@ -96,8 +102,10 @@ func NewHTTPRequestRemapper(remap map[string]string) HTTPRequestRemapper {
 
 // Remapper provides a function which takes strings and maps them to other strings. This is designed for URL prefix remapping, for a reverse proxy.
 type Remapper interface {
-	// Remap returns the given string remapped, and whether a remap rule was found
-	Remap(string) (string, bool)
+	// Remap returns the given string remapped, the unique name of the rule found, and whether a remap rule was found
+	Remap(string) (string, string, bool)
+	// Rules returns the unique names of every remap rule.
+	Rules() []string
 }
 
 // TODO change to use a prefix tree, for speed
@@ -105,13 +113,22 @@ type literalPrefixRemapper struct {
 	remap map[string]string
 }
 
-func (r literalPrefixRemapper) Remap(s string) (string, bool) {
+// Remap returns the remapped string, the remap rule name, and whether a remap was found
+func (r literalPrefixRemapper) Remap(s string) (string, string, bool) {
 	for from, to := range r.remap {
 		if strings.HasPrefix(s, from) {
-			return to + s[len(from):], true
+			return to + s[len(from):], to, true
 		}
 	}
-	return s, false
+	return s, "", false
+}
+
+func (r literalPrefixRemapper) Rules() []string {
+	rules := make([]string, len(r.remap))
+	for _, rule := range r.remap {
+		rules = append(rules, rule)
+	}
+	return rules
 }
 
 func NewLiteralPrefixRemapper(remap map[string]string) Remapper {
