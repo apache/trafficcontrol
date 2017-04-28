@@ -104,8 +104,10 @@ func CodeUnderstood(code int) bool {
 
 // TODO add options to ignore/violate request cache-control (to protect origins)
 func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header) bool {
+	fmt.Printf("CanCache start\n")
 	reqCacheControl := ParseCacheControl(reqHeaders)
 	respCacheControl := ParseCacheControl(respHeaders)
+	fmt.Printf("DEBUG CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
 	return CanStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl) && CanStoreAuthenticated(reqCacheControl, respCacheControl)
 }
 
@@ -124,6 +126,7 @@ func CanStoreAuthenticated(reqCacheControl, respCacheControl CacheControl) bool 
 	if _, ok := respCacheControl["s-maxage"]; ok {
 		return true
 	}
+	fmt.Printf("CanStoreAuthenticated false: has authorization, and no must-revalidate/public/s-maxage\n")
 	return false
 }
 
@@ -135,20 +138,26 @@ func CanStoreResponse(
 	respCacheControl CacheControl,
 ) bool {
 	if _, ok := reqCacheControl["no-store"]; ok {
+		fmt.Printf("CanStoreResponse false: request has no-store\n")
 		return false
 	}
 	if _, ok := respCacheControl["no-store"]; ok {
+		fmt.Printf("CanStoreResponse false: response has no-store\n")
 		return false
 	}
 	if _, ok := respCacheControl["private"]; ok {
+		fmt.Printf("CanStoreResponse false: has private\n")
 		return false
 	}
 	if _, ok := respCacheControl["authorization"]; ok {
+		fmt.Printf("CanStoreResponse false: has authorization\n")
 		return false
 	}
 	if !CacheControlAllows(respCode, respHeaders, respCacheControl) {
+		fmt.Printf("CanStoreResponse false: CacheControlAllows false\n")
 		return false
 	}
+	fmt.Printf("CanStoreResponse true\n")
 	return true
 }
 
@@ -172,6 +181,7 @@ func CacheControlAllows(
 	if CodeDefaultCacheable(respCode) {
 		return true
 	}
+	fmt.Printf("CacheControlAllows false: no expires, no max-age, no s-max-age, no extension allows, code not default cacheable\n")
 	return false
 }
 
@@ -192,28 +202,28 @@ func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheCon
 	// TODO: remove allowed_stale, check in cache manager after revalidate fails? (since RFC7234§4.2.4 prohibits serving stale response unless disconnected).
 
 	if !SelectedHeadersMatch(reqHeaders, respReqHeaders) {
-		fmt.Printf("CanReuseStored false - selected headers don't match") // debug
+		fmt.Printf("CanReuseStored false - selected headers don't match\n") // debug
 		return ReuseCannot
 	}
 
 	if !Fresh(respHeaders, respCacheControl, respReqTime, respRespTime) && !AllowedStale(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime) {
-		fmt.Printf("CanReuseStored false - not fresh, not allowed stale") // debug
+		fmt.Printf("CanReuseStored false - not fresh, not allowed stale\n") // debug
 		return ReuseCannot
 	}
 
 	if HasPragmaNoCache(reqHeaders) {
-		fmt.Printf("CanReuseStored MustRevalidate - has pragma no-cache")
+		fmt.Printf("CanReuseStored MustRevalidate - has pragma no-cache\n")
 		return ReuseMustRevalidate
 	}
 	if _, ok := reqCacheControl["no-cache"]; ok {
-		fmt.Printf("CanReuseStored false - request has cache-control no-cache")
+		fmt.Printf("CanReuseStored false - request has cache-control no-cache\n")
 		return ReuseCannot
 	}
 	if _, ok := respCacheControl["no-cache"]; ok {
-		fmt.Printf("CanReuseStored false - response has cache-control no-cache")
+		fmt.Printf("CanReuseStored false - response has cache-control no-cache\n")
 		return ReuseCannot
 	}
-	fmt.Printf("CanReuseStored true")
+	fmt.Printf("CanReuseStored true (respCacheControl %+v)\n", respCacheControl)
 	return ReuseCan
 }
 
@@ -388,6 +398,7 @@ func GetCurrentAge(respHeaders http.Header, respReqTime time.Time, respRespTime 
 
 // AllowedStale checks the constraints in RFC7234§4 via RFC7234§4.2.4
 func AllowedStale(respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqTime time.Time, respRespTime time.Time) bool {
+	// TODO return ReuseMustRevalidate where permitted
 	_, reqHasMaxAge := reqCacheControl["max-age"]
 	_, reqHasMaxStale := reqCacheControl["max-stale"]
 	if reqHasMaxAge && !reqHasMaxStale {
