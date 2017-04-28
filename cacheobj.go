@@ -22,8 +22,8 @@ func (c CacheObj) ComputeSize() uint64 {
 	return uint64(len(c.body))
 }
 
-func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, respTime time.Time) CacheObj {
-	obj := CacheObj{
+func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, respTime time.Time) *CacheObj {
+	obj := &CacheObj{
 		body:             bytes,
 		reqHeaders:       http.Header{},
 		respHeaders:      http.Header{},
@@ -33,8 +33,8 @@ func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.
 		respTime:         respTime,
 		size:             0,
 	}
-	copyHeader(reqHeader, &obj.reqHeaders)
-	copyHeader(respHeader, &obj.respHeaders)
+	// copyHeader(reqHeader, &obj.reqHeaders)
+	// copyHeader(respHeader, &obj.respHeaders)
 	obj.size = obj.ComputeSize()
 	return obj
 }
