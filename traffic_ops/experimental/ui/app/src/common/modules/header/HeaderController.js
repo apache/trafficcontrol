@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll, $interval, locationUtils, authService, changeLogService, trafficOpsService, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $anchorScroll, locationUtils, authService, trafficOpsService, changeLogService, changeLogModel, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -28,7 +28,7 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
      */
     $scope.user = angular.copy(userModel.user);
 
-    $scope.newLogCount = 0;
+    $scope.newLogCount = changeLogModel.newLogCount;
 
     $scope.changeLogs = [];
 
@@ -58,27 +58,6 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
-    var changeLogInterval,
-        increment = 1;
-
-    var createChangeLogInterval = function() {
-        killChangeLogInterval();
-        changeLogInterval = $interval(function() { getNewLogCount() }, (increment*60*1000)); // every X minutes
-    };
-
-    var killChangeLogInterval = function() {
-        if (angular.isDefined(changeLogInterval)) {
-            $interval.cancel(changeLogInterval);
-            changeLogInterval = undefined;
-        }
-    };
-
-    var getNewLogCount = function() {
-        changeLogService.getNewLogCount()
-            .then(function(result) {
-                $scope.newLogCount = result.data.response.newLogcount;
-            });
-    };
 
     var scrollToTop = function() {
         $anchorScroll(); // hacky?
@@ -123,18 +102,12 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
         $scope.user = angular.copy(userModel.user);
     });
 
-    $scope.$on('changeLogService::getChangeLogs', function() {
-        $scope.newLogCount = 0;
-    });
-
     var init = function () {
         scrollToTop();
         initToggleMenu();
-        getNewLogCount();
-        createChangeLogInterval();
     };
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$log', '$state', '$anchorScroll', '$interval', 'locationUtils', 'authService', 'changeLogService', 'trafficOpsService', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$anchorScroll', 'locationUtils', 'authService', 'trafficOpsService', 'changeLogService', 'changeLogModel', 'userModel'];
 module.exports = HeaderController;
