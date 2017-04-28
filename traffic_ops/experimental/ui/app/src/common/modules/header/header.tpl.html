@@ -39,7 +39,7 @@ under the License.
                 <div class="btn-group" uib-dropdown is-open="alerts.isopen">
                     <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
                         <i class="fa fa-comment-o"></i>
-                        <span class="badge bg-green">{{newLogCount}}</span>
+                        <span class="badge bg-green">{{newLogCount()}}</span>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
                         <li ng-repeat="changeLog in changeLogs">

@@ -17,13 +17,14 @@
  * under the License.
  */
 
-var AuthService = function($http, $state, $location, $q, $state, httpService, userModel, messageModel, ENV) {
+var AuthService = function($rootScope, $http, $state, $location, $q, $state, httpService, userModel, messageModel, ENV) {
 
     this.login = function(username, password) {
         userModel.resetUser();
         return httpService.post(ENV.api['root'] + 'user/login', { u: username, p: password })
             .then(
                 function(result) {
+                    $rootScope.$broadcast('authService::login');
                     var redirect = decodeURIComponent($location.search().redirect);
                     if (redirect !== 'undefined') {
                         $location.search('redirect', null); // remove the redirect query param
@@ -48,6 +49,7 @@ var AuthService = function($http, $state, $location, $q, $state, httpService, us
         httpService.post(ENV.api['root'] + 'user/logout').
             then(
                 function(result) {
+                    $rootScope.$broadcast('authService::logout');
                     if ($state.current.name == 'trafficOps.public.login') {
                         messageModel.setMessages(result.alerts, false);
                     } else {
@@ -65,5 +67,5 @@ var AuthService = function($http, $state, $location, $q, $state, httpService, us
 
 };
 
-AuthService.$inject = ['$http', '$state', '$location', '$q', '$state', 'httpService', 'userModel', 'messageModel', 'ENV'];
+AuthService.$inject = ['$rootScope', '$http', '$state', '$location', '$q', '$state', 'httpService', 'userModel', 'messageModel', 'ENV'];
 module.exports = AuthService;
