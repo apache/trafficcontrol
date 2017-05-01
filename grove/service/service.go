@@ -18,16 +18,18 @@ type Config struct {
 	// Port is the HTTP port to serve on
 	Port int `json:"port"`
 	// CacheSizeBytes is the size of the memory cache, in bytes.
-	CacheSizeBytes int    `json:"cache_size_bytes"`
-	RemapRulesFile string `json:"remap_rules_file"`
+	CacheSizeBytes         int    `json:"cache_size_bytes"`
+	RemapRulesFile         string `json:"remap_rules_file"`
+	ConcurrentRuleRequests int    `json:"concurrent_rule_requests"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
-	RFCCompliant:   true,
-	Port:           80,
-	CacheSizeBytes: bytesPerGibibyte,
-	RemapRulesFile: "remap.config",
+	RFCCompliant:           true,
+	Port:                   80,
+	CacheSizeBytes:         bytesPerGibibyte,
+	RemapRulesFile:         "remap.config",
+	ConcurrentRuleRequests: 100000,
 }
 
 // Load loads the given config file. If an empty string is passed, the default config is returned.
@@ -72,7 +74,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := grove.NewCacheHandler(cache, remapper)
+	handler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests))
 
 	listen := fmt.Sprintf(":%d", cfg.Port)
 	fmt.Printf("proxy listening on http://%s\n", listen)

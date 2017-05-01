@@ -13,6 +13,9 @@ type throttler struct {
 }
 
 func NewThrottler(max uint64) Throttler {
+	if max < 1 {
+		return NewNoThrottler()
+	}
 	return &throttler{c: make(chan struct{}, max)}
 }
 
@@ -63,4 +66,15 @@ func (t *throttlers) Throttle(k string, f func()) {
 	throttler := t.checkoutThrottler(k)
 	throttler.Throttle(f)
 	t.checkinThrottler(k)
+}
+
+type nothrottler struct{}
+
+// NewNoThrottler creates and returns a Throttler which doesn't actually throttle, but Throttle(f) immediately calls f.
+func NewNoThrottler() Throttler {
+	return &nothrottler{}
+}
+
+func (l *nothrottler) Throttle(f func()) {
+	f()
 }
