@@ -568,7 +568,7 @@ QUERY
 
     # Skip the insert if the admin 'username' is already there.
     my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
-    my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
+    my $sub_string  = sprintf( "('%s', 1, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
 
     $dbh->do("insert into tm_user (username, role, local_passwd) values $sub_string ON CONFLICT (username) DO NOTHING;");
 
