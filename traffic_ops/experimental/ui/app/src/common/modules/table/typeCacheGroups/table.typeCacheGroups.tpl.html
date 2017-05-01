@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/types')">Types</a></li>
-            <li><a ng-click="navigateToPath('/admin/types/' + type.id)">{{type.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/types/' + type.id)">{{::type.name}}</a></li>
             <li class="active">Cache Groups</li>
         </ol>
         <div class="pull-right">
@@ -42,12 +42,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in cacheGroups">
-                <td>{{cacheGroup.name}}</td>
-                <td>{{cacheGroup.shortName}}</td>
-                <td>{{cacheGroup.typeName}}</td>
-                <td>{{cacheGroup.latitude}}</td>
-                <td>{{cacheGroup.longitude}}</td>
+            <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in ::cacheGroups">
+                <td>{{::cacheGroup.name}}</td>
+                <td>{{::cacheGroup.shortName}}</td>
+                <td>{{::cacheGroup.typeName}}</td>
+                <td>{{::cacheGroup.latitude}}</td>
+                <td>{{::cacheGroup.longitude}}</td>
             </tr>
             </tbody>
         </table>

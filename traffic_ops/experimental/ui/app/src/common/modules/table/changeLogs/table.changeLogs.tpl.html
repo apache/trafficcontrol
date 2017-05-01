@@ -40,12 +40,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="changeLog in changeLogs">
-                <td>{{getRelativeTime(changeLog.lastUpdated)}}</td>
-                <td>{{changeLog.lastUpdated}}</td>
-                <td>{{changeLog.user}}</td>
-                <td>{{changeLog.level}}</td>
-                <td>{{changeLog.message}}</td>
+            <tr ng-repeat="changeLog in ::changeLogs">
+                <td>{{::getRelativeTime(changeLog.lastUpdated)}}</td>
+                <td>{{::changeLog.lastUpdated}}</td>
+                <td>{{::changeLog.user}}</td>
+                <td>{{::changeLog.level}}</td>
+                <td>{{::changeLog.message}}</td>
             </tr>
             </tbody>
         </table>

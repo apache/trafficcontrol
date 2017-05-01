@@ -38,9 +38,9 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editRegion(region.id)" ng-repeat="region in regions">
-                <td>{{region.name}}</td>
-                <td>{{region.divisionName}}</td>
+            <tr ng-click="editRegion(region.id)" ng-repeat="region in ::regions">
+                <td>{{::region.name}}</td>
+                <td>{{::region.divisionName}}</td>
             </tr>
             </tbody>
         </table>
