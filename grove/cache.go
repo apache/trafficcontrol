@@ -18,10 +18,10 @@ type Cache interface {
 }
 
 type cacheHandler struct {
-	cache    Cache
-	remapper HTTPRequestRemapper
-	getter   Getter
-	// ruleThrottlers    map[string]Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation.
+	cache          Cache
+	remapper       HTTPRequestRemapper
+	getter         Getter
+	ruleThrottlers map[string]Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -50,29 +50,29 @@ type cacheHandler struct {
 // Then, 2,000 requests come in for the same URL, simultaneously. They are all within the Origin limit, so they are all allowed to proceed to the key limiter. Then, the first request is allowed to make an actual request to the origin, while the other 1,999 wait at the key limiter.
 //
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
-func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper) http.Handler {
+func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64) http.Handler {
 	return &cacheHandler{
-		cache:    cache,
-		remapper: remapper,
-		getter:   NewGetter(),
-		// ruleThrottlers:    makeRuleThrottlers(remapper, ruleLimit),
+		cache:          cache,
+		remapper:       remapper,
+		getter:         NewGetter(),
+		ruleThrottlers: makeRuleThrottlers(remapper, ruleLimit),
 		// keyThrottlers:     NewThrottlers(keyLimit),
 		// nocacheThrottlers: NewThrottlers(nocacheLimit),
 	}
 }
 
-// func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]Throttler {
-// 	remapRules := remapper.Rules()
-// 	ruleThrottlers := make(map[string]Throttler, len(remapRules))
-// 	for _, rule := range remapRules {
-// 		ruleThrottlers[rule] = NewThrottler(limit)
-// 	}
-// 	return ruleThrottlers
-// }
+func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]Throttler {
+	remapRules := remapper.Rules()
+	ruleThrottlers := make(map[string]Throttler, len(remapRules))
+	for _, rule := range remapRules {
+		ruleThrottlers[rule] = NewThrottler(limit)
+	}
+	return ruleThrottlers
+}
 
-// NewHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use Java. I mean, `New`.
-func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper) http.HandlerFunc {
-	handler := NewCacheHandler(cache, remapper)
+// NewCacheHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use Java. I mean, `NewCacheHandler`.
+func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64) http.HandlerFunc {
+	handler := NewCacheHandler(cache, remapper, ruleLimit)
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
@@ -101,20 +101,33 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getAndCache := func() *CacheObj {
-		// TODO figure out why respReqTime isn't used
-		respCode, respHeader, respBody, _, respRespTime, err := h.request(remappedReq)
-		if err != nil {
-			fmt.Printf("DEBUG origin err for %v rule %v err %v\n", key, remapName, err)
-			code := http.StatusInternalServerError
-			body := []byte(http.StatusText(code))
-			return NewCacheObj(reqHeader, body, code, respHeader, reqTime, respRespTime)
+		get := func() *CacheObj {
+			// TODO figure out why respReqTime isn't used
+			respCode, respHeader, respBody, _, respRespTime, err := h.request(remappedReq)
+			if err != nil {
+				fmt.Printf("DEBUG origin err for %v rule %v err %v\n", key, remapName, err)
+				code := http.StatusInternalServerError
+				body := []byte(http.StatusText(code))
+				return NewCacheObj(reqHeader, body, code, respHeader, reqTime, respRespTime)
+			}
+			obj := NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, respRespTime)
+			if CanCache(reqHeader, respCode, respHeader) {
+				fmt.Printf("h.cache.AddSize %v\n", key)
+				h.cache.AddSize(key, obj, obj.size) // TODO store pointer?
+			}
+			return obj
 		}
-		obj := NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, respRespTime)
-		if CanCache(reqHeader, respCode, respHeader) {
-			fmt.Printf("h.cache.AddSize %v\n", key)
-			h.cache.AddSize(key, obj, obj.size) // TODO store pointer?
+
+		c := (*CacheObj)(nil)
+		ruleThrottler, ok := h.ruleThrottlers[remapName]
+		if !ok {
+			fmt.Printf("ERROR rule %v returned, but not in ruleThrottlers map. Requesting with no rule (origin) limit!\n", remapName)
+			ruleThrottler = NewNoThrottler()
 		}
-		return obj
+		ruleThrottler.Throttle(func() {
+			c = get()
+		})
+		return c
 	}
 
 	reqCacheControl := ParseCacheControl(reqHeader)
