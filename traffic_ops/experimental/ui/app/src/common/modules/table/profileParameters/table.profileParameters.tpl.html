@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/profiles')">Profiles</a></li>
-            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{profile.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{::profile.name}}</a></li>
             <li class="active">Parameters</li>
         </ol>
         <div class="pull-right">
@@ -43,11 +43,11 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="parameter in profileParameters">
-                <td>{{parameter.id}}</td>
-                <td>{{parameter.name}}</td>
-                <td>{{parameter.configFile}}</td>
-                <td>{{parameter.value}}</td>
+            <tr ng-repeat="parameter in ::profileParameters">
+                <td>{{::parameter.id}}</td>
+                <td>{{::parameter.name}}</td>
+                <td>{{::parameter.configFile}}</td>
+                <td>{{::parameter.value}}</td>
                 <td><button type="button" class="btn btn-link" title="Remove Parameter from Profile" ng-click="removeParameter(parameter.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
