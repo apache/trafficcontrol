@@ -18,7 +18,7 @@
 umask 022
 
 # go and git are required, but don't want to stomp on those if already installed
-for p in git go; do
+for p in git /usr/local/go/bin/go /opt/traffic_ops/go/bin/goose; do
 	type $p >/dev/null 2>&1 || { echo >&2 "postinstall requires $p but it's not installed.  Aborting."; exit 1; }
 done
 
@@ -36,7 +36,7 @@ cd /opt/traffic_ops/app
 export POSTGRES_HOME=${POSTGRES_HOME:-/usr/pgsql-9.6}
 /usr/local/bin/carton
 
-export GOPATH=${GOPATH:-/usr/local}
+export GOPATH=${GOPATH:-/usr/local/go/bin}
 go get bitbucket.org/liamstask/goose/cmd/goose
 
 export PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5
