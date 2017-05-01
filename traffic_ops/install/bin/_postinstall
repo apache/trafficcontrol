@@ -704,10 +704,6 @@ sub insert_parameters {
                 values ('tm.infourl', 'global', '$paramconf->{"tm.url"}/doc') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
-    insert into parameter (name, config_file, value) 
-                values ('tm.traffic_mon_fwd_proxy', 'global', '$paramconf->{"tm.url"}:81') 
-                ON CONFLICT (name, config_file, value) DO NOTHING;
-
     -- CRConfig.json parameters
     insert into parameter (name, config_file, value) 
                 values ('geolocation.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLite2-City.mmdb.gz') 
@@ -758,10 +754,6 @@ sub insert_profiles {
 
     insert into profile_parameter (profile, parameter) 
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$paramconf->{"tm.url"}/doc') ) 
-                ON CONFLICT (profile, parameter) DO NOTHING;
-
-    insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.traffic_mon_fwd_proxy' and config_file = 'global' and value = '$paramconf->{"tm.url"}:81') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
