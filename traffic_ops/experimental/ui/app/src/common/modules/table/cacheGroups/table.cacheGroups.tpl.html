@@ -22,7 +22,7 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li class="active">Cache Groups</li>
         </ol>
-        <div class="pull-right" role="group" ng-show="!settings.isNew">
+        <div class="pull-right" role="group" ng-if="!settings.isNew">
             <button class="btn btn-primary" title="Create Cache Group" ng-click="createCacheGroup()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
@@ -41,12 +41,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in cacheGroups">
-                <td>{{cacheGroup.name}}</td>
-                <td>{{cacheGroup.shortName}}</td>
-                <td>{{cacheGroup.typeName}}</td>
-                <td>{{cacheGroup.latitude}}</td>
-                <td>{{cacheGroup.longitude}}</td>
+            <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in ::cacheGroups">
+                <td>{{::cacheGroup.name}}</td>
+                <td>{{::cacheGroup.shortName}}</td>
+                <td>{{::cacheGroup.typeName}}</td>
+                <td>{{::cacheGroup.latitude}}</td>
+                <td>{{::cacheGroup.longitude}}</td>
             </tr>
             </tbody>
         </table>

@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/cdns')">CDNs</a></li>
-            <li><a ng-click="navigateToPath('/admin/cdns/' + cdn.id)">{{cdn.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/cdns/' + cdn.id)">{{::cdn.name}}</a></li>
             <li class="active">Profiles</li>
         </ol>
         <div class="pull-right">
@@ -40,10 +40,10 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editProfile(profile.id)" ng-repeat="profile in profiles">
-                <td>{{profile.name}}</td>
-                <td>{{profile.description}}</td>
-                <td>{{profile.cdnName}}</td>
+            <tr ng-click="editProfile(profile.id)" ng-repeat="profile in ::profiles">
+                <td>{{::profile.name}}</td>
+                <td>{{::profile.description}}</td>
+                <td>{{::profile.cdnName}}</td>
             </tr>
             </tbody>
         </table>

@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/users')">Users</a></li>
-            <li><a ng-click="navigateToPath('/admin/users/' + user.id)">{{user.username}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/users/' + user.id)">{{::user.username}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
@@ -42,10 +42,10 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="deliveryService in userDeliveryServices">
-                <td>{{deliveryService.xmlId}}</td>
-                <td>{{deliveryService.orgServerFqdn}}</td>
-                <td>{{deliveryService.cdnName}}</td>
+            <tr ng-repeat="deliveryService in ::userDeliveryServices">
+                <td>{{::deliveryService.xmlId}}</td>
+                <td>{{::deliveryService.orgServerFqdn}}</td>
+                <td>{{::deliveryService.cdnName}}</td>
                 <td><button type="button" class="btn btn-link" title="Remove Delivery Service" ng-click="removeDeliveryService()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>

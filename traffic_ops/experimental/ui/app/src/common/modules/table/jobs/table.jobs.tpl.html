@@ -41,12 +41,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="job in jobs">
-                <td>{{job.deliveryService}}</td>
-                <td>{{job.assetUrl}}</td>
-                <td>{{job.parameters}}</td>
-                <td>{{job.startTime}}</td>
-                <td>{{job.createdBy}}</td>
+            <tr ng-repeat="job in ::jobs">
+                <td>{{::job.deliveryService}}</td>
+                <td>{{::job.assetUrl}}</td>
+                <td>{{::job.parameters}}</td>
+                <td>{{::job.startTime}}</td>
+                <td>{{::job.createdBy}}</td>
             </tr>
             </tbody>
         </table>

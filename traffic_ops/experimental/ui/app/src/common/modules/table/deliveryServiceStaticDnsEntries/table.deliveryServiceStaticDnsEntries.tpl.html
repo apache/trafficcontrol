@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{::deliveryService.displayName}}</a></li>
             <li class="active">Static DNS Entries</li>
         </ol>
         <div class="pull-right">
@@ -43,13 +43,13 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="staticDnsEntry in staticDnsEntries">
-                <td>{{staticDnsEntry.host}}</td>
-                <td>{{staticDnsEntry.address}}</td>
-                <td>{{staticDnsEntry.type}}</td>
-                <td>{{staticDnsEntry.ttl}}</td>
-                <td>{{staticDnsEntry.deliveryservice}}</td>
-                <td>{{staticDnsEntry.cachegroup}}</td>
+            <tr ng-repeat="staticDnsEntry in ::staticDnsEntries">
+                <td>{{::staticDnsEntry.host}}</td>
+                <td>{{::staticDnsEntry.address}}</td>
+                <td>{{::staticDnsEntry.type}}</td>
+                <td>{{::staticDnsEntry.ttl}}</td>
+                <td>{{::staticDnsEntry.deliveryservice}}</td>
+                <td>{{::staticDnsEntry.cachegroup}}</td>
             </tr>
             </tbody>
         </table>
