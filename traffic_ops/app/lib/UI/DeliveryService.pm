@@ -999,6 +999,9 @@ sub create {
 		$self->field('ds.xml_id')->is_equal( "", "A Delivery service with xml_id \"$xml_id\" already exists." );
 	}
 
+	$self->stash_profile_selector('DS_PROFILE');
+	$self->stash_cdn_selector();
+	&stash_role($self);
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
