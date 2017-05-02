@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var CacheGroupService = function(Restangular, locationUtils, messageModel) {
+var CacheGroupService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
 
     this.getCacheGroups = function(queryParams) {
         return Restangular.all('cachegroups').getList(queryParams);
@@ -93,7 +93,23 @@ var CacheGroupService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one('parameters', paramId).getList('cachegroups');
     };
 
+    this.getCacheGroupHealth = function() {
+        var deferred = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns/health")
+            .then(
+                function(result) {
+                    deferred.resolve(result.data.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
+
+        return deferred.promise;
+    };
+
 };
 
-CacheGroupService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+CacheGroupService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = CacheGroupService;
