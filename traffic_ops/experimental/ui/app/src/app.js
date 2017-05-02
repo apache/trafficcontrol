@@ -155,7 +155,7 @@ var trafficOps = angular.module('trafficOps', [
 
         // dashboards
         require('./modules/private/monitor/dashboards').name,
-        require('./modules/private/monitor/dashboards/one').name,
+        require('./modules/private/monitor/dashboards/map').name,
         require('./modules/private/monitor/dashboards/two').name,
         require('./modules/private/monitor/dashboards/three').name,
 

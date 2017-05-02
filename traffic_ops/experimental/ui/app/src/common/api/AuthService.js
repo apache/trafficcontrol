@@ -30,7 +30,7 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
                         $location.search('redirect', null); // remove the redirect query param
                         $location.url(redirect);
                     } else {
-                        $location.url('/monitor/dashboards/one');
+                        $location.url('/monitor/dashboards/map');
                     }
                 },
                 function(fault) {
