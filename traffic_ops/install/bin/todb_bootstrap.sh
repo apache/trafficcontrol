@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
+# This script sets up the 'traffic_ops' role and database to simplify schema and data loading 
+#
 # To bypass the password prompts for automation, please set TODB_USERNAME_PASSWORD=<yourpassword> before you invoke
+#
 
 # Example:
 #
