@@ -17,7 +17,8 @@
 use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/lib /opt/traffic_ops/app/local/lib/perl5);
 
 $ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5:$ENV{PERL5LIB}";
-$ENV{PATH}     = "/usr/local/bin:/opt/traffic_ops/install/bin:$ENV{PATH}";
+$ENV{PATH}     = "/usr/bin:/opt/traffic_ops/go/bin:/usr/local/go/bin:/opt/traffic_ops/install/bin:$ENV{PATH}";
+$ENV{GOPATH} = "/opt/traffic_ops/go";
 
 use strict;
 use warnings;
@@ -34,7 +35,6 @@ use Getopt::Long;
 
 use InstallUtils qw{ :all };
 use GenerateCert qw{ :all };
-use ProfileCleanup qw{ :all };
 
 # paths of the output configuration files
 my $databaseConfFile = "/opt/traffic_ops/app/conf/production/database.conf";
@@ -64,14 +64,8 @@ my $debug = 1;
 # log file for cpan output
 my $cpanLogFile = "/var/log/traffic_ops/cpan.log";
 
-# whether or not to reconfigure traffic ops
-my $reconfigure = 1;
-
 # used to check for .reconfigure_defaults file for backwards compatability
 my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
-
-# old way of reconfiguring postinstall - only here to check for file and let user know it is deprecated
-my $reconfigure_file = "/opt/traffic_ops/.reconfigure";
 
 # maximum size the uncompressed log file should be before rotating it - rotating it copies the current log
 #  file to the same name appended with .bkp replacing the old backup if any is there
@@ -405,11 +399,11 @@ sub getDefaults {
         $dbConfFile => [
             {
                 "Database server root (admin) user" => "postgres",
-                "config_var"                        => "dbAdminUser"
+                "config_var"                        => "pgUser"
             },
             {
                 "Password for database server admin" => "",
-                "config_var"                         => "dbAdminPw",
+                "config_var"                         => "pgPassword",
                 "hidden"                             => "true"
             },
             {
@@ -508,20 +502,20 @@ sub getDefaults {
                 "config_var"      => "tm.url"
             },
             {
+                "Traffic Ops Instance Name" => "Traffic Ops CDN",
+                "config_var"      => "tm.instance_name"
+            },
+            {
+                "Traffic Ops Tool Name" => "Traffic Ops",
+                "config_var"      => "tm.toolname"
+            },
+            {
                 "Human-readable CDN Name.  (No whitespace, please)" => "kabletown_cdn",
                 "config_var"                                        => "cdn_name"
             },
             {
-                "Health Polling Interval (milliseconds)" => "8000",
-                "config_var"                             => "health_polling_int"
-            },
-            {
                 "DNS sub-domain for which your CDN is authoritative" => "cdn1.kabletown.net",
                 "config_var"                                         => "dns_subdomain"
-            },
-            {
-                "TLD SOA admin" => "traffic_ops",
-                "config_var"    => "soa_admin"
             },
             {
                 "TrafficServer Drive Prefix" => "/dev/sd",
@@ -534,20 +528,7 @@ sub getDefaults {
             {
                 "TrafficServer RAM Drive Letters (comma separated)" => "0,1,2,3,4,5,6,7",
                 "config_var"                                        => "ram_drive_letters"
-            },
-            {
-                "Health Threshold Load Average" => "25",
-                "config_var"                    => "health_thresh_load_avg"
-            },
-            {
-                "Health Threshold Available Bandwidth in Kbps" => "1750000",
-                "config_var"                                   => "health_thresh_kbps"
-            },
-            {
-                "Traffic Server Health Connection Timeout (milliseconds)" => "2000",
-                "config_var"                                              => "health_connect_timeout"
             }
-
         ]
     };
 }
@@ -557,49 +538,73 @@ sub getDefaults {
 # todbconf: The database configuration to be used
 # opensslconf: The openssl configuration if any
 
-sub setupDatabase {
-    my $todbconf         = shift;
-    my $opensslconf      = shift;
-    my $setupMaxmind     = shift;
-    my $databaseConfFile = shift;
+sub setupDatabaseData {
+    my $dbh = shift;
+    my $adminconf = shift;
+    my $paramconf = shift;
+    InstallUtils::logger( "paramconf " . Dumper($paramconf), "info" );
 
-    my $dbconf = InstallUtils::readJson($databaseConfFile);
+    my $result;
 
-    # Check if the Postgres db is used and set the admin database to be "postgres"
-    my $dbName = $dbconf->{type};
-    if ( $dbconf->{type} eq "Pg" ) {
-        $dbName = "postgres";
+    my $q = <<"QUERY";
+    select exists(select 1 from pg_tables where schemaname = 'public' and tablename = 'tm_user')
+QUERY
+
+    my $stmt = $dbh->prepare($q);
+    $stmt->execute(); 
+
+    InstallUtils::logger( "Setting up the database data", "info" );
+    my $tables_found;
+    while ( my $row = $stmt->fetch() ) {
+       $tables_found = $row->[0];
     }
-
-    my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbName, $dbconf->{hostname}, $dbconf->{port} );
-    my $dbh = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
-    if ($dbh) {
-        InstallUtils::logger( "Database connection succeeded", "info" );
-
-        # Success!
-        $dbh->disconnect();
+    if ($tables_found) {
+       InstallUtils::logger( "Found existing tables skipping table creation", "info" );
+    } else  {
+       invoke_db_admin_pl("load_schema");
     }
-    else {
-        InstallUtils::logger( "Error connecting to database", "error" );
-        exit(-1);
-    }
+    invoke_db_admin_pl("migrate");
+    invoke_db_admin_pl("seed");
 
-    InstallUtils::logger( "Setting up database", "info" );
-    $ENV{PGUSER}     = $todbconf->{"dbAdminUser"};
-    $ENV{PGPASSWORD} = $todbconf->{"dbAdminPw"};
+    # Skip the insert if the admin 'username' is already there.
+    my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
+
+    my $insert_admin = <<"ADMIN";
+    insert into tm_user (username, role, local_passwd) 
+                values  ("$adminconf->{"username"}", 
+                        (select id from role where name = 'admin'),
+                         "$sha1_passwd",
+                        "$sha1_passwd" ))
+                ON CONFLICT (profile, parameter) DO NOTHING ON CONFLICT (username) DO NOTHING;"
+ADMIN
+    $dbh->do($insert_admin);
+
+    insert_parameters($dbh, $paramconf);
+    insert_profiles($dbh, $paramconf);
+
+
+}
+
+sub invoke_db_admin_pl {
+    my $action    = shift;
+
     chdir("/opt/traffic_ops/app");
-    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "reset" );
-
-    if ( $result == 0 ) {
-	    $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", "seed" );
-    }
+    my $result = InstallUtils::execCommand( "/usr/bin/perl", "db/admin.pl", "--env=production", $action );
 
     if ( $result != 0 ) {
-        errorOut("Database initialization failed");
+        errorOut("Database $action failed");
     }
     else {
-        InstallUtils::logger( "Database initialization succeeded", "info" );
+        InstallUtils::logger( "Database $action succeeded", "info" );
     }
+
+    return $result;
+}
+
+sub setupMaxMind {
+    my $setupMaxmind     = shift;
+
+    my $result;
 
     if ( $setupMaxmind =~ /^y(?:es)?/ ) {
         InstallUtils::logger( "Downloading Maxmind data", "info" );
@@ -608,17 +613,22 @@ sub setupDatabase {
         if ( $result != 0 ) {
             InstallUtils::logger( "Failed to download MaxMind data", "error" );
         }
+
+        $result = InstallUtils::execCommand("/usr/bin/wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz");
+        if ( $result != 0 ) {
+            InstallUtils::logger( "Failed to download MaxMind data", "error" );
+        }
     }
     else {
         InstallUtils::logger("Not downloading Maxmind data");
     }
 
-    chdir("/opt/traffic_ops/app/public/routing");
-    InstallUtils::logger( "Copying coverage zone file to public dir", "info" );
-    $result = InstallUtils::execCommand("/bin/mv /opt/traffic_ops/app/public/coverage-zone.json .");
-    if ( $result != 0 ) {
-        InstallUtils::logger( "Failed to copy coverage zone file", "error" );
-    }
+}
+
+sub setupCertificates {
+    my $opensslconf      = shift;
+
+    my $result;
 
     if ( lc $opensslconf->{"genCert"} =~ /^y(?:es)?/ ) {
         if ( -x "/usr/bin/openssl" ) {
@@ -643,11 +653,144 @@ sub setupDatabase {
     }
 }
 
+#------------------------------------
+sub connect_to_database {
+    my $databaseConfFile = shift;
+    my $todbconf = shift;
+
+    my $dbconf = InstallUtils::readJson($databaseConfFile);
+
+    # Check if the Postgres db is used and set the admin database to be "postgres"
+    my $dbName = $dbconf->{type};
+    if ( $dbconf->{type} eq "Pg" ) {
+        $dbName = "traffic_ops";
+    }
+
+    $ENV{PGUSER}     = $todbconf->{"pgUser"};
+    $ENV{PGPASSWORD} = $todbconf->{"pgPassword"};
+
+    my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbName, $dbconf->{hostname}, $dbconf->{port} );
+    my $dbh = DBI->connect( $dsn, $todbconf->{"pgUser"}, $todbconf->{"pgPassword"} );
+    if ($dbh) {
+        InstallUtils::logger( "Database connection succeeded", "info" );
+    }
+    else {
+        InstallUtils::logger( "Error connecting to database", "error" );
+        exit(-1);
+    }
+   return $dbh;
+
+}
+
+#------------------------------------
+sub insert_parameters {
+    my $dbh = shift;
+    my $paramconf = shift;
+
+    InstallUtils::logger( "=========== Setting up parameters", "info" );
+
+    # Enable multiple inserts into one commit
+    $dbh->{pg_server_prepare} = 0;
+
+    my $insert_stmt = <<"INSERTS";
+
+    -- global parameters
+    insert into parameter (name, config_file, value) 
+                values ('tm.url', 'global', '$paramconf->{"tm.url"}') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    insert into parameter (name, config_file, value) 
+                values ('tm.instance_name', 'global', '$paramconf->{"tm.instance_name"}') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    insert into parameter (name, config_file, value) 
+                values ('tm.toolname', 'global', '$paramconf->{"tm.toolname"}') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    insert into parameter (name, config_file, value) 
+                values ('tm.infourl', 'global', '$paramconf->{"tm.url"}/doc') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    -- CRConfig.json parameters
+    insert into parameter (name, config_file, value) 
+                values ('geolocation.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLite2-City.mmdb.gz') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    insert into parameter (name, config_file, value) 
+                values ('geolocation6.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLiteCityv6.dat.gz') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    -- RAM Prefix
+    insert into parameter (name, config_file, value) 
+                values ('RAM_Drive_Prefix', 'storage.config', '$paramconf->{"ram_drive_prefix"}') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+    insert into parameter (name, config_file, value) 
+                values ('RAM_Drive_Letters', 'storage.config', '$paramconf->{"ram_drive_letters"}') 
+                ON CONFLICT (name, value) DO NOTHING;
+
+
+INSERTS
+    doInsert($dbh, $insert_stmt);
+}
+
+#------------------------------------
+sub insert_profiles {
+    my $dbh = shift;
+    my $paramconf = shift;
+
+    InstallUtils::logger( "\n=========== Setting up profiles", "info" );
+    my $insert_stmt = <<"INSERTS";
+
+    -- global parameters
+    insert into profile (name, description) 
+                values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE') 
+                ON CONFLICT (name) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = '$paramconf->{"tm.url"}') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = '$paramconf->{"tm.instance_name"}') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = '$paramconf->{"tm.toolname"}') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$paramconf->{"tm.url"}/doc') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = 'https://$paramconf->{"dns_subdomain"}/routing/GeoLite2-City.mmdb.gz') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = 'https://$paramconf->{"dns_subdomain"}/routing/GeoLiteCityv6.dat.gz') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+INSERTS
+    doInsert($dbh, $insert_stmt);
+}
+
+#------------------------------------
+sub doInsert {
+    my $dbh = shift;
+    my $insert_stmt = shift;
+
+    InstallUtils::logger( "\n" . $insert_stmt, "info" );
+    my $stmt = $dbh->prepare($insert_stmt);
+    $stmt->execute();
+}
+
+
+
 # -cfile     - Input File:       The input config file used to ask and answer questions
 # -a         - Automatic mode:   If there are questions in the config file which do not have answers, the script
 #                                will look to the defaults for the answer. If the answer is not in the defaults
 #                                the script will exit
-# -r         - Reconfigure:      Whether or not to reconfigure the database and check perl dependencies - This will recreate the database
 # -defaults  - Defaults:         Writes out a configuration file with defaults which can be used as input
 # -debug     - Debug Mode:       More output to the terminal
 # -h         - Help:             Basic command line help menu
@@ -661,7 +804,6 @@ sub main {
     GetOptions(
         "cfile=s"     => \$inputFile,
         "automatic"   => \$automatic,
-        "reconfigure" => \$reconfigure,
         "defaults"    => \$dumpDefaults,
         "debug"       => \$debug,
         "help"        => \$help
@@ -695,20 +837,11 @@ sub main {
         InstallUtils::logger( "Running in automatic mode", "info" );
     }
 
-    # check if the reconfigure_file is present on the system - if it is let the user know its deprecated
-    #  and exit with an error
-    if ( -f $reconfigure_file ) {
-        InstallUtils::logger( "$reconfigure_file file is depreprecated - please remove and rerun postinstall", "error" );
-        return;
-    }
-
     if ($dumpDefaults) {
         InstallUtils::logger( "Writing default configuration file to $outputConfigFile", "info" );
         InstallUtils::writeJson( $outputConfigFile, $defaultInputs );
         return;
     }
-
-    InstallUtils::logger( "Postinstall " . ( $reconfigure ? "" : "not " ) . "in reconfigure mode", "info" );
 
     InstallUtils::rotateLog($cpanLogFile);
 
@@ -741,24 +874,13 @@ sub main {
     # check the input config file against the defaults to check for missing questions
     sanityCheckConfig($userInput) if ( $inputFile ne "" );
 
-    # if reconfigure is set then rebuild the perl deps
-    if ($reconfigure) {
-	chdir("/opt/traffic_ops/install/bin");
-        my $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
-        if ( $rc != 0 ) {
-            errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
-        }
-    }
-    else {
-	chdir("/opt/traffic_ops/install/bin");
-        my $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
-        if ( $rc != 0 ) {
-            errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
-        }
+    chdir("/opt/traffic_ops/install/bin");
+    my $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
+    if ( $rc != 0 ) {
+     errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
     }
 
     # The generator functions handle checking input/default/automatic mode
-
     # todbconf will be used later when setting up the database
     my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
     generateCdnConf( $userInput, $cdnConfFile );
@@ -772,49 +894,24 @@ sub main {
         InstallUtils::writeJson( $post_install_cfg, {} );
     }
 
-    # if reconfigure is set then setup the database
-    if ($reconfigure) {
-        setupDatabase( $todbconf, $opensslconf, $todbconf->{"maxmind"}, $databaseConfFile );
+    setupMaxMind( $todbconf->{"maxmind"} );
+    setupCertificates( $opensslconf );
 
-        ## Create the tm_user
-        my $dbconf      = InstallUtils::readJson($databaseConfFile);
-        my $dsn         = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbconf->{dbname}, $dbconf->{hostname}, $dbconf->{port} );
-        my $dbh         = DBI->connect( $dsn, $todbconf->{"dbAdminUser"}, $todbconf->{"dbAdminPw"} );
-        my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
-        my $sub_string  = sprintf( "('%s', 4, '%s')", $adminconf->{"username"}, $sha1_passwd, $sha1_passwd );
+    my $dbh = connect_to_database($databaseConfFile, $todbconf);
+    setupDatabaseData( $dbh, $adminconf, $paramconf );
 
-        $dbh->do("insert into tm_user (username, role, local_passwd) values $sub_string");
+    InstallUtils::logger("Starting Traffic Ops", "info" );
+    InstallUtils::execCommand("/sbin/service traffic_ops restart");
 
-    }
+    InstallUtils::logger("Waiting for Traffic Ops to restart", "info" );
 
-    InstallUtils::logger( "Starting Traffic Ops", "info" );
-    InstallUtils::execCommand("/sbin/service traffic_ops start");
+    InstallUtils::logger("Success! Postinstall complete.");
 
-    InstallUtils::logger( "Waiting for Traffic Ops to start", "info" );
+    #InstallUtils::logger("Zipping up $logFile to $logFile.gz");
+    #InstallUtils::execCommand( "/bin/gzip", "$logFile" );
 
-    if ( -f $post_install_cfg ) {
-        $parameters = InstallUtils::readJson($post_install_cfg);
-    }
-
-    if ( !ProfileCleanup::profiles_exist( $adminconf, $paramconf->{"tm.url"}, $parameters, $reconfigure_defaults, $reconfigure ) ) {
-        InstallUtils::logger( "Creating default profiles...", "info" );
-        ProfileCleanup::replace_profile_templates( $paramconf, $adminconf, $post_install_cfg, $parameters, $profileDir );
-        ProfileCleanup::import_profiles( $paramconf->{"tm.url"}, $adminconf, $profileDir );
-
-        # call again to create $reconfigure_defaults file if import was successful
-        ProfileCleanup::profiles_exist( $adminconf, $paramconf->{"tm.url"}, $parameters, $reconfigure_defaults, $reconfigure );
-    }
-    else {
-        InstallUtils::logger( "Not creating default profiles", "info" );
-    }
-
-    if ( $custom_profile =~ /^y(?:es)?/ ) {
-        ProfileCleanup::add_custom_profiles( $custom_profile_dir, $adminconf, $parameters->{"tm.url"} );
-    }
-
-    InstallUtils::logger("Postinstall complete");
-
-    InstallUtils::execCommand( "/bin/gzip", "$logFile" );
+   # Success!
+    $dbh->disconnect();
 }
 
 main;

@@ -199,7 +199,7 @@ sub trim {
 
 sub readJson {
     my $file = shift;
-    open( my $fh, '<', $file ) or die("open(): $!");
+    open( my $fh, '<', $file ) or die("open($file): $!");
     local $/;    # slurp mode
     my $text = <$fh>;
     undef $fh;
@@ -208,7 +208,7 @@ sub readJson {
 
 sub writeJson {
     my $file = shift;
-    open( my $fh, '>', $file ) or die("open(): $!");
+    open( my $fh, '>', $file ) or die("open($file): $!");
     logger( "Writing json to $file", "info" );
     foreach my $data (@_) {
         my $json_text = JSON->new->utf8->pretty->encode($data);
@@ -221,7 +221,7 @@ sub writePerl {
     my $file = shift;
     my $data = shift;
 
-    open( my $fh, '>', $file ) or die("open(): $!");
+    open( my $fh, '>', $file ) or die("open($file): $!");
     my $dumper = Data::Dumper->new( [$data] );
 
     # print without var names and with simple indentation
