@@ -569,12 +569,9 @@ QUERY
     # Skip the insert if the admin 'username' is already there.
     my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
 
-    # Skip the insert if the admin 'username' is already there.
-    my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
-
     my $insert_admin = <<"ADMIN";
-    insert into tm_user (username, role, local_passwd)
-                values  ("$adminconf->{"username"}",
+    insert into tm_user (username, role, local_passwd) 
+                values  ("$adminconf->{"username"}", 
                         (select id from role where name = 'admin'),
                          "$sha1_passwd",
                         "$sha1_passwd" ))
