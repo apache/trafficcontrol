@@ -2018,7 +2018,7 @@ sub parent_dot_config {
 					$qsh = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'psel.qstring_handling');
 				}
 				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
-				if ( $remap->{qstring_ignore} == 0 && !defined($qsh) ) {
+				if ( $ds->{qstring_ignore} == 0 && !defined($qsh) ) {
 					$parent_qstring = "consider";
 				}
 
