@@ -65,6 +65,7 @@ my $usage = "\n"
 	. "redo  - Roll back the most recently applied migration, then run it again.\n"
 	. "reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.\n"
 	. "reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.\n"
+	. "seed_demo  - Execute sql from db/seeds_demo.sql for loading static demo data.\n"
 	. "seed  - Execute sql from db/seeds.sql for loading static data.\n"
 	. "show_users  - Execute sql to show all of the user for the current environment.\n"
 	. "status  - Print the status of all migrations.\n"
@@ -132,6 +133,9 @@ if ( defined($argument) ) {
 	}
 	elsif ( $argument eq 'seed' ) {
 		seed();
+	}
+	elsif ( $argument eq 'seed_demo' ) {
+		seed_demo();
 	}
 	elsif ( $argument eq 'load_schema' ) {
 		load_schema();
