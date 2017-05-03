@@ -17,8 +17,32 @@
  * under the License.
  */
 
-var DashboardController = function($scope) {
+var DashboardController = function(changeLogs, cacheGroupHealth, $scope, locationUtils) {
+
+	$scope.changeLogs = changeLogs;
+
+	$scope.getRelativeTime = function(date) {
+		return moment(date).fromNow();
+	};
+
+	$scope.navigateToPath = locationUtils.navigateToPath;
+
+
+	$scope.locationHealth = {
+		totalOnline: cacheGroupHealth.totalOnline,
+		totalOffline: cacheGroupHealth.totalOffline,
+		locations: cacheGroupHealth.cachegroups
+	};
+
+	// pagination
+	$scope.currentLocationPage = 1;
+	$scope.locationsPerPage = 10;
+
+	$scope.onlinePercent = function(location) {
+		return location.online / (location.online + location.offline);
+	};
+
 };
 
-DashboardController.$inject = ['$scope'];
+DashboardController.$inject = ['changeLogs', 'cacheGroupHealth', '$scope', 'locationUtils'];
 module.exports = DashboardController;

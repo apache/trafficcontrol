@@ -26,7 +26,17 @@ module.exports = angular.module('trafficOps.private.monitor.dashboard', [])
                 views: {
                     monitorContent: {
                         templateUrl: 'modules/private/monitor/dashboard/dashboard.tpl.html',
-                        controller: 'DashboardController'
+                        controller: 'DashboardController',
+                        resolve: {
+                            changeLogs: function(changeLogService) {
+                                return [];
+                                // return changeLogService.getChangeLogs({ limit: 6 });
+                            },
+                            cacheGroupHealth: function(cacheGroupService) {
+                                return cacheGroupService.getCacheGroupHealth();
+                            }
+                        }
+
                     }
                 }
             })
