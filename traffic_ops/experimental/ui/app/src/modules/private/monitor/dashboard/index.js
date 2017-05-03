@@ -17,16 +17,16 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.monitor.dashboards.three', [])
-    .controller('DashboardsThreeController', require('./DashboardsThreeController'))
+module.exports = angular.module('trafficOps.private.monitor.dashboard', [])
+    .controller('DashboardController', require('./DashboardController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.monitor.dashboards.three', {
-                url: '/three',
+            .state('trafficOps.private.monitor.dashboard', {
+                url: '/dashboard',
                 views: {
-                    dashboardsContent: {
-                        templateUrl: 'modules/private/monitor/dashboards/three/dashboards.three.tpl.html',
-                        controller: 'DashboardsThreeController'
+                    monitorContent: {
+                        templateUrl: 'modules/private/monitor/dashboard/dashboard.tpl.html',
+                        controller: 'DashboardController'
                     }
                 }
             })

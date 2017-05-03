@@ -25,7 +25,7 @@ under the License.
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right" role="group">
-            <button class="btn btn-primary" title="Add Delivery Service" ng-click="addDeliveryService()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Link Delivery Service to Server" ng-click="addDeliveryService()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
@@ -77,7 +77,7 @@ under the License.
                 <td>{{::deliveryService.protocol}}</td>
                 <td>{{::deliveryService.ipv6RoutingEnabled}}</td>
                 <td>{{::deliveryService.rangeRequestHandling}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove Delivery Service from Server" ng-click="removeDeliveryService(deliveryService.id, server.id)"><i class="fa fa-chain-broken"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from Server" ng-click="removeDeliveryService(deliveryService.id, server.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

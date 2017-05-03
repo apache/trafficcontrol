@@ -17,16 +17,16 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.monitor.dashboards.map', [])
-    .controller('DashboardsMapController', require('./DashboardsMapController'))
+module.exports = angular.module('trafficOps.private.monitor.map', [])
+    .controller('MapController', require('./MapController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.monitor.dashboards.map', {
+            .state('trafficOps.private.monitor.map', {
                 url: '/map',
                 views: {
-                    dashboardsContent: {
-                        templateUrl: 'modules/private/monitor/dashboards/map/dashboards.map.tpl.html',
-                        controller: 'DashboardsMapController',
+                    monitorContent: {
+                        templateUrl: 'modules/private/monitor/map/map.tpl.html',
+                        controller: 'MapController',
                         resolve: {
                             cacheGroups: function(cacheGroupService) {
                                 return cacheGroupService.getCacheGroups();

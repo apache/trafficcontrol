@@ -26,16 +26,21 @@ under the License.
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <button class="btn btn-primary" ng-click="confirmStatusUpdate()">Update Status</button>
             <!--<button class="btn btn-success" ng-click="onlineServer()">Online Server</button>-->
-            <button class="btn btn-primary" title="Queue {{server.hostName}} updates" ng-show="!server.updPending" ng-click="queueServerUpdates(server)"><i class="fa fa-flag"></i></button>
-            <button class="btn btn-primary" title="Cancel {{server.hostName}} updates" ng-show="server.updPending" ng-click="clearServerUpdates(server)"><i class="fa fa-ban"></i></button>
+            <button class="btn btn-primary" title="Queue Server Updates" ng-show="!server.updPending" ng-click="queueServerUpdates(server)"><i class="fa fa-flag"></i></button>
+            <button class="btn btn-primary" title="Clear Server Updates" ng-show="server.updPending" ng-click="clearServerUpdates(server)"><i class="fa fa-ban"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li ng-show="!server.updPending"><a ng-click="queueServerUpdates(server)">Queue Server Updates</a></li>
+                    <li ng-show="server.updPending"><a ng-click="clearServerUpdates(server)">Clear Server Updates</a></li>
+                    <li class="divider"></li>
+                    <li><a ng-click="confirmStatusUpdate()">Update Status</a></li>
+                    <li class="divider"></li>
                     <li><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
-                    <li><a ng-click="viewConfig()">View Server Config Files</a></li>
+                    <li><a ng-click="viewConfig()">View Config Files</a></li>
                 </ul>
             </div>
         </div>

@@ -122,16 +122,12 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
-    $scope.assignServers = function() {
+    $scope.viewServers = function() {
         $location.path($location.path() + '/servers');
     };
 
     $scope.viewRegexes = function() {
         $location.path($location.path() + '/regexes');
-    };
-
-    $scope.cachegroupHealth = function() {
-        alert('not hooked up yet: cachegroupHealth for DS');
     };
 
     $scope.viewJobs = function() {

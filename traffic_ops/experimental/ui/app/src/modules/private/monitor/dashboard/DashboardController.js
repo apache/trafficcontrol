@@ -17,8 +17,8 @@
  * under the License.
  */
 
-var DashboardsTwoController = function($scope) {
+var DashboardController = function($scope) {
 };
 
-DashboardsTwoController.$inject = ['$scope'];
-module.exports = DashboardsTwoController;
+DashboardController.$inject = ['$scope'];
+module.exports = DashboardController;
