@@ -37,6 +37,7 @@ CREATE TABLE api_capability (
     route text NOT NULL,
     capability text NOT NULL,
     CONSTRAINT fk_capability FOREIGN KEY (capability) REFERENCES capability(name) ON DELETE RESTRICT,
+    UNIQUE (http_method, route, capability),
     last_updated timestamp with time zone DEFAULT now()
 );
 
@@ -48,6 +49,7 @@ CREATE TABLE role_capability (
     CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE,  
     cap_name text NOT NULL,
     CONSTRAINT fk_cap_name FOREIGN KEY (cap_name) REFERENCES capability(name) ON DELETE RESTRICT,
+    UNIQUE (role_id, cap_name),
     last_updated timestamp with time zone DEFAULT now()
 );
 

@@ -23,7 +23,7 @@ use Data::Dumper;
 
 my $finfo = __FILE__ . ":";
 
-sub all {
+sub index {
 	my $self = shift;
 	my @data;
 	my $orderby = "name";
@@ -33,9 +33,9 @@ sub all {
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"name"          => $row->name,
-				"description"	=> $row->description,
-				"lastUpdated" 	=> $row->last_updated
+				"name"        => $row->name,
+				"description" => $row->description,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
@@ -46,14 +46,14 @@ sub name {
 	my $self = shift;
 	my $name = $self->param('name');
 
-	my $rs_data = $self->db->resultset("Capability")->search( 'me.name' => $name  );
+	my $rs_data = $self->db->resultset("Capability")->search( 'me.name' => $name );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
-				"name"          => $row->name,
-				"description"	=> $row->description,
-				"lastUpdated" 	=> $row->last_updated
+				"name"        => $row->name,
+				"description" => $row->description,
+				"lastUpdated" => $row->last_updated
 			}
 		);
 	}
@@ -61,7 +61,7 @@ sub name {
 }
 
 sub create {
-	my $self = shift;
+	my $self   = shift;
 	my $params = $self->req->json;
 
 	if ( !&is_oper($self) ) {
@@ -72,47 +72,47 @@ sub create {
 		return $self->alert("Parameters must be in JSON format.");
 	}
 
-	my $name = $params->{name} if defined($params->{name});
-	my $description = $params->{description} if defined($params->{description});
+	my $name        = $params->{name}        if defined( $params->{name} );
+	my $description = $params->{description} if defined( $params->{description} );
 
 	if ( !defined($name) or $name eq "" ) {
-		return $self->alert( "Name is required." );
+		return $self->alert("Name is required.");
 	}
 
 	if ( !defined($description) or $description eq "" ) {
-		return $self->alert( "Description is required." );
+		return $self->alert("Description is required.");
 	}
 
 	# check if capability exists
 	my $rs_data = $self->db->resultset("Capability")->search( { 'name' => { 'like', $name } } )->single();
-	if (defined($rs_data)) {
-		return $self->alert( "Capability '$name' already exists." );
+	if ( defined($rs_data) ) {
+		return $self->alert("Capability '$name' already exists.");
 	}
 
 	my $values = {
-		name		=> $name,
-		description	=> $description
+		name        => $name,
+		description => $description
 	};
 
 	my $insert = $self->db->resultset('Capability')->create($values);
-	my $rs = $insert->insert();
+	my $rs     = $insert->insert();
 	if ($rs) {
 		my $response;
-		$response->{name}			= $rs->name;
-		$response->{description}	= $rs->description;
+		$response->{name}        = $rs->name;
+		$response->{description} = $rs->description;
 
 		&log( $self, "Created Capability: '$response->{name}', '$response->{description}'", "APICHANGE" );
 
 		return $self->success( $response, "Capability was created." );
 	}
 	else {
-		return $self->alert( "Capability creation failed." );
+		return $self->alert("Capability creation failed.");
 	}
 }
 
 sub update {
-	my $self = shift;
-	my $name = $self->param('name');
+	my $self   = shift;
+	my $name   = $self->param('name');
 	my $params = $self->req->json;
 
 	if ( !&is_oper($self) ) {
@@ -123,7 +123,7 @@ sub update {
 		return $self->alert("Parameters must be in JSON format.");
 	}
 
-	my $description = $params->{description} if defined($params->{description});
+	my $description = $params->{description} if defined( $params->{description} );
 
 	my $capability = $self->db->resultset('Capability')->find( { name => $name } );
 	if ( !defined($capability) or $capability eq "" ) {
@@ -131,26 +131,24 @@ sub update {
 	}
 
 	if ( !defined($description) or $description eq "" ) {
-		return $self->alert( "Description is required." );
+		return $self->alert("Description is required.");
 	}
 
-	my $values = {
-		description => $description
-	};
+	my $values = { description => $description };
 
 	my $rs = $capability->update($values);
 	if ($rs) {
 		my $response;
-		$response->{name}			= $rs->name;
-		$response->{description}	= $rs->description;
-		$response->{lastUpdated}	= $rs->last_updated;
+		$response->{name}        = $rs->name;
+		$response->{description} = $rs->description;
+		$response->{lastUpdated} = $rs->last_updated;
 
 		&log( $self, "Updated Capability: '$response->{name}', '$response->{description}'", "APICHANGE" );
 
 		return $self->success( $response, "Capability was updated." );
 	}
 	else {
-		return $self->alert( "Capability update failed." );
+		return $self->alert("Capability update failed.");
 	}
 }
 
@@ -168,17 +166,18 @@ sub delete {
 	}
 
 	# make sure no api_capability refers to this capability
-	my $rs_data = $self->db->resultset("ApiCapability")->find( {'me.capability' => $name} );
-	if (defined($rs_data)) {
+	my $rs_data = $self->db->resultset("ApiCapability")->find( { 'me.capability' => $name } );
+	if ( defined($rs_data) ) {
 		my $reference_id = $rs_data->id;
-		return $self->alert( "Capability \'$name\' is refered by an api_capability mapping: $reference_id. Deletion failed." );
+		return $self->alert("Capability \'$name\' is refered by an api_capability mapping: $reference_id. Deletion failed.");
 	}
 
 	my $rs = $capability->delete();
 	if ($rs) {
 		return $self->success_message("Capability deleted.");
-	} else {
-		return $self->alert( "Capability deletion failed." );
+	}
+	else {
+		return $self->alert("Capability deletion failed.");
 	}
 }
 
