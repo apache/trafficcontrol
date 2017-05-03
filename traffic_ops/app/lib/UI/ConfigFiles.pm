@@ -1207,14 +1207,14 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				# check for delivery service psel.qstring_handling.  If this parameter is assigned to the delivery service profile,
+				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
 				# then edges will use the qstring handling value specified in the parameter for all profiles.
-				my $qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
-				# If there is no defined parameter in the delivery service, then check the server's profile.
-				# If psel.qstring_handling exists in the profile, then we use that value for the specified profile only.
-				# This is used only if not overridden by a delivery service profile qstring handling parameter.
+				my $qsh = $self->profile_param_value( $server->profile->id, 'parent.config', 'psel.qstring_handling');
+				# If there is no defined parameter in the profile, then check the delivery service profile.
+				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+				# This is used only if not overridden by a server profile qstring handling parameter.
 				if (!defined($qsh)) {
-					$qsh = $self->profile_param_value( $server->profile->id, 'parent.config', 'psel.qstring_handling');
+					$qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 				}
 				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
 				if ( $remap->{qstring_ignore} == 0 && !defined($qsh) ) {
