@@ -22,6 +22,7 @@ type cacheHandler struct {
 	remapper       HTTPRequestRemapper
 	getter         Getter
 	ruleThrottlers map[string]Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
+	strictRFC      bool
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -50,12 +51,13 @@ type cacheHandler struct {
 // Then, 2,000 requests come in for the same URL, simultaneously. They are all within the Origin limit, so they are all allowed to proceed to the key limiter. Then, the first request is allowed to make an actual request to the origin, while the other 1,999 wait at the key limiter.
 //
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
-func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64) http.Handler {
+func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, strictRFC bool) http.Handler {
 	return &cacheHandler{
 		cache:          cache,
 		remapper:       remapper,
 		getter:         NewGetter(),
 		ruleThrottlers: makeRuleThrottlers(remapper, ruleLimit),
+		strictRFC:      strictRFC,
 		// keyThrottlers:     NewThrottlers(keyLimit),
 		// nocacheThrottlers: NewThrottlers(nocacheLimit),
 	}
@@ -71,8 +73,8 @@ func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]T
 }
 
 // NewCacheHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use Java. I mean, `NewCacheHandler`.
-func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64) http.HandlerFunc {
-	handler := NewCacheHandler(cache, remapper, ruleLimit)
+func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, strictRFC bool) http.HandlerFunc {
+	handler := NewCacheHandler(cache, remapper, ruleLimit, strictRFC)
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
@@ -111,7 +113,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 				return NewCacheObj(reqHeader, body, code, respHeader, reqTime, respRespTime)
 			}
 			obj := NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, respRespTime)
-			if CanCache(reqHeader, respCode, respHeader) {
+			if CanCache(reqHeader, respCode, respHeader, h.strictRFC) {
 				fmt.Printf("h.cache.AddSize %v\n", key)
 				h.cache.AddSize(key, obj, obj.size) // TODO store pointer?
 			}
@@ -134,7 +136,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("DEBUG TryServe got Cache-Control %+v\n", reqCacheControl)
 	// return true for Revalidate, and issue revalidate requests separately.
 	canReuse := func(cacheObj *CacheObj) bool {
-		canReuse := CanReuseStored(reqHeader, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime)
+		canReuse := CanReuseStored(reqHeader, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime, h.strictRFC)
 		switch canReuse {
 		case ReuseCan:
 			return true
@@ -168,7 +170,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	reqHeaders := r.Header
 
-	canReuseStored := CanReuseStored(reqHeaders, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime)
+	canReuseStored := CanReuseStored(reqHeaders, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime, h.strictRFC)
 
 	switch canReuseStored {
 	case ReuseCan:

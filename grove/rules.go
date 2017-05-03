@@ -103,12 +103,13 @@ func CodeUnderstood(code int) bool {
 }
 
 // TODO add options to ignore/violate request cache-control (to protect origins)
-func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header) bool {
+// CanCache returns whether an object can be cached per RFC 7234, based on the request headers, response headers, and response code. If strictRFC is false, this ignores request headers denying cacheability such as `no-cache`, in order to protect origins.
+func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
 	fmt.Printf("CanCache start\n")
 	reqCacheControl := ParseCacheControl(reqHeaders)
 	respCacheControl := ParseCacheControl(respHeaders)
 	fmt.Printf("DEBUG CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
-	return CanStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl) && CanStoreAuthenticated(reqCacheControl, respCacheControl)
+	return CanStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && CanStoreAuthenticated(reqCacheControl, respCacheControl)
 }
 
 // CanStoreAuthenticated checks the constraints in RFC7234§3.2
@@ -136,8 +137,9 @@ func CanStoreResponse(
 	respHeaders http.Header,
 	reqCacheControl CacheControl,
 	respCacheControl CacheControl,
+	strictRFC bool,
 ) bool {
-	if _, ok := reqCacheControl["no-store"]; ok {
+	if _, ok := reqCacheControl["no-store"]; !strictRFC && ok {
 		fmt.Printf("CanStoreResponse false: request has no-store\n")
 		return false
 	}
@@ -198,24 +200,24 @@ func CodeDefaultCacheable(code int) bool {
 }
 
 // CanReuseStored checks the constraints in RFC7234§4
-func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqHeaders http.Header, respReqTime time.Time, respRespTime time.Time) Reuse {
+func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqHeaders http.Header, respReqTime time.Time, respRespTime time.Time, strictRFC bool) Reuse {
 	// TODO: remove allowed_stale, check in cache manager after revalidate fails? (since RFC7234§4.2.4 prohibits serving stale response unless disconnected).
 
-	if !SelectedHeadersMatch(reqHeaders, respReqHeaders) {
+	if !SelectedHeadersMatch(reqHeaders, respReqHeaders, strictRFC) {
 		fmt.Printf("CanReuseStored false - selected headers don't match\n") // debug
 		return ReuseCannot
 	}
 
-	if !Fresh(respHeaders, respCacheControl, respReqTime, respRespTime) && !AllowedStale(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime) {
+	if !Fresh(respHeaders, respCacheControl, respReqTime, respRespTime) && !AllowedStale(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime, strictRFC) {
 		fmt.Printf("CanReuseStored false - not fresh, not allowed stale\n") // debug
 		return ReuseCannot
 	}
 
-	if HasPragmaNoCache(reqHeaders) {
+	if HasPragmaNoCache(reqHeaders) && !strictRFC {
 		fmt.Printf("CanReuseStored MustRevalidate - has pragma no-cache\n")
 		return ReuseMustRevalidate
 	}
-	if _, ok := reqCacheControl["no-cache"]; ok {
+	if _, ok := reqCacheControl["no-cache"]; ok && !strictRFC {
 		fmt.Printf("CanReuseStored false - request has cache-control no-cache\n")
 		return ReuseCannot
 	}
@@ -397,11 +399,11 @@ func GetCurrentAge(respHeaders http.Header, respReqTime time.Time, respRespTime 
 // TODO add warning generation funcs
 
 // AllowedStale checks the constraints in RFC7234§4 via RFC7234§4.2.4
-func AllowedStale(respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqTime time.Time, respRespTime time.Time) bool {
+func AllowedStale(respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqTime time.Time, respRespTime time.Time, strictRFC bool) bool {
 	// TODO return ReuseMustRevalidate where permitted
 	_, reqHasMaxAge := reqCacheControl["max-age"]
 	_, reqHasMaxStale := reqCacheControl["max-stale"]
-	if reqHasMaxAge && !reqHasMaxStale {
+	if !strictRFC && reqHasMaxAge && !reqHasMaxStale {
 		return false
 	}
 	if _, ok := respCacheControl["must-revalidate"]; ok {
@@ -433,9 +435,9 @@ func InMaxStale(respHeaders http.Header, respCacheControl CacheControl, respReqT
 
 // SelectedHeadersMatch checks the constraints in RFC7234§4.1
 // TODO: change caching to key on URL+headers, so multiple requests for the same URL with different vary headers can be cached?
-func SelectedHeadersMatch(reqHeaders http.Header, respReqHeaders http.Header) bool {
+func SelectedHeadersMatch(reqHeaders http.Header, respReqHeaders http.Header, strictRFC bool) bool {
 	varyHeaders, ok := reqHeaders["vary"]
-	if !ok {
+	if !strictRFC && !ok {
 		return true
 	}
 	if len(varyHeaders) == 0 {
