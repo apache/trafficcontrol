@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "from": "http://localhost:8080",
+      "to": "https://www.example.com",
+      "query-string": {
+        "remap": false,
+        "cache": false
+      }
+    }
+  ]
+}
