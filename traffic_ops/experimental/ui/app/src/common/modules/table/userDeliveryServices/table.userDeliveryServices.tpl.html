@@ -25,7 +25,7 @@ under the License.
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Add Delivery Service" ng-click="addDeliveryService()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Link Delivery Service to User" ng-click="addDeliveryService()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -46,7 +46,7 @@ under the License.
                 <td>{{::deliveryService.xmlId}}</td>
                 <td>{{::deliveryService.orgServerFqdn}}</td>
                 <td>{{::deliveryService.cdnName}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove Delivery Service" ng-click="removeDeliveryService()"><i class="fa fa-trash-o"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from User" ng-click="removeDeliveryService()"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

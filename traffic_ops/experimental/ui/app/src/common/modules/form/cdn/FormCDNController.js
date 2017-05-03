@@ -34,10 +34,6 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         alert('not hooked up yet: manageSSL for cdn');
     };
 
-    $scope.cachegroupHealth = function() {
-        alert('not hooked up yet: cachegroupHealth for CDN');
-    };
-
     $scope.queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
     };

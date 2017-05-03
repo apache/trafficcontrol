@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DashboardsMapController = function(cacheGroups, cacheGroupHealth, $scope, NgMap) {
+var MapController = function(cacheGroups, cacheGroupHealth, $scope, NgMap) {
 
 	$scope.map = NgMap.getMap('cgMap');
 
@@ -58,5 +58,5 @@ var DashboardsMapController = function(cacheGroups, cacheGroupHealth, $scope, Ng
 
 };
 
-DashboardsMapController.$inject = ['cacheGroups', 'cacheGroupHealth', '$scope', 'NgMap'];
-module.exports = DashboardsMapController;
+MapController.$inject = ['cacheGroups', 'cacheGroupHealth', '$scope', 'NgMap'];
+module.exports = MapController;
