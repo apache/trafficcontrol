@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	// RFCCompliant determines whether `Cache-Control: no-cache` requests are honored. The ability to ignore `no-cache` is necessary to protect origin servers from DDOS attacks.
+	// RFCCompliant determines whether `Cache-Control: no-cache` requests are honored. The ability to ignore `no-cache` is necessary to protect origin servers from DDOS attacks. In general, CDNs and caching proxies with the goal of origin protection should set RFCComplaint false. Cache with other goals (performance, load balancing, etc) should set RFCCompliant true.
 	RFCCompliant bool `json:"rfc_compliant"`
 	// Port is the HTTP port to serve on
 	Port int `json:"port"`
@@ -74,7 +74,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests))
+	handler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), cfg.RFCCompliant)
 
 	listen := fmt.Sprintf(":%d", cfg.Port)
 	fmt.Printf("proxy listening on http://%s\n", listen)
