@@ -2893,7 +2893,7 @@ sub setup_lwp {
 	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
 
 	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
-	$browser->timeout(15);
+	$browser->timeout(30);
 
 	return $browser;
 }
