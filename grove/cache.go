@@ -93,11 +93,9 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	reqHeader := http.Header{}
 	copyHeader(r.Header, &reqHeader)
 
-	key := buildKey(r) // key MUST be built before calling ServeHTTP, because the http.Request is not guaranteed valid after.
-
-	remappedReq, remapName, ruleFound := h.remapper.Remap(r)
-	if !ruleFound {
-		fmt.Printf("DEBUG rule not found for %v\n", key)
+	remappedReq, remapName, cacheKey, ok := h.remapper.Remap(r)
+	if !ok {
+		fmt.Printf("DEBUG rule not found for %v\n", r.RequestURI)
 		h.serveRuleNotFound(w)
 		return
 	}
@@ -107,15 +105,15 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			// TODO figure out why respReqTime isn't used
 			respCode, respHeader, respBody, _, respRespTime, err := h.request(remappedReq)
 			if err != nil {
-				fmt.Printf("DEBUG origin err for %v rule %v err %v\n", key, remapName, err)
+				fmt.Printf("DEBUG origin err for %v rule %v err %v\n", cacheKey, remapName, err)
 				code := http.StatusInternalServerError
 				body := []byte(http.StatusText(code))
 				return NewCacheObj(reqHeader, body, code, respHeader, reqTime, respRespTime)
 			}
 			obj := NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, respRespTime)
 			if CanCache(reqHeader, respCode, respHeader, h.strictRFC) {
-				fmt.Printf("h.cache.AddSize %v\n", key)
-				h.cache.AddSize(key, obj, obj.size) // TODO store pointer?
+				fmt.Printf("h.cache.AddSize %v\n", cacheKey)
+				h.cache.AddSize(cacheKey, obj, obj.size) // TODO store pointer?
 			}
 			return obj
 		}
@@ -150,10 +148,10 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	iCacheObj, ok := h.cache.Get(key)
+	iCacheObj, ok := h.cache.Get(cacheKey)
 	if !ok {
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' not in cache\n", key)
-		cacheObj := h.getter.Get(key, getAndCache, canReuse)
+		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
+		cacheObj := h.getter.Get(cacheKey, getAndCache, canReuse)
 		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
 		return
 	}
@@ -161,8 +159,8 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	cacheObj, ok := iCacheObj.(*CacheObj)
 	if !ok {
 		// should never happen
-		fmt.Printf("Error: cache key '%v' value '%v' type '%T' expected *CacheObj\n", key, iCacheObj, iCacheObj)
-		cacheObj = h.getter.Get(key, getAndCache, canReuse)
+		fmt.Printf("Error: cache key '%v' value '%v' type '%T' expected *CacheObj\n", cacheKey, iCacheObj, iCacheObj)
+		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 		// TODO check for ReuseMustRevalidate
 		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
 		return
@@ -174,14 +172,14 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	switch canReuseStored {
 	case ReuseCan:
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' cache hit!\n", key)
+		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' cache hit!\n", cacheKey)
 	case ReuseCannot:
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' can't reuse\n", key)
-		cacheObj = h.getter.Get(key, getAndCache, canReuse)
+		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' can't reuse\n", cacheKey)
+		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	case ReuseMustRevalidate:
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' must revalidate\n", key)
+		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' must revalidate\n", cacheKey)
 		// TODO implement revalidate
-		cacheObj = h.getter.Get(key, getAndCache, canReuse)
+		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	}
 	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
 }
@@ -226,13 +224,6 @@ func (h *cacheHandler) serveRuleNotFound(w http.ResponseWriter) {
 // 	// h.parent.ServeHTTP(w, r)
 // }
 
-// TODO make configurable (method, uri, query params, etc)
-func buildKey(r *http.Request) string {
-	uri := fmt.Sprintf("%s://%s%s", getScheme(r), r.Host, r.RequestURI)
-	key := fmt.Sprintf("%s:%s", r.Method, uri)
-	return key
-}
-
 // // TryCache determines if it can validly cache the given response per RFC 7234. If so, it caches it in this handler's cache.
 // func (h *cacheHandler) TryCache(key string, reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, respTime time.Time) {
 // 	canCache := CanCache(reqHeader, code, respHeader)
@@ -270,15 +261,3 @@ func (h *cacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 	w.WriteHeader(code)
 	w.Write(body)
 }
-
-// func (h *cacheHandler) ThrottleRequest(remapRuleName string, remapKey string, noCache bool, request func()) {
-// 	h.ruleThrottlers[remapRuleName].Throttle(func() {
-// 		var throttlers Throttlers
-// 		if noCache {
-// 			throttlers = h.nocacheThrottlers
-// 		} else {
-// 			throttlers = h.keyThrottlers
-// 		}
-// 		throttlers.Throttle(remapKey, request)
-// 	})
-// }
