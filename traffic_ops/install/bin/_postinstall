@@ -35,6 +35,7 @@ use Getopt::Long;
 
 use InstallUtils qw{ :all };
 use GenerateCert qw{ :all };
+use Database qw{ connect };
 
 # paths of the output configuration files
 my $databaseConfFile = "/opt/traffic_ops/app/conf/production/database.conf";
@@ -516,18 +517,6 @@ sub getDefaults {
             {
                 "DNS sub-domain for which your CDN is authoritative" => "cdn1.kabletown.net",
                 "config_var"                                         => "dns_subdomain"
-            },
-            {
-                "TrafficServer Drive Prefix" => "/dev/sd",
-                "config_var"                 => "driver_prefix"
-            },
-            {
-                "TrafficServer RAM Drive Prefix" => "/dev/ram",
-                "config_var"                     => "ram_drive_prefix"
-            },
-            {
-                "TrafficServer RAM Drive Letters (comma separated)" => "0,1,2,3,4,5,6,7",
-                "config_var"                                        => "ram_drive_letters"
             }
         ]
     };
@@ -568,14 +557,13 @@ QUERY
 
     # Skip the insert if the admin 'username' is already there.
     my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
-
     my $insert_admin = <<"ADMIN";
-    insert into tm_user (username, role, local_passwd) 
-                values  ("$adminconf->{"username"}", 
+    insert into tm_user (username, role, local_passwd, confirm_local_passwd)
+                values  ('$adminconf->{"username"}',
                         (select id from role where name = 'admin'),
-                         "$sha1_passwd",
-                        "$sha1_passwd" ))
-                ON CONFLICT (profile, parameter) DO NOTHING ON CONFLICT (username) DO NOTHING;"
+                         '$sha1_passwd',
+                        '$sha1_passwd' )
+                        ON CONFLICT (username) DO NOTHING;
 ADMIN
     $dbh->do($insert_admin);
 
@@ -654,35 +642,6 @@ sub setupCertificates {
 }
 
 #------------------------------------
-sub connect_to_database {
-    my $databaseConfFile = shift;
-    my $todbconf = shift;
-
-    my $dbconf = InstallUtils::readJson($databaseConfFile);
-
-    # Check if the Postgres db is used and set the admin database to be "postgres"
-    my $dbName = $dbconf->{type};
-    if ( $dbconf->{type} eq "Pg" ) {
-        $dbName = "traffic_ops";
-    }
-
-    $ENV{PGUSER}     = $todbconf->{"pgUser"};
-    $ENV{PGPASSWORD} = $todbconf->{"pgPassword"};
-
-    my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbName, $dbconf->{hostname}, $dbconf->{port} );
-    my $dbh = DBI->connect( $dsn, $todbconf->{"pgUser"}, $todbconf->{"pgPassword"} );
-    if ($dbh) {
-        InstallUtils::logger( "Database connection succeeded", "info" );
-    }
-    else {
-        InstallUtils::logger( "Error connecting to database", "error" );
-        exit(-1);
-    }
-   return $dbh;
-
-}
-
-#------------------------------------
 sub insert_parameters {
     my $dbh = shift;
     my $paramconf = shift;
@@ -697,38 +656,28 @@ sub insert_parameters {
     -- global parameters
     insert into parameter (name, config_file, value) 
                 values ('tm.url', 'global', '$paramconf->{"tm.url"}') 
-                ON CONFLICT (name, value) DO NOTHING;
+                ON CONFLICT DO NOTHING;
 
     insert into parameter (name, config_file, value) 
                 values ('tm.instance_name', 'global', '$paramconf->{"tm.instance_name"}') 
-                ON CONFLICT (name, value) DO NOTHING;
+                ON CONFLICT DO NOTHING;
 
     insert into parameter (name, config_file, value) 
                 values ('tm.toolname', 'global', '$paramconf->{"tm.toolname"}') 
-                ON CONFLICT (name, value) DO NOTHING;
+                ON CONFLICT DO NOTHING;
 
     insert into parameter (name, config_file, value) 
                 values ('tm.infourl', 'global', '$paramconf->{"tm.url"}/doc') 
-                ON CONFLICT (name, value) DO NOTHING;
+                ON CONFLICT DO NOTHING;
 
     -- CRConfig.json parameters
     insert into parameter (name, config_file, value) 
                 values ('geolocation.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLite2-City.mmdb.gz') 
-                ON CONFLICT (name, value) DO NOTHING;
+                ON CONFLICT DO NOTHING;
 
     insert into parameter (name, config_file, value) 
                 values ('geolocation6.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLiteCityv6.dat.gz') 
-                ON CONFLICT (name, value) DO NOTHING;
-
-    -- RAM Prefix
-    insert into parameter (name, config_file, value) 
-                values ('RAM_Drive_Prefix', 'storage.config', '$paramconf->{"ram_drive_prefix"}') 
-                ON CONFLICT (name, value) DO NOTHING;
-
-    insert into parameter (name, config_file, value) 
-                values ('RAM_Drive_Letters', 'storage.config', '$paramconf->{"ram_drive_letters"}') 
-                ON CONFLICT (name, value) DO NOTHING;
-
+                ON CONFLICT DO NOTHING;
 
 INSERTS
     doInsert($dbh, $insert_stmt);
@@ -897,7 +846,7 @@ sub main {
     setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
 
-    my $dbh = connect_to_database($databaseConfFile, $todbconf);
+    my $dbh = Database::connect($databaseConfFile, $todbconf);
     setupDatabaseData( $dbh, $adminconf, $paramconf );
 
     InstallUtils::logger("Starting Traffic Ops", "info" );
