@@ -14,3 +14,49 @@
  limitations under the License.
 
 */
+
+#cache-groups-outer-container {
+
+  #cacheGroupsContainer {
+    max-height: 452px;
+    margin-bottom: 0;
+
+    .list-group-item {
+      background-color: transparent;
+    }
+
+    .cache-group-health {
+      height: 45px;
+
+      .cache-groups-table {
+        margin-top: -10px;
+        border-style: none;
+
+        td {
+          border-top: none !important;
+          padding: 12px 8px !important;
+        }
+
+      }
+
+    }
+
+  }
+
+  .cache-groups-pagination {
+    margin: 0 0 10px 0;
+    float: left;
+  }
+
+  .cache-group-search-form {
+    float: right;
+    width: 250px;
+    margin-bottom: 10px;
+  }
+
+}
+
+#cacheGroupsLoadingContainer {
+  height: 555px;
+  background-color: transparent;
+}
