@@ -199,10 +199,11 @@ func Up_20170205101432(txn *sql.Tx) {
 							} else {
 								parent_retry = "both"
 							}
-						} else {
+						} else if string(match[1]) == "dead_server_retry_response_codes" {
 							// unavailable_server_retry_responses is the only one that survives?
 							//	if string(match[1]) == "dead_server_retry_response_codes" {
-							pName := strings.Replace("mso."+string(match[1]), "dead", "unavailable", 1) // "mso.unavailable_server_retry_responses"
+							pName := strings.Replace("mso."+string(match[1]), "dead", "unavailable", 1) // "mso.unavailable_server_retry_response_codes"
+							pName = strings.Replace(pName, "response_codes", "responses", 1) // "mso.unavailable_server_retry_responses"
 							fmt.Println("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
 								pName, "parent.config", string(match[2]))
 							newRow := txn.QueryRow("INSERT INTO PARAMETER (name, config_file, value) VALUES ($1, $2, $3) RETURNING id",
