@@ -1,49 +1,16 @@
 package grove
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
 )
 
-// type remapHandler struct {
-// 	parent   http.Handler
-// 	remapper HTTPRequestRemapper
-// }
-
-// // NewHandler returns an http.Handler objectn, which may be pipelined with other http.Handlers via `http.ListenAndServe`. If you prefer pipelining functions, use `GetHandlerFunc`.
-// func NewRemapHandler(parent http.Handler, remapper HTTPRequestRemapper) http.Handler {
-// 	return &remapHandler{
-// 		parent:   parent,
-// 		remapper: remapper,
-// 	}
-// }
-
-// NewHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use Java. I mean, `New`.
-// func NewRemapHandlerFunc(parent http.HandlerFunc, remapper HTTPRequestRemapper)  http.HandlerFunc {
-// 	handler := NewRemapHandler(parent, remapper)
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		handler.ServeHTTP(w, r)
-// 	}
-// }
-
-// func (h *remapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-// 	r, _, ok := h.remapper.Remap(r)
-// 	// TODO configurable remap failure response
-// 	if !ok {
-// 		code := http.StatusNotFound
-// 		w.WriteHeader(code)
-// 		w.Write([]byte(http.StatusText(code)))
-// 		return
-// 	}
-// 	h.parent.ServeHTTP(w, r)
-// }
-
 type HTTPRequestRemapper interface {
 	// Remap returns the remapped request, the matched rule name, and whether a match was found.
-	Remap(*http.Request) (*http.Request, string, bool)
+	Remap(*http.Request) (*http.Request, string, string, bool)
 	Rules() []string
 }
 
@@ -62,26 +29,37 @@ func getScheme(r *http.Request) string {
 	return "http"
 }
 
-func (hr simpleHttpRequestRemapper) Remap(r *http.Request) (*http.Request, string, bool) {
+func buildKey(r *http.Request) string {
+	uri := fmt.Sprintf("%s://%s%s", getScheme(r), r.Host, r.RequestURI)
+	key := fmt.Sprintf("%s:%s", r.Method, uri)
+	return key
+}
+
+// Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, and whether a rule was found.
+func (hr simpleHttpRequestRemapper) Remap(r *http.Request) (*http.Request, string, string, bool) {
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
 	oldUri := fmt.Sprintf("%s://%s%s", getScheme(r), r.Host, r.RequestURI)
 	fmt.Printf("DEBUG Remap oldUri: '%v'\n", oldUri)
 	fmt.Printf("DEBUG request: '%+v'\n", r)
-	newUri, ruleName, ok := hr.remapper.Remap(oldUri)
+	// newUri, ruleName, options, ok :=
+	rule, ok := hr.remapper.Remap(oldUri)
 	if !ok {
 		fmt.Printf("DEBUG Remap oldUri: '%v' NOT FOUND\n", oldUri)
-		return r, "", false
+		return r, "", "", false
 	}
-	fmt.Printf("DEBUG Remap newURI: '%v'\n", newUri)
+
+	newUri := rule.URI(oldUri)
+	cacheKey := rule.CacheKey(r.Method, oldUri)
+	fmt.Printf("DEBUG Remap newURI: '%v'\nDEBUG Remap cacheKey '%v'\n", newUri, cacheKey)
 
 	newReq, err := http.NewRequest(r.Method, newUri, nil) // TODO modify given req in-place?
 	if err != nil {
 		fmt.Printf("Error Remap NewRequest: %v\n", err)
-		return r, "", false
+		return r, "", "", false
 	}
 	copyHeader(r.Header, &newReq.Header)
-	return newReq, ruleName, true
+	return newReq, rule.Name(), cacheKey, true
 }
 
 func copyHeader(source http.Header, dest *http.Header) {
@@ -96,81 +74,102 @@ func RemapperToHTTP(r Remapper) HTTPRequestRemapper {
 	return simpleHttpRequestRemapper{remapper: r}
 }
 
-func NewHTTPRequestRemapper(remap map[string]string) HTTPRequestRemapper {
+func NewHTTPRequestRemapper(remap []RemapRule) HTTPRequestRemapper {
 	return RemapperToHTTP(NewLiteralPrefixRemapper(remap))
 }
 
 // Remapper provides a function which takes strings and maps them to other strings. This is designed for URL prefix remapping, for a reverse proxy.
 type Remapper interface {
 	// Remap returns the given string remapped, the unique name of the rule found, and whether a remap rule was found
-	Remap(string) (string, string, bool)
+	Remap(uri string) (RemapRule, bool)
 	// Rules returns the unique names of every remap rule.
 	Rules() []string
 }
 
 // TODO change to use a prefix tree, for speed
 type literalPrefixRemapper struct {
-	remap map[string]string
+	remap []RemapRule
 }
 
-// Remap returns the remapped string, the remap rule name, and whether a remap was found
-func (r literalPrefixRemapper) Remap(s string) (string, string, bool) {
-	for from, to := range r.remap {
-		if strings.HasPrefix(s, from) {
-			return to + s[len(from):], to, true
+// Remap returns the remapped string, the remap rule name, the remap rule's options, and whether a remap was found
+func (r literalPrefixRemapper) Remap(s string) (RemapRule, bool) {
+	for _, rule := range r.remap {
+		if strings.HasPrefix(s, rule.From) {
+			return rule, true
 		}
 	}
-	return s, "", false
+	return RemapRule{}, false
 }
 
 func (r literalPrefixRemapper) Rules() []string {
 	rules := make([]string, len(r.remap))
 	for _, rule := range r.remap {
-		rules = append(rules, rule)
+		rules = append(rules, rule.From)
 	}
 	return rules
 }
 
-func NewLiteralPrefixRemapper(remap map[string]string) Remapper {
+func NewLiteralPrefixRemapper(remap []RemapRule) Remapper {
 	return literalPrefixRemapper{remap: remap}
 }
 
-func LoadRemapRules(path string) (map[string]string, error) {
+type RemapRulesJSON struct {
+	Rules []RemapRule `json:"rules"`
+}
+
+type RemapRule struct {
+	From        string          `json:"from"`
+	To          string          `json:"to"`
+	QueryString QueryStringRule `json:"query-string"`
+}
+
+type QueryStringRule struct {
+	Remap bool `json:"remap"`
+	Cache bool `json:"cache"`
+}
+
+func (r RemapRule) Name() string {
+	return r.To
+}
+
+func (r RemapRule) URI(fromURI string) string {
+	uri := r.To + fromURI[len(r.From):]
+	if !r.QueryString.Remap {
+		if i := strings.Index(uri, "?"); i != -1 {
+			uri = uri[:i]
+		}
+	}
+	return uri
+}
+
+func (r RemapRule) CacheKey(method string, fromURI string) string {
+	uri := r.To + fromURI[len(r.From):]
+	if !r.QueryString.Cache {
+		if i := strings.Index(uri, "?"); i != -1 {
+			uri = uri[:i]
+		}
+	}
+	key := method + ":" + uri
+	return key
+}
+
+func LoadRemapRules(path string) ([]RemapRule, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
-
-	remap := map[string]string{}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		tokens := strings.Split(line, " ")
-		if len(tokens) < 3 {
-			return nil, fmt.Errorf("malformed line '%s'", line)
-		}
-		rule := tokens[0]
-		switch rule {
-		case "map":
-			from := tokens[1]
-			to := tokens[2]
-			remap[from] = to
-		default:
-			return nil, fmt.Errorf("unknown rule '%s'", line)
-		}
+	remapRules := RemapRulesJSON{}
+	if err := json.NewDecoder(file).Decode(&remapRules); err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return remap, nil
+	return remapRules.Rules, nil
 }
 
 func LoadRemapper(path string) (HTTPRequestRemapper, error) {
-	remapRules, err := LoadRemapRules(path)
+	rules, err := LoadRemapRules(path)
 	if err != nil {
 		return nil, err
 	}
-	return NewHTTPRequestRemapper(remapRules), nil
+	return NewHTTPRequestRemapper(rules), nil
 }
