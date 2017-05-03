@@ -68,11 +68,12 @@ func gogetter(g *getter, key string, actualGet func() *CacheObj, canReuse func(*
 		obj := actualGet()
 		// don't need to check if the first can use, since the object isn't 'cached' i.e. given to anyone else yet.
 		getter.c <- obj
-		if noRemainingGetters {
-			return
-		}
+
 		// TODO process all getters, and create a list of "getters who couldn't use", and re-queue them? That would optimize for some requests being cachable and some not, for the same key. The current routine is optimized for an uncacheable key being uncacheable for all requestors.
 		for {
+			if noRemainingGetters {
+				return
+			}
 			getter, noRemainingGetters = g.atomicPopGetter(key)
 			if getter.canUse(obj) {
 				getter.c <- obj
