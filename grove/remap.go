@@ -59,7 +59,7 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request) (*http.Request, strin
 		return r, "", "", false
 	}
 	copyHeader(r.Header, &newReq.Header)
-	return newReq, rule.Name(), cacheKey, true
+	return newReq, rule.Name, cacheKey, true
 }
 
 func copyHeader(source http.Header, dest *http.Header) {
@@ -104,7 +104,7 @@ func (r literalPrefixRemapper) Remap(s string) (RemapRule, bool) {
 func (r literalPrefixRemapper) Rules() []string {
 	rules := make([]string, len(r.remap))
 	for _, rule := range r.remap {
-		rules = append(rules, rule.From)
+		rules = append(rules, rule.Name)
 	}
 	return rules
 }
@@ -118,6 +118,7 @@ type RemapRulesJSON struct {
 }
 
 type RemapRule struct {
+	Name        string          `json:"name"`
 	From        string          `json:"from"`
 	To          string          `json:"to"`
 	QueryString QueryStringRule `json:"query-string"`
@@ -126,10 +127,6 @@ type RemapRule struct {
 type QueryStringRule struct {
 	Remap bool `json:"remap"`
 	Cache bool `json:"cache"`
-}
-
-func (r RemapRule) Name() string {
-	return r.To
 }
 
 func (r RemapRule) URI(fromURI string) string {

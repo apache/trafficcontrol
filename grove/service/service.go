@@ -25,6 +25,7 @@ type Config struct {
 	ConcurrentRuleRequests int    `json:"concurrent_rule_requests"`
 	CertFile               string `json:"cert_file"`
 	KeyFile                string `json:"key_file"`
+	InterfaceName          string `json:"interface_name"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
@@ -79,7 +80,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), cfg.RFCCompliant)
+	statHandler, statWriter := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules())
+	cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), statWriter, cfg.RFCCompliant)
+	handler := http.NewServeMux()
+	handler.Handle("/_astats", statHandler)
+	handler.Handle("/", cacheHandler)
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
 	startHTTPServer(handler, cfg.Port)
