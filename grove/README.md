@@ -44,3 +44,25 @@ go run service/service.go -config ./service/cfg.json
 ```
 4. Verify it's working by making a request to a remapped endpoint.
     * For example, with the sample config, `curl -vs http://localhost:8080/foo/bar` should return a response from `http://example.com/foo/bar`, and the server should log messages regarding the request and cacheability.
+
+# HTTPS
+
+To serve on HTTPS, you will need a server key and a certificate.
+
+If you're not familiar with keys and certificates, we strongly recommend doing your own research to create sufficiently strong keys, and get valid certificates. But to get started, you can generate a server key via `openssl genrsa -out server.key 2048`, and generate a self-signed certificate (which will give warnings to clients), `openssl req -new -x509 -sha256 -key server.key -out server.crt -days 365`. You can also obtain free valid certificates from [Let's Encrypt](https://letsencrypt.org/).
+
+Then, set the `https_port`, `cert_file`, and `key_file` in the service config
+
+```json
+{
+  "rfc_compliant": false,
+  "port": 8080,
+  "cache_size_bytes": 50000,
+  "remap_rules_file": "./remap.json",
+  "https_port": 443,
+  "key_file": "./server.key",
+  "cert_file": "./server.crt"
+}
+```
+
+When `key_file`, and `cert_file` exist in the config, the service will automatically serve HTTPS alongside HTTP. The `https_port` defaults to `443`.

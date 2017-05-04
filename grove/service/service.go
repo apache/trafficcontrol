@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/hashicorp/golang-lru"
 	"github.com/apache/incubator-trafficcontrol/grove"
@@ -16,17 +17,21 @@ type Config struct {
 	// RFCCompliant determines whether `Cache-Control: no-cache` requests are honored. The ability to ignore `no-cache` is necessary to protect origin servers from DDOS attacks. In general, CDNs and caching proxies with the goal of origin protection should set RFCComplaint false. Cache with other goals (performance, load balancing, etc) should set RFCCompliant true.
 	RFCCompliant bool `json:"rfc_compliant"`
 	// Port is the HTTP port to serve on
-	Port int `json:"port"`
+	Port      int `json:"port"`
+	HTTPSPort int `json:"https_port"`
 	// CacheSizeBytes is the size of the memory cache, in bytes.
 	CacheSizeBytes         int    `json:"cache_size_bytes"`
 	RemapRulesFile         string `json:"remap_rules_file"`
 	ConcurrentRuleRequests int    `json:"concurrent_rule_requests"`
+	CertFile               string `json:"cert_file"`
+	KeyFile                string `json:"key_file"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
 	RFCCompliant:           true,
 	Port:                   80,
+	HTTPSPort:              443,
 	CacheSizeBytes:         bytesPerGibibyte,
 	RemapRulesFile:         "remap.config",
 	ConcurrentRuleRequests: 100000,
@@ -76,11 +81,38 @@ func main() {
 
 	handler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), cfg.RFCCompliant)
 
-	listen := fmt.Sprintf(":%d", cfg.Port)
-	fmt.Printf("proxy listening on http://%s\n", listen)
-	if err := http.ListenAndServe(listen, handler); err != nil {
-		fmt.Printf("Error serving: %v\n", err)
+	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
+	startHTTPServer(handler, cfg.Port)
+	if cfg.CertFile != "" && cfg.KeyFile != "" {
+		startHTTPSServer(handler, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
 	}
+	// TODO replace with config/remap file poller?
+	for {
+		time.Sleep(100000)
+	}
+}
+
+// startHTTPServer starts an HTTP server on the given port, and returns it
+func startHTTPServer(handler http.Handler, port int) *http.Server {
+	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port)}
+	go func() {
+		fmt.Printf("listening on http://%d\n", port)
+		if err := server.ListenAndServe(); err != nil {
+			fmt.Printf("Error serving HTTP port %v: %v\n", port, err)
+		}
+	}()
+	return server
+}
+
+func startHTTPSServer(handler http.Handler, port int, certFile string, keyFile string) *http.Server {
+	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port)}
+	go func() {
+		fmt.Printf("listening on https://%d\n", port)
+		if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
+			fmt.Printf("Error serving HTTPS port %v: %v\n", port, err)
+		}
+	}()
+	return server
 }
 
 // handle makes the given request and writes it to the given writer. It's assumed the request coming from a client has had its host rewritten to some other service. DO NOT call this with an unmodified request from a client; that would cause an infinite loop of pain.
