@@ -27,13 +27,19 @@ my $finfo = __FILE__ . ":";
 
 my %valid_http_methods = map { $_ => 1 } ('GET', 'POST', 'PUT', 'PATCH', 'DELETE');
 
-sub all {
-	my $self = shift;
+sub index {
+	my $self       = shift;
+	my $capability = $self->param('capability');
+
+	my %criteria;
+	if ( defined $capability ) {
+		$criteria{'me.capability'} = $capability;
+	}
 	my @data;
 	my $orderby = "capability";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
 
-	my $rs_data = $self->db->resultset("ApiCapability")->search( undef, { order_by => $orderby } );
+	my $rs_data = $self->db->resultset("ApiCapability")->search( \%criteria, { prefetch => ['capability'], order_by => $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
@@ -68,15 +74,7 @@ sub renderResults {
 	$self->success( \@data );
 }
 
-sub capName {
-	my $self = shift;
-	my $capability = $self->param('name');
-
-	my $rs_data = $self->db->resultset("ApiCapability")->search( 'me.capability' => $capability );
-	$self->renderResults( $rs_data ) ;
-}
-
-sub index {
+sub show {
 	my $self = shift;
 	my $id = $self->param('id');
 
