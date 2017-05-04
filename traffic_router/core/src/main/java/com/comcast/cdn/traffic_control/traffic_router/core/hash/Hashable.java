@@ -17,8 +17,11 @@ package com.comcast.cdn.traffic_control.traffic_router.core.hash;
 
 import java.util.List;
 
-public interface Hashable <E> {
+public interface Hashable <E> extends Comparable<E> {
 	Hashable<E> generateHashes(String hashId, int hashCount);
 	double getClosestHash(double hash);
 	List<Double> getHashValues();
+	boolean hasHashes();
+	int getOrder();
+	void setOrder(int order);
 }

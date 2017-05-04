@@ -508,4 +508,48 @@ public class SteeringTest {
 			}
 		}
 	}
+
+	@Test
+	public void itUsesMultiLocationFormatWithMoreThanTwoEntries() throws Exception {
+		final String path = "/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78";
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+		httpGet.addHeader("Host", "tr.client-steering-test-2.thecdn.example.com");
+
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			String location1 = ".steering-target-2.thecdn.example.com:8090" + path;
+			String location2 = ".steering-target-1.thecdn.example.com:8090" + path;
+			String location3 = ".client-steering-target-2.thecdn.example.com:8090" + path;
+			String location4 = ".client-steering-target-4.thecdn.example.com:8090" + path;
+			String location5 = ".client-steering-target-3.thecdn.example.com:8090" + path;
+			String location6 = ".client-steering-target-1.thecdn.example.com:8090" + path;
+			String location7 = ".steering-target-4.thecdn.example.com:8090" + path;
+			String location8 = ".steering-target-3.thecdn.example.com:8090" + path;
+
+			HttpEntity entity = response.getEntity();
+			assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+			assertThat(response.getFirstHeader("Location").getValue(), endsWith(location1));
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+			assertThat(entity.getContent(), not(nullValue()));
+
+			JsonNode json = objectMapper.readTree(entity.getContent());
+
+			assertThat(json.has("locations"), equalTo(true));
+			assertThat(json.get("locations").size(), equalTo(8));
+			assertThat(json.get("locations").get(0).asText(), equalTo(response.getFirstHeader("Location").getValue()));
+			assertThat(json.get("locations").get(1).asText(), endsWith(location2));
+			assertThat(json.get("locations").get(2).asText(), endsWith(location3));
+			assertThat(json.get("locations").get(3).asText(), endsWith(location4));
+			assertThat(json.get("locations").get(4).asText(), endsWith(location5));
+			assertThat(json.get("locations").get(5).asText(), endsWith(location6));
+			assertThat(json.get("locations").get(6).asText(), endsWith(location7));
+			assertThat(json.get("locations").get(7).asText(), endsWith(location8));
+		} finally {
+			if (response != null) { response.close(); }
+		}
+	}
 }

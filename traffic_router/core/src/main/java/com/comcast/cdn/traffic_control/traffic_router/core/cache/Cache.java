@@ -245,4 +245,19 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	public void setHttpsPort(final int httpsPort) {
 		this.httpsPort = httpsPort;
 	}
+
+	@Override
+	public boolean hasHashes() {
+		return hashable.hasHashes();
+	}
+
+	@Override
+	public int getOrder() {
+		return hashable.getOrder();
+	}
+
+	@Override
+	public void setOrder(final int order) {
+		hashable.setOrder(order);
+	}
 }

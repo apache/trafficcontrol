@@ -48,12 +48,38 @@
       "deliveryService": "client-steering-test-2",
       "targets": [
         {
+          "deliveryService": "steering-target-1",
+          "order": -100
+        },
+        {
+          "deliveryService": "steering-target-2",
+          "order": "-101",
+          "weight": "0"
+        },
+        {
+          "deliveryService": "client-steering-target-1",
+          "weight": "0",
+          "order": "1"
+        },
+        {
+          "deliveryService": "client-steering-target-2",
+          "order": "-1"
+        },
+        {
           "deliveryService": "client-steering-target-3",
           "weight": "5000"
         },
         {
           "deliveryService": "client-steering-target-4",
           "weight": "5000"
+        },
+        {
+          "deliveryService": "steering-target-3",
+          "order": "6000"
+        },
+        {
+          "deliveryService": "steering-target-4",
+          "order": "5001"
         }
       ],
       "clientSteering": true
