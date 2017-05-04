@@ -681,6 +681,23 @@ sub api_routes {
 	# Supports ?orderby=key
 	$r->get("/api/$version/roles")->over( authenticated => 1 )->to( 'Role#index', namespace => $namespace );
 
+	# -- CAPABILITIES
+	# Supports ?orderby=key
+	$r->get("/api/$version/capabilities")->over( authenticated => 1 )->to( 'Capability#all', namespace => $namespace );
+	$r->get("/api/$version/capabilities/:name")->over( authenticated => 1 )->to( 'Capability#name', namespace => $namespace );
+	$r->put("/api/$version/capabilities/:name")->over( authenticated => 1 )->to( 'Capability#update', namespace => $namespace );
+	$r->post("/api/$version/capabilities")->over( authenticated => 1 )->to( 'Capability#create', namespace => $namespace );
+	$r->delete("/api/$version/capabilities/:name")->over( authenticated => 1 )->to( 'Capability#delete', namespace => $namespace );
+
+	# -- API-CAPABILITIES
+	# Supports ?orderby=key
+	$r->get("/api/$version/api_capabilities")->over( authenticated => 1 )->to( 'ApiCapability#all', namespace => $namespace );
+	$r->get("/api/$version/api_capabilities/:id")->over( authenticated => 1 )->to( 'ApiCapability#index', namespace => $namespace );
+	$r->get("/api/$version/api_capabilities/capability/:name")->over( authenticated => 1 )->to( 'ApiCapability#capName', namespace => $namespace );
+	$r->put("/api/$version/api_capabilities/:id")->over( authenticated => 1 )->to( 'ApiCapability#update', namespace => $namespace );
+	$r->post("/api/$version/api_capabilities")->over( authenticated => 1 )->to( 'ApiCapability#create', namespace => $namespace );
+	$r->delete("/api/$version/api_capabilities/:id")->over( authenticated => 1 )->to( 'ApiCapability#delete', namespace => $namespace );
+
 	# -- SERVERS
 	# -- SERVERS: CRUD
 	$r->get("/api/$version/servers")->over( authenticated => 1 )->to( 'Server#index', namespace => $namespace );
