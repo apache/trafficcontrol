@@ -23,6 +23,8 @@ public class SteeringTarget extends DefaultHashable {
 	private String deliveryService;
 	@JsonProperty
 	private int weight;
+	@JsonProperty
+	private int order = 0;
 
 	public DefaultHashable generateHashes() {
 		return generateHashes(deliveryService, weight);
@@ -44,6 +46,14 @@ public class SteeringTarget extends DefaultHashable {
 		return weight;
 	}
 
+	public void setOrder(final int order) {
+		this.order = order;
+	}
+
+	public int getOrder() {
+		return order;
+	}
+
 	@Override
 	@SuppressWarnings("PMD")
 	public boolean equals(Object o) {
@@ -53,6 +63,7 @@ public class SteeringTarget extends DefaultHashable {
 		SteeringTarget target = (SteeringTarget) o;
 
 		if (weight != target.weight) return false;
+		if (order != target.order) return false;
 		return deliveryService != null ? deliveryService.equals(target.deliveryService) : target.deliveryService == null;
 
 	}
@@ -61,6 +72,7 @@ public class SteeringTarget extends DefaultHashable {
 	public int hashCode() {
 		int result = deliveryService != null ? deliveryService.hashCode() : 0;
 		result = 31 * result + weight;
+		result = 31 * result + order;
 		return result;
 	}
 }

@@ -56,7 +56,13 @@ public class SteeringRegistry {
 		registry.putAll(newSteerings);
 		for (final Steering steering : steerings) {
 			for (final SteeringTarget target : steering.getTargets()) {
-				LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight());
+				if (target.getWeight() > 0) {
+					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight());
+				} else if (target.getOrder() > 0 || target.getOrder() < 0) { // this target has a specific order set
+					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has order " + target.getOrder());
+				} else {
+					LOGGER.info("Steering " + steering.getDeliveryService() + " target " + target.getDeliveryService() + " now has weight " + target.getWeight() + " and order " + target.getOrder());
+				}
 			}
 		}
 	}
