@@ -152,7 +152,7 @@ $t->post_ok("/api/1.2/api_capabilities" => {Accept => 'application/json'} => jso
 	, 'Does mapping details return?';
 
 #get by cap name
-$t->get_ok("/api/1.2/api_capabilities/capability/$cap_name")->status_is(200)
+$t->get_ok("/api/1.2/api_capabilities?capability=$cap_name")->status_is(200)
 	->json_is( "/response/0/id" => 1 )
 	->json_is( "/response/0/httpMethod" => $http_method )
 	->json_is( "/response/0/route" => $route )
