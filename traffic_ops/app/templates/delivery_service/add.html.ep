@@ -310,6 +310,7 @@
 		<h3><a href="#">Add Delivery Service</a></h3>
 		%= include 'common/_errors'
 		%= include 'common/_flash'
+		%= include 'common/_error_list'
 		<br>
 		<form method="POST" action="/ds/create" id="addds" style="margin-left:20px;">
 			<h2>Delivery Service Info:</h2>
