@@ -17,32 +17,21 @@
  * under the License.
  */
 
-var DashboardController = function(changeLogs, cacheGroupHealth, $scope, locationUtils) {
+var DashboardController = function(cacheGroupHealth, cdns, currentStats, $scope) {
 
-	$scope.changeLogs = changeLogs;
+	$scope.cacheGroupHealth = cacheGroupHealth;
 
-	$scope.getRelativeTime = function(date) {
-		return moment(date).fromNow();
-	};
+	$scope.cdns = _.filter(cdns, function(cdn) {
+		// we don't want the "ALL" cdn which is not really a cdn
+		return cdn.name != 'ALL';
+	});
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-
-	$scope.locationHealth = {
-		totalOnline: cacheGroupHealth.totalOnline,
-		totalOffline: cacheGroupHealth.totalOffline,
-		locations: cacheGroupHealth.cachegroups
-	};
-
-	// pagination
-	$scope.currentLocationPage = 1;
-	$scope.locationsPerPage = 10;
-
-	$scope.onlinePercent = function(location) {
-		return location.online / (location.online + location.offline);
-	};
+	$scope.totalStats = _.find(currentStats.currentStats, function(item) {
+		// total stats are buried in a hash where cdn = total
+		return item.cdn == 'total';
+	});
 
 };
 
-DashboardController.$inject = ['changeLogs', 'cacheGroupHealth', '$scope', 'locationUtils'];
+DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', '$scope'];
 module.exports = DashboardController;

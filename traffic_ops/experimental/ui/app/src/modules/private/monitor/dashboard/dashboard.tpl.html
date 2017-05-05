@@ -17,299 +17,79 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<script src="../../../../../../../../../traffic_portal/app/src/modules/private/deliveryService/view/overview/DeliveryServiceViewOverviewController.js"></script>
 <div role="main">
     <!-- top tiles -->
     <div class="row tile_count">
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-user"></i> Total Users</span>
-            <div class="count">2500</div>
-            <span class="count_bottom"><i class="green">4% </i> From last Week</span>
+            <span class="count_top"><i class="fa fa-bolt"></i> Total Bandwidth</span>
+            <div class="count">{{totalStats.bandwidth | number:2}} Gbps</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-clock-o"></i> Average Time</span>
-            <div class="count">123.50</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>3% </i> From last Week</span>
+            <span class="count_top"><i class="fa fa-clock-o"></i> Total Connections</span>
+            <div class="count">{{totalStats.connections | number:0}}</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-user"></i> Total Males</span>
-            <div class="count green">2,500</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+            <span class="count_top"><i class="fa fa-server"></i> Total Online Caches</span>
+            <div class="count green">{{cacheGroupHealth.totalOnline}}</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-user"></i> Total Females</span>
-            <div class="count">4,567</div>
-            <span class="count_bottom"><i class="red"><i class="fa fa-sort-desc"></i>12% </i> From last Week</span>
+            <span class="count_top"><i class="fa fa-server"></i> Total Offline Caches</span>
+            <div class="count red">{{cacheGroupHealth.totalOffline}}</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-user"></i> Total Collections</span>
-            <div class="count">2,315</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+            <span class="count_top"><i class="fa fa-user"></i> Another Metric</span>
+            <div class="count">999</div>
         </div>
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-            <span class="count_top"><i class="fa fa-user"></i> Total Connections</span>
-            <div class="count">7,325</div>
-            <span class="count_bottom"><i class="green"><i class="fa fa-sort-asc"></i>34% </i> From last Week</span>
+            <span class="count_top"><i class="fa fa-user"></i> Another Metric</span>
+            <div class="count">999</div>
         </div>
     </div>
     <!-- /top tiles -->
 
-    <div class="row">
-        <div class="col-md-12 col-sm-12 col-xs-12">
-            <div class="dashboard_graph">
-
-                <div class="row x_title">
-                    <div class="col-md-6">
-                        <h3>Network Activities <small>Graph title sub-title</small></h3>
-                    </div>
-                    <div class="col-md-6">
-                        <div id="reportrange" class="pull-right" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc">
-                            <i class="glyphicon glyphicon-calendar fa fa-calendar"></i>
-                            <span>December 30, 2014 - January 28, 2015</span> <b class="caret"></b>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-9 col-sm-9 col-xs-12">
-                    <div id="chart_plot_01" class="demo-placeholder"></div>
-                </div>
-                <div class="col-md-3 col-sm-3 col-xs-12 bg-white">
-                    <div class="x_title">
-                        <h3>Top Campaign Performance</h3>
-                        <div class="clearfix"></div>
-                    </div>
-
-                    <div class="col-md-12 col-sm-12 col-xs-6">
-                        <div>
-                            <p>Facebook Campaign</p>
-                            <div class="">
-                                <div class="progress progress_sm" style="width: 76%;">
-                                    <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="80"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <p>Twitter Campaign</p>
-                            <div class="">
-                                <div class="progress progress_sm" style="width: 76%;">
-                                    <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="60"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-12 col-sm-12 col-xs-6">
-                        <div>
-                            <p>Conventional Media</p>
-                            <div class="">
-                                <div class="progress progress_sm" style="width: 76%;">
-                                    <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="40"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <p>Bill boards</p>
-                            <div class="">
-                                <div class="progress progress_sm" style="width: 76%;">
-                                    <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="50"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="clearfix"></div>
-            </div>
+    <!-- cdn graphs -->
+    <div ng-repeat="cdn in ::cdns">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12 chartContainer" data-cdnid="{{::cdn.id}}" ui-view="cdnChartContent"></div>
         </div>
-
+        <br>
     </div>
-    <br />
+    <!-- /cdn graphs -->
 
     <div class="row">
 
 
         <div class="col-md-4 col-sm-4 col-xs-12">
-            <div class="x_panel tile fixed_height_320">
-                <div class="x_title">
-                    <h3>App Versions</h3>
-                </div>
-                <div class="x_content">
-                    <h4>App Usage across versions</h4>
-                    <div class="widget_summary">
-                        <div class="w_left w_25">
-                            <span>0.1.5.2</span>
-                        </div>
-                        <div class="w_center w_55">
-                            <div class="progress">
-                                <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 66%;">
-                                    <span class="sr-only">60% Complete</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w_right w_20">
-                            <span>123k</span>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-
-                    <div class="widget_summary">
-                        <div class="w_left w_25">
-                            <span>0.1.5.3</span>
-                        </div>
-                        <div class="w_center w_55">
-                            <div class="progress">
-                                <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 45%;">
-                                    <span class="sr-only">60% Complete</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w_right w_20">
-                            <span>53k</span>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="widget_summary">
-                        <div class="w_left w_25">
-                            <span>0.1.5.4</span>
-                        </div>
-                        <div class="w_center w_55">
-                            <div class="progress">
-                                <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 25%;">
-                                    <span class="sr-only">60% Complete</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w_right w_20">
-                            <span>23k</span>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="widget_summary">
-                        <div class="w_left w_25">
-                            <span>0.1.5.5</span>
-                        </div>
-                        <div class="w_center w_55">
-                            <div class="progress">
-                                <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 5%;">
-                                    <span class="sr-only">60% Complete</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w_right w_20">
-                            <span>3k</span>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="widget_summary">
-                        <div class="w_left w_25">
-                            <span>0.1.5.6</span>
-                        </div>
-                        <div class="w_center w_55">
-                            <div class="progress">
-                                <div class="progress-bar bg-green" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 2%;">
-                                    <span class="sr-only">60% Complete</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w_right w_20">
-                            <span>1k</span>
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-
-                </div>
-            </div>
+            <div class="x_panel tile fixed_height_320" ui-view="capacityContent"></div>
         </div>
 
         <div class="col-md-4 col-sm-4 col-xs-12">
-            <div class="x_panel tile fixed_height_320 overflow_hidden">
-                <div class="x_title">
-                    <h3>Device Usage</h3>
-                </div>
-                <div class="x_content">
-                    <table class="" style="width:100%">
-                        <tr>
-                            <th style="width:37%;">
-                                <p>Top 5</p>
-                            </th>
-                            <th>
-                                <div class="col-lg-7 col-md-7 col-sm-7 col-xs-7">
-                                    <p class="">Device</p>
-                                </div>
-                                <div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
-                                    <p class="">Progress</p>
-                                </div>
-                            </th>
-                        </tr>
-                        <tr>
-                            <td>
-                                <canvas class="canvasDoughnut" height="140" width="140" style="margin: 15px 10px 10px 0"></canvas>
-                            </td>
-                            <td>
-                                <table class="tile_info">
-                                    <tr>
-                                        <td>
-                                            <p><i class="fa fa-square blue"></i>IOS </p>
-                                        </td>
-                                        <td>30%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <p><i class="fa fa-square green"></i>Android </p>
-                                        </td>
-                                        <td>10%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <p><i class="fa fa-square purple"></i>Blackberry </p>
-                                        </td>
-                                        <td>20%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <p><i class="fa fa-square aero"></i>Symbian </p>
-                                        </td>
-                                        <td>15%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <p><i class="fa fa-square red"></i>Others </p>
-                                        </td>
-                                        <td>30%</td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+            <div class="x_panel tile fixed_height_320" ui-view="routingContent"></div>
         </div>
-
-
         <div class="col-md-4 col-sm-4 col-xs-12">
             <div class="x_panel tile fixed_height_320">
                 <div class="x_title">
-                    <h3>Quick Settings</h3>
+                    <h3>Something Else</h3>
                 </div>
                 <div class="x_content">
                     <div class="dashboard-widget-content">
                         <ul class="quick-list">
-                            <li><i class="fa fa-calendar-o"></i><a href="#">Settings</a>
+                            <li><i class="fa fa-calendar-o"></i><a href="#">Foo</a>
                             </li>
-                            <li><i class="fa fa-bars"></i><a href="#">Subscription</a>
+                            <li><i class="fa fa-bars"></i><a href="#">Bar</a>
                             </li>
-                            <li><i class="fa fa-bar-chart"></i><a href="#">Auto Renewal</a> </li>
-                            <li><i class="fa fa-line-chart"></i><a href="#">Achievements</a>
+                            <li><i class="fa fa-bar-chart"></i><a href="#">Foo</a> </li>
+                            <li><i class="fa fa-line-chart"></i><a href="#">Bar</a>
                             </li>
-                            <li><i class="fa fa-bar-chart"></i><a href="#">Auto Renewal</a> </li>
-                            <li><i class="fa fa-line-chart"></i><a href="#">Achievements</a>
+                            <li><i class="fa fa-bar-chart"></i><a href="#">Foo</a> </li>
+                            <li><i class="fa fa-line-chart"></i><a href="#">Bar</a>
                             </li>
-                            <li><i class="fa fa-area-chart"></i><a href="#">Logout</a>
+                            <li><i class="fa fa-area-chart"></i><a href="#">Foo</a>
                             </li>
                         </ul>
 
                         <div class="sidebar-widget">
-                            <h4>Profile Completion</h4>
+                            <h4>Something</h4>
                             <canvas width="150" height="80" id="chart_gauge_01" class="" style="width: 160px; height: 100px;"></canvas>
                             <div class="goal-wrapper">
                                 <span id="gauge-text" class="gauge-value pull-left">0</span>
@@ -321,243 +101,16 @@ under the License.
                 </div>
             </div>
         </div>
-
     </div>
-
-
     <div class="row">
         <div class="col-md-4 col-sm-4 col-xs-12">
-            <div class="x_panel">
-                <div class="x_title">
-                    <h3>Change Logs</h3>
-                </div>
-                <div class="x_content">
-                    <div class="dashboard-widget-content">
-                        <ul class="list-unstyled timeline widget">
-                            <li ng-repeat="changeLog in ::changeLogs">
-                                <div class="block">
-                                    <div class="block_content">
-                                        <h2 class="title">{{::changeLog.level}}</h2>
-                                        <div class="byline">
-                                            <span>{{::getRelativeTime(changeLog.lastUpdated)}}</span> by <a>{{::changeLog.user}}</a>
-                                        </div>
-                                        <p class="excerpt">{{::changeLog.message}}</p>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="text-center">
-                        <a>
-                            <strong><a ng-click="navigateToPath('/admin/change-logs')">See All Change Logs</a></strong>
-                            <i class="fa fa-angle-right"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <div class="x_panel" ui-view="changeLogsContent"></div>
         </div>
-
-
         <div class="col-md-8 col-sm-8 col-xs-12">
-
-
-
             <div class="row">
-
                 <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h3>Cache Groups <small>100% online</small></h3>
-                        </div>
-                        <div class="x_content">
-                            <div id="cache-groups-outer-container">
-                                <div id="cacheGroupsOverallHealth">
-                                    <h4 class="cache-groups-online">Cache Groups <small>{{locationHealth.totalOnline/(locationHealth.totalOnline + locationHealth.totalOffline) | percentFilter}} online</small></h4>
-                                </div>
-                                <div id="cacheGroupsContainer">
-                                    <div class="alert alert-info" ng-show="(locationHealth.cachegroups | filter:search:strict).length == 0">
-                                        No matching cache groups
-                                    </div>
-                                    <div class="list-group">
-                                        <a class="cache-group-health list-group-item" ng-repeat="location in locationHealth.cachegroups | orderBy:[onlinePercent, 'name'] | filter:search:strict | offsetFilter:(currentLocationPage-1)*locationsPerPage | limitTo:locationsPerPage">
-                                            <div class="row">
-                                                <table class="cache-groups-table table">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td class="col-lg-4 col-md-4 col-sm-4">{{location.name}}</td>
-                                                        <td class="col-lg-4 col-md-4 col-sm-4">{{location.online/(location.online + location.offline) | percentFilter}} Online</td>
-                                                        <td class="col-lg-4 col-md-4 col-sm-4">{{location.online}} Servers Online | {{location.offline}} Servers Offline</td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div ng-show="(locationHealth.cachegroups | filter:search:strict).length > 0">
-                                        <uib-pagination class="cache-groups-pagination pagination-md" boundary-links="true" max-size="2" total-items="(locationHealth.cachegroups | filter:search:strict).length" items-per-page="locationsPerPage" ng-model="currentLocationPage" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>
-                                    </div>
-                                    <div class="input-group cache-group-search-form">
-                                        <input type="text" class="filter-input form-control" placeholder="Filter cache groups..." ng-model="search.name">
-                                        <span class="filter-input-group-btn input-group-btn">
-                                            <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="x_panel" ui-view="cacheGroupsContent"></div>
                 </div>
-
-            </div>
-            <div class="row">
-
-
-                <!-- Start to do list -->
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h3>To Do List <small>Sample tasks</small></h3>
-                        </div>
-                        <div class="x_content">
-
-                            <div class="">
-                                <ul class="to_do">
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Schedule meeting with new client </p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Create email address for new intern</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Have IT fix the network printer</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Copy backups to offsite location</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Food truck fixie locavors mcsweeney</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Food truck fixie locavors mcsweeney</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Create email address for new intern</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Have IT fix the network printer</p>
-                                    </li>
-                                    <li>
-                                        <p>
-                                            <input type="checkbox" class="flat"> Copy backups to offsite location</p>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- End to do list -->
-
-                <!-- start of weather widget -->
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h3>Daily active users <small>Sessions</small></h3>
-                        </div>
-                        <div class="x_content">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="temperature"><b>Monday</b>, 07:30 AM
-                                        <span>F</span>
-                                        <span><b>C</b></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <div class="weather-icon">
-                                        <canvas height="84" width="84" id="partly-cloudy-day"></canvas>
-                                    </div>
-                                </div>
-                                <div class="col-sm-8">
-                                    <div class="weather-text">
-                                        <h3>Texas <br><i>Partly Cloudy Day</i></h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-12">
-                                <div class="weather-text pull-right">
-                                    <h3 class="degrees">23</h3>
-                                </div>
-                            </div>
-
-                            <div class="clearfix"></div>
-
-                            <div class="row weather-days">
-                                <div class="col-sm-2">
-                                    <div class="daily-weather">
-                                        <h2 class="day">Mon</h2>
-                                        <h3 class="degrees">25</h3>
-                                        <canvas id="clear-day" width="32" height="32"></canvas>
-                                        <h5>15 <i>km/h</i></h5>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="daily-weather">
-                                        <h2 class="day">Tue</h2>
-                                        <h3 class="degrees">25</h3>
-                                        <canvas height="32" width="32" id="rain"></canvas>
-                                        <h5>12 <i>km/h</i></h5>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="daily-weather">
-                                        <h2 class="day">Wed</h2>
-                                        <h3 class="degrees">27</h3>
-                                        <canvas height="32" width="32" id="snow"></canvas>
-                                        <h5>14 <i>km/h</i></h5>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="daily-weather">
-                                        <h2 class="day">Thu</h2>
-                                        <h3 class="degrees">28</h3>
-                                        <canvas height="32" width="32" id="sleet"></canvas>
-                                        <h5>15 <i>km/h</i></h5>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="daily-weather">
-                                        <h2 class="day">Fri</h2>
-                                        <h3 class="degrees">28</h3>
-                                        <canvas height="32" width="32" id="wind"></canvas>
-                                        <h5>11 <i>km/h</i></h5>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="daily-weather">
-                                        <h2 class="day">Sat</h2>
-                                        <h3 class="degrees">26</h3>
-                                        <canvas height="32" width="32" id="cloudy"></canvas>
-                                        <h5>10 <i>km/h</i></h5>
-                                    </div>
-                                </div>
-                                <div class="clearfix"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <!-- end of weather widget -->
             </div>
         </div>
     </div>

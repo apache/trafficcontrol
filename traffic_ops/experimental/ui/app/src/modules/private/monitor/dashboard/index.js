@@ -23,17 +23,20 @@ module.exports = angular.module('trafficOps.private.monitor.dashboard', [])
         $stateProvider
             .state('trafficOps.private.monitor.dashboard', {
                 url: '/dashboard',
+                abstract: true,
                 views: {
                     monitorContent: {
                         templateUrl: 'modules/private/monitor/dashboard/dashboard.tpl.html',
                         controller: 'DashboardController',
                         resolve: {
-                            changeLogs: function(changeLogService) {
-                                return [];
-                                // return changeLogService.getChangeLogs({ limit: 6 });
-                            },
                             cacheGroupHealth: function(cacheGroupService) {
                                 return cacheGroupService.getCacheGroupHealth();
+                            },
+                            cdns: function(cdnService) {
+                                return cdnService.getCDNs();
+                            },
+                            currentStats: function(cdnService) {
+                                return cdnService.getCurrentStats();
                             }
                         }
 

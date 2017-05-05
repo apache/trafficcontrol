@@ -33,6 +33,8 @@ $fa-font-path: "../assets/fonts";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/table/table";
 @import "../common/modules/release/release";
+@import "../common/modules/widget/capacity/widget.capacity";
+@import "../common/modules/widget/cdnChart/widget.cdnChart";
 
 // public
 @import "../modules/public/login/login";

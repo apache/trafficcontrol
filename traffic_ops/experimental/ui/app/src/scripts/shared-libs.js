@@ -45,6 +45,14 @@ require('restangular');
 // jquery
 require('jquery');
 
+// flot charts
+require('jquery-flot');
+require('jquery-flot-pie');
+require('jquery-flot-stack');
+require('jquery-flot-time');
+require('jquery-flot-tooltip');
+require('jquery-flot-axislabels');
+
 // misc
 require('es5-shim');
 require('json3');
