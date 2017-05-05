@@ -257,9 +257,9 @@ func (h statHandler) LoadRemapStats() map[string]uint64 {
 		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.in_bytes", rule)] = statsRemap.InBytes()
 		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.out_bytes", rule)] = statsRemap.OutBytes()
 		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", rule)] = statsRemap.Status2xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", rule)] = statsRemap.Status3xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", rule)] = statsRemap.Status4xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", rule)] = statsRemap.Status5xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_3xx", rule)] = statsRemap.Status3xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_4xx", rule)] = statsRemap.Status4xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_5xx", rule)] = statsRemap.Status5xx()
 	}
 	return jsonStats
 }
