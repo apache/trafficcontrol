@@ -65,9 +65,6 @@ my $debug = 1;
 # log file for cpan output
 my $cpanLogFile = "/var/log/traffic_ops/cpan.log";
 
-# used to check for .reconfigure_defaults file for backwards compatability
-my $reconfigure_defaults = "/opt/traffic_ops/.reconfigure_defaults";
-
 # maximum size the uncompressed log file should be before rotating it - rotating it copies the current log
 #  file to the same name appended with .bkp replacing the old backup if any is there
 my $maxLogSize = 10000000;    #bytes
