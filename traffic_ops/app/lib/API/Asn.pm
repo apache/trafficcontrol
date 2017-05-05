@@ -49,6 +49,24 @@ sub index {
 	$self->success( \@data );
 }
 
+sub index_v11 {
+	my $self = shift;
+	my @data;
+	my $orderby = $self->param('orderby') || "asn";
+	my $rs_data = $self->db->resultset("Asn")->search( undef, { prefetch => [ { 'cachegroup' => undef } ], order_by => "me." . $orderby } );
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"asn"         => $row->asn,
+				"cachegroup"  => $row->cachegroup->name,
+				"lastUpdated" => $row->last_updated,
+			}
+		);
+	}
+	$self->success( { "asns" => \@data } );
+}
+
 # Show
 sub show {
 	my $self = shift;
