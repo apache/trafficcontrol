@@ -376,6 +376,12 @@ sub api_routes {
 	my $version   = shift;
 	my $namespace = shift;
 
+	# -- 1.1 API ROUTES
+
+	$r->get("/api/1.1/asns")->over( authenticated => 1 )->to( 'Asn#index_v11', namespace => $namespace );
+
+	# -- 1.1 or 1.2 API ROUTES
+
 	# -- ASNS (CRANS)
 	$r->get("/api/$version/asns")->over( authenticated => 1 )->to( 'Asn#index',     namespace => $namespace );
 	$r->get("/api/$version/asns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Asn#show', namespace => $namespace );
