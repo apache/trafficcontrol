@@ -24,7 +24,7 @@ sub index {
 	my $numdays = defined( $self->param('days') ) ? $self->param('days') : 30;
 	my $rows    = defined( $self->param('limit') ) ? $self->param('limit') : defined( $self->param('days') ) ? 1000000 : 1000;
 
-	my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
+	my $date_string = `date "+%Y-%m-%d% %H:%M:%S %z"`;
 	chomp($date_string);
 	$self->cookie( last_seen_log => $date_string, { path => "/", max_age => 604800 } );    # expires in a week.
 
@@ -59,7 +59,7 @@ sub newlogcount {
 
 	my $count = 0;
 	if ( !defined($cookie) ) {
-		my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
+		my $date_string = `date "+%Y-%m-%d% %H:%M:%S %z"`;
 		chomp($date_string);
 		$self->cookie( last_seen_log => $date_string, { path => "/", max_age => 604800 } );    # expires in a week.
 	}
