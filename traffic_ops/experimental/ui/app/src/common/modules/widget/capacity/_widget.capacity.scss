@@ -1,0 +1,14 @@
+#capacityChart {
+  left: 0px;
+  top: 0px;
+  width: 200px;
+  height: 200px;
+}
+.capacityChartTooltip {
+  padding: 3px 5px;
+  background-color: #000;
+  z-index: 100;
+  color: #fff;
+  opacity: .80;
+  filter: alpha(opacity=85);
+}
