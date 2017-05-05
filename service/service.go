@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -80,22 +81,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	buildHandler := func(scheme string) http.Handler {
+	httpListener, httpConns, err := grove.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	if err != nil {
+		fmt.Printf("Error creating HTTP listener %v: %v\n", cfg.Port, err)
+		os.Exit(1)
+	}
+
+	httpsListener, httpsConns, err := grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile)
+	if err != nil {
+		fmt.Printf("Error creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+	}
+
+	buildHandler := func(scheme string, conns *grove.ConnMap) http.Handler {
 		statHandler, statWriter := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules())
-		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), statWriter, scheme, cfg.RFCCompliant)
+		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), statWriter, scheme, conns, cfg.RFCCompliant)
 		handler := http.NewServeMux()
 		handler.Handle("/_astats", statHandler)
 		handler.Handle("/", cacheHandler)
 		return handler
 	}
 
-	httpHandler := buildHandler("http")
-	httpsHandler := buildHandler("https")
+	httpHandler := buildHandler("http", httpConns)
+	httpsHandler := buildHandler("https", httpsConns)
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
-	startHTTPServer(httpHandler, cfg.Port)
+	startHTTPServer(httpHandler, httpListener, cfg.Port)
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		startHTTPSServer(httpsHandler, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
+		startHTTPSServer(httpsHandler, httpsListener, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
 	}
 	// TODO replace with config/remap file poller?
 	for {
@@ -104,14 +116,9 @@ func main() {
 }
 
 // startHTTPServer starts an HTTP server on the given port, and returns it
-func startHTTPServer(handler http.Handler, port int) *http.Server {
+func startHTTPServer(handler http.Handler, listener net.Listener, port int) *http.Server {
 	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port)}
 	go func() {
-		listener, err := grove.InterceptListen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
-			fmt.Printf("Error creating HTTP listener %v: %v\n", port, err)
-			return
-		}
 		fmt.Printf("listening on http://%d\n", port)
 		if err := server.Serve(listener); err != nil {
 			fmt.Printf("Error serving HTTP port %v: %v\n", port, err)
@@ -120,13 +127,9 @@ func startHTTPServer(handler http.Handler, port int) *http.Server {
 	return server
 }
 
-func startHTTPSServer(handler http.Handler, port int, certFile string, keyFile string) *http.Server {
+func startHTTPSServer(handler http.Handler, listener net.Listener, port int, certFile string, keyFile string) *http.Server {
 	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port)}
 	go func() {
-		listener, err := grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", port), certFile, keyFile)
-		if err != nil {
-			fmt.Printf("Error creating HTTP listener %v: %v\n", port, err)
-		}
 		fmt.Printf("listening on https://%d\n", port)
 		if err := server.Serve(listener); err != nil {
 			fmt.Printf("Error serving HTTPS port %v: %v\n", port, err)
