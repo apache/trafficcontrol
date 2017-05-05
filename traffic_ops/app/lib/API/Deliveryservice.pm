@@ -69,7 +69,18 @@ sub index {
 		# build example urls for each delivery service
 		my @example_urls = ();
 		my $cdn_domain   = $row->cdn->domain_name;
-		my $regexp_set   = $self->get_regexp_set( $row->deliveryservice_regexes );
+		my $ds_regexes = $row->deliveryservice_regexes;
+		my $regexp_set;
+		my $i = 0;
+
+		while ( my $ds_regex = $ds_regexes->next ) {
+			$regexp_set->[$i]->{id}         = $ds_regex->id;
+			$regexp_set->[$i]->{pattern}    = $ds_regex->regex->pattern;
+			$regexp_set->[$i]->{type}    	= $ds_regex->regex->type->name;
+			$regexp_set->[$i]->{set_number} = $ds_regex->set_number;
+			$i++;
+		}
+
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
@@ -171,7 +182,19 @@ sub show {
 		# build example urls for the delivery service
 		my @example_urls = ();
 		my $cdn_domain   = $row->cdn->domain_name;
-		my $regexp_set   = $self->get_regexp_set( $row->deliveryservice_regexes );
+
+		$ds_regexes->reset; # need to reset the curson
+		my $regexp_set;
+		my $i = 0;
+
+		while ( my $ds_regex = $ds_regexes->next ) {
+			$regexp_set->[$i]->{id}         = $ds_regex->id;
+			$regexp_set->[$i]->{pattern}    = $ds_regex->regex->pattern;
+			$regexp_set->[$i]->{type}    	= $ds_regex->regex->type->name;
+			$regexp_set->[$i]->{set_number} = $ds_regex->set_number;
+			$i++;
+		}
+
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
