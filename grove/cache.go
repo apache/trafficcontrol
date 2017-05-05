@@ -22,7 +22,9 @@ type cacheHandler struct {
 	remapper       HTTPRequestRemapper
 	getter         Getter
 	ruleThrottlers map[string]Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
+	scheme         string
 	strictRFC      bool
+	stats          Stats
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -51,13 +53,15 @@ type cacheHandler struct {
 // Then, 2,000 requests come in for the same URL, simultaneously. They are all within the Origin limit, so they are all allowed to proceed to the key limiter. Then, the first request is allowed to make an actual request to the origin, while the other 1,999 wait at the key limiter.
 //
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
-func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, strictRFC bool) http.Handler {
+func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, strictRFC bool) http.Handler {
 	return &cacheHandler{
 		cache:          cache,
 		remapper:       remapper,
 		getter:         NewGetter(),
 		ruleThrottlers: makeRuleThrottlers(remapper, ruleLimit),
 		strictRFC:      strictRFC,
+		scheme:         scheme,
+		stats:          stats,
 		// keyThrottlers:     NewThrottlers(keyLimit),
 		// nocacheThrottlers: NewThrottlers(nocacheLimit),
 	}
@@ -72,9 +76,9 @@ func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]T
 	return ruleThrottlers
 }
 
-// NewCacheHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use Java. I mean, `NewCacheHandler`.
-func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, strictRFC bool) http.HandlerFunc {
-	handler := NewCacheHandler(cache, remapper, ruleLimit, stats, strictRFC)
+// NewCacheHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use `NewCacheHandler`.
+func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, strictRFC bool) http.HandlerFunc {
+	handler := NewCacheHandler(cache, remapper, ruleLimit, stats, scheme, strictRFC)
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
@@ -87,6 +91,7 @@ func (h *cacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // TryServe attempts to serve the given request, as a caching reverse proxy.
 // Serving acts as a state machine.
 func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
+	// inBytes := getBytes(r)
 	reqTime := time.Now()
 
 	// copy request header, because it's not guaranteed valid after actually issuing the request
@@ -94,7 +99,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	copyHeader(r.Header, &reqHeader)
 
 	// TODO fix host header
-	remappedReq, remapName, cacheKey, ok := h.remapper.Remap(r)
+	remappedReq, remapName, cacheKey, ok := h.remapper.Remap(r, h.scheme)
 	if !ok {
 		fmt.Printf("DEBUG rule not found for %v\n", r.RequestURI)
 		h.serveRuleNotFound(w)
@@ -153,7 +158,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		cacheObj := h.getter.Get(cacheKey, getAndCache, canReuse)
-		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
+		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, remapName)
 		return
 	}
 
@@ -163,7 +168,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Error: cache key '%v' value '%v' type '%T' expected *CacheObj\n", cacheKey, iCacheObj, iCacheObj)
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 		// TODO check for ReuseMustRevalidate
-		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
+		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, remapName)
 		return
 	}
 
@@ -182,7 +187,7 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		// TODO implement revalidate
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	}
-	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
+	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, remapName)
 }
 
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
@@ -256,9 +261,40 @@ func (h *cacheHandler) request(r *http.Request) (int, http.Header, []byte, time.
 	return resp.StatusCode, resp.Header, body, reqTime, respTime, nil
 }
 
-func (h *cacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte) {
+// respond writes the given code, header, and body to the ResponseWriter. After calling this, the ResponseWriter is no longer valid, and using it is undefined. This is because this function calls `Hijack`.
+func (h *cacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, stats Stats, remapRuleName string) {
 	dH := w.Header()
 	copyHeader(header, &dH)
 	w.WriteHeader(code)
 	w.Write(body)
+	h.getConnInfoAndDestroyWriter(w, stats, remapRuleName)
+}
+
+// getConnInfoAndDestroyWriter gets the info stored in the `Conn`, which requires calling `Hijack`, which destroys the ResponseWriter so it may no longer be used. It also calls Conn.Close().
+func (h *cacheHandler) getConnInfoAndDestroyWriter(w http.ResponseWriter, stats Stats, remapRuleName string) {
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		fmt.Printf("ERROR Could not get Conn info: writer is not a hijacker: %T\n", w)
+		return
+	}
+	conn, _, err := hj.Hijack()
+	if err != nil {
+		fmt.Printf("ERROR Could not get Conn info: hijack failed: %v\n", err)
+		return
+	}
+	defer conn.Close()
+
+	interceptConn, ok := conn.(*InterceptConn)
+	if !ok {
+		fmt.Printf("ERROR Could not get Conn info: ResponseWriter is not an InterceptConn: %T\n", w)
+		return
+	}
+
+	remapRuleStats, ok := stats.Remap().Stats(remapRuleName)
+	if !ok {
+		fmt.Printf("ERROR Remap rule %v not in Stats\n", remapRuleName)
+		return
+	}
+	remapRuleStats.AddInBytes(uint64(interceptConn.BytesRead()))
+	remapRuleStats.AddOutBytes(uint64(interceptConn.BytesWritten()))
 }

@@ -10,7 +10,7 @@ import (
 
 type HTTPRequestRemapper interface {
 	// Remap returns the remapped request, the matched rule name, and whether a match was found.
-	Remap(*http.Request) (*http.Request, string, string, bool)
+	Remap(r *http.Request, scheme string) (*http.Request, string, string, bool)
 	Rules() []string
 }
 
@@ -22,24 +22,11 @@ func (hr simpleHttpRequestRemapper) Rules() []string {
 	return hr.remapper.Rules()
 }
 
-func getScheme(r *http.Request) string {
-	if r.TLS != nil {
-		return "https"
-	}
-	return "http"
-}
-
-func buildKey(r *http.Request) string {
-	uri := fmt.Sprintf("%s://%s%s", getScheme(r), r.Host, r.RequestURI)
-	key := fmt.Sprintf("%s:%s", r.Method, uri)
-	return key
-}
-
 // Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, and whether a rule was found.
-func (hr simpleHttpRequestRemapper) Remap(r *http.Request) (*http.Request, string, string, bool) {
+func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool) {
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
-	oldUri := fmt.Sprintf("%s://%s%s", getScheme(r), r.Host, r.RequestURI)
+	oldUri := fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
 	fmt.Printf("DEBUG Remap oldUri: '%v'\n", oldUri)
 	fmt.Printf("DEBUG request: '%+v'\n", r)
 	// newUri, ruleName, options, ok :=
