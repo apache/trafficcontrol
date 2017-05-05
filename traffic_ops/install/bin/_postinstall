@@ -79,11 +79,6 @@ my $inputFile = "";
 my $automatic = 0;
 my $defaultInputs;
 
-sub getInstallPath {
-    my $relPath = shift;
-    return join( '/', "/tmp/traffic_ops", $relPath );
-}
-
 # given a var to the hash of config_var and question, will return the question
 sub getConfigQuestion {
     my $var = shift;
