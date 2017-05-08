@@ -936,7 +936,8 @@ sub check_syncds_state {
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
-			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. I'm outta here.\n";
+			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. Running revalidation before exiting.\n";
+			&revalidate_while_sleeping();
 			exit 0;
 		}
 		else {
