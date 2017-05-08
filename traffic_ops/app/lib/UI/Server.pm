@@ -987,12 +987,9 @@ sub postupdate {
 
 	#Parameters don't have boolean options at this time, so we're going to compare against the default string value of 0.
 	if ( defined($use_reval_pending) && $use_reval_pending ne '0' && defined($reval_updated) ) {
-		$update_server->update( { upd_pending => $updated } );
 		$update_server->update( { reval_pending => $reval_updated } );
 	}
-	else {
-		$update_server->update( { upd_pending => $updated } );
-	}
+	$update_server->update( { upd_pending => $updated } );
 
 	$self->render( text => "Success", layout=>undef);
 
