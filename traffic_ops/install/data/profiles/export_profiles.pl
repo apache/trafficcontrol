@@ -82,13 +82,8 @@ sub parameterInsert {
                       },
     };
     my $nameExcludes=sprintf("%s|%s|%s", $excludes->{name}{prefix}, $excludes->{name}{suffix}, $excludes->{name}{contains});
-    InstallUtils::logger( "nameExcludes: " . $nameExcludes, "debug" );
-
     my $valueExcludes=sprintf("%s", $excludes->{value}{contains});
-    InstallUtils::logger( "valueExcludes: " . $valueExcludes, "debug" );
-
     my $configFileExcludes=sprintf("%s|%s|%s", $excludes->{config_file}{prefix}, $excludes->{config_file}{suffix}, $excludes->{config_file}{contains});
-    InstallUtils::logger( "configFileExcludes: " . $configFileExcludes, "debug" );
 
     my $q=sprintf("SELECT * FROM profile as p 
                             INNER JOIN profile_parameter as pp ON p.id = pp.profile 
@@ -98,20 +93,16 @@ sub parameterInsert {
                                   param.value !~ '%s' AND 
                                   param.config_file !~ '%s' 
                                   order by param.name", $srcProfileName, $nameExcludes, $valueExcludes, $configFileExcludes);
-    InstallUtils::logger( "QUERY:" . $q . "\n", "debug" );
     my $stmt = $dbh->prepare($q);
     $stmt->execute();
     my $insert;
 
     while ( my $row = $stmt->fetchrow_hashref ) {
        
-       my $scrubbed_value = scrub_value($row->{value});
-       InstallUtils::logger( "scrubbed_value:" . $scrubbed_value . "\n", "debug" );
-       $insert=sprintf("INSERT INTO parameter (name, config_file, value) VALUES ('%s','%s','%s') ON CONFLICT (name, config_file, value) DO NOTHING;", $row->{name}, $row->{config_file}, $scrubbed_value);
+       $insert=sprintf("INSERT INTO parameter (name, config_file, value) VALUES ('%s','%s','%s') ON CONFLICT (name, config_file, value) DO NOTHING;", $row->{name}, $row->{config_file}, scrub_value($row->{value}));
 
        appendToFile($fileName, $insert);
-       profileParameterInsert($srcProfileName, $targetProfileName, $row->{name}, $row->{value}, $row->{config_file}, $fileName);
-
+       profileParameterInsert($srcProfileName, $targetProfileName, $row->{name}, scrub_value($row->{value}), $row->{config_file}, $fileName);
     }
 }
 
@@ -146,7 +137,6 @@ sub profileInsert {
 
     my $q=sprintf("SELECT * FROM profile WHERE name = '%s' order by name;", $srcProfileName, $fileName);
 
-    InstallUtils::logger( "QUERY:" . $q, "debug" );
     my $stmt = $dbh->prepare($q);
     $stmt->execute();
     my $name;
@@ -263,7 +253,6 @@ sub main {
     InstallUtils::logger( "Looking for latest profiles", "info" );
     while ( my $row = $latestProfiles->fetchrow_hashref ) {
        
-       InstallUtils::logger( " row: " .  Dumper($row), "info" );
        my $name = $row->{'name'};
        my $fileName = $row->{name}. ".sql";
        my $srcProfileName = $row->{value};
@@ -271,16 +260,13 @@ sub main {
 
        if (exists $lookupTable->{$name}) {
           my $profile = $lookupTable->{$name};
-          InstallUtils::logger( "=============================================", "debug");
-          InstallUtils::logger( "profile: " . Dumper($profile), "debug" );
-
           my $targetProfileName = $profile->{profile}{name};
           my $targetProfileDesc = $profile->{profile}{description};
           my $targetParameterConfigFile = $profile->{parameter}{config_file};
-          InstallUtils::logger( "targetProfileName: $targetProfileName", "debug" );
           $outputFilePath=sprintf("%s/%s", $pwd, $fileName);
           unlink($outputFilePath);
           generateInserts($srcProfileName, $targetProfileName, $targetProfileDesc, $targetParameterConfigFile, $fileName);
+          InstallUtils::logger( "Wrote exported file: $outputFilePath\n", "debug" );
       }
     }
 
