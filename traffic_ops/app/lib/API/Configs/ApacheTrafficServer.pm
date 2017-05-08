@@ -120,7 +120,7 @@ sub get_config_metadata {
 		$config_file_obj->{$config_file}->{'scope'} = $scope;
 	}
 
-	foreach my $config_file ( keys %{ $config_file_obj } ) {
+	foreach my $config_file ( sort keys %{ $config_file_obj } ) {
 		push ( @config_files, $config_file_obj->{$config_file} );
 	}
 
@@ -1935,7 +1935,7 @@ sub parent_dot_config {
 
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
-		foreach my $ds ( @{ $data->{dslist} } ) {
+		foreach my $ds ( sort @{ $data->{dslist} } ) {
 			my $xml_id                             = $ds->{ds_xml_id};
 			my $origin_shield                      = $ds->{origin_shield};
 			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
@@ -2029,7 +2029,7 @@ sub parent_dot_config {
 		$parent_info = $self->parent_data($server_obj);
 		my %done = ();
 
-		foreach my $ds ( @{ $data->{dslist} } ) {
+		foreach my $ds ( sort @{ $data->{dslist} } ) {
 			my $org = $ds->{org};
 			next if !defined $org || $org eq "";
 			next if $done{$org};
@@ -2069,12 +2069,12 @@ sub parent_dot_config {
 				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
-				my $parents = 'parent="' . join( '', @parent_info ) . '"';
+				my $parents = 'parent="' . join( '', sort @parent_info ) . '"';
 				my $secparents = '';
 				if ( scalar @secondary_parent_info > 0 ) {
 					my %seen;
 					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
-					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
+					$secparents = 'secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
 				}
 				my $round_robin = 'round_robin=consistent_hash';
 				my $go_direct   = 'go_direct=false';
@@ -2097,7 +2097,7 @@ sub parent_dot_config {
 			my %seen;
 			@parent_info = grep { !$seen{$_}++ } @parent_info;
 			$text .= "dest_domain=.";
-			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
 			$text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
@@ -2108,7 +2108,7 @@ sub parent_dot_config {
 			}
 			my %seen;
 			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
 			$text .= " round_robin=urlhash go_direct=false";
 		}
 
