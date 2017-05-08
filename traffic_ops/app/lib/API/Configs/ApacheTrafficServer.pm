@@ -1934,17 +1934,12 @@ sub parent_dot_config {
 		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
 		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
-	$time = localtime;
-	print STDERR "Time after ATS ver:\n";
-	print STDERR Dumper($time);
 	my $parent_info;
 	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
 	$time = localtime;
-        print STDERR "Time after DS Data:\n";
-        print STDERR Dumper($time);
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
 		foreach my $ds ( @{ $data->{dslist} } ) {
@@ -2033,8 +2028,6 @@ sub parent_dot_config {
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
 		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
-		print STDERR "Time after complete:\n";
-                print STDERR Dumper($time);
 		return $text;
 	}
 	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
