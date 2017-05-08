@@ -26,9 +26,11 @@ insert into job_agent (name, description, active) values ('dummy', 'Description 
 insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT (name) DO NOTHING;
 
 -- parameters
-insert into parameter (name, config_file, value) values ('ttl_max_hours', 'regex_revalidate.config', '672') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('ttl_min_hours', 'regex_revalidate.config', '48') ON CONFLICT (name, config_file, value) DO NOTHING;
+-- Move into postinstall global parameters
+insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
 insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90') ON CONFLICT (name, config_file, value) DO NOTHING;
+---------------------------------
+
 insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'bandwidth') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'maxKbps') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'ats.proxy.process.http.current_client_connections') ON CONFLICT (name, config_file, value) DO NOTHING;
@@ -42,7 +44,7 @@ insert into parameter (name, config_file, value) values ('DsStats', 'traffic_sta
 insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'tps_total') ON CONFLICT (name, config_file, value) DO NOTHING;
 
 -- profiles
-insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+---------------------------------
 insert into profile (name, description, type) values ('TRAFFIC_ANALYTICS', 'Traffic Analytics profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
 insert into profile (name, description, type) values ('TRAFFIC_OPS', 'Traffic Ops profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
 insert into profile (name, description, type) values ('TRAFFIC_OPS_DB', 'Traffic Ops DB profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
@@ -52,7 +54,13 @@ insert into profile (name, description, type) values ('INFLUXDB', 'InfluxDb prof
 insert into profile (name, description, type) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE') ON CONFLICT (name) DO NOTHING;
 
 -- profile_parameters
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'bandwidth') ) ON CONFLICT (profile, parameter) DO NOTHING;
+insert into profile_parameter (profile, parameter) 
+     values ( 
+	   (select id from profile where name = 'TRAFFIC_STATS'), 
+	   (select id from parameter 
+		          where name = 'CacheStats' 
+				  and config_file = 'traffic_stats.config' 
+				  and value = 'bandwidth') ) ON CONFLICT (profile, parameter) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'maxKbps') ) ON CONFLICT (profile, parameter) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.http.current_client_connections') ) ON CONFLICT (profile, parameter) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'kbps') ) ON CONFLICT (profile, parameter) DO NOTHING;
