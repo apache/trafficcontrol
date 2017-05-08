@@ -515,13 +515,13 @@ sub delivery_service_data_by_profile {
 				select 
 				id 
 				from server 
-				where profile = '.$profile_id.'
+				where profile = $1
 			)
 		);
 	';
 
 	my $stmt = $dbh->prepare($qry);
-	$stmt->execute();
+	$stmt->execute($profile_id);
 
 	my $deliveryservice_id;
 	my $deliveryservice_xml_id;
