@@ -332,7 +332,6 @@ sub get_scope {
 	else {
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
 		if ( !defined($scope) ) {
-			$self->app->log->error("Filename not found.  Setting Server scope.");
 			$scope = 'servers';
 		}
 	}
