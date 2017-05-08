@@ -867,7 +867,6 @@ sub check_syncds_state {
 		else {
 			$reval_in_use = 0;
 		}
-		( $dispersion > 0 ) && &sleep_timer($random_duration);
 
 		$upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -889,6 +888,7 @@ sub check_syncds_state {
 		}
 
 		if ( $upd_pending == 1 ) {
+			( $dispersion > 0 ) && &sleep_timer($random_duration);
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
