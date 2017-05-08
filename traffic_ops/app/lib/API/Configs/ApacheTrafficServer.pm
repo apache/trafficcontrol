@@ -1473,11 +1473,11 @@ sub ssl_multicert_dot_config {
 
 		#first one is the one we want
 		my $hostname = $example_urls[0];
-		if ( $hostname =~ /ccr/ ) {
-				next;    # Steering delivery service SSLs should not be on the edges.
-		}
 		$hostname =~ /(https?:\/\/)(.*)/;
 		my $new_host = $2;
+		if ( $new_host =~ /^ccr/ || $new_host =~ /^tr/ ) {
+			next;    # Steering delivery service SSLs should not be on the edges.
+		}
 		my $key_name = "$new_host.key";
 		$new_host =~ tr/./_/;
 		my $cer_name = $new_host . "_cert.cer";
