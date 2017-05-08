@@ -1460,6 +1460,9 @@ sub ssl_multicert_dot_config {
 	my $protocol_search = '> 0';
 	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ cdn_id => $cdn_obj->id, 'me.protocol' => \$protocol_search ] } )->all();
 	foreach my $ds (@ds_list) {
+		if ( $ds->type->name =~ /STEERING/ ) {
+				next;    # Steering delivery service SSLs should not be on the edges.
+		}
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
 		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
@@ -1470,6 +1473,9 @@ sub ssl_multicert_dot_config {
 
 		#first one is the one we want
 		my $hostname = $example_urls[0];
+		if ( $hostname =~ /ccr/ ) {
+				next;    # Steering delivery service SSLs should not be on the edges.
+		}
 		$hostname =~ /(https?:\/\/)(.*)/;
 		my $new_host = $2;
 		my $key_name = "$new_host.key";
@@ -1916,7 +1922,9 @@ sub format_parent_info {
 sub parent_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
-
+	print STDERR "Start time:\n";
+	my $time = localtime;
+	print STDERR Dumper($time);
 	my $data;
 
 	my $server_type = $server_obj->type->name;
@@ -1926,13 +1934,17 @@ sub parent_dot_config {
 		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
 		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
-
+	$time = localtime;
+	print STDERR "Time after ATS ver:\n";
+	print STDERR Dumper($time);
 	my $parent_info;
 	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
-
+	$time = localtime;
+        print STDERR "Time after DS Data:\n";
+        print STDERR Dumper($time);
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
 		foreach my $ds ( @{ $data->{dslist} } ) {
@@ -2021,7 +2033,8 @@ sub parent_dot_config {
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
 		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
-
+		print STDERR "Time after complete:\n";
+                print STDERR Dumper($time);
 		return $text;
 	}
 	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
@@ -2118,7 +2131,9 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
-
+		$time = localtime;
+        	print STDERR "Time after complete:\n";
+        	print STDERR Dumper($time);
 		return $text;
 	}
 }
