@@ -748,12 +748,12 @@ sub main {
     my $help = 0;
 
     # help string
-    my $usageString = "Usage: postinstall [-a] [-debug] [-defaults] [-r] -cfile=[config_file]\n";
+    my $usageString = "Usage: postinstall [-a] [-debug] [-defaults[=<outfile]] [-r] -cfile=[config_file]\n";
 
     GetOptions(
         "cfile=s"     => \$inputFile,
         "automatic"   => \$automatic,
-        "defaults"    => \$dumpDefaults,
+        "defaults:s"  => \$dumpDefaults,
         "debug"       => \$debug,
         "help"        => \$help
     ) or die($usageString);
@@ -786,8 +786,14 @@ sub main {
         InstallUtils::logger( "Running in automatic mode", "info" );
     }
 
-    if ($dumpDefaults) {
-        InstallUtils::logger( "Writing default configuration file to $outputConfigFile", "info" );
+    if (defined $dumpDefaults) {
+        # -defaults flag provided.
+        if ($dumpDefaults ne "") {
+	    # -defaults=<filename>  -- if -defaults without a file name, use the default.
+	    # dumpDefaults with value -- use that as output file name
+	    $outputConfigFile = $dumpDefaults;
+        }
+        InstallUtils::logger( "Writing default configuration to $outputConfigFile", "info" );
         InstallUtils::writeJson( $outputConfigFile, $defaultInputs );
         return;
     }
@@ -826,7 +832,7 @@ sub main {
     chdir("/opt/traffic_ops/install/bin");
     my $rc = InstallUtils::execCommand( "./download_web_deps", "-i" );
     if ( $rc != 0 ) {
-     errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
+        errorOut("Failed to install Traffic Ops Web dependencies, check the console output and rerun postinstall once you've resolved the error");
     }
 
     # The generator functions handle checking input/default/automatic mode

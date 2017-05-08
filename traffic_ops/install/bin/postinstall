@@ -14,6 +14,22 @@
 # limitations under the License.
 #
 
+for arg in "$@"; do
+	case $arg in
+		-h*) action=bypass
+			;;
+		-defaults*) action=bypass
+			;;
+	esac
+done
+
+# above options don't require any of the extra processing -- just kick off the script with
+# options intact.
+if [[ $action == "bypass" ]]; then
+	/opt/traffic_ops/install/bin/_postinstall "$@"
+	exit
+fi
+
 # make sure installed with proper permissions
 umask 022
 
