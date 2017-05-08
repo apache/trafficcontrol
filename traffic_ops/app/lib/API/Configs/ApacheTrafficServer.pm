@@ -1922,9 +1922,6 @@ sub format_parent_info {
 sub parent_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
-	print STDERR "Start time:\n";
-	my $time = localtime;
-	print STDERR Dumper($time);
 	my $data;
 
 	my $server_type = $server_obj->type->name;
@@ -1939,7 +1936,6 @@ sub parent_dot_config {
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
-	$time = localtime;
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
 		foreach my $ds ( @{ $data->{dslist} } ) {
@@ -2124,9 +2120,6 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
-		$time = localtime;
-        	print STDERR "Time after complete:\n";
-        	print STDERR Dumper($time);
 		return $text;
 	}
 }
