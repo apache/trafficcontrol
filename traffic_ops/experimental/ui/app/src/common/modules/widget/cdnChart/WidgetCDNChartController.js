@@ -136,33 +136,13 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 		};
 
 		var series = [
-			{ label: "Bandwidth", yaxis: 1, color: colors[Math.floor(Math.random() * 17) + 1], data: bandwidthChartData },
-			{ label: "Connections", yaxis: 2, color: colors[Math.floor(Math.random() * 17) + 1], data: connectionsChartData }
+			{ label: "Bandwidth", yaxis: 1, color: '#3498DB', data: bandwidthChartData },
+			{ label: "Connections", yaxis: 2, color: '#E74C3C', data: connectionsChartData }
 		];
 
 		$.plot($("#bps-chart-" + $scope.cdn.id), series, options);
 
 	};
-
-	var colors = [
-		'#1ABB9C',
-		'#3498DB',
-		'#73879C',
-		'#E74C3C',
-		'#946E83',
-		'#615055',
-		'#000000',
-		'#9FD356',
-		'#3A6B3D',
-		'#405672',
-		'#FF5000',
-		'#E39878',
-		'#6D6B6D',
-		'#54000B',
-		'#077187',
-		'#0D295E',
-		'#5B0554'
-	];
 
 	$scope.cdn;
 

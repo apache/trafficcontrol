@@ -17,11 +17,13 @@
  * under the License.
  */
 
-var WidgetChangeLogsController = function(changeLogs, $scope) {
+var WidgetChangeLogsController = function(changeLogs, $scope, locationUtils) {
 
 	$scope.getRelativeTime = function(date) {
 		return moment(date).fromNow();
 	};
+
+	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	var init = function() {
 		if (changeLogs) {
@@ -33,5 +35,5 @@ var WidgetChangeLogsController = function(changeLogs, $scope) {
 
 };
 
-WidgetChangeLogsController.$inject = ['changeLogs', '$scope'];
+WidgetChangeLogsController.$inject = ['changeLogs', '$scope', 'locationUtils'];
 module.exports = WidgetChangeLogsController;
