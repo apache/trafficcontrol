@@ -1,0 +1,32 @@
+[
+    {
+        "host": "domain.com",
+        "path": "/login",
+        "forward": "localhost:9004",
+        "secure": false
+    },
+    {
+        "host": "domain.com",
+        "path": "/ds/",
+        "forward": "localhost:8081",
+        "secure": true,
+        "capabilities": {
+            "GET": "read-ds",
+            "POST": "write-ds",
+            "PUT": "write-ds",
+            "PATCH": "write-ds"
+        }
+    },
+    {
+        "host": "domain.com",
+        "path": "/cachegroups/",
+        "forward": "localhost:8082",
+        "secure": true,
+        "capabilities": {
+            "GET": "read-cg",
+            "POST": "write-cg",
+            "PUT": "write-cg",
+            "PATCH": "write-cg"
+        }
+    }
+]

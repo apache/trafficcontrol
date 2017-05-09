@@ -21,6 +21,10 @@
 var myip = "127.0.0.1";
 var myport = 80;
 var config_url = "https://traffic-ops.com/CRConfig-Snapshots/cdn-name/CRConfig.json";
+var to_user = "";
+var to_password = "";
+var to_login_api = "/api/1.2/user/login";
+var simulator_ua = "ATS Simulator/node.js " + process.version;
 
 // first argument to follow node ats_sim.js
 if (process.argv[2]) {
@@ -31,6 +35,19 @@ if (process.argv[2]) {
 if (process.argv[3]) {
 	myport = process.argv[3];
 }
+
+if (process.argv[4]) {
+	to_user = process.argv[4];
+}
+
+if (process.argv[5]) {
+	to_password = process.argv[5];
+}
+
+var to_credentials = JSON.stringify({
+	"u": to_user,
+	"p": to_password,
+});
 
 var errorRateDenominator = 0;
 var debug = 0;
@@ -50,33 +67,101 @@ var cr_config = '';
 var tld = '';
 var Url = require('url');
 var stats = new Object();
+var to_url = Url.parse(config_url, true);
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+auth_get_config();
 
-client_http.get(config_url, function(res) {
-	var body = '';
+function auth_get_config() {
+	var to_cookie = "";
+	var options = {
+		protocol: to_url.protocol,
+		hostname: to_url.hostname,
+		port: to_url.port,
+		path: to_login_api,
+		method: 'POST',
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Content-Length": Buffer.byteLength(to_credentials),
+			"User-Agent": simulator_ua
+		}
+	};
 
-	res.on('data', function(chunk) {
-		body += chunk;
-	});
+	request = client_http.request(options, function(res) {
+		var cookie = res.headers["set-cookie"];
 
-	res.on('end', function() {
-		cr_config = JSON.parse(body);
-		tld = cr_config.config['domain_name'];
-		console.log("CDN TLD: " + tld);
-
-		for(var cid in cr_config.contentServers) {
-			if(cid.indexOf("atsec-sim")!=-1) {
-				cr_config.contentServers[cid].queryIp = myip;
-				cr_config.contentServers[cid].port = myport;
-			}
+		if (cookie) {
+			cookie.forEach(
+				function (cookieMonster) {
+					to_cookie += cookieMonster;
+				}
+			);
 		}
 
-		cr_config
+		if (to_cookie) {
+			if (debug) console.log("Cookie: " + to_cookie);
+		}
+
+		var body = '';
+
+		res.on('data', function(chunk) {
+			body += chunk;
+		});
+
+		res.on('end', function() {
+			response = JSON.parse(body);
+
+			if (res.statusCode == 200) {
+				console.log("Successfully authenticated to Traffic Ops");
+				get_config(options, to_cookie);
+			} else {
+				console.log("Authentication response: " + JSON.stringify(response));
+				throw new Error("Authentication failed.");
+			}
+		});
+	}).on('error', function(e) {
+		console.log("Got error: ", e);
 	});
-}).on('error', function(e) {
-	console.log("Got error: ", e);
-});
+
+	request.write(to_credentials);
+	request.end();
+}
+
+function get_config(options, cookie) {
+	options.method = "GET";
+	options.path = to_url.path;
+	options.headers = {
+		"Cookie": cookie,
+		"User-Agent": simulator_ua
+	};
+
+	request = client_http.request(options, function(res) {
+		var body = '';
+
+		res.on('data', function(chunk) {
+			body += chunk;
+		});
+
+		res.on('end', function() {
+			cr_config = JSON.parse(body);
+			tld = cr_config.config['domain_name'];
+			console.log("CDN TLD: " + tld);
+
+			for(var cid in cr_config.contentServers) {
+				if(cid.indexOf("atsec-sim")!=-1) {
+					cr_config.contentServers[cid].queryIp = myip;
+					cr_config.contentServers[cid].port = myport;
+				}
+			}
+
+			cr_config
+		});
+	}).on('error', function(e) {
+		console.log("Got error: ", e);
+	});
+
+	request.end();
+}
 
 var http = require('http');
 

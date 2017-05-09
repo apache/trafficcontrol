@@ -155,29 +155,9 @@ sub view_by_hostname {
 			return $self->alert( { Error => " - $key does not contain a valid domain name." } )      if !$domain_name;
 		}
 
-		my @ds_ids_regex = $self->db->resultset('Deliveryservice')
-			->search( { 'regex.pattern' => "$host_regex" }, { join => { deliveryservice_regexes => { regex => undef } } } )->get_column('id')->all();
-
-		my @domain_profiles = $self->db->resultset('Profile')->search(
-			{
-				'parameter.value'       => "$domain_name",
-				'parameter.config_file' => 'CRConfig.json',
-				'parameter.name'        => 'domain_name'
-			}, {
-				join => { 'profile_parameters' => { parameter => undef } }
-			}
-		)->get_column('id')->all();
-
-		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'profile' => { -in => \@domain_profiles } }, {} );
-
-		my $xml_id;
-		my %ds_ids_regex = map { $_ => undef } @ds_ids_regex;
-
-		while ( my $row = $rs_ds->next ) {
-			if ( exists( $ds_ids_regex{ $row->id } ) ) {
-				$xml_id = $row->xml_id;
-			}
-		}
+		my $cdn_id = $self->db->resultset('Cdn')->search( { domain_name => $domain_name } )->get_column('id')->single();
+		my $ds = $self->db->resultset('Deliveryservice')->search( { 'regex.pattern' => "$host_regex", 'cdn_id' => "$cdn_id" }, { join => { deliveryservice_regexes => { regex => undef } } } )->single();
+		my $xml_id = $ds->xml_id;
 
 		if ( !$version ) {
 			$version = 'latest';

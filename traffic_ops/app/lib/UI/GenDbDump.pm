@@ -17,27 +17,37 @@ package UI::GenDbDump;
 #
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use UI::Utils;
+use IO::Compress::Gzip qw(gzip $GzipError);
 
 sub dbdump {
 	my $self = shift;
 	my $filename = $self->param('filename');
 
+	if ( !&is_admin($self) ) {
+		$self->internal_server_error( { Error => "Insufficient permissions for DB Dump. Admin or Operations access is required." } );	
+		return;
+	}
+
+	my ($db_name, $host, $port) = $Schema::dsn =~ /:database=([^;]*);host=([^;]+);port=(\d+)/;
 	my $db_user = $Schema::user;
 	my $db_pass = $Schema::pass;
-	my $db_name = $Schema::dsn;
-	my $host;
-	my $port;
-	my $dsn = $Schema::dsn;
-	($db_name, $host, $port) = $dsn =~ /:database=(\w+);host=(\w+);port=(\d+)/;
 
-	my $cmd = "pg_dump -U " . $db_user . " -h localhost -C --column-insert";
-	my $extension = ".psql";
+	my $ok = open my $fh, '-|', "PGPASSWORD=\"$db_pass\" pg_dump -b -Fc --no-owner -h $host -p $port -U $db_user -d $db_name";
+	if (! $ok ) {
+		$self->internal_server_error( { Error => "Error dumping database" } );	
+		return;
+	}
 
-	my $data = `$cmd`;
+	# slurp it in..
+	undef $/;
+	my $data = <$fh>;
+
 
 	$self->res->headers->content_type("application/download");
 	$self->res->headers->content_disposition( "attachment; filename=\"" . $filename . "\"" );
 	$self->render( data => $data );
+	close $fh;
 }
 
 1;

@@ -29,7 +29,7 @@ Content Delivery Networks
 
 Profile Parameters
 ======================
-Many of the settings for the different servers in a Traffic Control CDN are controlled by parameters in the parameter view of Traffic Ops. Parameters are grouped in profiles and profiles are assigned to a server. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings. To make life easier, Traffic Ops allows for duplication, comparison, import and export of Profiles. Traffic Ops also has a "Global profile" - the parameters in this profile are going to be applied to all servers in the Traffic Ops instance, or apply to Traffic Ops themselves. These parameters are:
+Many of the settings for the different servers in a Traffic Control CDN are controlled by parameters in the parameter view of Traffic Ops. Parameters are grouped in profiles and profiles are assigned to a server or a deliveryservice. For a typical cache there are hundreds of configuration settings to apply. The Traffic Ops parameter view contains the defined settings. To make life easier, Traffic Ops allows for duplication, comparison, import and export of Profiles. Traffic Ops also has a "Global profile" - the parameters in this profile are going to be applied to all servers in the Traffic Ops instance, or apply to Traffic Ops themselves. These parameters are:
 
 
 .. index::
@@ -39,6 +39,8 @@ Many of the settings for the different servers in a Traffic Control CDN are cont
 |           Name           |  Config file  |                                                                 Value                                                                 |
 +==========================+===============+=======================================================================================================================================+
 | tm.url                   | global        | The URL where this Traffic Ops instance is being served from.                                                                         |
++--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
+| tm.cache.url             | global        | Not required. The URL where the Traffic Ops Config file cache instance is being served from.  Requires Traffic Ops 2.1 and above.     |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | tm.toolname              | global        | The name of the Traffic Ops tool. Usually "Traffic Ops". Used in the About screen and in the comments headers of the files generated. |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -90,9 +92,9 @@ Below is a list of cache parameters that are likely to need changes from the def
 | allow_ip6                | astats.config     | This is a comma separated  list of IPv6 CIDR blocks that will have access to the astats statistics on the caches.       |
 |                          |                   | The Traffic Monitor IP addresses have to be included in this, if they are using IPv6 to monitor the caches.             |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
-| Drive_Prefix             | storage.config    | JvD/Jeff to supply blurb                                                                                                |
+| Drive_Prefix             | storage.config    | The device path start of the disks. For example, if you have ``/dev/sda`` through ``/dev/sdf`` set this to ``/dev/sd``  |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
-| Drive_Letters            | storage.config    | JvD/Jeff to supply blurb                                                                                                |
+| Drive_Letters            | storage.config    | The letter part of the disks, in the same example as above set this to ``a,b,c,d,e,f``                                  |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 | purge_allow_ip           | ip_allow.config   | The IP address range that is allowed to execute the PURGE method on the caches (not related to :ref:`rl-purge`)         |
 +--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
@@ -151,6 +153,11 @@ Content Purge is controlled by the following parameters in the profile of the ca
 | regex_revalidate     | plugin.config           | The config to be used for regex_revalidate.      | `regex_revalidate <https://docs.trafficserver.apache.org/en/5.3.x/reference/plugins/regex_remap.en.html>`_                                              |
 |                      |                         | For example: --config regex_revalidate.config    |                                                                                                                                                         |
 +----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+| use_reval_pending    | global                  | Configures Traffic Ops to use separate           | When this flag is in use ORT will check for a new regex_revalidate.config every 60 seconds in syncds mode during the dispersal timer. This will         |
+|                      |                         | reval_pending flag for each cache.               | also allow ORT to be run in revalidate mode, which will check for and clear the reval_pending flag.  This can be set to run via cron task.              |
+|                      |                         |                                                  | This value is set to 0 by default.  Enable with a value of 1.  Use of this feature requires Traffic Ops 2.1 and above.                                  |
++----------------------+-------------------------+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 Note that the TTL the adminstrator enters in the purge request should be longer than the TTL of the content to ensure the bad content will not be used. If the CDN is serving content of unknown, or unlimited TTL, the administrator should consider using `proxy-config-http-cache-guaranteed-min-lifetime <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/records.config.en.html#proxy-config-http-cache-guaranteed-min-lifetime>`_ to limit the maximum time an object can be in the cache before it is considered stale, and set that to the same value as `maxRevalDurationDays` (Note that the former is in seconds and the latter is in days, so convert appropriately).
 

@@ -33,6 +33,10 @@ var FormParameterController = function(parameter, $scope, $location, formUtils, 
         $location.path($location.path() + '/profiles');
     };
 
+    $scope.viewCacheGroups = function() {
+        $location.path($location.path() + '/cache-groups');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;

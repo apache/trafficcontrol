@@ -21,12 +21,6 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
 
     $scope.cdn = cdn;
 
-    $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 45 }
-    ];
-
-    $scope.labelize = stringUtils.labelize;
-
     $scope.falseTrue = [
         { value: false, label: 'false' },
         { value: true, label: 'true' }
@@ -40,10 +34,6 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         alert('not hooked up yet: manageSSL for cdn');
     };
 
-    $scope.cachegroupHealth = function() {
-        alert('not hooked up yet: cachegroupHealth for CDN');
-    };
-
     $scope.queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
     };
@@ -54,6 +44,10 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
 
     $scope.manageSnapshots = function() {
         alert('not hooked up yet: manageSnapshots for CDN');
+    };
+
+    $scope.viewProfiles = function() {
+        $location.path($location.path() + '/profiles');
     };
 
     $scope.viewServers = function() {

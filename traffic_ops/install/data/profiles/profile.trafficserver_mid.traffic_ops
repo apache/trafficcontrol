@@ -263,7 +263,7 @@
         {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.http.connect_attempts_timeout",
-            "value": "INT 30"
+            "value": "INT 10"
         },
         {
             "config_file": "records.config",
@@ -348,11 +348,6 @@
         {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.http.cache.ignore_server_no_cache",
-            "value": "INT 0"
-        },
-        {
-            "config_file": "records.config",
-            "name": "CONFIG proxy.config.http.cache.ignore_client_cc_max_age",
             "value": "INT 0"
         },
         {
@@ -518,12 +513,12 @@
         {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.cache.ram_cache.algorithm",
-            "value": "INT 0"
+            "value": "INT 1"
         },
         {
             "config_file": "records.config",
             "name": "CONFIG proxy.config.cache.ram_cache.use_seen_filter",
-            "value": "INT 0"
+            "value": "INT 1"
         },
         {
             "config_file": "records.config",
@@ -1459,10 +1454,45 @@
             "config_file": "package",
             "name": "trafficserver",
             "value": "5.3.2-758.ce6de0c.el6.x86_64"
+        },
+        {
+            "config_file": "records.config",
+            "name": "CONFIG proxy.config.http.cache.guaranteed_max_lifetime",
+            "value": "INT 2592000"
+        },
+        {
+            "config_file": "records.config",
+            "name": "CONFIG proxy.config.http.cache.ignore_client_cc_max_age",
+            "value": "INT 1"
+        },
+        {
+            "config_file": "records.config",
+            "name": "CONFIG proxy.config.net.default_inactivity_timeout",
+            "value": "INT 180"
+        },
+        {
+            "config_file": "ip_allow.config",
+            "name": "coalesce_masklen_v6",
+            "value": "40"
+        },
+        {
+            "config_file": "ip_allow.config",
+            "name": "coalesce_number_v6",
+            "value": "5"
+        },
+        {
+            "config_file": "ip_allow.config",
+            "name": "coalesce_number_v4",
+            "value": "5"
+        },
+        {
+            "config_file": "ip_allow.config",
+            "name": "coalesce_masklen_v4",
+            "value": "16"
         }
     ],
     "profile": {
-        "description": "Traffic Server Mid Cache",
-        "name": "MID1_532"
+        "description": "TrafficServer Mid profile",
+        "name": "MID1_CDN_532"
     }
 }

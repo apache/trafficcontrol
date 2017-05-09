@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll, authService, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $anchorScroll, locationUtils, authService, trafficOpsService, changeLogService, changeLogModel, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -28,17 +28,36 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
      */
     $scope.user = angular.copy(userModel.user);
 
+    $scope.newLogCount = changeLogModel.newLogCount;
+
+    $scope.changeLogs = [];
+
     $scope.isState = function(state) {
         return $state.current.name.indexOf(state) !== -1;
+    };
+
+    $scope.getChangeLogs = function() {
+        $scope.changeLogs = [];
+        changeLogService.getChangeLogs({ limit: 6 })
+            .then(function(response) {
+                $scope.changeLogs = response;
+            });
+    };
+
+    $scope.getRelativeTime = function(date) {
+        return moment(date).fromNow();
     };
 
     $scope.logout = function() {
         authService.logout();
     };
 
-    $scope.downloadDB = function() {
-        alert('not hooked up yet: downloadDB');
+    $scope.dumpDB = function() {
+        trafficOpsService.dumpDB();
     };
+
+    $scope.navigateToPath = locationUtils.navigateToPath;
+
 
     var scrollToTop = function() {
         $anchorScroll(); // hacky?
@@ -79,7 +98,7 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
         });
     };
 
-    $scope.$on('userModel::userUpdated', function(event) {
+    $scope.$on('userModel::userUpdated', function() {
         $scope.user = angular.copy(userModel.user);
     });
 
@@ -90,5 +109,5 @@ var HeaderController = function($rootScope, $scope, $log, $state, $anchorScroll,
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$log', '$state', '$anchorScroll', 'authService', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$anchorScroll', 'locationUtils', 'authService', 'trafficOpsService', 'changeLogService', 'changeLogModel', 'userModel'];
 module.exports = HeaderController;

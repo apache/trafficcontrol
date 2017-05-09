@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils) {
+var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils, serverUtils) {
 
 	$scope.physLocation = physLocation;
 
@@ -31,16 +31,21 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.isOffline = serverUtils.isOffline;
+
+	$scope.offlineReason = serverUtils.offlineReason;
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 100,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
 module.exports = TablePhysLocationServersController;

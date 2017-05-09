@@ -24,13 +24,16 @@ under the License.
         </ol>
         <div class="pull-right">
             <button class="btn btn-primary" title="Create Server" ng-click="createServer()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="confirmQueueServerUpdates()">Queue Server Updates</a></li>
+                    <li role="menuitem"><a ng-click="confirmClearServerUpdates()">Clear Server Updates</a></li>
+                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="uploadServerCSV()">Upload Bulk CSV</a></li>
                 </ul>
             </div>
@@ -42,7 +45,7 @@ under the License.
         <table id="serversTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th></th>
+                <th>Update?</th>
                 <th>hostName</th>
                 <th>domainName</th>
                 <th>cdn</th>
@@ -58,20 +61,26 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServer(server.id)" ng-repeat="server in servers" ng-class="{'active': server.updPending}">
-                <td><i class="fa fa-flag" ng-show="server.updPending"></i></td>
-                <td>{{server.hostName}}</td>
-                <td>{{server.domainName}}</td>
-                <td>{{server.cdnName}}</td>
-                <td>{{server.cachegroup}}</td>
-                <td>{{server.type}}</td>
-                <td>{{server.physLocation}}</td>
-                <td>{{server.ipAddress}}</td>
-                <td>{{server.ip6Address}}</td>
-                <td>{{server.status}}</td>
-                <td>{{server.profile}}</td>
-                <td>{{server.iloIpAddress}}</td>
-                <td>{{server.iloIpGateway}}</td>
+            <tr ng-click="editServer(server.id)" ng-repeat="server in ::servers" ng-class="::{'active': server.updPending}">
+                <td class="update-column">
+                    <i class="fa fa-flag" ng-if="server.updPending"></i>
+                    <i class="fa fa-ban" ng-if="!server.updPending"></i>
+                </td>
+                <td>{{::server.hostName}}</td>
+                <td>{{::server.domainName}}</td>
+                <td>{{::server.cdnName}}</td>
+                <td>{{::server.cachegroup}}</td>
+                <td>{{::server.type}}</td>
+                <td>{{::server.physLocation}}</td>
+                <td>{{::server.ipAddress}}</td>
+                <td>{{::server.ip6Address}}</td>
+                <td>
+                    <span ng-if="!isOffline(server.status)">{{::server.status}}</span>
+                    <span ng-if="isOffline(server.status)" uib-popover="{{::offlineReason(server)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::server.status}}</span>
+                </td>
+                <td>{{::server.profile}}</td>
+                <td>{{::server.iloIpAddress}}</td>
+                <td>{{::server.iloIpGateway}}</td>
             </tr>
             </tbody>
         </table>

@@ -41,20 +41,23 @@ sub index {
 	&navbarpage($self);
 }
 
+
 sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_ds =
-		$self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', { 'type' => undef }, { 'profile' => undef } ] } );
+	my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type', 'profile' ] } );
 	my $data = $rs_ds->single;
-	my $action;
+
 	my $regexp_set   = &get_regexp_set( $self, $id );
-	my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
+	my $cdn_domain = $data->cdn->domain_name;
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 	my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
+
+	$self->stash_profile_selector('DS_PROFILE', defined($data->profile) ? $data->profile->id : undef);
+	$self->stash_cdn_selector($data->cdn->id);
 	&stash_role($self);
 	$self->stash(
 		ds           => $data,
@@ -66,20 +69,6 @@ sub edit {
 		hidden       => {},               # for form validation purposes
 		mode         => 'edit'            # for form generation
 	);
-}
-
-sub get_cdn_domain {
-	my $self       = shift;
-	my $id         = shift;
-	my $cdn_domain = $self->db->resultset('Parameter')->search(
-		{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $id ] },
-		{
-			join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-			distinct => 1
-		}
-	)->get_column('value')->single();
-	# Always return a lowercase FQDN.
-	return lc($cdn_domain);
 }
 
 sub get_example_urls {
@@ -127,7 +116,7 @@ sub get_example_urls {
 					$url = $scheme . '://' . $re->{pattern};
 					push( @example_urls, $url );
 					if ($scheme2) {
-						$url = $scheme . '://' . $re->{pattern};
+						$url = $scheme2 . '://' . $re->{pattern};
 						push( @example_urls, $url );
 					}
 				}
@@ -237,7 +226,6 @@ sub read {
 				"dns_bypass_ttl"              => $row->dns_bypass_ttl,
 				"org_server_fqdn"             => $row->org_server_fqdn,
 				"multi_site_origin"           => \$row->multi_site_origin,
-				"multi_site_origin_algorithm" => \$row->multi_site_origin_algorithm,
 				"ccr_dns_ttl"                 => $row->ccr_dns_ttl,
 				"type"                        => $row->type->id,
 				"cdn_name"                    => $cdn_name,
@@ -283,25 +271,31 @@ sub delete {
 		$self->flash( alertmsg => "No can do. Get more privs." );
 	}
 	else {
-		my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
-
-		my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
-		my $delete = $self->db->resultset('Deliveryservice')->search( { id => $id } );
-		$delete->delete();
-
-		my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
-		$delete_re->delete();
-
-		# Delete config file parameter
-		my @cfg_prefixes = ( "hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_" );
-		foreach my $cfg_prefix (@cfg_prefixes) {
-			my $cfg_file = $cfg_prefix . $dsname . ".config";
-			&delete_cfg_file( $self, $cfg_file );
-		}
-
-		&log( $self, "Delete deliveryservice with id:" . $id . " and name " . $dsname, "UICHANGE" );
+		$self->delete_ds($id);
 	}
 	return $self->redirect_to('/close_fancybox.html');
+}
+
+sub delete_ds {
+	my $self = shift;
+	my $id = shift;
+	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
+
+	my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
+	my $delete = $self->db->resultset('Deliveryservice')->search( { id => $id } );
+	$delete->delete();
+
+	my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
+	$delete_re->delete();
+
+	# Delete config file parameter
+	my @cfg_prefixes = ( "hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_" );
+	foreach my $cfg_prefix (@cfg_prefixes) {
+		my $cfg_file = $cfg_prefix . $dsname . ".config";
+		&delete_cfg_file( $self, $cfg_file );
+	}
+
+	&log( $self, "Delete deliveryservice with id:" . $id . " and name " . $dsname, "UICHANGE" );
 }
 
 sub typeid {
@@ -346,8 +340,8 @@ sub check_deliveryservice_input {
 		$self->field('ds.regex_remap')->is_equal( "", "Regex Remap can not be used when qstring_ignore is 2" );
 	}
 
-	my $profile_id = $self->param('ds.profile');
-	my $cdn_domain = $self->get_cdn_domain_by_profile_id($profile_id);
+	# my $profile_id = $self->param('ds.profile.id');
+	my $cdn_domain = $self->db->resultset('Cdn')->search( { id => $cdn_id } )->get_column('domain_name')->single();
 
 	my $match_one = 0;
 	my $dbl_check = {};
@@ -588,6 +582,7 @@ sub header_rewrite {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+
 		my $cdn_name = undef;
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
@@ -652,6 +647,7 @@ sub regex_remap {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -698,6 +694,7 @@ sub cacheurl {
 			$insert->insert();
 			$param_id = $insert->id;
 		}
+
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
@@ -714,6 +711,51 @@ sub cacheurl {
 	}
 	else {
 		&delete_cfg_file( $self, "cacheurl_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+	}
+}
+
+sub url_sig {
+	my $self       = shift;
+	my $ds_id      = shift;
+	my $ds_profile = shift;
+	my $ds_name    = shift;
+	my $signed    = shift;
+
+	if ( defined($signed) && $signed == 1 ) {
+		my $fname = "url_sig_" . $ds_name . ".config";
+		my $ats_cfg_loc =
+			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
+		$ats_cfg_loc =~ s/\/$//;
+
+		my $param_id = $self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => $fname ] } )->get_column('id')->single();
+		if ( !defined($param_id) ) {
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					config_file => $fname,
+					name        => 'location',
+					value       => $ats_cfg_loc
+				}
+			);
+			$insert->insert();
+			$param_id = $insert->id;
+		}
+
+		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
+		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
+		foreach my $profile_id (@profiles) {
+			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
+			if ( !defined($link) ) {
+				my $insert = $self->db->resultset('ProfileParameter')->create(
+					{
+						profile   => $profile_id,
+						parameter => $param_id
+					}
+				);
+			}
+		}
+	}
+	else {
+		&delete_cfg_file( $self, "url_sig_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
@@ -739,6 +781,9 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
+#	foreach my $f ($self->param) {
+#		print $f . " => " . $self->param($f) . "\n";
+#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
 
@@ -756,11 +801,10 @@ sub update {
 			geo_provider                => $self->paramAsScalar('ds.geo_provider'),
 			org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
-			multi_site_origin_algorithm => $self->paramAsScalar('ds.multi_site_origin_algorithm'),
 			ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 			type                        => $self->typeid(),
 			cdn_id                      => $self->paramAsScalar('ds.cdn_id'),
-			profile                     => $self->paramAsScalar('ds.profile'),
+			profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
 			global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
 			global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
 			miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
@@ -788,7 +832,7 @@ sub update {
 		);
 
 		my $typename = $self->typename();
-		if ( $typename eq "DNS" ) {
+		if ( $typename =~ /^DNS/ ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
 			$hash{dns_bypass_ip6}   = $self->paramAsScalar('ds.dns_bypass_ip6');
 			$hash{dns_bypass_cname} = $self->paramAsScalar('ds.dns_bypass_cname');
@@ -802,7 +846,7 @@ sub update {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
 		}
 
-		# print Dumper( \%hash );
+		#print Dumper( \%hash );
 		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
 		$update->update( \%hash );
 		$update->update();
@@ -894,15 +938,16 @@ sub update {
 		);
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
+		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.signed') );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
 	}
 	else {
 		&stash_role($self);
-		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
+		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
 		my $data = $rs_ds->single;
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id($id);
+		my $cdn_domain = $data->cdn->domain_name;
 		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 		my $regexp_set   = &get_regexp_set( $self, $id );
@@ -954,12 +999,16 @@ sub create {
 	my $new_id = -1;
 	my $cdn_id = $self->param('ds.cdn_id');
 	my $xml_id = $self->param('ds.xml_id');
+	my @msgs;
 
 	my $existing = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id } )->get_column('xml_id')->single();
 	if ($existing) {
 		$self->field('ds.xml_id')->is_equal( "", "A Delivery service with xml_id \"$xml_id\" already exists." );
 	}
 
+	$self->stash_profile_selector('DS_PROFILE');
+	$self->stash_cdn_selector();
+	&stash_role($self);
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
@@ -979,11 +1028,10 @@ sub create {
 				dns_bypass_ttl              => $self->paramAsScalar('ds.dns_bypass_ttl'),
 				org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 				multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
-				multi_site_origin_algorithm => $self->paramAsScalar('ds.multi_site_origin_algorithm'),
 				ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 				type                        => $self->paramAsScalar('ds.type'),
 				cdn_id                      => $cdn_id,
-				profile                     => $self->paramAsScalar('ds.profile'),
+				profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
 				global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
 				global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
 				miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
@@ -1063,7 +1111,6 @@ sub create {
 			);
 			$insert->insert();
 			my $new_re_id = $insert->id;
-
 			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
 				{
 					regex           => $new_re_id,
@@ -1086,15 +1133,37 @@ sub create {
 
 		if ( $dnssec_enabled == 1 ) {
 			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
-			$self->create_dnssec_keys( $cdn_rs->name, $self->param('ds.xml_id'), $new_id );
+			my $err = $self->create_dnssec_keys( $cdn_rs->name, $xml_id, $new_id );
+			if ($err ne "") {
+				push( @msgs, "Delivery service $xml_id could not be created because DNSSEC key creation was not successful.  Error was $err" );
+				# #delete DS since DNSSEC key creation was unsuccessful
+				$self->delete_ds($new_id);
+
+				#save the UI selections
+				my $selected_type    = $self->param('ds.type');
+				my $selected_profile = $self->param('ds.profile');
+				my $selected_cdn     = $self->param('ds.cdn_id');
+				&stash_role($self);
+				$self->stash(
+					ds               => {},
+					fbox_layout      => 1,
+					selected_type    => $selected_type,
+					selected_profile => $selected_profile,
+					selected_cdn     => $selected_cdn,
+					hidden           => {},                  # for form validation purposes
+					mode             => "add",
+					msgs             => \@msgs
+				);
+				return $self->render('delivery_service/add');
+			}
 		}
-		$self->flash( message => "Success!" );
+		$self->flash( message => "Delivery service successfully created!" );
 		return $self->redirect_to( '/ds/' . $new_id );
 	}
-	else {
+	else {  #validation failed
 		my $selected_type    = $self->param('ds.type');
 		my $selected_profile = $self->param('ds.profile');
-		my $selected_cdn     = $self->param('ds.cdn');
+		my $selected_cdn     = $self->param('ds.cdn_id');
 		&stash_role($self);
 		$self->stash(
 			ds               => {},
@@ -1104,8 +1173,9 @@ sub create {
 			selected_cdn     => $selected_cdn,
 			hidden           => {},                  # for form validation purposes
 			mode             => "add",
+			msgs             => \@msgs
 		);
-		$self->render('delivery_service/add');
+		return $self->render('delivery_service/add');
 	}
 }
 
@@ -1119,46 +1189,52 @@ sub create_dnssec_keys {
 	my $keys;
 	my $response_container = $self->riak_get( "dnssec", $cdn_name );
 	my $get_keys = $response_container->{'response'};
-	$keys = decode_json( $get_keys->content );
+	if ( $get_keys->is_success() ) {
+		$keys = decode_json( $get_keys->content );
 
-	#get default expiration days and ttl for DSs from CDN record to use when generating new keys
-	my $cdn_ksk = $keys->{$cdn_name}->{ksk};
-	my $k_exp_days = get_key_expiration_days( $cdn_ksk, "365" );
+		#get default expiration days and ttl for DSs from CDN record to use when generating new keys
+		my $cdn_ksk = $keys->{$cdn_name}->{ksk};
+		my $k_exp_days = get_key_expiration_days( $cdn_ksk, "365" );
 
-	my $cdn_zsk = $keys->{$cdn_name}->{zsk};
-	my $z_exp_days = get_key_expiration_days( $cdn_zsk, "30" );
+		my $cdn_zsk = $keys->{$cdn_name}->{zsk};
+		my $z_exp_days = get_key_expiration_days( $cdn_zsk, "30" );
 
-	my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
+		my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
 
-	#create the ds domain name for dnssec keys
-	my $domain_name             = get_cdn_domain($ds_id);
-	my $deliveryservice_regexes = get_regexp_set($ds_id);
-	my $rs_ds =
-		$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
-	my $data = $rs_ds->single;
-	my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
+		#create the ds domain name for dnssec keys
+		my $deliveryservice_regexes = get_regexp_set($self, $ds_id);
+		my $rs_ds =
+			$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
+		my $data = $rs_ds->single;
+		my $domain_name = $data->cdn->domain_name;
+		my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
+		#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
+		my $ds_name = $example_urls[0] . ".";
+		my $length = length($ds_name) - CORE::index( $ds_name, "." );
+		$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
 
-	#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
-	my $ds_name = $example_urls[0] . ".";
-	my $length = length($ds_name) - CORE::index( $ds_name, "." );
-	$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+		my $inception    = time();
+		my $z_expiration = $inception + ( 86400 * $z_exp_days );
+		my $k_expiration = $inception + ( 86400 * $k_exp_days );
 
-	my $inception    = time();
-	my $z_expiration = $inception + ( 86400 * $z_exp_days );
-	my $k_expiration = $inception + ( 86400 * $k_exp_days );
+		my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl, $inception, $z_expiration, "new", $inception );
+		my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception, $k_expiration, "new", $inception );
 
-	my $zsk = $self->get_dnssec_keys( "zsk", $ds_name, $dnskey_ttl, $inception, $z_expiration, "new", $inception );
-	my $ksk = $self->get_dnssec_keys( "ksk", $ds_name, $dnskey_ttl, $inception, $k_expiration, "new", $inception );
+		#add to keys hash
+		$keys->{$xml_id} = {
+			zsk => [$zsk],
+			ksk => [$ksk]
+		};
 
-	#add to keys hash
-	$keys->{$xml_id} = {
-		zsk => [$zsk],
-		ksk => [$ksk]
-	};
-
-	#put keys back in Riak
-	my $json_data = encode_json($keys);
-	$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
+		#put keys back in Riak
+		my $json_data = encode_json($keys);
+		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
+	} else {
+		my $err = "Could not create DNSSEC keys for $xml_id.  Reponse was " . $get_keys->{_content};
+		$self->app->log->error($err);
+		return $err;
+	}
+	return "";
 }
 
 sub get_key_expiration_days {
@@ -1191,6 +1267,10 @@ sub get_key_ttl {
 # for the add delivery service view
 sub add {
 	my $self = shift;
+	my @msgs;
+
+	$self->stash_profile_selector('DS_PROFILE');
+	$self->stash_cdn_selector();
 	&stash_role($self);
 	$self->stash(
 		fbox_layout      => 1,
@@ -1199,7 +1279,8 @@ sub add {
 		selected_profile => "",
 		selected_cdn     => "",
 		hidden           => {},      # for form validation purposes
-		mode             => 'add'    # for form generation
+		mode             => 'add',    # for form generation
+		msgs             => \@msgs
 	);
 	my @params = $self->param;
 	foreach my $field (@params) {

@@ -21,11 +21,11 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/divisions')">Divisions</a></li>
-            <li><a ng-click="navigateToPath('/admin/divisions/' + division.id)">{{division.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/divisions/' + division.id)">{{::division.name}}</a></li>
             <li class="active">Regions</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -39,9 +39,9 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editRegion(region.id)" ng-repeat="region in divisionRegions">
-                <td>{{region.name}}</td>
-                <td>{{region.divisionName}}</td>
+            <tr ng-click="editRegion(region.id)" ng-repeat="region in ::divisionRegions">
+                <td>{{::region.name}}</td>
+                <td>{{::region.divisionName}}</td>
             </tr>
             </tbody>
         </table>

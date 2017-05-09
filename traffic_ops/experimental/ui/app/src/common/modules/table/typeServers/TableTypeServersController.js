@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypeServersController = function(type, servers, $scope, $state, locationUtils) {
+var TableTypeServersController = function(type, servers, $scope, $state, locationUtils, serverUtils) {
 
 	$scope.type = type;
 
@@ -31,16 +31,21 @@ var TableTypeServersController = function(type, servers, $scope, $state, locatio
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.isOffline = serverUtils.isOffline;
+
+	$scope.offlineReason = serverUtils.offlineReason;
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 100,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableTypeServersController.$inject = ['type', 'servers', '$scope', '$state', 'locationUtils'];
+TableTypeServersController.$inject = ['type', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
 module.exports = TableTypeServersController;

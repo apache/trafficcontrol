@@ -22,14 +22,21 @@ var TrafficOpsService = function($http, $q) {
     this.getReleaseVersionInfo = function() {
         var deferred = $q.defer();
         $http.get('traffic_ops_release.json')
-            .success(function(result) {
-                deferred.resolve(result);
-            })
-            .error(function(fault) {
-                deferred.reject(fault);
-            });
+            .then(
+                function(result) {
+                    deferred.resolve(result);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
         return deferred.promise;
+    };
+
+    this.dumpDB = function() {
+        // todo: need to fix this so it is not hard-coded
+        window.location = 'http://localhost:3000/api/1.2/dbdump';
     };
 
 };

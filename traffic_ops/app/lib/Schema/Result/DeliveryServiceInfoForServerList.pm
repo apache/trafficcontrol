@@ -46,30 +46,29 @@ SELECT
     deliveryservice.qstring_ignore AS qstring_ignore,
     deliveryservice.org_server_fqdn as org_server_fqdn,
     deliveryservice.multi_site_origin as multi_site_origin,
-    deliveryservice.multi_site_origin_algorithm as multi_site_origin_algorithm,
     deliveryservice.range_request_handling as range_request_handling,
     deliveryservice.origin_shield as origin_shield,
     regex.pattern AS pattern,
     retype.name AS re_type,
     dstype.name AS ds_type,
-    parameter.value AS domain_name,
+    cdn.domain_name AS domain_name,
     deliveryservice_regex.set_number AS set_number,
     deliveryservice.edge_header_rewrite as edge_header_rewrite,
     deliveryservice.regex_remap as regex_remap,
     deliveryservice.cacheurl as cacheurl,
     deliveryservice.remap_text as remap_text,
     mid_header_rewrite as mid_header_rewrite,
-    deliveryservice.protocol as protocol
+    deliveryservice.protocol as protocol,
+    deliveryservice.profile as profile
 FROM
     deliveryservice
         JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
         JOIN regex ON deliveryservice_regex.regex = regex.id
         JOIN type as retype ON regex.type = retype.id
         JOIN type as dstype ON deliveryservice.type = dstype.id
-        JOIN profile_parameter ON deliveryservice.profile = profile_parameter.profile
-        JOIN parameter ON parameter.id = profile_parameter.parameter
+        JOIN cdn ON cdn.id = deliveryservice.cdn_id
         JOIN deliveryservice_server ON deliveryservice_server.deliveryservice = deliveryservice.id
-WHERE parameter.name = 'domain_name' AND deliveryservice_server.server = ?
+WHERE deliveryservice_server.server = ?
 ORDER BY ds_id, re_type , deliveryservice_regex.set_number
 "
 );
@@ -78,7 +77,6 @@ __PACKAGE__->add_columns(
 	"xml_id",          { data_type => "varchar", is_nullable => 0, size => 45 },
 	"org_server_fqdn", { data_type => "varchar", is_nullable => 0, size => 45 },
 	"multi_site_origin",           { data_type => "integer", is_nullable => 0 },
-	"multi_site_origin_algorithm", { data_type => "tinyint", is_nullable => 1 },
 	"ds_id",                       { data_type => "integer", is_nullable => 0 },
 	"dscp",                        { data_type => "integer", is_nullable => 0 },
 	"signed",                      { data_type => "integer", is_nullable => 0 },
@@ -96,6 +94,7 @@ __PACKAGE__->add_columns(
 	"protocol",                    { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"range_request_handling",      { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"profile",                     { data_type => "integer", is_nullable => 1},
 );
 
 1;

@@ -25,7 +25,7 @@ under the License.
             <li class="active">ASNs</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -39,9 +39,9 @@ under the License.
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editASN(asn.id)" ng-repeat="asn in asns">
-                    <td>{{asn.asn}}</td>
-                    <td>{{asn.cachegroup}}</td>
+                <tr ng-click="editASN(asn.id)" ng-repeat="asn in ::asns">
+                    <td>{{::asn.asn}}</td>
+                    <td>{{::asn.cachegroup}}</td>
                 </tr>
             </tbody>
         </table>

@@ -29,23 +29,44 @@ use YAML;
 use YAML qw(LoadFile);
 use DBIx::Class::Schema::Loader qw/make_schema_at/;
 
+use Env;
+use Env qw(HOME);
+
 my $usage = "\n"
 	. "Usage:  $PROGRAM_NAME [--env (development|test|production|integration)] [arguments]\t\n\n"
 	. "Example:  $PROGRAM_NAME --env=test reset\n\n"
 	. "Purpose:  This script is used to manage database. The environments are\n"
 	. "          defined in the dbconf.yml, as well as the database names.\n\n"
-	. "arguments:   \n\n"
+	. "NOTE: \n"
+	. "Postgres Superuser: The 'postgres' superuser needs to be created to run $PROGRAM_NAME and setup databases.\n"
+	. "If the 'postgres' superuser has not been created or password has not been set then run the following commands accordingly. \n\n"
+	. "Create the 'postgres' user as a super user (if not created):\n\n"
+	. "     \$ createuser postgres --superuser --createrole --createdb --login --pwprompt\n\n"
+	. "Modify your $HOME/.pgpass file which allows for easy command line access by defaulting the user and password for the database\n"
+	. "without prompts.\n\n"
+	. " Postgres .pgpass file format:\n"
+	. " hostname:port:database:username:password\n\n"
+	. " ----------------------\n"
+	. " Example Contents\n"
+	. " ----------------------\n"
+	. " *:*:*:postgres:your-postgres-password \n"
+	. " *:*:*:traffic_ops:the-password-in-dbconf.yml \n"
+	. " ----------------------\n\n"
+	. " Save the following example into this file $HOME/.pgpass with the permissions of this file\n"
+	. " so only $USER can read and write.\n\n"
+	. "     \$ chmod 0600 $HOME/.pgpass\n\n"
+	. "===================================================================================================================\n"
+	. "$PROGRAM_NAME arguments:   \n\n"
 	. "createdb  - Execute db 'createdb' the database for the current environment.\n"
+	. "create_user  - Execute 'create_user' the user for the current environment (traffic_ops).\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
 	. "down  - Roll back a single migration from the current version.\n"
-	. "createuser  - Execute 'createuser' the user for the current environment.\n"
-	. "dropuser  - Execute 'dropuser' the user for the current environment.\n"
-	. "showusers  - Execute sql to show all of the user for the current environment.\n"
+	. "drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).\n"
 	. "redo  - Roll back the most recently applied migration, then run it again.\n"
 	. "reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.\n"
 	. "reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.\n"
 	. "seed  - Execute sql from db/seeds.sql for loading static data.\n"
-	. "setup  - Execute db dropdb, createdb, load_schema, migrate, seed on the database for the current environment.\n"
+	. "show_users  - Execute sql to show all of the user for the current environment.\n"
 	. "status  - Print the status of all migrations.\n"
 	. "upgrade  - Execute migrate then seed on the database for the current environment.\n";
 
@@ -55,7 +76,8 @@ my $db_protocol;
 # This is defaulted to 'to_development' so
 # you don't have to specify --env=development for dev workstations
 my $db_name     = 'to_development';
-my $db_username = 'to_development';
+my $db_super_user = 'postgres';
+my $db_user = '';
 my $db_password = '';
 my $host_ip     = '';
 my $host_port   = '';
@@ -73,30 +95,23 @@ if ( defined($argument) ) {
 	elsif ( $argument eq 'dropdb' ) {
 		dropdb();
 	}
-	elsif ( $argument eq 'createuser' ) {
-		createuser();
+	elsif ( $argument eq 'create_user' ) {
+		create_user();
 	}
-	elsif ( $argument eq 'dropuser' ) {
-		dropuser();
+	elsif ( $argument eq 'drop_user' ) {
+		drop_user();
 	}
-	elsif ( $argument eq 'showusers' ) {
-		showusers();
+	elsif ( $argument eq 'show_users' ) {
+		show_users();
 	}
 	elsif ( $argument eq 'reset' ) {
+		create_user();
 		dropdb();
 		createdb();
 		load_schema();
 		migrate('up');
 	}
 	elsif ( $argument eq 'upgrade' ) {
-		migrate('up');
-		seed();
-	}
-	elsif ( $argument eq 'setup' ) {
-		createuser();
-		dropdb();
-		createdb();
-		load_schema();
 		migrate('up');
 		seed();
 	}
@@ -150,74 +165,84 @@ sub parse_dbconf_yml_pg_driver {
 
 	$host_ip     = $hash->{host};
 	$host_port   = $hash->{port};
-	$db_name     = $hash->{dbname};
-	$db_username = $hash->{user};
+	$db_user = $hash->{user};
 	$db_password = $hash->{password};
+	$db_name     = $hash->{dbname};
 }
 
 sub migrate {
 	my ($command) = @_;
 
 	print "Migrating database...\n";
-	if ( system( "goose --env=$environment $command" ) != 0 ) {
+	if ( system("goose --env=$environment $command") != 0 ) {
 		die "Can't run goose\n";
 	}
 }
 
 sub seed {
-	print "Seeding database.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/seeds.sql") != 0 ) {
-		die "Can't seed database\n";
+	print "Seeding database w/ required data.\n";
+	local $ENV{PGPASSWORD} = $db_password;
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds.sql") != 0 ) {
+		die "Can't seed database w/ required data\n";
+	}
+}
+
+sub seed_demo {
+	print "Seeding database w/ demo data.\n";
+	local $ENV{PGPASSWORD} = $db_password;
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds_demo.sql") != 0 ) {
+		die "Can't seed database w/ demo data\n";
 	}
 }
 
 sub load_schema {
 	print "Creating database tables.\n";
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_username -e < db/create_tables.sql") != 0 ) {
+	local $ENV{PGPASSWORD} = $db_password;
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/create_tables.sql") != 0 ) {
 		die "Can't create database tables\n";
 	}
 }
 
 sub dropdb {
-	if ( system("dropdb -h $host_ip -p $host_port -U $db_username -e --if-exists $db_name;") != 0 ) {
+	print "Dropping database: $db_name\n";
+	if ( system("dropdb -h $host_ip -p $host_port -U $db_super_user -e --if-exists $db_name;") != 0 ) {
 		die "Can't drop db $db_name\n";
 	}
 }
 
 sub createdb {
-	createuser();
-	my $db_exists = `psql -h $host_ip -p $host_port -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
-	if ( $db_exists ) {
+	my $db_exists = `psql -h $host_ip -U $db_super_user -p $host_port -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"`;
+	if ($db_exists) {
 		print "Database $db_name already exists\n";
 		return;
 	}
-
-	if ( system("createdb -h $host_ip -p $host_port -U $db_username -e $db_name;") != 0 ) {
+	my $cmd = "createdb -h $host_ip -p $host_port -U $db_super_user -e --owner $db_user $db_name;";
+	if ( system($cmd) != 0 ) {
 		die "Can't create db $db_name\n";
 	}
+
 }
 
-sub createuser {
-	my $user_exists = `psql -h $host_ip -p $host_port -U postgres postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_username'"`;
-	if ( $user_exists ) {
-		print "Role $db_username already exists\n";
-		return;
-	}
+sub create_user {
+	print "Creating user: $db_user\n";
+	my $user_exists = `psql -h $host_ip -p $host_port -U $db_super_user -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_user'"`;
 
-	my $cmd = "CREATE USER $db_username WITH SUPERUSER CREATEROLE CREATEDB ENCRYPTED PASSWORD '$db_password'";
-	if ( system( qq{psql -h $host_ip -p $host_port -U postgres -tAc "$cmd"} ) != 0 ) {
-		die "Can't create user $db_username\n";
-	}
-}
-
-sub dropuser {
-	if ( system("dropuser -h $host_ip -p $host_port -U postgres -i -e $db_username;") != 0 ) {
-		die "Can't drop user $db_username\n";
+	if (!$user_exists) {
+		my $cmd = "CREATE USER $db_user WITH LOGIN ENCRYPTED PASSWORD '$db_password'";
+		if ( system(qq{psql -h $host_ip -p $host_port -U $db_super_user -etAc "$cmd"}) != 0 ) {
+			die "Can't create user $db_user\n";
+		}
 	}
 }
 
-sub showusers {
-	if ( system("psql -h $host_ip -p $host_port -U postgres -ec '\\du';") != 0 ) {
+sub drop_user {
+	if ( system("dropuser -h $host_ip -p $host_port -U $db_super_user-i -e $db_user;") != 0 ) {
+		die "Can't drop user $db_user\n";
+	}
+}
+
+sub show_users {
+	if ( system("psql -h $host_ip -p $host_port -U $db_super_user -ec '\\du';") != 0 ) {
 		die "Can't show users";
 	}
 }
@@ -237,3 +262,4 @@ sub reverse_schema {
 		[ $dsn, $user, $pass ],
 	);
 }
+

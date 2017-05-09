@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileServersController = function(profile, servers, $scope, $state, locationUtils) {
+var TableProfileServersController = function(profile, servers, $scope, $state, locationUtils, serverUtils) {
 
 	$scope.profile = profile;
 
@@ -31,16 +31,21 @@ var TableProfileServersController = function(profile, servers, $scope, $state, l
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.isOffline = serverUtils.isOffline;
+
+	$scope.offlineReason = serverUtils.offlineReason;
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 100,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableProfileServersController.$inject = ['profile', 'servers', '$scope', '$state', 'locationUtils'];
+TableProfileServersController.$inject = ['profile', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
 module.exports = TableProfileServersController;

@@ -21,11 +21,11 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/regions')">Regions</a></li>
-            <li><a ng-click="navigateToPath('/admin/regions/' + region.id)">{{region.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/regions/' + region.id)">{{::region.name}}</a></li>
             <li class="active">Physical Locations</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -43,13 +43,13 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editPhysLocation(physLocation.id)" ng-repeat="physLocation in physLocations">
-                <td>{{physLocation.name}}</td>
-                <td>{{physLocation.shortName}}</td>
-                <td>{{physLocation.address}}</td>
-                <td>{{physLocation.city}}</td>
-                <td>{{physLocation.state}}</td>
-                <td>{{physLocation.region}}</td>
+            <tr ng-click="editPhysLocation(physLocation.id)" ng-repeat="physLocation in ::physLocations">
+                <td>{{::physLocation.name}}</td>
+                <td>{{::physLocation.shortName}}</td>
+                <td>{{::physLocation.address}}</td>
+                <td>{{::physLocation.city}}</td>
+                <td>{{::physLocation.state}}</td>
+                <td>{{::physLocation.region}}</td>
             </tr>
             </tbody>
         </table>

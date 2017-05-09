@@ -48,6 +48,32 @@ sub index {
 	$self->success( \@data );
 }
 
+sub show {
+    my $self = shift;
+    my $id     = $self->param('id');
+
+    my $find = $self->db->resultset('Parameter')->find({ id => $id } );
+    if ( !defined($find) ) {
+        return $self->not_found("parameter [id:".$id."] does not exist.");
+    }
+    if ( $find->secure != 0 && !&is_admin($self)) {
+        return $self->forbidden("You must be an admin to perform this operation!");
+    }
+
+    my @data = ();
+    push(
+        @data, {
+            "id"          => $find->id,
+            "name"        => $find->name,
+            "configFile"  => $find->config_file,
+            "value"       => $find->value,
+            "secure"      => \$find->secure,
+            "lastUpdated" => $find->last_updated
+        }
+    );
+    $self->success( \@data );
+}
+
 sub get_profile_params {
 	my $self         = shift;
 	my $profile_id   = $self->param('id');
@@ -199,33 +225,7 @@ sub create {
     return $self->success($response, "Create ". scalar(@new_parameters) . " parameters successfully.");
 }
 
-sub get {
-    my $self = shift;
-    my $id     = $self->param('id');
-
-    my $find = $self->db->resultset('Parameter')->find({ id => $id } );
-    if ( !defined($find) ) {
-        return $self->not_found("parameter [id:".$id."] does not exist.");
-    }
-    if ( $find->secure != 0 && !&is_admin($self)) {
-        return $self->forbidden("You must be an admin to perform this operation!");
-    }
-
-	my @data = ();
-	push(
-		@data, {
-			"id"          => $find->id,
-			"name"        => $find->name,
-			"configFile"  => $find->config_file,
-			"value"       => $find->value,
-			"secure"      => \$find->secure,
-			"lastUpdated" => $find->last_updated
-		}
-	);
-	$self->success( \@data );
-}
-
-sub edit {
+sub update {
     my $self = shift;
     my $id     = $self->param('id');
     my $params = $self->req->json;

@@ -29,11 +29,7 @@ func TestTRConfig(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for TR Config")
 

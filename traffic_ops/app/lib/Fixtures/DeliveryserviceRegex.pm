@@ -114,7 +114,7 @@ my %definition_for = (
 			set_number      => 0,
 		},
 	},
-		target_4 => {
+	target_4 => {
 		new   => 'DeliveryserviceRegex',
 		using => {
 			deliveryservice => 700,
@@ -122,6 +122,55 @@ my %definition_for = (
 			set_number      => 0,
 		},
 	},
+	target_5 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 800,
+			regex           => 1400,
+			set_number      => 0,
+		},
+	},
+	target_6 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 900,
+			regex           => 1500,
+			set_number      => 0,
+		},
+	},
+	target_7 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 1000,
+			regex           => 1600,
+			set_number      => 0,
+		},
+	},
+	target_8 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 1100,
+			regex           => 1700,
+			set_number      => 0,
+		},
+	},
+	target_9 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 1200,
+			regex           => 1800,
+			set_number      => 0,
+		},
+	},
+	target_10 => {
+		new   => 'DeliveryserviceRegex',
+		using => {
+			deliveryservice => 1300,
+			regex           => 1900,
+			set_number      => 0,
+		},
+	},
+
 );
 
 sub get_definition {

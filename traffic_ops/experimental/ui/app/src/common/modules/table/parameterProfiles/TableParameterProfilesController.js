@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, locationUtils) {
+var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, locationUtils, profileParameterService) {
 
 	$scope.parameter = parameter;
 
@@ -27,8 +27,13 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 		alert('not hooked up yet: add profile to parameter');
 	};
 
-	$scope.removeProfile = function() {
-		alert('not hooked up yet: remove profile from parameter');
+	$scope.removeProfile = function(profileId) {
+		profileParameterService.unlinkProfileParameter(profileId, parameter.id)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
@@ -38,13 +43,14 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#parametersTable').dataTable({
+		$('#parameterProfilesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 100,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', 'locationUtils'];
+TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', 'locationUtils', 'profileParameterService'];
 module.exports = TableParameterProfilesController;

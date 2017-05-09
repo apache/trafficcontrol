@@ -34,7 +34,7 @@ package InstallUtils;
 # under the License.
 
 
-use Term::ReadPassword;
+use Term::ReadKey;
 use JSON;
 use IO::Pipe;
 use base qw{ Exporter };
@@ -50,44 +50,10 @@ sub initLogger {
 }
 
 sub execCommand {
-    my ( $command, @args ) = @_;
-
-    my $pipe = IO::Pipe->new;
-    my $pid;
-    my $result    = 0;
-    my $customLog = "";
-
-    # find log file in args and remove if found
-    # if there is a string in the list of args which starts with 'pi_custom_log=' then remove it from the parameters and use
-    #  it as the log file for the exec
-    foreach my $var (@args) {
-        if ( index( $var, "pi_custom_log=" ) != -1 ) {
-            $customLog = ( split( /=/, $var ) )[1];
-            splice( @args, index( $var, "pi_custom_log=" ), 1 );
-            logger( "Using custom log '$customLog'", "info" );
-        }
-    }
-
-    # create pipe between child and parent and redirect output from child to parent for logging
-    my $child = open READER, '-|';
-    defined $child or die "pipe/fork: $!\n";
-    if ($child) {    #parent
-        while ( $line = <READER> ) {
-
-            # log all output from child pipe
-            if ( $customLog ne "" ) {
-                logger( $line, "info", $customLog );
-            }
-            else {
-                logger( $line, "info" );
-            }
-        }
-    }
-    else {           #child
-                     # redirect stderr to stdout so parent can read
-        open STDERR, '>&STDOUT';
-        exec( $command, @args ) or exit(1);
-    }
+        my ( $cmd, @args ) = @_;
+        system( $cmd, @args );
+        my $result = $? >> 8;
+        return $result;
 }
 
 # log the error and then kill the process
@@ -172,25 +138,27 @@ sub promptUser {
     }
 
     if ( defined $noEcho && $noEcho ) {
-        my $response = read_password('');
-        if ( ( !defined $response || $response eq '' ) && ( defined $defaultValue && $defaultValue ne '' ) ) {
-            $response = $defaultValue;
-        }
-        return $response;
+        # Set echo mode to off via ReadMode 2
+        ReadMode 2;
     }
-    else {
-        $| = 1;
-        $_ = <STDIN>;
-        chomp;
 
-        if ("$defaultValue") {
-            return $_ ? $_ : $defaultValue;
-        }
-        else {
-            return $_;
-        }
-        return $_;
+    $| = 1;
+    $_ = <STDIN>;
+    chomp;
+
+    if ( defined $noEcho && $noEcho ) {
+        # Set echo mode to on via ReadMode 1
+        ReadMode 1;
+        # Print extra line because echo mode was off during the STDIN
+        print "\n";
     }
+
+    if ("$defaultValue") {
+        return $_ ? $_ : $defaultValue;
+    }
+
+    # If we have gotten here, return what is left
+    return $_;
 }
 
 sub promptRequired {

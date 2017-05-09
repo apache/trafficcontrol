@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
@@ -36,7 +37,8 @@ func init() {
 	toPass := flag.String("toPass", "password", "Traffic Ops password")
 	flag.Parse()
 	var loginErr error
-	to, loginErr = traffic_ops.Login(*toURL, *toUser, *toPass, true)
+	toReqTimeout := time.Second * time.Duration(30)
+	to, loginErr = traffic_ops.LoginWithAgent(*toURL, *toUser, *toPass, true, "traffic-ops-client-integration-tests", true, toReqTimeout)
 	if loginErr != nil {
 		fmt.Printf("\nError logging in to %v: %v\nMake sure toURL, toUser, and toPass flags are included and correct.\nExample:  go test -toUser=admin -toPass=pass -toURL=http://localhost:3000\n\n", *toURL, loginErr)
 		os.Exit(1)
@@ -118,7 +120,7 @@ func Request(to traffic_ops.Session, method, path string, body []byte) (*http.Re
 		}
 	}
 
-	resp, err := to.UserAgent.Do(req)
+	resp, err := to.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}

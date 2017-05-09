@@ -21,11 +21,19 @@ package manager
 
 import (
 	"crypto/tls"
+	"fmt"
+	"io/ioutil"
 	"net/http"
-	"time"
+	"os"
+	"os/signal"
+
+	"golang.org/x/sys/unix"
+
+	"github.com/davecheney/gmx"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
@@ -34,26 +42,12 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
-	"github.com/davecheney/gmx"
 )
-
-// StaticAppData encapsulates data about the app available at startup
-type StaticAppData struct {
-	StartTime      time.Time
-	GitRevision    string
-	FreeMemoryMB   uint64
-	Version        string
-	WorkingDir     string
-	Name           string
-	BuildTimestamp string
-	Hostname       string
-	UserAgent      string
-}
 
 //
 // Start starts the poller and handler goroutines
 //
-func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData) {
+func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
 	counters := fetcher.Counters{
 		Success: gmx.NewCounter("fetchSuccess"),
@@ -74,12 +68,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -89,19 +83,23 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
 	cachesChanged := make(chan struct{})
+	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
 
 	monitorConfig := StartMonitorConfigManager(
 		monitorConfigPoller.ConfigChannel,
 		localStates,
+		peerStates,
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
 		peerPoller.ConfigChannel,
+		monitorConfigPoller.IntervalChan,
 		cachesChanged,
 		cfg,
 		staticAppData,
+		toSession,
+		toData,
 	)
 
-	peerStates := peer.NewCRStatesPeersThreadsafe() // each peer's last state is saved in this map
 	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)
 
 	StartPeerManager(
@@ -165,7 +163,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData StaticAppData)
 		cfg,
 	)
 
+	if err := startMonitorConfigFilePoller(trafficMonitorConfigFileName); err != nil {
+		return fmt.Errorf("starting monitor config file poller: %v", err)
+	}
+
 	healthTickListener(cacheHealthPoller.TickChan, healthIteration)
+	return nil
 }
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
@@ -173,4 +176,46 @@ func healthTickListener(cacheHealthTick <-chan uint64, healthIteration threadsaf
 	for i := range cacheHealthTick {
 		healthIteration.Set(i)
 	}
+}
+
+func startMonitorConfigFilePoller(filename string) error {
+	onChange := func(bytes []byte, err error) {
+		if err != nil {
+			log.Errorf("monitor config file poll, polling file '%v': %v", filename, err)
+			return
+		}
+
+		cfg, err := config.LoadBytes(bytes)
+		if err != nil {
+			log.Errorf("monitor config file poll, loading bytes '%v' from '%v': %v", string(bytes), filename, err)
+			return
+		}
+
+		eventW, errW, warnW, infoW, debugW, err := config.GetLogWriters(cfg)
+		if err != nil {
+			log.Errorf("monitor config file poll, getting log writers '%v': %v", filename, err)
+			return
+		}
+		log.Init(eventW, errW, warnW, infoW, debugW)
+	}
+
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	onChange(bytes, nil)
+
+	startSignalFileReloader(filename, unix.SIGHUP, onChange)
+	return nil
+}
+
+// signalFileReloader starts a goroutine which, when the given signal is received, attempts to load the given file and calls the given function with its bytes or error. There is no way to stop the goroutine or stop listening for signals, thus this should not be called if it's ever necessary to stop handling or change the listened file. The initialRead parameter determines whether the given handler is called immediately with an attempted file read (without a signal).
+func startSignalFileReloader(filename string, sig os.Signal, f func([]byte, error)) {
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, sig)
+		for range c {
+			f(ioutil.ReadFile(filename))
+		}
+	}()
 }

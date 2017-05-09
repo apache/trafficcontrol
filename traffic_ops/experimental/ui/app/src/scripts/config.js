@@ -17,10 +17,12 @@
  * under the License.
  */
 
+// this is the config the TO UI uses
+
 "use strict";
 
- angular.module('config', [])
+angular.module('config', [])
 
-.constant('ENV', {api:{root:'/api/1.2/'}})
+.constant('ENV', { api: { root:'/api/1.2/' } })
 
 ;

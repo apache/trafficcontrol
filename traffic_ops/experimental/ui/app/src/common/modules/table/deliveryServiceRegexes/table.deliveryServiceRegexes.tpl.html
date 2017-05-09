@@ -21,12 +21,12 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{::deliveryService.displayName}}</a></li>
             <li class="active">Regexes</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="createRegex(deliveryService.id)"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Regex</button>
+            <button class="btn btn-primary" title="Create Delivery Service Regex" ng-click="createRegex(deliveryService.id)"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -41,10 +41,10 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editRegex(deliveryService.id, regex.id)" ng-repeat="regex in regexes | orderBy:['setNumber']">
-                <td>{{regex.typeName}}</td>
-                <td>{{regex.pattern}}</td>
-                <td>{{regex.setNumber}}</td>
+            <tr ng-click="editRegex(deliveryService.id, regex.id)" ng-repeat="regex in ::regexes | orderBy:['setNumber']">
+                <td>{{::regex.typeName}}</td>
+                <td>{{::regex.pattern}}</td>
+                <td>{{::regex.setNumber}}</td>
             </tr>
             </tbody>
         </table>

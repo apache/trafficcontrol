@@ -32,6 +32,9 @@ import (
 	"strings"
 )
 
+// CDNName is the name of a CDN in Traffic Control.
+type CDNName string
+
 // TrafficMonitorName is the hostname of a Traffic Monitor peer.
 type TrafficMonitorName string
 

@@ -110,57 +110,57 @@ sub getserverdata {
 	my @data;
 	my $orderby = "host_name";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
-	my $rs_data = $self->db->resultset('Server')->search(
-		undef, {
-			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-			order_by => 'me.' . $orderby,
-		}
-	);
-	while ( my $row = $rs_data->next ) {
-		my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
+	my $dbh = $self->db->storage->dbh;
+	$orderby = $dbh->quote_identifier($orderby);
+	my $qry = 'SELECT
+		cdn.name AS cdn_name,
+		sv.id AS id,
+		sv.host_name AS host_name,
+		sv.domain_name AS domain_name,
+		sv.tcp_port AS tcp_port,
+		sv.https_port AS https_port,
+		sv.xmpp_id AS xmpp_id,
+		\'**********\' AS xmpp_passwd,
+		sv.interface_name AS interface_name,
+		sv.ip_address AS ip_address,
+		sv.ip_netmask AS ip_netmask,
+		sv.ip_gateway AS ip_gateway,
+		sv.ip6_address AS ip6_address,
+		sv.ip6_gateway AS ip6_gateway,
+		sv.interface_mtu AS interface_mtu,
+		cg.name AS cachegroup,
+		pl.name AS phys_location,
+		sv.guid AS guid,
+		sv.rack AS rack,
+		tp.name AS type,
+		st.name AS status,
+		sv.offline_reason AS offline_reason,
+		pf.name AS profile,
+		sv.mgmt_ip_address AS mgmt_ip_address,
+		sv.mgmt_ip_netmask AS mgmt_ip_netmask,
+		sv.mgmt_ip_gateway AS mgmt_ip_gateway,
+		sv.ilo_ip_address AS ilo_ip_address,
+		sv.ilo_ip_netmask AS ilo_ip_netmask,
+		sv.ilo_ip_gateway AS ilo_ip_gateway,
+		sv.ilo_username AS ilo_username,
+		\'**********\' AS ilo_password,
+		sv.router_host_name AS router_host_name,
+		sv.router_port_name AS router_port_name,
+		sv.last_updated AS last_updated
+		FROM server sv
+		LEFT JOIN cdn cdn ON cdn.id = sv.cdn_id
+		LEFT JOIN type tp ON tp.id = sv.type
+		LEFT JOIN status st ON st.id = sv.status
+		LEFT JOIN cachegroup cg ON cg.id = sv.cachegroup
+		LEFT JOIN profile pf ON pf.id = sv.profile
+		LEFT JOIN phys_location pl ON pl.id = sv.phys_location
+		ORDER BY sv.'.$orderby.';';
+	my $stmt = $dbh->prepare($qry);
+	$stmt->execute();
 
-		push(
-			@data, {
-				"id"               => $row->id,
-				"host_name"        => $row->host_name,
-				"domain_name"      => $row->domain_name,
-				"tcp_port"         => $row->tcp_port,
-				"https_port"         => $row->https_port,
-				"xmpp_id"          => $row->xmpp_id,
-				"xmpp_passwd"      => "**********",
-				"interface_name"   => $row->interface_name,
-				"ip_address"       => $row->ip_address,
-				"ip_netmask"       => $row->ip_netmask,
-				"ip_gateway"       => $row->ip_gateway,
-				"ip6_address"      => $row->ip6_address,
-				"ip6_gateway"      => $row->ip6_gateway,
-				"interface_mtu"    => $row->interface_mtu,
-				"cdn"              => $cdn_name,
-				"cachegroup"       => $row->cachegroup->name,
-				"phys_location"    => $row->phys_location->name,
-				"guid"             => $row->guid,
-				"rack"             => $row->rack,
-				"type"             => $row->type->name,
-				"status"           => $row->status->name,
-				"offline_reason"   => $row->offline_reason,
-				"profile"          => $row->profile->name,
-				"mgmt_ip_address"  => $row->mgmt_ip_address,
-				"mgmt_ip_netmask"  => $row->mgmt_ip_netmask,
-				"mgmt_ip_gateway"  => $row->mgmt_ip_gateway,
-				"ilo_ip_address"   => $row->ilo_ip_address,
-				"ilo_ip_netmask"   => $row->ilo_ip_netmask,
-				"ilo_ip_gateway"   => $row->ilo_ip_gateway,
-				"ilo_username"     => $row->ilo_username,
-				"ilo_password"     => "**********",
-				"router_host_name" => $row->router_host_name,
-				"router_port_name" => $row->router_port_name,
-				"last_updated"     => $row->last_updated,
-
-			}
-
-		);
+	while ( my $row = $stmt->fetchrow_hashref() ) {
+		push( @data, $row );
 	}
-
 	return ( \@data );
 }
 
@@ -413,9 +413,6 @@ sub check_server_input {
 		if ( !&is_ip6address( $paramHashRef->{'ip6_gateway'} ) ) {
 			$err .= "Gateway " . $paramHashRef->{'ip6_gateway'} . " is not a valid IPv6 address " . $sep;
 		}
-		if ( !&in_same_net( $paramHashRef->{'ip6_address'}, $paramHashRef->{'ip6_gateway'} ) ) {
-			$err .= $paramHashRef->{'ip6_address'} . " and " . $paramHashRef->{'ip6_gateway'} . " are not in same network" . $sep;
-		}
 	}
 
 	$ipstr1 = $paramHashRef->{'ilo_ip_address'} . "/" . $paramHashRef->{'ilo_ip_netmask'};
@@ -448,6 +445,12 @@ sub check_server_input {
 
 	if ( defined( $paramHashRef->{'csv_line_number'} ) && length($err) > 0 ) {
 		$err = '</li><li>' . $errorCSVLineDelim . '[LINE #:' . $paramHashRef->{'csv_line_number'} . ']:  ' . $err . '\n';
+	}
+
+	my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $paramHashRef->{'profile'}}, { prefetch => ['cdn'] } )->single();
+	my $cdn = $self->db->resultset('Cdn')->search( { 'me.id' => $paramHashRef->{'cdn'} } )->single();
+	if ( $profile->cdn->id != $cdn->id ) {
+		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the  " . $paramHashRef->{'cdn'} . " CDN." . $sep;
 	}
 	return $err;
 }
@@ -894,6 +897,7 @@ sub readupdate {
 
 	my $rs_servers;
 	my %parent_pending = ();
+	my %parent_reval_pending = ();
 	if ( $host_name =~ m/^all$/ ) {
 		$rs_servers = $self->db->resultset("Server")->search(undef, { prefetch => [ 'type', 'cachegroup' ] } );
 	}
@@ -905,41 +909,40 @@ sub readupdate {
 			if ( $rs_servers->single->type->name =~ m/^EDGE/ ) {
 				my $parent_cg =
 					$self->db->resultset('Cachegroup')->search( { id => $rs_servers->single->cachegroup->id } )->get_column('parent_cachegroup_id')->single;
-				my $rs_parents = $self->db->resultset('Server')->search( { cachegroup => $parent_cg }, { prefetch => [ 'status'] } );
+				my $rs_parents = $self->db->resultset('Server')->search( { -and => [ cachegroup => $parent_cg, cdn_id => $rs_servers->single->cdn_id ] }, { prefetch => [ 'status'] } );
 				while ( my $prow = $rs_parents->next ) {
 					if (   $prow->upd_pending == 1
 						&& $prow->status->name ne "OFFLINE" )
 					{
 						$parent_pending{ $rs_servers->single->host_name } = 1;
 					}
+					if (   $prow->reval_pending == 1
+						&& $prow->status->name ne "OFFLINE" )
+					{
+						$parent_reval_pending{ $rs_servers->single->host_name } = 1;
+					}
 				}
 			}
 		}
 	}
 
+	my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
+
 	while ( my $row = $rs_servers->next ) {
-		if ( $parent_pending{ $row->host_name } ) {
-			push(
-				@data, {
-					host_name      => $row->host_name,
-					upd_pending    => \$row->upd_pending,
-					host_id        => $row->id,
-					status         => $row->status->name,
-					parent_pending => \1
-				}
-			);
-		}
-		else {
-			push(
-				@data, {
-					host_name      => $row->host_name,
-					upd_pending    => \$row->upd_pending,
-					host_id        => $row->id,
-					status         => $row->status->name,
-					parent_pending => \0
-				}
-			);
-		}
+		my $parent_pending_flag = $parent_pending{ $row->host_name } ? 1 : 0;
+		my $parent_reval_pending_flag = $parent_reval_pending{ $row->host_name } ? 1 : 0;
+		my $reval_pending_flag = ($use_reval_pending) && $use_reval_pending ne '0' ? \$row->reval_pending : undef;
+		push(
+			@data, {
+				host_name      => $row->host_name,
+				upd_pending    => \$row->upd_pending,
+				reval_pending  => $reval_pending_flag,
+				host_id        => $row->id,
+				status         => $row->status->name,
+				parent_pending => \$parent_pending_flag,
+				parent_reval_pending => \$parent_reval_pending_flag
+			}
+		);
 	}
 
 	$self->render( json => \@data );
@@ -949,7 +952,9 @@ sub postupdate {
 
 	my $self      = shift;
 	my $updated   = $self->param("updated");
+	my $reval_updated = $self->param("reval_updated");
 	my $host_name = $self->param("host_name");
+
 	if ( !&is_admin($self) ) {
 		$self->render( text => "Forbidden", status => 403, layout => undef );
 		return;
@@ -977,7 +982,15 @@ sub postupdate {
 
 	my $update_server =
 		$self->db->resultset('Server')->search( { id => $serverid } );
-	if ( defined $updated ) {
+
+	my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
+
+	#Parameters don't have boolean options at this time, so we're going to compare against the default string value of 0.
+	if ( defined($use_reval_pending) && $use_reval_pending ne '0' ) {
+		$update_server->update( { upd_pending => $updated } );
+		$update_server->update( { reval_pending => $reval_updated } );
+	}
+	else {
 		$update_server->update( { upd_pending => $updated } );
 	}
 

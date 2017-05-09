@@ -92,6 +92,8 @@ $("a.fancybox").fancybox({
 							<td></td>						
 							<td>Profile Name</td>
 							<td>Profile Description</td>
+							<td>Type</td>
+							<td>Cdn</td>
 							<td>Last updated</td>
 						</tr>
 					</thead>

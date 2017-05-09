@@ -1,0 +1,40 @@
+<div class="x_title">
+    <h3>Overall Capacity</h3>
+</div>
+<div class="x_content">
+    <table class="" style="width:100%">
+        <tr>
+            <td>
+                <div id="capacityChart"></div>
+            </td>
+            <td>
+                <table class="tile_info">
+                    <tr>
+                        <td>
+                            <p><i class="fa fa-square green"></i>Available</p>
+                        </td>
+                        <td>{{availablePercent | number:2}}%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p><i class="fa fa-square blue"></i>Utilized</p>
+                        </td>
+                        <td>{{utilizedPercent | number:2}}%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p><i class="fa fa-square gray"></i>Maintenance</p>
+                        </td>
+                        <td>{{maintenancePercent | number:2}}%</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p><i class="fa fa-square red"></i>Down</p>
+                        </td>
+                        <td>{{unavailablePercent | number:2}}%</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>

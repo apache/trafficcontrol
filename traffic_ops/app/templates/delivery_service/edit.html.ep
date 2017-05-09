@@ -167,29 +167,6 @@
 			setup_form('fast');
 		}, "json");
 
-		$.get("/datadomains", function(data){
-			$.each(data, function(idx, val) {
-				if(data[idx].profile_id == "<%= $ds->profile->id %>") {
-					$("#profile").append("<option value=" + data[idx].profile_id + " selected=\"selected\">" + data[idx].profile_name +
-					" (" + data[idx].profile_description + ")</option>");
-				} else {
-					$("#profile").append("<option value=" + data[idx].profile_id + ">" + data[idx].profile_name +
-					" (" + data[idx].profile_description + ")</option>");
-				}
-			});
-		}, "json");
-
-		$.get("/api/1.2/cdns.json", function(data){
-			var response = data['response'];
-			$.each(response, function(idx, val) {
-				if (response[idx].name == "<%= $ds->cdn->name %>") {
-					$("#cdn").append("<option selected=\"selected\" value=" + response[idx].id + ">" + response[idx].name + "</option>");
-				} else {
-					$("#cdn").append("<option value=" + response[idx].id + ">" + response[idx].name + "</option>");
-				}
-			});
-		}, "json");
-
 			$('#type').change(function() {
 				show_hide_bypass_rows('slow');
 			});
@@ -201,7 +178,7 @@
 		$('#select_re').html("<select id=\"regexp_selector\"> " +
 				"<option>Add a regex...</option> " +
 				"<option>Add Host Regexp</option> " +
-			% if ($ds->type->name eq "DNS") {
+			% if ($ds->type->name =~ /^DNS/ ) {
 				"<option disabled>Add Path Regexp</option> " +
 				"<option disabled>Add Header Regexp</option> " +
 			% } else {
@@ -338,8 +315,8 @@ function setup_form(speed) {
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
 		}
-		else if (type_selected.match(/^STEERING$/)) {
-            $('#protocoli_row').hide(speed);
+		else if (type_selected.match(/STEERING$/)) {
+            $('#protocoli_row').show(speed);
             $('#dscp_row').hide(speed);
             $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
@@ -368,6 +345,7 @@ function setup_form(speed) {
             $('#ds_regexp_table').show(speed);
             $('#tr_response_headers').hide(speed);
             $('#multi_site_origin_row').hide(speed);
+            $('#multi_site_origin_algorithm_row').hide(speed);
             $('#initial_dispersion_row').hide(speed);
             $('#geo_provider_row').hide(speed);
             $('#tr_request_headers').hide(speed);

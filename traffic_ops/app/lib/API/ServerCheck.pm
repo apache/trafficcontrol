@@ -38,7 +38,7 @@ sub aadata {
 	my $rs_type = $self->db->resultset('Type')->search( \%condition );
 	my $rs =
 		$self->db->resultset('Server')
-		->search( { type => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ 'servercheck', 'status', 'profile' ]} );
+		->search( { 'me.type' => { -in => $rs_type->get_column('id')->as_query } }, { prefetch => [ 'servercheck', 'status', 'profile' ]} );
 	while ( my $server = $rs->next ) {
 		if ( !defined $server || !defined $server->servercheck ) {
 			next;

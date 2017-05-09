@@ -1,5 +1,3 @@
-{"name":"OFFLINE","description":"Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches"}
-{"name":"ONLINE","description":"Edge: Puts server in CCR config file in this state, but CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edge caches"}
-{"name":"REPORTED","description":"Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now"}
-{"name":"ADMIN_DOWN","description":"Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches"}
-{"name":"CCR_IGNORE","description":"Edge: Traffic Ops will not include caches in this state in CCR config files. Mid: N/A for now"}
+{
+
+}

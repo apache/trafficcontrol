@@ -288,6 +288,7 @@ sub create_user {
 		{
 			full_name            => $self->param('tm_user.full_name'),
 			username             => $self->param('tm_user.username'),
+			tenant_id            => current_user_tenant($self), #Tenancy is not dealt by the UI for now. getting the tenancy from the user			
 			public_ssh_key       => $self->param('tm_user.public_ssh_key'),
 			phone_number         => $self->param('tm_user.phone_number'),
 			email                => $self->param('tm_user.email'),

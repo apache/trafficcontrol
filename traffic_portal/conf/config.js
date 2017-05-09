@@ -30,8 +30,7 @@ module.exports = {
         ]
     },
     api: {
-        base_url: 'http://localhost:3000/api/',
-        key: ''
+        base_url: 'http://localhost:3000/api/'
     },
     files: {
         static: './app/dist/public/'

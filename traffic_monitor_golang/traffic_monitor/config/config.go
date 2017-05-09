@@ -21,8 +21,13 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -179,8 +184,58 @@ func Load(fileName string) (Config, error) {
 		return cfg, nil
 	}
 	configBytes, err := ioutil.ReadFile(fileName)
-	if err == nil {
-		err = json.Unmarshal(configBytes, &cfg)
+	if err != nil {
+		return DefaultConfig, err
 	}
+	return LoadBytes(configBytes)
+}
+
+// LoadBytes loads the given file bytes.
+func LoadBytes(bytes []byte) (Config, error) {
+	cfg := DefaultConfig
+	err := json.Unmarshal(bytes, &cfg)
 	return cfg, err
+}
+
+func getLogWriter(location string) (io.WriteCloser, error) {
+	switch location {
+	case LogLocationStdout:
+		return log.NopCloser(os.Stdout), nil
+	case LogLocationStderr:
+		return log.NopCloser(os.Stderr), nil
+	case LogLocationNull:
+		return log.NopCloser(ioutil.Discard), nil
+	default:
+		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	}
+}
+
+func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
+	eventLoc := cfg.LogLocationEvent
+	errLoc := cfg.LogLocationError
+	warnLoc := cfg.LogLocationWarning
+	infoLoc := cfg.LogLocationInfo
+	debugLoc := cfg.LogLocationDebug
+
+	eventW, err := getLogWriter(eventLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
+	}
+	errW, err := getLogWriter(errLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
+	}
+	warnW, err := getLogWriter(warnLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
+	}
+	infoW, err := getLogWriter(infoLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
+	}
+	debugW, err := getLogWriter(debugLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
+	}
+	return eventW, errW, warnW, infoW, debugW, nil
 }

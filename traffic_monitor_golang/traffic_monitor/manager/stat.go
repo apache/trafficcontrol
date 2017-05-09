@@ -41,7 +41,7 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
-func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS TrafficMonitorConfigMapThreadsafe) map[enum.CacheName]struct{} {
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[enum.CacheName]struct{} {
 	monitorConfig := monitorConfigTS.Get()
 	caches := map[enum.CacheName]struct{}{}
 	for cacheName := range localStates.GetCaches() {
@@ -65,14 +65,14 @@ func StartStatHistoryManager(
 	cachesChanged <-chan struct{},
 	errorCount threadsafe.Uint,
 	cfg config.Config,
-	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	events health.ThreadsafeEvents,
 	combineState func(),
-) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, DurationMapThreadsafe, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches, threadsafe.CacheAvailableStatus) {
+) (threadsafe.ResultInfoHistory, threadsafe.ResultStatHistory, threadsafe.CacheKbpses, threadsafe.DurationMap, threadsafe.LastStats, threadsafe.DSStatsReader, threadsafe.UnpolledCaches, threadsafe.CacheAvailableStatus) {
 	statInfoHistory := threadsafe.NewResultInfoHistory()
 	statResultHistory := threadsafe.NewResultStatHistory()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
-	lastStatDurations := NewDurationMapThreadsafe()
+	lastStatDurations := threadsafe.NewDurationMap()
 	lastStatEndTimes := map[enum.CacheName]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
@@ -136,7 +136,7 @@ func processStatResults(
 	errorCount threadsafe.Uint,
 	dsStats threadsafe.DSStats,
 	lastStatEndTimes map[enum.CacheName]time.Time,
-	lastStatDurationsThreadsafe DurationMapThreadsafe,
+	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc to.TrafficMonitorConfigMap,
 	precomputedData map[enum.CacheName]cache.PrecomputedData,
@@ -211,7 +211,7 @@ func processStatResults(
 	combineState()
 
 	endTime := time.Now()
-	lastStatDurations := lastStatDurationsThreadsafe.Get().Copy()
+	lastStatDurations := threadsafe.CopyDurationMap(lastStatDurationsThreadsafe.Get())
 	for _, result := range results {
 		if lastStatStart, ok := lastStatEndTimes[result.ID]; ok {
 			d := time.Since(lastStatStart)

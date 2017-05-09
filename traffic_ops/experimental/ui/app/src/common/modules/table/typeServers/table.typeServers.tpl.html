@@ -21,11 +21,11 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/types')">Types</a></li>
-            <li><a ng-click="navigateToPath('/admin/types/' + type.id)">{{type.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/types/' + type.id)">{{::type.name}}</a></li>
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -50,20 +50,26 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServer(server.id)" ng-repeat="server in servers" ng-class="{'active': server.updPending}">
-                <td>{{server.updPending}}</td>
-                <td>{{server.hostName}}</td>
-                <td>{{server.domainName}}</td>
-                <td>{{server.cdnName}}</td>
-                <td>{{server.cachegroup}}</td>
-                <td>{{server.type}}</td>
-                <td>{{server.physLocation}}</td>
-                <td>{{server.ipAddress}}</td>
-                <td>{{server.ip6Address}}</td>
-                <td>{{server.status}}</td>
-                <td>{{server.profile}}</td>
-                <td>{{server.iloIpAddress}}</td>
-                <td>{{server.iloIpGateway}}</td>
+            <tr ng-click="editServer(server.id)" ng-repeat="server in ::servers" ng-class="::{'active': server.updPending}">
+                <td class="update-column">
+                    <i class="fa fa-flag" ng-if="server.updPending"></i>
+                    <i class="fa fa-ban" ng-if="!server.updPending"></i>
+                </td>
+                <td>{{::server.hostName}}</td>
+                <td>{{::server.domainName}}</td>
+                <td>{{::server.cdnName}}</td>
+                <td>{{::server.cachegroup}}</td>
+                <td>{{::server.type}}</td>
+                <td>{{::server.physLocation}}</td>
+                <td>{{::server.ipAddress}}</td>
+                <td>{{::server.ip6Address}}</td>
+                <td>
+                    <span ng-if="!isOffline(server.status)">{{::server.status}}</span>
+                    <span ng-if="isOffline(server.status)" uib-popover="{{::offlineReason(server)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::server.status}}</span>
+                </td>
+                <td>{{::server.profile}}</td>
+                <td>{{::server.iloIpAddress}}</td>
+                <td>{{::server.iloIpGateway}}</td>
             </tr>
             </tbody>
         </table>

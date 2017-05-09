@@ -20,6 +20,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use UI::Utils;
 use Data::Dumper;
 
+
 sub index {
     my $self = shift;
 
@@ -60,9 +61,18 @@ sub find_steering {
         }
 
         my $target_id = $row->target_id;
+        
 
         if (! exists($steering{$row->steering_xml_id})) {
-            $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id};
+            my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $row->steering_xml_id } )->single();
+            my $client_steering;
+            if ($ds->type->name =~ /CLIENT_STEERING/) {
+                $client_steering = '1';
+            }
+            else { 
+                $client_steering = '0';
+            }
+            $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id, "clientSteering" => \$client_steering};
         }
 
         my $steering_entry = $steering{$row->steering_xml_id};

@@ -100,7 +100,7 @@ type DeliveryService struct {
 // DeliveryServiceMatch ...
 type DeliveryServiceMatch struct {
 	Type      string `json:"type"`
-	SetNumber string `json:"setNumber"`
+	SetNumber int    `json:"setNumber"`
 	Pattern   string `json:"pattern"`
 }
 

@@ -20,8 +20,6 @@
 'use strict';
 
 module.exports = function (grunt) {
-    var os = require("os");
-    var globalConfig = require('./grunt/globalConfig');
 
     // load time grunt - helps with optimizing build times
     require('time-grunt')(grunt);
@@ -29,25 +27,23 @@ module.exports = function (grunt) {
     // load grunt task configurations
     require('load-grunt-config')(grunt);
 
-    // default task - runs in dev mode
+    // default task - when you type 'grunt' it really runs as 'grunt dev'
     grunt.registerTask('default', ['dev']);
 
-    // dev task - when you type 'grunt dev' <-- builds unminified app and starts express server
+    // dev task - when you type 'grunt dev' <-- builds unminified app and puts it in in app/dist folder and starts express server which reads server.js
     grunt.registerTask('dev', [
         'build-dev',
         'express:dev',
         'watch'
     ]);
 
-    // dist task - when you type 'grunt dist' <-- builds minified app for distribution and generates node dependencies all wrapped up nicely in a /dist folder
+    // dist task - when you type 'grunt dist' <-- builds minified app for distribution all wrapped up nicely in app/dist folder
     grunt.registerTask('dist', [
-        'build',
-        'install-dependencies'
+        'build'
     ]);
 
     // build tasks
     grunt.registerTask('build', [
-        'ngconstant:prod',
         'clean',
         'copy:dist',
         'build-css',
@@ -56,7 +52,6 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('build-dev', [
-        'ngconstant:dev',
         'clean',
         'copy:dev',
         'build-css-dev',
