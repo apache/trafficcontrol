@@ -1,14 +1,14 @@
 **Contributing to Traffic Control**
 =================
 
-Thanks again for your time and interest in this project! 
+Thanks again for your time and interest in this project!
 
 The following document is a set of guidelines to streamline the contribution process for our contributors. Please feel free to suggest changes to this document in a pull request!
 
 Things to know before getting started
 -------------------------------------
 #### Code of Conduct
-Please review the [code of conduct](). By participating, you agree to it and are expected to follow this code. Please report any issues or unnacceptable behavior to [admin email]
+Please review the [code of conduct](). By participating, you agree to it and are expected to follow this code. Please report any issues or unacceptable behavior to [admin email]
 
 #### Design Decisions
 When we need to make changes to the project, we first discuss it on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We document our decisions as well as brainstorm project related ideas in the [wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home).
@@ -45,7 +45,7 @@ Keep functions small. Big functions are hard to read, and hard to review. Try to
 
 #### One pull request per feature
 
-Like big functions, big pull requests are just hard to review. Make each pull request as small as possible. For example, if you're adding ten independent API endpoints, make each a separate pull request. If you're adding interdependent functions or endpoints to multiple components, make a pull request for each, starting at the lowest level. 
+Like big functions, big pull requests are just hard to review. Make each pull request as small as possible. For example, if you're adding ten independent API endpoints, make each a separate pull request. If you're adding interdependent functions or endpoints to multiple components, make a pull request for each, starting at the lowest level.
 
 #### Tests
 
