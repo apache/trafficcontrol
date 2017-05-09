@@ -1265,7 +1265,7 @@ sub check_plugins {
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
+					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} && $plugin_config_file !~ /.lua$/ ) ) {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}
