@@ -588,10 +588,13 @@ sub header_rewrite {
 		if ( $tier eq "mid" ) {
 			my @mtype_ids = &type_ids( $self, 'MID%', 'server' );
 			my $param = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } );
-			$cdn_name = $param->next->cdn->name;
+			if (defined($param->next)) {
+				$cdn_name = $param->next->cdn->name;
+			}
 
 			@servers = $self->db->resultset('Server')->search( { type => { -in => \@mtype_ids } } )->get_column('id')->all();
 		}
+
 		my @profiles = $self->db->resultset('Server')->search( { id => { -in => \@servers } } )->get_column('profile')->all();
 		foreach my $profile_id (@profiles) {
 			my $link = $self->db->resultset('ProfileParameter')->search( { profile => $profile_id, parameter => $param_id } )->single();
