@@ -22,10 +22,10 @@ var WidgetCapacityController = function($scope, cdnService) {
 	var getCapacity = function() {
 		cdnService.getCapacity()
 			.then(function(response) {
-				$scope.availablePercent = Math.round(response.availablePercent * 100) / 100;
-				$scope.utilizedPercent = Math.round(response.utilizedPercent * 100) / 100;
-				$scope.maintenancePercent = Math.round(response.maintenancePercent * 100) / 100;
-				$scope.unavailablePercent = Math.round(response.unavailablePercent * 100) / 100;
+				$scope.availablePercent = response.availablePercent;
+				$scope.utilizedPercent = response.utilizedPercent;
+				$scope.maintenancePercent = response.maintenancePercent;
+				$scope.unavailablePercent = response.unavailablePercent;
 
 				var data = [];
 

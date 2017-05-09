@@ -11,27 +11,27 @@
                 <table class="tile_info">
                     <tr>
                         <td>
-                            <p><i class="fa fa-square green"></i>Available </p>
+                            <p><i class="fa fa-square green"></i>Available</p>
                         </td>
-                        <td>{{availablePercent}}%</td>
+                        <td>{{availablePercent | number:2}}%</td>
                     </tr>
                     <tr>
                         <td>
-                            <p><i class="fa fa-square blue"></i>Utilized </p>
+                            <p><i class="fa fa-square blue"></i>Utilized</p>
                         </td>
-                        <td>{{utilizedPercent}}%</td>
+                        <td>{{utilizedPercent | number:2}}%</td>
                     </tr>
                     <tr>
                         <td>
-                            <p><i class="fa fa-square gray"></i>Maint </p>
+                            <p><i class="fa fa-square gray"></i>Maintenance</p>
                         </td>
-                        <td>{{maintenancePercent}}%</td>
+                        <td>{{maintenancePercent | number:2}}%</td>
                     </tr>
                     <tr>
                         <td>
-                            <p><i class="fa fa-square red"></i>Down </p>
+                            <p><i class="fa fa-square red"></i>Down</p>
                         </td>
-                        <td>{{unavailablePercent}}%</td>
+                        <td>{{unavailablePercent | number:2}}%</td>
                     </tr>
                 </table>
             </td>

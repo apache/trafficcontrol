@@ -18,7 +18,6 @@ under the License.
 -->
 
 <div role="main">
-    <!-- top tiles -->
     <div class="row tile_count">
         <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
             <span class="count_top"><i class="fa fa-bolt"></i> Total Bandwidth</span>
@@ -45,71 +44,22 @@ under the License.
             <div class="count">999</div>
         </div>
     </div>
-    <!-- /top tiles -->
-
-    <!-- cdn graphs -->
     <div ng-repeat="cdn in ::cdns">
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12 chartContainer" data-cdnid="{{::cdn.id}}" ui-view="cdnChartContent"></div>
         </div>
         <br>
     </div>
-    <!-- /cdn graphs -->
-
     <div class="row">
-
-
         <div class="col-md-4 col-sm-4 col-xs-12">
             <div class="x_panel tile fixed_height_320" ui-view="capacityContent"></div>
-        </div>
-
-        <div class="col-md-4 col-sm-4 col-xs-12">
-            <div class="x_panel tile fixed_height_320" ui-view="routingContent"></div>
-        </div>
-        <div class="col-md-4 col-sm-4 col-xs-12">
-            <div class="x_panel tile fixed_height_320">
-                <div class="x_title">
-                    <h3>Something Else</h3>
-                </div>
-                <div class="x_content">
-                    <div class="dashboard-widget-content">
-                        <ul class="quick-list">
-                            <li><i class="fa fa-calendar-o"></i><a href="#">Foo</a>
-                            </li>
-                            <li><i class="fa fa-bars"></i><a href="#">Bar</a>
-                            </li>
-                            <li><i class="fa fa-bar-chart"></i><a href="#">Foo</a> </li>
-                            <li><i class="fa fa-line-chart"></i><a href="#">Bar</a>
-                            </li>
-                            <li><i class="fa fa-bar-chart"></i><a href="#">Foo</a> </li>
-                            <li><i class="fa fa-line-chart"></i><a href="#">Bar</a>
-                            </li>
-                            <li><i class="fa fa-area-chart"></i><a href="#">Foo</a>
-                            </li>
-                        </ul>
-
-                        <div class="sidebar-widget">
-                            <h4>Something</h4>
-                            <canvas width="150" height="80" id="chart_gauge_01" class="" style="width: 160px; height: 100px;"></canvas>
-                            <div class="goal-wrapper">
-                                <span id="gauge-text" class="gauge-value pull-left">0</span>
-                                <span class="gauge-value pull-left">%</span>
-                                <span id="goal-text" class="goal-value pull-right">100%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-4 col-sm-4 col-xs-12">
-            <div class="x_panel" ui-view="changeLogsContent"></div>
+            <div class="x_panel tile" ui-view="routingContent"></div>
         </div>
         <div class="col-md-8 col-sm-8 col-xs-12">
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
                     <div class="x_panel" ui-view="cacheGroupsContent"></div>
+                    <div class="x_panel" ui-view="changeLogsContent"></div>
                 </div>
             </div>
         </div>
