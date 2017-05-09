@@ -17,17 +17,29 @@
  * under the License.
  */
 
-var WidgetRoutingController = function(routing, $scope) {
+var WidgetRoutingController = function($scope, cdnService) {
+
+	var getRoutingMethods = function() {
+		cdnService.getRoutingMethods()
+			.then(function(response) {
+				$scope.native = response.cz;
+				$scope.thirdParty = response.geo;
+				$scope.federated = response.fed;
+				$scope.miss = response.miss;
+				$scope.static = response.staticRoute;
+				$scope.dsr = response.dsr;
+				$scope.error = response.err;
+				$scope.regionalAlternate = response.regionalAlternate;
+				$scope.regionalDenied = response.regionalDenied;
+			});
+	};
 
 	var init = function() {
-		if (routing) {
-			// only set this if it's passed in
-			$scope.routing = routing;
-		}
+		getRoutingMethods();
 	};
 	init();
 
 };
 
-WidgetRoutingController.$inject = ['routing', '$scope'];
+WidgetRoutingController.$inject = ['$scope', 'cdnService'];
 module.exports = WidgetRoutingController;

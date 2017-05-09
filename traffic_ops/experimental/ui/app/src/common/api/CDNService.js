@@ -104,6 +104,22 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
         return request.promise;
     };
 
+    this.getRoutingMethods = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns/routing")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
     this.getCurrentStats = function() {
         var request = $q.defer();
 
