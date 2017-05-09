@@ -20,7 +20,7 @@
 var WidgetCacheGroupsController = function(cacheGroupHealth, $scope) {
 
 	// pagination
-	$scope.currentLocationPage = 1;
+	$scope.currentCacheGroupsPage = 1;
 	$scope.cacheGroupsPerPage = 10;
 
 	$scope.onlinePercent = function(location) {
