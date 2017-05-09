@@ -24,7 +24,6 @@ var constants = require('constants'),
     path = require('path'),
     fs = require('fs'),
     morgan = require('morgan'),
-    errorhandler = require('errorhandler'),
     modRewrite = require('connect-modrewrite'),
     timeout = require('connect-timeout');
 
@@ -44,16 +43,30 @@ var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
 
 var app = express();
+
+app.use(function(req, res, next) {
+    var err = null;
+    try {
+        decodeURIComponent(req.path)
+    }
+    catch(e) {
+        err = e;
+    }
+    if (err){
+        console.log(err, req.url);
+    }
+    next();
+});
+
 // Add a handler to inspect the req.secure flag (see
 // http://expressjs.com/api#req.secure). This allows us
 // to know whether the request was via http or https.
 app.all ("/*", function (req, res, next) {
     if (useSSL && !req.secure) {
-        var headersHost = req.headers.host.split(':');
-        var httpsUrl = 'https://' + headersHost[0] + ':' +  config.sslPort + req.url;
         // request was via http, so redirect to https
-        res.redirect(httpsUrl);
+        return res.redirect(['https://', req.get('Host'), ':', config.sslPort, req.url].join(''));
     } else {
+        // request was via https or useSSL=false, so do no special handling
         next();
     }
 });
@@ -68,7 +81,6 @@ app.use(morgan('combined', {
     stream: logStream,
     skip: function (req, res) { return res.statusCode < 400 }
 }));
-app.use(errorhandler());
 app.use(timeout(config.timeout));
 
 if (app.get('env') === 'dev') {
