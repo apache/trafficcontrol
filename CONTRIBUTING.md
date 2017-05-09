@@ -7,8 +7,6 @@ The following document is a set of guidelines to streamline the contribution pro
 
 Things to know before getting started
 -------------------------------------
-#### Code of Conduct
-Please review the [code of conduct](). By participating, you agree to it and are expected to follow this code. Please report any issues or unacceptable behavior to [admin email]
 
 #### Design Decisions
 When we need to make changes to the project, we first discuss it on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We document our decisions as well as brainstorm project related ideas in the [wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home).
