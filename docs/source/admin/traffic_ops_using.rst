@@ -312,7 +312,8 @@ The fields in the Delivery Service view are:
 |                                                  | - 1 Do not use in cache key, but pass up to origin - this means a 2 URLs that are the same except for the query string will match, and cache HIT, while the origin still sees original query string in the request. |
 |                                                  | - 2 Drop at edge - this means a 2 URLs that are the same except for  the query string will match, and cache HIT, while the origin will not see original query string in the request.                                |
 |                                                  |                                                                                                                                                                                                                     |
-|                                                  | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`rl-regex-remap`.                                                                                  |
+|                                                  | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`rl-regex-remap`.
+|                                                  | To set the qstring without the use of regex remap, or for further options, see :ref:`qstring-handling`.      |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Limit?                                       | Some services are intended to be limited by geography. The possible settings are are:                                                                                                                               |
 |                                                  |                                                                                                                                                                                                                     |
@@ -590,6 +591,20 @@ Parameters in the Mid (parent) profile that influence this feature:
 +----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | use_ip_address | parent.config | 0       | 1 means use IP(v4) address of this parent in the parent.config, 0 means use the host_name.domain_name concatenation.                                                              |
 +----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. _rl-qstring-handling:
+
+Qstring Handling
+++++++++++++++++
+
+Delivery services have a Query String Handling option that, when set to ignore, will automatically add a regex remap to that delivery service's config.  There may be times this is not preferred, or there may be requirements for one delivery service or server(s) to behave differently.  When this is required, the psel.qstring_handling parameter can be set in either the delivery service profile or the server profile, but it is important to note that the server profile will override ALL delivery services assigned to servers with this profile parameter.  If the parameter is not set for the server profile but is present for the Delivery Service profile, this will override the setting in the delivery service.  A value of "ignore" will not result in the addition of regex remap configuration.
+
++-----------------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|      Name             |    Filename   | Default |                                                                                    Description                                                                                    |
++=======================+===============+=========+===================================================================================================================================================================================+
+| psel.qstring_handling | parent.config | -       | Sets qstring handling without the use of regex remap for a delivery service when assigned to a delivery service profile, and overrides qstring handling for all delivery services |
+|                       |               |         | for associated servers when assigned to a server profile. Value must be "consider" or "ignore".                                                                                   |
++-----------------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. _rl-multi-site-origin:
 
@@ -956,7 +971,7 @@ When changing delivery services special care has to be taken so that Traffic Rou
 
 Queue Updates
 ^^^^^^^^^^^^^
-Every 15 minutes the caches will run a *syncds* to get all changes needed from Traffic Ops. The files that will be updated by the syncds job are:
+Every 15 minutes the caches should run a *syncds* to get all changes needed from Traffic Ops. The files that will be updated by the syncds job are:
 
 - records.config
 - remap.config

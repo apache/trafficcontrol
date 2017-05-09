@@ -112,11 +112,16 @@ Installing the ORT script
 
     Run ``sudo crontab -e`` and add the following line :: 
 
-  	  	*/15 * * * * /opt/ort/traffic_ops_ort.pl syncds warn https://traffops.kabletown.net admin:password > /tmp/ort/syncds.log 2>&1
+  	  	*/15 * * * * /opt/ort/traffic_ops_ort.pl syncds warn https://traffops.kabletown.net admin:password --login_dispersion=30 --dispersion=180 > /tmp/ort/syncds.log 2>&1
 
     .. Note:: By default, running ort on an edge traffic server waits for it's parent (mid) servers to download their configuration before 
        it downloads it's own configuration. Because of this, scheduling ort for running every 15 minutes (with 5 minutes default dispersion) means 
-       that it might take up to ~35 minutes for a "Queue Updates" operation to affect all traffic servers.
+       that it might take up to ~35 minutes for a "Queue Updates" operation to affect all traffic servers.  To customize this dispersion time, use 
+       the command line option --dispersion=x where x is the number of seconds for the dispersion period.  Servers will select a random number from
+       within this dispersion period to being pulling down configuration files from Traffic Ops.  Another option, --login_dispersion=x can be used.
+       This option creates a dispersion period after the job begins during which ORT will wait before logging in and checking Traffic Ops for updates
+       to the server.  This defaults to 0.  If use_reval_pending, a.k.a. Rapid Revalidate is enabled, edges will NOT wait for their parents to download
+       their configuration before downloading their own.
 
     .. Note:: In 'syncds' mode, the ort script updates only configurations that might be changed as part of normal operations, such as:
 
@@ -124,5 +129,13 @@ Installing the ORT script
         * SSL certificates
         * Traffic Monitor IP addresses
         * Logging configuration
-        * More stuff <To be completed>
+        * Revalidation requests (By default. If Rapid Revalidate is enabled, this will only be checked by using a separate revalidate command in ORT.)
+
+
+#.  If Rapid Revalidate is enabled in Traffic Ops, create a second cron job for revalidation checks.  ORT will not check revalidation files if Rapid Revalidate
+    is enabled. This setting allows for a separate check to be performed every 60 seconds to verify if a revalidation update has been made.
+
+    Run ``sudo crontab -e`` and add the following line :: 
+
+        */1 * * * * /opt/ort/traffic_ops_ort.pl revalidate warn https://traffops.kabletown.net admin:password --login_dispersion=30 > /tmp/ort/syncds.log 2>&1
 
