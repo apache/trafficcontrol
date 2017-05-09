@@ -5,6 +5,10 @@
 2. Store your CDN_API_Credentials.txt in this folder (user, pw on separate lines)
 3. Create a folder called/Downloads/scripts/usage_reports to store usage_reporting_CustomerCopy.go outputs
 
+## To run cdn_api_mojokey.go:
+1. go run cdn_api_mojokey.go
+2. It will return a mojokey that you can use to authenticate all other API requests
+
 ## Usage Reporting:
 This program is intended to get usage data (Sum in Gbs and 95th Percentile in MBs) from various services via this api: https://cdnportal.comcast.net/api/1.1/deliveryservices/999/server_types/edge/metric_types/kbps/start_date/1453223126/end_date/1453309526
 
