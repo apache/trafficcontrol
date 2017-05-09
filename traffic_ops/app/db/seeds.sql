@@ -28,20 +28,12 @@ insert into job_status (name, description) values ('PENDING', 'Job is queued, bu
 -- parameters
 -- Move into postinstall global parameters
 insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90') ON CONFLICT (name, config_file, value) DO NOTHING;
 ---------------------------------
 
-insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'bandwidth') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'maxKbps') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('CacheStats', 'traffic_stats.config', 'ats.proxy.process.http.current_client_connections') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'kbps') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'status_4xx') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'status_5xx') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'tps_2xx') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'tps_3xx') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'tps_4xx') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'tps_5xx') ON CONFLICT (name, config_file, value) DO NOTHING;
-insert into parameter (name, config_file, value) values ('DsStats', 'traffic_stats.config', 'tps_total') ON CONFLICT (name, config_file, value) DO NOTHING;
+-- profiles
+---------------------------------
+insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN') ON CONFLICT (name, config_file, value) DO NOTHING;
+insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
 
 -- profiles
 ---------------------------------
@@ -53,29 +45,10 @@ insert into profile (name, description, type) values ('TRAFFIC_STATS', 'Traffic 
 insert into profile (name, description, type) values ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE') ON CONFLICT (name) DO NOTHING;
 insert into profile (name, description, type) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE') ON CONFLICT (name) DO NOTHING;
 
--- profile_parameters
-insert into profile_parameter (profile, parameter) 
-     values ( 
-	   (select id from profile where name = 'TRAFFIC_STATS'), 
-	   (select id from parameter 
-		          where name = 'CacheStats' 
-				  and config_file = 'traffic_stats.config' 
-				  and value = 'bandwidth') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'maxKbps') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.http.current_client_connections') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'kbps') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_2xx') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_4xx') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_5xx') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_3xx') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_4xx') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_5xx') ) ON CONFLICT (profile, parameter) DO NOTHING;
-insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'TRAFFIC_STATS'), (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total') ) ON CONFLICT (profile, parameter) DO NOTHING;
-
 -- statuses
 insert into status (name, description) values ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
 insert into status (name, description) values ('ONLINE', 'Server is online.') ON CONFLICT (name) DO NOTHING;
-insert into status (name, description) values ('REPORTED', 'Server is online and reporeted in the health protocol.') ON CONFLICT (name) DO NOTHING;
+insert into status (name, description) values ('REPORTED', 'Server is online and reported in the health protocol.') ON CONFLICT (name) DO NOTHING;
 insert into status (name, description) values ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT (name) DO NOTHING;
 insert into status (name, description) values ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT (name) DO NOTHING;
 insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
