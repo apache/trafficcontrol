@@ -495,14 +495,6 @@ sub getDefaults {
                 "config_var"      => "tm.url"
             },
             {
-                "Traffic Ops Instance Name" => "Traffic Ops CDN",
-                "config_var"      => "tm.instance_name"
-            },
-            {
-                "Traffic Ops Tool Name" => "Traffic Ops",
-                "config_var"      => "tm.toolname"
-            },
-            {
                 "Human-readable CDN Name.  (No whitespace, please)" => "kabletown_cdn",
                 "config_var"                                        => "cdn_name"
             },
