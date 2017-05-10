@@ -11,14 +11,14 @@ import (
 type HTTPRequestRemapper interface {
 	// Remap returns the remapped request, the matched rule name, and whether a match was found.
 	Remap(r *http.Request, scheme string) (*http.Request, string, string, bool)
-	Rules() []string
+	Rules() []RemapRule
 }
 
 type simpleHttpRequestRemapper struct {
 	remapper Remapper
 }
 
-func (hr simpleHttpRequestRemapper) Rules() []string {
+func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
 	return hr.remapper.Rules()
 }
 
@@ -70,7 +70,7 @@ type Remapper interface {
 	// Remap returns the given string remapped, the unique name of the rule found, and whether a remap rule was found
 	Remap(uri string) (RemapRule, bool)
 	// Rules returns the unique names of every remap rule.
-	Rules() []string
+	Rules() []RemapRule
 }
 
 // TODO change to use a prefix tree, for speed
@@ -88,10 +88,10 @@ func (r literalPrefixRemapper) Remap(s string) (RemapRule, bool) {
 	return RemapRule{}, false
 }
 
-func (r literalPrefixRemapper) Rules() []string {
-	rules := make([]string, len(r.remap))
+func (r literalPrefixRemapper) Rules() []RemapRule {
+	rules := make([]RemapRule, len(r.remap))
 	for _, rule := range r.remap {
-		rules = append(rules, rule.Name)
+		rules = append(rules, rule)
 	}
 	return rules
 }
@@ -109,6 +109,8 @@ type RemapRule struct {
 	From        string          `json:"from"`
 	To          string          `json:"to"`
 	QueryString QueryStringRule `json:"query-string"`
+	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
+	ConcurrentRuleRequests int `json:"concurrent_rule_requests"`
 }
 
 type QueryStringRule struct {
