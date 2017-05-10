@@ -17,11 +17,17 @@
  * under the License.
  */
 
-var MapController = function(cacheGroups, cacheGroupHealth, $scope, NgMap) {
+var MapController = function(cacheGroups, cacheGroupHealth, $scope, locationUtils, NgMap) {
 
 	$scope.map = NgMap.getMap('cgMap');
 
 	$scope.cacheGroups = [];
+
+	$scope.cacheGroupTypes = [];
+
+	$scope.cgTitle = function(cg) {
+		return cg.name + ' (' + cg.type + ')';
+	};
 
 	$scope.parentCg = function(cg) {
 		return cg.parent ? cg.parent : 'None'
@@ -31,13 +37,36 @@ var MapController = function(cacheGroups, cacheGroupHealth, $scope, NgMap) {
 		return cg.secondaryParent ? cg.secondaryParent : 'None'
 	};
 
+	$scope.icon = function(cg) {
+		var properties = {
+			path: 'M8 2.1c1.1 0 2.2 0.5 3 1.3 0.8 0.9 1.3 1.9 1.3 3.1s-0.5 2.5-1.3 3.3l-3 3.1-3-3.1c-0.8-0.8-1.3-2-1.3-3.3 0-1.2 0.4-2.2 1.3-3.1 0.8-0.8 1.9-1.3 3-1.3z',
+			fillOpacity: 0.8,
+			scale: 3,
+			strokeColor: 'white',
+			strokeWeight: 2
+		}
+		// color map markers by type UNLESS there are offline caches, then make red and bigger
+		if (parseInt(cg.offline) > 0) {
+			properties['fillColor'] = 'red';
+			properties['scale'] = 5;
+		} else {
+			properties['fillColor'] = colors[_.indexOf($scope.cacheGroupTypes, cg.type)];
+		}
+		return properties;
+	};
+
+	$scope.navigateToPath = locationUtils.navigateToPath;
+
 	var massageCacheGroups = function() {
 		var cgHealthCacheGroups = cacheGroupHealth.cachegroups,
 			cgHealth;
+		var cgTypes = [];
 		_.each(cacheGroups, function(cg) {
+			cgTypes.push(cg.typeName);
 			cgHealth = _.find(cgHealthCacheGroups, function(cghcg){ return cghcg.name == cg.name });
 			$scope.cacheGroups.push(
 				{
+					id: cg.id,
 					name: cg.name,
 					parent: cg.parentCachegroupName,
 					secondaryParent: cg.secondaryParentCachegroupName,
@@ -48,7 +77,17 @@ var MapController = function(cacheGroups, cacheGroupHealth, $scope, NgMap) {
 				}
 			);
 		});
+		$scope.cacheGroupTypes = _.uniq(cgTypes);
 	};
+
+	var colors = [
+		'#3F51B5', // blue
+		'#00AAA0', // turquoise
+		'#FF7A5A', // orangish
+		'#FFB85F', // yellowish
+		'#462066', // purple
+		'#FCF4D9' // whitish
+	];
 
 	var init = function() {
 		massageCacheGroups();
@@ -58,5 +97,5 @@ var MapController = function(cacheGroups, cacheGroupHealth, $scope, NgMap) {
 
 };
 
-MapController.$inject = ['cacheGroups', 'cacheGroupHealth', '$scope', 'NgMap'];
+MapController.$inject = ['cacheGroups', 'cacheGroupHealth', '$scope', 'locationUtils', 'NgMap'];
 module.exports = MapController;

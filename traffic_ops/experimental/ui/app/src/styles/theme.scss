@@ -1703,25 +1703,10 @@ span.right {
   border-left: 2px solid #ADB2B5;
   margin-top: 10px
 }
-@media (min-width: 992px) {
-  .tile_count .tile_stats_count:first-child:before {
-    border-left: 0
-  }
-}
 .tile_count .tile_stats_count .count {
-  font-size: 30px;
+  font-size: 25px;
   line-height: 47px;
   font-weight: 600
-}
-@media (min-width: 768px) {
-  .tile_count .tile_stats_count .count {
-    font-size: 30px
-  }
-}
-@media (min-width: 992px) and (max-width: 1100px) {
-  .tile_count .tile_stats_count .count {
-    font-size: 30px
-  }
 }
 .tile_count .tile_stats_count span {
   font-size: 12px
