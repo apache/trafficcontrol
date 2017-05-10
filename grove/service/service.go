@@ -21,8 +21,9 @@ type Config struct {
 	Port      int `json:"port"`
 	HTTPSPort int `json:"https_port"`
 	// CacheSizeBytes is the size of the memory cache, in bytes.
-	CacheSizeBytes         int    `json:"cache_size_bytes"`
-	RemapRulesFile         string `json:"remap_rules_file"`
+	CacheSizeBytes int    `json:"cache_size_bytes"`
+	RemapRulesFile string `json:"remap_rules_file"`
+	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. Note this is overridden by any per-rule settings in the remap rules.
 	ConcurrentRuleRequests int    `json:"concurrent_rule_requests"`
 	CertFile               string `json:"cert_file"`
 	KeyFile                string `json:"key_file"`

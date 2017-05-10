@@ -18,12 +18,12 @@ type statHandler struct {
 }
 
 // NewStatHandler returns an HTTP handler
-func NewStatHandler(interfaceName string, remapRules []string) (http.Handler, Stats) {
+func NewStatHandler(interfaceName string, remapRules []RemapRule) (http.Handler, Stats) {
 	stats := NewStats(remapRules)
 	return statHandler{interfaceName: interfaceName, stats: stats}, stats
 }
 
-func NewStatHandlerFunc(interfaceName string, remapRules []string) (http.HandlerFunc, Stats) {
+func NewStatHandlerFunc(interfaceName string, remapRules []RemapRule) (http.HandlerFunc, Stats) {
 	handler, rules := NewStatHandler(interfaceName, remapRules)
 	f := func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
@@ -50,7 +50,7 @@ type Stats interface {
 	Remap() StatsRemaps
 }
 
-func NewStats(remapRules []string) Stats {
+func NewStats(remapRules []RemapRule) Stats {
 	return &stats{system: NewStatsSystem(), remap: NewStatsRemaps(remapRules)}
 }
 
@@ -85,10 +85,10 @@ type StatsRemap interface {
 	AddStatus5xx(uint64)
 }
 
-func NewStatsRemaps(remapRules []string) StatsRemaps {
+func NewStatsRemaps(remapRules []RemapRule) StatsRemaps {
 	m := make(map[string]StatsRemap, len(remapRules))
 	for _, rule := range remapRules {
-		m[rule] = NewStatsRemap() // must pre-allocate, for threadsafety, so users are never changing the map itself, only the value pointed to.
+		m[rule.Name] = NewStatsRemap() // must pre-allocate, for threadsafety, so users are never changing the map itself, only the value pointed to.
 	}
 	return statsRemaps(m)
 }
@@ -250,16 +250,17 @@ func (h statHandler) LoadRemapStats() map[string]uint64 {
 	rules := statsRemaps.Rules()
 	jsonStats := make(map[string]uint64, len(rules)*6) // remap has 6 members: in, out, 2xx, 3xx, 4xx, 5xx
 	for _, rule := range rules {
-		statsRemap, ok := statsRemaps.Stats(rule)
+		ruleName := rule
+		statsRemap, ok := statsRemaps.Stats(ruleName)
 		if !ok {
 			continue // TODO warn?
 		}
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.in_bytes", rule)] = statsRemap.InBytes()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.out_bytes", rule)] = statsRemap.OutBytes()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", rule)] = statsRemap.Status2xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_3xx", rule)] = statsRemap.Status3xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_4xx", rule)] = statsRemap.Status4xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_5xx", rule)] = statsRemap.Status5xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.in_bytes", ruleName)] = statsRemap.InBytes()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.out_bytes", ruleName)] = statsRemap.OutBytes()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", ruleName)] = statsRemap.Status2xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_3xx", ruleName)] = statsRemap.Status3xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_4xx", ruleName)] = statsRemap.Status4xx()
+		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_5xx", ruleName)] = statsRemap.Status5xx()
 	}
 	return jsonStats
 }

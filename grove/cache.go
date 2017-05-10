@@ -73,7 +73,11 @@ func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]T
 	remapRules := remapper.Rules()
 	ruleThrottlers := make(map[string]Throttler, len(remapRules))
 	for _, rule := range remapRules {
-		ruleThrottlers[rule] = NewThrottler(limit)
+		ruleLimit := uint64(rule.ConcurrentRuleRequests)
+		if rule.ConcurrentRuleRequests == 0 {
+			ruleLimit = limit
+		}
+		ruleThrottlers[rule.Name] = NewThrottler(ruleLimit)
 	}
 	return ruleThrottlers
 }
