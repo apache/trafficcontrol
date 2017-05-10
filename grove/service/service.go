@@ -70,7 +70,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cache, err := lru.NewLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
+	cache, err := lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 	if err != nil {
 		fmt.Printf("Error starting service: creating cache: %v\n")
 		os.Exit(1)
