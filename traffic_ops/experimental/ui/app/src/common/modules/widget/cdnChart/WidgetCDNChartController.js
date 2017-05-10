@@ -19,10 +19,14 @@
 
 var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils) {
 
+	var chartSeries,
+		chartOptions;
+
 	var getCDN = function(id) {
 		cdnService.getCDN(id)
 			.then(function(result) {
 				$scope.cdn = result;
+				registerResizeListener();
 				getCurrentStats($scope.cdn.name);
 				getChartData($scope.cdn.name, moment().subtract(1, 'days'), moment().subtract(10, 'seconds'));
 			});
@@ -97,7 +101,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 
 	var buildChart = function(bandwidthChartData, connectionsChartData) {
 
-		var options = {
+		chartOptions = {
 			xaxis: {
 				mode: "time",
 				timezone: "utc",
@@ -135,13 +139,23 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 			}
 		};
 
-		var series = [
+		chartSeries = [
 			{ label: "Bandwidth", yaxis: 1, color: '#3498DB', data: bandwidthChartData },
 			{ label: "Connections", yaxis: 2, color: '#E74C3C', data: connectionsChartData }
 		];
 
-		$.plot($("#bps-chart-" + $scope.cdn.id), series, options);
+		plotChart();
 
+	};
+
+	var registerResizeListener = function() {
+		$(window).resize(plotChart);
+	};
+
+	var plotChart = function() {
+		if (chartOptions && chartSeries) {
+			$.plot($("#bps-chart-" + $scope.cdn.id), chartSeries, chartOptions);
+		}
 	};
 
 	$scope.cdn;

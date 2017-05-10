@@ -37,6 +37,9 @@ module.exports = angular.module('trafficOps.private.monitor.dashboard', [])
                             },
                             currentStats: function(cdnService) {
                                 return cdnService.getCurrentStats();
+                            },
+                            serverCount: function(serverService) {
+                                return serverService.getStatusCount();
                             }
                         }
 
