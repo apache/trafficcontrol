@@ -3,14 +3,15 @@ package grove
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 )
 
 type HTTPRequestRemapper interface {
-	// Remap returns the remapped request, the matched rule name, and whether a match was found.
-	Remap(r *http.Request, scheme string) (*http.Request, string, string, bool)
+	// Remap returns the remapped request, the matched rule name, whether the requestor's IP is allowed, whether a match was found, and any error.
+	Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, error)
 	Rules() []RemapRule
 }
 
@@ -22,19 +23,29 @@ func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
 	return hr.remapper.Rules()
 }
 
-// Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, and whether a rule was found.
-func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool) {
+// Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, whether the requestor's IP is allowed,  whether a rule was found, and any error.
+func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, error) {
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
 	oldUri := fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
 	fmt.Printf("DEBUG Remap oldUri: '%v'\n", oldUri)
 	fmt.Printf("DEBUG request: '%+v'\n", r)
-	// newUri, ruleName, options, ok :=
 	rule, ok := hr.remapper.Remap(oldUri)
 	if !ok {
 		fmt.Printf("DEBUG Remap oldUri: '%v' NOT FOUND\n", oldUri)
-		return r, "", "", false
+		return r, "", "", false, false, nil
 	}
+
+	ip, err := GetIP(r)
+	if err != nil {
+		return r, "", "", false, false, fmt.Errorf("parsing client IP: %v", err)
+	}
+
+	if !rule.Allowed(ip) {
+		return r, "", "", false, true, nil
+	}
+
+	fmt.Printf("DEBUG Allowed %v\n", ip)
 
 	newUri := rule.URI(oldUri)
 	cacheKey := rule.CacheKey(r.Method, oldUri)
@@ -43,10 +54,10 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http
 	newReq, err := http.NewRequest(r.Method, newUri, nil) // TODO modify given req in-place?
 	if err != nil {
 		fmt.Printf("Error Remap NewRequest: %v\n", err)
-		return r, "", "", false
+		return r, "", "", false, false, nil
 	}
 	copyHeader(r.Header, &newReq.Header)
-	return newReq, rule.Name, cacheKey, true
+	return newReq, rule.Name, cacheKey, true, true, nil
 }
 
 func copyHeader(source http.Header, dest *http.Header) {
@@ -101,16 +112,60 @@ func NewLiteralPrefixRemapper(remap []RemapRule) Remapper {
 }
 
 type RemapRulesJSON struct {
-	Rules []RemapRule `json:"rules"`
+	Rules []RemapRuleJSON `json:"rules"`
 }
 
-type RemapRule struct {
+type RemapRuleBase struct {
 	Name        string          `json:"name"`
 	From        string          `json:"from"`
 	To          string          `json:"to"`
 	QueryString QueryStringRule `json:"query-string"`
 	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
 	ConcurrentRuleRequests int `json:"concurrent_rule_requests"`
+}
+
+type RemapRuleJSON struct {
+	RemapRuleBase
+	Allow []string `json:"allow"`
+	Deny  []string `json:"deny"`
+}
+
+type RemapRule struct {
+	RemapRuleBase
+	Allow []*net.IPNet
+	Deny  []*net.IPNet
+}
+
+func GetIP(r *http.Request) (net.IP, error) {
+	clientIpStr, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return nil, fmt.Errorf("malformed client address '%s'", r.RemoteAddr)
+	}
+	clientIP := net.ParseIP(clientIpStr)
+	if clientIP == nil {
+		return nil, fmt.Errorf("malformed client IP address '%s'", clientIpStr)
+	}
+	return clientIP, nil
+}
+
+func (r *RemapRule) Allowed(ip net.IP) bool {
+	for _, network := range r.Deny {
+		if network.Contains(ip) {
+			fmt.Printf("DEBUGQ deny contains ip\n")
+			return false
+		}
+	}
+	if len(r.Allow) == 0 {
+		fmt.Printf("DEBUGQ Allowed len 0\n")
+		return true
+	}
+	for _, network := range r.Allow {
+		if network.Contains(ip) {
+			fmt.Printf("DEBUGQ allow contains ip\n")
+			return true
+		}
+	}
+	return false
 }
 
 type QueryStringRule struct {
@@ -149,7 +204,45 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 	if err := json.NewDecoder(file).Decode(&remapRules); err != nil {
 		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
-	return remapRules.Rules, nil
+
+	rules := make([]RemapRule, len(remapRules.Rules))
+	for i, jsonRule := range remapRules.Rules {
+		rule := RemapRule{RemapRuleBase: jsonRule.RemapRuleBase}
+		fmt.Printf("jsonRule %v allow %v\n", jsonRule.Name, jsonRule.Allow)
+		if rule.Allow, err = makeIPNets(jsonRule.Allow); err != nil {
+			return nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
+		}
+		if rule.Deny, err = makeIPNets(jsonRule.Deny); err != nil {
+			return nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
+		}
+		rules[i] = rule
+	}
+
+	return rules, nil
+}
+
+func makeIPNets(netStrs []string) ([]*net.IPNet, error) {
+	nets := make([]*net.IPNet, 0, len(netStrs))
+	for _, netStr := range netStrs {
+		netStr = strings.TrimSpace(netStr)
+		if netStr == "" {
+			continue
+		}
+		net, err := makeIPNet(netStr)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing CIDR %v: %v", netStr, err)
+		}
+		nets = append(nets, net)
+	}
+	return nets, nil
+}
+
+func makeIPNet(cidr string) (*net.IPNet, error) {
+	_, cidrnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing CIDR '%s': %v", cidr, err)
+	}
+	return cidrnet, nil
 }
 
 func LoadRemapper(path string) (HTTPRequestRemapper, error) {
