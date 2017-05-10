@@ -208,7 +208,6 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 	rules := make([]RemapRule, len(remapRules.Rules))
 	for i, jsonRule := range remapRules.Rules {
 		rule := RemapRule{RemapRuleBase: jsonRule.RemapRuleBase}
-		fmt.Printf("jsonRule %v allow %v\n", jsonRule.Name, jsonRule.Allow)
 		if rule.Allow, err = makeIPNets(jsonRule.Allow); err != nil {
 			return nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
 		}

@@ -10,9 +10,9 @@ import (
 // TODO add logging
 
 type Cache interface {
-	AddSize(key, value interface{}, size uint64) bool
-	Get(key interface{}) (interface{}, bool)
-	Remove(key interface{})
+	AddSize(key string, value interface{}, size uint64) bool
+	Get(key string) (interface{}, bool)
+	Remove(key string)
 	RemoveOldest()
 	Size() uint64
 }
