@@ -105,10 +105,20 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	copyHeader(r.Header, &reqHeader)
 
 	// TODO fix host header
-	remappedReq, remapName, cacheKey, ok := h.remapper.Remap(r, h.scheme)
+	remappedReq, remapName, cacheKey, allowed, ok, err := h.remapper.Remap(r, h.scheme)
+	if err != nil {
+		fmt.Printf("DEBUG request error: %v\n", err)
+		h.serveReqErr(w)
+		return
+	}
 	if !ok {
 		fmt.Printf("DEBUG rule not found for %v\n", r.RequestURI)
 		h.serveRuleNotFound(w)
+		return
+	}
+	if !allowed {
+		fmt.Printf("DEBUG IP %v not allowed\n", r.RemoteAddr)
+		h.serveNotAllowed(w)
 		return
 	}
 
@@ -199,6 +209,20 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
 func (h *cacheHandler) serveRuleNotFound(w http.ResponseWriter) {
 	code := http.StatusNotFound
+	w.WriteHeader(code)
+	w.Write([]byte(http.StatusText(code)))
+}
+
+// serveNotAllowed writes the appropriate response to the client, via given writer, for when the client's IP is not allowed for the requested rule.
+func (h *cacheHandler) serveNotAllowed(w http.ResponseWriter) {
+	code := http.StatusForbidden
+	w.WriteHeader(code)
+	w.Write([]byte(http.StatusText(code)))
+}
+
+// serveReqErr writes the appropriate response to the client, via given writer, for a generic request error.
+func (h *cacheHandler) serveReqErr(w http.ResponseWriter) {
+	code := http.StatusBadRequest
 	w.WriteHeader(code)
 	w.Write([]byte(http.StatusText(code)))
 }
