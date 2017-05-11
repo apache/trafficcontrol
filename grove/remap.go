@@ -10,8 +10,8 @@ import (
 )
 
 type HTTPRequestRemapper interface {
-	// Remap returns the remapped request, the matched rule name, whether the requestor's IP is allowed, whether a match was found, and any error.
-	Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, error)
+	// Remap returns the remapped request, the matched rule name, whether the requestor's IP is allowed, whether to connection close, whether a match was found, and any error.
+	Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, bool, error)
 	Rules() []RemapRule
 }
 
@@ -23,8 +23,8 @@ func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
 	return hr.remapper.Rules()
 }
 
-// Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, whether the requestor's IP is allowed,  whether a rule was found, and any error.
-func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, error) {
+// Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, whether the requestor's IP is allowed, whether the rule calls for sending a connection close header, whether a rule was found, and any error.
+func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, bool, error) {
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
 	oldUri := fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
@@ -33,16 +33,16 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http
 	rule, ok := hr.remapper.Remap(oldUri)
 	if !ok {
 		fmt.Printf("DEBUG Remap oldUri: '%v' NOT FOUND\n", oldUri)
-		return r, "", "", false, false, nil
+		return r, "", "", false, rule.ConnectionClose, false, nil
 	}
 
 	ip, err := GetIP(r)
 	if err != nil {
-		return r, "", "", false, false, fmt.Errorf("parsing client IP: %v", err)
+		return r, "", "", false, rule.ConnectionClose, false, fmt.Errorf("parsing client IP: %v", err)
 	}
 
 	if !rule.Allowed(ip) {
-		return r, "", "", false, true, nil
+		return r, "", "", false, rule.ConnectionClose, true, nil
 	}
 
 	fmt.Printf("DEBUG Allowed %v\n", ip)
@@ -54,10 +54,10 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http
 	newReq, err := http.NewRequest(r.Method, newUri, nil) // TODO modify given req in-place?
 	if err != nil {
 		fmt.Printf("Error Remap NewRequest: %v\n", err)
-		return r, "", "", false, false, nil
+		return r, "", "", false, rule.ConnectionClose, false, nil
 	}
 	copyHeader(r.Header, &newReq.Header)
-	return newReq, rule.Name, cacheKey, true, true, nil
+	return newReq, rule.Name, cacheKey, true, rule.ConnectionClose, true, nil
 }
 
 func copyHeader(source http.Header, dest *http.Header) {
@@ -116,10 +116,11 @@ type RemapRulesJSON struct {
 }
 
 type RemapRuleBase struct {
-	Name        string          `json:"name"`
-	From        string          `json:"from"`
-	To          string          `json:"to"`
-	QueryString QueryStringRule `json:"query-string"`
+	Name            string          `json:"name"`
+	From            string          `json:"from"`
+	To              string          `json:"to"`
+	ConnectionClose bool            `json:"connection-close"`
+	QueryString     QueryStringRule `json:"query-string"`
 	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
 	ConcurrentRuleRequests int `json:"concurrent_rule_requests"`
 }

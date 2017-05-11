@@ -30,7 +30,8 @@ type Config struct {
 	CertFile               string `json:"cert_file"`
 	KeyFile                string `json:"key_file"`
 	InterfaceName          string `json:"interface_name"`
-	ConnectionClose        bool   `json:"connection_close"`
+	// ConnectionClose determines whether to send a `Connection: close` header. This is primarily designed for maintenance, to drain the cache of incoming requestors. This overrides rule-specific `connection-close: false` configuration, under the assumption that draining a cache is a temporary maintenance operation, and if connectionClose is true on the service and false on some rules, those rules' configuration is probably a permament setting whereas the operator probably wants to drain all connections if the global setting is true. If it's necessary to leave connection close false on some rules, set all other rules' connectionClose to true and leave the global connectionClose unset.
+	ConnectionClose bool `json:"connection_close"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
