@@ -30,6 +30,7 @@ type Config struct {
 	CertFile               string `json:"cert_file"`
 	KeyFile                string `json:"key_file"`
 	InterfaceName          string `json:"interface_name"`
+	ConnectionClose        bool   `json:"connection_close"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
@@ -40,6 +41,7 @@ var DefaultConfig = Config{
 	CacheSizeBytes:         bytesPerGibibyte,
 	RemapRulesFile:         "remap.config",
 	ConcurrentRuleRequests: 100000,
+	ConnectionClose:        false,
 }
 
 // Load loads the given config file. If an empty string is passed, the default config is returned.
@@ -99,7 +101,7 @@ func main() {
 
 	buildHandler := func(scheme string, conns *grove.ConnMap) (http.Handler, *grove.CacheHandlerPointer) {
 		statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
-		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, scheme, conns, cfg.RFCCompliant)
+		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, scheme, conns, cfg.RFCCompliant, cfg.ConnectionClose)
 		cacheHandlerPointer := grove.NewCacheHandlerPointer(cacheHandler)
 
 		handler := http.NewServeMux()
@@ -162,10 +164,10 @@ func main() {
 
 		stats = grove.NewStats(remapper.Rules()) // TODO copy stats from old stats object?
 
-		httpCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "http", httpConns, cfg.RFCCompliant)
+		httpCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "http", httpConns, cfg.RFCCompliant, cfg.ConnectionClose)
 		httpHandlerPointer.Set(httpCacheHandler)
 
-		httpsCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "https", httpsConns, cfg.RFCCompliant)
+		httpsCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "https", httpsConns, cfg.RFCCompliant, cfg.ConnectionClose)
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
