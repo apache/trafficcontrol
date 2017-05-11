@@ -38,13 +38,17 @@ No restart is needed to re-read the forwarding rule file and apply; within 60 se
 However, authorized routes files are not re-read. Touch the forwarding rule file to trigger an update.
 
 * To run:
-`go run webfront.go webfront.config my-secret`
-`secret` is used for jwt signing
+
+    `go run webfront.go webfront.config my-secret`
+
+    `my-secret` is used for jwt signing
 
 
 * To login:
-`curl -X POST --insecure -Lkvs --header "Content-Type:application/json" https://localhost:9004/login -d'{"username":"foo", "password":"bar"}'`
+
+    `curl -X POST --insecure -Lkvs --header "Content-Type:application/json" https://localhost:9004/login -d'{"username":"foo", "password":"bar"}'`
    
 * To use a token:
-`curl --insecure -H'Authorization: Bearer <token>' -Lkvs  https://localhost:8080/ds/`
+
+    `curl --insecure -H'Authorization: Bearer <token>' -Lkvs  https://localhost:8080/ds/`
 

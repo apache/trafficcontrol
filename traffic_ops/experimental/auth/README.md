@@ -9,8 +9,11 @@ Upon every sucessful login the auth server performs additional login against leg
 This token is passed back on the user's JWT, and used by the API GW to set access control headers upon any consecutive API calls.
 
 * To run:
-`go run auth.go auth.config my-secret`
-`secret` is used for jwt signing
+
+	`go run auth.go auth.config my-secret`
+
+	`my-secret` is used for jwt signing
 
 * To login:
-`curl --insecure -X POST -Lkvs --header "Content-Type:application/json" https://localhost:9004/login -d'{"username":"username", "password":"password"}'`
+
+	`curl --insecure -X POST -Lkvs --header "Content-Type:application/json" https://localhost:9004/login -d'{"username":"username", "password":"password"}'`
