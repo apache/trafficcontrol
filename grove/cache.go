@@ -76,6 +76,8 @@ type CacheHandler struct {
 // Then, 2,000 requests come in for the same URL, simultaneously. They are all within the Origin limit, so they are all allowed to proceed to the key limiter. Then, the first request is allowed to make an actual request to the origin, while the other 1,999 wait at the key limiter.
 //
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
+//
+// The connectionClose parameter determines whether to send a `Connection: close` header. This is primarily designed for maintenance, to drain the cache of incoming requestors. This overrides rule-specific `connection-close: false` configuration, under the assumption that draining a cache is a temporary maintenance operation, and if connectionClose is true on the service and false on some rules, those rules' configuration is probably a permament setting whereas the operator probably wants to drain all connections if the global setting is true. If it's necessary to leave connection close false on some rules, set all other rules' connectionClose to true and leave the global connectionClose unset.
 func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, conns *ConnMap, strictRFC bool, connectionClose bool) *CacheHandler {
 	return &CacheHandler{
 		cache:           cache,
@@ -128,7 +130,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	copyHeader(r.Header, &reqHeader)
 
 	// TODO fix host header
-	remappedReq, remapName, cacheKey, allowed, ok, err := h.remapper.Remap(r, h.scheme)
+	remappedReq, remapName, cacheKey, allowed, ruleConnectionClose, ok, err := h.remapper.Remap(r, h.scheme)
 	if err != nil {
 		fmt.Printf("DEBUG request error: %v\n", err)
 		h.serveReqErr(w)
@@ -144,6 +146,8 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		h.serveNotAllowed(w)
 		return
 	}
+
+	connectionClose := h.connectionClose || ruleConnectionClose
 
 	getAndCache := func() *CacheObj {
 		get := func() *CacheObj {
@@ -197,7 +201,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		cacheObj := h.getter.Get(cacheKey, getAndCache, canReuse)
-		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, h.connectionClose)
+		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 		return
 	}
 
@@ -207,7 +211,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Error: cache key '%v' value '%v' type '%T' expected *CacheObj\n", cacheKey, iCacheObj, iCacheObj)
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 		// TODO check for ReuseMustRevalidate
-		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, h.connectionClose)
+		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 		return
 	}
 
@@ -226,7 +230,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		// TODO implement revalidate
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	}
-	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, h.connectionClose)
+	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 }
 
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
