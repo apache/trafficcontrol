@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+#-----------------------------------------
+# {{ ansible_managed }}
+#-----------------------------------------
+#
+[Unit]
+Description=Traffic Ops Postgres Docker Container
+Requires=docker.service
+After=docker.service
 
-systemctl enable traffic_ops_db.service
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker-compose -p trafficops -f /opt/traffic_ops_db/docker/docker-compose.yml up
+ExecStop=/usr/bin/docker-compose -p trafficops -f /opt/traffic_ops_db/docker/docker-compose.yml stop
 
-printf "\nNow you can start manually start the traffic_ops service with the command:\n"
-printf "systemctl start traffic_ops_db\n"
+[Install]
+WantedBy=default.target
