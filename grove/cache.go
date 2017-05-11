@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync/atomic"
 	"time"
+	"unsafe"
 )
 
 // TODO add logging
@@ -17,17 +19,47 @@ type Cache interface {
 	Size() uint64
 }
 
-type cacheHandler struct {
-	cache          Cache
-	remapper       HTTPRequestRemapper
-	getter         Getter
-	ruleThrottlers map[string]Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
-	scheme         string
-	strictRFC      bool
-	stats          Stats
-	conns          *ConnMap
+type CacheHandlerPointer struct {
+	realHandler *unsafe.Pointer
+}
+
+func NewCacheHandlerPointer(realHandler *CacheHandler) *CacheHandlerPointer {
+	p := (unsafe.Pointer)(realHandler)
+	return &CacheHandlerPointer{realHandler: &p}
+}
+
+func (h *CacheHandlerPointer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	realHandler := (*CacheHandler)(atomic.LoadPointer(h.realHandler))
+	realHandler.TryServe(w, r)
+}
+
+func (h *CacheHandlerPointer) Set(newHandler *CacheHandler) {
+	p := (unsafe.Pointer)(newHandler)
+	atomic.StorePointer(h.realHandler, p)
+}
+
+type CacheHandler struct {
+	cache           Cache
+	remapper        HTTPRequestRemapper
+	getter          Getter
+	ruleThrottlers  map[string]Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
+	scheme          string
+	strictRFC       bool
+	stats           Stats
+	conns           *ConnMap
+	connectionClose uint32 // Even bools must be synchronized. See https://golang.org/ref/mem#tmp_133
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
+}
+
+// SetConnectionClose sets the ConnectionClose flag on the handler, indicating a `Connection: close` header should be returned to all clients. This is designed to be set in a config, in order to drain the cache.
+func (c *CacheHandler) SetConnectionClose() {
+	atomic.StoreUint32(&c.connectionClose, 1)
+}
+
+// ConnectionClose returns whether the ConnectionClose flag on the handler is set, indicating a `Connection: close` header should be returned to all clients. This is designed to be set in a config, in order to drain the cache.
+func (c *CacheHandler) ConnectionClose() bool {
+	return atomic.LoadUint32(&c.connectionClose) == 1
 }
 
 // func (h *cacheHandler) checkoutKeyThrottler(k string) Throttler {
@@ -54,8 +86,8 @@ type cacheHandler struct {
 // Then, 2,000 requests come in for the same URL, simultaneously. They are all within the Origin limit, so they are all allowed to proceed to the key limiter. Then, the first request is allowed to make an actual request to the origin, while the other 1,999 wait at the key limiter.
 //
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
-func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, conns *ConnMap, strictRFC bool) http.Handler {
-	return &cacheHandler{
+func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, conns *ConnMap, strictRFC bool) *CacheHandler {
+	return &CacheHandler{
 		cache:          cache,
 		remapper:       remapper,
 		getter:         NewGetter(),
@@ -90,13 +122,13 @@ func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit ui
 	}
 }
 
-func (h *cacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.TryServe(w, r)
 }
 
 // TryServe attempts to serve the given request, as a caching reverse proxy.
 // Serving acts as a state machine.
-func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
+func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	// inBytes := getBytes(r)
 	reqTime := time.Now()
 
@@ -207,21 +239,21 @@ func (h *cacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 }
 
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
-func (h *cacheHandler) serveRuleNotFound(w http.ResponseWriter) {
+func (h *CacheHandler) serveRuleNotFound(w http.ResponseWriter) {
 	code := http.StatusNotFound
 	w.WriteHeader(code)
 	w.Write([]byte(http.StatusText(code)))
 }
 
 // serveNotAllowed writes the appropriate response to the client, via given writer, for when the client's IP is not allowed for the requested rule.
-func (h *cacheHandler) serveNotAllowed(w http.ResponseWriter) {
+func (h *CacheHandler) serveNotAllowed(w http.ResponseWriter) {
 	code := http.StatusForbidden
 	w.WriteHeader(code)
 	w.Write([]byte(http.StatusText(code)))
 }
 
 // serveReqErr writes the appropriate response to the client, via given writer, for a generic request error.
-func (h *cacheHandler) serveReqErr(w http.ResponseWriter) {
+func (h *CacheHandler) serveReqErr(w http.ResponseWriter) {
 	code := http.StatusBadRequest
 	w.WriteHeader(code)
 	w.Write([]byte(http.StatusText(code)))
@@ -271,7 +303,7 @@ func (h *cacheHandler) serveReqErr(w http.ResponseWriter) {
 // }
 
 // request makes the given request and returns its response code, headers, body, the request time, response time, and any error.
-func (h *cacheHandler) request(r *http.Request) (int, http.Header, []byte, time.Time, time.Time, error) {
+func (h *CacheHandler) request(r *http.Request) (int, http.Header, []byte, time.Time, time.Time, error) {
 	rr := r
 	// Create a client and query the target
 	var transport http.Transport
@@ -292,7 +324,7 @@ func (h *cacheHandler) request(r *http.Request) (int, http.Header, []byte, time.
 }
 
 // respond writes the given code, header, and body to the ResponseWriter.
-func (h *cacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, stats Stats, conns *ConnMap, remoteAddr string, remapRuleName string) {
+func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, stats Stats, conns *ConnMap, remoteAddr string, remapRuleName string) {
 	dH := w.Header()
 	copyHeader(header, &dH)
 	w.WriteHeader(code)
