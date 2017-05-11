@@ -28,42 +28,66 @@ import (
 	"net/http/httputil"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-// TODO(amiry) - Handle refresh tokens
+// TODO(amiry) - Refresh tokens
+// TODO(amiry) - Rewrite rules
+// TODO(amiry) - Access log
+// TODO(amiry) - Cantralized, managed route configuration
+// TODO(amiry) - Auth server: Legacy token expiration should be longer than JWT expiration
+
+// TODO(amiry) - Test regex match performance
+// TODO(amiry) - Test/Document: Deprecate API with empty "auth" object in json
+// TODO(amiry) - Add "/" route for admin user? This will cause non existant routes to return Forbidden instead of Not Found
+//    { "match": "/.*", "auth": { "GET": ["all-read"], "POST": ["all-write"], "PUT": ["all-write"], "PATCH": ["all-write"], "DELETE": ["all-write"] }}
+
+
+// Config holds the configuration of the server.
+type Config struct {
+	RuleFile     			string 	`json:"rule-file"`
+	PollInterval 			int    	`json:"poll-interval"`
+	ListenPort   			int    	`json:"listen-port"`
+	InsecureSkipVerify 		bool	`json:"insecure-skip-verify"`
+}
 
 // Server implements an http.Handler that acts as a reverse proxy
 type Server struct {
 	mu    sync.RWMutex // guards the fields below
 	last  time.Time
-	rules []*Rule
+	Rules []*FwdRule
 }
 
-// Rule represents a rule in a configuration file.
-type Rule struct {
-	Host          string              // to match against request Host header
-	Path          string              // to match against a path (start)
-	Forward       string              // reverse proxy map-to
-	Secure        bool                // protect with jwt?
-	Capabilities  map[string]string   // map HTTP methods to capabilitues  
+// FwdRule represents a FwdRule in a configuration file
+type FwdRule struct {
+	Host           string     							// to match against request Host header
+	Path           string     							// to match against a path (start)
+	Forward        string     							// reverse proxy map-to
+	Scheme         string     							// reverse proxy URL scheme (HTTP)
+	Auth           bool       							// protect with jwt?
+	RoutesFile     string     `json:"routes-file"`		// path to routes file
 
-	handler http.Handler
+	routes         []*Route
+	handler        http.Handler
+}
+
+type Route struct {
+	Match   string 										// the route's path regex
+	Auth    map[string]([]string)						// map a HTTP method to the capabilities that are required
+														// to perform the method on this route. Methods that are not 
+														// in this list are forbidden.
+	// A compiled regex for "Match"
+	matchRegexp *regexp.Regexp
 }
 
 type Claims struct {
-    Capabilities []string `json:"cap"`
+    Capabilities []string      `json:"cap"`
+    LegacyCookie string        `json:"legacy-cookie"`	// LEGACY: The legacy cookie to be set upon request
     jwt.StandardClaims
-}
-
-// Config holds the configuration of the server.
-type Config struct {
-	RuleFile     string `json:"rule-file"`
-	PollInterval int    `json:"poll-interval"`
-	ListenPort   int    `json:"listen-port"`
 }
 
 var Logger *log.Logger
@@ -72,7 +96,8 @@ func printUsage() {
 	exampleConfig := `{
 	"listen-port":   9000,
 	"rule-file":     "rules.json",
-	"poll-interval": 60
+	"poll-interval": 60,
+	"insecure-skip-verify": false
 }`
 	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
 	fmt.Println("")
@@ -108,9 +133,7 @@ func main() {
 		Logger.Fatal(err)
 	}
 
-	// override the default so we can use self-signed certs on our microservices
-	// and use a self-signed cert in this server
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = makeTLSConfig(&config)
 	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
 		Logger.Fatal("server.pem file not found")
 	}
@@ -120,6 +143,259 @@ func main() {
 
 	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
 	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
+}
+
+// NewServer constructs a Server that reads Rules from file with a period 
+// specified by poll
+func NewServer(file string, poll time.Duration) (*Server, error) {
+	s := new(Server)
+	if err := s.loadRules(file); err != nil {
+		Logger.Fatal(fmt.Errorf("Load rules failed: %s", err))
+	}
+
+	// TODO(amiry) - Reload config using NOHUP signal instead of poll for changes
+	go s.refreshRules(file, poll)
+
+	return s, nil
+}
+
+func makeTLSConfig(config *Config) *tls.Config {
+
+	s := false 
+	if config.InsecureSkipVerify == true {
+		Logger.Printf("NOTICE: Skip sertificate verification")
+		s = true
+	}
+	return &tls.Config{InsecureSkipVerify: s}
+}
+
+// loadRules tests whether file has been modified since its last invocation
+// and, if so, loads the rule set from file.
+func (s *Server) loadRules(file string) error {
+
+	fi, err := os.Stat(file)
+	if err != nil {
+		return err
+	}
+
+	mtime := fi.ModTime()
+	if !mtime.After(s.last) && s.Rules != nil {
+		return nil // no change
+	}
+
+	Rules, err := parseRules(file)
+	if err != nil {
+		return err
+	}
+
+	s.mu.Lock()
+	s.last = mtime
+	s.Rules = Rules
+	s.mu.Unlock()
+	return nil
+}
+
+// refreshRules polls file periodically and refreshes the Server's rule set
+// if the file has been modified.
+func (s *Server) refreshRules(file string, poll time.Duration) {
+	for {
+		if err := s.loadRules(file); err != nil {
+			Logger.Printf("Refresh rules failed: %s", err)
+		}
+		time.Sleep(poll)
+	}
+}
+
+// parseRules reads rule definitions from file, constructs the rule handlers,
+// and returns the resultant rules.
+func parseRules(file string) ([]*FwdRule, error) {
+
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	Logger.Printf("Loading rules file: %s", file)
+
+	var rules []*FwdRule
+	if err := json.NewDecoder(f).Decode(&rules); err != nil {
+		return nil, err
+	}
+
+	for _, r := range rules {
+
+		if r.Auth {
+			r.routes, err = parseRoutes(r.RoutesFile)
+			if err != nil {
+				Logger.Printf("Skip rule %s ERROR: %s", r.Path, err)
+				continue
+			}			
+		}
+
+		r.handler, err = makeHandler(r)
+		if err != nil {
+			Logger.Printf("Skip rule %s ERROR: %s", r.Path, err)
+			continue
+		}
+
+		// Logger.Printf("Loaded rule: %s", r.Path)
+	}
+
+	return rules, nil
+}
+
+// parseRoutes reads route definitions from file, constructs the route auth handler,
+// and returns the resultant routes.
+func parseRoutes(file string) ([]*Route, error) {
+
+	// If the rule defines a routes file, we load the routes and enforce access.
+	// Routes than are not present in this file are forbidden.
+
+	// Note that there is currently no mechanism to trigger an update on a change in the route files. 
+	// To trigger an update, one needs to touch rules.json 
+
+	cf, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer cf.Close()
+
+	Logger.Printf("Loading routes file: %s", file)
+
+	var routes []*Route
+	if err := json.NewDecoder(cf).Decode(&routes); err != nil {
+		return nil, err
+	}
+
+	for _, r := range routes {
+
+		/*
+		// If the match ends with a slash, it is treated as a prefix. 
+		// If not, it is an exact match
+		if !strings.EndsWith(r.Match, "/") {
+			r.Match = r.Match + '$'
+		}
+		*/
+
+		r.matchRegexp, err = regexp.Compile(r.Match + "$")
+		if err != nil {
+			Logger.Printf("Skip route %s ERROR: %s", r.Match, err)
+			continue
+		}
+
+		// Logger.Printf("Loaded route: %s", r.Match)
+	}
+
+	return routes, nil
+}
+
+// makeHandler constructs the appropriate Handler for the given FwdRule.
+func makeHandler(r *FwdRule) (http.Handler, error) {
+
+	if h := r.Forward; h == "" {
+		return nil, fmt.Errorf("Not a forward rule")
+	}
+
+	return &httputil.ReverseProxy {
+		Director: func(req *http.Request) {
+			req.URL.Scheme = r.Scheme
+			req.URL.Host = r.Forward
+			// req.URL.Path = "/boo1" // TODO JvD - regex to change path here
+		},
+	}, nil
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ServeHTTP matches the Request with a forward rule and, if found, serves the
+// request with therule's handler. If the rule's secure field is true, it will
+// only allow access if the request has a valid JWT bearer token.
+func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+
+	rule := s.matchRule(req)
+	if rule == nil {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	if rule.Auth {
+		authorized := rule.authorize(w, req)
+		if !authorized {
+			return
+		}
+	}
+
+	if h := rule.handler; h != nil {
+		h.ServeHTTP(w, req)
+		return
+	}
+
+	http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	return
+}
+
+func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
+
+	token, err := validateToken(req.Header.Get("Authorization"))
+
+	if err != nil {
+		Logger.Printf("%v %v Token error: %s", req.Method, req.URL.RequestURI(), err)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return false
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		Logger.Printf("%v %v Token valid but cannot parse claims", req.Method, req.URL.RequestURI())
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return false
+	}
+
+	route := rule.matchRoute(req)
+	if route == nil {
+		Logger.Printf("%v %v Route not found", req.Method, req.URL.RequestURI())
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return false
+	}
+
+    method := route.Auth[req.Method]
+    if method == nil {
+		Logger.Printf("%v %v Route found but method forbidden", req.Method, req.URL.RequestURI())
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return false
+    }
+
+    // method is actually a list of capabilities required to perform this method.
+    // Re performance - the lists are VERY short
+    satisfied := len(method)
+	for _, need := range method {
+		for _, has := range claims.Capabilities {
+        	if has == need {
+        		satisfied--
+        	}
+        }
+    }
+
+    if (satisfied > 0) {
+		Logger.Printf("%v %v Route found but required capabilitoes not satisfied. HAS %v, NEED %v", 
+			req.Method, req.URL.RequestURI(), claims.Capabilities, method)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return false
+    }
+
+	Logger.Printf("%v %v Authorized. Subject=%v, ExpiresAt=%v, Rule=%s, Route=%s, Has=%v, Need=%v", 
+		req.Method, req.URL.RequestURI(), claims.Subject, claims.ExpiresAt, rule.Path, route.Match, method, claims.Capabilities)
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// LEGACY: Pass legacy authentication token upon every secured request...
+	legacyCookie := claims.LegacyCookie;
+	req.Header.Add("Cookie", legacyCookie)			
+	// Logger.Printf("Set legacy cookie: %v", legacyCookie)
+	// LEGACY: encoding
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	return true
 }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
@@ -134,176 +410,59 @@ func validateToken(tokenString string) (*jwt.Token, error) {
 	return token, err
 }
 
-// NewServer constructs a Server that reads rules from file with a period
-// specified by poll.
-func NewServer(file string, poll time.Duration) (*Server, error) {
-	s := new(Server)
-	if err := s.loadRules(file); err != nil {
-		Logger.Fatal("Error loading rules file: ", err)
-	}
-	go s.refreshRules(file, poll)
-	return s, nil
-}
+func (s *Server) matchRule(req *http.Request) *FwdRule {
 
-// ServeHTTP matches the Request with a Rule and, if found, serves the
-// request with the Rule's handler. If the rule's secure field is true, it will
-// only allow access if the request has a valid JWT bearer token.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	rule := s.getRule(r)
-	if rule == nil {
-		Logger.Printf("%v %v No mapping in rules file!", r.Method, r.URL.RequestURI())
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-
-	isAuthorized := false
-
-	if rule.Secure {
-		tokenValid := false
-		token, err := validateToken(r.Header.Get("Authorization"))
-
-		if err == nil {
-			tokenValid = true
-		} else {
-			Logger.Println("Token Error:", err.Error())
-		}
-
-		if !tokenValid {
-			Logger.Printf("%v %v Valid token required, but none found!", r.Method, r.URL.RequestURI())
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		claims, ok := token.Claims.(*Claims)
-		if !ok {
-			Logger.Printf("%v %v Valid token found, but cannot parse claims!", r.Method, r.URL.RequestURI())
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		// Authorization: Check is the list of capabilities in the token's claims contains 
-		// the reqired capability that is listed in the rule
-		for _, c := range claims.Capabilities {
-        	if c == rule.Capabilities[r.Method] {
-				isAuthorized = true
-				break
-			}
-        }
-
-		Logger.Printf("%v %v Valid token. Subject=%v, ExpiresAt=%v, Capabilities=%v, Required=%v, Authorized=%v", 
-			r.Method, r.URL.RequestURI(), claims.Subject, claims.ExpiresAt, claims.Capabilities, 
-			rule.Capabilities[r.Method], isAuthorized)
-
-	} else {
-		isAuthorized = true
-	}
-
-	if isAuthorized {
-		if h := rule.handler; h != nil {
-			h.ServeHTTP(w, r)
-			return
-		}
-	}
-
-	http.Error(w, "Not Authorized", http.StatusUnauthorized)
-	return
-}
-
-func rejectNoToken(handler http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusForbidden)
-	}
-}
-
-func (s *Server) getRule(req *http.Request) *Rule {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	h := req.Host
+	// h := req.Host
 	p := req.URL.Path
 
+	/*
 	// Some clients include a port in the request host; strip it.
 	if i := strings.Index(h, ":"); i >= 0 {
 		h = h[:i]
 	}
+	*/
 
-	for _, r := range s.rules {
+	for _, r := range s.Rules {
+
+		// Rules are matched in order! Longer rules should take precedence in rule file.
+		// Logger.Printf("CHECK RULE: PATH %s BEGINS WITH %s ?", p, r.Path)		
 		if strings.HasPrefix(p, r.Path) {
-			// Logger.Printf("Found rule")
+			// Logger.Printf("FOUND RULE: %s", r.Path)
 			return r
 		}
 	}
 
-	// Logger.Printf("Rule not found")
+	// Logger.Printf("Rule not found for path: %s", p)
 	return nil
 }
 
-// refreshRules polls file periodically and refreshes the Server's rule
-// set if the file has been modified.
-func (s *Server) refreshRules(file string, poll time.Duration) {
-	for {
-		// Logger.Printf("loading rule file")
-		if err := s.loadRules(file); err != nil {
-			Logger.Println(file, ":", err)
-		}
-		time.Sleep(poll)
-	}
-}
+func (r *FwdRule) matchRoute(req *http.Request) *Route {
 
-// loadRules tests whether file has been modified since its last invocation
-// and, if so, loads the rule set from file.
-func (s *Server) loadRules(file string) error {
-	fi, err := os.Stat(file)
-	if err != nil {
-		return err
-	}
-	mtime := fi.ModTime()
-	if !mtime.After(s.last) && s.rules != nil {
-		return nil // no change
-	}
-	rules, err := parseRules(file)
-	if err != nil {
-		return err
-	}
-	s.mu.Lock()
-	s.last = mtime
-	s.rules = rules
-	s.mu.Unlock()
-	return nil
-}
+	// TODO(amiry) - Naive implementation
 
-// parseRules reads rule definitions from file, constructs the Rule handlers,
-// and returns the resultant Rules.
-func parseRules(file string) ([]*Rule, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
+	// h := req.Host
+	p := req.URL.Path
+
+	/*
+	// Some clients include a port in the request host; strip it.
+	if i := strings.Index(h, ":"); i >= 0 {
+		h = h[:i]
 	}
-	defer f.Close()
-	var rules []*Rule
-	if err := json.NewDecoder(f).Decode(&rules); err != nil {
-		return nil, err
-	}
-	for _, r := range rules {
-		r.handler = makeHandler(r)
-		if r.handler == nil {
-			Logger.Printf("Bad rule: %#v", r)
+	*/
+
+	for _, r := range r.routes {
+
+		// Routes are matched in order! Longer routes should take precedence in rule file.
+		// Logger.Printf("CHECK ROUTE: PATH %s MATCHES %s ?", p, r.Match)
+		if r.matchRegexp.MatchString(p) {
+			// Logger.Printf("FOUND ROUTE: %s", r.matchRegexp)
+			return r
 		}
 	}
-	return rules, nil
-}
 
-// makeHandler constructs the appropriate Handler for the given Rule.
-func makeHandler(r *Rule) http.Handler {
-	if h := r.Forward; h != "" {
-		return &httputil.ReverseProxy{
-			Director: func(req *http.Request) {
-				req.URL.Scheme = "https"
-				req.URL.Host = h
-				// req.URL.Path = "/boo1" // TODO JvD - regex to change path here
-			},
-		}
-	}
+	// Logger.Printf("Route not found for path: %s", p)
 	return nil
 }

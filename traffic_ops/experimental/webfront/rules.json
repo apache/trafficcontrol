@@ -1,32 +1,6 @@
 [
-    {
-        "host": "domain.com",
-        "path": "/login",
-        "forward": "localhost:9004",
-        "secure": false
-    },
-    {
-        "host": "domain.com",
-        "path": "/ds/",
-        "forward": "localhost:8081",
-        "secure": true,
-        "capabilities": {
-            "GET": "read-ds",
-            "POST": "write-ds",
-            "PUT": "write-ds",
-            "PATCH": "write-ds"
-        }
-    },
-    {
-        "host": "domain.com",
-        "path": "/cachegroups/",
-        "forward": "localhost:8082",
-        "secure": true,
-        "capabilities": {
-            "GET": "read-cg",
-            "POST": "write-cg",
-            "PUT": "write-cg",
-            "PATCH": "write-cg"
-        }
-    }
+    { "host": "localhost", "path": "/login",               "forward": "localhost:9004", "scheme": "https", "auth": false },
+    { "host": "localhost", "path": "/api/1.2/innovation/", "forward": "localhost:8004", "scheme": "http",  "auth": false },
+    { "host": "localhost", "path": "/api/1.2/",            "forward": "localhost:3000", "scheme": "http",  "auth": true, "routes-file": "traffic-ops-routes.json" },
+    { "host": "localhost", "path": "/internal/api/1.2/",   "forward": "localhost:3000", "scheme": "http",  "auth": true, "routes-file": "internal-routes.json" }
 ]
