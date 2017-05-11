@@ -1009,6 +1009,7 @@ sub take_and_bake_server {
 	foreach my $parameter ( sort keys %{$data} ) {
 		$text .= $data->{$parameter} . "\n";
 	}
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 
@@ -1023,6 +1024,7 @@ sub take_and_bake_profile {
 	foreach my $parameter ( sort keys %{$data} ) {
 		$text .= $data->{$parameter} . "\n";
 	}
+	$text =~ s/\s*__RETURN__\s*/\n/g;
 	return $text;
 }
 
