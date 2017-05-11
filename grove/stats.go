@@ -18,17 +18,16 @@ type statHandler struct {
 }
 
 // NewStatHandler returns an HTTP handler
-func NewStatHandler(interfaceName string, remapRules []RemapRule) (http.Handler, Stats) {
-	stats := NewStats(remapRules)
-	return statHandler{interfaceName: interfaceName, stats: stats}, stats
+func NewStatHandler(interfaceName string, remapRules []RemapRule, stats Stats) http.Handler {
+	return statHandler{interfaceName: interfaceName, stats: stats}
 }
 
-func NewStatHandlerFunc(interfaceName string, remapRules []RemapRule) (http.HandlerFunc, Stats) {
-	handler, rules := NewStatHandler(interfaceName, remapRules)
+func NewStatHandlerFunc(interfaceName string, remapRules []RemapRule, stats Stats) http.HandlerFunc {
+	handler := NewStatHandler(interfaceName, remapRules, stats)
 	f := func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
-	return f, rules
+	return f
 }
 
 type StatsSystem interface {
