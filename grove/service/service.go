@@ -96,9 +96,11 @@ func main() {
 	buildHandler := func(scheme string, conns *grove.ConnMap) http.Handler {
 		statHandler, statWriter := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules())
 		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), statWriter, scheme, conns, cfg.RFCCompliant)
+		cacheHandlerPointer := grove.NewCacheHandlerPointer(cacheHandler)
+
 		handler := http.NewServeMux()
 		handler.Handle("/_astats", statHandler)
-		handler.Handle("/", cacheHandler)
+		handler.Handle("/", cacheHandlerPointer)
 		return handler
 	}
 
