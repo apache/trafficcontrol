@@ -8,7 +8,9 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"time"
+	"os/signal"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/hashicorp/golang-lru"
 	"github.com/apache/incubator-trafficcontrol/grove"
@@ -93,28 +95,112 @@ func main() {
 		fmt.Printf("Error creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 	}
 
-	buildHandler := func(scheme string, conns *grove.ConnMap) http.Handler {
-		statHandler, statWriter := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules())
-		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), statWriter, scheme, conns, cfg.RFCCompliant)
+	stats := grove.NewStats(remapper.Rules())
+
+	buildHandler := func(scheme string, conns *grove.ConnMap) (http.Handler, *grove.CacheHandlerPointer) {
+		statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, scheme, conns, cfg.RFCCompliant)
 		cacheHandlerPointer := grove.NewCacheHandlerPointer(cacheHandler)
 
 		handler := http.NewServeMux()
 		handler.Handle("/_astats", statHandler)
 		handler.Handle("/", cacheHandlerPointer)
-		return handler
+		return handler, cacheHandlerPointer
 	}
 
-	httpHandler := buildHandler("http", httpConns)
-	httpsHandler := buildHandler("https", httpsConns)
+	httpHandler, httpHandlerPointer := buildHandler("http", httpConns)
+	httpsHandler, httpsHandlerPointer := buildHandler("https", httpsConns)
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
-	startHTTPServer(httpHandler, httpListener, cfg.Port)
+	httpServer := startHTTPServer(httpHandler, httpListener, cfg.Port)
+	httpsServer := (*http.Server)(nil)
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		startHTTPSServer(httpsHandler, httpsListener, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
+		httpsServer = startHTTPSServer(httpsHandler, httpsListener, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
 	}
-	// TODO replace with config/remap file poller?
-	for {
-		time.Sleep(100000)
+
+	reloadConfig := func() {
+		fmt.Printf("INFO reloading config\n")
+		err := error(nil)
+		oldCfg := cfg
+		cfg, err = LoadConfig(*configFileName)
+		if err != nil {
+			fmt.Printf("Error reloading config: loading config file: %v\n", err)
+			return
+		}
+
+		if cfg.CacheSizeBytes != oldCfg.CacheSizeBytes {
+			// TODO determine if it's ok for the cache to temporarily exceed the value. This means the cache usage could be temporarily double, as old requestors still have the old object. We could call `Purge` on the old cache, to empty it, to mitigate this.
+			cache, err = lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
+			if err != nil {
+				fmt.Printf("Error reloading config: creating cache: %v\n")
+				return
+			}
+		}
+
+		remapper, err = grove.LoadRemapper(cfg.RemapRulesFile)
+		if err != nil {
+			fmt.Printf("Error starting service: loading remap rules: %v\n", err)
+			os.Exit(1)
+		}
+
+		if cfg.Port != oldCfg.Port {
+			if httpListener, httpConns, err = grove.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port)); err != nil {
+				fmt.Printf("Error reloading config: creating HTTP listener %v: %v\n", cfg.Port, err)
+				return
+			}
+		}
+
+		if (cfg.CertFile != oldCfg.CertFile || cfg.KeyFile != oldCfg.KeyFile) && cfg.HTTPSPort != oldCfg.HTTPSPort {
+			fmt.Printf("WARNING config certificate changed, but port did not. Cannot recreate listener on same port without stopping the service. Restart the service to load the new certificate.\n")
+		}
+
+		if cfg.HTTPSPort != oldCfg.HTTPSPort {
+			if httpsListener, httpsConns, err = grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
+				fmt.Printf("Error creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+			}
+		}
+
+		stats = grove.NewStats(remapper.Rules()) // TODO copy stats from old stats object?
+
+		httpCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "http", httpConns, cfg.RFCCompliant)
+		httpHandlerPointer.Set(httpCacheHandler)
+
+		httpsCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "https", httpsConns, cfg.RFCCompliant)
+		httpsHandlerPointer.Set(httpsCacheHandler)
+
+		if cfg.Port != oldCfg.Port {
+			statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+			handler := http.NewServeMux()
+			handler.Handle("/_astats", statHandler)
+			handler.Handle("/", httpHandlerPointer)
+			if err := httpServer.Close(); err != nil {
+				fmt.Printf("ERROR closing http server: %v\n", err)
+			}
+			httpServer = startHTTPServer(handler, httpListener, cfg.Port)
+		}
+
+		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
+			statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+			handler := http.NewServeMux()
+			handler.Handle("/_astats", statHandler)
+			handler.Handle("/", httpsHandlerPointer)
+			if httpsServer != nil {
+				if err := httpsServer.Close(); err != nil {
+					fmt.Printf("ERROR closing https server: %v\n", err)
+				}
+			}
+			httpsServer = startHTTPSServer(handler, httpsListener, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
+		}
+	}
+
+	signalReloader(unix.SIGHUP, reloadConfig)
+}
+
+func signalReloader(sig os.Signal, f func()) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, sig)
+	for range c {
+		f()
 	}
 }
 
