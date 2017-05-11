@@ -694,8 +694,11 @@ sub api_routes {
 	$r->get("/api/$version/servers/details")->over( authenticated => 1 )->to( 'Server#details', namespace => $namespace );
 	$r->get("/api/$version/servers/hostname/:name/details")->over( authenticated => 1 )->to( 'Server#details_v11', namespace => $namespace );
 
-	# -- SERVERS: TOTALS
+	# -- SERVERS: COUNT BY TYPE
 	$r->get("/api/$version/servers/totals")->over( authenticated => 1 )->to( 'Server#totals', namespace => $namespace );
+
+	# -- SERVERS: COUNT BY STATUS
+	$r->get("/api/$version/servers/status")->over( authenticated => 1 )->to( 'Server#status', namespace => $namespace );
 
 	# -- SERVERS: QUEUE/DEQUEUE SERVER UPDATES
 	$r->post("/api/$version/servers/:id/queue_update" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
