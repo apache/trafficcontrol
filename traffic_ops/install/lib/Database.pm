@@ -36,8 +36,8 @@ sub connect {
         $dbName = "traffic_ops";
     }
 
-	$ENV{PGUSER}     = $conf->{"user"};
-	$ENV{PGPASSWORD} = $conf->{"password"};
+    $ENV{PGUSER}     = $conf->{"user"};
+    $ENV{PGPASSWORD} = $conf->{"password"};
 
     my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $conf->{type}, $dbName, $conf->{hostname}, $conf->{port} );
     InstallUtils::logger( "dsn: " . $dsn, "info" );
