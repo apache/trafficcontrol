@@ -608,7 +608,7 @@ API 1.2 Reference
   traffic_ops_api/v12/cache_stats
   traffic_ops_api/v12/cdn
   traffic_ops_api/v12/changelog
-  traffic_ops_api/v12/configfiles-ats
+  traffic_ops_api/v12/configfiles_ats
   traffic_ops_api/v12/deliveryservice
   traffic_ops_api/v12/deliveryservice_regex
   traffic_ops_api/v12/deliveryservice_stats
