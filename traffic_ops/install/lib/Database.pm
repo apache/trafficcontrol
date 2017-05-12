@@ -40,7 +40,6 @@ sub connect {
     $ENV{PGPASSWORD} = $conf->{"password"};
 
     my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $conf->{type}, $dbName, $conf->{hostname}, $conf->{port} );
-    InstallUtils::logger( "dsn: " . $dsn, "info" );
     my $dbh = DBI->connect( $dsn, $todbconf->{"user"}, $todbconf->{"password"} );
     if ($dbh) {
         InstallUtils::logger( "Database connection succeeded", "info" );
