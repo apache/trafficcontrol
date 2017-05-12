@@ -114,4 +114,4 @@ API Routes
 +------------------------------------+----------------------------------------------------+----------------------------------------------------+
 | /datauser/orderby/:field           |   :ref:`to-api-v11-users-route`                    |   :ref:`to-api-v12-users-route`                    |
 +------------------------------------+----------------------------------------------------+-----------------------------------------------------
-| *Not Implemented*                  |   *Not Implemented*                                |   :ref:`to-api-v12-configfiles-route`              |
+| *Not Implemented*                  |   *Not Implemented*                                |   :ref:`to-api-v12-configfiles_ats-route`              |
