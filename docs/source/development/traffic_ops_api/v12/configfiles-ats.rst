@@ -14,12 +14,12 @@
 .. 
 
 
-.. _to-api-v12-configfiles:
+.. _to-api-v12-configfiles-ats:
 
 Config Files and Config File Metadata
 ===
 
-.. _to-api-v12-configfiles-route:
+.. _to-api-v12-configfiles-ats-route:
 
 /api/1.2/servers/:hostname/configfiles/ats
 /api/1.2/servers/:host_id/configfiles/ats
