@@ -28,19 +28,20 @@ sub connect {
     my $databaseConfFile = shift;
     my $todbconf = shift;
 
-    my $dbconf = InstallUtils::readJson($databaseConfFile);
+    my $conf = InstallUtils::readJson($databaseConfFile);
 
     # Check if the Postgres db is used and set the admin database to be "postgres"
-    my $dbName = $dbconf->{type};
-    if ( $dbconf->{type} eq "Pg" ) {
+    my $dbName = $conf->{type};
+    if ( $conf->{type} eq "Pg" ) {
         $dbName = "traffic_ops";
     }
 
-    $ENV{PGUSER}     = $todbconf->{"pgUser"};
-    $ENV{PGPASSWORD} = $todbconf->{"pgPassword"};
+	$ENV{PGUSER}     = $conf->{"user"};
+	$ENV{PGPASSWORD} = $conf->{"password"};
 
-    my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $dbconf->{type}, $dbName, $dbconf->{hostname}, $dbconf->{port} );
-    my $dbh = DBI->connect( $dsn, $todbconf->{"pgUser"}, $todbconf->{"pgPassword"} );
+    my $dsn = sprintf( "DBI:%s:db=%s;host=%s;port=%d", $conf->{type}, $dbName, $conf->{hostname}, $conf->{port} );
+    InstallUtils::logger( "dsn: " . $dsn, "info" );
+    my $dbh = DBI->connect( $dsn, $todbconf->{"user"}, $todbconf->{"password"} );
     if ($dbh) {
         InstallUtils::logger( "Database connection succeeded", "info" );
     }
