@@ -23,19 +23,17 @@ func InterceptListen(network, laddr string) (net.Listener, *ConnMap, error) {
 
 // InterceptListenTLS is like InterceptListen but for serving HTTPS.
 func InterceptListenTLS(net, laddr, certFile, keyFile string) (net.Listener, *ConnMap, error) {
-	config := &tls.Config{}
+	interceptListener, connMap, err := InterceptListen(net, laddr)
+
+	config := &tls.Config{NextProtos: []string{"h2"}}
 	config.Certificates = make([]tls.Certificate, 1)
-	err := error(nil)
 	config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return nil, nil, err
 	}
-	l, err := tls.Listen(net, laddr, config)
-	if err != nil {
-		return l, nil, err
-	}
-	connMap := NewConnMap()
-	return &InterceptListener{realListener: l, connMap: connMap}, connMap, nil
+
+	tlsListener := tls.NewListener(interceptListener, config)
+	return tlsListener, connMap, nil
 }
 
 func (l *InterceptListener) Accept() (net.Conn, error) {
