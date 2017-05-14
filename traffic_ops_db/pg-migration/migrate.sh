@@ -107,6 +107,8 @@ function clean() {
   docker rmi $IMAGE --force
   IMAGE=$docker_project"_waiter"
   docker rmi $IMAGE --force
+  IMAGE=$IMAGE"_1"
+  docker rm $IMAGE
 
   # Cleanup any dangling volumes
   docker volume rm $(docker volume ls -qf dangling=true)
