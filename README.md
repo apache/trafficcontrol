@@ -1,3 +1,4 @@
+[![Build Status](https://builds.apache.org/buildStatus/icon?job=incubator-trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/incubator-trafficcontrol-master-build/)
 
 Apache Traffic Control (incubating) is an Open Source implementation of a Content Delivery Network.
 
