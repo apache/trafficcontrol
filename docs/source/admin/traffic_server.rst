@@ -114,6 +114,8 @@ Installing the ORT script
 
   	  	*/15 * * * * /opt/ort/traffic_ops_ort.pl syncds warn https://traffops.kabletown.net admin:password > /tmp/ort/syncds.log 2>&1
 
+    Changing ``https://traffops.kabletown.net``, ``admin``, and ``password`` to your CDN URL and credentials.
+
     .. Note:: By default, running ort on an edge traffic server waits for it's parent (mid) servers to download their configuration before 
        it downloads it's own configuration. Because of this, scheduling ort for running every 15 minutes (with 5 minutes default dispersion) means 
        that it might take up to ~35 minutes for a "Queue Updates" operation to affect all traffic servers.
