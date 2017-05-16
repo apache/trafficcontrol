@@ -150,7 +150,6 @@ fi
 %attr(755,root,root) %{PACKAGEDIR}/app/bin/*
 %attr(755,root,root) %{PACKAGEDIR}/app/script/*
 %attr(755,root,root) %{PACKAGEDIR}/app/db/*.pl
-%attr(755,root,root) %{PACKAGEDIR}/app/db/*.sh
 %config(noreplace)/opt/traffic_ops/app/conf/*
 %config(noreplace)/var/www/files/osversions.cfg
 %{PACKAGEDIR}/app/cpanfile
