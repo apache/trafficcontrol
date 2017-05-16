@@ -80,7 +80,7 @@ Built: %(date) by %{getenv: USER}
 	  if [ -f /var/tmp/traffic_ops-backup.tar ]; then
 		  %__rm /var/tmp/traffic_ops-backup.tar
 	  fi
-	  cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/*Snapshots app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
+	  cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
     fi
 
     # upgrade
