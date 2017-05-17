@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DashboardController = function(cacheGroupHealth, cdns, currentStats, $scope) {
+var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope) {
 
 	$scope.cacheGroupHealth = cacheGroupHealth;
 
@@ -31,7 +31,9 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, $scope)
 		return item.cdn == 'total';
 	});
 
+	$scope.serverCount = serverCount;
+
 };
 
-DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', '$scope'];
+DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope'];
 module.exports = DashboardController;

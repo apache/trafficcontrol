@@ -18,13 +18,14 @@ under the License.
 -->
 
 <div class="angular-google-map-container" map-lazy-load="https://maps.google.com/maps/api/js">
-    <ng-map id="cgMap" zoom="5" center="[41,-87]">
+    <ng-map id="cgMap" zoom="5" center="[37,-91]">
         <marker ng-repeat="cg in ::cacheGroups"
                 position="{{::cg.pos}}"
-                on-click="map.showInfoWindow(event, cg.name)"></marker>
+                on-click="map.showInfoWindow(event, cg.name)"
+                icon="{{::icon(cg)}}"></marker>
         <info-window id="{{::cg.name}}" ng-repeat="cg in ::cacheGroups">
             <div>
-                <h3>{{::cg.name}} ({{::cg.type}})</h3>
+                <h3><a ng-click="navigateToPath('/configure/cache-groups/' + cg.id)">{{::cgTitle(cg)}}</a></h3>
                 <hr>
                 <h5>Coordinates: {{::cg.pos}}</h5>
                 <h5>1st Parent: {{::parentCg(cg)}}</h5>

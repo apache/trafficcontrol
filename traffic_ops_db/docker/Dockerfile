@@ -11,18 +11,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-FROM dewrich/postgres:latest
+FROM postgres:latest
 
 MAINTAINER Dan Kirkwood
 
 # Postgres Access
+ENV POSTGRES_USER=$POSTGRES_USER
 ENV POSTGRES_HOST=$POSTGRES_HOST
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV POSTGRES_DATABASE=$POSTGRES_DATABASE
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+#COPY docker-entrypoint-initdb.d/* /docker-entrypoint-initdb.d
 
-RUN apt-get update 
-ADD pg-migration/runconvert.sh .
-ADD convert_bools.sql .
-
-CMD ./runconvert.sh
+EXPOSE "5432:5432"

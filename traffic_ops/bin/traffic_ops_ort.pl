@@ -867,7 +867,6 @@ sub check_syncds_state {
 		else {
 			$reval_in_use = 0;
 		}
-		( $dispersion > 0 ) && &sleep_timer($random_duration);
 
 		$upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -889,6 +888,7 @@ sub check_syncds_state {
 		}
 
 		if ( $upd_pending == 1 ) {
+			( $dispersion > 0 ) && &sleep_timer($random_duration);
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
@@ -936,7 +936,8 @@ sub check_syncds_state {
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
-			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. I'm outta here.\n";
+			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. Running revalidation before exiting.\n";
+			&revalidate_while_sleeping();
 			exit 0;
 		}
 		else {
@@ -1264,7 +1265,7 @@ sub check_plugins {
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
+					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}

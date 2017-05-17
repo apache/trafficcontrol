@@ -92,7 +92,6 @@ function clean() {
   echo $separator
 
   # Powerdown the containers (to remove them)
-  docker-compose -p $docker_project -f waiter.yml down --remove-orphans
   docker-compose -p $docker_project -f mysql-to-postgres.yml down --remove-orphans
   docker-compose -p $docker_project -f convert.yml down --remove-orphans
 
@@ -108,6 +107,8 @@ function clean() {
   docker rmi $IMAGE --force
   IMAGE=$docker_project"_waiter"
   docker rmi $IMAGE --force
+  IMAGE=$IMAGE"_1"
+  docker rm $IMAGE
 
   # Cleanup any dangling volumes
   docker volume rm $(docker volume ls -qf dangling=true)

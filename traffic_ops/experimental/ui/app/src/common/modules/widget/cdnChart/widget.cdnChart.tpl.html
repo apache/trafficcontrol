@@ -1,8 +1,11 @@
 <div id="{{::randomId}}" class="dashboard_graph">
-    <div class="row x_title">
-        <div class="col-md-6">
-            <h3><a ng-click="navigateToPath('/admin/cdns/' + cdn.id)">{{::cdn.name}}</a></h3>
-        </div>
+    <div class="x_title">
+        <h2><a ng-click="navigateToPath('/admin/cdns/' + cdn.id)">{{::cdn.name}}</a></h2>
+        <ul class="nav navbar-right panel_toolbox">
+            <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+            <li><a class="close-link"><i class="fa fa-close"></i></a></li>
+        </ul>
+        <div class="clearfix"></div>
     </div>
     <div class="col-md-9 col-sm-9 col-xs-12">
         <div class="bps-chart-container">

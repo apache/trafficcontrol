@@ -35,7 +35,7 @@ If it's a bug fix, make a [JIRA issue](https://issues.apache.org/jira/browse/TC)
 
 #### Documentation
 
-If your pull request changes the user interface or API, make sure the relevant documentation is updated.
+If your pull request changes the user interface or API, make sure the relevant [documentation](http://trafficcontrol.apache.org/docs/latest/index.html) is updated. Documentation [source code](https://github.com/apache/incubator-trafficcontrol/tree/master/docs/source) is written using [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText). Please verify any document changes by installing [Sphinx](http://www.sphinx-doc.org/en/stable/) and running 'make' from the [root of the docs directory](https://github.com/apache/incubator-trafficcontrol/tree/master/docs).
 
 #### Code formatting
 

@@ -24,11 +24,9 @@ module.exports = {
     port: 8080,
     sslPort: 8443,
     ssl: {
-        key:    '/path/to/ssl.key',
-        cert:   '/path/to/ssl.crt',
-        ca:     [
-            '/path/to/ssl-bundle.crt'
-        ]
+        key:    '/etc/pki/tls/private/localhost.key',
+        cert:   '/etc/pki/tls/certs/localhost.crt',
+        ca:     [ '/etc/pki/tls/certs/ca-bundle.crt' ]
     },
     api: {
         base_url: 'http://localhost:3000/api/'

@@ -17,11 +17,13 @@
  * under the License.
  */
 
-var WidgetCacheGroupsController = function(cacheGroupHealth, $scope) {
+var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, locationUtils) {
 
 	// pagination
-	$scope.currentLocationPage = 1;
+	$scope.currentCacheGroupsPage = 1;
 	$scope.cacheGroupsPerPage = 10;
+
+	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.onlinePercent = function(location) {
 		return (location.online / (location.online + location.offline)) * 100;
@@ -37,5 +39,5 @@ var WidgetCacheGroupsController = function(cacheGroupHealth, $scope) {
 
 };
 
-WidgetCacheGroupsController.$inject = ['cacheGroupHealth', '$scope'];
+WidgetCacheGroupsController.$inject = ['cacheGroupHealth', '$scope', 'locationUtils'];
 module.exports = WidgetCacheGroupsController;
