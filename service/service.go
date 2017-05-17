@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -12,8 +13,19 @@ import (
 
 	"golang.org/x/sys/unix"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+
 	"github.com/hashicorp/golang-lru"
 	"github.com/apache/incubator-trafficcontrol/grove"
+)
+
+const (
+	// LogLocationStdout indicates the stdout IO stream
+	LogLocationStdout = "stdout"
+	// LogLocationStderr indicates the stderr IO stream
+	LogLocationStderr = "stderr"
+	// LogLocationNull indicates the null IO stream (/dev/null)
+	LogLocationNull = "null"
 )
 
 type Config struct {
@@ -32,6 +44,12 @@ type Config struct {
 	InterfaceName          string `json:"interface_name"`
 	// ConnectionClose determines whether to send a `Connection: close` header. This is primarily designed for maintenance, to drain the cache of incoming requestors. This overrides rule-specific `connection-close: false` configuration, under the assumption that draining a cache is a temporary maintenance operation, and if connectionClose is true on the service and false on some rules, those rules' configuration is probably a permament setting whereas the operator probably wants to drain all connections if the global setting is true. If it's necessary to leave connection close false on some rules, set all other rules' connectionClose to true and leave the global connectionClose unset.
 	ConnectionClose bool `json:"connection_close"`
+
+	LogLocationError   string `json:"log_location_error"`
+	LogLocationWarning string `json:"log_location_warning"`
+	LogLocationInfo    string `json:"log_location_info"`
+	LogLocationDebug   string `json:"log_location_debug"`
+	LogLocationEvent   string `json:"log_location_event"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
@@ -43,6 +61,11 @@ var DefaultConfig = Config{
 	RemapRulesFile:         "remap.config",
 	ConcurrentRuleRequests: 100000,
 	ConnectionClose:        false,
+	LogLocationError:       LogLocationStderr,
+	LogLocationWarning:     LogLocationStdout,
+	LogLocationInfo:        LogLocationNull,
+	LogLocationDebug:       LogLocationNull,
+	LogLocationEvent:       LogLocationStdout,
 }
 
 // Load loads the given config file. If an empty string is passed, the default config is returned.
@@ -60,6 +83,51 @@ func LoadConfig(fileName string) (Config, error) {
 
 const bytesPerGibibyte = 1024 * 1024 * 1024
 
+func getLogWriter(location string) (io.WriteCloser, error) {
+	// TODO move to common/log
+	switch location {
+	case LogLocationStdout:
+		return log.NopCloser(os.Stdout), nil
+	case LogLocationStderr:
+		return log.NopCloser(os.Stderr), nil
+	case LogLocationNull:
+		return log.NopCloser(ioutil.Discard), nil
+	default:
+		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	}
+}
+
+func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
+	// TODO move to common/log
+	eventLoc := cfg.LogLocationEvent
+	errLoc := cfg.LogLocationError
+	warnLoc := cfg.LogLocationWarning
+	infoLoc := cfg.LogLocationInfo
+	debugLoc := cfg.LogLocationDebug
+
+	eventW, err := getLogWriter(eventLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
+	}
+	errW, err := getLogWriter(errLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
+	}
+	warnW, err := getLogWriter(warnLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
+	}
+	infoW, err := getLogWriter(infoLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
+	}
+	debugW, err := getLogWriter(debugLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
+	}
+	return eventW, errW, warnW, infoW, debugW, nil
+}
+
 func main() {
 	configFileName := flag.String("config", "", "The config file path")
 	flag.Parse()
@@ -75,27 +143,34 @@ func main() {
 		os.Exit(1)
 	}
 
+	eventW, errW, warnW, infoW, debugW, err := GetLogWriters(cfg)
+	if err != nil {
+		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
+		os.Exit(1)
+	}
+	log.Init(eventW, errW, warnW, infoW, debugW)
+
 	cache, err := lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 	if err != nil {
-		fmt.Printf("Error starting service: creating cache: %v\n")
+		log.Errorf("starting service: creating cache: %v\n")
 		os.Exit(1)
 	}
 
 	remapper, err := grove.LoadRemapper(cfg.RemapRulesFile)
 	if err != nil {
-		fmt.Printf("Error starting service: loading remap rules: %v\n", err)
+		log.Errorf("starting service: loading remap rules: %v\n", err)
 		os.Exit(1)
 	}
 
 	httpListener, httpConns, err := grove.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
-		fmt.Printf("Error creating HTTP listener %v: %v\n", cfg.Port, err)
+		log.Errorf("creating HTTP listener %v: %v\n", cfg.Port, err)
 		os.Exit(1)
 	}
 
 	httpsListener, httpsConns, err := grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile)
 	if err != nil {
-		fmt.Printf("Error creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+		log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 	}
 
 	stats := grove.NewStats(remapper.Rules())
@@ -122,44 +197,50 @@ func main() {
 	}
 
 	reloadConfig := func() {
-		fmt.Printf("INFO reloading config\n")
+		log.Infof("reloading config\n")
 		err := error(nil)
 		oldCfg := cfg
 		cfg, err = LoadConfig(*configFileName)
 		if err != nil {
-			fmt.Printf("Error reloading config: loading config file: %v\n", err)
+			log.Errorf("reloading config: loading config file: %v\n", err)
 			return
 		}
+
+		eventW, errW, warnW, infoW, debugW, err := GetLogWriters(cfg)
+		if err != nil {
+			log.Errorf("relaoding config: getting log writers '%v': %v", *configFileName, err)
+		}
+		log.Init(eventW, errW, warnW, infoW, debugW)
 
 		if cfg.CacheSizeBytes != oldCfg.CacheSizeBytes {
 			// TODO determine if it's ok for the cache to temporarily exceed the value. This means the cache usage could be temporarily double, as old requestors still have the old object. We could call `Purge` on the old cache, to empty it, to mitigate this.
 			cache, err = lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 			if err != nil {
-				fmt.Printf("Error reloading config: creating cache: %v\n")
+				log.Errorf("reloading config: creating cache: %v\n")
 				return
 			}
 		}
 
 		remapper, err = grove.LoadRemapper(cfg.RemapRulesFile)
 		if err != nil {
-			fmt.Printf("Error starting service: loading remap rules: %v\n", err)
+			log.Errorf("starting service: loading remap rules: %v\n", err)
 			os.Exit(1)
 		}
 
 		if cfg.Port != oldCfg.Port {
 			if httpListener, httpConns, err = grove.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port)); err != nil {
-				fmt.Printf("Error reloading config: creating HTTP listener %v: %v\n", cfg.Port, err)
+				log.Errorf("reloading config: creating HTTP listener %v: %v\n", cfg.Port, err)
 				return
 			}
 		}
 
 		if (cfg.CertFile != oldCfg.CertFile || cfg.KeyFile != oldCfg.KeyFile) && cfg.HTTPSPort != oldCfg.HTTPSPort {
-			fmt.Printf("WARNING config certificate changed, but port did not. Cannot recreate listener on same port without stopping the service. Restart the service to load the new certificate.\n")
+			log.Warnf("config certificate changed, but port did not. Cannot recreate listener on same port without stopping the service. Restart the service to load the new certificate.\n")
 		}
 
 		if cfg.HTTPSPort != oldCfg.HTTPSPort {
 			if httpsListener, httpsConns, err = grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
-				fmt.Printf("Error creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+				log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			}
 		}
 
@@ -177,7 +258,7 @@ func main() {
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpHandlerPointer)
 			if err := httpServer.Close(); err != nil {
-				fmt.Printf("ERROR closing http server: %v\n", err)
+				log.Errorf("closing http server: %v\n", err)
 			}
 			httpServer = startHTTPServer(handler, httpListener, cfg.Port)
 		}
@@ -189,7 +270,7 @@ func main() {
 			handler.Handle("/", httpsHandlerPointer)
 			if httpsServer != nil {
 				if err := httpsServer.Close(); err != nil {
-					fmt.Printf("ERROR closing https server: %v\n", err)
+					log.Errorf("closing https server: %v\n", err)
 				}
 			}
 			httpsServer = startHTTPSServer(handler, httpsListener, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
@@ -211,9 +292,9 @@ func signalReloader(sig os.Signal, f func()) {
 func startHTTPServer(handler http.Handler, listener net.Listener, port int) *http.Server {
 	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port)}
 	go func() {
-		fmt.Printf("listening on http://%d\n", port)
+		log.Infof("listening on http://%d\n", port)
 		if err := server.Serve(listener); err != nil {
-			fmt.Printf("Error serving HTTP port %v: %v\n", port, err)
+			log.Errorf("serving HTTP port %v: %v\n", port, err)
 		}
 	}()
 	return server
@@ -222,9 +303,9 @@ func startHTTPServer(handler http.Handler, listener net.Listener, port int) *htt
 func startHTTPSServer(handler http.Handler, listener net.Listener, port int, certFile string, keyFile string) *http.Server {
 	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port)}
 	go func() {
-		fmt.Printf("listening on https://%d\n", port)
+		log.Infof("listening on https://%d\n", port)
 		if err := server.Serve(listener); err != nil {
-			fmt.Printf("Error serving HTTPS port %v: %v\n", port, err)
+			log.Errorf("serving HTTPS port %v: %v\n", port, err)
 		}
 	}()
 	return server
