@@ -23,7 +23,7 @@ under the License.
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right" role="group" ng-if="!settings.isNew">
-            <button class="btn btn-primary" title="Create Delivery Service" ng-click="createDeliveryService()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Create Delivery Service" ng-click="selectDSType()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -50,7 +50,7 @@ under the License.
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editDeliveryService(deliveryService.id)" ng-repeat="deliveryService in ::deliveryServices">
+                <tr ng-click="editDeliveryService(deliveryService)" ng-repeat="deliveryService in ::deliveryServices">
                     <td>{{::deliveryService.xmlId}}</td>
                     <td>{{::deliveryService.orgServerFqdn}}</td>
                     <td>{{::deliveryService.cdnName}}</td>

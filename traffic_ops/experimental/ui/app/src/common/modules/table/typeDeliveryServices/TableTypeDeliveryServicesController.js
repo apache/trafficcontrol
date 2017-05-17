@@ -23,8 +23,8 @@ var TableTypeDeliveryServicesController = function(type, deliveryServices, $scop
 
 	$scope.deliveryServices = deliveryServices;
 
-	$scope.editDeliveryServices = function(id) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + id);
+	$scope.editDeliveryServices = function(ds) {
+		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
 	};
 
 	$scope.refresh = function() {

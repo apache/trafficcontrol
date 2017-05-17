@@ -23,8 +23,8 @@ var TableProfileDeliveryServicesController = function(profile, deliveryServices,
 
 	$scope.deliveryServices = deliveryServices;
 
-	$scope.editDeliveryService = function(id) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + id);
+	$scope.editDeliveryService = function(ds) {
+		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
 	};
 
 	$scope.refresh = function() {

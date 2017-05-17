@@ -17,20 +17,47 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(deliveryServices, $scope, $state, locationUtils) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $uibModal, locationUtils) {
 
     $scope.deliveryServices = deliveryServices;
 
-    $scope.editDeliveryService = function(id) {
-        locationUtils.navigateToPath('/configure/delivery-services/' + id);
+    $scope.editDeliveryService = function(ds) {
+        var path = '/configure/delivery-services/' + ds.id + '?type=' + ds.type;
+        locationUtils.navigateToPath(path);
     };
 
-    $scope.createDeliveryService = function() {
-        locationUtils.navigateToPath('/configure/delivery-services/new');
+    var createDeliveryService = function(typeName) {
+        var path = '/configure/delivery-services/new?type=' + typeName;
+        locationUtils.navigateToPath(path);
     };
 
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
+    };
+
+    $scope.selectDSType = function() {
+        var params = {
+            title: 'Create Delivery Service',
+            message: "Please select a content routing type"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(typeService) {
+                    return typeService.getTypes( { useInTable: 'deliveryservice'} );
+                }
+            }
+        });
+        modalInstance.result.then(function(type) {
+            createDeliveryService(type.name);
+        }, function () {
+            // do nothing
+        });
     };
 
     angular.element(document).ready(function () {
@@ -43,5 +70,5 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', 'locationUtils'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$uibModal', 'locationUtils'];
 module.exports = TableDeliveryServicesController;
