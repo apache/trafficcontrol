@@ -1,5 +1,6 @@
 # Overview
 
+
 ## How to run go scripts:
 1. Create a folder called /Downloads/scripts
 2. Store your CDN_API_Credentials.txt in this folder (user, pw on separate lines)
