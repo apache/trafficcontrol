@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 type HTTPRequestRemapper interface {
@@ -28,11 +30,11 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
 	oldUri := fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
-	fmt.Printf("DEBUG Remap oldUri: '%v'\n", oldUri)
-	fmt.Printf("DEBUG request: '%+v'\n", r)
+	log.Debugf("Remap oldUri: '%v'\n", oldUri)
+	log.Debugf("request: '%+v'\n", r)
 	rule, ok := hr.remapper.Remap(oldUri)
 	if !ok {
-		fmt.Printf("DEBUG Remap oldUri: '%v' NOT FOUND\n", oldUri)
+		log.Debugf("Remap oldUri: '%v' NOT FOUND\n", oldUri)
 		return r, "", "", false, rule.ConnectionClose, false, nil
 	}
 
@@ -45,15 +47,15 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http
 		return r, "", "", false, rule.ConnectionClose, true, nil
 	}
 
-	fmt.Printf("DEBUG Allowed %v\n", ip)
+	log.Debugf("Allowed %v\n", ip)
 
 	newUri := rule.URI(oldUri)
 	cacheKey := rule.CacheKey(r.Method, oldUri)
-	fmt.Printf("DEBUG Remap newURI: '%v'\nDEBUG Remap cacheKey '%v'\n", newUri, cacheKey)
+	log.Debugf("Remap newURI: '%v'\nDEBUG Remap cacheKey '%v'\n", newUri, cacheKey)
 
 	newReq, err := http.NewRequest(r.Method, newUri, nil) // TODO modify given req in-place?
 	if err != nil {
-		fmt.Printf("Error Remap NewRequest: %v\n", err)
+		log.Errorf("Remap NewRequest: %v\n", err)
 		return r, "", "", false, rule.ConnectionClose, false, nil
 	}
 	copyHeader(r.Header, &newReq.Header)
@@ -152,17 +154,17 @@ func GetIP(r *http.Request) (net.IP, error) {
 func (r *RemapRule) Allowed(ip net.IP) bool {
 	for _, network := range r.Deny {
 		if network.Contains(ip) {
-			fmt.Printf("DEBUGQ deny contains ip\n")
+			log.Debugf("deny contains ip\n")
 			return false
 		}
 	}
 	if len(r.Allow) == 0 {
-		fmt.Printf("DEBUGQ Allowed len 0\n")
+		log.Debugf("Allowed len 0\n")
 		return true
 	}
 	for _, network := range r.Allow {
 		if network.Contains(ip) {
-			fmt.Printf("DEBUGQ allow contains ip\n")
+			log.Debugf("allow contains ip\n")
 			return true
 		}
 	}
