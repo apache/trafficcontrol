@@ -51,7 +51,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDeliveryService(deliveryService.id)" ng-repeat="deliveryService in ::deliveryServices">
+            <tr ng-click="editDeliveryService(deliveryService)" ng-repeat="deliveryService in ::deliveryServices">
                 <td>{{::deliveryService.xmlId}}</td>
                 <td>{{::deliveryService.orgServerFqdn}}</td>
                 <td>{{::deliveryService.cdnName}}</td>

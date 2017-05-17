@@ -32,7 +32,7 @@ var DeliveryServiceService = function(Restangular, locationUtils, httpService, m
             .then(
                 function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
-                    locationUtils.navigateToPath('/configure/delivery-services/' + response.id);
+                    locationUtils.navigateToPath('/configure/delivery-services/' + response.id + '?type=' + response.type);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

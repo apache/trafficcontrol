@@ -1,0 +1,193 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
+            <li class="active">{{deliveryServiceName}}</li>
+        </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
+                    <li role="menuitem"><a ng-click="viewRegexes()">View Regexes</a></li>
+                    <li role="menuitem"><a ng-click="viewJobs()">View Invalidate Content Jobs</a></li>
+                    <li role="menuitem"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="deliveryServiceForm" class="form-horizontal form-label-left" novalidate>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type.id), 'has-feedback': hasError(deliveryServiceForm.type.id)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Content Routing Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="type" name="type" class="form-control" ng-model="deliveryService.typeId" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">XML ID *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="xmlId" name="xmlId" type="text" class="form-control" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
+                    <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Display Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" ng-required="true" ng-maxlength="48" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Active *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="active" name="active" class="form-control" ng-model="deliveryService.active" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.protocol), 'has-feedback': hasError(deliveryServiceForm.protocol)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Protocol *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="protocol" name="protocol" class="form-control" ng-model="deliveryService.protocol" ng-options="protocol.value as protocol.label for protocol in protocols" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.protocol, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ipv6RoutingEnabled), 'has-feedback': hasError(deliveryServiceForm.ipv6RoutingEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Routing Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="ipv6RoutingEnabled" name="ipv6RoutingEnabled" class="form-control" ng-model="deliveryService.ipv6RoutingEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ipv6RoutingEnabled, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc), 'has-feedback': hasError(deliveryServiceForm.longDesc)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="longDesc" name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description 1</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="longDesc1" name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc1, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description 2</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="longDesc2" name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc2, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Info URL</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="infoUrl" name="infoUrl" type="text" class="form-control" ng-model="deliveryService.infoUrl" ng-maxlength="255" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.checkPath), 'has-feedback': hasError(deliveryServiceForm.checkPath)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Check Path</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" ng-maxlength="255" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.sslKeyVersion), 'has-feedback': hasError(deliveryServiceForm.sslKeyVersion)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">SSL Key Version</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="sslKeyVersion" name="sslKeyVersion" type="text" class="form-control" ng-model="deliveryService.sslKeyVersion" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.sslKeyVersion, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.sslKeyVersion)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.logsEnabled), 'has-feedback': hasError(deliveryServiceForm.logsEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Logs Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="logsEnabled" name="logsEnabled" class="form-control" ng-model="deliveryService.logsEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(deliveryService)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

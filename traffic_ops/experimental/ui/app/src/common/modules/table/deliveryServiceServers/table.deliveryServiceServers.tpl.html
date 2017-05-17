@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{::deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.displayName}}</a></li>
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
