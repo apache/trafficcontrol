@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 // TODO add logging
@@ -132,17 +134,17 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	// TODO fix host header
 	remappedReq, remapName, cacheKey, allowed, ruleConnectionClose, ok, err := h.remapper.Remap(r, h.scheme)
 	if err != nil {
-		fmt.Printf("DEBUG request error: %v\n", err)
+		log.Debugf("request error: %v\n", err)
 		h.serveReqErr(w)
 		return
 	}
 	if !ok {
-		fmt.Printf("DEBUG rule not found for %v\n", r.RequestURI)
+		log.Debugf("rule not found for %v\n", r.RequestURI)
 		h.serveRuleNotFound(w)
 		return
 	}
 	if !allowed {
-		fmt.Printf("DEBUG IP %v not allowed\n", r.RemoteAddr)
+		log.Debugf("IP %v not allowed\n", r.RemoteAddr)
 		h.serveNotAllowed(w)
 		return
 	}
@@ -154,14 +156,14 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			// TODO figure out why respReqTime isn't used
 			respCode, respHeader, respBody, _, respRespTime, err := h.request(remappedReq)
 			if err != nil {
-				fmt.Printf("DEBUG origin err for %v rule %v err %v\n", cacheKey, remapName, err)
+				log.Debugf("origin err for %v rule %v err %v\n", cacheKey, remapName, err)
 				code := http.StatusInternalServerError
 				body := []byte(http.StatusText(code))
 				return NewCacheObj(reqHeader, body, code, respHeader, reqTime, respRespTime)
 			}
 			obj := NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, respRespTime)
 			if CanCache(reqHeader, respCode, respHeader, h.strictRFC) {
-				fmt.Printf("h.cache.AddSize %v\n", cacheKey)
+				log.Debugf("h.cache.AddSize %v\n", cacheKey)
 				h.cache.AddSize(cacheKey, obj, obj.size) // TODO store pointer?
 			}
 			return obj
@@ -170,7 +172,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		c := (*CacheObj)(nil)
 		ruleThrottler, ok := h.ruleThrottlers[remapName]
 		if !ok {
-			fmt.Printf("ERROR rule %v returned, but not in ruleThrottlers map. Requesting with no rule (origin) limit!\n", remapName)
+			log.Errorf("rule %v returned, but not in ruleThrottlers map. Requesting with no rule (origin) limit!\n", remapName)
 			ruleThrottler = NewNoThrottler()
 		}
 		ruleThrottler.Throttle(func() {
@@ -180,7 +182,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqCacheControl := ParseCacheControl(reqHeader)
-	fmt.Printf("DEBUG TryServe got Cache-Control %+v\n", reqCacheControl)
+	log.Debugf("TryServe got Cache-Control %+v\n", reqCacheControl)
 	// return true for Revalidate, and issue revalidate requests separately.
 	canReuse := func(cacheObj *CacheObj) bool {
 		canReuse := CanReuseStored(reqHeader, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime, h.strictRFC)
@@ -192,14 +194,14 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		case ReuseMustRevalidate:
 			return true
 		default:
-			fmt.Printf("Error: CanReuseStored returned unknown %v\n", canReuse)
+			log.Errorf("CanReuseStored returned unknown %v\n", canReuse)
 			return false
 		}
 	}
 
 	iCacheObj, ok := h.cache.Get(cacheKey)
 	if !ok {
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
+		log.Debugf("cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		cacheObj := h.getter.Get(cacheKey, getAndCache, canReuse)
 		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 		return
@@ -208,7 +210,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	cacheObj, ok := iCacheObj.(*CacheObj)
 	if !ok {
 		// should never happen
-		fmt.Printf("Error: cache key '%v' value '%v' type '%T' expected *CacheObj\n", cacheKey, iCacheObj, iCacheObj)
+		log.Errorf("cache key '%v' value '%v' type '%T' expected *CacheObj\n", cacheKey, iCacheObj, iCacheObj)
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 		// TODO check for ReuseMustRevalidate
 		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
@@ -221,12 +223,12 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	switch canReuseStored {
 	case ReuseCan:
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' cache hit!\n", cacheKey)
+		log.Debugf("cacheHandler.ServeHTTP: '%v' cache hit!\n", cacheKey)
 	case ReuseCannot:
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' can't reuse\n", cacheKey)
+		log.Debugf("cacheHandler.ServeHTTP: '%v' can't reuse\n", cacheKey)
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	case ReuseMustRevalidate:
-		fmt.Printf("DEBUG cacheHandler.ServeHTTP: '%v' must revalidate\n", cacheKey)
+		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate\n", cacheKey)
 		// TODO implement revalidate
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	}
@@ -330,24 +332,24 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 
 	remapRuleStats, ok := stats.Remap().Stats(remapRuleName)
 	if !ok {
-		fmt.Printf("ERROR Remap rule %v not in Stats\n", remapRuleName)
+		log.Errorf("Remap rule %v not in Stats\n", remapRuleName)
 		return
 	}
 
 	conn, ok := conns.Pop(remoteAddr)
 	if !ok {
-		fmt.Printf("ERROR RemoteAddr %v not in Conns\n", remoteAddr)
+		log.Errorf("RemoteAddr %v not in Conns\n", remoteAddr)
 		return
 	}
 
 	interceptConn, ok := conn.(*InterceptConn)
 	if !ok {
-		fmt.Printf("ERROR Could not get Conn info: Conn is not an InterceptConn: %T\n", conn)
+		log.Errorf("Could not get Conn info: Conn is not an InterceptConn: %T\n", conn)
 		return
 	}
 
 	if wFlusher, ok := w.(http.Flusher); !ok {
-		fmt.Printf("ERROR ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!\n")
+		log.Errorf("ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!\n")
 	} else {
 		wFlusher.Flush()
 	}
@@ -360,7 +362,7 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 	remapRuleStats.AddOutBytes(uint64(bytesWritten))
 	switch {
 	case code < 200:
-		fmt.Printf("ERROR responded with invalid code %v\n", code)
+		log.Errorf("responded with invalid code %v\n", code)
 	case code < 300:
 		remapRuleStats.AddStatus2xx(1)
 	case code < 400:
@@ -370,6 +372,6 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 	case code < 600:
 		remapRuleStats.AddStatus5xx(1)
 	default:
-		fmt.Printf("ERROR responded with invalid code %v\n", code)
+		log.Errorf("responded with invalid code %v\n", code)
 	}
 }
