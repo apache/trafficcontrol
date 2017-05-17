@@ -47,6 +47,8 @@ The following are requirements to ensure an accurate set up:
 
 
 6. Start Tomcat: ``sudo service tomcat start``, and test lookups with dig and curl against that server.
+	To restart, ``sudo service tomcat stop``, kill the traffic router process, and ``sudo service tomcat start``
+	Also, crconfig previously recieved will be cached, and needs to be removed manually to actually be reloaded /opt/traffic_router/db/cr-config.json
 7. Snapshot CRConfig; See :ref:`rl-snapshot-crconfig`
 
 ..  Note:: Once the CRConfig is snapshotted, live traffic will be sent to the new Traffic Routers provided that their status is set to ``ONLINE``.
