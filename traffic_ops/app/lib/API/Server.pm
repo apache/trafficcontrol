@@ -157,7 +157,7 @@ sub show {
 				"mgmtIpAddress"  => $row->mgmt_ip_address,
 				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
-				"offline_reason" => $row->offline_reason,
+				"offlineReason"  => $row->offline_reason,
 				"physLocation"   => $row->phys_location->name,
 				"physLocationId" => $row->phys_location->id,
 				"profile"        => $row->profile->name,
@@ -621,6 +621,27 @@ sub totals {
 
 }
 
+sub status {
+	my $self = shift;
+
+	my $rs = $self->db->resultset('Server')->search(
+		undef,
+		{
+			join     => [qw/ status /],
+			select   => [ 'status.name', { count => 'me.id' } ],
+			as       => [qw/ status_name server_count /],
+			group_by => [qw/ status.id /]
+		}
+	);
+
+	my $response;
+	while ( my $row = $rs->next ) {
+		$response->{ $row->{'_column_data'}->{'status_name'} } = $row->{'_column_data'}->{'server_count'};
+	}
+
+	return $self->success( $response );
+}
+
 sub get_count_by_type {
 	my $self      = shift;
 	my $type_name = shift;
@@ -633,9 +654,8 @@ sub details_v11 {
 	my $isadmin   = &is_admin($self);
 	my $host_name = $self->param('name');
 	my $rs_data   = $self->db->resultset('Server')->search( { host_name => $host_name },
-		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', { 'deliveryservice_servers' => 'deliveryservice' } ], } );
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', { 'deliveryservice_servers' => 'deliveryservice' } ], } );
 	while ( my $row = $rs_data->next ) {
-
 		my $serv = {
 			"id"             => $row->id,
 			"hostName"       => $row->host_name,
@@ -657,7 +677,7 @@ sub details_v11 {
 			"rack"           => $row->rack,
 			"type"           => $row->type->name,
 			"status"         => $row->status->name,
-			"offline_reason" => $row->offline_reason,
+			"offlineReason"  => $row->offline_reason,
 			"profile"        => $row->profile->name,
 			"profileDesc"    => $row->profile->description,
 			"mgmtIpAddress"  => $row->mgmt_ip_address,
@@ -670,6 +690,7 @@ sub details_v11 {
 			"iloPassword"    => $isadmin ? $row->ilo_password : "********",
 			"routerHostName" => $row->router_host_name,
 			"routerPortName" => $row->router_port_name,
+			"cdnName"        => $row->cdn->name,
 		};
 		my $hw_rs = $row->hwinfos;
 		while ( my $hwinfo_row = $hw_rs->next ) {
@@ -732,7 +753,7 @@ sub details {
 				"rack"           => $row->rack,
 				"type"           => $row->type->name,
 				"status"         => $row->status->name,
-				"offline_reason" => $row->offline_reason,
+				"offlineReason"  => $row->offline_reason,
 				"profile"        => $row->profile->name,
 				"profileDesc"    => $row->profile->description,
 				"mgmtIpAddress"  => $row->mgmt_ip_address,

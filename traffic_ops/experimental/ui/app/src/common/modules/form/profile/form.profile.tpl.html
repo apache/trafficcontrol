@@ -24,15 +24,16 @@ under the License.
             <li class="active">{{profileName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" ng-click="viewParams()">View Parameters &nbsp;&nbsp;<i class="fa fa-sticky-note"></i></button>
-            <button class="btn btn-primary" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
-
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="viewDeliveryServices()" ng-if="profile.type == 'DS_PROFILE'">View Delivery Services</a></li>
+                    <li role="menuitem"><a ng-click="viewParams()">View Parameters</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()" ng-if="profile.type != 'DS_PROFILE'">View Servers</a></li>
+                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="cloneProfile()">Clone Profile</a></li>
                     <li role="menuitem"><a ng-click="exportProfile()">Export Profile</a></li>
                 </ul>
@@ -43,13 +44,31 @@ under the License.
     <div class="x_content">
         <br>
         <form name="profileForm" class="form-horizontal form-label-left" novalidate>
-            <div class="form-group" ng-class="{'has-error': hasError(profileForm[prop.name]), 'has-feedback': hasError(profileForm[prop.name])}" ng-repeat="prop in props">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
+            <div class="form-group" ng-class="{'has-error': hasError(profileForm.name), 'has-feedback': hasError(profileForm.name)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="profile[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(profileForm[prop.name], 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(profileForm[prop.name], 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(profileForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <input id="name" name="name" type="text" class="form-control" ng-model="profile.name" ng-required="true" ng-maxlength="45" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(profileForm.name, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(profileForm.name, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(profileForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(profileForm.cdn), 'has-feedback': hasError(profileForm.cdn)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="cdn" name="cdn" class="form-control" ng-model="profile.cdn" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(profileForm.cdn, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(profileForm.type), 'has-feedback': hasError(profileForm.type)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="type" name="type" class="form-control" ng-model="profile.type" ng-options="type.value as type.value for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(profileForm.cdn, 'required')">Required</small>
                 </div>
             </div>
             <div class="form-group">

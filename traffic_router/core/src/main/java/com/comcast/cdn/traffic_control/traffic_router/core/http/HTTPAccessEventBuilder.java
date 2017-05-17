@@ -102,7 +102,6 @@ public class HTTPAccessEventBuilder {
             rloc = decimalFormat.format(resultLocation.getLatitude()) + "," + decimalFormat.format(resultLocation.getLongitude());
         }
 
-
         final String xMmClientIpHeader = httpServletRequest.getHeader(HTTPRequest.X_MM_CLIENT_IP);
         final String fakeIpParameter = httpServletRequest.getParameter(HTTPRequest.FAKE_IP);
 
@@ -141,8 +140,11 @@ public class HTTPAccessEventBuilder {
             stringBuilder.append(" pssc=").append(pssc).append(" ttms=").append(String.format("%.03f",ttms));
         }
 
-        final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\" ";
+        final String respurl = " rurl=\"" + formatObject(httpAccessRecord.getResponseURL()) + "\"";
         stringBuilder.append(respurl);
+
+        final String respurls = " rurls=\"" + formatObject(httpAccessRecord.getResponseURLs()) + "\" ";
+        stringBuilder.append(respurls);
 
         stringBuilder.append(formatRequestHeaders(httpAccessRecord.getRequestHeaders()));
         return stringBuilder.toString();

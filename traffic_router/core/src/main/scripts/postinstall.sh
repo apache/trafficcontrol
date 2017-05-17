@@ -16,7 +16,7 @@
 chkconfig --add tomcat
 chkconfig tomcat on
 
-for JAR in traffic_router_connector.jar traffic_router_shared.jar jackson-core.jar jackson-annotations.jar jackson-databind.jar; do
+for JAR in traffic_router_connector.jar traffic_router_shared.jar jackson-core.jar jackson-annotations.jar jackson-databind.jar log4j.jar; do
     if [ ! -e /opt/tomcat/lib/$JAR ]; then
         echo "Creating symbolic link from /opt/traffic_router/lib/$JAR to /opt/tomcat/lib"
         /bin/ln -s /opt/traffic_router/lib/$JAR /opt/tomcat/lib/$JAR

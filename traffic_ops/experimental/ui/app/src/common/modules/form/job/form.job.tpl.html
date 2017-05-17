@@ -1,0 +1,65 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb">
+            <li><a ng-click="navigateToPath('/admin/jobs')">Invalidate Content Jobs</a></li>
+            <li class="active">{{jobName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="jobForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(jobForm.deliveryservice), 'has-feedback': hasError(jobForm.deliveryservice)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="deliveryservice" name="deliveryservice" class="form-control" ng-model="job.dsId" ng-options="deliveryservice.id as deliveryservice.xmlId for deliveryservice in deliveryservices" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.deliveryservice, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(jobForm.regex), 'has-feedback': hasError(jobForm.regex)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Path Regex *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="regex" name="regex" type="text" class="form-control" placeholder="eg. /path/to/content/.*\.jpg" ng-model="job.regex" ng-required="true" ng-maxlength="255" ng-pattern="/^\//" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.regex, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.regex, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.regex, 'pattern')">Must Start with /</small>
+                    <span ng-show="hasError(jobForm.regex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(jobForm.ttl), 'has-feedback': hasError(jobForm.ttl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">TTL (hours) *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ttl" name="ttl" type="text" class="form-control" ng-model="job.ttl" ng-required="true" ng-maxlength="1000" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'pattern')">Number</small>
+                    <span ng-show="hasError(jobForm.ttl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" ng-disabled="jobForm.$pristine || jobForm.$invalid" ng-click="save(job)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

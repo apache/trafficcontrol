@@ -17,22 +17,19 @@
  * under the License.
  */
 
+// this is the config that is consumed by server.js
 module.exports = {
     timeout: '120s',
     useSSL: false, // set to true if using ssl
     port: 8080,
     sslPort: 8443,
-    proxyPort: 8009,
     ssl: {
-        key:    '/path/to/ssl.key',
-        cert:   '/path/to/ssl.crt',
-        ca:     [
-            '/path/to/ssl-bundle.crt'
-        ]
+        key:    '/etc/pki/tls/private/localhost.key',
+        cert:   '/etc/pki/tls/certs/localhost.crt',
+        ca:     [ '/etc/pki/tls/certs/ca-bundle.crt' ]
     },
     api: {
-        base_url: 'http://localhost:3000',
-        key: ''
+        base_url: 'http://localhost:3000/api/'
     },
     files: {
         static: './app/dist/public/'

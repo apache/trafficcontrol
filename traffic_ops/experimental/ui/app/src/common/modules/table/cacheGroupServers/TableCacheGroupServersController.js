@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, $uibModal, cacheGroupService, locationUtils) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, $uibModal, cacheGroupService, locationUtils, serverUtils) {
 
 	$scope.cacheGroup = cacheGroup;
 
@@ -67,8 +67,8 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 				}
 			}
 		});
-		modalInstance.result.then(function(cdnId) {
-			queueServerUpdates(cacheGroup, cdnId);
+		modalInstance.result.then(function(cdn) {
+			queueServerUpdates(cacheGroup, cdn.id);
 		}, function () {
 			// do nothing
 		});
@@ -92,8 +92,8 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 				}
 			}
 		});
-		modalInstance.result.then(function(cdnId) {
-			clearServerUpdates(cacheGroup, cdnId);
+		modalInstance.result.then(function(cdn) {
+			clearServerUpdates(cacheGroup, cdn.id);
 		}, function () {
 			// do nothing
 		});
@@ -101,14 +101,19 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
+	$scope.isOffline = serverUtils.isOffline;
+
+	$scope.offlineReason = serverUtils.offlineReason;
+
 	angular.element(document).ready(function () {
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 100,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', '$uibModal', 'cacheGroupService', 'locationUtils'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', '$uibModal', 'cacheGroupService', 'locationUtils', 'serverUtils'];
 module.exports = TableCacheGroupsServersController;

@@ -44,6 +44,36 @@ module.exports = {
                                 'json3/lib/json3.min.js',
                                 'restangular/dist/restangular.min.js'
                             ]
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.js' ],
+                        rename: function () { return 'jquery-flot.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.pie.js' ],
+                        rename: function () { return 'jquery-flot-pie.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.stack.js' ],
+                        rename: function () { return 'jquery-flot-stack.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.time.js' ],
+                        rename: function () { return 'jquery-flot-time.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot.tooltip/js/jquery.flot.tooltip.min.js' ],
+                        rename: function () { return 'jquery-flot-tooltip.min.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot-axislabels/jquery.flot.axislabels.js' ],
+                        rename: function () { return 'jquery-flot-axislabels.js'; }
                     }
                 ]
             }
@@ -75,6 +105,36 @@ module.exports = {
                                 'json3/lib/json3.js',
                                 'restangular/dist/restangular.js'
                             ]
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.js' ],
+                        rename: function () { return 'jquery-flot.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.pie.js' ],
+                        rename: function () { return 'jquery-flot-pie.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.stack.js' ],
+                        rename: function () { return 'jquery-flot-stack.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.time.js' ],
+                        rename: function () { return 'jquery-flot-time.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot.tooltip/js/jquery.flot.tooltip.js' ],
+                        rename: function () { return 'jquery-flot-tooltip.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot-axislabels/jquery.flot.axislabels.js' ],
+                        rename: function () { return 'jquery-flot-axislabels.js'; }
                     }
                 ]
             }

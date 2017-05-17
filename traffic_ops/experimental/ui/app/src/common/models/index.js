@@ -18,5 +18,6 @@
  */
 
 module.exports = angular.module('trafficOps.models', [])
+    .service('changeLogModel', require('./ChangeLogModel'))
     .service('messageModel', require('./MessageModel'))
     .service('userModel', require('./UserModel'));

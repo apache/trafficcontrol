@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var CDNService = function(Restangular, locationUtils, messageModel) {
+var CDNService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
 
     this.getCDNs = function(queryParams) {
         return Restangular.all('cdns').getList(queryParams);
@@ -88,7 +88,55 @@ var CDNService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
+    this.getCapacity = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns/capacity")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.getRoutingMethods = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns/routing")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.getCurrentStats = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "current_stats")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
 };
 
-CDNService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+CDNService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = CDNService;

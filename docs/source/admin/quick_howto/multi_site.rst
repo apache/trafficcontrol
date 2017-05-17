@@ -37,7 +37,7 @@ Configure Multi Site Origin
 	:scale: 100%
 	:align: center
 
-4) Check the multi-site check box in the delivery service screen and make sure that Content Routing Type is set to HTTP_LIVE_NATL:
+4) Check the multi-site check box in the delivery service screen:
 
 .. image:: mso-enable.png
 	:scale: 100%

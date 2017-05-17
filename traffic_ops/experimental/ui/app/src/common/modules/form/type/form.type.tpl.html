@@ -24,10 +24,18 @@ under the License.
             <li class="active">{{typeName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" ng-show="type.useInTable == 'server'" ng-click="viewServers()">View Servers &nbsp;&nbsp;<i class="fa fa-server"></i></button>
-            <button class="btn btn-primary" ng-show="type.useInTable == 'deliveryservice'" ng-click="viewDeliveryServices()">View Delivery Services</button>
-            <button class="btn btn-primary" ng-show="type.useInTable == 'cachegroup'" ng-click="viewCacheGroups()">View Cache Groups</button>
-            <button class="btn btn-primary" ng-show="type.useInTable == 'staticdnsentry'" ng-click="viewStaticDnsEntries()">View Static DNS Entries</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-show="type.useInTable == 'server'"><a ng-click="viewServers()">View Servers</a></li>
+                    <li role="menuitem" ng-show="type.useInTable == 'deliveryservice'"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li role="menuitem" ng-show="type.useInTable == 'cachegroup'"><a ng-click="viewCacheGroups()">View Cache Groups</a></li>
+                    <li role="menuitem" ng-show="type.useInTable == 'staticdnsentry'"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>

@@ -141,8 +141,8 @@ var DashboardDeliveryServicesController = function($window, $rootScope, $scope, 
             size: 'lg',
             windowClass: 'ds-config-modal',
             resolve: {
-                deliveryService: function () {
-                    return angular.copy(ds);
+                deliveryService: function (deliveryServiceService) {
+                    return deliveryServiceService.getDeliveryService(ds.id);
                 }
             }
         });

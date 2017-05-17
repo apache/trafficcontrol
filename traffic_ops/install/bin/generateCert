@@ -17,7 +17,7 @@
 
 use strict;
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_ops/app/lib);
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
 
 use JSON;
 use InstallUtils;

@@ -576,7 +576,7 @@ Server
 |
 
 
-**GET /api/1.2/servers/summary**
+**GET /api/1.2/servers/totals**
 
   Retrieves a count of CDN servers by type.
 
@@ -621,6 +621,49 @@ Server
     }
 
 |
+
+**GET /api/1.2/servers/status**
+
+  Retrieves a count of CDN servers by status.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Response Properties**
+
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+  | Parameter       |  Type  |                             Description                                                                               |
+  +=================+========+=======================================================================================================================+
+  | ``ONLINE``      | int    | The number of ONLINE servers. Traffic Monitor will not monitor the state of ONLINE servers. True health is unknown.   |
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+  | ``REPORTED``    | int    | The number of REPORTED servers. Traffic Monitor monitors the state of REPORTED servers and removes them if unhealthy. |
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+  | ``OFFLINE``     | int    | The number of OFFLINE servers. Used for longer-term maintenance. These servers are excluded from CRConfig.json.       |
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+  | ``ADMIN_DOWN``  | int    | The number of ADMIN_DOWN servers. Used for short-term maintenance. These servers are included in CRConfig.json.       |
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+  | ``CCR_IGNORE``  | int    | The number of CCR_IGNORE servers. These servers are excluded from CRConfig.json.                                      |
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+  | ``PRE_PROD``    | int    | The number of PRE_PROD servers. Used for servers to be deployed. These servers are excluded from CRConfig.json.       |
+  +-----------------+--------+-----------------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response":
+        {
+          "ONLINE": 100,
+          "OFFLINE": 23,
+          "REPORTED": 45,
+          "ADMIN_DOWN": 4,
+          "CCR_IGNORE": 1,
+          "PRE_PROD": 0,
+        }
+    }
+
+|
+
 
 **GET /api/1.2/servers/hostname/:name/details**
 

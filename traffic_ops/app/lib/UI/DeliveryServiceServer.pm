@@ -31,7 +31,8 @@ sub cpdss_iframe {
 		my $server = $self->db->resultset('Server')->search( { 'me.id' => $srvr_id }, { prefetch => [ 'cachegroup' ] } )->single();
 
 		my @etypeids = &type_ids( $self, 'EDGE%', 'server' );
-		my $rs = $self->db->resultset('Server')->search( { type => { -in => \@etypeids }, cdn_id => $server->cdn_id }, { prefetch => 'profile', order_by => 'host_name' } );
+		my $rs = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@etypeids }, cdn_id => $server->cdn_id }, 
+			{ prefetch => 'profile', order_by => 'host_name' } );
 		my @from_server_list;
 		while ( my $row = $rs->next ) {
 			if ( $row->id == $srvr_id ) {

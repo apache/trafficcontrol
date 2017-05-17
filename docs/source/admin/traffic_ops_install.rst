@@ -379,3 +379,106 @@ To upgrade:
 2. Enter the following command:``yum upgrade traffic_ops``
 3. See :ref:`rl-ps` to run postinstall.
 4. Enter the following command:``service traffic_ops start``
+
+Manually Generating and Installing the SSL Certificate
+------------------------------------------------------
+
+.. Note:: This section is valid for traffic-control 2.0.0 and later.
+
+Self-signed Certificate (Development)
+=====================================
+
+    Example Procedure::
+
+      $ openssl genrsa -des3 -passout pass:x -out localhost.pass.key 2048
+      Generating RSA private key, 2048 bit long modulus
+      ...
+      $ openssl rsa -passin pass:x -in localhost.pass.key -out localhost.key
+      writing RSA key
+      $ rm localhost.pass.key
+
+      $ openssl req -new -key localhost.key -out localhost.csr
+      You are about to be asked to enter information that will be incorporated
+      into your certificate request.
+      What you are about to enter is what is called a Distinguished Name or a DN.
+      There are quite a few fields but you can leave some blank
+      For some fields there will be a default value,
+      If you enter '.', the field will be left blank.
+      -----
+      Country Name (2 letter code) [XX]:US<enter>
+      State or Province Name (full name) []:CO<enter>
+      Locality Name (eg, city) [Default City]:Denver<enter>
+      Organization Name (eg, company) [Default Company Ltd]: <enter>
+      Organizational Unit Name (eg, section) []: <enter>
+      Common Name (eg, your name or your server's hostname) []: <enter>
+      Email Address []: <enter>
+
+      Please enter the following 'extra' attributes
+      to be sent with your certificate request
+      A challenge password []: pass<enter>
+      An optional company name []: <enter>
+      $ openssl x509 -req -sha256 -days 365 -in localhost.csr -signkey localhost.key -out localhost.crt
+      Signature ok
+      subject=/C=US/ST=CO/L=Denver/O=Default Company Ltd
+      Getting Private key
+      $ sudo cp localhost.crt /etc/pki/tls/certs
+      $ sudo cp localhost.key /etc/pki/tls/private
+      $ sudo chown trafops:trafops /etc/pki/tls/certs/localhost.crt
+      $ sudo chown trafops:trafops /etc/pki/tls/private/localhost.key
+
+Certificate from Certificate Authority (Production)
+===================================================
+
+.. Note:: You will need to know the appropriate answers when generating the certificate request file `trafficopss.csr` below.
+
+    Example Procedure::
+
+      $ openssl genrsa -des3 -passout pass:x -out trafficops.pass.key 2048
+      Generating RSA private key, 2048 bit long modulus
+      ...
+      $ openssl rsa -passin pass:x -in trafficops.pass.key -out trafficops.key
+      writing RSA key
+      $ rm localhost.pass.key
+
+      Generate the Certificate Signing Request (CSR) file needed for Certificate Authority (CA) request.
+
+      $ openssl req -new -key trafficops.key -out trafficops.csr
+      You are about to be asked to enter information that will be incorporated
+      into your certificate request.
+      What you are about to enter is what is called a Distinguished Name or a DN.
+      There are quite a few fields but you can leave some blank
+      For some fields there will be a default value,
+      If you enter '.', the field will be left blank.
+      -----
+      Country Name (2 letter code) [XX]: <enter country code>
+      State or Province Name (full name) []: <enter state or province>
+      Locality Name (eg, city) [Default City]: <enter locality name>
+      Organization Name (eg, company) [Default Company Ltd]: <enter organization name>
+      Organizational Unit Name (eg, section) []: <enter organizational unit name>
+      Common Name (eg, your name or your server's hostname) []: <enter server's hostname name>
+      Email Address []: <enter e-mail address>
+
+      Please enter the following 'extra' attributes
+      to be sent with your certificate request
+      A challenge password []: <enter challenge password>
+      An optional company name []: <enter>
+      $ sudo cp trafficops.key /etc/pki/tls/private
+      $ sudo chown trafops:trafops /etc/pki/tls/private/trafficops.key
+
+      You must then take the output file trafficops.csr and submit a request to your Certificate Authority (CA).
+      Once you get approved and receive your trafficops.crt file:
+
+      $ sudo cp trafficops.crt /etc/pki/tls/certs
+      $ sudo chown trafops:trafops /etc/pki/tls/certs/trafficops.crt
+
+      If necessary, install the CA certificates .pem and .crt in /etc/pki/tls/certs.
+
+      You will need to update the file /opt/traffic_ops/app/conf/cdn.conf with the following changes:
+            ...
+            e.g. given trafficops.crt and trafficops.key
+            'hypnotoad' => ...
+                'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
+             ...
+
+
+

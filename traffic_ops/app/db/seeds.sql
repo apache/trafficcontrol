@@ -13,143 +13,114 @@
 	limitations under the License.
 */
 
--- roles
-insert into role (id, name, description, priv_level) values (1, 'disallowed','Block all access',0) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (2, 'read-only user','Block all access', 10) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (3, 'operations','Block all access', 20) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (4, 'admin','super-user', 30) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (5, 'portal','Portal User', 2) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (6, 'migrations','database migrations user - DO NOT REMOVE', 20) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (7, 'federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
-insert into role (id, name, description, priv_level) values (8, 'steering', 'Role for Steering Delivery Services', 15) ON CONFLICT DO NOTHING;
 
--- types
-insert into type (name, description, use_in_table) values ('ANY_MAP', 'No Content Routing - arbitrary remap at the edge, no Traffic Router config', 'deliveryservice') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('ORG_LOC', 'Origin Logical Site', 'cachegroup') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('STEERING', 'Steering Delivery Service', 'deliveryservice') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('STEERING_REGEXP', 'Steering target filter regular expression', 'regex') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_OPEN_SLOT', 'Open slot for check in Server Status', 'to_extension') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('CONFIG_EXTENSION', 'Extension for additional configuration file', 'to_extension') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('STATISTIC_EXTENSION', 'Extension source for 12M graphs', 'to_extension') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('RESOLVE4', 'federation type resolve4', 'federation') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('RESOLVE6', 'federation type resolve6', 'federation') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('RIAK', 'Riak keystore', 'server') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('TRAFFIC_STATS', 'traffic_stats server', 'server') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('TRAFFIC_PORTAL', 'traffic_portal server', 'server') ON CONFLICT DO NOTHING;
-insert into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb server', 'server') ON CONFLICT DO NOTHING;
+-- THIS FILE INCLUDES STATIC DATA REQUIRED OF TRAFFIC OPS
 
--- statuses
-insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT DO NOTHING;
+-- cdns
+insert into cdn (name, dnssec_enabled, domain_name) values ('ALL', false, '-') ON CONFLICT (name) DO NOTHING;
 
 -- job agents
-insert into job_agent (name, description, active) values ('dummy','Description of Purge Agent','1') ON CONFLICT DO NOTHING;
+insert into job_agent (name, description, active) values ('dummy', 'Description of Purge Agent', 1) ON CONFLICT (name) DO NOTHING;
 
 -- job statuses
-insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT DO NOTHING;
-insert into job_status (name, description) values ('IN_PROGRESS', 'Job is being processed by agents') ON CONFLICT DO NOTHING;
-insert into job_status (name, description) values ('COMPLETED', 'Job has finished') ON CONFLICT DO NOTHING;
-insert into job_status (name, description) values ('CANCELLED', 'Job was cancelled') ON CONFLICT DO NOTHING;
-insert into job_status (name, description) values ('PURGE', 'Initial Purge state') ON CONFLICT DO NOTHING;
+insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT (name) DO NOTHING;
 
 -- parameters
-insert into parameter (name, config_file, value) values ('ttl_max_hours', 'regex_revalidate.config', '672') ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) values ('ttl_min_hours', 'regex_revalidate.config', '48') ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90') ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_0.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_0.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_8.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_8.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_10.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_10.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_12.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_12.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_14.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_14.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_16.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_16.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_18.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_18.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_20.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_20.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_22.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_22.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_24.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_24.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_26.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_26.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_28.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_28.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_30.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_30.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_32.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_32.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_34.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_34.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_36.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_36.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_38.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_38.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_40.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_40.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_48.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_48.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, value, config_file) select * from (select 'location', '/opt/trafficserver/etc/trafficserver/dscp', 'set_dscp_56.config') as temp where not exists (select name from parameter where name = 'location' and config_file = 'set_dscp_56.config') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'bandwidth') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'bandwidth') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'maxKbps') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'maxKbps') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'ats.proxy.process.http.current_client_connections') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.http.current_client_connections') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'ats.proxy.process.cache.volume_1.wrap_count') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.cache.volume_1.wrap_count') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'CacheStats', 'traffic_stats.config', 'ats.proxy.process.cache.volume_2.wrap_count') as temp where not exists (select name from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.cache.volume_2.wrap_count') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'kbps') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'kbps') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_2xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_2xx') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'status_4xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_4xx') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'status_5xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_5xx') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_3xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_3xx') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_4xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_4xx') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_5xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_5xx') limit 1 ON CONFLICT DO NOTHING;
-insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_total') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total') limit 1 ON CONFLICT DO NOTHING;
+-- Move into postinstall global parameters
+insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+---------------------------------
 
 -- profiles
-insert into profile (name, description) values ('RIAK_ALL', 'Riak profile for all CDNs') ON CONFLICT DO NOTHING;
-insert into profile (name, description) values ('TRAFFIC_STATS', 'Traffic_Stats profile') ON CONFLICT DO NOTHING;
-insert into profile (name, description) values ('TRAFFIC_PORTAL', 'Traffic_Portal profile') ON CONFLICT DO NOTHING;
-insert into profile (name, description) values ('INFLUXDB', 'InfluxDb profile') ON CONFLICT DO NOTHING;
+---------------------------------
+insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN') ON CONFLICT (name, config_file, value) DO NOTHING;
+insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
 
--- profile parameters
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'bandwidth')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'maxKbps')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'CacheStats' and config_file = 'traffic_stats.config' and value = 'ats.proxy.process.http.current_client_connections')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'kbps')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'kbps')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_2xx')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_4xx')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'status_5xx')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_3xx')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_4xx')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_5xx')
-) ON CONFLICT DO NOTHING;
-insert into profile_parameter (profile, parameter) values (
-  (select id from profile where name = 'TRAFFIC_STATS'),
-  (select id from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total')
-) ON CONFLICT DO NOTHING;
-update server set https_port = 443 where https_port is null;
+-- profiles
+---------------------------------
+insert into profile (name, description, type) values ('TRAFFIC_ANALYTICS', 'Traffic Analytics profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type) values ('TRAFFIC_OPS', 'Traffic Ops profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type) values ('TRAFFIC_OPS_DB', 'Traffic Ops DB profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type) values ('TRAFFIC_PORTAL', 'Traffic Portal profile', 'TP_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type) values ('TRAFFIC_STATS', 'Traffic Stats profile', 'TS_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type) values ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE') ON CONFLICT (name) DO NOTHING;
+
+-- statuses
+insert into status (name, description) values ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
+insert into status (name, description) values ('ONLINE', 'Server is online.') ON CONFLICT (name) DO NOTHING;
+insert into status (name, description) values ('REPORTED', 'Server is online and reported in the health protocol.') ON CONFLICT (name) DO NOTHING;
+insert into status (name, description) values ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT (name) DO NOTHING;
+insert into status (name, description) values ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT (name) DO NOTHING;
+insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
+
+-- roles
+insert into role (name, description, priv_level) values ('admin', 'super-user', 30) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('migrations', 'database migrations user - DO NOT REMOVE', 20) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
+
+-- tenants
+insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
+
+-- types
+-- delivery service types
+insert into type (name, description, use_in_table) values ('HTTP', 'HTTP Content Routing', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('HTTP_NO_CACHE', 'HTTP Content Routing, no caching', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('HTTP_LIVE', 'HTTP Content routing cache in RAM', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('HTTP_LIVE_NATNL', 'HTTP Content routing, RAM cache, National', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('DNS', 'DNS Content Routing', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('DNS_LIVE', 'DNS Content routing, RAM cache, Local', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('DNS_LIVE_NATNL', 'DNS Content routing, RAM cache, National', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('ANY_MAP', 'No Content Routing - arbitrary remap at the edge, no Traffic Router config', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('STEERING', 'Steering Delivery Service', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('CLIENT_STEERING', 'Client-Controlled Steering Delivery Service', 'deliveryservice') ON CONFLICT (name) DO NOTHING;
+
+-- server types
+insert into type (name, description, use_in_table) values ('EDGE', 'Edge Cache', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('MID', 'Mid Tier Cache', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('ORG', 'Origin', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('CCR', 'Traffic Router', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('RASCAL', 'Traffic Monitor', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('RIAK', 'Riak keystore', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('INFLUXDB', 'influxDb server', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_ANALYTICS', 'traffic analytics server', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_OPS', 'traffic ops server', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_OPS_DB', 'traffic ops DB server', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_PORTAL', 'traffic portal server', 'server') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TRAFFIC_STATS', 'traffic stats server', 'server') ON CONFLICT (name) DO NOTHING;
+
+-- cachegroup types
+insert into type (name, description, use_in_table) values ('EDGE_LOC', 'Edge Logical Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('MID_LOC', 'Mid Logical Location', 'cachegroup') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('ORG_LOC', 'Origin Logical Site', 'cachegroup') ON CONFLICT (name) DO NOTHING;
+
+-- to_extension types
+insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_BOOL', 'Extension for checkmark in Server Check', 'to_extension') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_NUM', 'Extension for int value in Server Check', 'to_extension') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('CHECK_EXTENSION_OPEN_SLOT', 'Open slot for check in Server Status', 'to_extension') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('CONFIG_EXTENSION', 'Extension for additional configuration file', 'to_extension') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('STATISTIC_EXTENSION', 'Extension source for 12M graphs', 'to_extension') ON CONFLICT (name) DO NOTHING;
+
+-- regex types
+insert into type (name, description, use_in_table) values ('HOST_REGEXP', 'Host header regular expression', 'regex') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('HEADER_REGEXP', 'HTTP header regular expression', 'regex') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('PATH_REGEXP', 'URL path regular expression', 'regex') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('STEERING_REGEXP', 'Steering target filter regular expression', 'regex') ON CONFLICT (name) DO NOTHING;
+
+-- federation types
+insert into type (name, description, use_in_table) values ('RESOLVE4', 'federation type resolve4', 'federation') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('RESOLVE6', 'federation type resolve6', 'federation') ON CONFLICT (name) DO NOTHING;
+
+-- static dns entry types
+insert into type (name, description, use_in_table) values ('A_RECORD', 'Static DNS A entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('AAAA_RECORD', 'Static DNS AAAA entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('CNAME_RECORD', 'Static DNS CNAME entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
 
 -- users
-insert into tm_user (username, role,full_name) values ('portal',(select id from role where name='portal'),'Portal User') ON CONFLICT DO NOTHING;
 insert into tm_user (username, role, full_name, token) values ('extension', 3, 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
 
 -- to extensions

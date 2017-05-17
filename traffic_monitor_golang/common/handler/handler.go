@@ -20,11 +20,8 @@ package handler
  */
 
 import (
-	"encoding/json"
 	"io"
 	"time"
-
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 const (
@@ -32,16 +29,6 @@ const (
 	NOTIFY_CHANGE
 	NOTIFY_ALWAYS
 )
-
-type Handler interface {
-	Handle(string, io.Reader, time.Duration, time.Time, error, uint64, chan<- uint64)
-}
-
-type OpsConfigFileHandler struct {
-	Content          interface{}
-	ResultChannel    chan interface{}
-	OpsConfigChannel chan OpsConfig
-}
 
 type OpsConfig struct {
 	Username     string `json:"username"`
@@ -52,17 +39,6 @@ type OpsConfig struct {
 	HttpListener string `json:"httpListener"`
 }
 
-func (handler OpsConfigFileHandler) Listen() {
-	for {
-		result := <-handler.ResultChannel
-		var toc OpsConfig
-
-		err := json.Unmarshal(result.([]byte), &toc)
-
-		if err != nil {
-			log.Errorf("Could not unmarshal Ops Config JSON: %s\n", err)
-		} else {
-			handler.OpsConfigChannel <- toc
-		}
-	}
+type Handler interface {
+	Handle(string, io.Reader, time.Duration, time.Time, error, uint64, chan<- uint64)
 }

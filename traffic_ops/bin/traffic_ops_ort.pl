@@ -25,6 +25,7 @@ use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
 
+
 $| = 1;
 my $date           = `/bin/date`;
 chomp($date);
@@ -36,10 +37,14 @@ my %supported_el_release = ( "EL6" => 1, "EL7" => 1);
 my $dispersion = 300;
 my $retries = 5;
 my $wait_for_parents = 1;
+my $login_dispersion = 0;
+my $reval_wait_time = 60;
+my $reval_in_use = 0;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
-            "wait_for_parents=i" => \$wait_for_parents );
+            "wait_for_parents=i" => \$wait_for_parents,
+            "login_dispersion=i" => \$login_dispersion );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -60,6 +65,8 @@ given ( $ARGV[1] ) {
 }
 
 my $traffic_ops_host = undef;
+my $to_url = undef;
+my $to_rev_proxy_url = undef;
 my $TM_LOGIN         = undef;
 
 if ( defined( $ARGV[2] ) ) {
@@ -92,6 +99,7 @@ my $INTERACTIVE = 0;
 my $REPORT      = 1;
 my $BADASS      = 2;
 my $SYNCDS      = 3;
+my $REVALIDATE  = 4;
 #### Logging constants for bit shifting ####
 my $ALL   = 7;
 my $TRACE = 6;
@@ -115,6 +123,7 @@ my $UPDATE_TROPS_NOTNEEDED  = 0;
 my $UPDATE_TROPS_NEEDED     = 1;
 my $UPDATE_TROPS_SUCCESSFUL = 2;
 my $UPDATE_TROPS_FAILED     = 3;
+
 #### Other constants #####
 my $START_FAILED        = 0;
 my $START_SUCCESSFUL    = 1;
@@ -131,11 +140,16 @@ my $CFG_FILE_PREREQ_FAILED     = 3;
 my $CFG_FILE_ALREADY_PROCESSED = 4;
 
 #### LWP globals
+my $api_in_use = 1;
+my $rev_proxy_in_use = 0;
 my $lwp_conn                   = &setup_lwp();
-
 my $unixtime       = time();
 my $hostname_short = `/bin/hostname -s`;
 chomp($hostname_short);
+my $hostname_full = `/bin/hostname`;
+chomp($hostname_full);
+my $server_ipv4;
+my $server_tcp_port;
 
 my $domainname = &set_domainname();
 $lwp_conn->agent("$hostname_short-$unixtime");
@@ -177,32 +191,56 @@ my $ssl_tracker      = undef;
 #### Start main flow
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 
-#### First and foremost, if this is a syncds run, check to see if we can bail.
-my $syncds_update = undef;
-if ( defined $traffic_ops_host ) {
-	($syncds_update) = &check_syncds_state();
-}
-else {
-	print "FATAL Could not resolve Traffic Ops host!\n";
-	exit 1;
-}
 
 #### Delete /tmp dirs older than one week
-if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS ) {
+if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
 	&smart_mkdir($TMP_BASE);
 	&clean_tmp_dirs();
 }
 
-( my $my_profile_name, $cfg_file_tracker, my $my_cdn_name ) = &get_cfg_file_list( $hostname_short, $traffic_ops_host );
 my $header_comment = &get_header_comment($traffic_ops_host);
 
-&process_packages( $hostname_short, $traffic_ops_host );
-# get the ats user's UID after package installation in case this is the initial badass
 my $ats_uid          = getpwnam("ats");
-&process_chkconfig( $hostname_short, $traffic_ops_host );
+
+if ( !defined $traffic_ops_host ) {
+	print "FATAL Could not resolve Traffic Ops host!\n";
+	exit 1;
+}
+
+#### If this is a syncds run, check to see if we can bail.
+my $syncds_update = 0;
+
+if ( $script_mode == $REVALIDATE ) {
+	( $syncds_update ) = &check_revalidate_state();
+	if ( $syncds_update < 1 ) {
+		exit 1;
+	}
+}
+else {
+	( $syncds_update ) = &check_syncds_state();
+}
+
+
+( my $my_profile_name, $cfg_file_tracker, my $my_cdn_name ) = &get_cfg_file_list( $hostname_short, $traffic_ops_host, $script_mode );
+
+
+
+if ( $script_mode == $REVALIDATE ) {
+	( $log_level >> $INFO ) && print "\nINFO: ======== Revalidating, no package processing needed ========\n";
+}
+else {
+	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing packages ========\n";
+	&process_packages( $hostname_short, $traffic_ops_host );
+	# get the ats user's UID after package installation in case this is the initial badass
+	( $log_level >> $INFO ) && print "\nINFO: ======== Start second package processing run ========\n";
+	&process_chkconfig( $hostname_short, $traffic_ops_host );
+}
+
+
 
 #### First time
 &process_config_files();
+
 #### Second time, in case there were new files added to the registry
 &process_config_files();
 
@@ -246,6 +284,22 @@ if ( $script_mode != $REPORT ) {
 #### Subroutines
 ####-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-####
 
+sub revalidate_while_sleeping {
+	$syncds_update = &check_revalidate_state(1);
+	if ( $syncds_update > 0 ) {
+		$script_mode = $REVALIDATE;
+		( my $my_profile_name, $cfg_file_tracker, my $my_cdn_name ) = &get_cfg_file_list( $hostname_short, $traffic_ops_host, $script_mode );
+
+		&process_config_files();
+
+		&start_restart_services();
+
+		&update_trops();
+
+		$traffic_line_needed = 0;
+	}
+}
+
 sub os_version {
   my $release = "UNKNOWN";
   if (`uname -r` =~ m/.+(el\d)\.x86_64/)  {
@@ -262,6 +316,7 @@ sub usage {
 	print "\t<Mode> = report - prints config differences and exits.\n";
 	print "\t<Mode> = badass - attempts to fix all config differences that it can.\n";
 	print "\t<Mode> = syncds - syncs delivery services with what is configured in Traffic Ops.\n";
+	print "\t<Mode> = revalidate - checks for updated revalidations in Traffic Ops and applies them.  Requires Traffic Ops 2.1.\n";
 	print "\n";
 	print "\t<Log_Level> => ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE\n";
 	print "\n";
@@ -269,9 +324,10 @@ sub usage {
 	print "\n";
 	print "\t<Traffic_Ops_Login> => Example: 'username:password' \n";
 	print "\n\t[optional flags]:\n";
-	print "\t\tdispersion=<time>      => wait a random number between 0 and <time> before starting. Default = 300.\n";
-	print "\t\tretries=<number>       => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
-	print "\t\twait_for_parents=<0|1> => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
+	print "\t   dispersion=<time>        => wait a random number between 0 and <time> before starting. Default = 300.\n";
+	print "\t   login_dispersion=<time>  => wait a random number between 0 and <time> before login. Default = 0.\n";
+	print "\t   retries=<number>         => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
+	print "\t   wait_for_parents=<0|1>   => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -281,7 +337,7 @@ sub process_cfg_file {
 	my $result = ( defined( $cfg_file_tracker->{$cfg_file}->{'contents'} ) ) ? $cfg_file_tracker->{$cfg_file}->{'contents'} : undef;
 
 	my $return_code = 0;
-	my $url;
+	my $uri;
 
 	return $CFG_FILE_ALREADY_PROCESSED
 		if ( defined( $cfg_file_tracker->{$cfg_file}->{'audit_complete'} ) && $cfg_file_tracker->{$cfg_file}->{'audit_complete'} > 0 );
@@ -292,13 +348,26 @@ sub process_cfg_file {
 
 	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
 
-	$url = &set_url($cfg_file);
+	$uri = &set_uri($cfg_file);
 
 	&smart_mkdir($config_dir);
 
-	$result = &lwp_get($url) if ( !defined($result) && defined($url) );
+	$result = &lwp_get($uri) if ( !defined($result) && defined($uri) );
 
-	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$url, \$result ) );
+	return $CFG_FILE_NOT_PROCESSED if ( !&validate_result( \$uri, \$result ) );
+
+	# Process __SERVER_TCP_PORT__, __HOSTNAME__, __FULL_HOSTNAME__ and __CACHE_IPV4__ values from traffic ops API.
+	if ( $api_in_use == 1 ) {
+		if ( $server_tcp_port != 80 ) {
+			$result =~ s/__SERVER_TCP_PORT__/$server_tcp_port/g;
+		}
+		else {
+			$result =~ s/:__SERVER_TCP_PORT__//g;
+		}
+		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
+		$result =~ s/__HOSTNAME__/$hostname_short/g;
+		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
+	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
 
@@ -573,7 +642,7 @@ sub smart_mkdir {
 	my $dir = shift;
 
 	if ( !-d ($dir) ) {
-		if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS ) {
+		if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
 			( $log_level >> $TRACE ) && print "TRACE Directory to create if needed: $dir\n";
 			system("/bin/mkdir -p $dir");
 			if ( $dir =~ m/config_trops/ ) {
@@ -632,6 +701,18 @@ sub update_trops {
 		$update_result++;
 	}
 	if ($update_result) {
+		#need to know if reval_pending is supported
+		my $uri     = "/update/$hostname_short";
+		my $upd_ref = &lwp_get($uri);
+		if ( $upd_ref =~ m/^\d{3}$/ ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
+			exit 1;
+		}
+		my $upd_json = decode_json($upd_ref);
+
+		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
+		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
+
 		if ( $script_mode == $INTERACTIVE ) {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops needs updated. Should I do that now? [Y/n] (n): ";
 			my $select = 'n';
@@ -646,18 +727,28 @@ sub update_trops {
 			}
 		}
 		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
-			&send_update_to_trops($CLEAR);
+			if ( defined $reval_pending ) {
+				&send_update_to_trops($CLEAR, $reval_pending );
+			}
+			else {
+				&send_update_to_trops($CLEAR, $CLEAR);
+			}
+		}
+		elsif ( $script_mode = $REVALIDATE ) {
+			&send_update_to_trops($upd_pending, $CLEAR);
 		}
 	}
 }
 
 sub send_update_to_trops {
 	my $status = shift;
-	my $url    = "$traffic_ops_host\/update/$hostname_short";
+	my $reval_status = shift;
+	my $uri    = "/update/$hostname_short";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
 
 	my %headers = ( 'Cookie' => $cookie );
-	my $response = $lwp_conn->post( $url, [ 'updated' => $status ], %headers );
+	my $url = $traffic_ops_host . $uri;
+	my $response = $lwp_conn->post( $url, [ 'updated' => $status, 'reval_updated' => $reval_status ], %headers );
 
 	&check_lwp_response_code($response, $ERROR);
 
@@ -671,97 +762,54 @@ sub get_print_current_client_connections {
 	( $log_level >> $DEBUG ) && print "DEBUG There are currently $current_connections connections.\n";
 }
 
-sub check_syncds_state {
+sub check_revalidate_state {
+	my $sleep_override = shift;
 
 	my $syncds_update = 0;
 
-	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
-	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
+	( $log_level >> $DEBUG ) && print "DEBUG Checking revalidate state.\n";
+	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
-		( $dispersion > 0 ) && &sleep_rand($dispersion);
 
-		my $url     = "$traffic_ops_host\/update/$hostname_short";
-		my $upd_ref = &lwp_get($url);
+		my $uri     = "/update/$hostname_short";
+		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
 		}
 
 		my $upd_json = decode_json($upd_ref);
-		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
-		if ( !defined($upd_pending) ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an upd_pending key.\n";
-			if ( $script_mode != $SYNCDS ) {
-				return $syncds_update;
-			}
-			else {
-				( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
-				exit 1;
-			}
+		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
+		if ( !defined($reval_pending) ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.\n";
+			return($UPDATE_TROPS_NOTNEEDED);
 		}
 
-		if ( $upd_pending == 1 ) {
-			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
+		if ( $reval_pending == 1 ) {
+			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that a revalidation is waiting to be applied.\n";
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
-			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-			if ( !defined($parent_pending) ) {
-				( $log_level >> $ERROR ) && print "ERROR Update URL: $url did not have an parent_pending key.\n";
-				if ( $script_mode != $SYNCDS ) {
-					return $syncds_update;
-				}
-				else {
-					( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
-					exit 1;
-				}
+			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
+			if ( !defined($parent_reval_pending) ) {
+				( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an parent_reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.  Unable to continue!\n";
+				return($UPDATE_TROPS_NOTNEEDED);
 			}
-			if ( $parent_pending == 1 && $wait_for_parents == 1) {
-				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
-				if ( $script_mode == $SYNCDS ) {
-					if ( $dispersion > 0 ) {
-						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
-						for ( my $i = $dispersion; $i > 0; $i-- ) {
-							( $log_level >> $WARN ) && print ".";
-							sleep 1;
-						}
-					}
-
-					( $log_level >> $WARN ) && print "\n";
-					$upd_ref = &lwp_get($url);
-					if ( $upd_ref =~ m/^\d{3}$/ ) {
-						( $log_level >> $ERROR ) && print "ERROR Update URL: $url returned $upd_ref. Exiting, not sure what else to do.\n";
-						exit 1;
-					}
-					$upd_json = decode_json($upd_ref);
-					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
-					if ( !defined($parent_pending) ) {
-						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $url. Exiting, not sure what else to do.\n";
-					}
-					if ( $parent_pending == 1 ) {
-						( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
-						exit 1;
-
-					}
-					else {
-						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
-					}
-				}
-			}
-			else {
-				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
+			if ( $parent_reval_pending == 1 ) {
+				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need to revalidate.\n";
+				return($UPDATE_TROPS_NOTNEEDED);
 			}
 		}
-		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
-			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. I'm outta here.\n";
-			exit 0;
+		elsif ( $script_mode == $REVALIDATE && $reval_pending != 1 ) {
+			( $log_level >> $ERROR ) && print "ERROR In revalidate mode, but no update needs to be applied. I'm outta here.\n";
+			return($UPDATE_TROPS_NOTNEEDED);
 		}
 		else {
-			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
+			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no revalidations are waiting to be applied.\n";
 		}
 
-		my $stj = &lwp_get("$traffic_ops_host\/datastatus");
+		my $stj = &lwp_get("/api/1.2/statuses");
 		if ( $stj =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "Statuses URL: $url returned $stj! Skipping creation of status file.\n";
+			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
 		}
 
 		my $statuses = decode_json($stj);
@@ -782,7 +830,144 @@ sub check_syncds_state {
 			( $log_level >> $ERROR ) && print "ERROR status file $status_file does not exist.\n";
 		}
 
-		for my $status ( @{$statuses} ) {
+		for my $status ( @{$statuses->{'response'}} ) {
+			next if ( $status->{name} eq $my_status );
+			my $other_status = $status_dir . "/" . $status->{name};
+
+			if ( -f $other_status && $status->{name} ne $my_status ) {
+				( $log_level >> $ERROR ) && print "ERROR Other status file $other_status exists.\n";
+				if ( $script_mode != $REPORT ) {
+					( $log_level >> $DEBUG ) && print "DEBUG Removing $other_status\n";
+					unlink($other_status);
+				}
+			}
+		}
+	}
+
+	return ($syncds_update);
+}
+
+
+sub check_syncds_state {
+
+	my $syncds_update = 0;
+	my $random_duration = int( rand($dispersion) );
+
+	( $log_level >> $DEBUG ) && print "DEBUG Checking syncds state.\n";
+	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
+		## The herd is about to get /update/<hostname>
+		## need to check if revalidation is being used first.
+		my $uri     = "/update/$hostname_short";
+		my $upd_ref = &lwp_get($uri);
+		my $upd_json = decode_json($upd_ref);
+		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
+		if (defined($reval_pending) ) {
+			$reval_in_use = 1;
+		}
+		else {
+			$reval_in_use = 0;
+		}
+
+		$upd_ref = &lwp_get($uri);
+		if ( $upd_ref =~ m/^\d{3}$/ ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
+			exit 1;
+		}
+
+		$upd_json = decode_json($upd_ref);
+		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
+		if ( !defined($upd_pending) ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an upd_pending key.\n";
+			if ( $script_mode != $SYNCDS ) {
+				return $syncds_update;
+			}
+			else {
+				( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
+				exit 1;
+			}
+		}
+
+		if ( $upd_pending == 1 ) {
+			( $dispersion > 0 ) && &sleep_timer($random_duration);
+			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
+			$syncds_update = $UPDATE_TROPS_NEEDED;
+
+			my $parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
+			if ( !defined($parent_pending) ) {
+				( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an parent_pending key.\n";
+				if ( $script_mode != $SYNCDS ) {
+					return $syncds_update;
+				}
+				else {
+					( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
+					exit 1;
+				}
+			}
+			if ( $parent_pending == 1 && $wait_for_parents == 1 && $reval_in_use == 0) {
+				( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that my parents need an update.\n";
+				if ( $script_mode == $SYNCDS ) {
+					if ( $dispersion > 0 ) {
+						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
+						( $dispersion > 0 ) && &sleep_timer($dispersion);
+					}
+					$upd_ref = &lwp_get($uri);
+					if ( $upd_ref =~ m/^\d{3}$/ ) {
+						( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
+						exit 1;
+					}
+					$upd_json = decode_json($upd_ref);
+					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
+					if ( !defined($parent_pending) ) {
+						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
+					}
+					if ( $parent_pending == 1 || $parent_reval_pending == 1 ) {
+						( $log_level >> $ERROR ) && print "ERROR My parents still need an update, bailing.\n";
+						exit 1;
+
+					}
+					else {
+						( $log_level >> $DEBUG ) && print "DEBUG The update on my parents cleared; continuing.\n";
+					}
+				}
+			}			
+			else {
+				( $log_level >> $DEBUG ) && print "DEBUG Traffic Ops is signaling that my parents do not need an update, or wait_for_parents == 0.\n";
+			}
+		}
+		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
+			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. Running revalidation before exiting.\n";
+			&revalidate_while_sleeping();
+			exit 0;
+		}
+		else {
+			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that no update is waiting to be applied.\n";
+		}
+
+		my $stj = &lwp_get("/api/1.2/statuses");
+		if ( $stj =~ m/^\d{3}$/ ) {
+			( $log_level >> $ERROR ) && print "Statuses URL: $uri returned $stj! Skipping creation of status file.\n";
+		}
+
+		my $statuses = decode_json($stj);
+		my $my_status = ( defined( $upd_json->[0]->{'status'} ) ) ? $upd_json->[0]->{'status'} : undef;
+
+		if ( defined($my_status) ) {
+			( $log_level >> $DEBUG ) && print "DEBUG Found $my_status status from Traffic Ops.\n";
+		}
+		else {
+			( $log_level >> $ERROR ) && print "ERROR Returning; did not find status from Traffic Ops!\n";
+			return ($syncds_update);
+		}
+
+		my $status_dir  = dirname($0) . "/status";
+		my $status_file = $status_dir . "/" . $my_status;
+
+		if ( !-f $status_file ) {
+			( $log_level >> $ERROR ) && print "ERROR status file $status_file does not exist.\n";
+		}
+
+		for my $status ( @{$statuses->{'response'}} ) {
 			next if ( $status->{name} eq $my_status );
 			my $other_status = $status_dir . "/" . $status->{name};
 
@@ -824,6 +1009,51 @@ sub sleep_rand {
 		( $log_level >> $WARN ) && print ".";
 		sleep 1;
 	}
+	( $log_level >> $WARN ) && print "\n";
+}
+
+sub sleep_timer {
+	my $duration = shift;
+	my $reval_clock = $reval_wait_time;
+	
+	my $proper_script_mode = $script_mode; 
+	
+	if ( $reval_in_use == 1 && $proper_script_mode != $BADASS ) {
+		( $log_level >> $WARN ) && print "WARN Performing a revalidation check before sleeping... \n";
+		&revalidate_while_sleeping();
+		( $log_level >> $WARN ) && print "WARN Revalidation check complete.\n";
+	}
+	if ( $duration < $reval_clock || $reval_in_use == 0 || $script_mode == $BADASS ) {
+		( $log_level >> $WARN ) && print "WARN Sleeping for $duration seconds: ";
+	}
+	else {
+		( $log_level >> $WARN ) && print "WARN $reval_clock seconds until next revalidation check.\n";
+		( $log_level >> $WARN ) && print "WARN $duration seconds remaining in dispersion sleep period\n";
+		( $log_level >> $WARN ) && print "WARN Sleeping for $reval_clock seconds: ";
+	}
+	for ( my $i = $duration; $i > 0; $i-- ) {
+		( $log_level >> $WARN ) && print ".";
+		sleep 1;
+		$reval_clock--;
+		if ($reval_clock < 1 && $script_mode != $BADASS && $reval_in_use == 1 ) {
+			( $log_level >> $WARN ) && print "\n";
+			( $log_level >> $WARN ) && print "WARN Interrupting dispersion sleep period for revalidation check. \n";
+			&revalidate_while_sleeping();
+			$reval_clock = $reval_wait_time;
+			if ($reval_clock < $i ) {
+				( $log_level >> $WARN ) && print "WARN Revalidation check complete. $reval_clock seconds until next revalidation check.\n";
+				( $log_level >> $WARN ) && print "WARN $i seconds remaining in dispersion sleep period\n";
+				( $log_level >> $WARN ) && print "WARN Sleeping for $reval_clock seconds: ";
+			}
+			else {
+				( $log_level >> $WARN ) && print "WARN Revalidation check complete. $i seconds remaining in dispersion sleep period.\n";
+				( $log_level >> $WARN ) && print "WARN Sleeping for $i seconds: ";
+			}
+		}
+	}
+
+	$script_mode = $proper_script_mode; 
+
 	( $log_level >> $WARN ) && print "\n";
 }
 
@@ -1035,7 +1265,7 @@ sub check_plugins {
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
+					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}
@@ -1153,7 +1383,7 @@ sub check_this_plugin {
 }
 
 sub lwp_get {
-	my $url           = shift;
+	my $uri           = shift;
 	my $retry_counter = $retries;
 
 	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
@@ -1164,21 +1394,32 @@ sub lwp_get {
 
 	while( $retry_counter > 0 ) {
 
-		$response = $lwp_conn->get($url, %headers);
+		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		my $request = $traffic_ops_host . $uri;
+
+		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
-			( $log_level >> $ERROR ) && print "ERROR result for $url is: ..." . $response->content . "...\n";
+			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
+			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
+					return $response->code;
+			}
+			if ( $rev_proxy_in_use == 1 ) {
+				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
+				$traffic_ops_host = $to_url;
+				$rev_proxy_in_use = 0;
+			}
 			sleep 2**( $retries - $retry_counter );
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( $url =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
-			( $log_level >> $FATAL ) && print "FATAL result for $url is: ..." . $response->content . "...\n";
+		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
 			exit 1;
 		}
 		else {
-			( $log_level >> $DEBUG ) && print "DEBUG result for $url is: ..." . $response->content . "...\n";
+			( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response->content . "...\n";
 			last;
 		}
 
@@ -1186,7 +1427,7 @@ sub lwp_get {
 
 	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
 
-	&eval_json($response) if ( $url =~ m/\.json$/ );
+	&eval_json($response) if ( $uri =~ m/\.json$/ );
 
 	return $response_content;
 
@@ -1219,13 +1460,19 @@ sub replace_cfg_file {
 			$select = $input;
 		}
 	}
-	if ( $select == 1 || $script_mode == $BADASS || $script_mode == $SYNCDS ) {
+	if ( $select == 1 || $script_mode == $BADASS || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
 		( $log_level >> $ERROR )
 			&& print "ERROR Copying "
 			. $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} . " to "
 			. $cfg_file_tracker->{$cfg_file}->{'location'}
 			. "/$cfg_file\n";
 		system("/bin/cp $cfg_file_tracker->{$cfg_file}->{'backup_from_trops'} $cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file");
+		if ( $cfg_file =~ /cron/ ) {
+			chown 0, 0, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
+		}
+		else {
+			chown $ats_uid, $ats_uid, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
+		}
 		$cfg_file_tracker->{$cfg_file}->{'change_applied'}++;
 		( $log_level >> $TRACE ) && print "TRACE Setting change applied for $cfg_file.\n";
 		$return_code = $CFG_FILE_CHANGED;
@@ -1309,6 +1556,11 @@ sub get_cookie {
 	my $to_login    = shift;
 	my ( $u, $p ) = split( /:/, $to_login );
 	my %headers;
+
+	if ( $login_dispersion > 0 ) {
+		( $log_level >> $WARN ) && print "WARN Login dispersion is enabled.\n";
+		&sleep_rand($login_dispersion);
+	}
 
 	my $url = $to_host . "/login";
 	my $response = $lwp_conn->post( $url, [ 'u' => $u, 'p' => $p ], %headers );
@@ -1394,6 +1646,10 @@ sub check_script_mode {
 		( $log_level >> $DEBUG ) && print "DEBUG Script running in syncds mode.\n";
 		$script_mode = 3;
 	}
+	elsif ( $ARGV[0] eq "revalidate" ) {
+		( $log_level >> $DEBUG ) && print "DEBUG Script running in revalidate mode.\n";
+		$script_mode = 4;
+	}
 	else {
 		( $log_level >> $FATAL ) && print "FATAL You did not specify a valid mode. Exiting.\n";
 		&usage();
@@ -1448,24 +1704,99 @@ sub set_domainname {
 sub get_cfg_file_list {
 	my $host_name = shift;
 	my $tm_host   = shift;
+	my $script_mode = shift;
 	my $cfg_files;
 	my $profile_name;
 	my $cdn_name;
-	my $url = "$tm_host/ort/$host_name/ort1";
+	my $uri = "/api/1.2/servers/$host_name/configfiles/ats";
 
-	my $result = &lwp_get($url);
+	my $result = &lwp_get($uri);
+
+	if ($result eq '404') {
+		$api_in_use = 0;
+		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Reverting to UI route.\n");
+		$uri = "/ort/$host_name/ort1";
+		$result = &lwp_get($uri);
+	}
 
 	my $ort_ref = decode_json($result);
-	$profile_name = $ort_ref->{'profile'}->{'name'};
-	( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
-	$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
-	( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
-	foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
-		my $fname_on_disk = &get_filename_on_disk($cfg_file);
-		( $log_level >> $INFO )
-			&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
-		$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
-		$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+	
+	if ($api_in_use == 1) {
+		$to_url = $ort_ref->{'info'}->{'toUrl'};
+		$to_url =~ s/\/*$//g;
+		$traffic_ops_host = $to_url;
+		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $to_url\n");
+		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
+		if ( $to_rev_proxy_url ) {
+			$to_rev_proxy_url =~ s/\/*$//g;
+			$traffic_ops_host = $to_rev_proxy_url;
+			$rev_proxy_in_use = 1;
+			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
+		}
+		$profile_name = $ort_ref->{'info'}->{'profileName'};
+		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
+		$cdn_name = $ort_ref->{'info'}->{'cdnName'};
+		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
+		$server_tcp_port = $ort_ref->{'info'}->{'serverTcpPort'};
+		( $log_level >> $INFO ) && printf("INFO Found cache server tcp port from Traffic Ops: $server_tcp_port\n");
+		$server_ipv4 = $ort_ref->{'info'}->{'serverIpv4'};
+		( $log_level >> $INFO ) && printf("INFO Found cache server ipv4 from Traffic Ops: $server_ipv4\n");
+	}
+	else {
+		$profile_name = $ort_ref->{'profile'}->{'name'};
+		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
+		$cdn_name = $ort_ref->{'other'}->{'CDN_name'};
+		( $log_level >> $INFO ) && printf("INFO Found CDN_name from Traffic Ops: $cdn_name\n");
+	}
+	if ( $script_mode == $REVALIDATE ) {
+		foreach my $cfg_file ( @{$ort_ref->{'configFiles'}} ) {
+			if ( $cfg_file->{'fnameOnDisk'} eq "regex_revalidate.config" ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
+				( $log_level >> $INFO )
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
+				if ($api_in_use == 1) {
+					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+				}
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+			}
+		}
+	}
+	else {
+		if ( $reval_in_use == 1 ) {
+			( $log_level >> $WARN ) && printf("WARN Instant Invalidate is enabled.  Skipping regex_revalidate.config.\n");
+			if ( $api_in_use == 1 ) {
+				my @new = grep { $_->{'fnameOnDisk'} ne 'regex_revalidate.config' } @{$ort_ref->{'configFiles'}};
+				$ort_ref->{'configFiles'} = \@new;
+			}
+			else {
+				delete $ort_ref->{'config_files'}->{'regex_revalidate.config'};
+			}
+		}
+		if ( $api_in_use == 1 ) {
+			foreach my $cfg_file (@{$ort_ref->{'configFiles'}} ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file->{'fnameOnDisk'} );
+				( $log_level >> $INFO )
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
+				if ($api_in_use == 1) {
+					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+				}
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+			}
+		}
+		else {
+			foreach my $cfg_file ( keys %{ $ort_ref->{'config_files'} } ) {
+				my $fname_on_disk = &get_filename_on_disk( $cfg_file );
+				( $log_level >> $INFO )
+					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file, $ort_ref->{'config_files'}->{$cfg_file}->{'location'} );
+				$cfg_files->{$fname_on_disk}->{'location'} = $ort_ref->{'config_files'}->{$cfg_file}->{'location'};
+				if ($api_in_use == 1) {
+					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+				}
+				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file;
+			}
+		}
 	}
 	return ( $profile_name, $cfg_files, $cdn_name );
 }
@@ -1480,8 +1811,8 @@ sub get_header_comment {
 	my $to_host = shift;
 	my $toolname;
 
-	my $url    = "$to_host/api/1.1/system/info.json";
-	my $result = &lwp_get($url);
+	my $uri    = "/api/1.2/system/info.json";
+	my $result = &lwp_get($uri);
 
 	my $result_ref = decode_json($result);
 	if ( defined( $result_ref->{'response'}->{'parameters'}->{'tm.toolname'} ) ) {
@@ -1647,8 +1978,8 @@ sub process_packages {
 	my $tm_host   = shift;
 
 	my $proceed = 0;
-	my $url     = "$tm_host/ort/$host_name/packages";
-	my $result  = &lwp_get($url);
+	my $uri     = "/ort/$host_name/packages";
+	my $result  = &lwp_get($uri);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^(\d){3}$/ ) {
 		my %package_map;
@@ -1895,8 +2226,8 @@ sub process_chkconfig {
 	my $tm_host   = shift;
 
 	my $proceed = 0;
-	my $url     = "$tm_host/ort/$host_name/chkconfig";
-	my $result  = &lwp_get($url);
+	my $uri     = "/ort/$host_name/chkconfig";
+	my $result  = &lwp_get($uri);
 
 	if ( defined($result) && $result ne "" && $result !~ m/^\d{3}$/ ) {
 		my @chkconfig_list = @{ decode_json($result) };
@@ -2027,7 +2358,7 @@ sub start_restart_services {
 		if ( $script_mode == $REPORT ) {
 			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_LINE -x' needs to be run.\n";
 		}
-		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS ) {
+		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
 			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. Running '$TRAFFIC_LINE -x' now.\n";
 			&run_traffic_line();
 		}
@@ -2150,13 +2481,21 @@ sub validate_result {
 	}
 }
 
-sub set_url {
+sub set_uri {
 	my $filename = shift;
+	
 	my $filepath = $cfg_file_tracker->{$filename}->{'location'};
+	my $URI;
+	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
+		$URI = $cfg_file_tracker->{$filename}->{'apiUri'};
+	}
+	else {
+		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+	}
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
 
-	return "$traffic_ops_host\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+	return $URI; 
 }
 
 sub scrape_unencode_text {
@@ -2190,12 +2529,6 @@ sub can_read_write_file {
 
 	my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
 	( $log_level >> $TRACE ) && print "TRACE User to validate $file against: $username\n";
-
-	if ( -z $file ) {
-		( $log_level >> $ERROR ) && print "ERROR $file has size=0!\n";
-		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
-		return 0;
-	}
 
 	if ( !-R $file ) {
 		( $log_level >> $ERROR ) && print "ERROR $file is not readable by $username!\n";
@@ -2495,14 +2828,14 @@ sub adv_processing_ssl {
 	my @db_file_lines = @{ $_[0] };
 	if (@db_file_lines > 1) { #header line is always present, so look for 2 lines or more
 		( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for ssl_multicert.config.\n";
-		my $url = $traffic_ops_host . "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
-		my $result = &lwp_get($url);
+		my $uri = "/api/1.2/cdns/name/$my_cdn_name/sslkeys.json";
+		my $result = &lwp_get($uri);
 		if ( $result =~ m/^\d{3}$/ ) {
 			if ( $script_mode == $REPORT ) {
-				( $log_level >> $ERROR ) && print "ERROR SSL URL: $url returned $result.\n";
+				( $log_level >> $ERROR ) && print "ERROR SSL URL: $uri returned $result.\n";
 				return 1;
 			} else {
-				( $log_level >> $FATAL ) && print "FATAL SSL URL: $url returned $result. Exiting.\n";
+				( $log_level >> $FATAL ) && print "FATAL SSL URL: $uri returned $result. Exiting.\n";
 				exit 1;
 			}
 		}
@@ -2561,7 +2894,7 @@ sub setup_lwp {
 	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
 
 	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
-	$browser->timeout(15);
+	$browser->timeout(30);
 
 	return $browser;
 }

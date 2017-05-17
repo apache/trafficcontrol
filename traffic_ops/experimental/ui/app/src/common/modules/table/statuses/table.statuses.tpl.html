@@ -23,8 +23,8 @@ under the License.
             <li class="active">Statuses</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="createStatus()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Create Status</button>
+            <button class="btn btn-primary" title="Create Status" ng-click="createStatus()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -38,9 +38,9 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editStatus(status.id)" ng-repeat="status in statuses">
-                <td>{{status.name}}</td>
-                <td>{{status.description}}</td>
+            <tr ng-click="editStatus(status.id)" ng-repeat="status in ::statuses">
+                <td>{{::status.name}}</td>
+                <td>{{::status.description}}</td>
             </tr>
             </tbody>
         </table>

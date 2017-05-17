@@ -53,7 +53,7 @@ public final class SignatureManager {
 	private boolean dnssecEnabled = false;
 	private boolean expiredKeyAllowed = true;
 	private Map<String, List<DnsSecKeyPair>> keyMap;
-	private static ProtectedFetcher fetcher = null;
+	private ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
 	private boolean useJDnsSec = true;
 	private final TrafficRouterManager trafficRouterManager;

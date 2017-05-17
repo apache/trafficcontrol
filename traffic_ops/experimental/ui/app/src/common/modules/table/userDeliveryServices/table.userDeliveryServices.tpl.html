@@ -21,12 +21,12 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/users')">Users</a></li>
-            <li><a ng-click="navigateToPath('/admin/users/' + user.id)">{{user.username}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/users/' + user.id)">{{::user.username}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-default" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <button class="btn btn-primary" ng-click="addDeliveryService()"><i class="fa fa-plus"></i>&nbsp;&nbsp; Add Delivery Services To User</button>
+            <button class="btn btn-primary" title="Link Delivery Service to User" ng-click="addDeliveryService()"><i class="fa fa-link"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -42,11 +42,11 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="deliveryService in userDeliveryServices">
-                <td>{{deliveryService.xmlId}}</td>
-                <td>{{deliveryService.orgServerFqdn}}</td>
-                <td>{{deliveryService.cdnName}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove from Server" ng-click="removeDeliveryService()"><i class="fa fa-trash-o"></i></button></td>
+            <tr ng-repeat="deliveryService in ::userDeliveryServices">
+                <td>{{::deliveryService.xmlId}}</td>
+                <td>{{::deliveryService.orgServerFqdn}}</td>
+                <td>{{::deliveryService.cdnName}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from User" ng-click="removeDeliveryService()"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

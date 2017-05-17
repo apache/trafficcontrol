@@ -46,7 +46,7 @@ func (to *Session) Types(useInTable ...string) ([]Type, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 
 	var data TypeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {

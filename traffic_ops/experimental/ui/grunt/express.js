@@ -20,7 +20,7 @@
 module.exports = {
     dev: {
         options: {
-            script: './server/server.js',
+            script: './server.js',
             node_env: 'dev'
         }
     }

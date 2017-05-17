@@ -24,6 +24,8 @@ my %definition_for = (
 			id          => 100,
 			name        => 'EDGE1',
 			description => 'edge description',
+			cdn         => 100,
+			type        => 'ATS_PROFILE',
 		},
 	},
 	MID1 => {
@@ -32,6 +34,8 @@ my %definition_for = (
 			id          => 200,
 			name        => 'MID1',
 			description => 'mid description',
+			cdn         => 100,
+			type        => 'ATS_PROFILE',
 		},
 	},
 	CCR1 => {
@@ -40,6 +44,18 @@ my %definition_for = (
 			id          => 300,
 			name        => 'CCR1',
 			description => 'ccr description',
+			cdn         => 100,
+			type        => 'TR_PROFILE',
+		},
+	},
+	CCR2 => {
+		new   => 'Profile',
+		using => {
+			id          => 301,
+			name        => 'CCR2',
+			description => 'ccr description',
+			cdn         => 200,
+			type        => 'TR_PROFILE',
 		},
 	},
 	RIAK1 => {
@@ -48,6 +64,8 @@ my %definition_for = (
 			id          => 500,
 			name        => 'RIAK1',
 			description => 'riak description',
+			cdn         => 100,
+			type        => 'RIAK_PROFILE',
 		},
 	},
 	RASCAL1 => {
@@ -56,6 +74,8 @@ my %definition_for = (
 			id          => 600,
 			name        => 'RASCAL1',
 			description => 'rascal description',
+			cdn         => 100,
+			type        => 'TM_PROFILE',
 		},
 	},
 	RASCAL2 => {
@@ -64,6 +84,8 @@ my %definition_for = (
 			id          => 700,
 			name        => 'RASCAL2',
 			description => 'rascal2 description',
+			cdn         => 200,
+			type        => 'TM_PROFILE',
 		},
 	},
 	MISC => {
@@ -72,6 +94,7 @@ my %definition_for = (
 			id          => 8,
 			name        => 'MISC',
 			description => 'misc profile description',
+			type        => 'UNK_PROFILE',
 		},
 	},
 );

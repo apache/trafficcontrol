@@ -239,21 +239,14 @@ sub create {
 		}
 
 		#create keys
-		my $name = $self->db->resultset('Parameter')->search(
-			{   -and => [
-					'me.name'        => 'domain_name',
-					'me.config_file' => 'CRConfig.json',
-					'profile.id'     => $profile_id
-				]
-			},
-			{ join => { profile_parameters => { profile => undef } }, }
-		)->get_column('value')->single();
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $profile_id }, { prefetch => ['cdn'] } )->single();
+		my $domain_name = $profile->cdn->domain_name;
 
 		my $response_container = $self->riak_ping();
 		my $ping_response      = $response_container->{response};
 		if ( $ping_response->is_success ) {
 			my $response_container
-				= $self->generate_store_dnssec_keys( $cdn_name, $name, $ttl,
+				= $self->generate_store_dnssec_keys( $cdn_name, $domain_name, $ttl,
 				$k_expiry, $z_expiry, $effective_date );
 			my $response = $response_container->{response};
 			if ( $response->is_success ) {
@@ -264,7 +257,7 @@ sub create {
 			}
 			else {
 				$self->flash(
-					{   "DNSSEC keys for $name could not be created.  Response was"
+					{   "DNSSEC keys for $domain_name could not be created.  Response was"
 							. $response->{_content}
 					}
 				);

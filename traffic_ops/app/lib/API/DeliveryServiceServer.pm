@@ -46,23 +46,21 @@ sub index {
 	$self->success( \@data, undef, $orderby, $limit, $page );
 }
 
+
+# why is this here and in API/Cdn.pm?
 sub domains {
 	my $self = shift;
 	my @data;
 
-	my @ccrprofs = $self->db->resultset('Profile')->search( { name => { -like => 'CCR%' } } )->get_column('id')->all();
-	my $rs_pp =
-		$self->db->resultset('ProfileParameter')
-		->search( { profile => { -in => \@ccrprofs }, 'parameter.name' => 'domain_name', 'parameter.config_file' => 'CRConfig.json' },
-		{ prefetch => [ 'parameter', 'profile' ] } );
-	while ( my $row = $rs_pp->next ) {
+	my $rs = $self->db->resultset('Profile')->search( { 'me.name' => { -like => 'CCR%' } }, { prefetch => ['cdn'] } );
+	while ( my $row = $rs->next ) {
 		push(
 			@data, {
-				"domainName"         => $row->parameter->value,
-				"parameterId"        => $row->parameter->id,
-				"profileId"          => $row->profile->id,
-				"profileName"        => $row->profile->name,
-				"profileDescription" => $row->profile->description,
+				"domainName"         => $row->cdn->domain_name,
+				"parameterId"        => -1,  # it's not a parameter anymore
+				"profileId"          => $row->id,
+				"profileName"        => $row->name,
+				"profileDescription" => $row->description,
 			}
 		);
 
@@ -176,6 +174,30 @@ sub assign_ds_to_cachegroup {
 	$response->{serverNames} = \@server_names;
 	$response->{deliveryServices} = $params->{deliveryServices};
 	$self->success( $response, "Delivery services successfully assigned to all the servers of cache group $cg_id" );
+}
+
+sub remove_server_from_ds {
+	my $self     	= shift;
+	my $ds_id  	 	= $self->param('dsId');
+	my $server_id	= $self->param('serverId');
+
+	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+		$self->forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my $ds_server = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id, server => $server_id }, { prefetch => [ 'deliveryservice', 'server' ] } );
+	if ( $ds_server->count == 0 ) {
+		return $self->not_found();
+	}
+
+	my $row = $ds_server->next;
+	my $rs = $ds_server->delete();
+	if ($rs) {
+		&log( $self, "Server [ " . $row->server->id . " | " . $row->server->host_name . " ] unlinked from deliveryservice [ " . $row->deliveryservice->id . " | " . $row->deliveryservice->xml_id . " ].", "APICHANGE" );
+		return $self->success_message("Server unlinked from delivery service.");
+	}
+
+	return $self->alert( "Failed to unlink server from delivery service." );
 }
 
 1;

@@ -69,10 +69,10 @@ sub index {
 
 	my $dbh;
 	if ( defined $username ) {
-		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 	else {
-		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 
 	while ( my $row = $dbh->next ) {
@@ -97,7 +97,9 @@ sub index {
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
-				"username"        => $row->username
+				"username"        => $row->username,
+				"tenant"          => defined ($row->tenant) ? $row->tenant->name : undef,
+				"tenantId"        => $row->tenant_id
 			}
 		);
 	}
@@ -108,7 +110,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' ] } );
+	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' , 'tenant'] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -132,7 +134,9 @@ sub show {
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
 				"uid"             => $row->uid,
-				"username"        => $row->username
+				"username"        => $row->username,
+				"tenant"          => defined ($row->tenant) ? $row->tenant->name : undef,
+				"tenantId"        => $row->tenant_id
 			}
 		);
 	}
@@ -159,6 +163,9 @@ sub update {
 		return $self->not_found();
 	}
 
+	#setting tenant_id to undef if tenant is not set. 
+ 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
+ 	
 	my $values = {
 		address_line1 			=> $params->{addressLine1},
 		address_line2 			=> $params->{addressLine2},
@@ -174,7 +181,9 @@ sub update {
 		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
 		role 					=> $params->{role},
 		state_or_province 		=> $params->{stateOrProvince},
-		username 				=> $params->{username}
+		username 				=> $params->{username},
+		tenant_id 				=> $tenant_id
+		
 	};
 
 	if ( defined($params->{localPasswd}) && $params->{localPasswd} ne '' ) {
@@ -207,6 +216,8 @@ sub update {
 		$response->{stateOrProvince} 		= $rs->state_or_province;
 		$response->{uid} 					= $rs->uid;
 		$response->{username} 				= $rs->username;
+		$response->{tenantId} 				= $rs->tenant_id;
+
 
 		&log( $self, "Updated User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -273,10 +284,13 @@ sub current {
 
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
+
 		push(
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
+				"tenantId"	  => undef,
+				"tenant"          => undef,
 				"publicSshKey"  => "",
 				"role"            => $role,
 				"uid"             => "0",
@@ -299,7 +313,7 @@ sub current {
 		return $self->success( @data );
 	}
 	else {
-		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
+		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } , { prefetch => [ 'role' , 'tenant' ] } );
 		while ( my $row = $dbh->next ) {
 			push(
 				@data, {
@@ -321,6 +335,8 @@ sub current {
 					"phoneNumber"     => $row->phone_number,
 					"postalCode"      => $row->postal_code,
 					"country"         => $row->country,
+					"tenant"          => defined ($row->tenant) ? $row->tenant->name : undef,
+					"tenantId"        => $row->tenant_id,
 				}
 			);
 		}
@@ -375,6 +391,9 @@ sub update_current {
 		if ( defined( $user->{"username"} ) ) {
 			$db_user->{"username"} = $user->{"username"};
 		}
+		if ( defined( $user->{"tenantId"} ) ) {
+ 			$db_user->{"tenant_id"} = $user->{"tenantId"};
+ 		}
 		if ( defined( $user->{"public_ssh_key"} ) ) {
 			$db_user->{"public_ssh_key"} = $user->{"public_ssh_key"};
 		}
@@ -475,7 +494,7 @@ sub is_valid {
 					return $self->is_username_taken( $value, $params );
 				}
 			},
-
+			
 		]
 	};
 

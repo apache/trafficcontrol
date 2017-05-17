@@ -71,6 +71,7 @@ sub update {
     my $self       = shift;
     my $id         = $self->param('id');
     my $priv_level = $self->stash('priv_level');
+    my $dnssec_enabled = defined($self->param('cdn_data.dnssec_enabled')) ? $self->param('cdn_data.dnssec_enabled') : 0;
 
     $self->stash(
         id          => $id,
@@ -79,6 +80,8 @@ sub update {
         cdn_data    => {
             id   => $id,
             name => $self->param('cdn_data.name'),
+            domain_name => $self->param('cdn_data.domain_name'),
+            dnssec_enabled => $self->param('cdn_data.dnssec_enabled'),
         }
     );
 
@@ -93,12 +96,17 @@ sub update {
     else {
         my $update = $self->db->resultset('Cdn')->find( { id => $self->param('id') } );
         $update->name( $self->param('cdn_data.name') );
+        $update->domain_name( $self->param('cdn_data.domain_name') );
+        $update->dnssec_enabled( $dnssec_enabled );
         $update->update();
 
         # if the update has failed, we don't even get here, we go to the exception page.
     }
 
-    &log( $self, "Update Cdn with name:" . $self->param('cdn_data.name'), "UICHANGE" );
+    my $msg = "Update Cdn with name:" . $self->param('cdn_data.name') .
+              "; domain_name: " . $self->param('cdn_data.domain_name') .
+              "; dnssec_enabled: " . $self->param('cdn_data.dnssec_enabled');
+    &log( $self, $msg, "UICHANGE" );
     $self->flash( message => "Successfully updated CDN." );
     return $self->redirect_to( '/cdn/edit/' . $id );
 }
@@ -107,6 +115,8 @@ sub update {
 sub create {
     my $self = shift;
     my $name = $self->param('cdn_data.name');
+    my $dnssec_enabled = defined($self->param('cdn_data.dnssec_enabled')) ? $self->param('cdn_data.dnssec_enabled') : 0;
+    my $domain_name = $self->param('cdn_data.domain_name');
     my $data = $self->get_cdns();
     my $cdns = $data->{'cdn'};
 
@@ -115,6 +125,8 @@ sub create {
             fbox_layout => 1,
             cdn_data    => {
                 name => $name,
+                domain_name => $domain_name,
+                dnssec_enabled => $dnssec_enabled,
             }
         );
         return $self->render('cdn/add');
@@ -125,6 +137,8 @@ sub create {
             fbox_layout => 1,
             cdn_data    => {
                 name => $name,
+                domain_name => $domain_name,
+                dnssec_enabled => $dnssec_enabled,
             }
         );
         return $self->render('cdn/add');
@@ -136,7 +150,7 @@ sub create {
         return $self->redirect_to( '/cdn/edit/' . $new_id );
     }
     else {
-        my $insert = $self->db->resultset('Cdn')->create( { name => $name } );
+        my $insert = $self->db->resultset('Cdn')->create( { name => $name, domain_name => $domain_name, dnssec_enabled => $dnssec_enabled } );
         $insert->insert();
         $new_id = $insert->id;
     }
@@ -160,6 +174,16 @@ sub delete {
         $self->flash( alertmsg => "You must be an ADMIN to perform this operation!" );
     }
     else {
+        my $server_count = $self->db->resultset('Server')->search( { cdn_id => $id } )->count();
+        if ($server_count > 0) {
+            $self->flash( alertmsg => "Failed to delete cdn id = $id has servers." );
+            return $self->redirect_to('/close_fancybox.html');
+        }
+        my $ds_count = $self->db->resultset('Deliveryservice')->search( { cdn_id => $id } )->count();
+        if ($ds_count > 0) {
+            $self->flash( alertmsg => "Failed to delete cdn id = $id has delivery services." );
+            return $self->redirect_to('/close_fancybox.html');
+        }
         my $p_name = $self->db->resultset('Cdn')->search( { id => $id } )->get_column('name')->single();
         my $delete = $self->db->resultset('Cdn')->search( { id => $id } );
         $delete->delete();
@@ -445,9 +469,10 @@ sub adeliveryservice {
         # This will be undefined for 'Steering' delivery services
         my $org_server_fqdn = defined($row->org_server_fqdn) ? $row->org_server_fqdn : "";
 
+        my $ptext = defined($row->profile) ? $row->profile->name : "-";
         my $line = [
             $row->id,                       $row->xml_id,                $org_server_fqdn,                "dummy",
-            $cdn_name,                      $row->profile->name,         $row->ccr_dns_ttl,                    $yesno{ $row->active },
+            $cdn_name,                      $ptext,                      $row->ccr_dns_ttl,                    $yesno{ $row->active },
             $row->type->name,               $row->dscp,                  $yesno{ $row->signed },               $row->qstring_ignore,
             $geo_limits{ $row->geo_limit }, $protocol{ $row->protocol }, $yesno{ $row->ipv6_routing_enabled }, $row->range_request_handling,
             $row->http_bypass_fqdn,         $row->dns_bypass_ip,         $row->dns_bypass_ip6,                 $row->dns_bypass_ttl,
@@ -586,7 +611,7 @@ sub acdn {
 
     $rs = $self->db->resultset('Cdn')->search(undef);
     while ( my $row = $rs->next ) {
-        my @line = [ $row->id, $row->name, $yesno{ $row->dnssec_enabled }, $row->last_updated ];
+        my @line = [ $row->id, $row->name, $row->domain_name, $yesno{ $row->dnssec_enabled }, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );
@@ -680,11 +705,11 @@ sub aprofile {
     my $self = shift;
     my %data = ( "aaData" => [] );
 
-    my $rs = $self->db->resultset('Profile')->search(undef);
+    my $rs = $self->db->resultset('Profile')->search(undef, { prefetch => ['cdn'] } );
 
     while ( my $row = $rs->next ) {
-
-        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->last_updated ];
+        my $ctext = defined( $row->cdn ) ? $row->cdn->name : "-";
+        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );

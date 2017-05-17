@@ -98,7 +98,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'bigint'
   is_foreign_key: 1
-  is_nullable: 0
+  is_nullable: 1
 
 =head2 cdn_id
 
@@ -278,11 +278,6 @@ __PACKAGE__->table("deliveryservice");
   default_value: false
   is_nullable: 1
 
-=head2 multi_site_origin_algorithm
-
-  data_type: 'smallint'
-  is_nullable: 1
-
 =head2 geolimit_redirect_url
 
   data_type: 'text'
@@ -323,7 +318,7 @@ __PACKAGE__->add_columns(
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "profile",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "cdn_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "ccr_dns_ttl",
@@ -395,8 +390,6 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "logs_enabled",
   { data_type => "boolean", default_value => \"false", is_nullable => 1 },
-  "multi_site_origin_algorithm",
-  { data_type => "smallint", is_nullable => 1 },
   "geolimit_redirect_url",
   { data_type => "text", is_nullable => 1 },
 );
@@ -417,7 +410,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54278_ds_id_unique>
+=head2 C<idx_101208_ds_id_unique>
 
 =over 4
 
@@ -427,9 +420,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54278_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_101208_ds_id_unique", ["id"]);
 
-=head2 C<idx_54278_ds_name_unique>
+=head2 C<idx_101208_ds_name_unique>
 
 =over 4
 
@@ -439,7 +432,7 @@ __PACKAGE__->add_unique_constraint("idx_54278_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54278_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_101208_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -545,7 +538,12 @@ __PACKAGE__->belongs_to(
   "profile",
   "Schema::Result::Profile",
   { id => "profile" },
-  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
 );
 
 =head2 staticdnsentries
@@ -609,8 +607,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OGL35PLFXtZ8BuzgP7IHzQ
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-01-02 16:07:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:qCU9AxWN09+5k2ETT6tqSQ
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
