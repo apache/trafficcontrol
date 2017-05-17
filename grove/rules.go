@@ -1,12 +1,13 @@
 package grove
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 type Reuse int
@@ -105,10 +106,10 @@ func CodeUnderstood(code int) bool {
 // TODO add options to ignore/violate request cache-control (to protect origins)
 // CanCache returns whether an object can be cached per RFC 7234, based on the request headers, response headers, and response code. If strictRFC is false, this ignores request headers denying cacheability such as `no-cache`, in order to protect origins.
 func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
-	fmt.Printf("CanCache start\n")
+	log.Debugf("CanCache start\n")
 	reqCacheControl := ParseCacheControl(reqHeaders)
 	respCacheControl := ParseCacheControl(respHeaders)
-	fmt.Printf("DEBUG CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
+	log.Debugf("CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)
 	return CanStoreResponse(respCode, respHeaders, reqCacheControl, respCacheControl, strictRFC) && CanStoreAuthenticated(reqCacheControl, respCacheControl)
 }
 
@@ -127,7 +128,7 @@ func CanStoreAuthenticated(reqCacheControl, respCacheControl CacheControl) bool 
 	if _, ok := respCacheControl["s-maxage"]; ok {
 		return true
 	}
-	fmt.Printf("CanStoreAuthenticated false: has authorization, and no must-revalidate/public/s-maxage\n")
+	log.Debugf("CanStoreAuthenticated false: has authorization, and no must-revalidate/public/s-maxage\n")
 	return false
 }
 
@@ -140,26 +141,26 @@ func CanStoreResponse(
 	strictRFC bool,
 ) bool {
 	if _, ok := reqCacheControl["no-store"]; !strictRFC && ok {
-		fmt.Printf("CanStoreResponse false: request has no-store\n")
+		log.Debugf("CanStoreResponse false: request has no-store\n")
 		return false
 	}
 	if _, ok := respCacheControl["no-store"]; ok {
-		fmt.Printf("CanStoreResponse false: response has no-store\n")
+		log.Debugf("CanStoreResponse false: response has no-store\n")
 		return false
 	}
 	if _, ok := respCacheControl["private"]; ok {
-		fmt.Printf("CanStoreResponse false: has private\n")
+		log.Debugf("CanStoreResponse false: has private\n")
 		return false
 	}
 	if _, ok := respCacheControl["authorization"]; ok {
-		fmt.Printf("CanStoreResponse false: has authorization\n")
+		log.Debugf("CanStoreResponse false: has authorization\n")
 		return false
 	}
 	if !CacheControlAllows(respCode, respHeaders, respCacheControl) {
-		fmt.Printf("CanStoreResponse false: CacheControlAllows false\n")
+		log.Debugf("CanStoreResponse false: CacheControlAllows false\n")
 		return false
 	}
-	fmt.Printf("CanStoreResponse true\n")
+	log.Debugf("CanStoreResponse true\n")
 	return true
 }
 
@@ -183,7 +184,7 @@ func CacheControlAllows(
 	if CodeDefaultCacheable(respCode) {
 		return true
 	}
-	fmt.Printf("CacheControlAllows false: no expires, no max-age, no s-max-age, no extension allows, code not default cacheable\n")
+	log.Debugf("CacheControlAllows false: no expires, no max-age, no s-max-age, no extension allows, code not default cacheable\n")
 	return false
 }
 
@@ -204,28 +205,28 @@ func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheCon
 	// TODO: remove allowed_stale, check in cache manager after revalidate fails? (since RFC7234§4.2.4 prohibits serving stale response unless disconnected).
 
 	if !SelectedHeadersMatch(reqHeaders, respReqHeaders, strictRFC) {
-		fmt.Printf("CanReuseStored false - selected headers don't match\n") // debug
+		log.Debugf("CanReuseStored false - selected headers don't match\n") // debug
 		return ReuseCannot
 	}
 
 	if !Fresh(respHeaders, respCacheControl, respReqTime, respRespTime) && !AllowedStale(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime, strictRFC) {
-		fmt.Printf("CanReuseStored false - not fresh, not allowed stale\n") // debug
+		log.Debugf("CanReuseStored false - not fresh, not allowed stale\n") // debug
 		return ReuseCannot
 	}
 
 	if HasPragmaNoCache(reqHeaders) && !strictRFC {
-		fmt.Printf("CanReuseStored MustRevalidate - has pragma no-cache\n")
+		log.Debugf("CanReuseStored MustRevalidate - has pragma no-cache\n")
 		return ReuseMustRevalidate
 	}
 	if _, ok := reqCacheControl["no-cache"]; ok && !strictRFC {
-		fmt.Printf("CanReuseStored false - request has cache-control no-cache\n")
+		log.Debugf("CanReuseStored false - request has cache-control no-cache\n")
 		return ReuseCannot
 	}
 	if _, ok := respCacheControl["no-cache"]; ok {
-		fmt.Printf("CanReuseStored false - response has cache-control no-cache\n")
+		log.Debugf("CanReuseStored false - response has cache-control no-cache\n")
 		return ReuseCannot
 	}
-	fmt.Printf("CanReuseStored true (respCacheControl %+v)\n", respCacheControl)
+	log.Debugf("CanReuseStored true (respCacheControl %+v)\n", respCacheControl)
 	return ReuseCan
 }
 

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 type statHandler struct {
@@ -204,7 +206,7 @@ type StatsJSON struct {
 func loadFileAndLogGrep(filename string, grepStr string) string {
 	file, err := os.Open(filename)
 	if err != nil {
-		fmt.Printf("Error reading system stat file %v: %v\n", filename, err)
+		log.Errorf("reading system stat file %v: %v\n", filename, err)
 		return ""
 	}
 	defer file.Close()
@@ -216,14 +218,14 @@ func loadFileAndLogGrep(filename string, grepStr string) string {
 			return l
 		}
 	}
-	fmt.Printf("Error reading system stat file %v looking for %v: not found\n", filename, grepStr)
+	log.Errorf("reading system stat file %v looking for %v: not found\n", filename, grepStr)
 	return ""
 }
 
 func loadFileAndLog(filename string) string {
 	f, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Printf("Error reading system stat file %v: %v\n", filename, err)
+		log.Errorf("reading system stat file %v: %v\n", filename, err)
 		return ""
 	}
 	return string(f)
