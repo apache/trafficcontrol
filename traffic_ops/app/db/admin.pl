@@ -187,14 +187,6 @@ sub seed {
 	}
 }
 
-sub seed_demo {
-	print "Seeding database w/ demo data.\n";
-	local $ENV{PGPASSWORD} = $db_password;
-	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds_demo.sql") != 0 ) {
-		die "Can't seed database w/ demo data\n";
-	}
-}
-
 sub load_schema {
 	print "Creating database tables.\n";
 	local $ENV{PGPASSWORD} = $db_password;

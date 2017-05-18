@@ -621,6 +621,27 @@ sub totals {
 
 }
 
+sub status {
+	my $self = shift;
+
+	my $rs = $self->db->resultset('Server')->search(
+		undef,
+		{
+			join     => [qw/ status /],
+			select   => [ 'status.name', { count => 'me.id' } ],
+			as       => [qw/ status_name server_count /],
+			group_by => [qw/ status.id /]
+		}
+	);
+
+	my $response;
+	while ( my $row = $rs->next ) {
+		$response->{ $row->{'_column_data'}->{'status_name'} } = $row->{'_column_data'}->{'server_count'};
+	}
+
+	return $self->success( $response );
+}
+
 sub get_count_by_type {
 	my $self      = shift;
 	my $type_name = shift;

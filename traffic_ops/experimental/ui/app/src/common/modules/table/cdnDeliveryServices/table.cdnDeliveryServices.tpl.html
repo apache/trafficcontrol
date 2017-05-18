@@ -51,21 +51,21 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDeliveryService(deliveryService.id)" ng-repeat="deliveryService in deliveryServices">
-                <td>{{deliveryService.xmlId}}</td>
-                <td>{{deliveryService.orgServerFqdn}}</td>
-                <td>{{deliveryService.cdnName}}</td>
-                <td>{{deliveryService.profileName}}</td>
-                <td>{{deliveryService.ccrDnsTtl}}</td>
-                <td>{{deliveryService.active}}</td>
-                <td>{{deliveryService.type}}</td>
-                <td>{{deliveryService.dscp}}</td>
-                <td>{{deliveryService.signed}}</td>
-                <td>{{deliveryService.qstringIgnore}}</td>
-                <td>{{deliveryService.geoLimit}}</td>
-                <td>{{deliveryService.protocol}}</td>
-                <td>{{deliveryService.ipv6RoutingEnabled}}</td>
-                <td>{{deliveryService.rangeRequestHandling}}</td>
+            <tr ng-click="editDeliveryService(deliveryService.id)" ng-repeat="deliveryService in ::deliveryServices">
+                <td>{{::deliveryService.xmlId}}</td>
+                <td>{{::deliveryService.orgServerFqdn}}</td>
+                <td>{{::deliveryService.cdnName}}</td>
+                <td>{{::deliveryService.profileName}}</td>
+                <td>{{::deliveryService.ccrDnsTtl}}</td>
+                <td>{{::deliveryService.active}}</td>
+                <td>{{::deliveryService.type}}</td>
+                <td>{{::deliveryService.dscp}}</td>
+                <td>{{::deliveryService.signed}}</td>
+                <td>{{::deliveryService.qstringIgnore}}</td>
+                <td>{{::deliveryService.geoLimit}}</td>
+                <td>{{::deliveryService.protocol}}</td>
+                <td>{{::deliveryService.ipv6RoutingEnabled}}</td>
+                <td>{{::deliveryService.rangeRequestHandling}}</td>
             </tr>
             </tbody>
         </table>

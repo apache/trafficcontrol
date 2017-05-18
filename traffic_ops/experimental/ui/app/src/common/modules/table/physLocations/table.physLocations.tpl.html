@@ -42,13 +42,13 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editPhysLocation(physLocation.id)" ng-repeat="physLocation in physLocations">
-                <td>{{physLocation.name}}</td>
-                <td>{{physLocation.shortName}}</td>
-                <td>{{physLocation.address}}</td>
-                <td>{{physLocation.city}}</td>
-                <td>{{physLocation.state}}</td>
-                <td>{{physLocation.region}}</td>
+            <tr ng-click="editPhysLocation(physLocation.id)" ng-repeat="physLocation in ::physLocations">
+                <td>{{::physLocation.name}}</td>
+                <td>{{::physLocation.shortName}}</td>
+                <td>{{::physLocation.address}}</td>
+                <td>{{::physLocation.city}}</td>
+                <td>{{::physLocation.state}}</td>
+                <td>{{::physLocation.region}}</td>
             </tr>
             </tbody>
         </table>

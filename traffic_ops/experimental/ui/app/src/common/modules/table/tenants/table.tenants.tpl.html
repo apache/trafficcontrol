@@ -40,11 +40,11 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editTenant(tenant.id)" ng-repeat="tenant in tenants">
-                <td>{{tenant.id}}</td>
-                <td>{{tenant.name}}</td>
-                <td>{{tenant.active}}</td>
-                <td>{{tenant.parentId}}</td>
+            <tr ng-click="editTenant(tenant.id)" ng-repeat="tenant in ::tenants">
+                <td>{{::tenant.id}}</td>
+                <td>{{::tenant.name}}</td>
+                <td>{{::tenant.active}}</td>
+                <td>{{::tenant.parentId}}</td>
             </tr>
             </tbody>
         </table>

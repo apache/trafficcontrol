@@ -986,9 +986,8 @@ sub postupdate {
 	my $use_reval_pending = $self->db->resultset('Parameter')->search( { -and => [ 'name' => 'use_reval_pending', 'config_file' => 'global' ] } )->get_column('value')->single;
 
 	#Parameters don't have boolean options at this time, so we're going to compare against the default string value of 0.
-	if ( defined($use_reval_pending) && $use_reval_pending ne '0' ) {
-		$update_server->update( { upd_pending => $updated } );
-		$update_server->update( { reval_pending => $reval_updated } );
+	if ( defined($use_reval_pending) && $use_reval_pending ne '0' && defined($reval_updated) ) {
+		$update_server->update( { reval_pending => $reval_updated, upd_pending => $updated } );
 	}
 	else {
 		$update_server->update( { upd_pending => $updated } );

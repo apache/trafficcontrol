@@ -239,7 +239,7 @@ sub create {
 		}
 
 		#create keys
-		my $profile = $self->db->resultset('Profile')->search( { id => $profile_id }, { prefetch => ['cdn'] } )->single();
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $profile_id }, { prefetch => ['cdn'] } )->single();
 		my $domain_name = $profile->cdn->domain_name;
 
 		my $response_container = $self->riak_ping();

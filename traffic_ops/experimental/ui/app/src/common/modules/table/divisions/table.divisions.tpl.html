@@ -37,8 +37,8 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDivision(division.id)" ng-repeat="division in divisions">
-                <td>{{division.name}}</td>
+            <tr ng-click="editDivision(division.id)" ng-repeat="division in ::divisions">
+                <td>{{::division.name}}</td>
             </tr>
             </tbody>
         </table>

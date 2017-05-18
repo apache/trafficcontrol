@@ -48,7 +48,7 @@ sub edit {
 	my $cursor = $self->db->resultset('Profile')->search( { id => $id } );
 	my $data   = $cursor->single;
 
-	$self->stash_cdn_selector($data->cdn->id);
+	$self->stash_cdn_selector(defined($data->cdn) ? $data->cdn->id : undef);
 	$self->stash_profile_type_selector($data->type);
 
 	&stash_role($self);
@@ -147,6 +147,7 @@ sub check_profile_input {
 	#Check required fields
 	$self->field('profile.name')->is_required;
 	$self->field('profile.description')->is_required;
+	$self->field('profile.type')->is_required;
 
 	$self->field('profile.name')->is_like( qr/^\S+$/, "Profile name cannot contain space(s)." );
 
@@ -292,8 +293,10 @@ sub doImport {
 	my $data             = JSON->new->utf8->decode( $in_data->asset->{content} );
 	my $p_name           = $data->{profile}->{name};
 	my $p_desc           = $data->{profile}->{description};
+	my $p_type           = $data->{profile}->{type};
 	my $existing_profile = $self->db->resultset('Profile')->search( { name => $p_name } )->get_column('name')->single();
 	my $existing_desc    = $self->db->resultset('Profile')->search( { description => $p_desc } )->get_column('description')->single();
+	my @valid_types      = @{$self->db->source('ProfileTypeValue')->column_info('value')->{extra}->{list}};
 	my @msgs;
 
 	if ($existing_profile) {
@@ -302,6 +305,12 @@ sub doImport {
 	if ($existing_desc) {
 		push( @msgs, "A profile with the exact same description already exists!" );
 	}
+
+	if (! grep(/^$p_type$/, @valid_types )) {
+		my $vtypes = join(', ', @valid_types);
+		push( @msgs, "Profile contains type \"$p_type\" which is not a valid profile type. Valid types are: $vtypes" );
+	}
+
 	my $msgs_size = @msgs;
 	if ( $msgs_size > 0 ) {
 		&stash_role($self);
@@ -313,6 +322,7 @@ sub doImport {
 			{
 				name        => $p_name,
 				description => $p_desc,
+				type        => $p_type,
 			}
 		);
 		$insert->insert();
@@ -397,6 +407,7 @@ sub export {
 		if ( !defined( $jdata->{profile} ) ) {
 			$jdata->{profile}->{name}        = $row->profile->name;
 			$jdata->{profile}->{description} = $row->profile->description;
+			$jdata->{profile}->{type}        = $row->profile->type;
 			$pname                           = $row->profile->name;
 		}
 		$jdata->{parameters}->[$i] = {

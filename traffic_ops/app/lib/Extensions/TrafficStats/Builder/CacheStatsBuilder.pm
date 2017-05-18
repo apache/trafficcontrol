@@ -74,14 +74,12 @@ sub summary_query {
 	if ( $self->validate_keys() ) {
 
 		#'summary' section
-		my $query = sprintf(
-			'%s "%s" %s',
-			"SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value) FROM",
-			$args->{series_name}, "WHERE cdn = '$args->{cdn_name}' AND
-			                             time > '$args->{start_date}' AND
-		                                 time < '$args->{end_date}' 
-		                                 GROUP BY time($args->{interval}), cdn"
-		);
+		my $query = qq[SELECT mean(value), percentile(value, 5), percentile(value, 95), percentile(value, 98), min(value), max(value), sum(value), count(value)
+				FROM "monthly"."$args->{series_name}.cdn.1min"
+				WHERE cdn = '$args->{cdn_name}'
+					AND time > '$args->{start_date}'
+					AND time < '$args->{end_date}'
+					GROUP BY time($args->{interval}), cdn];
 
 		$query = Extensions::TrafficStats::Builder::BaseBuilder->append_clauses( $query, $args );
 
@@ -93,17 +91,13 @@ sub summary_query {
 sub series_query {
 	my $self = shift;
 
-	# TODO: drichardson - make the sum more dynamic based upon the interval
-	my $query = sprintf(
-		'%s "%s" %s',
-		"SELECT sum(value)*1000/6 FROM",
-		$args->{series_name}, "WHERE 
-							   time > '$args->{start_date}' AND 
-                               time < '$args->{end_date}' AND 
-                               cdn = '$args->{cdn_name}'
-                               GROUP BY time($args->{interval}),
-							   cdn ORDER BY asc"
-	);
+	my $query = qq[SELECT sum(value)/count(value)
+			FROM "monthly"."$args->{series_name}.cdn.1min"
+			WHERE cdn = '$args->{cdn_name}'
+				AND time > '$args->{start_date}'
+				AND time < '$args->{end_date}'
+				GROUP BY time($args->{interval}), cdn
+				ORDER BY asc];
 
 	$query = Extensions::TrafficStats::Builder::BaseBuilder->append_clauses( $query, $args );
 

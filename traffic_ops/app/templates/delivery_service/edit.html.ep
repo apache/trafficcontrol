@@ -178,7 +178,7 @@
 		$('#select_re').html("<select id=\"regexp_selector\"> " +
 				"<option>Add a regex...</option> " +
 				"<option>Add Host Regexp</option> " +
-			% if ($ds->type->name eq "DNS") {
+			% if ($ds->type->name =~ /^DNS/ ) {
 				"<option disabled>Add Path Regexp</option> " +
 				"<option disabled>Add Header Regexp</option> " +
 			% } else {

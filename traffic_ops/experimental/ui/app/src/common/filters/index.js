@@ -19,4 +19,5 @@
 
 module.exports = angular.module('trafficOps.filters', [])
     .filter('offsetFilter', require('./OffsetFilter'))
+	.filter('percentFilter', require('./PercentFilter'))
 ;

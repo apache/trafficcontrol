@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ServerService = function(Restangular, locationUtils, messageModel) {
+var ServerService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
 
     this.getServers = function(queryParams) {
         return Restangular.all('servers').getList(queryParams);
@@ -92,7 +92,23 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
+    this.getStatusCount = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "servers/status")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
 };
 
-ServerService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+ServerService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ServerService;

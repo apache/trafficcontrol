@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Files are relative to this script directory.
+SELF="${BASH_SOURCE[0]}"
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+COMPOSE_FILE=./infrastructure/docker/build/docker-compose.yml
+
+# Check for dependencies
+if ! which docker >/dev/null 2>&1; then
+	echo "Error: docker is required for a docker build." >&2
+	exit 1
+fi
+
+# If the user defined COMPOSE, use that as the path for docker-compose.
+if [ ! -z "$COMPOSE" ]; then
+	COMPOSECMD=( "$COMPOSE" )
+else
+	COMPOSECMD=()
+fi
+
+# Check to see if docker-compose is already installed and use it directly, if possible.
+if [ ${#COMPOSECMD[@]} -eq 0 ]; then
+	if which docker-compose >/dev/null 2>&1; then
+		COMPOSECMD=( docker-compose )
+	fi
+fi
+
+# If it's unavailable, go get the image and run docker-compose inside a container.
+# This is considerably slower, but allows for building on hosts without docker-compose.
+if [ ${#COMPOSECMD[@]} -eq 0 ]; then
+	# Pin the version of docker-compose.
+	IMAGE="docker/compose:1.11.2"
+
+	# We need to either mount the docker socket or export the docker host into the container.
+	# This allows the container to manage "sibling" containers via docker.
+	if [ -z "$DOCKER_HOST" ]; then
+			DOCKER_HOST="/var/run/docker.sock"
+	fi
+
+	if [ -S "$DOCKER_HOST" ]; then
+			DOCKER_ADDR=(-v "$DOCKER_HOST:$DOCKER_HOST" -e DOCKER_HOST)
+	else
+			DOCKER_ADDR=(-e DOCKER_HOST -e DOCKER_TLS_VERIFY -e DOCKER_CERT_PATH)
+	fi
+
+	# We mount the current directory (the base of the repository) into the same location
+	# inside the container. There are many places for which this won't work, but "/" is
+	# a major one.
+	#
+	# You're going to want to avoid keeping your repository in a folder named "/usr/bin",
+	# "/home", "/var" or any other standard paths that will be needed by the docker container.
+	#
+	# This is very unlikely to cause trouble for anyone in practice.
+	if [ "$(pwd)" == "/" ]; then
+		echo "Error: Cannot compile directly at filesystem root." >&2
+		exit 1
+	fi
+
+	# Mount the working directory, and the home directory. Mounting $HOME provides container
+	# access to config files that are kept there.
+	VOLUMES=(-v "$(pwd):$(pwd)" -v "$HOME:$HOME" -v "$HOME:/root")
+
+	# Prepull the image, to avoid spitting out pull progress during other commands.
+	if ! docker inspect $IMAGE >/dev/null 2>&1; then
+		docker pull $IMAGE >/dev/null 2>&1
+	fi
+
+	# COMPOSECMD is kept as an array to significantly simplify handling paths that contain
+	# spaces and other special characters.
+	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
+fi
+
+# Parse command line arguments
+verbose=0
+while getopts :lvq? opt; do
+	case $opt in
+		\?)
+			PROJECTS=`$SELF -l | sed "s/^/		- /"`
+			echo "Usage: $SELF [options] [projects]"
+			echo "	-q	Quiet mode. Supresses output."
+			echo "	-v	Verbose mode. Lists all build output."
+			echo "	-l	List available projects."
+			echo
+			echo "	If no projects are listed, all projects will be packaged."
+			echo "	Valid projects:"
+			cat <<< "$PROJECTS"
+			exit 0
+			;;
+		q)
+			exec >/dev/null 2>&1
+			;;
+		v)
+			verbose=1
+			;;
+		l)
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
+			exit $?
+			;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+# If no specific packages are listed, run them all.
+if (( ! "$#" )); then
+	set -- `$SELF -l`
+fi
+
+# Build each project in turn.
+failure=0
+badproj=""
+while (( "$#" )); do
+	echo Building $1.
+	(
+		if (( "$verbose" == 0 )); then
+			exec >/dev/null 2>&1
+		fi
+		"${COMPOSECMD[@]}" -f $COMPOSE_FILE build $1 || exit 1
+		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run --rm $1 || exit 1
+	) || {
+		# Don't totally bail out, but make note of the failures.
+		failure=1
+		badproj="$badproj $1"
+	}
+	shift
+done
+
+if (( $failure )); then
+	echo "Failed to build$badproj."
+fi
+
+exit $failure

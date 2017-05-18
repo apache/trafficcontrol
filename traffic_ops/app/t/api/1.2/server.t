@@ -526,6 +526,11 @@ ok $t->put_ok('/api/1.2/servers/' . $server_id => {Accept => 'application/json'}
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Does the server update succeed because ip6Address is already used by the profile but...by this server?';
 
+ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/ONLINE", 15 )
+		->json_is( "/response/REPORTED", 5 )
+		->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
 done_testing();

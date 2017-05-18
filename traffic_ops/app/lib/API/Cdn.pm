@@ -1089,7 +1089,6 @@ sub dnssec_keys_refresh {
 
 	# fork and daemonize so we can avoid blocking
 	my $rc = $self->fork_and_daemonize();
-
 	if ( $rc < 0 ) {
 		my $error = "Unable to fork_and_daemonize to check DNSSEC keys for refresh in the background";
 		$self->app->log->fatal($error);
@@ -1109,6 +1108,7 @@ sub refresh_keys {
 	my $self       = shift;
 	my $is_updated = 0;
 	my $error_message;
+	$self->app->log->debug("Starting refresh of DNSSEC keys");
 	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
 
 	while ( my $row = $rs_data->next ) {
@@ -1195,7 +1195,7 @@ sub refresh_keys {
 			}
 
 			#get DeliveryServices for CDN
-			my %search = ( profile => $profile_id );
+			my %search = ( cdn_id => $row->id );
 			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
@@ -1240,16 +1240,13 @@ sub refresh_keys {
 					#update is_updated param
 					$is_updated = 1;
 				}
-
 				#if keys do exist, check expiration
 				else {
 					my $ksk = $ds_keys->{ksk};
 					foreach my $krecord (@$ksk) {
 						my $kstatus = $krecord->{status};
-						if ( $kstatus eq 'new' ) {    #ignore anything other than the 'new' record
-							                          #check if expired
+						if ( $kstatus eq 'new' ) {
 							if ( $krecord->{expirationDate} < $key_expiration ) {
-
 								#if expired create new keys
 								$self->app->log->info("The KSK keys for $xml_id are expired!");
 								my $effective_date = $krecord->{expirationDate} - ( $dnskey_ttl * $dnskey_effective_multiplier );
@@ -1282,7 +1279,6 @@ sub refresh_keys {
 			}
 
 			if ( $is_updated == 1 ) {
-
 				# #convert hash to json and store in Riak
 				my $json_data = encode_json($keys);
 				$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
@@ -1296,6 +1292,7 @@ sub refresh_keys {
 			}
 		}
 	}
+	$self->app->log->debug("Done refreshing DNSSEC keys");
 }
 
 sub regen_expired_keys {

@@ -21,11 +21,11 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/profiles')">Profiles</a></li>
-            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{profile.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{::profile.name}}</a></li>
             <li class="active">Parameters</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Add Parameter" ng-click="addParameter()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Link Parameter to Profile" ng-click="addParameter()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -43,12 +43,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="parameter in profileParameters">
-                <td>{{parameter.id}}</td>
-                <td>{{parameter.name}}</td>
-                <td>{{parameter.configFile}}</td>
-                <td>{{parameter.value}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove Parameter" ng-click="removeParameter()"><i class="fa fa-trash-o"></i></button></td>
+            <tr ng-repeat="parameter in ::profileParameters">
+                <td>{{::parameter.id}}</td>
+                <td>{{::parameter.name}}</td>
+                <td>{{::parameter.configFile}}</td>
+                <td>{{::parameter.value}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Profile" ng-click="removeParameter(parameter.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

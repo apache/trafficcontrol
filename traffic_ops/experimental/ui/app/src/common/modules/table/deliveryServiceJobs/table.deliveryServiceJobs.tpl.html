@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id)">{{::deliveryService.displayName}}</a></li>
             <li class="active">Invalidate Content Jobs</li>
         </ol>
         <div class="pull-right">
@@ -37,16 +37,16 @@ under the License.
             <tr class="headings">
                 <th>assetUrl</th>
                 <th>parameters</th>
-                <th>start</th>
+                <th>start (UTC)</th>
                 <th>createdBy</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="dsJob in dsJobs">
-                <td>{{dsJob.assetUrl}}</td>
-                <td>{{dsJob.parameters}}</td>
-                <td>{{dsJob.startTime}}</td>
-                <td>{{dsJob.createdBy}}</td>
+            <tr ng-repeat="dsJob in ::dsJobs">
+                <td>{{::dsJob.assetUrl}}</td>
+                <td>{{::dsJob.parameters}}</td>
+                <td>{{::dsJob.startTime}}</td>
+                <td>{{::dsJob.createdBy}}</td>
             </tr>
             </tbody>
         </table>

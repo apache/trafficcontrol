@@ -120,7 +120,7 @@ sub get_config_metadata {
 		$config_file_obj->{$config_file}->{'scope'} = $scope;
 	}
 
-	foreach my $config_file ( keys %{ $config_file_obj } ) {
+	foreach my $config_file ( sort keys %{ $config_file_obj } ) {
 		push ( @config_files, $config_file_obj->{$config_file} );
 	}
 
@@ -157,6 +157,7 @@ sub get_server_config {
 	#generate the config file using the appropriate function
 	my $file_contents;
 	if ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename ); }
+	elsif ( $filename eq "cache.config" ) { $file_contents = $self->server_cache_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename ); }
@@ -255,7 +256,7 @@ sub get_profile_config {
 	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename ); }
 	elsif ( $filename eq "12M_facts" ) { $file_contents = $self->facts( $profile_obj, $filename ); }
 	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
-	elsif ( $filename eq "cache.config" ) { $file_contents = $self->cache_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "cache.config" ) { $file_contents = $self->profile_cache_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
@@ -311,6 +312,7 @@ sub get_scope {
 	elsif ( $fname eq "12M_facts" )                            { $scope = 'profiles' }
 	elsif ( $fname eq "50-ats.rules" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "astats.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "cache.config" && $type =~ m/^MID/ )     { $scope = 'servers' }
 	elsif ( $fname eq "cache.config" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
 	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
@@ -330,7 +332,6 @@ sub get_scope {
 	else {
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
 		if ( !defined($scope) ) {
-			$self->app->log->error("Filename not found.  Setting Server scope.");
 			$scope = 'servers';
 		}
 	}
@@ -1458,6 +1459,9 @@ sub ssl_multicert_dot_config {
 	my $protocol_search = '> 0';
 	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ cdn_id => $cdn_obj->id, 'me.protocol' => \$protocol_search ] } )->all();
 	foreach my $ds (@ds_list) {
+		if ( $ds->type->name =~ /STEERING/ ) {
+				next;    # Steering delivery service SSLs should not be on the edges.
+		}
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
 		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
@@ -1511,7 +1515,35 @@ sub url_sig_dot_config {
 	}
 }
 
-sub cache_dot_config {
+sub server_cache_dot_config {
+	my $self       = shift;
+	my $server_obj = shift;
+	my $filename   = shift;
+	
+
+	my $text = $self->header_comment( $server_obj->host_name );
+	my $data = $self->ds_data($server_obj);
+
+	foreach my $ds ( @{ $data->{dslist} } ) {
+		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
+			my $org_fqdn = $ds->{org};
+			$org_fqdn =~ s/https?:\/\///;
+			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+		}
+	}
+
+	#remove duplicate lines, since we're looking up by profile
+	my @lines = split(/\n/,$text);
+	
+	my %seen;
+	@lines = grep { !$seen{$_}++ } @lines;
+
+	$text = join("\n",@lines);
+
+	return $text;
+}
+
+sub profile_cache_dot_config {
 	my $self       = shift;
 	my $profile_obj = shift;
 	my $filename   = shift;
@@ -1886,7 +1918,6 @@ sub format_parent_info {
 sub parent_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
-
 	my $data;
 
 	my $server_type = $server_obj->type->name;
@@ -1896,16 +1927,14 @@ sub parent_dot_config {
 		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
 		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
-
 	my $parent_info;
 	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
 		$data = $self->ds_data($server_obj);
 	}
-
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
-		foreach my $ds ( @{ $data->{dslist} } ) {
+		foreach my $ds ( sort @{ $data->{dslist} } ) {
 			my $xml_id                             = $ds->{ds_xml_id};
 			my $origin_shield                      = $ds->{origin_shield};
 			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
@@ -1991,7 +2020,6 @@ sub parent_dot_config {
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
 		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
-
 		return $text;
 	}
 	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
@@ -1999,7 +2027,7 @@ sub parent_dot_config {
 		$parent_info = $self->parent_data($server_obj);
 		my %done = ();
 
-		foreach my $ds ( @{ $data->{dslist} } ) {
+		foreach my $ds ( sort @{ $data->{dslist} } ) {
 			my $org = $ds->{org};
 			next if !defined $org || $org eq "";
 			next if $done{$org};
@@ -2008,7 +2036,15 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				my $qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+				# then edges will use the qstring handling value specified in the parameter for all profiles.
+				my $qsh = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'psel.qstring_handling');
+				# If there is no defined parameter in the profile, then check the delivery service profile.
+				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+				# This is used only if not overridden by a server profile qstring handling parameter.
+				if (!defined($qsh)) {
+					$qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				}
 				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
 				if ( $ds->{qstring_ignore} == 0 && !defined($qsh) ) {
 					$parent_qstring = "consider";
@@ -2031,12 +2067,12 @@ sub parent_dot_config {
 				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
-				my $parents = 'parent="' . join( '', @parent_info ) . '"';
+				my $parents = 'parent="' . join( '', sort @parent_info ) . '"';
 				my $secparents = '';
 				if ( scalar @secondary_parent_info > 0 ) {
 					my %seen;
 					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
-					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
+					$secparents = 'secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
 				}
 				my $round_robin = 'round_robin=consistent_hash';
 				my $go_direct   = 'go_direct=false';
@@ -2059,7 +2095,7 @@ sub parent_dot_config {
 			my %seen;
 			@parent_info = grep { !$seen{$_}++ } @parent_info;
 			$text .= "dest_domain=.";
-			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
 			$text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
@@ -2070,7 +2106,7 @@ sub parent_dot_config {
 			}
 			my %seen;
 			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
+			$text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
 			$text .= " round_robin=urlhash go_direct=false";
 		}
 
@@ -2080,7 +2116,6 @@ sub parent_dot_config {
 		}
 
 		$text .= "\n";
-
 		return $text;
 	}
 }

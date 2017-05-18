@@ -50,11 +50,11 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editProfile(profile.id)" ng-repeat="profile in profiles">
-                <td>{{profile.name}}</td>
-                <td>{{profile.type}}</td>
-                <td>{{profile.description}}</td>
-                <td>{{profile.cdnName}}</td>
+            <tr ng-click="editProfile(profile.id)" ng-repeat="profile in ::profiles">
+                <td>{{::profile.name}}</td>
+                <td>{{::profile.type}}</td>
+                <td>{{::profile.description}}</td>
+                <td>{{::profile.cdnName}}</td>
             </tr>
             </tbody>
         </table>

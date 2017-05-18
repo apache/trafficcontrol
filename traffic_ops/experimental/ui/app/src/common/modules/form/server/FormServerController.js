@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -61,6 +61,13 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
             });
     };
 
+    var updateStatus = function(status) {
+        // todo: hook this into PUT /api/version/server/:id/status
+        console.log(status.name);
+        console.log(status.offlineReason);
+        alert('this still needs to be hooked into the api');
+    };
+    
     var refresh = function() {
         $state.reload(); // reloads all the resolves for the view
     };
@@ -97,24 +104,27 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
             );
     };
 
-    $scope.queueUpdates = function() {
-        alert('not hooked up yet: queuing updates for server');
+    $scope.confirmStatusUpdate = function() {
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/status/dialog.select.status.tpl.html',
+            controller: 'DialogSelectStatusController',
+            size: 'md',
+            resolve: {
+                statuses: function() {
+                    return $scope.statuses;
+                }
+            }
+        });
+        modalInstance.result.then(function(status) {
+            updateStatus(status);
+        }, function () {
+            // do nothing
+        });
     };
 
-    $scope.dequeueUpdates = function() {
-        alert('not hooked up yet: dequeuing updates for server');
-    };
 
     $scope.viewConfig = function() {
         alert('not hooked up yet: view config files for server');
-    };
-
-    $scope.offlineServer = function() {
-        alert('not hooked up yet: offlineServer for server');
-    };
-
-    $scope.onlineServer = function() {
-        alert('not hooked up yet: onlineServer for server');
     };
 
     $scope.viewDeliveryServices = function() {
@@ -139,5 +149,5 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
 module.exports = FormServerController;
