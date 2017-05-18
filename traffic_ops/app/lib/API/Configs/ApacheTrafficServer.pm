@@ -18,6 +18,7 @@ package API::Configs::ApacheTrafficServer;
 #
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojo::UserAgent;
 use Date::Manip;
 use NetAddr::IP;
 use Data::Dumper;
@@ -84,20 +85,18 @@ sub get_config_metadata {
 			$data_obj->{'info'}->{'toRevProxyUrl'}	= $tm_rev_proxy_url;
 		}
 
-		#$data_obj->{'profile'}->{'name'}   = $server->profile->name;
-		#$data_obj->{'profile'}->{'id'}     = $server->profile->id;
-		#$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
-
 		%condition = (
 			'profile_parameters.profile' => $server->profile->id,
-			-or                          => [ 'name' => 'location' ]
+			-or                          => [ 'name' => 'location' , 'name' => 'URL' ]
 		);
 		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 		while ( my $param = $rs_param->next ) {
 			if ( $param->name eq 'location' ) {
 				$config_file_obj->{ $param->config_file }->{'fnameOnDisk'} = $param->config_file;
 				$config_file_obj->{ $param->config_file }->{'location'} = $param->value;
-
+			}
+			if ( $param->name eq 'URL' ) {
+				$config_file_obj->{ $param->config_file }->{'url'} = $param->value;
 			}
 		}
 	}
@@ -107,6 +106,9 @@ sub get_config_metadata {
 	foreach my $config_file ( keys %{ $config_file_obj } ) {
 		my $scope = $self->get_scope($config_file, $server_obj);
 		my $scope_id;
+		if (defined ( $config_file_obj->{$config_file}->{'url'} ) ) {
+			$scope = 'cdns';
+		}
 		if ( $scope eq 'cdns' ) {
 			$scope_id = $server->cdn->name;
 		}
@@ -116,7 +118,14 @@ sub get_config_metadata {
 		else {
 			$scope_id = $server_obj->host_name;
 		}
-		$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		if (defined ( $config_file_obj->{$config_file}->{'url'} ) ) {
+			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/download?url=" . $config_file_obj->{$config_file}->{'url'};
+			#delete the url element so we don't see it in the metadata:
+			delete $config_file_obj->{$config_file}->{'url'};
+		}
+		else {
+			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		}
 		$config_file_obj->{$config_file}->{'scope'} = $scope;
 	}
 
@@ -190,9 +199,10 @@ sub get_server_config {
 #entry point for cdn scope api route.
 sub get_cdn_config {
 	my $self     = shift;
-	my $filename = $self->param("filename");
+	my $filename = $self->param('filename');
 	my $id       = $self->param('id');
 	my $scope    = $self->get_scope($filename);
+	my $ext_url  = $self->param('url');
 
 	##check user access
 	if ( !&is_oper($self) ) {
@@ -219,7 +229,8 @@ sub get_cdn_config {
 	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename ); }
-	else                                          { return $self->not_found(); }
+	elsif ( $filename eq "download" && defined($ext_url) ) { $file_contents = $self->download_file( $ext_url ) }
+	else { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
@@ -324,6 +335,7 @@ sub get_scope {
 	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
 	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
+	elsif ( $fname eq "download" )                             { $scope = 'cdns' }
 	elsif ( $fname =~ /hdr_rw_.*\.config/ )                    { $scope = 'cdns' }
 	elsif ( $fname =~ /regex_remap_.*\.config/ )               { $scope = 'cdns' }
 	elsif ( $fname eq "regex_revalidate.config" )              { $scope = 'cdns' }
@@ -989,6 +1001,19 @@ sub facts {
 	$text .= "profile:" . $profile_obj->name . "\n";
 
 	return $text;
+}
+
+#downloads a file from an external source and returns it.
+sub download_file {
+	my $self = shift;
+	my $url  = shift;
+
+	my $ua = Mojo::UserAgent->new;
+	$ua     = $ua->max_redirects(3);
+	$ua         = $ua->request_timeout(5);
+	my $download = $ua->get($url)->res;
+	if ( $download->code == '200' ) { return $download->body; }
+	else { return; }
 }
 
 #generates a generic config file based on a server and parameters which match the supplied filename.
