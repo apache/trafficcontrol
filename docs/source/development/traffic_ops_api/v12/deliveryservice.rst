@@ -1493,8 +1493,9 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | orgServerFqdn          | yes      | The origin server base URL (FQDN when used in this instance, includes the                               |
-  |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server.                    |
+  | orgServerFqdn          | yes|no   | The origin server base URL (FQDN when used in this instance, includes the                               |
+  |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server. This field is      |
+  |                        |          | NOT required if type is ANY_MAP, STEERING OR CLIENT_STEERING.                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
