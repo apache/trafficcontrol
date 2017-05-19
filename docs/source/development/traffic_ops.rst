@@ -605,6 +605,7 @@ API 1.2 Reference
 
   traffic_ops_api/v12/asn
   traffic_ops_api/v12/cachegroup
+  traffic_ops_api/v12/cachegroup_parameter
   traffic_ops_api/v12/cache_stats
   traffic_ops_api/v12/cdn
   traffic_ops_api/v12/changelog

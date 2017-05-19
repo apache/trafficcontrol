@@ -560,6 +560,15 @@ my %definition_for = (
 			value       => 90,
 		},
 	},
+	'unassigned_parameter_1' => {
+		new   => 'Parameter',
+		using => {
+			id          => 65,
+			name        => 'unassigned_parameter_1',
+			config_file => 'whaterver.config',
+			value       => 852,
+		},
+	},
 );
 
 sub get_definition {
