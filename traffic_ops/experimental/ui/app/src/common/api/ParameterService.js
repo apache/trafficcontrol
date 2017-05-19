@@ -68,6 +68,14 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one('profiles', profileId).getList('parameters');
     };
 
+    this.getProfileUnassignedParams = function(profileId) {
+        return Restangular.one('profiles', profileId).getList('unassigned_parameters');
+    };
+
+    this.getCacheGroupUnassignedParams = function(cgId) {
+        return Restangular.one('cachegroups', cgId).getList('unassigned_parameters');
+    };
+
 };
 
 ParameterService.$inject = ['Restangular', 'locationUtils', 'messageModel'];

@@ -17,13 +17,37 @@
  * under the License.
  */
 
-var CacheGroupParameterService = function(Restangular) {
+var CacheGroupParameterService = function(Restangular, messageModel, httpService, ENV) {
 
 	this.getCacheGroupParameters = function(cachegroupId) {
 		return Restangular.one('cachegroups', cachegroupId).getList('parameters')
 	};
 
+	this.unlinkCacheGroupParameter = function(cgId, paramId) {
+		return httpService.delete(ENV.api['root'] + 'cachegroupparameters/' + cgId + '/' + paramId)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Cachegroup and parameter were unlinked.' } ], false);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, true);
+				}
+			);
+	};
+
+	this.linkCacheGroupParameters = function(cgParamMappings) {
+		return Restangular.service('cachegroupparameters').post(cgParamMappings)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Parameters linked to cache group' } ], false);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
+	};
+
 };
 
-CacheGroupParameterService.$inject = ['Restangular'];
+CacheGroupParameterService.$inject = ['Restangular', 'messageModel', 'httpService', 'ENV'];
 module.exports = CacheGroupParameterService;

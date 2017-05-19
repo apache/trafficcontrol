@@ -25,7 +25,7 @@ under the License.
             <li class="active">Parameters</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="Link Parameter to Cache Group" ng-click="addParameter()"><i class="fa fa-link"></i></button>
+            <button class="btn btn-primary" title="Link Parameter to Cache Group" ng-click="selectParams()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -48,7 +48,7 @@ under the License.
                 <td>{{::parameter.name}}</td>
                 <td>{{::parameter.configFile}}</td>
                 <td>{{::parameter.value}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove from Cache Group" ng-click="removeParameter()"><i class="fa fa-chain-broken"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Cache Group" ng-click="removeParameter(parameter.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>
