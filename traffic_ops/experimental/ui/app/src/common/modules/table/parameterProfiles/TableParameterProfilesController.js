@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, locationUtils, profileParameterService) {
+var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, $uibModal, locationUtils, profileParameterService) {
 
 	$scope.parameter = parameter;
 
@@ -40,6 +40,37 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.selectProfiles = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/parameterProfiles/table.paramProfilesUnassigned.tpl.html',
+			controller: 'TableParamProfilesUnassignedController',
+			size: 'lg',
+			resolve: {
+				parameter: function() {
+					return parameter;
+				},
+				profiles: function(profileService) {
+					return profileService.getParamUnassignedProfiles(parameter.id);
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedProfiles) {
+			var massagedArray = [];
+			for (i = 0; i < selectedProfiles.length; i++) {
+				massagedArray.push( { parameterId: parameter.id, profileId: selectedProfiles[i] } );
+			}
+			profileParameterService.linkProfileParameters(massagedArray)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
@@ -52,5 +83,5 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', 'locationUtils', 'profileParameterService'];
+TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', '$uibModal', 'locationUtils', 'profileParameterService'];
 module.exports = TableParameterProfilesController;

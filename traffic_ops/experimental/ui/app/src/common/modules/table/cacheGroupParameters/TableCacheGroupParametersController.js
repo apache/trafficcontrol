@@ -17,22 +17,53 @@
  * under the License.
  */
 
-var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParameters, $scope, $state, locationUtils) {
+var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParameters, $scope, $state, $uibModal, locationUtils, cacheGroupParameterService) {
 
 	$scope.cacheGroup = cacheGroup;
 
 	$scope.cacheGroupParameters = cacheGroupParameters;
 
-	$scope.addParameter = function() {
-		alert('not hooked up yet: add parameter to cache group');
-	};
-
-	$scope.removeParameter = function() {
-		alert('not hooked up yet: remove Parameter from cache group');
+	$scope.removeParameter = function(paramId) {
+		cacheGroupParameterService.unlinkCacheGroupParameter(cacheGroup.id, paramId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
+	};
+
+	$scope.selectParams = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/cacheGroupParameters/table.cacheGroupParamsUnassigned.tpl.html',
+			controller: 'TableCacheGroupParamsUnassignedController',
+			size: 'lg',
+			resolve: {
+				cg: function() {
+					return cacheGroup;
+				},
+				parameters: function(parameterService) {
+					return parameterService.getCacheGroupUnassignedParams(cacheGroup.id);
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedParams) {
+			var massagedArray = [];
+			for (i = 0; i < selectedParams.length; i++) {
+				massagedArray.push( { cacheGroupId: cacheGroup.id, parameterId: selectedParams[i] } );
+			}
+			cacheGroupParameterService.linkCacheGroupParameters(massagedArray)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -47,5 +78,5 @@ var TableCacheGroupParametersController = function(cacheGroup, cacheGroupParamet
 
 };
 
-TableCacheGroupParametersController.$inject = ['cacheGroup', 'cacheGroupParameters', '$scope', '$state', 'locationUtils'];
+TableCacheGroupParametersController.$inject = ['cacheGroup', 'cacheGroupParameters', '$scope', '$state', '$uibModal', 'locationUtils', 'cacheGroupParameterService'];
 module.exports = TableCacheGroupParametersController;
