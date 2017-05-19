@@ -111,6 +111,38 @@ sub get_profiles_by_paramId {
 	return $self->success( \@data );
 }
 
+sub get_unassigned_profiles_by_paramId {
+	my $self    	= shift;
+	my $param_id	= $self->param('id');
+
+	my %criteria;
+	if ( defined $param_id ) {
+		$criteria{'parameter.id'} = $param_id;
+	} else {
+		return $self->alert("Parameter ID is required");
+	}
+
+	my @assigned_profiles =
+		$self->db->resultset('ProfileParameter')->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } )->get_column('profile')->all();
+
+	my $rs_data = $self->db->resultset("Profile")->search( { 'me.id' => { 'not in' => \@assigned_profiles } }, { prefetch => [ 'cdn' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"description" => $row->description,
+				"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+				"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
+				"type"        => $row->type,
+				"lastUpdated" => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
 sub show {
 	my $self = shift;
 	my $id   = $self->param('id');

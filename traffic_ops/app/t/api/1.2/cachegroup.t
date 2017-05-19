@@ -17,6 +17,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use DBI;
+use JSON;
 use strict;
 use warnings;
 no warnings 'once';
@@ -270,6 +271,26 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id . '/update' => {Accept => 'applic
         "name" => "cache_group_edge_1",
         "shortName" => "cg_edge_1",
         "typeName" => "EDGE_LOC"})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->load_core_data($schema);
+
+# Count the 'response number'
+my $count_response = sub {
+    my ( $t, $count ) = @_;
+    my $json = decode_json( $t->tx->res->content->asset->slurp );
+    my $r    = $json->{response};
+    return $t->success( is( scalar(@$r), $count ) );
+};
+
+# there are currently 61 parameters not assigned to cachegroup 100
+$t->get_ok('/api/1.2/cachegroups/100/unassigned_parameters')->status_is(200)->$count_response(61)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 61 parameters not assigned to cachegroup 100
+$t->get_ok('/api/1.2/cachegroups/200/unassigned_parameters')->status_is(200)->$count_response(61)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

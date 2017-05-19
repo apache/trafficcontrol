@@ -613,6 +613,7 @@ sub api_routes {
 
 	# parameters for a profile
 	$r->get( "/api/$version/profiles/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
+	$r->get( "/api/$version/profiles/:id/unassigned_parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_profile_params_unassigned', namespace => $namespace );
 	$r->get("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
 	$r->get( "/api/$version/parameters/profile/:name")->over( authenticated => 1 )->to( 'Parameter#get_profile_params', namespace => $namespace );
 	$r->post("/api/$version/profiles/name/:name/parameters")->over( authenticated => 1 )
@@ -628,8 +629,12 @@ sub api_routes {
 
 	# -- PARAMETERS: CACHEGROUP PARAMETERS
 	$r->get("/api/$version/cachegroups/:id/parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_cachegroup_params', namespace => $namespace );
+	$r->get("/api/$version/cachegroups/:id/unassigned_parameters" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Parameter#get_cachegroup_params_unassigned', namespace => $namespace );
 	$r->get("/api/$version/cachegroup/:parameter_id/parameter")->over( authenticated => 1 )->to( 'Cachegroup#by_parameter_id', namespace => $namespace );
 	$r->get("/api/$version/cachegroupparameters")->over( authenticated => 1 )->to( 'CachegroupParameter#index', namespace => $namespace );
+	$r->post("/api/$version/cachegroupparameters")->over( authenticated => 1 )->to( 'CachegroupParameter#create', namespace => $namespace );
+	$r->delete("/api/$version/cachegroupparameters/:cachegroup_id/:parameter_id")->over( authenticated => 1 )
+		->to( 'CachegroupParameter#delete', namespace => $namespace );
 	$r->get("/api/$version/cachegroups/:parameter_id/parameter/available")->over( authenticated => 1 )
 		->to( 'Cachegroup#available_for_parameter', namespace => $namespace );
 
@@ -659,6 +664,7 @@ sub api_routes {
 
 	# get all profiles associated with a parameter (from profile_parameter table)
 	$r->get( "/api/$version/parameters/:id/profiles" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Profile#get_profiles_by_paramId', namespace => $namespace );
+	$r->get( "/api/$version/parameters/:id/unassigned_profiles" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Profile#get_unassigned_profiles_by_paramId', namespace => $namespace );
 
 	# -- REGIONS
 	# Supports ?orderby=key
