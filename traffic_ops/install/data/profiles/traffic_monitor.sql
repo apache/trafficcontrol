@@ -1,3 +1,20 @@
+/*
+
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
 INSERT INTO profile (name, description, type) VALUES ('TM_PROFILE','Traffic Monitor','TM_PROFILE') ON CONFLICT (name) DO NOTHING;
 INSERT INTO parameter (name, config_file, value) VALUES ('hack.ttl','rascal-config.txt','30') ON CONFLICT (name, config_file, value) DO NOTHING;
 INSERT INTO profile_parameter (profile, parameter) VALUES ( (select id from profile where name = 'TM_PROFILE'), (select id from parameter where name = 'hack.ttl' and config_file = 'rascal-config.txt' and value = '30') )  ON CONFLICT (profile, parameter) DO NOTHING;
