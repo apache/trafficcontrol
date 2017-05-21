@@ -47,6 +47,9 @@ sub name {
 	my $name = $self->param('name');
 
 	my $rs_data = $self->db->resultset("Capability")->search( 'me.name' => $name );
+	if ( !defined($rs_data) ) {
+		return $self->not_found();
+	}
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
