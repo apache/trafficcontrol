@@ -46,7 +46,7 @@ sub index {
 				"id"          	=> $row->id,
 				"httpMethod"	=> $row->http_method,
 				"route" 		=> $row->route,
-				"capName"   	=> $row->capability->name,
+				"capability"   	=> $row->capability->name,
 				"lastUpdated" 	=> $row->last_updated
 			}
 		);
@@ -66,7 +66,7 @@ sub renderResults {
 				"id"          	=> $row->id,
 				"httpMethod"	=> $row->http_method,
 				"route" 		=> $row->route,
-				"capName"   	=> $row->capability->name,
+				"capability"   	=> $row->capability->name,
 				"lastUpdated" 	=> $row->last_updated
 			}
 		);
@@ -147,7 +147,7 @@ sub create {
 
 	my $http_method = $params->{httpMethod} if defined($params->{httpMethod});
 	my $route = $params->{route} if defined($params->{route});
-	my $capability = $params->{capName} if defined($params->{capName});
+	my $capability = $params->{capability} if defined($params->{capability});
 	my $id = undef;
 
 	my ( $is_valid, $errStr ) = $self->is_mapping_valid( $id, $http_method, $route, $capability );
@@ -169,10 +169,10 @@ sub create {
 		$response->{id}				= $rs->id;
 		$response->{httpMethod}		= $rs->http_method;
 		$response->{route}			= $rs->route;
-		$response->{capName}		= $rs->capability->name;
+		$response->{capability}		= $rs->capability->name;
 		$response->{lastUpdated}	= $rs->last_updated;
 
-		&log( $self, "Created API-Capability mapping: '$response->{httpMethod}', '$response->{route}', '$response->{capName}' for id: " . $response->{id}, "APICHANGE" );
+		&log( $self, "Created API-Capability mapping: '$response->{httpMethod}', '$response->{route}', '$response->{capability}' for id: " . $response->{id}, "APICHANGE" );
 
 		return $self->success( $response, "API-Capability mapping was created." );
 	}
@@ -196,7 +196,7 @@ sub update {
 
 	my $http_method = $params->{httpMethod} if defined($params->{httpMethod});
 	my $route = $params->{route} if defined($params->{route});
-	my $capability = $params->{capName} if defined($params->{capName});
+	my $capability = $params->{capability} if defined($params->{capability});
 
 	my $mapping = $self->db->resultset('ApiCapability')->find( { id => $id } );
 	if ( !defined($mapping) ) {
@@ -220,10 +220,10 @@ sub update {
 		$response->{id}				= $rs->id;
 		$response->{httpMethod}		= $rs->http_method;
 		$response->{route}			= $rs->route;
-		$response->{capName}		= $rs->capability->name;
+		$response->{capability}		= $rs->capability->name;
 		$response->{lastUpdated}	= $rs->last_updated;
 
-		&log( $self, "Updated API-Capability mapping: '$response->{httpMethod}', '$response->{route}', '$response->{capName}' for id: " . $response->{id}, "APICHANGE" );
+		&log( $self, "Updated API-Capability mapping: '$response->{httpMethod}', '$response->{route}', '$response->{capability}' for id: " . $response->{id}, "APICHANGE" );
 
 		return $self->success( $response, "API-Capability mapping was updated." );
 	}
