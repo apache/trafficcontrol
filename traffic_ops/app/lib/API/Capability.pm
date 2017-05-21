@@ -129,7 +129,7 @@ sub update {
 	my $description = $params->{description} if defined( $params->{description} );
 
 	my $capability = $self->db->resultset('Capability')->find( { name => $name } );
-	if ( !defined($capability) or $capability eq "" ) {
+	if ( !defined($capability) ) {
 		return $self->not_found();
 	}
 
