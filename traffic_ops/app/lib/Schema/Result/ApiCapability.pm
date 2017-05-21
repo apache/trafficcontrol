@@ -98,6 +98,27 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key("id");
 
+=head1 UNIQUE CONSTRAINTS
+
+=head2 C<api_capability_http_method_route_capability_key>
+
+=over 4
+
+=item * L</http_method>
+
+=item * L</route>
+
+=item * L</capability>
+
+=back
+
+=cut
+
+__PACKAGE__->add_unique_constraint(
+  "api_capability_http_method_route_capability_key",
+  ["http_method", "route", "capability"],
+);
+
 =head1 RELATIONS
 
 =head2 capability
@@ -116,8 +137,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-04-01 22:22:35
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vYfANFCOS9i3LpGHRzMv3w
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-05-21 10:15:00
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:b1CNpOv08i47l8nNcqxLoA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
