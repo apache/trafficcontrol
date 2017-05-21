@@ -32,9 +32,6 @@ my $schema = Schema->connect_to_database;
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
-my $false = 0;
-my $true = 1;
-
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
