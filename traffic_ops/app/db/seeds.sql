@@ -62,7 +62,6 @@ insert into role (name, description, priv_level) values ('steering', 'Role for S
 insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('root', 'Role for full capabilities - super-user ', 30) ON CONFLICT DO NOTHING;
 
 -- tenants
 insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
@@ -133,8 +132,8 @@ insert into capability (name, description) values ('user-read', 'View user confi
 insert into capability (name, description) values ('user-write', 'Create, edit or delete user configuration') ON CONFLICT (name) DO NOTHING;
 
 -- roles_capabilities
-insert into role_capability (role_id, cap_name) values ((select id from role where name='root'), 'all-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
-insert into role_capability (role_id, cap_name) values ((select id from role where name='root'), 'all-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'all-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
+insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'all-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
 
 -- api_capabilities
 insert into api_capability (http_method, route, capability) values ('GET', '/', 'all-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
