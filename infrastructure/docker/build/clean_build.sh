@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# Fix ownership of output files
+#  $1 is file or dir with correct ownership
+#  remaining args are files/dirs to be fixed, recursively
+setowner() {
+    own=$(stat -c '%u:%g' $1)
+    shift
+    [[ -n $@ ]] && chown -R ${own} "$@"
+}
+
+cleanup() {
+    setowner /trafficcontrol /trafficcontrol/dist
+}
+
+trap cleanup EXIT
+
 set -x
+
+# set owner of dist dir -- cleans up existing dist permissions...
+cleanup
 cp -a /trafficcontrol /tmp/. && \
 	cd /tmp/trafficcontrol && \
 	rm -rf dist && \
-	ln -fs /trafficcontrol/dist dist &&
+	ln -fs /trafficcontrol/dist dist && \
 	((((./build/build.sh $1 2>&1; echo $? >&3) | tee ./dist/build-$1.log >&4) 3>&1) | (read x; exit $x)) 4>&1
