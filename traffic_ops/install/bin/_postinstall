@@ -551,6 +551,7 @@ QUERY
 ADMIN
     $dbh->do($insert_admin);
 
+    insert_cdn($dbh, $paramconf);
     insert_parameters($dbh, $paramconf);
     insert_profiles($dbh, $paramconf);
 
@@ -626,6 +627,31 @@ sub setupCertificates {
 }
 
 #------------------------------------
+sub insert_cdn {
+
+    my $dbh = shift;
+    my $paramconf = shift;
+
+    InstallUtils::logger( "=========== Setting up cdn", "info" );
+
+    # Enable multiple inserts into one commit
+    $dbh->{pg_server_prepare} = 0;
+
+	my $cdn_name = $paramconf->{"cdn_name"};
+	my $dns_subdomain = $paramconf->{"dns_subdomain"};
+
+    my $insert_stmt = <<INSERTS;
+
+    -- global parameters
+    insert into cdn (name, domain_name, dnssec_enabled)
+                values ('$cdn_name', '$dns_subdomain', false) 
+                ON CONFLICT (name) DO NOTHING;
+
+INSERTS
+    doInsert($dbh, $insert_stmt);
+}
+
+#------------------------------------
 sub insert_parameters {
     my $dbh = shift;
     my $paramconf = shift;
@@ -635,32 +661,25 @@ sub insert_parameters {
     # Enable multiple inserts into one commit
     $dbh->{pg_server_prepare} = 0;
 
-    my $insert_stmt = <<'INSERTS';
+	my $tm_url = $paramconf->{"tm.url"};
 
+    my $insert_stmt = <<INSERTS;
     -- global parameters
     insert into parameter (name, config_file, value) 
-                values ('tm.url', 'global', '$paramconf->{"tm.url"}') 
+                values ('tm.url', 'global', '$tm_url') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
     insert into parameter (name, config_file, value) 
-                values ('tm.instance_name', 'global', '$paramconf->{"tm.instance_name"}') 
-                ON CONFLICT (name, config_file, value) DO NOTHING;
-
-    insert into parameter (name, config_file, value) 
-                values ('tm.toolname', 'global', '$paramconf->{"tm.toolname"}') 
-                ON CONFLICT (name, config_file, value) DO NOTHING;
-
-    insert into parameter (name, config_file, value) 
-                values ('tm.infourl', 'global', '$paramconf->{"tm.url"}/doc') 
+                values ('tm.infourl', 'global', '$tm_url/doc') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
     -- CRConfig.json parameters
     insert into parameter (name, config_file, value) 
-                values ('geolocation.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLite2-City.mmdb.gz') 
+                values ('geolocation.polling.url', 'CRConfig.json', '$tm_url/routing/GeoLite2-City.mmdb.gz') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
     insert into parameter (name, config_file, value) 
-                values ('geolocation6.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLiteCityv6.dat.gz') 
+                values ('geolocation6.polling.url', 'CRConfig.json', '$tm_url/routing/GeoLiteCityv6.dat.gz') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
 INSERTS
@@ -673,7 +692,9 @@ sub insert_profiles {
     my $paramconf = shift;
 
     InstallUtils::logger( "\n=========== Setting up profiles", "info" );
-    my $insert_stmt = <<'INSERTS';
+	my $tm_url = $paramconf->{"tm.url"};
+
+    my $insert_stmt = <<INSERTS;
 
     -- global parameters
     insert into profile (name, description, type) 
@@ -681,27 +702,19 @@ sub insert_profiles {
                 ON CONFLICT (name) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = '$paramconf->{"tm.url"}') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = '$tm_url') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = '$paramconf->{"tm.instance_name"}') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$tm_url/doc') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = '$paramconf->{"tm.toolname"}') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLite2-City.mmdb.gz') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$paramconf->{"tm.url"}/doc') ) 
-                ON CONFLICT (profile, parameter) DO NOTHING;
-
-    insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = 'https://$paramconf->{"dns_subdomain"}/routing/GeoLite2-City.mmdb.gz') ) 
-                ON CONFLICT (profile, parameter) DO NOTHING;
-
-    insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = 'https://$paramconf->{"dns_subdomain"}/routing/GeoLiteCityv6.dat.gz') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLiteCityv6.dat.gz') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
 INSERTS
