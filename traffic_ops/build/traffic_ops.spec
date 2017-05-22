@@ -34,7 +34,7 @@ Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
 Requires:         cpanminus, expat-devel, gcc-c++, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
-Requires:	      libidn-devel, libcurl-devel
+Requires:         libidn-devel, libcurl-devel
 Requires:         postgresql96 >= 9.6.2 , postgresql96-devel >= 9.6.2
 Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
@@ -96,6 +96,7 @@ Built: %(date) by %{getenv: USER}
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_clean_isos /etc/cron.d/trafops_clean_isos
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
+    %__cp %{PACKAGEDIR}/etc/profile.d/traffic_ops.sh /etc/profile.d/traffic_ops.sh
     %__chown root:root /etc/init.d/traffic_ops
     %__chown root:root /etc/cron.d/trafops_dnssec_refresh
     %__chown root:root /etc/cron.d/trafops_clean_isos
