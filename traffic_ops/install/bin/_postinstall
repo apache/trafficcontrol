@@ -635,7 +635,7 @@ sub insert_parameters {
     # Enable multiple inserts into one commit
     $dbh->{pg_server_prepare} = 0;
 
-    my $insert_stmt = <<"INSERTS";
+    my $insert_stmt = <<'INSERTS';
 
     -- global parameters
     insert into parameter (name, config_file, value) 
@@ -673,7 +673,7 @@ sub insert_profiles {
     my $paramconf = shift;
 
     InstallUtils::logger( "\n=========== Setting up profiles", "info" );
-    my $insert_stmt = <<"INSERTS";
+    my $insert_stmt = <<'INSERTS';
 
     -- global parameters
     insert into profile (name, description, type) 
