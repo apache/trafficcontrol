@@ -90,6 +90,21 @@ insert into parameter (name, config_file, value) select * from (select 'DsStats'
 insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_4xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_4xx') limit 1 ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_5xx') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_5xx') limit 1 ON CONFLICT DO NOTHING;
 insert into parameter (name, config_file, value) select * from (select 'DsStats', 'traffic_stats.config', 'tps_total') as temp where not exists (select name from parameter where name = 'DsStats' and config_file = 'traffic_stats.config' and value = 'tps_total') limit 1 ON CONFLICT DO NOTHING;
+-- Moved into postinstall global parameters
+insert into profile (name, description) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE') ON CONFLICT (name) DO NOTHING;
+
+---------------------------------
+
+-- profiles
+---------------------------------
+insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN') ON CONFLICT DO NOTHING;
+insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'Traffic Ops CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
+
+insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT DO NOTHING;
+insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
+
+
+
 
 -- profiles
 insert into profile (name, description) values ('RIAK_ALL', 'Riak profile for all CDNs') ON CONFLICT DO NOTHING;
