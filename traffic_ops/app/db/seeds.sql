@@ -26,14 +26,21 @@ insert into job_agent (name, description, active) values ('dummy', 'Description 
 insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT (name) DO NOTHING;
 
 -- parameters
--- Move into postinstall global parameters
+-- Moved into postinstall global parameters
 insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+
 ---------------------------------
 
 -- profiles
 ---------------------------------
 insert into parameter (name, config_file, value) values ('tm.instance_name', 'global', 'Traffic Ops CDN') ON CONFLICT (name, config_file, value) DO NOTHING;
+insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = 'Traffic Ops CDN') ) ON CONFLICT (profile, parameter) DO NOTHING;
+
 insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
+insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
+
+
+
 
 -- profiles
 ---------------------------------
