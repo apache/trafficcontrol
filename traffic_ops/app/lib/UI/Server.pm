@@ -449,11 +449,10 @@ sub check_server_input {
 
 	my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $paramHashRef->{'profile'}}, { prefetch => ['cdn'] } )->single();
 	my $cdn = $self->db->resultset('Cdn')->search( { 'me.id' => $paramHashRef->{'cdn'} } )->single();
-	my $profile_cdn = $profile->cdn;
-	if ( !defined($profile_cdn) ) {
+	if ( !defined($profile->cdn) ) {
 		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the " . $cdn->name . " CDN." . $sep;
 	}
-	if ( $profile_cdn != $cdn->id ) {
+	elsif ( $profile->cdn->id != $cdn->id ) {
 		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the " . $cdn->name . " CDN." . $sep;
 	}
 	return $err;
