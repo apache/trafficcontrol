@@ -18,6 +18,8 @@ package Utils::Helper;
 
 use Carp qw(cluck confess);
 use Data::Dumper;
+use Digest::SHA1 qw(sha1_hex);
+use Crypt::ScryptKDF qw(scrypt_hash scrypt_hash_verify);
 
 sub new {
 	my $self  = {};
@@ -130,6 +132,22 @@ sub error {
 			}
 		}
 	);
+}
+
+sub hash_pass {
+	my $pass = shift;
+	return scrypt_hash($pass, \64, 16384, 8, 1, 64);
+}
+
+# verify_pass verifies that the given plaintext password matches the hashed password from the database.
+# It first checks if it's scrypt, and if that verification fails, it checks if it's an old insecure sha1 hash. The insecure sha1 fallback is deprecated, and will be removed in the next major version.
+sub verify_pass {
+	my $pass        = shift;
+	my $hashed_pass = shift;
+	if ( scrypt_hash_verify($pass, $hashed_pass) ) {
+		return 1;
+	}
+	return $hashed_pass eq sha1_hex($pass); # DEPRECATED - remove in next major version
 }
 
 1;

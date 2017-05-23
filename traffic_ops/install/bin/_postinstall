@@ -28,7 +28,7 @@ use DBI;
 use POSIX;
 use File::Basename qw{dirname};
 use File::Path qw{make_path};
-use Digest::SHA1 qw(sha1_hex);
+use Crypt::ScryptKDF qw(scrypt_hash);
 use Data::Dumper qw(Dumper);
 use Scalar::Util qw(looks_like_number);
 use Getopt::Long;
@@ -212,6 +212,11 @@ sub generateCdnConf {
     InstallUtils::writePerl( $fileName, $cdnConf );
 }
 
+sub hash_pass {
+	my $pass = shift;
+	return scrypt_hash($pass, \64, 16384, 8, 1, 64);
+}
+
 # userInput: The entire input config file which is either user input or the defaults
 # fileName: The filename of the output config file
 #
@@ -242,7 +247,7 @@ sub generateUsersConf {
     my %config = getConfig( $userInput, $fileName );
 
     $user{username} = $config{tmAdminUser};
-    $user{password} = sha1_hex( $config{tmAdminPw} );
+    $user{password} = hash_pass( $config{tmAdminPw} );
 
     InstallUtils::writeJson( $fileName, \%user );
     $user{password} = $config{tmAdminPw};
@@ -540,13 +545,13 @@ QUERY
     invoke_db_admin_pl("seed");
 
     # Skip the insert if the admin 'username' is already there.
-    my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
+    my $hashed_passwd = hash_pass( $adminconf->{"password"} );
     my $insert_admin = <<"ADMIN";
     insert into tm_user (username, role, local_passwd, confirm_local_passwd)
                 values  ('$adminconf->{"username"}',
                         (select id from role where name = 'admin'),
-                         '$sha1_passwd',
-                        '$sha1_passwd' )
+                         '$hashed_passwd',
+                        '$hashed_passwd' )
                         ON CONFLICT (username) DO NOTHING;
 ADMIN
     $dbh->do($insert_admin);
