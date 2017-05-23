@@ -84,6 +84,19 @@ var DeliveryServiceService = function(Restangular, locationUtils, httpService, m
             );
     };
 
+    this.assignDeliveryServiceServers = function(dsServerMappings) {
+        return Restangular.service('deliveryserviceserver').post(dsServerMappings)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Servers linked to delivery service' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+
 };
 
 DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'httpService', 'messageModel', 'ENV'];

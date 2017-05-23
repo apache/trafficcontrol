@@ -17,15 +17,11 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, locationUtils, serverUtils, deliveryServiceService) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, $uibModal, locationUtils, serverUtils, deliveryServiceService) {
 
 	$scope.deliveryService = deliveryService;
 
 	$scope.servers = servers;
-
-	$scope.addServer = function() {
-		alert('not hooked up yet: addServer to ds');
-	};
 
 	$scope.removeServer = function(dsId, serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
@@ -39,6 +35,34 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};
+
+	$scope.selectServers = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/deliveryServiceServers/table.dsServersUnassigned.tpl.html',
+			controller: 'TableDSServersUnassignedController',
+			size: 'lg',
+			resolve: {
+				deliveryService: function() {
+					return deliveryService;
+				},
+				servers: function(serverService) {
+					return serverService.getUnassignedDeliveryServiceServers(deliveryService.id);
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedServerIds) {
+			var serverAssignments = { dsId: deliveryService.id, servers: selectedServerIds };
+			deliveryServiceService.assignDeliveryServiceServers(serverAssignments)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -56,5 +80,5 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'deliveryServiceService'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'deliveryServiceService'];
 module.exports = TableDeliveryServiceServersController;
