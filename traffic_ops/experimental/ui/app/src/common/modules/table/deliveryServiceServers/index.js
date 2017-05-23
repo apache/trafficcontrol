@@ -18,4 +18,5 @@
  */
 
 module.exports = angular.module('trafficOps.table.deliveryServiceServers', [])
-	.controller('TableDeliveryServiceServersController', require('./TableDeliveryServiceServersController'));
+	.controller('TableDeliveryServiceServersController', require('./TableDeliveryServiceServersController'))
+	.controller('TableDSServersUnassignedController', require('./TableDSServersUnassignedController'));
