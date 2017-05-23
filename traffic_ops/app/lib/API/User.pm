@@ -20,7 +20,7 @@ package API::User;
 use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
-use Digest::SHA1 qw(sha1_hex);
+use Utils::Helper;
 use Mojolicious::Validator;
 use Mojolicious::Validator::Validation;
 use Data::Dumper;
@@ -184,10 +184,10 @@ sub update {
 	};
 
 	if ( defined( $params->{localPasswd} ) && $params->{localPasswd} ne '' ) {
-		$values->{"local_passwd"} = sha1_hex( $params->{localPasswd} );
+		$values->{"local_passwd"} = Utils::Helper::hash_pass($params->{localPasswd});
 	}
 	if ( defined( $params->{confirmLocalPasswd} ) && $params->{confirmLocalPasswd} ne '' ) {
-		$values->{"confirm_local_passwd"} = sha1_hex( $params->{confirmLocalPasswd} );
+		$values->{"confirm_local_passwd"} = Utils::Helper::hash_pass( $params->{confirmLocalPasswd} );
 	}
 
 	my $rs = $user->update($values);
@@ -505,10 +505,10 @@ sub update_current {
 		# These if "defined" checks allow for partial user updates, otherwise the entire
 		# user would need to be passed through.
 		if ( defined($local_passwd) && $local_passwd ne '' ) {
-			$db_user->{"local_passwd"} = sha1_hex($local_passwd);
+			$db_user->{"local_passwd"} = Utils::Helper::hash_pass( $local_passwd );
 		}
 		if ( defined($confirm_local_passwd) && $confirm_local_passwd ne '' ) {
-			$db_user->{"confirm_local_passwd"} = sha1_hex($confirm_local_passwd);
+			$db_user->{"confirm_local_passwd"} = Utils::Helper::hash_pass( $confirm_local_passwd );
 		}
 		if ( defined( $user->{"id"} ) ) {
 			$db_user->{"id"} = $user->{"id"};

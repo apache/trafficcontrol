@@ -22,7 +22,6 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use UI::Utils;
-use Digest::SHA1 qw(sha1_hex);
 use Mojolicious::Validator;
 use Mojolicious::Validator::Validation;
 use Mojo::JSON;

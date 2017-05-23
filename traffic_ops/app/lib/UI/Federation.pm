@@ -21,7 +21,6 @@ use UI::Utils;
 use List::MoreUtils qw(uniq);
 
 use Mojo::Base 'Mojolicious::Controller';
-use Digest::SHA1 qw(sha1_hex);
 use Mojolicious::Validator;
 use Mojolicious::Validator::Validation;
 use Email::Valid;

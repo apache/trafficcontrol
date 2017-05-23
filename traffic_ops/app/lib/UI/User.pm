@@ -20,7 +20,7 @@ package UI::User;
 use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
-use Digest::SHA1 qw(sha1_hex);
+use Utils::Helper;
 use Mojolicious::Validator;
 use Mojolicious::Validator::Validation;
 use Email::Valid;
@@ -187,10 +187,10 @@ sub update {
 
 		# ignore the local_passwd and confirm_local_passwd if it comes across as blank (or it didn't change)
 		if ( defined($local_passwd) && $local_passwd ne '' ) {
-			$dbh->local_passwd( sha1_hex( $self->param('tm_user.local_passwd') ) );
+			$dbh->local_passwd( Utils::Helper::hash_pass( $self->param('tm_user.local_passwd') ) );
 		}
 		if ( defined($confirm_local_passwd) && $confirm_local_passwd ne '' ) {
-			$dbh->confirm_local_passwd( sha1_hex( $self->param('tm_user.confirm_local_passwd') ) );
+			$dbh->confirm_local_passwd( Utils::Helper::hash_pass( $self->param('tm_user.confirm_local_passwd') ) );
 		}
 
 		$dbh->company( $self->param('tm_user.company') );
@@ -293,8 +293,8 @@ sub create_user {
 			public_ssh_key       => $self->param('tm_user.public_ssh_key'),
 			phone_number         => $self->param('tm_user.phone_number'),
 			email                => $self->param('tm_user.email'),
-			local_passwd         => sha1_hex( $self->param('tm_user.local_passwd') ),
-			confirm_local_passwd => sha1_hex( $self->param('tm_user.confirm_local_passwd') ),
+			local_passwd         => Utils::Helper::hash_pass( $self->param('tm_user.local_passwd') ),
+			confirm_local_passwd => Utils::Helper::hash_pass( $self->param('tm_user.confirm_local_passwd') ),
 			role                 => $self->param('tm_user.role'),
 			new_user             => 0,
 			uid                  => 0,

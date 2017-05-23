@@ -270,6 +270,7 @@ requires 'Net::Riak';
 requires 'Crypt::OpenSSL::RSA';
 requires 'Crypt::OpenSSL::Bignum';
 requires 'Crypt::OpenSSL::Random';
+requires 'Crypt::ScryptKDF';
 requires 'Net::DNS::SEC::Private';
 requires 'LWP::Protocol::https';
 requires 'Net::CIDR';

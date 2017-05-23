@@ -24,7 +24,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 use base 'DBIx::Class::Core';
 use Schema;
 use Data::Dumper;
-use Digest::SHA1 qw(sha1_hex);
+use Utils::Helper;
 use JSON;
 use Cwd;
 
@@ -451,10 +451,7 @@ sub check_local_user {
 	my $db_user = $self->db->resultset('TmUser')->find( { username => $username } );
 	if ( defined($db_user) && defined( $db_user->local_passwd ) ) {
 		$self->app->log->info( $username . " was found in the database. " );
-		my $db_local_passwd         = $db_user->local_passwd;
-		my $db_confirm_local_passwd = $db_user->confirm_local_passwd;
-		my $hex_pw_string           = sha1_hex($pass);
-		if ( $db_local_passwd eq $hex_pw_string ) {
+		if ( Utils::Helper::verify_pass($pass, $db_user->local_passwd) ) {
 			$local_user = $username;
 			$self->app->log->debug("Password matched.");
 			$is_authenticated = 1;
