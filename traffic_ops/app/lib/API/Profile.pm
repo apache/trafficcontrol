@@ -337,6 +337,15 @@ sub update {
 	}
 
 	my $cdn = $params->{cdn};
+
+	my $ex_server = $profile->servers->first;
+	if ( defined $ex_server ) {
+		if ( $cdn != $ex_server->cdn_id ) {
+			return $self->alert("the assigned CDN does not match the CDN assigned to servers with this profile.");
+		}
+	}
+
+
 	my $type = $params->{type};
 	my $values = {
 		name        => $name,
