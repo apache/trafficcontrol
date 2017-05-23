@@ -883,7 +883,7 @@ sub get_servers_by_phys_loc {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
+	$servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
@@ -913,13 +913,12 @@ sub is_server_valid {
 
 	my $cdn_mismatch;
 	if ($id) {
-		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $params->{profileId}} )->single();
-		my $profile_cdn_id = $profile->cdn;
-		if ( !defined($profile_cdn_id) ) {
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $params->{profileId}}, { prefetch => ['cdn'] } )->single();
+		if ( !defined($profile->cdn) ) {
 			$cdn_mismatch = 1;
 		} 
-		elsif ( $params->{cdnId} != $profile_cdn_id ) {
-			$cdn_does_not_match = 1;
+		elsif ( $params->{cdnId} != $profile->cdn->id ) {
+			$cdn_mismatch = 1;
 		}
 	}
 
