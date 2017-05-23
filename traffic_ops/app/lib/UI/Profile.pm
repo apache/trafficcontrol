@@ -193,6 +193,16 @@ sub check_profile_input {
 				}
 			}
 		}
+
+		#make sure the CDN matches servers already assigned to the profile
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $id}, { prefetch => ['servers'] } )->first();
+		my $cdn = $self->param('profile.cdn');
+		my $ex_server = $profile->servers->first;
+		if ( defined $ex_server ) {
+			if ( $cdn != $ex_server->cdn_id ) {
+				$self->field('profile.cdn')->is_equal( "", "The assigned CDN does not match the CDN assigned to servers with this profile!" );
+			}
+		}
 	}
 	return $self->valid;
 }
@@ -223,7 +233,13 @@ sub update {
 	}
 	else {
 		&stash_role($self);
+
+		my $cursor = $self->db->resultset('Profile')->search( { id => $id } );
+		my $data   = $cursor->single;
+
+		$self->stash_cdn_selector(defined($data->cdn) ? $data->cdn->id : undef);
 		$self->stash( profile => {}, fbox_layout => 1 );
+		$self->stash_profile_type_selector($data->type);
 		$self->render('profile/edit');
 	}
 
