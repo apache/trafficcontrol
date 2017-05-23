@@ -995,6 +995,22 @@ sub is_server_valid {
 		return ( 0, "Invalid server type" );
 	}
 
+	my $cdn_mismatch;
+	if ($id) {
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $params->{profileId}} )->single();
+		my $profile_cdn_id = $profile->cdn;
+		if ( !defined($profile_cdn_id) ) {
+			$cdn_mismatch = 1;
+		} 
+		elsif ( $params->{cdnId} != $profile_cdn_id ) {
+			$cdn_does_not_match = 1;
+		}
+	}
+
+	if ($cdn_mismatch) {
+		return ( 0, "CDN of profile does not match Server CDN" );
+	}
+
 	my $ip_used_for_profile;
 	if ($id) {
 		$ip_used_for_profile = $self->db->resultset('Server')
