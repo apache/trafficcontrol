@@ -335,7 +335,7 @@
 		<% } %>
 		%= label_for 'ccr_dns_ttl' => 'Delivery Service DNS TTL', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.ccr_dns_ttl')->text(class => 'field', id => 'ccr_dns_ttl', name => 'ds.ccr_dns_ttl', value => 3600);
+		%= field('ds.ccr_dns_ttl')->text(class => 'field', id => 'ccr_dns_ttl', name => 'ds.ccr_dns_ttl');
 		<% } else { %>
 		%= field('ds.ccr_dns_ttl')->text(class => 'field', readonly => 'readonly');
 		<% } %>
