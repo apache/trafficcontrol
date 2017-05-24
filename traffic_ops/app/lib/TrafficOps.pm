@@ -94,6 +94,7 @@ sub startup {
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
 	$self->set_secrets();
+	$self->load_password_blacklist();
 
 	$self->log->info("-------------------------------------------------------------");
 	$self->log->info( "TrafficOps version: " . Utils::Helper::Version->current() . " is starting." );
@@ -347,6 +348,19 @@ sub setup_mojo_plugins {
 	#FormFields
 	$self->plugin('FormFields');
 
+}
+
+sub load_password_blacklist {
+	my $self = shift;
+	my $path = find_conf_path("invalid_passwords.txt");
+	open( my $fn, '<', $path ) || die("invalid_passwords.txt $!\n");
+	my $invalid_passwords = {};
+	while ( my $line = <$fn> ) {
+		chomp($line);
+		$invalid_passwords->{$line} = 1;
+	}
+	close($fn);
+	$self->{invalid_passwords} = $invalid_passwords;
 }
 
 sub check_token {
