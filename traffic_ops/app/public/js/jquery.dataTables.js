@@ -1,15 +1,15 @@
-/*! DataTables 1.10.4
- * ©2008-2014 SpryMedia Ltd - datatables.net/license
+/*! DataTables 1.10.15
+ * ©2008-2017 SpryMedia Ltd - datatables.net/license
  */
 
 /**
  * @summary     DataTables
  * @description Paginate, search and order HTML tables
- * @version     1.10.4
+ * @version     1.10.15
  * @file        jquery.dataTables.js
- * @author      SpryMedia Ltd (www.sprymedia.co.uk)
- * @contact     www.sprymedia.co.uk/contact
- * @copyright   Copyright 2008-2014 SpryMedia Ltd.
+ * @author      SpryMedia Ltd
+ * @contact     www.datatables.net
+ * @copyright   Copyright 2008-2017 SpryMedia Ltd.
  *
  * This source file is free software, available under the following license:
  *   MIT license - http://datatables.net/license
@@ -22,28 +22,41 @@
  */
 
 /*jslint evil: true, undef: true, browser: true */
-/*globals $,require,jQuery,define,_selector_run,_selector_opts,_selector_first,_selector_row_indexes,_ext,_Api,_api_register,_api_registerPlural,_re_new_lines,_re_html,_re_formatted_numeric,_re_escape_regex,_empty,_intVal,_numToDecimal,_isNumber,_isHtml,_htmlNumeric,_pluck,_pluck_order,_range,_stripHtml,_unique,_fnBuildAjax,_fnAjaxUpdate,_fnAjaxParameters,_fnAjaxUpdateDraw,_fnAjaxDataSrc,_fnAddColumn,_fnColumnOptions,_fnAdjustColumnSizing,_fnVisibleToColumnIndex,_fnColumnIndexToVisible,_fnVisbleColumns,_fnGetColumns,_fnColumnTypes,_fnApplyColumnDefs,_fnHungarianMap,_fnCamelToHungarian,_fnLanguageCompat,_fnBrowserDetect,_fnAddData,_fnAddTr,_fnNodeToDataIndex,_fnNodeToColumnIndex,_fnGetCellData,_fnSetCellData,_fnSplitObjNotation,_fnGetObjectDataFn,_fnSetObjectDataFn,_fnGetDataMaster,_fnClearTable,_fnDeleteIndex,_fnInvalidate,_fnGetRowElements,_fnCreateTr,_fnBuildHead,_fnDrawHead,_fnDraw,_fnReDraw,_fnAddOptionsHtml,_fnDetectHeader,_fnGetUniqueThs,_fnFeatureHtmlFilter,_fnFilterComplete,_fnFilterCustom,_fnFilterColumn,_fnFilter,_fnFilterCreateSearch,_fnEscapeRegex,_fnFilterData,_fnFeatureHtmlInfo,_fnUpdateInfo,_fnInfoMacros,_fnInitialise,_fnInitComplete,_fnLengthChange,_fnFeatureHtmlLength,_fnFeatureHtmlPaginate,_fnPageChange,_fnFeatureHtmlProcessing,_fnProcessingDisplay,_fnFeatureHtmlTable,_fnScrollDraw,_fnApplyToChildren,_fnCalculateColumnWidths,_fnThrottle,_fnConvertToWidth,_fnScrollingWidthAdjust,_fnGetWidestNode,_fnGetMaxLenString,_fnStringToCss,_fnScrollBarWidth,_fnSortFlatten,_fnSort,_fnSortAria,_fnSortListener,_fnSortAttachListener,_fnSortingClasses,_fnSortData,_fnSaveState,_fnLoadState,_fnSettingsFromNode,_fnLog,_fnMap,_fnBindAction,_fnCallbackReg,_fnCallbackFire,_fnLengthOverflow,_fnRenderer,_fnDataSource,_fnRowAttributes*/
-
-(/** @lends <global> */function( window, document, undefined ) {
+/*globals $,require,jQuery,define,_selector_run,_selector_opts,_selector_first,_selector_row_indexes,_ext,_Api,_api_register,_api_registerPlural,_re_new_lines,_re_html,_re_formatted_numeric,_re_escape_regex,_empty,_intVal,_numToDecimal,_isNumber,_isHtml,_htmlNumeric,_pluck,_pluck_order,_range,_stripHtml,_unique,_fnBuildAjax,_fnAjaxUpdate,_fnAjaxParameters,_fnAjaxUpdateDraw,_fnAjaxDataSrc,_fnAddColumn,_fnColumnOptions,_fnAdjustColumnSizing,_fnVisibleToColumnIndex,_fnColumnIndexToVisible,_fnVisbleColumns,_fnGetColumns,_fnColumnTypes,_fnApplyColumnDefs,_fnHungarianMap,_fnCamelToHungarian,_fnLanguageCompat,_fnBrowserDetect,_fnAddData,_fnAddTr,_fnNodeToDataIndex,_fnNodeToColumnIndex,_fnGetCellData,_fnSetCellData,_fnSplitObjNotation,_fnGetObjectDataFn,_fnSetObjectDataFn,_fnGetDataMaster,_fnClearTable,_fnDeleteIndex,_fnInvalidate,_fnGetRowElements,_fnCreateTr,_fnBuildHead,_fnDrawHead,_fnDraw,_fnReDraw,_fnAddOptionsHtml,_fnDetectHeader,_fnGetUniqueThs,_fnFeatureHtmlFilter,_fnFilterComplete,_fnFilterCustom,_fnFilterColumn,_fnFilter,_fnFilterCreateSearch,_fnEscapeRegex,_fnFilterData,_fnFeatureHtmlInfo,_fnUpdateInfo,_fnInfoMacros,_fnInitialise,_fnInitComplete,_fnLengthChange,_fnFeatureHtmlLength,_fnFeatureHtmlPaginate,_fnPageChange,_fnFeatureHtmlProcessing,_fnProcessingDisplay,_fnFeatureHtmlTable,_fnScrollDraw,_fnApplyToChildren,_fnCalculateColumnWidths,_fnThrottle,_fnConvertToWidth,_fnGetWidestNode,_fnGetMaxLenString,_fnStringToCss,_fnSortFlatten,_fnSort,_fnSortAria,_fnSortListener,_fnSortAttachListener,_fnSortingClasses,_fnSortData,_fnSaveState,_fnLoadState,_fnSettingsFromNode,_fnLog,_fnMap,_fnBindAction,_fnCallbackReg,_fnCallbackFire,_fnLengthOverflow,_fnRenderer,_fnDataSource,_fnRowAttributes*/
 
 (function( factory ) {
 	"use strict";
 
 	if ( typeof define === 'function' && define.amd ) {
-		// Define as an AMD module if possible
-		define( 'datatables', ['jquery'], factory );
+		// AMD
+		define( ['jquery'], function ( $ ) {
+			return factory( $, window, document );
+		} );
 	}
-    else if ( typeof exports === 'object' ) {
-        // Node/CommonJS
-        factory( require( 'jquery' ) );
-    }
-	else if ( jQuery && !jQuery.fn.dataTable ) {
-		// Define using browser globals otherwise
-		// Prevent multiple instantiations if the script is loaded twice
-		factory( jQuery );
+	else if ( typeof exports === 'object' ) {
+		// CommonJS
+		module.exports = function (root, $) {
+			if ( ! root ) {
+				// CommonJS environments without a window global must pass a
+				// root. This will give an error otherwise
+				root = window;
+			}
+
+			if ( ! $ ) {
+				$ = typeof window !== 'undefined' ? // jQuery's factory checks for a global window
+					require('jquery') :
+					require('jquery')( root );
+			}
+
+			return factory( $, root, root.document );
+		};
+	}
+	else {
+		// Browser
+		factory( jQuery, window, document );
 	}
 }
-(/** @lends <global> */function( $ ) {
+(function( $, window, document, undefined ) {
 	"use strict";
 
 	/**
@@ -78,7 +91,1251 @@
 	 *      } );
 	 *    } );
 	 */
-	var DataTable;
+	var DataTable = function ( options )
+	{
+		/**
+		 * Perform a jQuery selector action on the table's TR elements (from the tbody) and
+		 * return the resulting jQuery object.
+		 *  @param {string|node|jQuery} sSelector jQuery selector or node collection to act on
+		 *  @param {object} [oOpts] Optional parameters for modifying the rows to be included
+		 *  @param {string} [oOpts.filter=none] Select TR elements that meet the current filter
+		 *    criterion ("applied") or all TR elements (i.e. no filter).
+		 *  @param {string} [oOpts.order=current] Order of the TR elements in the processed array.
+		 *    Can be either 'current', whereby the current sorting of the table is used, or
+		 *    'original' whereby the original order the data was read into the table is used.
+		 *  @param {string} [oOpts.page=all] Limit the selection to the currently displayed page
+		 *    ("current") or not ("all"). If 'current' is given, then order is assumed to be
+		 *    'current' and filter is 'applied', regardless of what they might be given as.
+		 *  @returns {object} jQuery object, filtered by the given selector.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Highlight every second row
+		 *      oTable.$('tr:odd').css('backgroundColor', 'blue');
+		 *    } );
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Filter to rows with 'Webkit' in them, add a background colour and then
+		 *      // remove the filter, thus highlighting the 'Webkit' rows only.
+		 *      oTable.fnFilter('Webkit');
+		 *      oTable.$('tr', {"search": "applied"}).css('backgroundColor', 'blue');
+		 *      oTable.fnFilter('');
+		 *    } );
+		 */
+		this.$ = function ( sSelector, oOpts )
+		{
+			return this.api(true).$( sSelector, oOpts );
+		};
+		
+		
+		/**
+		 * Almost identical to $ in operation, but in this case returns the data for the matched
+		 * rows - as such, the jQuery selector used should match TR row nodes or TD/TH cell nodes
+		 * rather than any descendants, so the data can be obtained for the row/cell. If matching
+		 * rows are found, the data returned is the original data array/object that was used to
+		 * create the row (or a generated array if from a DOM source).
+		 *
+		 * This method is often useful in-combination with $ where both functions are given the
+		 * same parameters and the array indexes will match identically.
+		 *  @param {string|node|jQuery} sSelector jQuery selector or node collection to act on
+		 *  @param {object} [oOpts] Optional parameters for modifying the rows to be included
+		 *  @param {string} [oOpts.filter=none] Select elements that meet the current filter
+		 *    criterion ("applied") or all elements (i.e. no filter).
+		 *  @param {string} [oOpts.order=current] Order of the data in the processed array.
+		 *    Can be either 'current', whereby the current sorting of the table is used, or
+		 *    'original' whereby the original order the data was read into the table is used.
+		 *  @param {string} [oOpts.page=all] Limit the selection to the currently displayed page
+		 *    ("current") or not ("all"). If 'current' is given, then order is assumed to be
+		 *    'current' and filter is 'applied', regardless of what they might be given as.
+		 *  @returns {array} Data for the matched elements. If any elements, as a result of the
+		 *    selector, were not TR, TD or TH elements in the DataTable, they will have a null
+		 *    entry in the array.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Get the data from the first row in the table
+		 *      var data = oTable._('tr:first');
+		 *
+		 *      // Do something useful with the data
+		 *      alert( "First cell is: "+data[0] );
+		 *    } );
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Filter to 'Webkit' and get all data for
+		 *      oTable.fnFilter('Webkit');
+		 *      var data = oTable._('tr', {"search": "applied"});
+		 *
+		 *      // Do something with the data
+		 *      alert( data.length+" rows matched the search" );
+		 *    } );
+		 */
+		this._ = function ( sSelector, oOpts )
+		{
+			return this.api(true).rows( sSelector, oOpts ).data();
+		};
+		
+		
+		/**
+		 * Create a DataTables Api instance, with the currently selected tables for
+		 * the Api's context.
+		 * @param {boolean} [traditional=false] Set the API instance's context to be
+		 *   only the table referred to by the `DataTable.ext.iApiIndex` option, as was
+		 *   used in the API presented by DataTables 1.9- (i.e. the traditional mode),
+		 *   or if all tables captured in the jQuery object should be used.
+		 * @return {DataTables.Api}
+		 */
+		this.api = function ( traditional )
+		{
+			return traditional ?
+				new _Api(
+					_fnSettingsFromNode( this[ _ext.iApiIndex ] )
+				) :
+				new _Api( this );
+		};
+		
+		
+		/**
+		 * Add a single new row or multiple rows of data to the table. Please note
+		 * that this is suitable for client-side processing only - if you are using
+		 * server-side processing (i.e. "bServerSide": true), then to add data, you
+		 * must add it to the data source, i.e. the server-side, through an Ajax call.
+		 *  @param {array|object} data The data to be added to the table. This can be:
+		 *    <ul>
+		 *      <li>1D array of data - add a single row with the data provided</li>
+		 *      <li>2D array of arrays - add multiple rows in a single call</li>
+		 *      <li>object - data object when using <i>mData</i></li>
+		 *      <li>array of objects - multiple data objects when using <i>mData</i></li>
+		 *    </ul>
+		 *  @param {bool} [redraw=true] redraw the table or not
+		 *  @returns {array} An array of integers, representing the list of indexes in
+		 *    <i>aoData</i> ({@link DataTable.models.oSettings}) that have been added to
+		 *    the table.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    // Global var for counter
+		 *    var giCount = 2;
+		 *
+		 *    $(document).ready(function() {
+		 *      $('#example').dataTable();
+		 *    } );
+		 *
+		 *    function fnClickAddRow() {
+		 *      $('#example').dataTable().fnAddData( [
+		 *        giCount+".1",
+		 *        giCount+".2",
+		 *        giCount+".3",
+		 *        giCount+".4" ]
+		 *      );
+		 *
+		 *      giCount++;
+		 *    }
+		 */
+		this.fnAddData = function( data, redraw )
+		{
+			var api = this.api( true );
+		
+			/* Check if we want to add multiple rows or not */
+			var rows = $.isArray(data) && ( $.isArray(data[0]) || $.isPlainObject(data[0]) ) ?
+				api.rows.add( data ) :
+				api.row.add( data );
+		
+			if ( redraw === undefined || redraw ) {
+				api.draw();
+			}
+		
+			return rows.flatten().toArray();
+		};
+		
+		
+		/**
+		 * This function will make DataTables recalculate the column sizes, based on the data
+		 * contained in the table and the sizes applied to the columns (in the DOM, CSS or
+		 * through the sWidth parameter). This can be useful when the width of the table's
+		 * parent element changes (for example a window resize).
+		 *  @param {boolean} [bRedraw=true] Redraw the table or not, you will typically want to
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable( {
+		 *        "sScrollY": "200px",
+		 *        "bPaginate": false
+		 *      } );
+		 *
+		 *      $(window).on('resize', function () {
+		 *        oTable.fnAdjustColumnSizing();
+		 *      } );
+		 *    } );
+		 */
+		this.fnAdjustColumnSizing = function ( bRedraw )
+		{
+			var api = this.api( true ).columns.adjust();
+			var settings = api.settings()[0];
+			var scroll = settings.oScroll;
+		
+			if ( bRedraw === undefined || bRedraw ) {
+				api.draw( false );
+			}
+			else if ( scroll.sX !== "" || scroll.sY !== "" ) {
+				/* If not redrawing, but scrolling, we want to apply the new column sizes anyway */
+				_fnScrollDraw( settings );
+			}
+		};
+		
+		
+		/**
+		 * Quickly and simply clear a table
+		 *  @param {bool} [bRedraw=true] redraw the table or not
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Immediately 'nuke' the current rows (perhaps waiting for an Ajax callback...)
+		 *      oTable.fnClearTable();
+		 *    } );
+		 */
+		this.fnClearTable = function( bRedraw )
+		{
+			var api = this.api( true ).clear();
+		
+			if ( bRedraw === undefined || bRedraw ) {
+				api.draw();
+			}
+		};
+		
+		
+		/**
+		 * The exact opposite of 'opening' a row, this function will close any rows which
+		 * are currently 'open'.
+		 *  @param {node} nTr the table row to 'close'
+		 *  @returns {int} 0 on success, or 1 if failed (can't find the row)
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable;
+		 *
+		 *      // 'open' an information row when a row is clicked on
+		 *      $('#example tbody tr').click( function () {
+		 *        if ( oTable.fnIsOpen(this) ) {
+		 *          oTable.fnClose( this );
+		 *        } else {
+		 *          oTable.fnOpen( this, "Temporary row opened", "info_row" );
+		 *        }
+		 *      } );
+		 *
+		 *      oTable = $('#example').dataTable();
+		 *    } );
+		 */
+		this.fnClose = function( nTr )
+		{
+			this.api( true ).row( nTr ).child.hide();
+		};
+		
+		
+		/**
+		 * Remove a row for the table
+		 *  @param {mixed} target The index of the row from aoData to be deleted, or
+		 *    the TR element you want to delete
+		 *  @param {function|null} [callBack] Callback function
+		 *  @param {bool} [redraw=true] Redraw the table or not
+		 *  @returns {array} The row that was deleted
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Immediately remove the first row
+		 *      oTable.fnDeleteRow( 0 );
+		 *    } );
+		 */
+		this.fnDeleteRow = function( target, callback, redraw )
+		{
+			var api = this.api( true );
+			var rows = api.rows( target );
+			var settings = rows.settings()[0];
+			var data = settings.aoData[ rows[0][0] ];
+		
+			rows.remove();
+		
+			if ( callback ) {
+				callback.call( this, settings, data );
+			}
+		
+			if ( redraw === undefined || redraw ) {
+				api.draw();
+			}
+		
+			return data;
+		};
+		
+		
+		/**
+		 * Restore the table to it's original state in the DOM by removing all of DataTables
+		 * enhancements, alterations to the DOM structure of the table and event listeners.
+		 *  @param {boolean} [remove=false] Completely remove the table from the DOM
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      // This example is fairly pointless in reality, but shows how fnDestroy can be used
+		 *      var oTable = $('#example').dataTable();
+		 *      oTable.fnDestroy();
+		 *    } );
+		 */
+		this.fnDestroy = function ( remove )
+		{
+			this.api( true ).destroy( remove );
+		};
+		
+		
+		/**
+		 * Redraw the table
+		 *  @param {bool} [complete=true] Re-filter and resort (if enabled) the table before the draw.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Re-draw the table - you wouldn't want to do it here, but it's an example :-)
+		 *      oTable.fnDraw();
+		 *    } );
+		 */
+		this.fnDraw = function( complete )
+		{
+			// Note that this isn't an exact match to the old call to _fnDraw - it takes
+			// into account the new data, but can hold position.
+			this.api( true ).draw( complete );
+		};
+		
+		
+		/**
+		 * Filter the input based on data
+		 *  @param {string} sInput String to filter the table on
+		 *  @param {int|null} [iColumn] Column to limit filtering to
+		 *  @param {bool} [bRegex=false] Treat as regular expression or not
+		 *  @param {bool} [bSmart=true] Perform smart filtering or not
+		 *  @param {bool} [bShowGlobal=true] Show the input global filter in it's input box(es)
+		 *  @param {bool} [bCaseInsensitive=true] Do case-insensitive matching (true) or not (false)
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Sometime later - filter...
+		 *      oTable.fnFilter( 'test string' );
+		 *    } );
+		 */
+		this.fnFilter = function( sInput, iColumn, bRegex, bSmart, bShowGlobal, bCaseInsensitive )
+		{
+			var api = this.api( true );
+		
+			if ( iColumn === null || iColumn === undefined ) {
+				api.search( sInput, bRegex, bSmart, bCaseInsensitive );
+			}
+			else {
+				api.column( iColumn ).search( sInput, bRegex, bSmart, bCaseInsensitive );
+			}
+		
+			api.draw();
+		};
+		
+		
+		/**
+		 * Get the data for the whole table, an individual row or an individual cell based on the
+		 * provided parameters.
+		 *  @param {int|node} [src] A TR row node, TD/TH cell node or an integer. If given as
+		 *    a TR node then the data source for the whole row will be returned. If given as a
+		 *    TD/TH cell node then iCol will be automatically calculated and the data for the
+		 *    cell returned. If given as an integer, then this is treated as the aoData internal
+		 *    data index for the row (see fnGetPosition) and the data for that row used.
+		 *  @param {int} [col] Optional column index that you want the data of.
+		 *  @returns {array|object|string} If mRow is undefined, then the data for all rows is
+		 *    returned. If mRow is defined, just data for that row, and is iCol is
+		 *    defined, only data for the designated cell is returned.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    // Row data
+		 *    $(document).ready(function() {
+		 *      oTable = $('#example').dataTable();
+		 *
+		 *      oTable.$('tr').click( function () {
+		 *        var data = oTable.fnGetData( this );
+		 *        // ... do something with the array / object of data for the row
+		 *      } );
+		 *    } );
+		 *
+		 *  @example
+		 *    // Individual cell data
+		 *    $(document).ready(function() {
+		 *      oTable = $('#example').dataTable();
+		 *
+		 *      oTable.$('td').click( function () {
+		 *        var sData = oTable.fnGetData( this );
+		 *        alert( 'The cell clicked on had the value of '+sData );
+		 *      } );
+		 *    } );
+		 */
+		this.fnGetData = function( src, col )
+		{
+			var api = this.api( true );
+		
+			if ( src !== undefined ) {
+				var type = src.nodeName ? src.nodeName.toLowerCase() : '';
+		
+				return col !== undefined || type == 'td' || type == 'th' ?
+					api.cell( src, col ).data() :
+					api.row( src ).data() || null;
+			}
+		
+			return api.data().toArray();
+		};
+		
+		
+		/**
+		 * Get an array of the TR nodes that are used in the table's body. Note that you will
+		 * typically want to use the '$' API method in preference to this as it is more
+		 * flexible.
+		 *  @param {int} [iRow] Optional row index for the TR element you want
+		 *  @returns {array|node} If iRow is undefined, returns an array of all TR elements
+		 *    in the table's body, or iRow is defined, just the TR element requested.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Get the nodes from the table
+		 *      var nNodes = oTable.fnGetNodes( );
+		 *    } );
+		 */
+		this.fnGetNodes = function( iRow )
+		{
+			var api = this.api( true );
+		
+			return iRow !== undefined ?
+				api.row( iRow ).node() :
+				api.rows().nodes().flatten().toArray();
+		};
+		
+		
+		/**
+		 * Get the array indexes of a particular cell from it's DOM element
+		 * and column index including hidden columns
+		 *  @param {node} node this can either be a TR, TD or TH in the table's body
+		 *  @returns {int} If nNode is given as a TR, then a single index is returned, or
+		 *    if given as a cell, an array of [row index, column index (visible),
+		 *    column index (all)] is given.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      $('#example tbody td').click( function () {
+		 *        // Get the position of the current data from the node
+		 *        var aPos = oTable.fnGetPosition( this );
+		 *
+		 *        // Get the data array for this row
+		 *        var aData = oTable.fnGetData( aPos[0] );
+		 *
+		 *        // Update the data array and return the value
+		 *        aData[ aPos[1] ] = 'clicked';
+		 *        this.innerHTML = 'clicked';
+		 *      } );
+		 *
+		 *      // Init DataTables
+		 *      oTable = $('#example').dataTable();
+		 *    } );
+		 */
+		this.fnGetPosition = function( node )
+		{
+			var api = this.api( true );
+			var nodeName = node.nodeName.toUpperCase();
+		
+			if ( nodeName == 'TR' ) {
+				return api.row( node ).index();
+			}
+			else if ( nodeName == 'TD' || nodeName == 'TH' ) {
+				var cell = api.cell( node ).index();
+		
+				return [
+					cell.row,
+					cell.columnVisible,
+					cell.column
+				];
+			}
+			return null;
+		};
+		
+		
+		/**
+		 * Check to see if a row is 'open' or not.
+		 *  @param {node} nTr the table row to check
+		 *  @returns {boolean} true if the row is currently open, false otherwise
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable;
+		 *
+		 *      // 'open' an information row when a row is clicked on
+		 *      $('#example tbody tr').click( function () {
+		 *        if ( oTable.fnIsOpen(this) ) {
+		 *          oTable.fnClose( this );
+		 *        } else {
+		 *          oTable.fnOpen( this, "Temporary row opened", "info_row" );
+		 *        }
+		 *      } );
+		 *
+		 *      oTable = $('#example').dataTable();
+		 *    } );
+		 */
+		this.fnIsOpen = function( nTr )
+		{
+			return this.api( true ).row( nTr ).child.isShown();
+		};
+		
+		
+		/**
+		 * This function will place a new row directly after a row which is currently
+		 * on display on the page, with the HTML contents that is passed into the
+		 * function. This can be used, for example, to ask for confirmation that a
+		 * particular record should be deleted.
+		 *  @param {node} nTr The table row to 'open'
+		 *  @param {string|node|jQuery} mHtml The HTML to put into the row
+		 *  @param {string} sClass Class to give the new TD cell
+		 *  @returns {node} The row opened. Note that if the table row passed in as the
+		 *    first parameter, is not found in the table, this method will silently
+		 *    return.
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable;
+		 *
+		 *      // 'open' an information row when a row is clicked on
+		 *      $('#example tbody tr').click( function () {
+		 *        if ( oTable.fnIsOpen(this) ) {
+		 *          oTable.fnClose( this );
+		 *        } else {
+		 *          oTable.fnOpen( this, "Temporary row opened", "info_row" );
+		 *        }
+		 *      } );
+		 *
+		 *      oTable = $('#example').dataTable();
+		 *    } );
+		 */
+		this.fnOpen = function( nTr, mHtml, sClass )
+		{
+			return this.api( true )
+				.row( nTr )
+				.child( mHtml, sClass )
+				.show()
+				.child()[0];
+		};
+		
+		
+		/**
+		 * Change the pagination - provides the internal logic for pagination in a simple API
+		 * function. With this function you can have a DataTables table go to the next,
+		 * previous, first or last pages.
+		 *  @param {string|int} mAction Paging action to take: "first", "previous", "next" or "last"
+		 *    or page number to jump to (integer), note that page 0 is the first page.
+		 *  @param {bool} [bRedraw=true] Redraw the table or not
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *      oTable.fnPageChange( 'next' );
+		 *    } );
+		 */
+		this.fnPageChange = function ( mAction, bRedraw )
+		{
+			var api = this.api( true ).page( mAction );
+		
+			if ( bRedraw === undefined || bRedraw ) {
+				api.draw(false);
+			}
+		};
+		
+		
+		/**
+		 * Show a particular column
+		 *  @param {int} iCol The column whose display should be changed
+		 *  @param {bool} bShow Show (true) or hide (false) the column
+		 *  @param {bool} [bRedraw=true] Redraw the table or not
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Hide the second column after initialisation
+		 *      oTable.fnSetColumnVis( 1, false );
+		 *    } );
+		 */
+		this.fnSetColumnVis = function ( iCol, bShow, bRedraw )
+		{
+			var api = this.api( true ).column( iCol ).visible( bShow );
+		
+			if ( bRedraw === undefined || bRedraw ) {
+				api.columns.adjust().draw();
+			}
+		};
+		
+		
+		/**
+		 * Get the settings for a particular table for external manipulation
+		 *  @returns {object} DataTables settings object. See
+		 *    {@link DataTable.models.oSettings}
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *      var oSettings = oTable.fnSettings();
+		 *
+		 *      // Show an example parameter from the settings
+		 *      alert( oSettings._iDisplayStart );
+		 *    } );
+		 */
+		this.fnSettings = function()
+		{
+			return _fnSettingsFromNode( this[_ext.iApiIndex] );
+		};
+		
+		
+		/**
+		 * Sort the table by a particular column
+		 *  @param {int} iCol the data index to sort on. Note that this will not match the
+		 *    'display index' if you have hidden data entries
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Sort immediately with columns 0 and 1
+		 *      oTable.fnSort( [ [0,'asc'], [1,'asc'] ] );
+		 *    } );
+		 */
+		this.fnSort = function( aaSort )
+		{
+			this.api( true ).order( aaSort ).draw();
+		};
+		
+		
+		/**
+		 * Attach a sort listener to an element for a given column
+		 *  @param {node} nNode the element to attach the sort listener to
+		 *  @param {int} iColumn the column that a click on this node will sort on
+		 *  @param {function} [fnCallback] callback function when sort is run
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *
+		 *      // Sort on column 1, when 'sorter' is clicked on
+		 *      oTable.fnSortListener( document.getElementById('sorter'), 1 );
+		 *    } );
+		 */
+		this.fnSortListener = function( nNode, iColumn, fnCallback )
+		{
+			this.api( true ).order.listener( nNode, iColumn, fnCallback );
+		};
+		
+		
+		/**
+		 * Update a table cell or row - this method will accept either a single value to
+		 * update the cell with, an array of values with one element for each column or
+		 * an object in the same format as the original data source. The function is
+		 * self-referencing in order to make the multi column updates easier.
+		 *  @param {object|array|string} mData Data to update the cell/row with
+		 *  @param {node|int} mRow TR element you want to update or the aoData index
+		 *  @param {int} [iColumn] The column to update, give as null or undefined to
+		 *    update a whole row.
+		 *  @param {bool} [bRedraw=true] Redraw the table or not
+		 *  @param {bool} [bAction=true] Perform pre-draw actions or not
+		 *  @returns {int} 0 on success, 1 on error
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *      oTable.fnUpdate( 'Example update', 0, 0 ); // Single cell
+		 *      oTable.fnUpdate( ['a', 'b', 'c', 'd', 'e'], $('tbody tr')[0] ); // Row
+		 *    } );
+		 */
+		this.fnUpdate = function( mData, mRow, iColumn, bRedraw, bAction )
+		{
+			var api = this.api( true );
+		
+			if ( iColumn === undefined || iColumn === null ) {
+				api.row( mRow ).data( mData );
+			}
+			else {
+				api.cell( mRow, iColumn ).data( mData );
+			}
+		
+			if ( bAction === undefined || bAction ) {
+				api.columns.adjust();
+			}
+		
+			if ( bRedraw === undefined || bRedraw ) {
+				api.draw();
+			}
+			return 0;
+		};
+		
+		
+		/**
+		 * Provide a common method for plug-ins to check the version of DataTables being used, in order
+		 * to ensure compatibility.
+		 *  @param {string} sVersion Version string to check for, in the format "X.Y.Z". Note that the
+		 *    formats "X" and "X.Y" are also acceptable.
+		 *  @returns {boolean} true if this version of DataTables is greater or equal to the required
+		 *    version, or false if this version of DataTales is not suitable
+		 *  @method
+		 *  @dtopt API
+		 *  @deprecated Since v1.10
+		 *
+		 *  @example
+		 *    $(document).ready(function() {
+		 *      var oTable = $('#example').dataTable();
+		 *      alert( oTable.fnVersionCheck( '1.9.0' ) );
+		 *    } );
+		 */
+		this.fnVersionCheck = _ext.fnVersionCheck;
+		
+
+		var _that = this;
+		var emptyInit = options === undefined;
+		var len = this.length;
+
+		if ( emptyInit ) {
+			options = {};
+		}
+
+		this.oApi = this.internal = _ext.internal;
+
+		// Extend with old style plug-in API methods
+		for ( var fn in DataTable.ext.internal ) {
+			if ( fn ) {
+				this[fn] = _fnExternApiFunc(fn);
+			}
+		}
+
+		this.each(function() {
+			// For each initialisation we want to give it a clean initialisation
+			// object that can be bashed around
+			var o = {};
+			var oInit = len > 1 ? // optimisation for single table case
+				_fnExtend( o, options, true ) :
+				options;
+
+			/*global oInit,_that,emptyInit*/
+			var i=0, iLen, j, jLen, k, kLen;
+			var sId = this.getAttribute( 'id' );
+			var bInitHandedOff = false;
+			var defaults = DataTable.defaults;
+			var $this = $(this);
+			
+			
+			/* Sanity check */
+			if ( this.nodeName.toLowerCase() != 'table' )
+			{
+				_fnLog( null, 0, 'Non-table node initialisation ('+this.nodeName+')', 2 );
+				return;
+			}
+			
+			/* Backwards compatibility for the defaults */
+			_fnCompatOpts( defaults );
+			_fnCompatCols( defaults.column );
+			
+			/* Convert the camel-case defaults to Hungarian */
+			_fnCamelToHungarian( defaults, defaults, true );
+			_fnCamelToHungarian( defaults.column, defaults.column, true );
+			
+			/* Setting up the initialisation object */
+			_fnCamelToHungarian( defaults, $.extend( oInit, $this.data() ) );
+			
+			
+			
+			/* Check to see if we are re-initialising a table */
+			var allSettings = DataTable.settings;
+			for ( i=0, iLen=allSettings.length ; i<iLen ; i++ )
+			{
+				var s = allSettings[i];
+			
+				/* Base check on table node */
+				if ( s.nTable == this || s.nTHead.parentNode == this || (s.nTFoot && s.nTFoot.parentNode == this) )
+				{
+					var bRetrieve = oInit.bRetrieve !== undefined ? oInit.bRetrieve : defaults.bRetrieve;
+					var bDestroy = oInit.bDestroy !== undefined ? oInit.bDestroy : defaults.bDestroy;
+			
+					if ( emptyInit || bRetrieve )
+					{
+						return s.oInstance;
+					}
+					else if ( bDestroy )
+					{
+						s.oInstance.fnDestroy();
+						break;
+					}
+					else
+					{
+						_fnLog( s, 0, 'Cannot reinitialise DataTable', 3 );
+						return;
+					}
+				}
+			
+				/* If the element we are initialising has the same ID as a table which was previously
+				 * initialised, but the table nodes don't match (from before) then we destroy the old
+				 * instance by simply deleting it. This is under the assumption that the table has been
+				 * destroyed by other methods. Anyone using non-id selectors will need to do this manually
+				 */
+				if ( s.sTableId == this.id )
+				{
+					allSettings.splice( i, 1 );
+					break;
+				}
+			}
+			
+			/* Ensure the table has an ID - required for accessibility */
+			if ( sId === null || sId === "" )
+			{
+				sId = "DataTables_Table_"+(DataTable.ext._unique++);
+				this.id = sId;
+			}
+			
+			/* Create the settings object for this table and set some of the default parameters */
+			var oSettings = $.extend( true, {}, DataTable.models.oSettings, {
+				"sDestroyWidth": $this[0].style.width,
+				"sInstance":     sId,
+				"sTableId":      sId
+			} );
+			oSettings.nTable = this;
+			oSettings.oApi   = _that.internal;
+			oSettings.oInit  = oInit;
+			
+			allSettings.push( oSettings );
+			
+			// Need to add the instance after the instance after the settings object has been added
+			// to the settings array, so we can self reference the table instance if more than one
+			oSettings.oInstance = (_that.length===1) ? _that : $this.dataTable();
+			
+			// Backwards compatibility, before we apply all the defaults
+			_fnCompatOpts( oInit );
+			
+			if ( oInit.oLanguage )
+			{
+				_fnLanguageCompat( oInit.oLanguage );
+			}
+			
+			// If the length menu is given, but the init display length is not, use the length menu
+			if ( oInit.aLengthMenu && ! oInit.iDisplayLength )
+			{
+				oInit.iDisplayLength = $.isArray( oInit.aLengthMenu[0] ) ?
+					oInit.aLengthMenu[0][0] : oInit.aLengthMenu[0];
+			}
+			
+			// Apply the defaults and init options to make a single init object will all
+			// options defined from defaults and instance options.
+			oInit = _fnExtend( $.extend( true, {}, defaults ), oInit );
+			
+			
+			// Map the initialisation options onto the settings object
+			_fnMap( oSettings.oFeatures, oInit, [
+				"bPaginate",
+				"bLengthChange",
+				"bFilter",
+				"bSort",
+				"bSortMulti",
+				"bInfo",
+				"bProcessing",
+				"bAutoWidth",
+				"bSortClasses",
+				"bServerSide",
+				"bDeferRender"
+			] );
+			_fnMap( oSettings, oInit, [
+				"asStripeClasses",
+				"ajax",
+				"fnServerData",
+				"fnFormatNumber",
+				"sServerMethod",
+				"aaSorting",
+				"aaSortingFixed",
+				"aLengthMenu",
+				"sPaginationType",
+				"sAjaxSource",
+				"sAjaxDataProp",
+				"iStateDuration",
+				"sDom",
+				"bSortCellsTop",
+				"iTabIndex",
+				"fnStateLoadCallback",
+				"fnStateSaveCallback",
+				"renderer",
+				"searchDelay",
+				"rowId",
+				[ "iCookieDuration", "iStateDuration" ], // backwards compat
+				[ "oSearch", "oPreviousSearch" ],
+				[ "aoSearchCols", "aoPreSearchCols" ],
+				[ "iDisplayLength", "_iDisplayLength" ],
+				[ "bJQueryUI", "bJUI" ]
+			] );
+			_fnMap( oSettings.oScroll, oInit, [
+				[ "sScrollX", "sX" ],
+				[ "sScrollXInner", "sXInner" ],
+				[ "sScrollY", "sY" ],
+				[ "bScrollCollapse", "bCollapse" ]
+			] );
+			_fnMap( oSettings.oLanguage, oInit, "fnInfoCallback" );
+			
+			/* Callback functions which are array driven */
+			_fnCallbackReg( oSettings, 'aoDrawCallback',       oInit.fnDrawCallback,      'user' );
+			_fnCallbackReg( oSettings, 'aoServerParams',       oInit.fnServerParams,      'user' );
+			_fnCallbackReg( oSettings, 'aoStateSaveParams',    oInit.fnStateSaveParams,   'user' );
+			_fnCallbackReg( oSettings, 'aoStateLoadParams',    oInit.fnStateLoadParams,   'user' );
+			_fnCallbackReg( oSettings, 'aoStateLoaded',        oInit.fnStateLoaded,       'user' );
+			_fnCallbackReg( oSettings, 'aoRowCallback',        oInit.fnRowCallback,       'user' );
+			_fnCallbackReg( oSettings, 'aoRowCreatedCallback', oInit.fnCreatedRow,        'user' );
+			_fnCallbackReg( oSettings, 'aoHeaderCallback',     oInit.fnHeaderCallback,    'user' );
+			_fnCallbackReg( oSettings, 'aoFooterCallback',     oInit.fnFooterCallback,    'user' );
+			_fnCallbackReg( oSettings, 'aoInitComplete',       oInit.fnInitComplete,      'user' );
+			_fnCallbackReg( oSettings, 'aoPreDrawCallback',    oInit.fnPreDrawCallback,   'user' );
+			
+			oSettings.rowIdFn = _fnGetObjectDataFn( oInit.rowId );
+			
+			/* Browser support detection */
+			_fnBrowserDetect( oSettings );
+			
+			var oClasses = oSettings.oClasses;
+			
+			// @todo Remove in 1.11
+			if ( oInit.bJQueryUI )
+			{
+				/* Use the JUI classes object for display. You could clone the oStdClasses object if
+				 * you want to have multiple tables with multiple independent classes
+				 */
+				$.extend( oClasses, DataTable.ext.oJUIClasses, oInit.oClasses );
+			
+				if ( oInit.sDom === defaults.sDom && defaults.sDom === "lfrtip" )
+				{
+					/* Set the DOM to use a layout suitable for jQuery UI's theming */
+					oSettings.sDom = '<"H"lfr>t<"F"ip>';
+				}
+			
+				if ( ! oSettings.renderer ) {
+					oSettings.renderer = 'jqueryui';
+				}
+				else if ( $.isPlainObject( oSettings.renderer ) && ! oSettings.renderer.header ) {
+					oSettings.renderer.header = 'jqueryui';
+				}
+			}
+			else
+			{
+				$.extend( oClasses, DataTable.ext.classes, oInit.oClasses );
+			}
+			$this.addClass( oClasses.sTable );
+			
+			
+			if ( oSettings.iInitDisplayStart === undefined )
+			{
+				/* Display start point, taking into account the save saving */
+				oSettings.iInitDisplayStart = oInit.iDisplayStart;
+				oSettings._iDisplayStart = oInit.iDisplayStart;
+			}
+			
+			if ( oInit.iDeferLoading !== null )
+			{
+				oSettings.bDeferLoading = true;
+				var tmp = $.isArray( oInit.iDeferLoading );
+				oSettings._iRecordsDisplay = tmp ? oInit.iDeferLoading[0] : oInit.iDeferLoading;
+				oSettings._iRecordsTotal = tmp ? oInit.iDeferLoading[1] : oInit.iDeferLoading;
+			}
+			
+			/* Language definitions */
+			var oLanguage = oSettings.oLanguage;
+			$.extend( true, oLanguage, oInit.oLanguage );
+			
+			if ( oLanguage.sUrl )
+			{
+				/* Get the language definitions from a file - because this Ajax call makes the language
+				 * get async to the remainder of this function we use bInitHandedOff to indicate that
+				 * _fnInitialise will be fired by the returned Ajax handler, rather than the constructor
+				 */
+				$.ajax( {
+					dataType: 'json',
+					url: oLanguage.sUrl,
+					success: function ( json ) {
+						_fnLanguageCompat( json );
+						_fnCamelToHungarian( defaults.oLanguage, json );
+						$.extend( true, oLanguage, json );
+						_fnInitialise( oSettings );
+					},
+					error: function () {
+						// Error occurred loading language file, continue on as best we can
+						_fnInitialise( oSettings );
+					}
+				} );
+				bInitHandedOff = true;
+			}
+			
+			/*
+			 * Stripes
+			 */
+			if ( oInit.asStripeClasses === null )
+			{
+				oSettings.asStripeClasses =[
+					oClasses.sStripeOdd,
+					oClasses.sStripeEven
+				];
+			}
+			
+			/* Remove row stripe classes if they are already on the table row */
+			var stripeClasses = oSettings.asStripeClasses;
+			var rowOne = $this.children('tbody').find('tr').eq(0);
+			if ( $.inArray( true, $.map( stripeClasses, function(el, i) {
+				return rowOne.hasClass(el);
+			} ) ) !== -1 ) {
+				$('tbody tr', this).removeClass( stripeClasses.join(' ') );
+				oSettings.asDestroyStripes = stripeClasses.slice();
+			}
+			
+			/*
+			 * Columns
+			 * See if we should load columns automatically or use defined ones
+			 */
+			var anThs = [];
+			var aoColumnsInit;
+			var nThead = this.getElementsByTagName('thead');
+			if ( nThead.length !== 0 )
+			{
+				_fnDetectHeader( oSettings.aoHeader, nThead[0] );
+				anThs = _fnGetUniqueThs( oSettings );
+			}
+			
+			/* If not given a column array, generate one with nulls */
+			if ( oInit.aoColumns === null )
+			{
+				aoColumnsInit = [];
+				for ( i=0, iLen=anThs.length ; i<iLen ; i++ )
+				{
+					aoColumnsInit.push( null );
+				}
+			}
+			else
+			{
+				aoColumnsInit = oInit.aoColumns;
+			}
+			
+			/* Add the columns */
+			for ( i=0, iLen=aoColumnsInit.length ; i<iLen ; i++ )
+			{
+				_fnAddColumn( oSettings, anThs ? anThs[i] : null );
+			}
+			
+			/* Apply the column definitions */
+			_fnApplyColumnDefs( oSettings, oInit.aoColumnDefs, aoColumnsInit, function (iCol, oDef) {
+				_fnColumnOptions( oSettings, iCol, oDef );
+			} );
+			
+			/* HTML5 attribute detection - build an mData object automatically if the
+			 * attributes are found
+			 */
+			if ( rowOne.length ) {
+				var a = function ( cell, name ) {
+					return cell.getAttribute( 'data-'+name ) !== null ? name : null;
+				};
+			
+				$( rowOne[0] ).children('th, td').each( function (i, cell) {
+					var col = oSettings.aoColumns[i];
+			
+					if ( col.mData === i ) {
+						var sort = a( cell, 'sort' ) || a( cell, 'order' );
+						var filter = a( cell, 'filter' ) || a( cell, 'search' );
+			
+						if ( sort !== null || filter !== null ) {
+							col.mData = {
+								_:      i+'.display',
+								sort:   sort !== null   ? i+'.@data-'+sort   : undefined,
+								type:   sort !== null   ? i+'.@data-'+sort   : undefined,
+								filter: filter !== null ? i+'.@data-'+filter : undefined
+							};
+			
+							_fnColumnOptions( oSettings, i );
+						}
+					}
+				} );
+			}
+			
+			var features = oSettings.oFeatures;
+			var loadedInit = function () {
+				/*
+				 * Sorting
+				 * @todo For modularisation (1.11) this needs to do into a sort start up handler
+				 */
+			
+				// If aaSorting is not defined, then we use the first indicator in asSorting
+				// in case that has been altered, so the default sort reflects that option
+				if ( oInit.aaSorting === undefined ) {
+					var sorting = oSettings.aaSorting;
+					for ( i=0, iLen=sorting.length ; i<iLen ; i++ ) {
+						sorting[i][1] = oSettings.aoColumns[ i ].asSorting[0];
+					}
+				}
+			
+				/* Do a first pass on the sorting classes (allows any size changes to be taken into
+				 * account, and also will apply sorting disabled classes if disabled
+				 */
+				_fnSortingClasses( oSettings );
+			
+				if ( features.bSort ) {
+					_fnCallbackReg( oSettings, 'aoDrawCallback', function () {
+						if ( oSettings.bSorted ) {
+							var aSort = _fnSortFlatten( oSettings );
+							var sortedColumns = {};
+			
+							$.each( aSort, function (i, val) {
+								sortedColumns[ val.src ] = val.dir;
+							} );
+			
+							_fnCallbackFire( oSettings, null, 'order', [oSettings, aSort, sortedColumns] );
+							_fnSortAria( oSettings );
+						}
+					} );
+				}
+			
+				_fnCallbackReg( oSettings, 'aoDrawCallback', function () {
+					if ( oSettings.bSorted || _fnDataSource( oSettings ) === 'ssp' || features.bDeferRender ) {
+						_fnSortingClasses( oSettings );
+					}
+				}, 'sc' );
+			
+			
+				/*
+				 * Final init
+				 * Cache the header, body and footer as required, creating them if needed
+				 */
+			
+				// Work around for Webkit bug 83867 - store the caption-side before removing from doc
+				var captions = $this.children('caption').each( function () {
+					this._captionSide = $(this).css('caption-side');
+				} );
+			
+				var thead = $this.children('thead');
+				if ( thead.length === 0 ) {
+					thead = $('<thead/>').appendTo($this);
+				}
+				oSettings.nTHead = thead[0];
+			
+				var tbody = $this.children('tbody');
+				if ( tbody.length === 0 ) {
+					tbody = $('<tbody/>').appendTo($this);
+				}
+				oSettings.nTBody = tbody[0];
+			
+				var tfoot = $this.children('tfoot');
+				if ( tfoot.length === 0 && captions.length > 0 && (oSettings.oScroll.sX !== "" || oSettings.oScroll.sY !== "") ) {
+					// If we are a scrolling table, and no footer has been given, then we need to create
+					// a tfoot element for the caption element to be appended to
+					tfoot = $('<tfoot/>').appendTo($this);
+				}
+			
+				if ( tfoot.length === 0 || tfoot.children().length === 0 ) {
+					$this.addClass( oClasses.sNoFooter );
+				}
+				else if ( tfoot.length > 0 ) {
+					oSettings.nTFoot = tfoot[0];
+					_fnDetectHeader( oSettings.aoFooter, oSettings.nTFoot );
+				}
+			
+				/* Check if there is data passing into the constructor */
+				if ( oInit.aaData ) {
+					for ( i=0 ; i<oInit.aaData.length ; i++ ) {
+						_fnAddData( oSettings, oInit.aaData[ i ] );
+					}
+				}
+				else if ( oSettings.bDeferLoading || _fnDataSource( oSettings ) == 'dom' ) {
+					/* Grab the data from the page - only do this when deferred loading or no Ajax
+					 * source since there is no point in reading the DOM data if we are then going
+					 * to replace it with Ajax data
+					 */
+					_fnAddTr( oSettings, $(oSettings.nTBody).children('tr') );
+				}
+			
+				/* Copy the data index array */
+				oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+			
+				/* Initialisation complete - table can be drawn */
+				oSettings.bInitialised = true;
+			
+				/* Check if we need to initialise the table (it might not have been handed off to the
+				 * language processor)
+				 */
+				if ( bInitHandedOff === false ) {
+					_fnInitialise( oSettings );
+				}
+			};
+			
+			/* Must be done after everything which can be overridden by the state saving! */
+			if ( oInit.bStateSave )
+			{
+				features.bStateSave = true;
+				_fnCallbackReg( oSettings, 'aoDrawCallback', _fnSaveState, 'state_save' );
+				_fnLoadState( oSettings, oInit, loadedInit );
+			}
+			else {
+				loadedInit();
+			}
+			
+		} );
+		_that = null;
+		return this;
+	};
 
 	
 	/*
@@ -105,15 +1362,25 @@
 	var _re_dic = {};
 	var _re_new_lines = /[\r\n]/g;
 	var _re_html = /<.*?>/g;
-	var _re_date_start = /^[\w\+\-]/;
-	var _re_date_end = /[\w\+\-]$/;
+	
+	// This is not strict ISO8601 - Date.parse() is quite lax, although
+	// implementations differ between browsers.
+	var _re_date = /^\d{2,4}[\.\/\-]\d{1,2}[\.\/\-]\d{1,2}([T ]{1}\d{1,2}[:\.]\d{2}([\.:]\d{2})?)?$/;
 	
 	// Escape regular expression special characters
 	var _re_escape_regex = new RegExp( '(\\' + [ '/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\', '$', '^', '-' ].join('|\\') + ')', 'g' );
 	
-	// U+2009 is thin space and U+202F is narrow no-break space, both used in many
-	// standards as thousands separators
-	var _re_formatted_numeric = /[',$£€¥%\u2009\u202F]/g;
+	// http://en.wikipedia.org/wiki/Foreign_exchange_market
+	// - \u20BD - Russian ruble.
+	// - \u20a9 - South Korean Won
+	// - \u20BA - Turkish Lira
+	// - \u20B9 - Indian Rupee
+	// - R - Brazil (R$) and South Africa
+	// - fr - Swiss Franc
+	// - kr - Swedish krona, Norwegian krone and Danish krone
+	// - \u2009 is thin space and \u202F is narrow no-break space, both used in many
+	//   standards as thousands separators.
+	var _re_formatted_numeric = /[',$£€¥%\u2009\u202F\u20BD\u20a9\u20BArfk]/gi;
 	
 	
 	var _empty = function ( d ) {
@@ -142,6 +1409,13 @@
 	var _isNumber = function ( d, decimalPoint, formatted ) {
 		var strType = typeof d === 'string';
 	
+		// If empty return immediately so there must be a number if it is a
+		// formatted string (this stops the string "k", or "kr", etc being detected
+		// as a formatted number for currency
+		if ( _empty( d ) ) {
+			return true;
+		}
+	
 		if ( decimalPoint && strType ) {
 			d = _numToDecimal( d, decimalPoint );
 		}
@@ -150,7 +1424,7 @@
 			d = d.replace( _re_formatted_numeric, '' );
 		}
 	
-		return _empty( d ) || (!isNaN( parseFloat(d) ) && isFinite( d ));
+		return !isNaN( parseFloat(d) ) && isFinite( d );
 	};
 	
 	
@@ -267,6 +1541,35 @@
 	
 	
 	/**
+	 * Determine if all values in the array are unique. This means we can short
+	 * cut the _unique method at the cost of a single loop. A sorted array is used
+	 * to easily check the values.
+	 *
+	 * @param  {array} src Source array
+	 * @return {boolean} true if all unique, false otherwise
+	 * @ignore
+	 */
+	var _areAllUnique = function ( src ) {
+		if ( src.length < 2 ) {
+			return true;
+		}
+	
+		var sorted = src.slice().sort();
+		var last = sorted[0];
+	
+		for ( var i=1, ien=sorted.length ; i<ien ; i++ ) {
+			if ( sorted[i] === last ) {
+				return false;
+			}
+	
+			last = sorted[i];
+		}
+	
+		return true;
+	};
+	
+	
+	/**
 	 * Find the unique elements in a source array.
 	 *
 	 * @param  {array} src Source array
@@ -275,6 +1578,10 @@
 	 */
 	var _unique = function ( src )
 	{
+		if ( _areAllUnique( src ) ) {
+			return src.slice();
+		}
+	
 		// A faster unique method is to use object keys to identify used values,
 		// but this doesn't work with arrays or objects, which we must also
 		// consider. See jsperf.com/compare-array-unique-versions/4 for more
@@ -299,6 +1606,65 @@
 		}
 	
 		return out;
+	};
+	
+	
+	/**
+	 * DataTables utility methods
+	 * 
+	 * This namespace provides helper methods that DataTables uses internally to
+	 * create a DataTable, but which are not exclusively used only for DataTables.
+	 * These methods can be used by extension authors to save the duplication of
+	 * code.
+	 *
+	 *  @namespace
+	 */
+	DataTable.util = {
+		/**
+		 * Throttle the calls to a function. Arguments and context are maintained
+		 * for the throttled function.
+		 *
+		 * @param {function} fn Function to be called
+		 * @param {integer} freq Call frequency in mS
+		 * @return {function} Wrapped function
+		 */
+		throttle: function ( fn, freq ) {
+			var
+				frequency = freq !== undefined ? freq : 200,
+				last,
+				timer;
+	
+			return function () {
+				var
+					that = this,
+					now  = +new Date(),
+					args = arguments;
+	
+				if ( last && now < last + frequency ) {
+					clearTimeout( timer );
+	
+					timer = setTimeout( function () {
+						last = undefined;
+						fn.apply( that, args );
+					}, frequency );
+				}
+				else {
+					last = now;
+					fn.apply( that, args );
+				}
+			};
+		},
+	
+	
+		/**
+		 * Escape a string such that it can be used in a regular expression
+		 *
+		 *  @param {string} val string to escape
+		 *  @returns {string} escaped string
+		 */
+		escapeRegex: function ( val ) {
+			return val.replace( _re_escape_regex, '\\$1' );
+		}
 	};
 	
 	
@@ -452,6 +1818,14 @@
 		_fnCompatMap( init, 'pageLength',    'iDisplayLength' );
 		_fnCompatMap( init, 'searching',     'bFilter' );
 	
+		// Boolean initialisation of x-scrolling
+		if ( typeof init.sScrollX === 'boolean' ) {
+			init.sScrollX = init.sScrollX ? '100%' : '';
+		}
+		if ( typeof init.scrollX === 'boolean' ) {
+			init.scrollX = init.scrollX ? '100%' : '';
+		}
+	
 		// Column search objects are in an array, so it needs to be converted
 		// element by element
 		var searchCols = init.aoSearchCols;
@@ -478,6 +1852,12 @@
 		_fnCompatMap( init, 'orderData',     'aDataSort' );
 		_fnCompatMap( init, 'orderSequence', 'asSorting' );
 		_fnCompatMap( init, 'orderDataType', 'sortDataType' );
+	
+		// orderData can be given as an integer
+		var dataSort = init.aDataSort;
+		if ( typeof dataSort === 'number' && ! $.isArray( dataSort ) ) {
+			init.aDataSort = [ dataSort ];
+		}
 	}
 	
 	
@@ -488,49 +1868,75 @@
 	 */
 	function _fnBrowserDetect( settings )
 	{
-		var browser = settings.oBrowser;
+		// We don't need to do this every time DataTables is constructed, the values
+		// calculated are specific to the browser and OS configuration which we
+		// don't expect to change between initialisations
+		if ( ! DataTable.__browser ) {
+			var browser = {};
+			DataTable.__browser = browser;
 	
-		// Scrolling feature / quirks detection
-		var n = $('<div/>')
-			.css( {
-				position: 'absolute',
-				top: 0,
-				left: 0,
-				height: 1,
-				width: 1,
-				overflow: 'hidden'
-			} )
-			.append(
-				$('<div/>')
-					.css( {
-						position: 'absolute',
-						top: 1,
-						left: 1,
-						width: 100,
-						overflow: 'scroll'
-					} )
-					.append(
-						$('<div class="test"/>')
-							.css( {
-								width: '100%',
-								height: 10
-							} )
-					)
-			)
-			.appendTo( 'body' );
+			// Scrolling feature / quirks detection
+			var n = $('<div/>')
+				.css( {
+					position: 'fixed',
+					top: 0,
+					left: $(window).scrollLeft()*-1, // allow for scrolling
+					height: 1,
+					width: 1,
+					overflow: 'hidden'
+				} )
+				.append(
+					$('<div/>')
+						.css( {
+							position: 'absolute',
+							top: 1,
+							left: 1,
+							width: 100,
+							overflow: 'scroll'
+						} )
+						.append(
+							$('<div/>')
+								.css( {
+									width: '100%',
+									height: 10
+								} )
+						)
+				)
+				.appendTo( 'body' );
 	
-		var test = n.find('.test');
+			var outer = n.children();
+			var inner = outer.children();
 	
-		// IE6/7 will oversize a width 100% element inside a scrolling element, to
-		// include the width of the scrollbar, while other browsers ensure the inner
-		// element is contained without forcing scrolling
-		browser.bScrollOversize = test[0].offsetWidth === 100;
+			// Numbers below, in order, are:
+			// inner.offsetWidth, inner.clientWidth, outer.offsetWidth, outer.clientWidth
+			//
+			// IE6 XP:                           100 100 100  83
+			// IE7 Vista:                        100 100 100  83
+			// IE 8+ Windows:                     83  83 100  83
+			// Evergreen Windows:                 83  83 100  83
+			// Evergreen Mac with scrollbars:     85  85 100  85
+			// Evergreen Mac without scrollbars: 100 100 100 100
 	
-		// In rtl text layout, some browsers (most, but not all) will place the
-		// scrollbar on the left, rather than the right.
-		browser.bScrollbarLeft = test.offset().left !== 1;
+			// Get scrollbar width
+			browser.barWidth = outer[0].offsetWidth - outer[0].clientWidth;
 	
-		n.remove();
+			// IE6/7 will oversize a width 100% element inside a scrolling element, to
+			// include the width of the scrollbar, while other browsers ensure the inner
+			// element is contained without forcing scrolling
+			browser.bScrollOversize = inner[0].offsetWidth === 100 && outer[0].clientWidth !== 100;
+	
+			// In rtl text layout, some browsers (most, but not all) will place the
+			// scrollbar on the left, rather than the right.
+			browser.bScrollbarLeft = Math.round( inner.offset().left ) !== 1;
+	
+			// IE8- don't provide height and width for getBoundingClientRect
+			browser.bBounding = n[0].getBoundingClientRect().width ? true : false;
+	
+			n.remove();
+		}
+	
+		$.extend( settings.oBrowser, DataTable.__browser );
+		settings.oScroll.iBarWidth = DataTable.__browser.barWidth;
 	}
 	
 	
@@ -595,7 +2001,7 @@
 		searchCols[ iCol ] = $.extend( {}, DataTable.models.oSearch, searchCols[ iCol ] );
 	
 		// Use the default column options function to initialise classes etc
-		_fnColumnOptions( oSettings, iCol, null );
+		_fnColumnOptions( oSettings, iCol, $(nTh).data() );
 	}
 	
 	
@@ -658,7 +2064,7 @@
 			/* iDataSort to be applied (backwards compatibility), but aDataSort will take
 			 * priority if defined
 			 */
-			if ( typeof oOptions.iDataSort === 'number' )
+			if ( oOptions.iDataSort !== undefined )
 			{
 				oCol.aDataSort = [ oOptions.iDataSort ];
 			}
@@ -676,6 +2082,7 @@
 		oCol._bAttrSrc = $.isPlainObject( mDataSrc ) && (
 			attrTest(mDataSrc.sort) || attrTest(mDataSrc.type) || attrTest(mDataSrc.filter)
 		);
+		oCol._setter = null;
 	
 		oCol.fnGetData = function (rowData, type, meta) {
 			var innerData = mData( rowData, type, undefined, meta );
@@ -800,7 +2207,16 @@
 	 */
 	function _fnVisbleColumns( oSettings )
 	{
-		return _fnGetColumns( oSettings, 'bVisible' ).length;
+		var vis = 0;
+	
+		// No reduce in IE8, use a loop for now
+		$.each( oSettings.aoColumns, function ( i, col ) {
+			if ( col.bVisible && $(col.nTh).css('display') !== 'none' ) {
+				vis++;
+			}
+		} );
+	
+		return vis;
 	}
 	
 	
@@ -987,7 +2403,8 @@
 		/* Create the object for storing information about this new row */
 		var iRow = oSettings.aoData.length;
 		var oData = $.extend( true, {}, DataTable.models.oRow, {
-			src: nTr ? 'dom' : 'data'
+			src: nTr ? 'dom' : 'data',
+			idx: iRow
 		} );
 	
 		oData._aData = aDataIn;
@@ -996,19 +2413,20 @@
 		/* Create the cells */
 		var nTd, sThisType;
 		var columns = oSettings.aoColumns;
+	
+		// Invalidate the column types as the new data needs to be revalidated
 		for ( var i=0, iLen=columns.length ; i<iLen ; i++ )
 		{
-			// When working with a row, the data source object must be populated. In
-			// all other cases, the data source object is already populated, so we
-			// don't overwrite it, which might break bindings etc
-			if ( nTr ) {
-				_fnSetCellData( oSettings, iRow, i, _fnGetCellData( oSettings, iRow, i ) );
-			}
 			columns[i].sType = null;
 		}
 	
 		/* Add to the display array */
 		oSettings.aiDisplayMaster.push( iRow );
+	
+		var id = oSettings.rowIdFn( aDataIn );
+		if ( id !== undefined ) {
+			oSettings.aIds[ id ] = oData;
+		}
 	
 		/* Create the DOM information, or register it if already present */
 		if ( nTr || ! oSettings.oFeatures.bDeferRender )
@@ -1098,14 +2516,15 @@
 			if ( settings.iDrawError != draw && defaultContent === null ) {
 				_fnLog( settings, 0, "Requested unknown parameter "+
 					(typeof col.mData=='function' ? '{function}' : "'"+col.mData+"'")+
-					" for row "+rowIdx, 4 );
+					" for row "+rowIdx+", column "+colIdx, 4 );
 				settings.iDrawError = draw;
 			}
 			return defaultContent;
 		}
 	
-		/* When the data source is null, we can use default column data */
-		if ( (cellData === rowData || cellData === null) && defaultContent !== null ) {
+		// When the data source is null and a specific data type is requested (i.e.
+		// not the original data), we can use default column data
+		if ( (cellData === rowData || cellData === null) && defaultContent !== null && type !== undefined ) {
 			cellData = defaultContent;
 		}
 		else if ( typeof cellData === 'function' ) {
@@ -1153,8 +2572,8 @@
 	 */
 	function _fnSplitObjNotation( str )
 	{
-		return $.map( str.match(/(\\.|[^\.])+/g), function ( s ) {
-			return s.replace(/\\./g, '.');
+		return $.map( str.match(/(\\.|[^\.])+/g) || [''], function ( s ) {
+			return s.replace(/\\\./g, '.');
 		} );
 	}
 	
@@ -1236,8 +2655,10 @@
 							innerSrc = a.join('.');
 	
 							// Traverse each entry in the array getting the properties requested
-							for ( var j=0, jLen=data.length ; j<jLen ; j++ ) {
-								out.push( fetchData( data[j], type, innerSrc ) );
+							if ( $.isArray( data ) ) {
+								for ( var j=0, jLen=data.length ; j<jLen ; j++ ) {
+									out.push( fetchData( data[j], type, innerSrc ) );
+								}
 							}
 	
 							// If a string is given in between the array notation indicators, that
@@ -1337,11 +2758,21 @@
 						innerSrc = b.join('.');
 	
 						// Traverse each entry in the array setting the properties requested
-						for ( var j=0, jLen=val.length ; j<jLen ; j++ )
+						if ( $.isArray( val ) )
 						{
-							o = {};
-							setData( o, val[j], innerSrc );
-							data[ a[i] ].push( o );
+							for ( var j=0, jLen=val.length ; j<jLen ; j++ )
+							{
+								o = {};
+								setData( o, val[j], innerSrc );
+								data[ a[i] ].push( o );
+							}
+						}
+						else
+						{
+							// We've been asked to save data to an array, but it
+							// isn't array data to be saved. Best that can be done
+							// is to just save the value.
+							data[ a[i] ] = val;
 						}
 	
 						// The inner call to setData has already traversed through the remainder
@@ -1414,6 +2845,7 @@
 		settings.aoData.length = 0;
 		settings.aiDisplayMaster.length = 0;
 		settings.aiDisplay.length = 0;
+		settings.aIds = {};
 	}
 	
 	
@@ -1519,7 +2951,7 @@
 			}
 	
 			// Update DataTables special `DT_*` attributes for the row
-			_fnRowAttributes( row );
+			_fnRowAttributes( settings, row );
 		}
 	}
 	
@@ -1551,7 +2983,11 @@
 			objectRead = settings._rowReadObject;
 	
 		// Allow the data object to be passed in, or construct
-		d = d || objectRead ? {} : [];
+		d = d !== undefined ?
+			d :
+			objectRead ?
+				{} :
+				[];
 	
 		var attr = function ( str, td  ) {
 			if ( typeof str === 'string' ) {
@@ -1614,9 +3050,20 @@
 		else {
 			// Existing row object passed in
 			tds = row.anCells;
-			
+	
 			for ( var j=0, jen=tds.length ; j<jen ; j++ ) {
 				cellProcess( tds[j] );
+			}
+		}
+	
+		// Read the ID from the DOM if present
+		var rowNode = row.firstChild ? row : row.nTr;
+	
+		if ( rowNode ) {
+			var id = rowNode.getAttribute( 'id' );
+	
+			if ( id ) {
+				_fnSetObjectDataFn( settings.rowId )( d, id );
 			}
 		}
 	
@@ -1657,7 +3104,7 @@
 			nTr._DT_RowIndex = iRow;
 	
 			/* Special parameters can be given by the data source to be used on the row */
-			_fnRowAttributes( row );
+			_fnRowAttributes( oSettings, row );
 	
 			/* Process each column */
 			for ( i=0, iLen=oSettings.aoColumns.length ; i<iLen ; i++ )
@@ -1665,11 +3112,17 @@
 				oCol = oSettings.aoColumns[i];
 	
 				nTd = nTrIn ? anTds[i] : document.createElement( oCol.sCellType );
+				nTd._DT_CellIndex = {
+					row: iRow,
+					column: i
+				};
+				
 				cells.push( nTd );
 	
 				// Need to create the HTML if new, or if a rendering function is defined
-				if ( !nTrIn || oCol.mRender || oCol.mData !== i )
-				{
+				if ( (!nTrIn || oCol.mRender || oCol.mData !== i) &&
+					 (!$.isPlainObject(oCol.mData) || oCol.mData._ !== i+'.display')
+				) {
 					nTd.innerHTML = _fnGetCellData( oSettings, iRow, i, 'display' );
 				}
 	
@@ -1709,17 +3162,20 @@
 	/**
 	 * Add attributes to a row based on the special `DT_*` parameters in a data
 	 * source object.
+	 *  @param {object} settings DataTables settings object
 	 *  @param {object} DataTables row object for the row to be modified
 	 *  @memberof DataTable#oApi
 	 */
-	function _fnRowAttributes( row )
+	function _fnRowAttributes( settings, row )
 	{
 		var tr = row.nTr;
 		var data = row._aData;
 	
 		if ( tr ) {
-			if ( data.DT_RowId ) {
-				tr.id = data.DT_RowId;
+			var id = settings.rowIdFn( data );
+	
+			if ( id ) {
+				tr.id = id;
 			}
 	
 			if ( data.DT_RowClass ) {
@@ -1732,6 +3188,10 @@
 				$(tr)
 					.removeClass( row.__rowc.join(' ') )
 					.addClass( data.DT_RowClass );
+			}
+	
+			if ( data.DT_RowAttr ) {
+				$(tr).attr( data.DT_RowAttr );
 			}
 	
 			if ( data.DT_RowData ) {
@@ -1780,7 +3240,7 @@
 				}
 			}
 	
-			if ( column.sTitle != cell.html() ) {
+			if ( column.sTitle != cell[0].innerHTML ) {
 				cell.html( column.sTitle );
 			}
 	
@@ -2252,6 +3712,7 @@
 	
 		/* Built our DOM structure - replace the holding div with what we want */
 		holding.replaceWith( insert );
+		oSettings.nHolding = null;
 	}
 	
 	
@@ -2367,8 +3828,6 @@
 		return aReturn;
 	}
 	
-	
-	
 	/**
 	 * Create an Ajax call based on the table's settings, taking into account that
 	 * parameters can have multiple forms, and backwards compatibility.
@@ -2411,16 +3870,20 @@
 		var ajaxData;
 		var ajax = oSettings.ajax;
 		var instance = oSettings.oInstance;
+		var callback = function ( json ) {
+			_fnCallbackFire( oSettings, null, 'xhr', [oSettings, json, oSettings.jqXHR] );
+			fn( json );
+		};
 	
 		if ( $.isPlainObject( ajax ) && ajax.data )
 		{
 			ajaxData = ajax.data;
 	
 			var newData = $.isFunction( ajaxData ) ?
-				ajaxData( data ) :  // fn can manipulate data or return an object
-				ajaxData;           // object or array to merge
+				ajaxData( data, oSettings ) :  // fn can manipulate data or return
+				ajaxData;                      // an object object or array to merge
 	
-			// If the function returned an object, use that alone
+			// If the function returned something, use that alone
 			data = $.isFunction( ajaxData ) && newData ?
 				newData :
 				$.extend( true, data, newData );
@@ -2435,24 +3898,25 @@
 			"success": function (json) {
 				var error = json.error || json.sError;
 				if ( error ) {
-					oSettings.oApi._fnLog( oSettings, 0, error );
+					_fnLog( oSettings, 0, error );
 				}
 	
 				oSettings.json = json;
-				_fnCallbackFire( oSettings, null, 'xhr', [oSettings, json] );
-				fn( json );
+				callback( json );
 			},
 			"dataType": "json",
 			"cache": false,
 			"type": oSettings.sServerMethod,
 			"error": function (xhr, error, thrown) {
-				var log = oSettings.oApi._fnLog;
+				var ret = _fnCallbackFire( oSettings, null, 'xhr', [oSettings, null, oSettings.jqXHR] );
 	
-				if ( error == "parsererror" ) {
-					log( oSettings, 0, 'Invalid JSON response', 1 );
-				}
-				else if ( xhr.readyState === 4 ) {
-					log( oSettings, 0, 'Ajax error', 7 );
+				if ( $.inArray( true, ret ) === -1 ) {
+					if ( error == "parsererror" ) {
+						_fnLog( oSettings, 0, 'Invalid JSON response', 1 );
+					}
+					else if ( xhr.readyState === 4 ) {
+						_fnLog( oSettings, 0, 'Ajax error', 7 );
+					}
 				}
 	
 				_fnProcessingDisplay( oSettings, false );
@@ -2473,7 +3937,7 @@
 				$.map( data, function (val, key) { // Need to convert back to 1.9 trad format
 					return { name: key, value: val };
 				} ),
-				fn,
+				callback,
 				oSettings
 			);
 		}
@@ -2487,7 +3951,7 @@
 		else if ( $.isFunction( ajax ) )
 		{
 			// Is a function - let the caller define what needs to be done
-			oSettings.jqXHR = ajax.call( instance, data, fn, oSettings );
+			oSettings.jqXHR = ajax.call( instance, data, callback, oSettings );
 		}
 		else
 		{
@@ -2653,6 +4117,7 @@
 			return json[old] !== undefined ? json[old] : json[modern];
 		};
 	
+		var data = _fnAjaxDataSrc( settings, json );
 		var draw            = compat( 'sEcho',                'draw' );
 		var recordsTotal    = compat( 'iTotalRecords',        'recordsTotal' );
 		var recordsFiltered = compat( 'iTotalDisplayRecords', 'recordsFiltered' );
@@ -2669,7 +4134,6 @@
 		settings._iRecordsTotal   = parseInt(recordsTotal, 10);
 		settings._iRecordsDisplay = parseInt(recordsFiltered, 10);
 	
-		var data = _fnAjaxDataSrc( settings, json );
 		for ( var i=0, ien=data.length ; i<ien ; i++ ) {
 			_fnAddData( settings, data[i] );
 		}
@@ -2711,7 +4175,6 @@
 			_fnGetObjectDataFn( dataSrc )( json ) :
 			json;
 	}
-	
 	
 	/**
 	 * Generate the node required for filtering text
@@ -2768,13 +4231,13 @@
 		var jqFilter = $('input', filter)
 			.val( previousSearch.sSearch )
 			.attr( 'placeholder', language.sSearchPlaceholder )
-			.bind(
+			.on(
 				'keyup.DT search.DT input.DT paste.DT cut.DT',
 				searchDelay ?
 					_fnThrottle( searchFn, searchDelay ) :
 					searchFn
 			)
-			.bind( 'keypress.DT', function(e) {
+			.on( 'keypress.DT', function(e) {
 				/* Prevent form submission */
 				if ( e.keyCode == 13 ) {
 					return false;
@@ -2882,7 +4345,7 @@
 			// So the array reference doesn't break set the results into the
 			// existing array
 			displayRows.length = 0;
-			displayRows.push.apply( displayRows, rows );
+			$.merge( displayRows, rows );
 		}
 	}
 	
@@ -2904,16 +4367,19 @@
 		}
 	
 		var data;
+		var out = [];
 		var display = settings.aiDisplay;
 		var rpSearch = _fnFilterCreateSearch( searchStr, regex, smart, caseInsensitive );
 	
-		for ( var i=display.length-1 ; i>=0 ; i-- ) {
+		for ( var i=0 ; i<display.length ; i++ ) {
 			data = settings.aoData[ display[i] ]._aFilterData[ colIdx ];
 	
-			if ( ! rpSearch.test( data ) ) {
-				display.splice( i, 1 );
+			if ( rpSearch.test( data ) ) {
+				out.push( display[i] );
 			}
 		}
+	
+		settings.aiDisplay = out;
 	}
 	
 	
@@ -2933,6 +4399,7 @@
 		var prevSearch = settings.oPreviousSearch.sSearch;
 		var displayMaster = settings.aiDisplayMaster;
 		var display, invalidated, i;
+		var filtered = [];
 	
 		// Need to take account of custom filtering functions - always filter
 		if ( DataTable.ext.search.length !== 0 ) {
@@ -2961,11 +4428,13 @@
 			// Search the display array
 			display = settings.aiDisplay;
 	
-			for ( i=display.length-1 ; i>=0 ; i-- ) {
-				if ( ! rpSearch.test( settings.aoData[ display[i] ]._sFilterRow ) ) {
-					display.splice( i, 1 );
+			for ( i=0 ; i<display.length ; i++ ) {
+				if ( rpSearch.test( settings.aoData[ display[i] ]._sFilterRow ) ) {
+					filtered.push( display[i] );
 				}
 			}
+	
+			settings.aiDisplay = filtered;
 		}
 	}
 	
@@ -2993,7 +4462,7 @@
 			 * 
 			 * ^(?=.*?\bone\b)(?=.*?\btwo three\b)(?=.*?\bfour\b).*$
 			 */
-			var a = $.map( search.match( /"[^"]+"|[^ ]+/g ) || '', function ( word ) {
+			var a = $.map( search.match( /"[^"]+"|[^ ]+/g ) || [''], function ( word ) {
 				if ( word.charAt(0) === '"' ) {
 					var m = word.match( /^"(.*)"$/ );
 					word = m ? m[1] : word;
@@ -3015,12 +4484,7 @@
 	 *  @returns {string} escaped string
 	 *  @memberof DataTable#oApi
 	 */
-	function _fnEscapeRegex ( sVal )
-	{
-		return sVal.replace( _re_escape_regex, '\\$1' );
-	}
-	
-	
+	var _fnEscapeRegex = DataTable.util.escapeRegex;
 	
 	var __filter_div = $('<div>')[0];
 	var __filter_div_textContent = __filter_div.textContent !== undefined;
@@ -3238,6 +4702,7 @@
 		var i, iLen, iAjaxStart=settings.iInitDisplayStart;
 		var columns = settings.aoColumns, column;
 		var features = settings.oFeatures;
+		var deferLoading = settings.bDeferLoading; // value modified by the draw
 	
 		/* Ensure that the table data is fully initialised */
 		if ( ! settings.bInitialised ) {
@@ -3269,6 +4734,8 @@
 			}
 		}
 	
+		_fnCallbackFire( settings, null, 'preInit', [settings] );
+	
 		// If there is default sorting required - let's do it. The sort function
 		// will do the drawing for us. Otherwise we draw the table regardless of the
 		// Ajax source - this allows the table to look initialised for Ajax sourcing
@@ -3277,7 +4744,7 @@
 	
 		// Server-side processing init complete is done by _fnAjaxUpdateDraw
 		var dataSrc = _fnDataSource( settings );
-		if ( dataSrc != 'ssp' ) {
+		if ( dataSrc != 'ssp' || deferLoading ) {
 			// if there is an ajax source load the data
 			if ( dataSrc == 'ajax' ) {
 				_fnBuildAjax( settings, [], function(json) {
@@ -3318,12 +4785,13 @@
 	{
 		settings._bInitComplete = true;
 	
-		// On an Ajax load we now have data and therefore want to apply the column
-		// sizing
-		if ( json ) {
+		// When data was added after the initialisation (data or Ajax) we need to
+		// calculate the column sizing
+		if ( json || settings.oInit.aaData ) {
 			_fnAdjustColumnSizing( settings );
 		}
 	
+		_fnCallbackFire( settings, null, 'plugin-init', [settings, json] );
 		_fnCallbackFire( settings, 'aoInitComplete', 'init', [settings, json] );
 	}
 	
@@ -3379,13 +4847,13 @@
 		// reference is broken by the use of outerHTML
 		$('select', div)
 			.val( settings._iDisplayLength )
-			.bind( 'change.DT', function(e) {
+			.on( 'change.DT', function(e) {
 				_fnLengthChange( settings, $(this).val() );
 				_fnDraw( settings );
 			} );
 	
 		// Update node value whenever anything changes the table's length
-		$(settings.nTable).bind( 'length.dt.DT', function (e, s, len) {
+		$(settings.nTable).on( 'length.dt.DT', function (e, s, len) {
 			if ( settings === s ) {
 				$('select', div).val( len );
 			}
@@ -3441,7 +4909,6 @@
 							buttons = plugin(page, pages),
 							i, ien;
 	
-				//debugger;
 						for ( i=0, ien=features.p.length ; i<ien ; i++ ) {
 							_fnRenderer( settings, 'pageButton' )(
 								settings, features.p[i], i, buttons, page, pages
@@ -3601,17 +5068,6 @@
 			return !s ? null : _fnStringToCss( s );
 		};
 	
-		// This is fairly messy, but with x scrolling enabled, if the table has a
-		// width attribute, regardless of any width applied using the column width
-		// options, the browser will shrink or grow the table as needed to fit into
-		// that 100%. That would make the width options useless. So we remove it.
-		// This is okay, under the assumption that width:100% is applied to the
-		// table in CSS (it is in the default stylesheet) which will set the table
-		// width as appropriate (the attribute and css behave differently...)
-		if ( scroll.sX && table.attr('width') === '100%' ) {
-			table.removeAttr('width');
-		}
-	
 		if ( ! footer.length ) {
 			footer = null;
 		}
@@ -3661,8 +5117,8 @@
 			.append(
 				$(_div, { 'class': classes.sScrollBody } )
 					.css( {
+						position: 'relative',
 						overflow: 'auto',
-						height: size( scrollY ),
 						width: size( scrollX )
 					} )
 					.append( table )
@@ -3698,7 +5154,7 @@
 	
 		// When the body is scrolled, then we also want to scroll the headers
 		if ( scrollX ) {
-			$(scrollBody).scroll( function (e) {
+			$(scrollBody).on( 'scroll.DT', function (e) {
 				var scrollLeft = this.scrollLeft;
 	
 				scrollHead.scrollLeft = scrollLeft;
@@ -3708,6 +5164,11 @@
 				}
 			} );
 		}
+	
+		$(scrollBody).css(
+			scrollY && scroll.bCollapse ? 'max-height' : 'height', 
+			scrollY
+		);
 	
 		settings.nScrollHead = scrollHead;
 		settings.nScrollBody = scrollBody;
@@ -3766,11 +5227,12 @@
 			footer         = settings.nTFoot ? $(settings.nTFoot) : null,
 			browser        = settings.oBrowser,
 			ie67           = browser.bScrollOversize,
+			dtHeaderCells  = _pluck( settings.aoColumns, 'nTh' ),
 			headerTrgEls, footerTrgEls,
 			headerSrcEls, footerSrcEls,
 			headerCopy, footerCopy,
 			headerWidths=[], footerWidths=[],
-			headerContent=[],
+			headerContent=[], footerContent=[],
 			idx, correction, sanityWidth,
 			zeroOut = function(nSizer) {
 				var style = nSizer.style;
@@ -3781,6 +5243,20 @@
 				style.height = 0;
 			};
 	
+		// If the scrollbar visibility has changed from the last draw, we need to
+		// adjust the column sizes as the table width will have changed to account
+		// for the scrollbar
+		var scrollBarVis = divBodyEl.scrollHeight > divBodyEl.clientHeight;
+		
+		if ( settings.scrollBarVis !== scrollBarVis && settings.scrollBarVis !== undefined ) {
+			settings.scrollBarVis = scrollBarVis;
+			_fnAdjustColumnSizing( settings );
+			return; // adjust column sizing will call this function again
+		}
+		else {
+			settings.scrollBarVis = scrollBarVis;
+		}
+	
 		/*
 		 * 1. Re-create the table inside the scrolling div
 		 */
@@ -3788,17 +5264,17 @@
 		// Remove the old minimised thead and tfoot elements in the inner table
 		table.children('thead, tfoot').remove();
 	
-		// Clone the current header and footer elements and then place it into the inner table
-		headerCopy = header.clone().prependTo( table );
-		headerTrgEls = header.find('tr'); // original header is in its own table
-		headerSrcEls = headerCopy.find('tr');
-		headerCopy.find('th, td').removeAttr('tabindex');
-	
 		if ( footer ) {
 			footerCopy = footer.clone().prependTo( table );
 			footerTrgEls = footer.find('tr'); // the original tfoot is in its own table and must be sized
 			footerSrcEls = footerCopy.find('tr');
 		}
+	
+		// Clone the current header and footer elements and then place it into the inner table
+		headerCopy = header.clone().prependTo( table );
+		headerTrgEls = header.find('tr'); // original header is in its own table
+		headerSrcEls = headerCopy.find('tr');
+		headerCopy.find('th, td').removeAttr('tabindex');
 	
 	
 		/*
@@ -3825,13 +5301,6 @@
 			}, footerSrcEls );
 		}
 	
-		// If scroll collapse is enabled, when we put the headers back into the body for sizing, we
-		// will end up forcing the scrollbar to appear, making our measurements wrong for when we
-		// then hide it (end of this function), so add the header height to the body scroller.
-		if ( scroll.bCollapse && scrollY !== "" ) {
-			divBodyStyle.height = (divBody[0].offsetHeight + header[0].offsetHeight)+"px";
-		}
-	
 		// Size the table as a whole
 		sanityWidth = table.outerWidth();
 		if ( scrollX === "" ) {
@@ -3846,32 +5315,17 @@
 			) {
 				tableStyle.width = _fnStringToCss( table.outerWidth() - barWidth);
 			}
-		}
-		else
-		{
-			// x scrolling
-			if ( scrollXInner !== "" ) {
-				// x scroll inner has been given - use it
-				tableStyle.width = _fnStringToCss(scrollXInner);
-			}
-			else if ( sanityWidth == divBody.width() && divBody.height() < table.height() ) {
-				// There is y-scrolling - try to take account of the y scroll bar
-				tableStyle.width = _fnStringToCss( sanityWidth-barWidth );
-				if ( table.outerWidth() > sanityWidth-barWidth ) {
-					// Not possible to take account of it
-					tableStyle.width = _fnStringToCss( sanityWidth );
-				}
-			}
-			else {
-				// When all else fails
-				tableStyle.width = _fnStringToCss( sanityWidth );
-			}
-		}
 	
-		// Recalculate the sanity width - now that we've applied the required width,
-		// before it was a temporary variable. This is required because the column
-		// width calculation is done before this table DOM is created.
-		sanityWidth = table.outerWidth();
+			// Recalculate the sanity width
+			sanityWidth = table.outerWidth();
+		}
+		else if ( scrollXInner !== "" ) {
+			// legacy x scroll inner has been given - use it
+			tableStyle.width = _fnStringToCss(scrollXInner);
+	
+			// Recalculate the sanity width
+			sanityWidth = table.outerWidth();
+		}
 	
 		// Hidden header should have zero height, so remove padding and borders. Then
 		// set the width based on the real headers
@@ -3887,7 +5341,11 @@
 	
 		// Apply all widths in final pass
 		_fnApplyToChildren( function(nToSize, i) {
-			nToSize.style.width = headerWidths[i];
+			// Only apply widths to the DataTables detected header cells - this
+			// prevents complex headers from having contradictory sizes applied
+			if ( $.inArray( nToSize, dtHeaderCells ) !== -1 ) {
+				nToSize.style.width = headerWidths[i];
+			}
 		}, headerTrgEls );
 	
 		$(headerSrcEls).height(0);
@@ -3898,6 +5356,7 @@
 			_fnApplyToChildren( zeroOut, footerSrcEls );
 	
 			_fnApplyToChildren( function(nSizer) {
+				footerContent.push( nSizer.innerHTML );
 				footerWidths.push( _fnStringToCss( $(nSizer).css('width') ) );
 			}, footerSrcEls );
 	
@@ -3925,7 +5384,7 @@
 		if ( footer )
 		{
 			_fnApplyToChildren( function(nSizer, i) {
-				nSizer.innerHTML = "";
+				nSizer.innerHTML = '<div class="dataTables_sizing" style="height:0;overflow:hidden;">'+footerContent[i]+'</div>';
 				nSizer.style.width = footerWidths[i];
 			}, footerSrcEls );
 		}
@@ -3979,18 +5438,6 @@
 			}
 		}
 	
-		if ( scrollY && scroll.bCollapse ) {
-			divBodyStyle.height = _fnStringToCss( scrollY );
-	
-			var iExtra = (scrollX && tableEl.offsetWidth > divBodyEl.offsetWidth) ?
-				barWidth :
-				0;
-	
-			if ( tableEl.offsetHeight < divBodyEl.offsetHeight ) {
-				divBodyStyle.height = _fnStringToCss( tableEl.offsetHeight+iExtra );
-			}
-		}
-	
 		/* Finally set the width's of the header and footer tables */
 		var iOuterWidth = table.outerWidth();
 		divHeaderTable[0].style.width = _fnStringToCss( iOuterWidth );
@@ -4007,6 +5454,9 @@
 			divFooterInner[0].style.width = _fnStringToCss( iOuterWidth );
 			divFooterInner[0].style[padding] = bScrolling ? barWidth+"px" : "0px";
 		}
+	
+		// Correct DOM ordering for colgroup - comes before the thead
+		table.children('colgroup').insertBefore( table.children('thead') );
 	
 		/* Adjust the position of the header in case we loose the y-scrollbar */
 		divBody.scroll();
@@ -4079,10 +5529,17 @@
 			columnCount = columns.length,
 			visibleColumns = _fnGetColumns( oSettings, 'bVisible' ),
 			headerCells = $('th', oSettings.nTHead),
-			tableWidthAttr = table.getAttribute('width'),
+			tableWidthAttr = table.getAttribute('width'), // from DOM element
 			tableContainer = table.parentNode,
 			userInputs = false,
-			i, column, columnIdx, width, outerWidth;
+			i, column, columnIdx, width, outerWidth,
+			browser = oSettings.oBrowser,
+			ie67 = browser.bScrollOversize;
+	
+		var styleWidth = table.style.width;
+		if ( styleWidth && styleWidth.indexOf('%') !== -1 ) {
+			tableWidthAttr = styleWidth;
+		}
 	
 		/* Convert any user input sizes into pixel sizes */
 		for ( i=0 ; i<visibleColumns.length ; i++ ) {
@@ -4100,31 +5557,42 @@
 		 * the web- browser. No custom sizes can be set in order for this to happen,
 		 * nor scrolling used
 		 */
-		if ( ! userInputs && ! scrollX && ! scrollY &&
-		    columnCount == _fnVisbleColumns( oSettings ) &&
-			columnCount == headerCells.length
+		if ( ie67 || ! userInputs && ! scrollX && ! scrollY &&
+		     columnCount == _fnVisbleColumns( oSettings ) &&
+		     columnCount == headerCells.length
 		) {
 			for ( i=0 ; i<columnCount ; i++ ) {
-				columns[i].sWidth = _fnStringToCss( headerCells.eq(i).width() );
+				var colIdx = _fnVisibleToColumnIndex( oSettings, i );
+	
+				if ( colIdx !== null ) {
+					columns[ colIdx ].sWidth = _fnStringToCss( headerCells.eq(i).width() );
+				}
 			}
 		}
 		else
 		{
-			// Otherwise construct a single row table with the widest node in the
-			// data, assign any user defined widths, then insert it into the DOM and
-			// allow the browser to do all the hard work of calculating table widths
+			// Otherwise construct a single row, worst case, table with the widest
+			// node in the data, assign any user defined widths, then insert it into
+			// the DOM and allow the browser to do all the hard work of calculating
+			// table widths
 			var tmpTable = $(table).clone() // don't use cloneNode - IE8 will remove events on the main table
-				.empty()
 				.css( 'visibility', 'hidden' )
-				.removeAttr( 'id' )
-				.append( $(oSettings.nTHead).clone( false ) )
-				.append( $(oSettings.nTFoot).clone( false ) )
-				.append( $('<tbody><tr/></tbody>') );
+				.removeAttr( 'id' );
+	
+			// Clean up the table body
+			tmpTable.find('tbody tr').remove();
+			var tr = $('<tr/>').appendTo( tmpTable.find('tbody') );
+	
+			// Clone the table header and footer - we can't use the header / footer
+			// from the cloned table, since if scrolling is active, the table's
+			// real header and footer are contained in different table tags
+			tmpTable.find('thead, tfoot').remove();
+			tmpTable
+				.append( $(oSettings.nTHead).clone() )
+				.append( $(oSettings.nTFoot).clone() );
 	
 			// Remove any assigned widths from the footer (from scrolling)
 			tmpTable.find('tfoot th, tfoot td').css('width', '');
-	
-			var tr = tmpTable.find( 'tbody tr' );
 	
 			// Apply custom sizing to the cloned header
 			headerCells = _fnGetUniqueThs( oSettings, tmpTable.find('thead')[0] );
@@ -4135,6 +5603,19 @@
 				headerCells[i].style.width = column.sWidthOrig !== null && column.sWidthOrig !== '' ?
 					_fnStringToCss( column.sWidthOrig ) :
 					'';
+	
+				// For scrollX we need to force the column width otherwise the
+				// browser will collapse it. If this width is smaller than the
+				// width the column requires, then it will have no effect
+				if ( column.sWidthOrig && scrollX ) {
+					$( headerCells[i] ).append( $('<div/>').css( {
+						width: column.sWidthOrig,
+						margin: 0,
+						padding: 0,
+						border: 0,
+						height: 1
+					} ) );
+				}
 			}
 	
 			// Find the widest cell for each column and put it into the table
@@ -4150,8 +5631,28 @@
 				}
 			}
 	
-			// Table has been built, attach to the document so we can work with it
-			tmpTable.appendTo( tableContainer );
+			// Tidy the temporary table - remove name attributes so there aren't
+			// duplicated in the dom (radio elements for example)
+			$('[name]', tmpTable).removeAttr('name');
+	
+			// Table has been built, attach to the document so we can work with it.
+			// A holding element is used, positioned at the top of the container
+			// with minimal height, so it has no effect on if the container scrolls
+			// or not. Otherwise it might trigger scrolling when it actually isn't
+			// needed
+			var holder = $('<div/>').css( scrollX || scrollY ?
+					{
+						position: 'absolute',
+						top: 0,
+						left: 0,
+						height: 1,
+						right: 0,
+						overflow: 'hidden'
+					} :
+					{}
+				)
+				.append( tmpTable )
+				.appendTo( tableContainer );
 	
 			// When scrolling (X or Y) we want to set the width of the table as 
 			// appropriate. However, when not scrolling leave the table width as it
@@ -4161,57 +5662,50 @@
 			}
 			else if ( scrollX ) {
 				tmpTable.css( 'width', 'auto' );
+				tmpTable.removeAttr('width');
 	
-				if ( tmpTable.width() < tableContainer.offsetWidth ) {
-					tmpTable.width( tableContainer.offsetWidth );
+				// If there is no width attribute or style, then allow the table to
+				// collapse
+				if ( tmpTable.width() < tableContainer.clientWidth && tableWidthAttr ) {
+					tmpTable.width( tableContainer.clientWidth );
 				}
 			}
 			else if ( scrollY ) {
-				tmpTable.width( tableContainer.offsetWidth );
+				tmpTable.width( tableContainer.clientWidth );
 			}
 			else if ( tableWidthAttr ) {
 				tmpTable.width( tableWidthAttr );
 			}
 	
-			// Take into account the y scrollbar
-			_fnScrollingWidthAdjust( oSettings, tmpTable[0] );
-	
-			// Browsers need a bit of a hand when a width is assigned to any columns
-			// when x-scrolling as they tend to collapse the table to the min-width,
-			// even if we sent the column widths. So we need to keep track of what
-			// the table width should be by summing the user given values, and the
-			// automatic values
-			if ( scrollX )
-			{
-				var total = 0;
-	
-				for ( i=0 ; i<visibleColumns.length ; i++ ) {
-					column = columns[ visibleColumns[i] ];
-					outerWidth = $(headerCells[i]).outerWidth();
-	
-					total += column.sWidthOrig === null ?
-						outerWidth :
-						parseInt( column.sWidth, 10 ) + outerWidth - $(headerCells[i]).width();
-				}
-	
-				tmpTable.width( _fnStringToCss( total ) );
-				table.style.width = _fnStringToCss( total );
-			}
-	
-			// Get the width of each column in the constructed table
+			// Get the width of each column in the constructed table - we need to
+			// know the inner width (so it can be assigned to the other table's
+			// cells) and the outer width so we can calculate the full width of the
+			// table. This is safe since DataTables requires a unique cell for each
+			// column, but if ever a header can span multiple columns, this will
+			// need to be modified.
+			var total = 0;
 			for ( i=0 ; i<visibleColumns.length ; i++ ) {
-				column = columns[ visibleColumns[i] ];
-				width = $(headerCells[i]).width();
+				var cell = $(headerCells[i]);
+				var border = cell.outerWidth() - cell.width();
 	
-				if ( width ) {
-					column.sWidth = _fnStringToCss( width );
-				}
+				// Use getBounding... where possible (not IE8-) because it can give
+				// sub-pixel accuracy, which we then want to round up!
+				var bounding = browser.bBounding ?
+					Math.ceil( headerCells[i].getBoundingClientRect().width ) :
+					cell.outerWidth();
+	
+				// Total is tracked to remove any sub-pixel errors as the outerWidth
+				// of the table might not equal the total given here (IE!).
+				total += bounding;
+	
+				// Width for each column to use
+				columns[ visibleColumns[i] ].sWidth = _fnStringToCss( bounding - border );
 			}
 	
-			table.style.width = _fnStringToCss( tmpTable.css('width') );
+			table.style.width = _fnStringToCss( total );
 	
 			// Finished with the table - ditch it
-			tmpTable.remove();
+			holder.remove();
 		}
 	
 		// If there is a width attr, we want to attach an event listener which
@@ -4223,9 +5717,20 @@
 		}
 	
 		if ( (tableWidthAttr || scrollX) && ! oSettings._reszEvt ) {
-			$(window).bind('resize.DT-'+oSettings.sInstance, _fnThrottle( function () {
-				_fnAdjustColumnSizing( oSettings );
-			} ) );
+			var bindResize = function () {
+				$(window).on('resize.DT-'+oSettings.sInstance, _fnThrottle( function () {
+					_fnAdjustColumnSizing( oSettings );
+				} ) );
+			};
+	
+			// IE6/7 will crash if we bind a resize event handler on page load.
+			// To be removed in 1.11 which drops IE6/7 support
+			if ( ie67 ) {
+				setTimeout( bindResize, 1000 );
+			}
+			else {
+				bindResize();
+			}
 	
 			oSettings._reszEvt = true;
 		}
@@ -4240,35 +5745,7 @@
 	 *  @returns {function} wrapped function
 	 *  @memberof DataTable#oApi
 	 */
-	function _fnThrottle( fn, freq ) {
-		var
-			frequency = freq !== undefined ? freq : 200,
-			last,
-			timer;
-	
-		return function () {
-			var
-				that = this,
-				now  = +new Date(),
-				args = arguments;
-	
-			if ( last && now < last + frequency ) {
-				clearTimeout( timer );
-	
-				timer = setTimeout( function () {
-					last = undefined;
-					fn.apply( that, args );
-				}, frequency );
-			}
-			else if ( last ) {
-				last = now;
-				fn.apply( that, args );
-			}
-			else {
-				last = now;
-			}
-		};
-	}
+	var _fnThrottle = DataTable.util.throttle;
 	
 	
 	/**
@@ -4292,27 +5769,6 @@
 		n.remove();
 	
 		return val;
-	}
-	
-	
-	/**
-	 * Adjust a table's width to take account of vertical scroll bar
-	 *  @param {object} oSettings dataTables settings object
-	 *  @param {node} n table node
-	 *  @memberof DataTable#oApi
-	 */
-	
-	function _fnScrollingWidthAdjust ( settings, n )
-	{
-		var scroll = settings.oScroll;
-	
-		if ( scroll.sX || scroll.sY ) {
-			// When y-scrolling only, we want to remove the width of the scroll bar
-			// so the table + scroll bar will fit into the area available, otherwise
-			// we fix the table at its current size with no adjustment
-			var correction = ! scroll.sX ? scroll.iBarWidth : 0;
-			n.style.width = _fnStringToCss( $(n).outerWidth() - correction );
-		}
 	}
 	
 	
@@ -4351,6 +5807,7 @@
 		for ( var i=0, ien=settings.aoData.length ; i<ien ; i++ ) {
 			s = _fnGetCellData( settings, i, colIdx, 'display' )+'';
 			s = s.replace( __re_html_remove, '' );
+			s = s.replace( /&nbsp;/g, ' ' );
 	
 			if ( s.length > max ) {
 				max = s.length;
@@ -4387,53 +5844,6 @@
 	}
 	
 	
-	/**
-	 * Get the width of a scroll bar in this browser being used
-	 *  @returns {int} width in pixels
-	 *  @memberof DataTable#oApi
-	 */
-	function _fnScrollBarWidth ()
-	{
-		// On first run a static variable is set, since this is only needed once.
-		// Subsequent runs will just use the previously calculated value
-		if ( ! DataTable.__scrollbarWidth ) {
-			var inner = $('<p/>').css( {
-				width: '100%',
-				height: 200,
-				padding: 0
-			} )[0];
-	
-			var outer = $('<div/>')
-				.css( {
-					position: 'absolute',
-					top: 0,
-					left: 0,
-					width: 200,
-					height: 150,
-					padding: 0,
-					overflow: 'hidden',
-					visibility: 'hidden'
-				} )
-				.append( inner )
-				.appendTo( 'body' );
-	
-			var w1 = inner.offsetWidth;
-			outer.css( 'overflow', 'scroll' );
-			var w2 = inner.offsetWidth;
-	
-			if ( w1 === w2 ) {
-				w2 = outer[0].clientWidth;
-			}
-	
-			outer.remove();
-	
-			DataTable.__scrollbarWidth = w1 - w2;
-		}
-	
-		return DataTable.__scrollbarWidth;
-	}
-	
-	
 	
 	function _fnSortFlatten ( settings )
 	{
@@ -4453,7 +5863,7 @@
 				}
 				else {
 					// 2D array
-					nestedSort.push.apply( nestedSort, a );
+					$.merge( nestedSort, a );
 				}
 			};
 	
@@ -4721,6 +6131,10 @@
 				// Yes, modify the sort
 				nextSortIdx = next( sorting[sortIdx], true );
 	
+				if ( nextSortIdx === null && sorting.length === 1 ) {
+					nextSortIdx = 0; // can't remove sorting completely
+				}
+	
 				if ( nextSortIdx === null ) {
 					sorting.splice( sortIdx, 1 );
 				}
@@ -4915,74 +6329,102 @@
 	 * Attempt to load a saved table state
 	 *  @param {object} oSettings dataTables settings object
 	 *  @param {object} oInit DataTables init object so we can override settings
+	 *  @param {function} callback Callback to execute when the state has been loaded
 	 *  @memberof DataTable#oApi
 	 */
-	function _fnLoadState ( settings, oInit )
+	function _fnLoadState ( settings, oInit, callback )
 	{
 		var i, ien;
 		var columns = settings.aoColumns;
+		var loaded = function ( s ) {
+			if ( ! s || ! s.time ) {
+				callback();
+				return;
+			}
 	
-		if ( ! settings.oFeatures.bStateSave ) {
-			return;
-		}
+			// Allow custom and plug-in manipulation functions to alter the saved data set and
+			// cancelling of loading by returning false
+			var abStateLoad = _fnCallbackFire( settings, 'aoStateLoadParams', 'stateLoadParams', [settings, s] );
+			if ( $.inArray( false, abStateLoad ) !== -1 ) {
+				callback();
+				return;
+			}
 	
-		var state = settings.fnStateLoadCallback.call( settings.oInstance, settings );
-		if ( ! state || ! state.time ) {
-			return;
-		}
+			// Reject old data
+			var duration = settings.iStateDuration;
+			if ( duration > 0 && s.time < +new Date() - (duration*1000) ) {
+				callback();
+				return;
+			}
 	
-		/* Allow custom and plug-in manipulation functions to alter the saved data set and
-		 * cancelling of loading by returning false
-		 */
-		var abStateLoad = _fnCallbackFire( settings, 'aoStateLoadParams', 'stateLoadParams', [settings, state] );
-		if ( $.inArray( false, abStateLoad ) !== -1 ) {
-			return;
-		}
+			// Number of columns have changed - all bets are off, no restore of settings
+			if ( s.columns && columns.length !== s.columns.length ) {
+				callback();
+				return;
+			}
 	
-		/* Reject old data */
-		var duration = settings.iStateDuration;
-		if ( duration > 0 && state.time < +new Date() - (duration*1000) ) {
-			return;
-		}
+			// Store the saved state so it might be accessed at any time
+			settings.oLoadedState = $.extend( true, {}, s );
 	
-		// Number of columns have changed - all bets are off, no restore of settings
-		if ( columns.length !== state.columns.length ) {
-			return;
-		}
+			// Restore key features - todo - for 1.11 this needs to be done by
+			// subscribed events
+			if ( s.start !== undefined ) {
+				settings._iDisplayStart    = s.start;
+				settings.iInitDisplayStart = s.start;
+			}
+			if ( s.length !== undefined ) {
+				settings._iDisplayLength   = s.length;
+			}
 	
-		// Store the saved state so it might be accessed at any time
-		settings.oLoadedState = $.extend( true, {}, state );
-	
-		// Restore key features - todo - for 1.11 this needs to be done by
-		// subscribed events
-		settings._iDisplayStart    = state.start;
-		settings.iInitDisplayStart = state.start;
-		settings._iDisplayLength   = state.length;
-		settings.aaSorting = [];
-	
-		// Order
-		$.each( state.order, function ( i, col ) {
-			settings.aaSorting.push( col[0] >= columns.length ?
-				[ 0, col[1] ] :
-				col
-			);
-		} );
-	
-		// Search
-		$.extend( settings.oPreviousSearch, _fnSearchToHung( state.search ) );
-	
-		// Columns
-		for ( i=0, ien=state.columns.length ; i<ien ; i++ ) {
-			var col = state.columns[i];
-	
-			// Visibility
-			columns[i].bVisible = col.visible;
+			// Order
+			if ( s.order !== undefined ) {
+				settings.aaSorting = [];
+				$.each( s.order, function ( i, col ) {
+					settings.aaSorting.push( col[0] >= columns.length ?
+						[ 0, col[1] ] :
+						col
+					);
+				} );
+			}
 	
 			// Search
-			$.extend( settings.aoPreSearchCols[i], _fnSearchToHung( col.search ) );
+			if ( s.search !== undefined ) {
+				$.extend( settings.oPreviousSearch, _fnSearchToHung( s.search ) );
+			}
+	
+			// Columns
+			//
+			if ( s.columns ) {
+				for ( i=0, ien=s.columns.length ; i<ien ; i++ ) {
+					var col = s.columns[i];
+	
+					// Visibility
+					if ( col.visible !== undefined ) {
+						columns[i].bVisible = col.visible;
+					}
+	
+					// Search
+					if ( col.search !== undefined ) {
+						$.extend( settings.aoPreSearchCols[i], _fnSearchToHung( col.search ) );
+					}
+				}
+			}
+	
+			_fnCallbackFire( settings, 'aoStateLoaded', 'stateLoaded', [settings, s] );
+			callback();
 		}
 	
-		_fnCallbackFire( settings, 'aoStateLoaded', 'stateLoaded', [settings, state] );
+		if ( ! settings.oFeatures.bStateSave ) {
+			callback();
+			return;
+		}
+	
+		var state = settings.fnStateLoadCallback.call( settings.oInstance, settings, loaded );
+	
+		if ( state !== undefined ) {
+			loaded( state );
+		}
+		// otherwise, wait for the loaded callback to be executed
 	}
 	
 	
@@ -5014,7 +6456,7 @@
 	function _fnLog( settings, level, msg, tn )
 	{
 		msg = 'DataTables warning: '+
-			(settings!==null ? 'table id='+settings.sTableId+' - ' : '')+msg;
+			(settings ? 'table id='+settings.sTableId+' - ' : '')+msg;
 	
 		if ( tn ) {
 			msg += '. For more information about this error, please see '+
@@ -5026,11 +6468,18 @@
 			var ext = DataTable.ext;
 			var type = ext.sErrMode || ext.errMode;
 	
+			if ( settings ) {
+				_fnCallbackFire( settings, null, 'error', [ settings, tn, msg ] );
+			}
+	
 			if ( type == 'alert' ) {
 				alert( msg );
 			}
-			else {
+			else if ( type == 'throw' ) {
 				throw new Error(msg);
+			}
+			else if ( typeof type == 'function' ) {
+				type( settings, tn, msg );
 			}
 		}
 		else if ( window.console && console.log ) {
@@ -5128,17 +6577,17 @@
 	function _fnBindAction( n, oData, fn )
 	{
 		$(n)
-			.bind( 'click.DT', oData, function (e) {
+			.on( 'click.DT', oData, function (e) {
 					n.blur(); // Remove focus outline for mouse users
 					fn(e);
 				} )
-			.bind( 'keypress.DT', oData, function (e){
+			.on( 'keypress.DT', oData, function (e){
 					if ( e.which === 13 ) {
 						e.preventDefault();
 						fn(e);
 					}
 				} )
-			.bind( 'selectstart.DT', function () {
+			.on( 'selectstart.DT', function () {
 					/* Take the brutal approach to cancelling text selection */
 					return false;
 				} );
@@ -5174,13 +6623,13 @@
 	 *  @param {object} settings dataTables settings object
 	 *  @param {string} callbackArr Name of the array storage for the callbacks in
 	 *      oSettings
-	 *  @param {string} event Name of the jQuery custom event to trigger. If null no
-	 *      trigger is fired
+	 *  @param {string} eventName Name of the jQuery custom event to trigger. If
+	 *      null no trigger is fired
 	 *  @param {array} args Array of arguments to pass to the callback function /
 	 *      trigger
 	 *  @memberof DataTable#oApi
 	 */
-	function _fnCallbackFire( settings, callbackArr, e, args )
+	function _fnCallbackFire( settings, callbackArr, eventName, args )
 	{
 		var ret = [];
 	
@@ -5190,8 +6639,12 @@
 			} );
 		}
 	
-		if ( e !== null ) {
-			$(settings.nTable).trigger( e+'.dt', args );
+		if ( eventName !== null ) {
+			var e = $.Event( eventName+'.dt' );
+	
+			$(settings.nTable).trigger( e, args );
+	
+			ret.push( e.result );
 		}
 	
 		return ret;
@@ -5263,1257 +6716,6 @@
 		return 'dom';
 	}
 	
-
-	DataTable = function( options )
-	{
-		/**
-		 * Perform a jQuery selector action on the table's TR elements (from the tbody) and
-		 * return the resulting jQuery object.
-		 *  @param {string|node|jQuery} sSelector jQuery selector or node collection to act on
-		 *  @param {object} [oOpts] Optional parameters for modifying the rows to be included
-		 *  @param {string} [oOpts.filter=none] Select TR elements that meet the current filter
-		 *    criterion ("applied") or all TR elements (i.e. no filter).
-		 *  @param {string} [oOpts.order=current] Order of the TR elements in the processed array.
-		 *    Can be either 'current', whereby the current sorting of the table is used, or
-		 *    'original' whereby the original order the data was read into the table is used.
-		 *  @param {string} [oOpts.page=all] Limit the selection to the currently displayed page
-		 *    ("current") or not ("all"). If 'current' is given, then order is assumed to be
-		 *    'current' and filter is 'applied', regardless of what they might be given as.
-		 *  @returns {object} jQuery object, filtered by the given selector.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Highlight every second row
-		 *      oTable.$('tr:odd').css('backgroundColor', 'blue');
-		 *    } );
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Filter to rows with 'Webkit' in them, add a background colour and then
-		 *      // remove the filter, thus highlighting the 'Webkit' rows only.
-		 *      oTable.fnFilter('Webkit');
-		 *      oTable.$('tr', {"search": "applied"}).css('backgroundColor', 'blue');
-		 *      oTable.fnFilter('');
-		 *    } );
-		 */
-		this.$ = function ( sSelector, oOpts )
-		{
-			return this.api(true).$( sSelector, oOpts );
-		};
-		
-		
-		/**
-		 * Almost identical to $ in operation, but in this case returns the data for the matched
-		 * rows - as such, the jQuery selector used should match TR row nodes or TD/TH cell nodes
-		 * rather than any descendants, so the data can be obtained for the row/cell. If matching
-		 * rows are found, the data returned is the original data array/object that was used to
-		 * create the row (or a generated array if from a DOM source).
-		 *
-		 * This method is often useful in-combination with $ where both functions are given the
-		 * same parameters and the array indexes will match identically.
-		 *  @param {string|node|jQuery} sSelector jQuery selector or node collection to act on
-		 *  @param {object} [oOpts] Optional parameters for modifying the rows to be included
-		 *  @param {string} [oOpts.filter=none] Select elements that meet the current filter
-		 *    criterion ("applied") or all elements (i.e. no filter).
-		 *  @param {string} [oOpts.order=current] Order of the data in the processed array.
-		 *    Can be either 'current', whereby the current sorting of the table is used, or
-		 *    'original' whereby the original order the data was read into the table is used.
-		 *  @param {string} [oOpts.page=all] Limit the selection to the currently displayed page
-		 *    ("current") or not ("all"). If 'current' is given, then order is assumed to be
-		 *    'current' and filter is 'applied', regardless of what they might be given as.
-		 *  @returns {array} Data for the matched elements. If any elements, as a result of the
-		 *    selector, were not TR, TD or TH elements in the DataTable, they will have a null
-		 *    entry in the array.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Get the data from the first row in the table
-		 *      var data = oTable._('tr:first');
-		 *
-		 *      // Do something useful with the data
-		 *      alert( "First cell is: "+data[0] );
-		 *    } );
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Filter to 'Webkit' and get all data for
-		 *      oTable.fnFilter('Webkit');
-		 *      var data = oTable._('tr', {"search": "applied"});
-		 *
-		 *      // Do something with the data
-		 *      alert( data.length+" rows matched the search" );
-		 *    } );
-		 */
-		this._ = function ( sSelector, oOpts )
-		{
-			return this.api(true).rows( sSelector, oOpts ).data();
-		};
-		
-		
-		/**
-		 * Create a DataTables Api instance, with the currently selected tables for
-		 * the Api's context.
-		 * @param {boolean} [traditional=false] Set the API instance's context to be
-		 *   only the table referred to by the `DataTable.ext.iApiIndex` option, as was
-		 *   used in the API presented by DataTables 1.9- (i.e. the traditional mode),
-		 *   or if all tables captured in the jQuery object should be used.
-		 * @return {DataTables.Api}
-		 */
-		this.api = function ( traditional )
-		{
-			return traditional ?
-				new _Api(
-					_fnSettingsFromNode( this[ _ext.iApiIndex ] )
-				) :
-				new _Api( this );
-		};
-		
-		
-		/**
-		 * Add a single new row or multiple rows of data to the table. Please note
-		 * that this is suitable for client-side processing only - if you are using
-		 * server-side processing (i.e. "bServerSide": true), then to add data, you
-		 * must add it to the data source, i.e. the server-side, through an Ajax call.
-		 *  @param {array|object} data The data to be added to the table. This can be:
-		 *    <ul>
-		 *      <li>1D array of data - add a single row with the data provided</li>
-		 *      <li>2D array of arrays - add multiple rows in a single call</li>
-		 *      <li>object - data object when using <i>mData</i></li>
-		 *      <li>array of objects - multiple data objects when using <i>mData</i></li>
-		 *    </ul>
-		 *  @param {bool} [redraw=true] redraw the table or not
-		 *  @returns {array} An array of integers, representing the list of indexes in
-		 *    <i>aoData</i> ({@link DataTable.models.oSettings}) that have been added to
-		 *    the table.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    // Global var for counter
-		 *    var giCount = 2;
-		 *
-		 *    $(document).ready(function() {
-		 *      $('#example').dataTable();
-		 *    } );
-		 *
-		 *    function fnClickAddRow() {
-		 *      $('#example').dataTable().fnAddData( [
-		 *        giCount+".1",
-		 *        giCount+".2",
-		 *        giCount+".3",
-		 *        giCount+".4" ]
-		 *      );
-		 *
-		 *      giCount++;
-		 *    }
-		 */
-		this.fnAddData = function( data, redraw )
-		{
-			var api = this.api( true );
-		
-			/* Check if we want to add multiple rows or not */
-			var rows = $.isArray(data) && ( $.isArray(data[0]) || $.isPlainObject(data[0]) ) ?
-				api.rows.add( data ) :
-				api.row.add( data );
-		
-			if ( redraw === undefined || redraw ) {
-				api.draw();
-			}
-		
-			return rows.flatten().toArray();
-		};
-		
-		
-		/**
-		 * This function will make DataTables recalculate the column sizes, based on the data
-		 * contained in the table and the sizes applied to the columns (in the DOM, CSS or
-		 * through the sWidth parameter). This can be useful when the width of the table's
-		 * parent element changes (for example a window resize).
-		 *  @param {boolean} [bRedraw=true] Redraw the table or not, you will typically want to
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable( {
-		 *        "sScrollY": "200px",
-		 *        "bPaginate": false
-		 *      } );
-		 *
-		 *      $(window).bind('resize', function () {
-		 *        oTable.fnAdjustColumnSizing();
-		 *      } );
-		 *    } );
-		 */
-		this.fnAdjustColumnSizing = function ( bRedraw )
-		{
-			var api = this.api( true ).columns.adjust();
-			var settings = api.settings()[0];
-			var scroll = settings.oScroll;
-		
-			if ( bRedraw === undefined || bRedraw ) {
-				api.draw( false );
-			}
-			else if ( scroll.sX !== "" || scroll.sY !== "" ) {
-				/* If not redrawing, but scrolling, we want to apply the new column sizes anyway */
-				_fnScrollDraw( settings );
-			}
-		};
-		
-		
-		/**
-		 * Quickly and simply clear a table
-		 *  @param {bool} [bRedraw=true] redraw the table or not
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Immediately 'nuke' the current rows (perhaps waiting for an Ajax callback...)
-		 *      oTable.fnClearTable();
-		 *    } );
-		 */
-		this.fnClearTable = function( bRedraw )
-		{
-			var api = this.api( true ).clear();
-		
-			if ( bRedraw === undefined || bRedraw ) {
-				api.draw();
-			}
-		};
-		
-		
-		/**
-		 * The exact opposite of 'opening' a row, this function will close any rows which
-		 * are currently 'open'.
-		 *  @param {node} nTr the table row to 'close'
-		 *  @returns {int} 0 on success, or 1 if failed (can't find the row)
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable;
-		 *
-		 *      // 'open' an information row when a row is clicked on
-		 *      $('#example tbody tr').click( function () {
-		 *        if ( oTable.fnIsOpen(this) ) {
-		 *          oTable.fnClose( this );
-		 *        } else {
-		 *          oTable.fnOpen( this, "Temporary row opened", "info_row" );
-		 *        }
-		 *      } );
-		 *
-		 *      oTable = $('#example').dataTable();
-		 *    } );
-		 */
-		this.fnClose = function( nTr )
-		{
-			this.api( true ).row( nTr ).child.hide();
-		};
-		
-		
-		/**
-		 * Remove a row for the table
-		 *  @param {mixed} target The index of the row from aoData to be deleted, or
-		 *    the TR element you want to delete
-		 *  @param {function|null} [callBack] Callback function
-		 *  @param {bool} [redraw=true] Redraw the table or not
-		 *  @returns {array} The row that was deleted
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Immediately remove the first row
-		 *      oTable.fnDeleteRow( 0 );
-		 *    } );
-		 */
-		this.fnDeleteRow = function( target, callback, redraw )
-		{
-			var api = this.api( true );
-			var rows = api.rows( target );
-			var settings = rows.settings()[0];
-			var data = settings.aoData[ rows[0][0] ];
-		
-			rows.remove();
-		
-			if ( callback ) {
-				callback.call( this, settings, data );
-			}
-		
-			if ( redraw === undefined || redraw ) {
-				api.draw();
-			}
-		
-			return data;
-		};
-		
-		
-		/**
-		 * Restore the table to it's original state in the DOM by removing all of DataTables
-		 * enhancements, alterations to the DOM structure of the table and event listeners.
-		 *  @param {boolean} [remove=false] Completely remove the table from the DOM
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      // This example is fairly pointless in reality, but shows how fnDestroy can be used
-		 *      var oTable = $('#example').dataTable();
-		 *      oTable.fnDestroy();
-		 *    } );
-		 */
-		this.fnDestroy = function ( remove )
-		{
-			this.api( true ).destroy( remove );
-		};
-		
-		
-		/**
-		 * Redraw the table
-		 *  @param {bool} [complete=true] Re-filter and resort (if enabled) the table before the draw.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Re-draw the table - you wouldn't want to do it here, but it's an example :-)
-		 *      oTable.fnDraw();
-		 *    } );
-		 */
-		this.fnDraw = function( complete )
-		{
-			// Note that this isn't an exact match to the old call to _fnDraw - it takes
-			// into account the new data, but can old position.
-			this.api( true ).draw( ! complete );
-		};
-		
-		
-		/**
-		 * Filter the input based on data
-		 *  @param {string} sInput String to filter the table on
-		 *  @param {int|null} [iColumn] Column to limit filtering to
-		 *  @param {bool} [bRegex=false] Treat as regular expression or not
-		 *  @param {bool} [bSmart=true] Perform smart filtering or not
-		 *  @param {bool} [bShowGlobal=true] Show the input global filter in it's input box(es)
-		 *  @param {bool} [bCaseInsensitive=true] Do case-insensitive matching (true) or not (false)
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Sometime later - filter...
-		 *      oTable.fnFilter( 'test string' );
-		 *    } );
-		 */
-		this.fnFilter = function( sInput, iColumn, bRegex, bSmart, bShowGlobal, bCaseInsensitive )
-		{
-			var api = this.api( true );
-		
-			if ( iColumn === null || iColumn === undefined ) {
-				api.search( sInput, bRegex, bSmart, bCaseInsensitive );
-			}
-			else {
-				api.column( iColumn ).search( sInput, bRegex, bSmart, bCaseInsensitive );
-			}
-		
-			api.draw();
-		};
-		
-		
-		/**
-		 * Get the data for the whole table, an individual row or an individual cell based on the
-		 * provided parameters.
-		 *  @param {int|node} [src] A TR row node, TD/TH cell node or an integer. If given as
-		 *    a TR node then the data source for the whole row will be returned. If given as a
-		 *    TD/TH cell node then iCol will be automatically calculated and the data for the
-		 *    cell returned. If given as an integer, then this is treated as the aoData internal
-		 *    data index for the row (see fnGetPosition) and the data for that row used.
-		 *  @param {int} [col] Optional column index that you want the data of.
-		 *  @returns {array|object|string} If mRow is undefined, then the data for all rows is
-		 *    returned. If mRow is defined, just data for that row, and is iCol is
-		 *    defined, only data for the designated cell is returned.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    // Row data
-		 *    $(document).ready(function() {
-		 *      oTable = $('#example').dataTable();
-		 *
-		 *      oTable.$('tr').click( function () {
-		 *        var data = oTable.fnGetData( this );
-		 *        // ... do something with the array / object of data for the row
-		 *      } );
-		 *    } );
-		 *
-		 *  @example
-		 *    // Individual cell data
-		 *    $(document).ready(function() {
-		 *      oTable = $('#example').dataTable();
-		 *
-		 *      oTable.$('td').click( function () {
-		 *        var sData = oTable.fnGetData( this );
-		 *        alert( 'The cell clicked on had the value of '+sData );
-		 *      } );
-		 *    } );
-		 */
-		this.fnGetData = function( src, col )
-		{
-			var api = this.api( true );
-		
-			if ( src !== undefined ) {
-				var type = src.nodeName ? src.nodeName.toLowerCase() : '';
-		
-				return col !== undefined || type == 'td' || type == 'th' ?
-					api.cell( src, col ).data() :
-					api.row( src ).data() || null;
-			}
-		
-			return api.data().toArray();
-		};
-		
-		
-		/**
-		 * Get an array of the TR nodes that are used in the table's body. Note that you will
-		 * typically want to use the '$' API method in preference to this as it is more
-		 * flexible.
-		 *  @param {int} [iRow] Optional row index for the TR element you want
-		 *  @returns {array|node} If iRow is undefined, returns an array of all TR elements
-		 *    in the table's body, or iRow is defined, just the TR element requested.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Get the nodes from the table
-		 *      var nNodes = oTable.fnGetNodes( );
-		 *    } );
-		 */
-		this.fnGetNodes = function( iRow )
-		{
-			var api = this.api( true );
-		
-			return iRow !== undefined ?
-				api.row( iRow ).node() :
-				api.rows().nodes().flatten().toArray();
-		};
-		
-		
-		/**
-		 * Get the array indexes of a particular cell from it's DOM element
-		 * and column index including hidden columns
-		 *  @param {node} node this can either be a TR, TD or TH in the table's body
-		 *  @returns {int} If nNode is given as a TR, then a single index is returned, or
-		 *    if given as a cell, an array of [row index, column index (visible),
-		 *    column index (all)] is given.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      $('#example tbody td').click( function () {
-		 *        // Get the position of the current data from the node
-		 *        var aPos = oTable.fnGetPosition( this );
-		 *
-		 *        // Get the data array for this row
-		 *        var aData = oTable.fnGetData( aPos[0] );
-		 *
-		 *        // Update the data array and return the value
-		 *        aData[ aPos[1] ] = 'clicked';
-		 *        this.innerHTML = 'clicked';
-		 *      } );
-		 *
-		 *      // Init DataTables
-		 *      oTable = $('#example').dataTable();
-		 *    } );
-		 */
-		this.fnGetPosition = function( node )
-		{
-			var api = this.api( true );
-			var nodeName = node.nodeName.toUpperCase();
-		
-			if ( nodeName == 'TR' ) {
-				return api.row( node ).index();
-			}
-			else if ( nodeName == 'TD' || nodeName == 'TH' ) {
-				var cell = api.cell( node ).index();
-		
-				return [
-					cell.row,
-					cell.columnVisible,
-					cell.column
-				];
-			}
-			return null;
-		};
-		
-		
-		/**
-		 * Check to see if a row is 'open' or not.
-		 *  @param {node} nTr the table row to check
-		 *  @returns {boolean} true if the row is currently open, false otherwise
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable;
-		 *
-		 *      // 'open' an information row when a row is clicked on
-		 *      $('#example tbody tr').click( function () {
-		 *        if ( oTable.fnIsOpen(this) ) {
-		 *          oTable.fnClose( this );
-		 *        } else {
-		 *          oTable.fnOpen( this, "Temporary row opened", "info_row" );
-		 *        }
-		 *      } );
-		 *
-		 *      oTable = $('#example').dataTable();
-		 *    } );
-		 */
-		this.fnIsOpen = function( nTr )
-		{
-			return this.api( true ).row( nTr ).child.isShown();
-		};
-		
-		
-		/**
-		 * This function will place a new row directly after a row which is currently
-		 * on display on the page, with the HTML contents that is passed into the
-		 * function. This can be used, for example, to ask for confirmation that a
-		 * particular record should be deleted.
-		 *  @param {node} nTr The table row to 'open'
-		 *  @param {string|node|jQuery} mHtml The HTML to put into the row
-		 *  @param {string} sClass Class to give the new TD cell
-		 *  @returns {node} The row opened. Note that if the table row passed in as the
-		 *    first parameter, is not found in the table, this method will silently
-		 *    return.
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable;
-		 *
-		 *      // 'open' an information row when a row is clicked on
-		 *      $('#example tbody tr').click( function () {
-		 *        if ( oTable.fnIsOpen(this) ) {
-		 *          oTable.fnClose( this );
-		 *        } else {
-		 *          oTable.fnOpen( this, "Temporary row opened", "info_row" );
-		 *        }
-		 *      } );
-		 *
-		 *      oTable = $('#example').dataTable();
-		 *    } );
-		 */
-		this.fnOpen = function( nTr, mHtml, sClass )
-		{
-			return this.api( true )
-				.row( nTr )
-				.child( mHtml, sClass )
-				.show()
-				.child()[0];
-		};
-		
-		
-		/**
-		 * Change the pagination - provides the internal logic for pagination in a simple API
-		 * function. With this function you can have a DataTables table go to the next,
-		 * previous, first or last pages.
-		 *  @param {string|int} mAction Paging action to take: "first", "previous", "next" or "last"
-		 *    or page number to jump to (integer), note that page 0 is the first page.
-		 *  @param {bool} [bRedraw=true] Redraw the table or not
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *      oTable.fnPageChange( 'next' );
-		 *    } );
-		 */
-		this.fnPageChange = function ( mAction, bRedraw )
-		{
-			var api = this.api( true ).page( mAction );
-		
-			if ( bRedraw === undefined || bRedraw ) {
-				api.draw(false);
-			}
-		};
-		
-		
-		/**
-		 * Show a particular column
-		 *  @param {int} iCol The column whose display should be changed
-		 *  @param {bool} bShow Show (true) or hide (false) the column
-		 *  @param {bool} [bRedraw=true] Redraw the table or not
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Hide the second column after initialisation
-		 *      oTable.fnSetColumnVis( 1, false );
-		 *    } );
-		 */
-		this.fnSetColumnVis = function ( iCol, bShow, bRedraw )
-		{
-			var api = this.api( true ).column( iCol ).visible( bShow );
-		
-			if ( bRedraw === undefined || bRedraw ) {
-				api.columns.adjust().draw();
-			}
-		};
-		
-		
-		/**
-		 * Get the settings for a particular table for external manipulation
-		 *  @returns {object} DataTables settings object. See
-		 *    {@link DataTable.models.oSettings}
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *      var oSettings = oTable.fnSettings();
-		 *
-		 *      // Show an example parameter from the settings
-		 *      alert( oSettings._iDisplayStart );
-		 *    } );
-		 */
-		this.fnSettings = function()
-		{
-			return _fnSettingsFromNode( this[_ext.iApiIndex] );
-		};
-		
-		
-		/**
-		 * Sort the table by a particular column
-		 *  @param {int} iCol the data index to sort on. Note that this will not match the
-		 *    'display index' if you have hidden data entries
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Sort immediately with columns 0 and 1
-		 *      oTable.fnSort( [ [0,'asc'], [1,'asc'] ] );
-		 *    } );
-		 */
-		this.fnSort = function( aaSort )
-		{
-			this.api( true ).order( aaSort ).draw();
-		};
-		
-		
-		/**
-		 * Attach a sort listener to an element for a given column
-		 *  @param {node} nNode the element to attach the sort listener to
-		 *  @param {int} iColumn the column that a click on this node will sort on
-		 *  @param {function} [fnCallback] callback function when sort is run
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *
-		 *      // Sort on column 1, when 'sorter' is clicked on
-		 *      oTable.fnSortListener( document.getElementById('sorter'), 1 );
-		 *    } );
-		 */
-		this.fnSortListener = function( nNode, iColumn, fnCallback )
-		{
-			this.api( true ).order.listener( nNode, iColumn, fnCallback );
-		};
-		
-		
-		/**
-		 * Update a table cell or row - this method will accept either a single value to
-		 * update the cell with, an array of values with one element for each column or
-		 * an object in the same format as the original data source. The function is
-		 * self-referencing in order to make the multi column updates easier.
-		 *  @param {object|array|string} mData Data to update the cell/row with
-		 *  @param {node|int} mRow TR element you want to update or the aoData index
-		 *  @param {int} [iColumn] The column to update, give as null or undefined to
-		 *    update a whole row.
-		 *  @param {bool} [bRedraw=true] Redraw the table or not
-		 *  @param {bool} [bAction=true] Perform pre-draw actions or not
-		 *  @returns {int} 0 on success, 1 on error
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *      oTable.fnUpdate( 'Example update', 0, 0 ); // Single cell
-		 *      oTable.fnUpdate( ['a', 'b', 'c', 'd', 'e'], $('tbody tr')[0] ); // Row
-		 *    } );
-		 */
-		this.fnUpdate = function( mData, mRow, iColumn, bRedraw, bAction )
-		{
-			var api = this.api( true );
-		
-			if ( iColumn === undefined || iColumn === null ) {
-				api.row( mRow ).data( mData );
-			}
-			else {
-				api.cell( mRow, iColumn ).data( mData );
-			}
-		
-			if ( bAction === undefined || bAction ) {
-				api.columns.adjust();
-			}
-		
-			if ( bRedraw === undefined || bRedraw ) {
-				api.draw();
-			}
-			return 0;
-		};
-		
-		
-		/**
-		 * Provide a common method for plug-ins to check the version of DataTables being used, in order
-		 * to ensure compatibility.
-		 *  @param {string} sVersion Version string to check for, in the format "X.Y.Z". Note that the
-		 *    formats "X" and "X.Y" are also acceptable.
-		 *  @returns {boolean} true if this version of DataTables is greater or equal to the required
-		 *    version, or false if this version of DataTales is not suitable
-		 *  @method
-		 *  @dtopt API
-		 *  @deprecated Since v1.10
-		 *
-		 *  @example
-		 *    $(document).ready(function() {
-		 *      var oTable = $('#example').dataTable();
-		 *      alert( oTable.fnVersionCheck( '1.9.0' ) );
-		 *    } );
-		 */
-		this.fnVersionCheck = _ext.fnVersionCheck;
-		
-
-		var _that = this;
-		var emptyInit = options === undefined;
-		var len = this.length;
-
-		if ( emptyInit ) {
-			options = {};
-		}
-
-		this.oApi = this.internal = _ext.internal;
-
-		// Extend with old style plug-in API methods
-		for ( var fn in DataTable.ext.internal ) {
-			if ( fn ) {
-				this[fn] = _fnExternApiFunc(fn);
-			}
-		}
-
-		this.each(function() {
-			// For each initialisation we want to give it a clean initialisation
-			// object that can be bashed around
-			var o = {};
-			var oInit = len > 1 ? // optimisation for single table case
-				_fnExtend( o, options, true ) :
-				options;
-
-			/*global oInit,_that,emptyInit*/
-			var i=0, iLen, j, jLen, k, kLen;
-			var sId = this.getAttribute( 'id' );
-			var bInitHandedOff = false;
-			var defaults = DataTable.defaults;
-			
-			
-			/* Sanity check */
-			if ( this.nodeName.toLowerCase() != 'table' )
-			{
-				_fnLog( null, 0, 'Non-table node initialisation ('+this.nodeName+')', 2 );
-				return;
-			}
-			
-			/* Backwards compatibility for the defaults */
-			_fnCompatOpts( defaults );
-			_fnCompatCols( defaults.column );
-			
-			/* Convert the camel-case defaults to Hungarian */
-			_fnCamelToHungarian( defaults, defaults, true );
-			_fnCamelToHungarian( defaults.column, defaults.column, true );
-			
-			/* Setting up the initialisation object */
-			_fnCamelToHungarian( defaults, oInit );
-			
-			/* Check to see if we are re-initialising a table */
-			var allSettings = DataTable.settings;
-			for ( i=0, iLen=allSettings.length ; i<iLen ; i++ )
-			{
-				/* Base check on table node */
-				if ( allSettings[i].nTable == this )
-				{
-					var bRetrieve = oInit.bRetrieve !== undefined ? oInit.bRetrieve : defaults.bRetrieve;
-					var bDestroy = oInit.bDestroy !== undefined ? oInit.bDestroy : defaults.bDestroy;
-			
-					if ( emptyInit || bRetrieve )
-					{
-						return allSettings[i].oInstance;
-					}
-					else if ( bDestroy )
-					{
-						allSettings[i].oInstance.fnDestroy();
-						break;
-					}
-					else
-					{
-						_fnLog( allSettings[i], 0, 'Cannot reinitialise DataTable', 3 );
-						return;
-					}
-				}
-			
-				/* If the element we are initialising has the same ID as a table which was previously
-				 * initialised, but the table nodes don't match (from before) then we destroy the old
-				 * instance by simply deleting it. This is under the assumption that the table has been
-				 * destroyed by other methods. Anyone using non-id selectors will need to do this manually
-				 */
-				if ( allSettings[i].sTableId == this.id )
-				{
-					allSettings.splice( i, 1 );
-					break;
-				}
-			}
-			
-			/* Ensure the table has an ID - required for accessibility */
-			if ( sId === null || sId === "" )
-			{
-				sId = "DataTables_Table_"+(DataTable.ext._unique++);
-				this.id = sId;
-			}
-			
-			/* Create the settings object for this table and set some of the default parameters */
-			var oSettings = $.extend( true, {}, DataTable.models.oSettings, {
-				"nTable":        this,
-				"oApi":          _that.internal,
-				"oInit":         oInit,
-				"sDestroyWidth": $(this)[0].style.width,
-				"sInstance":     sId,
-				"sTableId":      sId
-			} );
-			allSettings.push( oSettings );
-			
-			// Need to add the instance after the instance after the settings object has been added
-			// to the settings array, so we can self reference the table instance if more than one
-			oSettings.oInstance = (_that.length===1) ? _that : $(this).dataTable();
-			
-			// Backwards compatibility, before we apply all the defaults
-			_fnCompatOpts( oInit );
-			
-			if ( oInit.oLanguage )
-			{
-				_fnLanguageCompat( oInit.oLanguage );
-			}
-			
-			// If the length menu is given, but the init display length is not, use the length menu
-			if ( oInit.aLengthMenu && ! oInit.iDisplayLength )
-			{
-				oInit.iDisplayLength = $.isArray( oInit.aLengthMenu[0] ) ?
-					oInit.aLengthMenu[0][0] : oInit.aLengthMenu[0];
-			}
-			
-			// Apply the defaults and init options to make a single init object will all
-			// options defined from defaults and instance options.
-			oInit = _fnExtend( $.extend( true, {}, defaults ), oInit );
-			
-			
-			// Map the initialisation options onto the settings object
-			_fnMap( oSettings.oFeatures, oInit, [
-				"bPaginate",
-				"bLengthChange",
-				"bFilter",
-				"bSort",
-				"bSortMulti",
-				"bInfo",
-				"bProcessing",
-				"bAutoWidth",
-				"bSortClasses",
-				"bServerSide",
-				"bDeferRender"
-			] );
-			_fnMap( oSettings, oInit, [
-				"asStripeClasses",
-				"ajax",
-				"fnServerData",
-				"fnFormatNumber",
-				"sServerMethod",
-				"aaSorting",
-				"aaSortingFixed",
-				"aLengthMenu",
-				"sPaginationType",
-				"sAjaxSource",
-				"sAjaxDataProp",
-				"iStateDuration",
-				"sDom",
-				"bSortCellsTop",
-				"iTabIndex",
-				"fnStateLoadCallback",
-				"fnStateSaveCallback",
-				"renderer",
-				"searchDelay",
-				[ "iCookieDuration", "iStateDuration" ], // backwards compat
-				[ "oSearch", "oPreviousSearch" ],
-				[ "aoSearchCols", "aoPreSearchCols" ],
-				[ "iDisplayLength", "_iDisplayLength" ],
-				[ "bJQueryUI", "bJUI" ]
-			] );
-			_fnMap( oSettings.oScroll, oInit, [
-				[ "sScrollX", "sX" ],
-				[ "sScrollXInner", "sXInner" ],
-				[ "sScrollY", "sY" ],
-				[ "bScrollCollapse", "bCollapse" ]
-			] );
-			_fnMap( oSettings.oLanguage, oInit, "fnInfoCallback" );
-			
-			/* Callback functions which are array driven */
-			_fnCallbackReg( oSettings, 'aoDrawCallback',       oInit.fnDrawCallback,      'user' );
-			_fnCallbackReg( oSettings, 'aoServerParams',       oInit.fnServerParams,      'user' );
-			_fnCallbackReg( oSettings, 'aoStateSaveParams',    oInit.fnStateSaveParams,   'user' );
-			_fnCallbackReg( oSettings, 'aoStateLoadParams',    oInit.fnStateLoadParams,   'user' );
-			_fnCallbackReg( oSettings, 'aoStateLoaded',        oInit.fnStateLoaded,       'user' );
-			_fnCallbackReg( oSettings, 'aoRowCallback',        oInit.fnRowCallback,       'user' );
-			_fnCallbackReg( oSettings, 'aoRowCreatedCallback', oInit.fnCreatedRow,        'user' );
-			_fnCallbackReg( oSettings, 'aoHeaderCallback',     oInit.fnHeaderCallback,    'user' );
-			_fnCallbackReg( oSettings, 'aoFooterCallback',     oInit.fnFooterCallback,    'user' );
-			_fnCallbackReg( oSettings, 'aoInitComplete',       oInit.fnInitComplete,      'user' );
-			_fnCallbackReg( oSettings, 'aoPreDrawCallback',    oInit.fnPreDrawCallback,   'user' );
-			
-			var oClasses = oSettings.oClasses;
-			
-			// @todo Remove in 1.11
-			if ( oInit.bJQueryUI )
-			{
-				/* Use the JUI classes object for display. You could clone the oStdClasses object if
-				 * you want to have multiple tables with multiple independent classes
-				 */
-				$.extend( oClasses, DataTable.ext.oJUIClasses, oInit.oClasses );
-			
-				if ( oInit.sDom === defaults.sDom && defaults.sDom === "lfrtip" )
-				{
-					/* Set the DOM to use a layout suitable for jQuery UI's theming */
-					oSettings.sDom = '<"H"lfr>t<"F"ip>';
-				}
-			
-				if ( ! oSettings.renderer ) {
-					oSettings.renderer = 'jqueryui';
-				}
-				else if ( $.isPlainObject( oSettings.renderer ) && ! oSettings.renderer.header ) {
-					oSettings.renderer.header = 'jqueryui';
-				}
-			}
-			else
-			{
-				$.extend( oClasses, DataTable.ext.classes, oInit.oClasses );
-			}
-			$(this).addClass( oClasses.sTable );
-			
-			/* Calculate the scroll bar width and cache it for use later on */
-			if ( oSettings.oScroll.sX !== "" || oSettings.oScroll.sY !== "" )
-			{
-				oSettings.oScroll.iBarWidth = _fnScrollBarWidth();
-			}
-			if ( oSettings.oScroll.sX === true ) { // Easy initialisation of x-scrolling
-				oSettings.oScroll.sX = '100%';
-			}
-			
-			if ( oSettings.iInitDisplayStart === undefined )
-			{
-				/* Display start point, taking into account the save saving */
-				oSettings.iInitDisplayStart = oInit.iDisplayStart;
-				oSettings._iDisplayStart = oInit.iDisplayStart;
-			}
-			
-			if ( oInit.iDeferLoading !== null )
-			{
-				oSettings.bDeferLoading = true;
-				var tmp = $.isArray( oInit.iDeferLoading );
-				oSettings._iRecordsDisplay = tmp ? oInit.iDeferLoading[0] : oInit.iDeferLoading;
-				oSettings._iRecordsTotal = tmp ? oInit.iDeferLoading[1] : oInit.iDeferLoading;
-			}
-			
-			/* Language definitions */
-			var oLanguage = oSettings.oLanguage;
-			$.extend( true, oLanguage, oInit.oLanguage );
-			
-			if ( oLanguage.sUrl !== "" )
-			{
-				/* Get the language definitions from a file - because this Ajax call makes the language
-				 * get async to the remainder of this function we use bInitHandedOff to indicate that
-				 * _fnInitialise will be fired by the returned Ajax handler, rather than the constructor
-				 */
-				$.ajax( {
-					dataType: 'json',
-					url: oLanguage.sUrl,
-					success: function ( json ) {
-						_fnLanguageCompat( json );
-						_fnCamelToHungarian( defaults.oLanguage, json );
-						$.extend( true, oLanguage, json );
-						_fnInitialise( oSettings );
-					},
-					error: function () {
-						// Error occurred loading language file, continue on as best we can
-						_fnInitialise( oSettings );
-					}
-				} );
-				bInitHandedOff = true;
-			}
-			
-			/*
-			 * Stripes
-			 */
-			if ( oInit.asStripeClasses === null )
-			{
-				oSettings.asStripeClasses =[
-					oClasses.sStripeOdd,
-					oClasses.sStripeEven
-				];
-			}
-			
-			/* Remove row stripe classes if they are already on the table row */
-			var stripeClasses = oSettings.asStripeClasses;
-			var rowOne = $('tbody tr:eq(0)', this);
-			if ( $.inArray( true, $.map( stripeClasses, function(el, i) {
-				return rowOne.hasClass(el);
-			} ) ) !== -1 ) {
-				$('tbody tr', this).removeClass( stripeClasses.join(' ') );
-				oSettings.asDestroyStripes = stripeClasses.slice();
-			}
-			
-			/*
-			 * Columns
-			 * See if we should load columns automatically or use defined ones
-			 */
-			var anThs = [];
-			var aoColumnsInit;
-			var nThead = this.getElementsByTagName('thead');
-			if ( nThead.length !== 0 )
-			{
-				_fnDetectHeader( oSettings.aoHeader, nThead[0] );
-				anThs = _fnGetUniqueThs( oSettings );
-			}
-			
-			/* If not given a column array, generate one with nulls */
-			if ( oInit.aoColumns === null )
-			{
-				aoColumnsInit = [];
-				for ( i=0, iLen=anThs.length ; i<iLen ; i++ )
-				{
-					aoColumnsInit.push( null );
-				}
-			}
-			else
-			{
-				aoColumnsInit = oInit.aoColumns;
-			}
-			
-			/* Add the columns */
-			for ( i=0, iLen=aoColumnsInit.length ; i<iLen ; i++ )
-			{
-				_fnAddColumn( oSettings, anThs ? anThs[i] : null );
-			}
-			
-			/* Apply the column definitions */
-			_fnApplyColumnDefs( oSettings, oInit.aoColumnDefs, aoColumnsInit, function (iCol, oDef) {
-				_fnColumnOptions( oSettings, iCol, oDef );
-			} );
-			
-			/* HTML5 attribute detection - build an mData object automatically if the
-			 * attributes are found
-			 */
-			if ( rowOne.length ) {
-				var a = function ( cell, name ) {
-					return cell.getAttribute( 'data-'+name ) ? name : null;
-				};
-			
-				$.each( _fnGetRowElements( oSettings, rowOne[0] ).cells, function (i, cell) {
-					var col = oSettings.aoColumns[i];
-			
-					if ( col.mData === i ) {
-						var sort = a( cell, 'sort' ) || a( cell, 'order' );
-						var filter = a( cell, 'filter' ) || a( cell, 'search' );
-			
-						if ( sort !== null || filter !== null ) {
-							col.mData = {
-								_:      i+'.display',
-								sort:   sort !== null   ? i+'.@data-'+sort   : undefined,
-								type:   sort !== null   ? i+'.@data-'+sort   : undefined,
-								filter: filter !== null ? i+'.@data-'+filter : undefined
-							};
-			
-							_fnColumnOptions( oSettings, i );
-						}
-					}
-				} );
-			}
-			
-			var features = oSettings.oFeatures;
-			
-			/* Must be done after everything which can be overridden by the state saving! */
-			if ( oInit.bStateSave )
-			{
-				features.bStateSave = true;
-				_fnLoadState( oSettings, oInit );
-				_fnCallbackReg( oSettings, 'aoDrawCallback', _fnSaveState, 'state_save' );
-			}
-			
-			
-			/*
-			 * Sorting
-			 * @todo For modularisation (1.11) this needs to do into a sort start up handler
-			 */
-			
-			// If aaSorting is not defined, then we use the first indicator in asSorting
-			// in case that has been altered, so the default sort reflects that option
-			if ( oInit.aaSorting === undefined )
-			{
-				var sorting = oSettings.aaSorting;
-				for ( i=0, iLen=sorting.length ; i<iLen ; i++ )
-				{
-					sorting[i][1] = oSettings.aoColumns[ i ].asSorting[0];
-				}
-			}
-			
-			/* Do a first pass on the sorting classes (allows any size changes to be taken into
-			 * account, and also will apply sorting disabled classes if disabled
-			 */
-			_fnSortingClasses( oSettings );
-			
-			if ( features.bSort )
-			{
-				_fnCallbackReg( oSettings, 'aoDrawCallback', function () {
-					if ( oSettings.bSorted ) {
-						var aSort = _fnSortFlatten( oSettings );
-						var sortedColumns = {};
-			
-						$.each( aSort, function (i, val) {
-							sortedColumns[ val.src ] = val.dir;
-						} );
-			
-						_fnCallbackFire( oSettings, null, 'order', [oSettings, aSort, sortedColumns] );
-						_fnSortAria( oSettings );
-					}
-				} );
-			}
-			
-			_fnCallbackReg( oSettings, 'aoDrawCallback', function () {
-				if ( oSettings.bSorted || _fnDataSource( oSettings ) === 'ssp' || features.bDeferRender ) {
-					_fnSortingClasses( oSettings );
-				}
-			}, 'sc' );
-			
-			
-			/*
-			 * Final init
-			 * Cache the header, body and footer as required, creating them if needed
-			 */
-			
-			/* Browser support detection */
-			_fnBrowserDetect( oSettings );
-			
-			// Work around for Webkit bug 83867 - store the caption-side before removing from doc
-			var captions = $(this).children('caption').each( function () {
-				this._captionSide = $(this).css('caption-side');
-			} );
-			
-			var thead = $(this).children('thead');
-			if ( thead.length === 0 )
-			{
-				thead = $('<thead/>').appendTo(this);
-			}
-			oSettings.nTHead = thead[0];
-			
-			var tbody = $(this).children('tbody');
-			if ( tbody.length === 0 )
-			{
-				tbody = $('<tbody/>').appendTo(this);
-			}
-			oSettings.nTBody = tbody[0];
-			
-			var tfoot = $(this).children('tfoot');
-			if ( tfoot.length === 0 && captions.length > 0 && (oSettings.oScroll.sX !== "" || oSettings.oScroll.sY !== "") )
-			{
-				// If we are a scrolling table, and no footer has been given, then we need to create
-				// a tfoot element for the caption element to be appended to
-				tfoot = $('<tfoot/>').appendTo(this);
-			}
-			
-			if ( tfoot.length === 0 || tfoot.children().length === 0 ) {
-				$(this).addClass( oClasses.sNoFooter );
-			}
-			else if ( tfoot.length > 0 ) {
-				oSettings.nTFoot = tfoot[0];
-				_fnDetectHeader( oSettings.aoFooter, oSettings.nTFoot );
-			}
-			
-			/* Check if there is data passing into the constructor */
-			if ( oInit.aaData )
-			{
-				for ( i=0 ; i<oInit.aaData.length ; i++ )
-				{
-					_fnAddData( oSettings, oInit.aaData[ i ] );
-				}
-			}
-			else if ( oSettings.bDeferLoading || _fnDataSource( oSettings ) == 'dom' )
-			{
-				/* Grab the data from the page - only do this when deferred loading or no Ajax
-				 * source since there is no point in reading the DOM data if we are then going
-				 * to replace it with Ajax data
-				 */
-				_fnAddTr( oSettings, $(oSettings.nTBody).children('tr') );
-			}
-			
-			/* Copy the data index array */
-			oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
-			
-			/* Initialisation complete - table can be drawn */
-			oSettings.bInitialised = true;
-			
-			/* Check if we need to initialise the table (it might not have been handed off to the
-			 * language processor)
-			 */
-			if ( bInitHandedOff === false )
-			{
-				_fnInitialise( oSettings );
-			}
-		} );
-		_that = null;
-		return this;
-	};
 
 	
 	
@@ -6682,17 +6884,15 @@
 	 */
 	_Api = function ( context, data )
 	{
-		if ( ! this instanceof _Api ) {
-			throw 'DT API must be constructed as a new object';
-			// or should it do the 'new' for the caller?
-			// return new _Api.apply( this, arguments );
+		if ( ! (this instanceof _Api) ) {
+			return new _Api( context, data );
 		}
 	
 		var settings = [];
 		var ctxSettings = function ( o ) {
 			var a = _toSettings( o );
 			if ( a ) {
-				settings.push.apply( settings, a );
+				settings = settings.concat( a );
 			}
 		};
 	
@@ -6710,7 +6910,7 @@
 	
 		// Initial data
 		if ( data ) {
-			this.push.apply( this, data.toArray ? data.toArray() : data );
+			$.merge( this, data );
 		}
 	
 		// selector
@@ -6725,23 +6925,25 @@
 	
 	DataTable.Api = _Api;
 	
-	_Api.prototype = /** @lends DataTables.Api */{
-		/**
-		 * Return a new Api instance, comprised of the data held in the current
-		 * instance, join with the other array(s) and/or value(s).
-		 *
-		 * An alias for `Array.prototype.concat`.
-		 *
-		 * @type method
-		 * @param {*} value1 Arrays and/or values to concatenate.
-		 * @param {*} [...] Additional arrays and/or values to concatenate.
-		 * @returns {DataTables.Api} New API instance, comprising of the combined
-		 *   array.
-		 */
+	// Don't destroy the existing prototype, just extend it. Required for jQuery 2's
+	// isPlainObject.
+	$.extend( _Api.prototype, {
+		any: function ()
+		{
+			return this.count() !== 0;
+		},
+	
+	
 		concat:  __arrayProto.concat,
 	
 	
 		context: [], // array of table settings objects
+	
+	
+		count: function ()
+		{
+			return this.flatten().length;
+		},
 	
 	
 		each: function ( fn )
@@ -6804,7 +7006,6 @@
 			return -1;
 		},
 	
-		// Note that `alwaysNew` is internal - use iteratorNew externally
 		iterator: function ( flatten, type, fn, alwaysNew ) {
 			var
 				a = [], ret,
@@ -6941,6 +7142,11 @@
 		shift:   __arrayProto.shift,
 	
 	
+		slice: function () {
+			return new _Api( this.context, this );
+		},
+	
+	
 		sort:    __arrayProto.sort, // ? name - order?
 	
 	
@@ -6972,13 +7178,13 @@
 	
 	
 		unshift: __arrayProto.unshift
-	};
+	} );
 	
 	
 	_Api.extend = function ( scope, obj, ext )
 	{
 		// Only extend API instances and static properties of the API
-		if ( ! obj || ( ! (obj instanceof _Api) && ! obj.__dt_wrapper ) ) {
+		if ( ! ext.length || ! obj || ( ! (obj instanceof _Api) && ! obj.__dt_wrapper ) ) {
 			return;
 		}
 	
@@ -7227,15 +7433,21 @@
 	
 	/**
 	 * Redraw the tables in the current context.
-	 *
-	 * @param {boolean} [reset=true] Reset (default) or hold the current paging
-	 *   position. A full re-sort and re-filter is performed when this method is
-	 *   called, which is why the pagination reset is the default action.
-	 * @returns {DataTables.Api} this
 	 */
-	_api_register( 'draw()', function ( resetPaging ) {
+	_api_register( 'draw()', function ( paging ) {
 		return this.iterator( 'table', function ( settings ) {
-			_fnReDraw( settings, resetPaging===false );
+			if ( paging === 'page' ) {
+				_fnDraw( settings );
+			}
+			else {
+				if ( typeof paging === 'string' ) {
+					paging = paging === 'full-hold' ?
+						false :
+						true;
+				}
+	
+				_fnReDraw( settings, paging===false );
+			}
 		} );
 	} );
 	
@@ -7298,7 +7510,7 @@
 		var
 			settings   = this.context[0],
 			start      = settings._iDisplayStart,
-			len        = settings._iDisplayLength,
+			len        = settings.oFeatures.bPaginate ? settings._iDisplayLength : -1,
 			visRecords = settings.fnRecordsDisplay(),
 			all        = len === -1;
 	
@@ -7309,7 +7521,8 @@
 			"end":            settings.fnDisplayEnd(),
 			"length":         len,
 			"recordsTotal":   settings.fnRecordsTotal(),
-			"recordsDisplay": visRecords
+			"recordsDisplay": visRecords,
+			"serverSide":     _fnDataSource( settings ) === 'ssp'
 		};
 	} );
 	
@@ -7344,13 +7557,28 @@
 	
 	
 	var __reload = function ( settings, holdPosition, callback ) {
+		// Use the draw event to trigger a callback
+		if ( callback ) {
+			var api = new _Api( settings );
+	
+			api.one( 'draw', function () {
+				callback( api.ajax.json() );
+			} );
+		}
+	
 		if ( _fnDataSource( settings ) == 'ssp' ) {
 			_fnReDraw( settings, holdPosition );
 		}
 		else {
-			// Trigger xhr
 			_fnProcessingDisplay( settings, true );
 	
+			// Cancel an existing request
+			var xhr = settings.jqXHR;
+			if ( xhr && xhr.readyState !== 4 ) {
+				xhr.abort();
+			}
+	
+			// Trigger xhr
 			_fnBuildAjax( settings, [], function( json ) {
 				_fnClearTable( settings );
 	
@@ -7361,16 +7589,6 @@
 	
 				_fnReDraw( settings, holdPosition );
 				_fnProcessingDisplay( settings, false );
-			} );
-		}
-	
-		// Use the draw event to trigger a callback, regardless of if it is an async
-		// or sync draw
-		if ( callback ) {
-			var api = new _Api( settings );
-	
-			api.one( 'draw', function () {
-				callback( api.ajax.json() );
 			} );
 		}
 	};
@@ -7488,7 +7706,7 @@
 	
 	
 	
-	var _selector_run = function ( selector, select )
+	var _selector_run = function ( type, selector, selectFn, settings, opts )
 	{
 		var
 			out = [], res,
@@ -7502,20 +7720,29 @@
 		}
 	
 		for ( i=0, ien=selector.length ; i<ien ; i++ ) {
-			a = selector[i] && selector[i].split ?
+			// Only split on simple strings - complex expressions will be jQuery selectors
+			a = selector[i] && selector[i].split && ! selector[i].match(/[\[\(:]/) ?
 				selector[i].split(',') :
 				[ selector[i] ];
 	
 			for ( j=0, jen=a.length ; j<jen ; j++ ) {
-				res = select( typeof a[j] === 'string' ? $.trim(a[j]) : a[j] );
+				res = selectFn( typeof a[j] === 'string' ? $.trim(a[j]) : a[j] );
 	
 				if ( res && res.length ) {
-					out.push.apply( out, res );
+					out = out.concat( res );
 				}
 			}
 		}
 	
-		return out;
+		// selector extensions
+		var ext = _ext.selector[ type ];
+		if ( ext.length ) {
+			for ( i=0, ien=ext.length ; i<ien ; i++ ) {
+				out = ext[i]( settings, opts, out );
+			}
+		}
+	
+		return _unique( out );
 	};
 	
 	
@@ -7527,15 +7754,15 @@
 	
 		// Backwards compatibility for 1.9- which used the terminology filter rather
 		// than search
-		if ( opts.filter && ! opts.search ) {
+		if ( opts.filter && opts.search === undefined ) {
 			opts.search = opts.filter;
 		}
 	
-		return {
-			search: opts.search || 'none',
-			order:  opts.order  || 'current',
-			page:   opts.page   || 'all'
-		};
+		return $.extend( {
+			search: 'none',
+			order: 'current',
+			page: 'all'
+		}, opts );
 	};
 	
 	
@@ -7547,6 +7774,7 @@
 				// Assign the first element to the first item in the instance
 				// and truncate the instance and context
 				inst[0] = inst[i];
+				inst[0].length = 1;
 				inst.length = 1;
 				inst.context = [ inst.context[i] ];
 	
@@ -7633,7 +7861,8 @@
 	
 	var __row_selector = function ( settings, selector, opts )
 	{
-		return _selector_run( selector, function ( sel ) {
+		var rows;
+		var run = function ( sel ) {
 			var selInt = _intVal( sel );
 			var i, ien;
 	
@@ -7644,13 +7873,15 @@
 				return [ selInt ];
 			}
 	
-			var rows = _selector_row_indexes( settings, opts );
+			if ( ! rows ) {
+				rows = _selector_row_indexes( settings, opts );
+			}
 	
 			if ( selInt !== null && $.inArray( selInt, rows ) !== -1 ) {
 				// Selector - integer
 				return [ selInt ];
 			}
-			else if ( ! sel ) {
+			else if ( sel === null || sel === undefined || sel === '' ) {
 				// Selector - none
 				return rows;
 			}
@@ -7670,10 +7901,38 @@
 	
 			// Selector - node
 			if ( sel.nodeName ) {
-				if ( $.inArray( sel, nodes ) !== -1 ) {
-					return [ sel._DT_RowIndex ]; // sel is a TR node that is in the table
-					                             // and DataTables adds a prop for fast lookup
+				if ( sel._DT_RowIndex !== undefined ) {
+					return [ sel._DT_RowIndex ]; // Property added by DT for fast lookup
 				}
+				else if ( sel._DT_CellIndex ) {
+					return [ sel._DT_CellIndex.row ];
+				}
+				else {
+					var host = $(sel).closest('*[data-dt-row]');
+					return host.length ?
+						[ host.data('dt-row') ] :
+						[];
+				}
+			}
+	
+			// ID selector. Want to always be able to select rows by id, regardless
+			// of if the tr element has been created or not, so can't rely upon
+			// jQuery here - hence a custom implementation. This does not match
+			// Sizzle's fast selector or HTML4 - in HTML5 the ID can be anything,
+			// but to select it using a CSS selector engine (like Sizzle or
+			// querySelect) it would need to need to be escaped for some characters.
+			// DataTables simplifies this for row selectors since you can select
+			// only a row. A # indicates an id any anything that follows is the id -
+			// unescaped.
+			if ( typeof sel === 'string' && sel.charAt(0) === '#' ) {
+				// get row index from id
+				var rowObj = settings.aIds[ sel.replace( /^#/, '' ) ];
+				if ( rowObj !== undefined ) {
+					return [ rowObj.idx ];
+				}
+	
+				// need to fall through to jQuery in case there is DOM id that
+				// matches
 			}
 	
 			// Selector - jQuery selector string, array of nodes or jQuery object/
@@ -7685,13 +7944,12 @@
 					return this._DT_RowIndex;
 				} )
 				.toArray();
-		} );
+		};
+	
+		return _selector_run( 'row', selector, run, settings, opts );
 	};
 	
 	
-	/**
-	 *
-	 */
 	_api_register( 'rows()', function ( selector, opts ) {
 		// argument shifting
 		if ( selector === undefined ) {
@@ -7714,7 +7972,6 @@
 	
 		return inst;
 	} );
-	
 	
 	_api_register( 'rows().nodes()', function () {
 		return this.iterator( 'row', function ( settings, row ) {
@@ -7747,23 +8004,49 @@
 		}, 1 );
 	} );
 	
+	_api_registerPlural( 'rows().ids()', 'row().id()', function ( hash ) {
+		var a = [];
+		var context = this.context;
+	
+		// `iterator` will drop undefined values, but in this case we want them
+		for ( var i=0, ien=context.length ; i<ien ; i++ ) {
+			for ( var j=0, jen=this[i].length ; j<jen ; j++ ) {
+				var id = context[i].rowIdFn( context[i].aoData[ this[i][j] ]._aData );
+				a.push( (hash === true ? '#' : '' )+ id );
+			}
+		}
+	
+		return new _Api( context, a );
+	} );
+	
 	_api_registerPlural( 'rows().remove()', 'row().remove()', function () {
 		var that = this;
 	
-		return this.iterator( 'row', function ( settings, row, thatIdx ) {
+		this.iterator( 'row', function ( settings, row, thatIdx ) {
 			var data = settings.aoData;
+			var rowData = data[ row ];
+			var i, ien, j, jen;
+			var loopRow, loopCells;
 	
 			data.splice( row, 1 );
 	
-			// Update the _DT_RowIndex parameter on all rows in the table
-			for ( var i=0, ien=data.length ; i<ien ; i++ ) {
-				if ( data[i].nTr !== null ) {
-					data[i].nTr._DT_RowIndex = i;
+			// Update the cached indexes
+			for ( i=0, ien=data.length ; i<ien ; i++ ) {
+				loopRow = data[i];
+				loopCells = loopRow.anCells;
+	
+				// Rows
+				if ( loopRow.nTr !== null ) {
+					loopRow.nTr._DT_RowIndex = i;
+				}
+	
+				// Cells
+				if ( loopCells !== null ) {
+					for ( j=0, jen=loopCells.length ; j<jen ; j++ ) {
+						loopCells[j]._DT_CellIndex.row = i;
+					}
 				}
 			}
-	
-			// Remove the target row from the search array
-			var displayIndex = $.inArray( row, settings.aiDisplay );
 	
 			// Delete from the display arrays
 			_fnDeleteIndex( settings.aiDisplayMaster, row );
@@ -7772,7 +8055,21 @@
 	
 			// Check for an 'overflow' they case for displaying the table
 			_fnLengthOverflow( settings );
+	
+			// Remove the row's ID reference if there is one
+			var id = settings.rowIdFn( rowData._aData );
+			if ( id !== undefined ) {
+				delete settings.aIds[ id ];
+			}
 		} );
+	
+		this.iterator( 'table', function ( settings ) {
+			for ( var i=0, ien=settings.aoData.length ; i<ien ; i++ ) {
+				settings.aoData[i].idx = i;
+			}
+		} );
+	
+		return this;
 	} );
 	
 	
@@ -7798,7 +8095,7 @@
 		// Return an Api.rows() extended instance, so rows().nodes() etc can be used
 		var modRows = this.rows( -1 );
 		modRows.pop();
-		modRows.push.apply( modRows, newRows.toArray() );
+		$.merge( modRows, newRows );
 	
 		return modRows;
 	} );
@@ -7869,6 +8166,14 @@
 		// Convert to array of TR elements
 		var rows = [];
 		var addRow = function ( r, k ) {
+			// Recursion to allow for arrays of jQuery objects
+			if ( $.isArray( r ) || r instanceof $ ) {
+				for ( var i=0, ien=r.length ; i<ien ; i++ ) {
+					addRow( r[i], k );
+				}
+				return;
+			}
+	
 			// If we get a TR element, then just add it directly - up to the dev
 			// to add the correct number of columns etc
 			if ( r.nodeName && r.nodeName.toLowerCase() === 'tr' ) {
@@ -7886,17 +8191,10 @@
 			}
 		};
 	
-		if ( $.isArray( data ) || data instanceof $ ) {
-			for ( var i=0, ien=data.length ; i<ien ; i++ ) {
-				addRow( data[i], klass );
-			}
-		}
-		else {
-			addRow( data, klass );
-		}
+		addRow( data, klass );
 	
 		if ( row._details ) {
-			row._details.remove();
+			row._details.detach();
 		}
 	
 		row._details = $(rows);
@@ -7915,7 +8213,7 @@
 		if ( ctx.length ) {
 			var row = ctx[0].aoData[ idx !== undefined ? idx : api[0] ];
 	
-			if ( row._details ) {
+			if ( row && row._details ) {
 				row._details.remove();
 	
 				row._detailsShow = undefined;
@@ -8097,7 +8395,7 @@
 	// can be an array of these items, comma separated list, or an array of comma
 	// separated lists
 	
-	var __re_column_selector = /^(.+):(name|visIdx|visible)$/;
+	var __re_column_selector = /^([^:]+):(name|visIdx|visible)$/;
 	
 	
 	// r1 and r2 are redundant - but it means that the parameters match for the
@@ -8118,14 +8416,14 @@
 			names = _pluck( columns, 'sName' ),
 			nodes = _pluck( columns, 'nTh' );
 	
-		return _selector_run( selector, function ( s ) {
+		var run = function ( s ) {
 			var selInt = _intVal( s );
 	
 			// Selector - all
 			if ( s === '' ) {
 				return _range( columns.length );
 			}
-			
+	
 			// Selector - index
 			if ( selInt !== null ) {
 				return [ selInt >= 0 ?
@@ -8133,7 +8431,7 @@
 					columns.length + selInt // Count from right (+ because its a negative value)
 				];
 			}
-			
+	
 			// Selector = function
 			if ( typeof s === 'function' ) {
 				var rows = _selector_row_indexes( settings, opts );
@@ -8173,22 +8471,42 @@
 						return $.map( names, function (name, i) {
 							return name === match[1] ? i : null;
 						} );
+	
+					default:
+						return [];
 				}
 			}
-			else {
-				// jQuery selector on the TH elements for the columns
-				return $( nodes )
-					.filter( s )
-					.map( function () {
-						return $.inArray( this, nodes ); // `nodes` is column index complete and in order
-					} )
-					.toArray();
+	
+			// Cell in the table body
+			if ( s.nodeName && s._DT_CellIndex ) {
+				return [ s._DT_CellIndex.column ];
 			}
-		} );
+	
+			// jQuery selector on the TH elements for the columns
+			var jqResult = $( nodes )
+				.filter( s )
+				.map( function () {
+					return $.inArray( this, nodes ); // `nodes` is column index complete and in order
+				} )
+				.toArray();
+	
+			if ( jqResult.length || ! s.nodeName ) {
+				return jqResult;
+			}
+	
+			// Otherwise a node which might have a `dt-column` data attribute, or be
+			// a child or such an element
+			var host = $(s).closest('*[data-dt-column]');
+			return host.length ?
+				[ host.data('dt-column') ] :
+				[];
+		};
+	
+		return _selector_run( 'column', selector, run, settings, opts );
 	};
 	
 	
-	var __setColumnVis = function ( settings, column, vis, recalc ) {
+	var __setColumnVis = function ( settings, column, vis ) {
 		var
 			cols = settings.aoColumns,
 			col  = cols[ column ],
@@ -8231,25 +8549,10 @@
 		_fnDrawHead( settings, settings.aoHeader );
 		_fnDrawHead( settings, settings.aoFooter );
 	
-		if ( recalc === undefined || recalc ) {
-			// Automatically adjust column sizing
-			_fnAdjustColumnSizing( settings );
-	
-			// Realign columns for scrolling
-			if ( settings.oScroll.sX || settings.oScroll.sY ) {
-				_fnScrollDraw( settings );
-			}
-		}
-	
-		_fnCallbackFire( settings, null, 'column-visibility', [settings, column, vis] );
-	
 		_fnSaveState( settings );
 	};
 	
 	
-	/**
-	 *
-	 */
 	_api_register( 'columns()', function ( selector, opts ) {
 		// argument shifting
 		if ( selector === undefined ) {
@@ -8273,41 +8576,27 @@
 		return inst;
 	} );
 	
-	
-	/**
-	 *
-	 */
 	_api_registerPlural( 'columns().header()', 'column().header()', function ( selector, opts ) {
 		return this.iterator( 'column', function ( settings, column ) {
 			return settings.aoColumns[column].nTh;
 		}, 1 );
 	} );
 	
-	
-	/**
-	 *
-	 */
 	_api_registerPlural( 'columns().footer()', 'column().footer()', function ( selector, opts ) {
 		return this.iterator( 'column', function ( settings, column ) {
 			return settings.aoColumns[column].nTf;
 		}, 1 );
 	} );
 	
-	
-	/**
-	 *
-	 */
 	_api_registerPlural( 'columns().data()', 'column().data()', function () {
 		return this.iterator( 'column-rows', __columnData, 1 );
 	} );
-	
 	
 	_api_registerPlural( 'columns().dataSrc()', 'column().dataSrc()', function () {
 		return this.iterator( 'column', function ( settings, column ) {
 			return settings.aoColumns[column].mData;
 		}, 1 );
 	} );
-	
 	
 	_api_registerPlural( 'columns().cache()', 'column().cache()', function ( type ) {
 		return this.iterator( 'column-rows', function ( settings, column, i, j, rows ) {
@@ -8317,25 +8606,34 @@
 		}, 1 );
 	} );
 	
-	
 	_api_registerPlural( 'columns().nodes()', 'column().nodes()', function () {
 		return this.iterator( 'column-rows', function ( settings, column, i, j, rows ) {
 			return _pluck_order( settings.aoData, rows, 'anCells', column ) ;
 		}, 1 );
 	} );
 	
-	
-	
 	_api_registerPlural( 'columns().visible()', 'column().visible()', function ( vis, calc ) {
-		return this.iterator( 'column', function ( settings, column ) {
+		var ret = this.iterator( 'column', function ( settings, column ) {
 			if ( vis === undefined ) {
 				return settings.aoColumns[ column ].bVisible;
 			} // else
-			__setColumnVis( settings, column, vis, calc );
+			__setColumnVis( settings, column, vis );
 		} );
+	
+		// Group the column visibility changes
+		if ( vis !== undefined ) {
+			// Second loop once the first is done for events
+			this.iterator( 'column', function ( settings, column ) {
+				_fnCallbackFire( settings, null, 'column-visibility', [settings, column, vis, calc] );
+			} );
+	
+			if ( calc === undefined || calc ) {
+				this.columns.adjust();
+			}
+		}
+	
+		return ret;
 	} );
-	
-	
 	
 	_api_registerPlural( 'columns().indexes()', 'column().index()', function ( type ) {
 		return this.iterator( 'column', function ( settings, column ) {
@@ -8345,28 +8643,12 @@
 		}, 1 );
 	} );
 	
-	
-	// _api_register( 'columns().show()', function () {
-	// 	var selector = this.selector;
-	// 	return this.columns( selector.cols, selector.opts ).visible( true );
-	// } );
-	
-	
-	// _api_register( 'columns().hide()', function () {
-	// 	var selector = this.selector;
-	// 	return this.columns( selector.cols, selector.opts ).visible( false );
-	// } );
-	
-	
-	
 	_api_register( 'columns.adjust()', function () {
 		return this.iterator( 'table', function ( settings ) {
 			_fnAdjustColumnSizing( settings );
 		}, 1 );
 	} );
 	
-	
-	// Convert from one column index type, to another type
 	_api_register( 'column.index()', function ( type, idx ) {
 		if ( this.context.length !== 0 ) {
 			var ctx = this.context[0];
@@ -8380,11 +8662,9 @@
 		}
 	} );
 	
-	
 	_api_register( 'column()', function ( selector, opts ) {
 		return _selector_first( this.columns( selector, opts ) );
 	} );
-	
 	
 	
 	
@@ -8398,7 +8678,7 @@
 		var columns = settings.aoColumns.length;
 		var a, i, ien, j, o, host;
 	
-		return _selector_run( selector, function ( s ) {
+		var run = function ( s ) {
 			var fnSelector = typeof s === 'function';
 	
 			if ( s === null || s === undefined || fnSelector ) {
@@ -8416,9 +8696,9 @@
 	
 						if ( fnSelector ) {
 							// Selector - function
-							host = settings.aoData[ row ];
+							host = data[ row ];
 	
-							if ( s( o, _fnGetCellData(settings, row, j), host.anCells[j] ) ) {
+							if ( s( o, _fnGetCellData(settings, row, j), host.anCells ? host.anCells[j] : null ) ) {
 								a.push( o );
 							}
 						}
@@ -8438,18 +8718,33 @@
 			}
 	
 			// Selector - jQuery filtered cells
-			return allCells
+			var jqResult = allCells
 				.filter( s )
 				.map( function (i, el) {
-					row = el.parentNode._DT_RowIndex;
-	
-					return {
-						row: row,
-						column: $.inArray( el, data[ row ].anCells )
-					};
+					return { // use a new object, in case someone changes the values
+						row:    el._DT_CellIndex.row,
+						column: el._DT_CellIndex.column
+	 				};
 				} )
 				.toArray();
-		} );
+	
+			if ( jqResult.length || ! s.nodeName ) {
+				return jqResult;
+			}
+	
+			// Otherwise the selector is a node, and there is one last option - the
+			// element might be a child of an element which has dt-row and dt-column
+			// data attributes
+			host = $(s).closest('*[data-dt-row]');
+			return host.length ?
+				[ {
+					row: host.data('dt-row'),
+					column: host.data('dt-column')
+				} ] :
+				[];
+		};
+	
+		return _selector_run( 'cell', selector, run, settings, opts );
 	};
 	
 	
@@ -8459,13 +8754,15 @@
 		// Argument shifting
 		if ( $.isPlainObject( rowSelector ) ) {
 			// Indexes
-			if ( typeof rowSelector.row !== undefined ) {
-				opts = columnSelector;
-				columnSelector = null;
-			}
-			else {
+			if ( rowSelector.row === undefined ) {
+				// Selector options in first parameter
 				opts = rowSelector;
 				rowSelector = null;
+			}
+			else {
+				// Cell index objects in first parameter
+				opts = columnSelector;
+				columnSelector = null;
 			}
 		}
 		if ( $.isPlainObject( columnSelector ) ) {
@@ -8512,9 +8809,10 @@
 	
 	_api_registerPlural( 'cells().nodes()', 'cell().node()', function () {
 		return this.iterator( 'cell', function ( settings, row, column ) {
-			var cells = settings.aoData[ row ].anCells;
-			return cells ?
-				cells[ column ] :
+			var data = settings.aoData[ row ];
+	
+			return data && data.anCells ?
+				data.anCells[ column ] :
 				undefined;
 		}, 1 );
 	} );
@@ -8630,7 +8928,7 @@
 			// Simple column / direction passed in
 			order = [ [ order, dir ] ];
 		}
-		else if ( ! $.isArray( order[0] ) ) {
+		else if ( order.length && ! $.isArray( order[0] ) ) {
 			// Arguments passed in (list of 1D arrays)
 			order = Array.prototype.slice.call( arguments );
 		}
@@ -8655,6 +8953,24 @@
 	_api_register( 'order.listener()', function ( node, column, callback ) {
 		return this.iterator( 'table', function ( settings ) {
 			_fnSortAttachListener( settings, node, column, callback );
+		} );
+	} );
+	
+	
+	_api_register( 'order.fixed()', function ( set ) {
+		if ( ! set ) {
+			var ctx = this.context;
+			var fixed = ctx.length ?
+				ctx[0].aaSortingFixed :
+				undefined;
+	
+			return $.isArray( fixed ) ?
+				{ pre: fixed } :
+				fixed;
+		}
+	
+		return this.iterator( 'table', function ( settings ) {
+			settings.aaSortingFixed = $.extend( true, {}, set );
 		} );
 	} );
 	
@@ -8826,8 +9142,15 @@
 		var t = $(table).get(0);
 		var is = false;
 	
+		if ( table instanceof DataTable.Api ) {
+			return true;
+		}
+	
 		$.each( DataTable.settings, function (i, o) {
-			if ( o.nTable === t || o.nScrollHead === t || o.nScrollFoot === t ) {
+			var head = o.nScrollHead ? $('table', o.nScrollHead)[0] : null;
+			var foot = o.nScrollFoot ? $('table', o.nScrollFoot)[0] : null;
+	
+			if ( o.nTable === t || head === t || foot === t ) {
 				is = true;
 			}
 		} );
@@ -8854,43 +9177,22 @@
 	 */
 	DataTable.tables = DataTable.fnTables = function ( visible )
 	{
-		return $.map( DataTable.settings, function (o) {
+		var api = false;
+	
+		if ( $.isPlainObject( visible ) ) {
+			api = visible.api;
+			visible = visible.visible;
+		}
+	
+		var a = $.map( DataTable.settings, function (o) {
 			if ( !visible || (visible && $(o.nTable).is(':visible')) ) {
 				return o.nTable;
 			}
 		} );
-	};
 	
-	
-	/**
-	 * DataTables utility methods
-	 * 
-	 * This namespace provides helper methods that DataTables uses internally to
-	 * create a DataTable, but which are not exclusively used only for DataTables.
-	 * These methods can be used by extension authors to save the duplication of
-	 * code.
-	 *
-	 *  @namespace
-	 */
-	DataTable.util = {
-		/**
-		 * Throttle the calls to a function. Arguments and context are maintained
-		 * for the throttled function.
-		 *
-		 * @param {function} fn Function to be called
-		 * @param {integer} freq Call frequency in mS
-		 * @return {function} Wrapped function
-		 */
-		throttle: _fnThrottle,
-	
-	
-		/**
-		 * Escape a string such that it can be used in a regular expression
-		 *
-		 *  @param {string} sVal string to escape
-		 *  @returns {string} escaped string
-		 */
-		escapeRegex: _fnEscapeRegex
+		return api ?
+			new _Api( a ) :
+			a;
 	};
 	
 	
@@ -8932,9 +9234,11 @@
 			var args = Array.prototype.slice.call(arguments);
 	
 			// Add the `dt` namespace automatically if it isn't already present
-			if ( ! args[0].match(/\.dt\b/) ) {
-				args[0] += '.dt';
-			}
+			args[0] = $.map( args[0].split( /\s/ ), function ( e ) {
+				return ! e.match(/\.dt\b/) ?
+					e+'.dt' :
+					e;
+				} ).join( ' ' );
 	
 			var inst = $( this.tables().nodes() );
 			inst[key].apply( inst, args );
@@ -8952,6 +9256,12 @@
 	
 	_api_register( 'settings()', function () {
 		return new _Api( this.context, this.context );
+	} );
+	
+	
+	_api_register( 'init()', function () {
+		var ctx = this.context;
+		return ctx.length ? ctx[0].oInit : null;
 	} );
 	
 	
@@ -8993,8 +9303,8 @@
 			// Blitz all `DT` namespaced events (these are internal events, the
 			// lowercase, `dt` events are user subscribed and they are responsible
 			// for removing them
-			jqWrapper.unbind('.DT').find(':not(tbody *)').unbind('.DT');
-			$(window).unbind('.DT-'+settings.sInstance);
+			jqWrapper.off('.DT').find(':not(tbody *)').off('.DT');
+			$(window).off('.DT-'+settings.sInstance);
 	
 			// When scrolling we had to break the table up - restore it
 			if ( table != thead.parentNode ) {
@@ -9006,10 +9316,6 @@
 				jqTable.children('tfoot').detach();
 				jqTable.append( tfoot );
 			}
-	
-			// Remove the DataTables generated nodes, events and classes
-			jqTable.detach();
-			jqWrapper.detach();
 	
 			settings.aaSorting = [];
 			settings.aaSortingFixed = [];
@@ -9030,30 +9336,36 @@
 				} );
 			}
 	
-			if ( ! remove && orig ) {
-				// insertBefore acts like appendChild if !arg[1]
-				orig.insertBefore( table, settings.nTableReinsertBefore );
-			}
-	
 			// Add the TR elements back into the table in their original order
 			jqTbody.children().detach();
 			jqTbody.append( rows );
 	
-			// Restore the width of the original table - was read from the style property,
-			// so we can restore directly to that
-			jqTable
-				.css( 'width', settings.sDestroyWidth )
-				.removeClass( classes.sTable );
+			// Remove the DataTables generated nodes, events and classes
+			var removedMethod = remove ? 'remove' : 'detach';
+			jqTable[ removedMethod ]();
+			jqWrapper[ removedMethod ]();
 	
-			// If the were originally stripe classes - then we add them back here.
-			// Note this is not fool proof (for example if not all rows had stripe
-			// classes - but it's a good effort without getting carried away
-			ien = settings.asDestroyStripes.length;
+			// If we need to reattach the table to the document
+			if ( ! remove && orig ) {
+				// insertBefore acts like appendChild if !arg[1]
+				orig.insertBefore( table, settings.nTableReinsertBefore );
 	
-			if ( ien ) {
-				jqTbody.children().each( function (i) {
-					$(this).addClass( settings.asDestroyStripes[i % ien] );
-				} );
+				// Restore the width of the original table - was read from the style property,
+				// so we can restore directly to that
+				jqTable
+					.css( 'width', settings.sDestroyWidth )
+					.removeClass( classes.sTable );
+	
+				// If the were originally stripe classes - then we add them back here.
+				// Note this is not fool proof (for example if not all rows had stripe
+				// classes - but it's a good effort without getting carried away
+				ien = settings.asDestroyStripes.length;
+	
+				if ( ien ) {
+					jqTbody.children().each( function (i) {
+						$(this).addClass( settings.asDestroyStripes[i % ien] );
+					} );
+				}
 			}
 	
 			/* Remove the settings object from the settings array */
@@ -9064,6 +9376,55 @@
 		} );
 	} );
 	
+	
+	// Add the `every()` method for rows, columns and cells in a compact form
+	$.each( [ 'column', 'row', 'cell' ], function ( i, type ) {
+		_api_register( type+'s().every()', function ( fn ) {
+			var opts = this.selector.opts;
+			var api = this;
+	
+			return this.iterator( type, function ( settings, arg1, arg2, arg3, arg4 ) {
+				// Rows and columns:
+				//  arg1 - index
+				//  arg2 - table counter
+				//  arg3 - loop counter
+				//  arg4 - undefined
+				// Cells:
+				//  arg1 - row index
+				//  arg2 - column index
+				//  arg3 - table counter
+				//  arg4 - loop counter
+				fn.call(
+					api[ type ](
+						arg1,
+						type==='cell' ? arg2 : opts,
+						type==='cell' ? opts : undefined
+					),
+					arg1, arg2, arg3, arg4
+				);
+			} );
+		} );
+	} );
+	
+	
+	// i18n method for extensions to be able to use the language object from the
+	// DataTable
+	_api_register( 'i18n()', function ( token, def, plural ) {
+		var ctx = this.context[0];
+		var resolved = _fnGetObjectDataFn( token )( ctx.oLanguage );
+	
+		if ( resolved === undefined ) {
+			resolved = def;
+		}
+	
+		if ( plural !== undefined && $.isPlainObject( resolved ) ) {
+			resolved = resolved[ plural ] !== undefined ?
+				resolved[ plural ] :
+				resolved._;
+		}
+	
+		return resolved.replace( '%d', plural ); // nb: plural might be undefined,
+	} );
 
 	/**
 	 * Version string for plug-ins to check compatibility. Allowed format is
@@ -9073,7 +9434,7 @@
 	 *  @type string
 	 *  @default Version number
 	 */
-	DataTable.version = "1.10.4";
+	DataTable.version = "1.10.15";
 
 	/**
 	 * Private data store, containing all of the settings objects that are
@@ -9225,7 +9586,16 @@
 		 *  @default null
 		 *  @private
 		 */
-		"src": null
+		"src": null,
+	
+		/**
+		 * Index in the aoData array. This saves an indexOf lookup when we have the
+		 * object, but want to know the index
+		 *  @type integer
+		 *  @default -1
+		 *  @private
+		 */
+		"idx": -1
 	};
 	
 	
@@ -10572,6 +10942,8 @@
 		 *  @type function
 		 *  @member
 		 *  @param {object} settings DataTables settings object
+		 *  @param {object} callback Callback that can be executed when done. It
+		 *    should be passed the loaded state object.
 		 *  @return {object} The DataTables state object to be loaded
 		 *
 		 *  @dtopt Callbacks
@@ -10581,21 +10953,14 @@
 		 *    $(document).ready( function() {
 		 *      $('#example').dataTable( {
 		 *        "stateSave": true,
-		 *        "stateLoadCallback": function (settings) {
-		 *          var o;
-		 *
-		 *          // Send an Ajax request to the server to get the data. Note that
-		 *          // this is a synchronous request.
+		 *        "stateLoadCallback": function (settings, callback) {
 		 *          $.ajax( {
 		 *            "url": "/state_load",
-		 *            "async": false,
 		 *            "dataType": "json",
 		 *            "success": function (json) {
-		 *              o = json;
+		 *              callback( json );
 		 *            }
 		 *          } );
-		 *
-		 *          return o;
 		 *        }
 		 *      } );
 		 *    } );
@@ -11534,14 +11899,15 @@
 	
 	
 		/**
-		 * DataTables features four different built-in options for the buttons to
+		 * DataTables features six different built-in options for the buttons to
 		 * display for pagination control:
 		 *
+		 * * `numbers` - Page number buttons only
 		 * * `simple` - 'Previous' and 'Next' buttons only
 		 * * 'simple_numbers` - 'Previous' and 'Next' buttons, plus page numbers
 		 * * `full` - 'First', 'Previous', 'Next' and 'Last' buttons
-		 * * `full_numbers` - 'First', 'Previous', 'Next' and 'Last' buttons, plus
-		 *   page numbers
+		 * * `full_numbers` - 'First', 'Previous', 'Next' and 'Last' buttons, plus page numbers
+		 * * `first_last_numbers` - 'First' and 'Last' buttons, plus page numbers
 		 *  
 		 * Further methods can be added using {@link DataTable.ext.oPagination}.
 		 *  @type string
@@ -11666,7 +12032,18 @@
 		 *  @name DataTable.defaults.renderer
 		 *
 		 */
-		"renderer": null
+		"renderer": null,
+	
+	
+		/**
+		 * Set the data property name that DataTables should use to get a row's id
+		 * to set as the `id` property in the node.
+		 *  @type string
+		 *  @default DT_RowId
+		 *
+		 *  @name DataTable.defaults.rowId
+		 */
+		"rowId": "DT_RowId"
 	};
 	
 	_fnHungarianMap( DataTable.defaults );
@@ -12765,7 +13142,21 @@
 			 *  @type boolean
 			 *  @default false
 			 */
-			"bScrollbarLeft": false
+			"bScrollbarLeft": false,
+	
+			/**
+			 * Flag for if `getBoundingClientRect` is fully supported or not
+			 *  @type boolean
+			 *  @default false
+			 */
+			"bBounding": false,
+	
+			/**
+			 * Browser scrollbar width
+			 *  @type integer
+			 *  @default 0
+			 */
+			"barWidth": 0
 		},
 	
 	
@@ -12809,6 +13200,13 @@
 		 *  @default []
 		 */
 		"aiDisplayMaster": [],
+	
+		/**
+		 * Map of row ids to data indexes
+		 *  @type object
+		 *  @default {}
+		 */
+		"aIds": {},
 	
 		/**
 		 * Store information about each column that is in use
@@ -13418,7 +13816,21 @@
 		 *  @type object
 		 *  @default {}
 		 */
-		"oPlugins": {}
+		"oPlugins": {},
+	
+		/**
+		 * Function used to get a row's id from the row's data
+		 *  @type function
+		 *  @default null
+		 */
+		"rowIdFn": null,
+	
+		/**
+		 * Data location where to store a row's id
+		 *  @type string
+		 *  @default null
+		 */
+		"rowId": null
 	};
 
 	/**
@@ -13448,6 +13860,17 @@
 	 */
 	DataTable.ext = _ext = {
 		/**
+		 * Buttons. For use with the Buttons extension for DataTables. This is
+		 * defined here so other extensions can define buttons regardless of load
+		 * order. It is _not_ used by DataTables core.
+		 *
+		 *  @type object
+		 *  @default {}
+		 */
+		buttons: {},
+	
+	
+		/**
 		 * Element class names
 		 *
 		 *  @type object
@@ -13457,12 +13880,20 @@
 	
 	
 		/**
-		 * Error reporting.
-		 * 
-		 * How should DataTables report an error. Can take the value 'alert' or
-		 * 'throw'
+		 * DataTables build type (expanded by the download builder)
 		 *
 		 *  @type string
+		 */
+		builder: "-source-",
+	
+	
+		/**
+		 * Error reporting.
+		 * 
+		 * How should DataTables report an error. Can take the value 'alert',
+		 * 'throw', 'none' or a function.
+		 *
+		 *  @type string|function
 		 *  @default alert
 		 */
 		errMode: "alert",
@@ -13567,6 +13998,37 @@
 		 *    );
 		 */
 		search: [],
+	
+	
+		/**
+		 * Selector extensions
+		 *
+		 * The `selector` option can be used to extend the options available for the
+		 * selector modifier options (`selector-modifier` object data type) that
+		 * each of the three built in selector types offer (row, column and cell +
+		 * their plural counterparts). For example the Select extension uses this
+		 * mechanism to provide an option to select only rows, columns and cells
+		 * that have been marked as selected by the end user (`{selected: true}`),
+		 * which can be used in conjunction with the existing built in selector
+		 * options.
+		 *
+		 * Each property is an array to which functions can be pushed. The functions
+		 * take three attributes:
+		 *
+		 * * Settings object for the host table
+		 * * Options object (`selector-modifier` object type)
+		 * * Array of selected item indexes
+		 *
+		 * The return is an array of the resulting item indexes after the custom
+		 * selector has been applied.
+		 *
+		 *  @type object
+		 */
+		selector: {
+			cell: [],
+			column: [],
+			row: []
+		},
 	
 	
 		/**
@@ -14062,7 +14524,7 @@
 			numbers.splice( 0, 0, 0 );
 		}
 		else {
-			numbers = _range( page-1, page+2 );
+			numbers = _range( page-half+2, page+half-1 );
 			numbers.push( 'ellipsis' );
 			numbers.push( pages-1 );
 			numbers.splice( 0, 0, 'ellipsis' );
@@ -14083,6 +14545,10 @@
 			return [  'first', 'previous', 'next', 'last' ];
 		},
 	
+		numbers: function ( page, pages ) {
+			return [ _numbers(page, pages) ];
+		},
+	
 		simple_numbers: function ( page, pages ) {
 			return [ 'previous', _numbers(page, pages), 'next' ];
 		},
@@ -14090,9 +14556,15 @@
 		full_numbers: function ( page, pages ) {
 			return [ 'first', 'previous', _numbers(page, pages), 'next', 'last' ];
 		},
+		
+		first_last_numbers: function (page, pages) {
+	 		return ['first', _numbers(page, pages), 'last'];
+	 	},
 	
 		// For testing and plug-ins to use
 		_numbers: _numbers,
+	
+		// Number of number buttons (including ellipsis) to show. _Must be odd!_
 		numbers_length: 7
 	} );
 	
@@ -14102,8 +14574,8 @@
 			_: function ( settings, host, idx, buttons, page, pages ) {
 				var classes = settings.oClasses;
 				var lang = settings.oLanguage.oPaginate;
+				var aria = settings.oLanguage.oAria.paginate || {};
 				var btnDisplay, btnClass, counter=0;
-
 	
 				var attach = function( container, buttons ) {
 					var i, ien, node, button;
@@ -14120,12 +14592,12 @@
 							attach( inner, button );
 						}
 						else {
-							btnDisplay = '';
+							btnDisplay = null;
 							btnClass = '';
 	
 							switch ( button ) {
 								case 'ellipsis':
-									container.append('<span>&hellip;</span>');
+									container.append('<span class="ellipsis">&#x2026;</span>');
 									break;
 	
 								case 'first':
@@ -14159,10 +14631,11 @@
 									break;
 							}
 	
-							if ( btnDisplay ) {
+							if ( btnDisplay !== null ) {
 								node = $('<a>', {
 										'class': classes.sPageButton+' '+btnClass,
 										'aria-controls': settings.sTableId,
+										'aria-label': aria[ button ],
 										'data-dt-idx': counter,
 										'tabindex': settings.iTabIndex,
 										'id': idx === 0 && typeof button === 'string' ?
@@ -14185,20 +14658,22 @@
 				// IE9 throws an 'unknown error' if document.activeElement is used
 				// inside an iframe or frame. Try / catch the error. Not good for
 				// accessibility, but neither are frames.
+				var activeEl;
+	
 				try {
 					// Because this approach is destroying and recreating the paging
 					// elements, focus is lost on the select button which is bad for
 					// accessibility. So we want to restore focus once the draw has
 					// completed
-					var activeEl = $(document.activeElement).data('dt-idx');
-	
-					attach( $(host).empty(), buttons );
-	
-					if ( activeEl !== null ) {
-						$(host).find( '[data-dt-idx='+activeEl+']' ).focus();
-					}
+					activeEl = $(host).find(document.activeElement).data('dt-idx');
 				}
 				catch (e) {}
+	
+				attach( $(host).empty(), buttons );
+	
+				if ( activeEl !== undefined ) {
+					$(host).find( '[data-dt-idx='+activeEl+']' ).focus();
+				}
 			}
 		}
 	} );
@@ -14219,10 +14694,10 @@
 		// Dates (only those recognised by the browser's Date.parse)
 		function ( d, settings )
 		{
-			// V8 will remove any unknown characters at the start and end of the
-			// expression, leading to false matches such as `$245.12` or `10%` being
-			// a valid date. See forum thread 18941 for detail.
-			if ( d && !(d instanceof Date) && ( ! _re_date_start.test(d) || ! _re_date_end.test(d) ) ) {
+			// V8 tries _very_ hard to make a string passed into `Date.parse()`
+			// valid, so we need to use a regex to restrict date formats. Use a
+			// plug-in for anything other than ISO8601 style strings
+			if ( d && !(d instanceof Date) && ! _re_date.test(d) ) {
 				return null;
 			}
 			var parsed = Date.parse(d);
@@ -14359,7 +14834,7 @@
 	$.extend( _ext.type.order, {
 		// Dates
 		"date-pre": function ( d ) {
-			return Date.parse( d ) || 0;
+			return Date.parse( d ) || -Infinity;
 		},
 	
 		// html
@@ -14480,6 +14955,12 @@
 	 * to make working with DataTables a little bit easier.
 	 */
 	
+	var __htmlEscapeEntities = function ( d ) {
+		return typeof d === 'string' ?
+			d.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') :
+			d;
+	};
+	
 	/**
 	 * Helpers for `columns.render`.
 	 *
@@ -14488,11 +14969,14 @@
 	 *
 	 * * `number` - Will format numeric data (defined by `columns.data`) for
 	 *   display, retaining the original unformatted data for sorting and filtering.
-	 *   It takes 4 parameters:
+	 *   It takes 5 parameters:
 	 *   * `string` - Thousands grouping separator
 	 *   * `string` - Decimal point indicator
 	 *   * `integer` - Number of decimal points to show
 	 *   * `string` (optional) - Prefix.
+	 *   * `string` (optional) - Postfix (/suffix).
+	 * * `text` - Escape HTML to help prevent XSS attacks. It has no optional
+	 *   parameters.
 	 *
 	 * @example
 	 *   // Column definition using the number renderer
@@ -14504,11 +14988,25 @@
 	 * @namespace
 	 */
 	DataTable.render = {
-		number: function ( thousands, decimal, precision, prefix ) {
+		number: function ( thousands, decimal, precision, prefix, postfix ) {
 			return {
 				display: function ( d ) {
+					if ( typeof d !== 'number' && typeof d !== 'string' ) {
+						return d;
+					}
+	
 					var negative = d < 0 ? '-' : '';
-					d = Math.abs( parseFloat( d ) );
+					var flo = parseFloat( d );
+	
+					// If NaN then there isn't much formatting that we can do - just
+					// return immediately, escaping any HTML (this was supposed to
+					// be a number after all)
+					if ( isNaN( flo ) ) {
+						return __htmlEscapeEntities( d );
+					}
+	
+					flo = flo.toFixed( precision );
+					d = Math.abs( flo );
 	
 					var intPart = parseInt( d, 10 );
 					var floatPart = precision ?
@@ -14519,8 +15017,15 @@
 						intPart.toString().replace(
 							/\B(?=(\d{3})+(?!\d))/g, thousands
 						) +
-						floatPart;
+						floatPart +
+						(postfix||'');
 				}
+			};
+		},
+	
+		text: function () {
+			return {
+				display: __htmlEscapeEntities
 			};
 		}
 	};
@@ -14623,11 +15128,9 @@
 		_fnCalculateColumnWidths: _fnCalculateColumnWidths,
 		_fnThrottle: _fnThrottle,
 		_fnConvertToWidth: _fnConvertToWidth,
-		_fnScrollingWidthAdjust: _fnScrollingWidthAdjust,
 		_fnGetWidestNode: _fnGetWidestNode,
 		_fnGetMaxLenString: _fnGetMaxLenString,
 		_fnStringToCss: _fnStringToCss,
-		_fnScrollBarWidth: _fnScrollBarWidth,
 		_fnSortFlatten: _fnSortFlatten,
 		_fnSort: _fnSort,
 		_fnSortAria: _fnSortAria,
@@ -14655,6 +15158,9 @@
 
 	// jQuery access
 	$.fn.dataTable = DataTable;
+
+	// Provide access to the host jQuery object (circular reference)
+	DataTable.$ = $;
 
 	// Legacy aliases
 	$.fn.dataTableSettings = DataTable.settings;
@@ -14837,6 +15343,3 @@
 
 	return $.fn.dataTable;
 }));
-
-}(window, document));
-
