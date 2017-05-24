@@ -28,6 +28,10 @@ sub index {
 	chomp($date_string);
 	$self->cookie( last_seen_log => $date_string, { path => "/", max_age => 604800 } );    # expires in a week.
 
+	my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
+	chomp($date_string);
+	$self->cookie( last_seen_log => $date_string, { path => "/", max_age => 604800 } );    # expires in a week.
+
 	my @data;
 	my $interval = "> now() - interval '" . $numdays . " day'";                  # postgres
 	my $rs = $self->db->resultset('Log')->search( { 'me.last_updated' => \$interval },
