@@ -866,6 +866,11 @@ sub main {
     setupCertificates( $opensslconf );
 
     my $dbh = Database::connect($databaseConfFile, $todbconf);
+    if (!$dbh) {
+        InstallUtils::logger("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/db_bootstrap.sh` on the db server to create it and run `postinstall` again.", "error");
+        exit(-1);
+    }
+
     setupDatabaseData( $dbh, $adminconf, $paramconf );
 
     InstallUtils::logger("Starting Traffic Ops", "info" );
