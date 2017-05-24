@@ -287,7 +287,7 @@ my $count_response = sub {
 $t->get_ok('/api/1.2/cachegroups/100/unassigned_parameters')->status_is(200)->$count_response(61)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-# there are currently 61 parameters not assigned to cachegroup 100
+# there are currently 61 parameters not assigned to cachegroup 200
 $t->get_ok('/api/1.2/cachegroups/200/unassigned_parameters')->status_is(200)->$count_response(61)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

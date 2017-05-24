@@ -140,15 +140,15 @@ $t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$coun
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 7 profiles not assigned to parameter 4
-$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(7)
+$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(8)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 7 profiles not assigned to parameter 4
-$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(7)
+$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(8)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 6 profiles not assigned to parameter 6
-$t->get_ok('/api/1.2/parameters/6/unassigned_profiles')->status_is(200)->$count_response(6)
+$t->get_ok('/api/1.2/parameters/6/unassigned_profiles')->status_is(200)->$count_response(7)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );

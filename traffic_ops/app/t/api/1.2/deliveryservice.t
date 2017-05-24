@@ -40,6 +40,32 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
+# Count the 'response number'
+my $count_response = sub {
+	my ( $t, $count ) = @_;
+	my $json = decode_json( $t->tx->res->content->asset->slurp );
+	my $r    = $json->{response};
+	return $t->success( is( scalar(@$r), $count ) );
+};
+
+# there are currently 3 servers of type EDGE or ORG where server.cdn == ds.cdn not assigned to ds 100
+$t->get_ok('/api/1.2/deliveryservices/100/unassigned_servers')->status_is(200)->$count_response(4)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# we will assign 2 more servers to ds 100
+ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'} => json => {
+			"dsId" => 100,
+			"servers" => [ 1400, 1600 ]
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "success" )
+		->json_is( "/alerts/0/text" => "Server assignments complete." )
+	, 'Are the servers assigned to the delivery service?';
+
+# there are now 2 servers of type EDGE or ORG where server.cdn == ds.cdn not assigned to ds 100
+$t->get_ok('/api/1.2/deliveryservices/100/unassigned_servers')->status_is(200)->$count_response(2)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 # It gets existing delivery services
 ok $t->get_ok("/api/1.2/deliveryservices/list")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "steering-ds1" )
@@ -311,14 +337,6 @@ ok $t->post_ok(
 ok $t->get_ok("/api/1.2/deliveryservices.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 	->json_is( "/response/0/xmlId", "ds_2" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 0 )
 	->json_is( "/response/1/xmlId", "ds_3" );
-
-# Count the 'response number'
-my $count_response = sub {
-	my ( $t, $count ) = @_;
-	my $json = decode_json( $t->tx->res->content->asset->slurp );
-	my $r    = $json->{response};
-	return $t->success( is( scalar(@$r), $count ) );
-};
 
 $t->get_ok('/api/1.2/deliveryservices/list?logsEnabled=true')->status_is(200)->$count_response(2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
