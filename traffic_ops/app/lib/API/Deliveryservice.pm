@@ -41,16 +41,16 @@ sub index {
 
 	my %criteria;
 	if ( defined $cdn_id ) {
-		$criteria{'cdn_id'} = $cdn_id;
+		$criteria{'me.cdn_id'} = $cdn_id;
 	}
 	if ( defined $profile_id ) {
-		$criteria{'profile'} = $profile_id;
+		$criteria{'me.profile'} = $profile_id;
 	}
 	if ( defined $type_id ) {
-		$criteria{'type'} = $type_id;
+		$criteria{'me.type'} = $type_id;
 	}
 	if ( defined $logs_enabled ) {
-		$criteria{'logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
+		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
 	}
 
 	if ( !&is_privileged($self) ) {
