@@ -68,6 +68,45 @@ sub domains {
 	$self->success( \@data );
 }
 
+sub create {
+	my $self 		= shift;
+	my $params 		= $self->req->json;
+	my $ds_id 		= $params->{dsId};
+	my $servers 	= $params->{servers};
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( ref($servers) ne 'ARRAY' ) {
+		return $self->alert("Servers must be an array");
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	$self->db->txn_begin();
+	foreach my $server (@{ $servers }) {
+		my $server_exist = $self->db->resultset('Server')->find( { id => $server } );
+		if ( !defined($server_exist) ) {
+			$self->db->txn_rollback();
+			return $self->alert("Server with id [ " . $server . " ] doesn't exist");
+		}
+		my $ds_server_exist = $self->db->resultset('DeliveryserviceServer')->find( { deliveryservice => $ds_id, server => $server } );
+		if ( !defined($ds_server_exist) ) {
+			$self->db->resultset('DeliveryserviceServer')->create( { deliveryservice => $ds_id, server => $server } )->insert();
+		}
+	}
+	$self->db->txn_commit();
+
+	&log( $self, "Servers were assigned to " . $ds->xml_id, "APICHANGE" );
+
+	my $response = $params;
+	return $self->success($response, "Server assignments complete.");
+}
+
 sub assign_ds_to_cachegroup {
 	my $self   = shift;
 	my $cg_id  = $self->param('id');

@@ -97,6 +97,17 @@ my %definition_for = (
 			type        => 'UNK_PROFILE',
 		},
 	},
+	EDGE2 => {
+		new   => 'Profile',
+		using => {
+			id          => 900,
+			name        => 'EDGE2',
+			description => 'edge description',
+			cdn         => 200,
+			type        => 'ATS_PROFILE',
+		},
+	},
+
 );
 
 sub get_definition {

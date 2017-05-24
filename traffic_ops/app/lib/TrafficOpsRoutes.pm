@@ -572,6 +572,7 @@ sub api_routes {
 	# -- DELIVERYSERVICES: SERVERS
 	# Supports ?orderby=key
 	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
+	$r->post("/api/$version/deliveryserviceserver")->over( authenticated => 1 )->to( 'DeliveryServiceServer#create', namespace => $namespace );
 
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1 )->to( 'Division#index', namespace => $namespace );
@@ -691,6 +692,7 @@ sub api_routes {
 
 	# get all edge servers associated with a delivery service (from deliveryservice_server table)
 	$r->get( "/api/$version/deliveryservices/:id/servers" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Server#get_edge_servers_by_dsid', namespace => $namespace );
+	$r->get( "/api/$version/deliveryservices/:id/unassigned_servers" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Server#get_unassigned_servers_by_dsid', namespace => $namespace );
 
 	# alternate server routes
 	$r->post("/api/$version/servers/create")->over( authenticated => 1 )->to( 'Server2#create', namespace => $namespace );
