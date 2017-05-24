@@ -77,6 +77,17 @@ sub register {
 			}
 		}
 	);
+
+	$app->renderer->add_helper(
+		is_password_uncommon => sub {
+			my $self  = shift;
+			my $pass = $self->param('tm_user.local_passwd');
+			my %blacklist = %{$self->app->{invalid_passwords}};
+			if ( defined($pass) && defined(%blacklist->{$pass}) ) {
+				$self->field('tm_user.local_passwd')->is_like( qr/ . $pass . /, "Password is too common." );
+			}
+		}
+	);
 }
 
 package MojoPlugins::Validation::Functions;

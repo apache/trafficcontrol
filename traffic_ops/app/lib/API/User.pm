@@ -583,6 +583,10 @@ sub is_good_password {
 		return "Password must be greater than 7 chars.";
 	}
 
+	if ( defined($self->app->{invalid_passwords}->{$value}) ) {
+		return "Password is too common.";
+	}
+
 	# At this point we're happy with the password
 	return undef;
 }

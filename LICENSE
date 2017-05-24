@@ -373,3 +373,7 @@ Several subsections of main.css are under the MIT license, as noted in the file:
 For the seelog component:
 @traffic_stats/vendor/github.com/cihub/seelog/*
 ./licenses/BSD-seelog
+
+The invalid_passwords.txt file is from the Projects/OWASP SecLists Project provided under a CC-A-SA license:
+@traffic_ops/app/conf/invalid_passwords.txt
+./licenses/CC_A_SA_3
