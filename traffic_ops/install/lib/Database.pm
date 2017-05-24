@@ -45,10 +45,10 @@ sub connect {
         InstallUtils::logger( "Database connection succeeded", "info" );
     }
     else {
-        InstallUtils::logger( "Error connecting to database", "error" );
-        exit(-1);
+        # show error, but don't exit -- let the caller deal with it based on undef $dbh
+        InstallUtils::logger( $DBI::errstr, "error" );
     }
-   return $dbh;
+    return $dbh;
 }
 
 
