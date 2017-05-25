@@ -58,6 +58,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/admin/asns/list').name,
         require('./modules/private/admin/asns/new').name,
         require('./modules/private/admin/cdns').name,
+        require('./modules/private/admin/cdns/config').name,
         require('./modules/private/admin/cdns/deliveryServices').name,
         require('./modules/private/admin/cdns/edit').name,
         require('./modules/private/admin/cdns/list').name,

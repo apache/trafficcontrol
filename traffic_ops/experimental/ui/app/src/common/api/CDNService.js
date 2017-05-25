@@ -136,6 +136,59 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
         return request.promise;
     };
 
+    this.getCurrentSnapshot = function(cdnName) {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns/" + cdnName + "/snapshot")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.getNewSnapshot = function(cdnName) {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns/" + cdnName + "/snapshot/new")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.snapshot = function(cdn) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "cdns/" + cdn.id + "/snapshot")
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Snapshot performed' } ], true);
+                    locationUtils.navigateToPath('/admin/cdns/' + cdn.id);
+
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+
+        return request.promise;
+    };
+
+
+
+
 };
 
 CDNService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];

@@ -14,3 +14,37 @@
  limitations under the License.
 
 */
+
+#snapshotContainer {
+
+  pre {
+    margin: 20px 0 20px 0;
+  }
+
+  .nav-tabs {
+    border-bottom: 1px solid #ddd;
+  }
+
+  .tab {
+    padding: 20px 20px 0 20px;
+  }
+
+  .tab-heading {
+    font-size: 17px;
+  }
+
+  .added {
+    background-color: #dff0d8;
+    color: #3c763d;
+  }
+
+  .removed {
+    background-color: #f2dede;
+    color: #a94442;
+  }
+
+  .no-change {
+    color: grey;
+  }
+}
+
