@@ -33,7 +33,7 @@ The scripts are called as follows: ::
   <name> is the type of check script
   <traffic_ops_ip> is the IP address of the Traffic Ops Server
   <check_name> is the name of the check. For example: CDU, CHR, DSCP, MTU, etc...
-  <log_level> is between 1 and 4, with 4 being the most verbose. This field is optional
+  <log_level> is between 1 and 6, with 6 being the most verbose. This field is optional and defaults to error.
 
 
 Example Cron File
