@@ -1,0 +1,113 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/admin/cdns')">CDNs</a></li>
+            <li><a ng-click="navigateToPath('/admin/cdns/' + cdn.id)">{{::cdn.name}}</a></li>
+            <li class="active">Config Changes</li>
+        </ol>
+        <div class="pull-right" ng-show="!settings.isNew">
+            <button type="button" class="btn btn-default" ng-click="navigateToPath('/admin/cdns/' + cdn.id)">Cancel</button>
+            <button class="btn btn-primary" title="Snapshot {{cdn.name}} Config" ng-click="confirmSnapshot(cdn)"><i class="fa fa-camera"></i>&nbsp;&nbsp;Perform Snapshot</button>
+        </div>
+
+        <div class="clearfix"></div>
+    </div>
+    <div id="snapshotContainer" class="x_content">
+        <uib-tabset active="active" justified="true">
+            <uib-tab index="0" class="tab" ng-click="diffConfig(500)">
+                <uib-tab-heading>
+                    General [ <span uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{configCount.added}} | {{configCount.removed}}</span> ]
+                </uib-tab-heading>
+                <pre id="config"></pre>
+            </uib-tab>
+            <uib-tab index="1" class="tab" ng-click="diffContentRouters(500)">
+                <uib-tab-heading>
+                    Traffic Routers [ <span uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{contentRoutersCount.added}} | {{contentRoutersCount.removed}}</span> ]
+                </uib-tab-heading>
+                <pre id="contentRouters"></pre>
+            </uib-tab>
+            <uib-tab index="2" class="tab" ng-click="diffContentServers(500)">
+                <uib-tab-heading>
+                    Traffic Servers [ <span uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{contentServersCount.added}} | {{contentServersCount.removed}}</span> ]
+                </uib-tab-heading>
+                <pre id="contentServers"></pre>
+            </uib-tab>
+            <uib-tab index="3" class="tab" ng-click="diffDeliveryServices(500)">
+                <uib-tab-heading>
+                    Delivery Services [ <span uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}}</span> ]
+                </uib-tab-heading>
+                <pre id="deliveryServices"></pre>
+            </uib-tab>
+            <uib-tab index="4" class="tab" ng-click="diffEdgeLocations(500)">
+                <uib-tab-heading>
+                    Edge Cache Groups [ <span uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}}</span> ]
+                </uib-tab-heading>
+                <pre id="edgeLocations"></pre>
+            </uib-tab>
+            <uib-tab index="5" class="tab" ng-click="diffStats(500)">
+                <uib-tab-heading>
+                    Stats [ <span uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{statsCount.added}} | {{statsCount.removed}}</span> ]
+                </uib-tab-heading>
+                <pre id="stats"></pre>
+            </uib-tab>
+        </uib-tabset>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" ng-click="navigateToPath('/admin/cdns/' + cdn.id)">Cancel</button>
+            <button class="btn btn-primary" title="Snapshot {{cdn.name}} Config" ng-click="confirmSnapshot(cdn)"><i class="fa fa-camera"></i>&nbsp;&nbsp;Perform Snapshot</button>
+        </div>
+    </div>
+</div>
+
+<!--- start: templates for popovers --->
+
+<script type="text/ng-template" id="configPopoverTemplate.html">
+    <div>{{configCount.added}} additions (++)</div>
+    <div>{{configCount.removed}} removals (--)</div>
+</script>
+
+<script type="text/ng-template" id="crPopoverTemplate.html">
+    <div>{{contentRoutersCount.added}} additions (++)</div>
+    <div>{{contentRoutersCount.removed}} removals (--)</div>
+</script>
+
+<script type="text/ng-template" id="csPopoverTemplate.html">
+    <div>{{contentServersCount.added}} additions (++)</div>
+    <div>{{contentServersCount.removed}} removals (--)</div>
+</script>
+
+<script type="text/ng-template" id="dsPopoverTemplate.html">
+    <div>{{deliveryServicesCount.added}} additions (++)</div>
+    <div>{{deliveryServicesCount.removed}} removals (--)</div>
+</script>
+
+<script type="text/ng-template" id="elPopoverTemplate.html">
+    <div>{{edgeLocationsCount.added}} additions (++)</div>
+    <div>{{edgeLocationsCount.removed}} removals (--)</div>
+</script>
+
+<script type="text/ng-template" id="statsPopoverTemplate.html">
+    <div>{{statsCount.added}} additions (++)</div>
+    <div>{{statsCount.removed}} removals (--)</div>
+</script>
+
+<!--- end: templates for popovers --->
+

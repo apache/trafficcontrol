@@ -42,8 +42,8 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         cdnService.clearServerUpdates(cdn.id);
     };
 
-    $scope.manageSnapshots = function() {
-        alert('not hooked up yet: manageSnapshots for CDN');
+    $scope.viewConfig = function() {
+        $location.path($location.path() + '/config/changes');
     };
 
     $scope.viewProfiles = function() {
