@@ -279,7 +279,7 @@ static char * getFile(char *filename, char *buffer, int bufferSize) {
 	return buffer;
 }
 
-static int getSpeedForIF(char *inf, char *buffer, int bufferSize) {
+static int getSpeed(char *inf, char *buffer, int bufferSize) {
 	char* str;
 	char b[256];
 	int speed = 0;
@@ -291,47 +291,6 @@ static int getSpeedForIF(char *inf, char *buffer, int bufferSize) {
 		snprintf(b, sizeof(b), "/sys/class/net/%s/speed", inf);
 		str = getFile(b, buffer, bufferSize);
 		speed = strtol(str, 0, 10);
-	}
-
-	return speed;
-}
-
-static int getSpeed(char *interface, char *buffer, int bufferSize) {
-	DIR *dp;
-	struct dirent *ep;
-	char *str;
-	char *inf;
-	char b[256];
-	int speed = 0;
-	int i = 0;
-	const char *fnames[] = {"slave_", "lower_"};
-
-	if (!interface)
-		return 0;
-
-	str = getFile("/sys/class/net/bonding_masters", buffer, bufferSize);
-	if (str) {
-		str = strstr(str, interface);
-		if (str)
-			return getSpeedForIF(interface, buffer, bufferSize);
-	}
-
-	snprintf(b, sizeof(b), "/sys/class/net/%s/", interface);
-	dp = opendir (b);
-
-	if (dp != NULL) {
-		while ((ep = readdir (dp))) {
-			for (i = 0; i < sizeof(fnames)/sizeof(fnames[0]); i++) {
-				str = strstr(ep->d_name, fnames[i]);
-				if (str) {
-					inf = str + strlen(fnames[i]);
-					speed += getSpeedForIF (inf, buffer, bufferSize);
-					break; // in case we happen to have slave_ and lower_ for some odd reason
-				}
-			}
-		}
-
-		(void) closedir(dp);
 	}
 
 	return speed;
