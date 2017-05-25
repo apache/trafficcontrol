@@ -31,10 +31,9 @@ trap cleanup EXIT
 set -x
 
 # set owner of dist dir -- cleans up existing dist permissions...
-rm -rf /trafficcontrol/dist
-
 cp -a /trafficcontrol /tmp/. && \
 	cd /tmp/trafficcontrol && \
+	rm -rf dist && \
 	mkdir -p /trafficcontrol/dist && \
-	ln -fs /trafficcontrol/dist dist && \
+	ln -s /trafficcontrol/dist dist && \
 	((((./build/build.sh $1 2>&1; echo $? >&3) | tee ./dist/build-$1.log >&4) 3>&1) | (read x; exit $x)) 4>&1
