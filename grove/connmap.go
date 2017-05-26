@@ -16,7 +16,7 @@ func NewConnMap() *ConnMap {
 	return &ConnMap{conns: map[string]net.Conn{}}
 }
 
-func (cm ConnMap) Pop(remoteAddr string) (net.Conn, bool) {
+func (cm *ConnMap) Pop(remoteAddr string) (net.Conn, bool) {
 	log.Debugf("ConnMap popping '%v'\n", remoteAddr)
 	cm.m.Lock()
 	defer cm.m.Unlock()
@@ -25,7 +25,7 @@ func (cm ConnMap) Pop(remoteAddr string) (net.Conn, bool) {
 	return c, ok
 }
 
-func (cm ConnMap) Push(conn net.Conn) {
+func (cm *ConnMap) Push(conn net.Conn) {
 	log.Debugf("ConnMap pushing '%v'\n", conn.RemoteAddr().String())
 	cm.m.Lock()
 	defer cm.m.Unlock()
