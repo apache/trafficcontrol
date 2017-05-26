@@ -3,6 +3,7 @@ package grove
 import (
 	"crypto/tls"
 	"net"
+	"net/http"
 	"time"
 )
 
@@ -11,29 +12,37 @@ type InterceptListener struct {
 	connMap      *ConnMap
 }
 
+func getConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
+	return func(conn net.Conn, state http.ConnState) {
+		if state == http.StateClosed {
+			connMap.Pop(conn.RemoteAddr().String())
+		}
+	}
+}
+
 // InterceptListen creates and returns a net.Listener via net.Listen, which is wrapped with an intercepter, which counts Conn read and write bytes. If you want a `grove.NewCacheHandler` to be able to count in and out bytes per remap rule in the stats interface, it must be served with a listener created via InterceptListen or InterceptListenTLS.
-func InterceptListen(network, laddr string) (net.Listener, *ConnMap, error) {
+func InterceptListen(network, laddr string) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
 	l, err := net.Listen(network, laddr)
 	if err != nil {
-		return l, nil, err
+		return l, nil, nil, err
 	}
 	connMap := NewConnMap()
-	return &InterceptListener{realListener: l, connMap: connMap}, connMap, nil
+	return &InterceptListener{realListener: l, connMap: connMap}, connMap, getConnStateCallback(connMap), nil
 }
 
 // InterceptListenTLS is like InterceptListen but for serving HTTPS.
-func InterceptListenTLS(net, laddr, certFile, keyFile string) (net.Listener, *ConnMap, error) {
-	interceptListener, connMap, err := InterceptListen(net, laddr)
+func InterceptListenTLS(net, laddr, certFile, keyFile string) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
+	interceptListener, connMap, connState, err := InterceptListen(net, laddr)
 
 	config := &tls.Config{NextProtos: []string{"h2"}}
 	config.Certificates = make([]tls.Certificate, 1)
 	config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	tlsListener := tls.NewListener(interceptListener, config)
-	return tlsListener, connMap, nil
+	return tlsListener, connMap, connState, nil
 }
 
 func (l *InterceptListener) Accept() (net.Conn, error) {
