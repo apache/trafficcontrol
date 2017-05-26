@@ -11,6 +11,8 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/pprof"
+	"time"
 
 	"golang.org/x/sys/unix"
 
@@ -92,7 +94,7 @@ func getLogWriter(location string) (io.WriteCloser, error) {
 	case LogLocationStderr:
 		return log.NopCloser(os.Stderr), nil
 	case LogLocationNull:
-		return log.NopCloser(ioutil.Discard), nil
+		return nil, nil
 	default:
 		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	}
@@ -130,7 +132,7 @@ func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, 
 }
 
 func main() {
-	runtime.GOMAXPROCS(16)
+	runtime.GOMAXPROCS(16) // DEBUG
 	configFileName := flag.String("config", "", "The config file path")
 	flag.Parse()
 
@@ -280,6 +282,25 @@ func main() {
 	}
 
 	signalReloader(unix.SIGHUP, reloadConfig)
+}
+
+func profile() {
+	go func() {
+		count := 0
+		for {
+			count++
+			filename := fmt.Sprintf("grove%d.pprof", count)
+			f, err := os.Create(filename)
+			if err != nil {
+				log.Errorf("creating profile: %v\n", err)
+				os.Exit(1)
+			}
+			pprof.StartCPUProfile(f)
+			time.Sleep(time.Minute)
+			pprof.StopCPUProfile()
+			f.Close()
+		}
+	}()
 }
 
 func signalReloader(sig os.Signal, f func()) {
