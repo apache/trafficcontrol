@@ -29,7 +29,7 @@ func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
 func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, bool, error) {
 	// NewRequest(method, urlStr string, body io.Reader)
 	// TODO config whether to consider query string, method, headers
-	oldUri := fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
+	oldUri := scheme + "://" + r.Host + r.RequestURI
 	log.Debugf("Remap oldUri: '%v'\n", oldUri)
 	log.Debugf("request: '%+v'\n", r)
 	rule, ok := hr.remapper.Remap(oldUri)
