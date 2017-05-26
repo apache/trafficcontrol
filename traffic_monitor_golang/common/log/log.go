@@ -41,11 +41,21 @@ var (
 )
 
 func initLogger(logger **log.Logger, oldLogCloser *io.Closer, newLogWriter io.WriteCloser, logPrefix string, logFlags int) {
+	if newLogWriter == nil {
+		*logger = nil
+		if *oldLogCloser != nil {
+			(*oldLogCloser).Close()
+			*oldLogCloser = nil
+		}
+		return
+	}
+
 	if *logger != nil {
 		(*logger).SetOutput(newLogWriter)
 	} else {
 		*logger = log.New(newLogWriter, logPrefix, logFlags)
 	}
+
 	if *oldLogCloser != nil {
 		(*oldLogCloser).Close()
 	}
@@ -65,32 +75,59 @@ const timeFormat = time.RFC3339Nano
 const stackFrame = 3
 
 func Errorf(format string, v ...interface{}) {
+	if Error == nil {
+		return
+	}
 	Error.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
 }
 func Errorln(v ...interface{}) {
+	if Error == nil {
+		return
+	}
 	Error.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
 }
 func Warnf(format string, v ...interface{}) {
+	if Warning == nil {
+		return
+	}
 	Warning.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
 }
 func Warnln(v ...interface{}) {
+	if Warning == nil {
+		return
+	}
 	Warning.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
 }
 func Infof(format string, v ...interface{}) {
+	if Info == nil {
+		return
+	}
 	Info.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
 }
 func Infoln(v ...interface{}) {
+	if Info == nil {
+		return
+	}
 	Info.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
 }
 func Debugf(format string, v ...interface{}) {
+	if Debug == nil {
+		return
+	}
 	Debug.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
 }
 func Debugln(v ...interface{}) {
+	if Debug == nil {
+		return
+	}
 	Debug.Output(stackFrame, time.Now().Format(timeFormat)+": "+fmt.Sprintln(v...))
 }
 
 // event log entries (TM event.log, TR access.log, etc)
 func Eventf(t time.Time, format string, v ...interface{}) {
+	if Event == nil {
+		return
+	}
 	// 1484001185.287 ...
 	Event.Printf("%.3f %s", float64(t.Unix())+(float64(t.Nanosecond())/1e9), fmt.Sprintf(format, v...))
 }
