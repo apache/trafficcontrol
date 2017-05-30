@@ -61,4 +61,43 @@ sub SnapshotCRConfig {
     return $self->success("SUCCESS");
 }
 
+sub get_snapshot {
+    my $self        = shift;
+    my $cdn_name    = $self->param('name');
+
+    if ( !&is_oper($self) ) {
+        return $self->forbidden();
+    }
+
+    my $cdn = $self->db->resultset('Cdn')->find( { name => $cdn_name } );
+    if ( !defined($cdn) ) {
+        return $self->not_found();
+    }
+
+    my $snapshot = $self->db->resultset('Snapshot')->search( { cdn => $cdn_name } )->get_column('content')->single();
+    if ( !defined($snapshot) ) {
+        return $self->success( {} );
+    }
+
+    $self->success( decode_json($snapshot) );
+}
+
+sub get_new_snapshot {
+    my $self        = shift;
+    my $cdn_name    = $self->param('name');
+
+    if ( !&is_oper($self) ) {
+        return $self->forbidden();
+    }
+
+    my $cdn = $self->db->resultset('Cdn')->find( { name => $cdn_name } );
+    if ( !defined($cdn) ) {
+        return $self->not_found();
+    }
+
+    my $json = &UI::Topology::gen_crconfig_json($self, $cdn_name);
+
+    $self->success( $json );
+}
+
 1;
