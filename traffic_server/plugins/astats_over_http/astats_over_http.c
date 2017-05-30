@@ -545,18 +545,22 @@ void TSPluginInit(int argc, const char *argv[]) {
 }
 
 static bool is_ip_match(const char *ip, char *ipmask, char mask) {
-	int j, i,k;
+	unsigned int j, i,k;
 	char cm;
-	for(j=0, i=0; ((i+1)*8) <= mask; i++) {
+	// to be able to set mask to 128
+	unsigned int umask = 0xff & mask;
+
+	for(j=0, i=0; ((i+1)*8) <= umask; i++) {
 		if(ip[i] != ipmask[i]) {
 			return false;
 		}
 		j+=8;
 	}
 	cm = 0;
-	for(k=0; j<mask;j++,k++) {
+	for(k=0; j<umask;j++,k++) {
 		cm |= 1<<(7-k);
 	}
+
 	if((ip[i]&cm) != (ipmask[i]&cm)) {
 		return false;
 	}
@@ -570,11 +574,13 @@ static bool is_ip_allowed(const config_t* config, const struct sockaddr* addr) {
 	if(!addr) {
 		return true;
 	}
-	const char *ip = addr->sa_data+2;
 
 	if (addr->sa_family == AF_INET && config->allowIps) {
+		const struct sockaddr_in* addr_in = (struct sockaddr_in*) addr;
+		const char *ip = (char*) &addr_in->sin_addr;
+
 		for(i=0; i < config->ipCount; i++) {
-			ipmask = config->allowIps+ (i*5);
+			ipmask = config->allowIps + (i*5);
 			if(is_ip_match(ip, ipmask, ipmask[4])) {
 				TSDebug(PLUGIN_TAG, "clientip is %s--> ALLOW", inet_ntop(AF_INET,ip,ip_port_text_buffer,INET6_ADDRSTRLEN));
 				return true;
@@ -582,10 +588,14 @@ static bool is_ip_allowed(const config_t* config, const struct sockaddr* addr) {
 		}
 		TSDebug(PLUGIN_TAG, "clientip is %s--> DENY", inet_ntop(AF_INET,ip,ip_port_text_buffer,INET6_ADDRSTRLEN));
 		return false;
+
 	} else if (addr->sa_family == AF_INET6 && config->allowIps6) {
+		const struct sockaddr_in6* addr_in6 = (struct sockaddr_in6*) addr;
+		const char *ip = (char*) &addr_in6->sin6_addr;
+
 		for(i=0; i < config->ip6Count; i++) {
-			ipmask = config->allowIps6+ (i*9);
-			if(is_ip_match(ip, ipmask, ipmask[8])) {
+			ipmask = config->allowIps6 + (i*(sizeof(struct in6_addr) + 1));
+			if(is_ip_match(ip, ipmask, ipmask[sizeof(struct in6_addr)])) {
 				TSDebug(PLUGIN_TAG, "clientip6 is %s--> ALLOW", inet_ntop( AF_INET6,ip,ip_port_text_buffer,INET6_ADDRSTRLEN));
 				return true;
 			}
@@ -648,15 +658,15 @@ static void parseIps6(config_t* config, char* ipStr) {
 	int i, mask;
 	char ip_port_text_buffer[INET6_ADDRSTRLEN];
 
-        if(!ipStr) {
-            config->ip6Count = 1;
-            ip = config->allowIps6 = TSmalloc(5);
-            inet_pton(AF_INET, DEFAULT_IP6, ip);
-            ip[8] = 64;
-            return;
-        }
+	if(!ipStr) {
+		config->ip6Count = 1;
+		ip = config->allowIps6 = TSmalloc(sizeof(struct in6_addr) + 1);
+		inet_pton(AF_INET6, DEFAULT_IP6, ip);
+		ip[sizeof(struct in6_addr)] = 128;
+		return;
+	}
 
-        strcpy(buffer, ipStr);
+	strcpy(buffer, ipStr);
 	p = buffer;
 	while(strtok_r(p, ", \n", &p)) {
 		config->ip6Count++;
@@ -664,27 +674,28 @@ static void parseIps6(config_t* config, char* ipStr) {
 	if(!config->ip6Count) {
 		return;
 	}
-	config->allowIps6 = TSmalloc(9*config->ip6Count); // 4 bytes for ip + 1 for bit mask
+
+	config->allowIps6 = TSmalloc((sizeof(struct in6_addr) + 1)*config->ip6Count); // 16 bytes for ip + 1 for bit mask
 	strcpy(buffer, ipStr);
 	p = buffer;
 	i = 0;
 	while((tok1 = strtok_r(p, ", \n", &p))) {
 		TSDebug(PLUGIN_TAG, "%d) parsing: %s", i+1,tok1);
 		tok2 = strtok_r(tok1, "/", &tok1);
-		ip = config->allowIps6+(9*i);
-		if(!inet_pton(AF_INET, tok2, ip)) {
+		ip = config->allowIps6+((sizeof(struct in6_addr)+1)*i);
+		if(!inet_pton(AF_INET6, tok2, ip)) {
 			TSDebug(PLUGIN_TAG, "%d) skipping: %s", i+1,tok1);
 			continue;
 		}
 		tok2 = strtok_r(tok1, "/", &tok1);
 		if(!tok2) {
-			mask = 64;
+			mask = 128;
 		} else {
 			mask = atoi(tok2);
 		}
-		ip[8] = mask;
+		ip[sizeof(struct in6_addr)] = mask;
 		TSDebug(PLUGIN_TAG, "%d) adding netmask: %s/%d", i+1,
-				inet_ntop(AF_INET6,ip,ip_port_text_buffer,INET6_ADDRSTRLEN),ip[8]);
+				inet_ntop(AF_INET6,ip,ip_port_text_buffer,INET6_ADDRSTRLEN),ip[sizeof(struct in6_addr)]);
 		i++;
 	}
 }
@@ -732,7 +743,7 @@ static config_t* new_config(TSFile fh) {
 	if(!config->ipCount) {
             parseIps(config, NULL);
 	}
-	if(config->ip6Count) {
+	if(!config->ip6Count) {
             parseIps6(config, NULL);
 	}
 	TSDebug(PLUGIN_TAG, "config path=%s", config->stats_path);
