@@ -36,7 +36,7 @@ var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, $state, l
 	angular.element(document).ready(function () {
 		$('#parametersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100,
+			"iDisplayLength": 25,
 			"aaSorting": []
 		});
 	});
