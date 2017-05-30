@@ -40,7 +40,7 @@ var TableRegionPhysLocationsController = function(region, physLocations, $scope,
 	angular.element(document).ready(function () {
 		$('#physLocationsTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1,
+			"iDisplayLength": 25,
 			"aaSorting": []
 		});
 	});

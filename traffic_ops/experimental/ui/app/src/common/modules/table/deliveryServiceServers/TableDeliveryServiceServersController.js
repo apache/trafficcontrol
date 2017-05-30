@@ -73,7 +73,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	angular.element(document).ready(function () {
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100,
+			"iDisplayLength": 25,
 			"aaSorting": []
 		});
 	});
