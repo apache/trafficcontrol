@@ -129,7 +129,7 @@ sub show {
 				"phoneNumber"     => $row->phone_number,
 				"postalCode"      => $row->postal_code,
 				"publicSshKey"    => $row->public_ssh_key,
-				"registrationSent"=> \$row->registration_sent,
+				"registrationSent"=> $row->registration_sent,
 				"role"            => $row->role->id,
 				"rolename"        => $row->role->name,
 				"stateOrProvince" => $row->state_or_province,
@@ -178,7 +178,7 @@ sub update {
 		phone_number 			=> $params->{phoneNumber},
 		postal_code 			=> $params->{postalCode},
 		public_ssh_key 			=> $params->{publicSshKey},
-		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
+		registration_sent 		=> $params->{registrationSent},
 		role 					=> $params->{role},
 		state_or_province 		=> $params->{stateOrProvince},
 		username 				=> $params->{username},
@@ -516,18 +516,15 @@ sub is_valid {
 sub is_username_taken {
 	my $self     = shift;
 	my $username = shift;
-	my $params   = shift;
 
-	my $dbh = $self->db->resultset('TmUser')->search( { username => $username } );
-	my $user_data = $dbh->single;
-	if ( defined($user_data) ) {
-		my $user_id = $user_data->id;
+	my $user_with_username = $self->db->resultset('TmUser')->search( { username => $username } )->single;
+	if ( defined($user_with_username) ) {
+		my $user_id = $user_with_username->id;
 
-		# Allow the current user to be modified
 		my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single;
 		my $current_userid = $current_user->id;
 
-		my %condition = ( -and => [ { username => $username }, { id => { '!=' => $current_userid } } ] );
+		my %condition = ( -and => [ { username => $username }, { id => { 'not in' => [ $current_userid, $user_id ] } } ] );
 		my $count = $self->db->resultset('TmUser')->search( \%condition )->count();
 
 		if ( $count > 0 ) {
@@ -541,18 +538,15 @@ sub is_username_taken {
 sub is_email_taken {
 	my $self   = shift;
 	my $email  = shift;
-	my $params = shift;
 
-	my $dbh = $self->db->resultset('TmUser')->search( { email => $email } );
-	my $user_data = $dbh->single;
-	if ( defined($user_data) ) {
-		my $user_id = $user_data->id;
+	my $user_with_email = $self->db->resultset('TmUser')->search( { email => $email } )->single;
+	if ( defined($user_with_email) ) {
+		my $user_id = $user_with_email->id;
 
-		# Allow the current user to be modified
 		my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single;
 		my $current_userid = $current_user->id;
 
-		my %condition = ( -and => [ { email => $email }, { id => { '!=' => $current_userid } } ] );
+		my %condition = ( -and => [ { email => $email }, { id => { 'not in' => [ $current_userid, $user_id ] } } ] );
 		my $count = $self->db->resultset('TmUser')->search( \%condition )->count();
 
 		if ( $count > 0 ) {
@@ -579,7 +573,7 @@ sub is_good_password {
 		return "Your password cannot be the same as your username.";
 	}
 
-	if ( ( $value ne '' ) && $value !~ qr/^.{8,100}$/ ) {
+	if ( length($value) < 8 ) {
 		return "Password must be greater than 7 chars.";
 	}
 
