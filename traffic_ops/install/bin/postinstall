@@ -38,6 +38,11 @@ if [[ ! $(su - postgres psql -w -c 'show is_superuser' </dev/null 2>/dev/null) =
 	exit 1
 fi
 
+if [[ ! $(su - postgres psql -w -c 'show is_superuser' </dev/null 2>/dev/null) =~ 'on' ]]; then
+	echo >&2 "postinstall requires the postgres user to have superuser access to postgresql. Aborting."
+	exit 1
+fi
+
 # install carton first
 cpanm Carton
 
