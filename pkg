@@ -18,16 +18,76 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 COMPOSE_FILE=./infrastructure/docker/build/docker-compose.yml
 
 # Check for dependencies
-if ! which docker-compose >/dev/null 2>&1; then
-	echo "Error: docker-compose is required for a docker build." >&2
+if ! which docker >/dev/null 2>&1; then
+	echo "Error: docker is required for a docker build." >&2
 	exit 1
+fi
+
+# If the user defined COMPOSE, use that as the path for docker-compose.
+if [ ! -z "$COMPOSE" ]; then
+	COMPOSECMD=( "$COMPOSE" )
+else
+	COMPOSECMD=()
+fi
+
+# Check to see if docker-compose is already installed and use it directly, if possible.
+if [ ${#COMPOSECMD[@]} -eq 0 ]; then
+	if which docker-compose >/dev/null 2>&1; then
+		COMPOSECMD=( docker-compose )
+	fi
+fi
+
+# If it's unavailable, go get the image and run docker-compose inside a container.
+# This is considerably slower, but allows for building on hosts without docker-compose.
+if [ ${#COMPOSECMD[@]} -eq 0 ]; then
+	# Pin the version of docker-compose.
+	IMAGE="docker/compose:1.11.2"
+
+	# We need to either mount the docker socket or export the docker host into the container.
+	# This allows the container to manage "sibling" containers via docker.
+	if [ -z "$DOCKER_HOST" ]; then
+			DOCKER_HOST="/var/run/docker.sock"
+	fi
+
+	if [ -S "$DOCKER_HOST" ]; then
+			DOCKER_ADDR=(-v "$DOCKER_HOST:$DOCKER_HOST" -e DOCKER_HOST)
+	else
+			DOCKER_ADDR=(-e DOCKER_HOST -e DOCKER_TLS_VERIFY -e DOCKER_CERT_PATH)
+	fi
+
+	# We mount the current directory (the base of the repository) into the same location
+	# inside the container. There are many places for which this won't work, but "/" is
+	# a major one.
+	#
+	# You're going to want to avoid keeping your repository in a folder named "/usr/bin",
+	# "/home", "/var" or any other standard paths that will be needed by the docker container.
+	#
+	# This is very unlikely to cause trouble for anyone in practice.
+	if [ "$(pwd)" == "/" ]; then
+		echo "Error: Cannot compile directly at filesystem root." >&2
+		exit 1
+	fi
+
+	# Mount the working directory, and the home directory. Mounting $HOME provides container
+	# access to config files that are kept there.
+	VOLUMES=(-v "$(pwd):$(pwd)" -v "$HOME:$HOME" -v "$HOME:/root")
+
+	# Prepull the image, to avoid spitting out pull progress during other commands.
+	if ! docker inspect $IMAGE >/dev/null 2>&1; then
+		docker pull $IMAGE >/dev/null 2>&1
+	fi
+
+	# COMPOSECMD is kept as an array to significantly simplify handling paths that contain
+	# spaces and other special characters.
+	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
 fi
 
 # Parse command line arguments
 verbose=0
-while getopts lvq? opt; do
+while getopts :lvq? opt; do
 	case $opt in
 		\?)
+			PROJECTS=`$SELF -l | sed "s/^/		- /"`
 			echo "Usage: $SELF [options] [projects]"
 			echo "	-q	Quiet mode. Supresses output."
 			echo "	-v	Verbose mode. Lists all build output."
@@ -35,7 +95,7 @@ while getopts lvq? opt; do
 			echo
 			echo "	If no projects are listed, all projects will be packaged."
 			echo "	Valid projects:"
-			$SELF -l | sed "s/^/		- /"
+			cat <<< "$PROJECTS"
 			exit 0
 			;;
 		q)
@@ -45,7 +105,7 @@ while getopts lvq? opt; do
 			verbose=1
 			;;
 		l)
-			docker-compose -f $COMPOSE_FILE config --services
+			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
 			exit $?
 			;;
 	esac
@@ -67,8 +127,8 @@ while (( "$#" )); do
 		if (( "$verbose" == 0 )); then
 			exec >/dev/null 2>&1
 		fi
-		docker-compose -f $COMPOSE_FILE build $1 || exit 1
-		docker-compose -f $COMPOSE_FILE run --rm $1 || exit 1
+		"${COMPOSECMD[@]}" -f $COMPOSE_FILE build $1 || exit 1
+		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run --rm $1 || exit 1
 	) || {
 		# Don't totally bail out, but make note of the failures.
 		failure=1
