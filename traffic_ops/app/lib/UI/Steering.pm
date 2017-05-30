@@ -19,6 +19,7 @@ package UI::Steering;
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojo::Parameters;
 use Data::Dumper;
 use UI::DeliveryService;
 use API::Cdn;
@@ -31,11 +32,14 @@ use Data::Dumper;
 sub index {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
+	#print STDERR Dumper($ds_id);
 
 	&navbarpage($self);
 
 	# select * from steering_target where deliveryservice = ds_id;
-	my $steering = { ds_id => $ds_id, ds_name => $self->get_ds_name($ds_id) };
+	#my $steering = { ds_id => $ds_id, ds_name => $self->get_ds_name($ds_id) };
+	my $steering_obj;
+	my @steering;
 	my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
 	if ( $st_rs > 0 ) {
 		my %steering_targets;
@@ -43,25 +47,24 @@ sub index {
 			$steering_targets{ $row->target } = $row->weight;
 		}
 		my $i = 0;
+		#print STDERR Dumper(\%steering_targets);
 		my @keys = sort keys %steering_targets;
 		while ( (my $target, my $weight) = each %steering_targets ) {
-			$steering->{"target_id_$i"} = $target;
-			$steering->{"target_name_$i"}   = $self->get_ds_name( $target );
-			$steering->{"target_weight_id_$i"}   = $weight;
-			if (!defined($steering->{"target_weight_id_$i"})) { $steering->{"target_weight_id_$i"} = 0; }
+			$steering_obj->{"target_$i"}->{'target_id'} = $target;
+			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $target );
+			$steering_obj->{"target_$i"}->{'target_weight'}   = $weight;
+			if (!defined($steering_obj->{"target_$i"}->{'target_weight'})) { $steering_obj->{"target_$i"}->{'target_weight'} = 0; }
+			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_name'});
+			push ( @steering, $steering_obj->{"target_$i"} );
 			$i++;
 		}
 	}
-	print STDERR Dumper($steering->{'target_id_0'});
-	print STDERR Dumper($steering->{'target_name_0'});
-	print STDERR Dumper($steering->{'target_weight_id_0'});
-	print STDERR Dumper($steering->{'target_id_1'});
-	print STDERR Dumper($steering->{'target_name_1'});
-	print STDERR Dumper($steering->{'target_weight_id_1'});
-
 	
+	#print STDERR Dumper(\@steering);
 	$self->stash(
-		steering       => $steering,
+		ds_id          => $ds_id,
+		ds_name        => $self->get_ds_name($ds_id),
+		steering       => \@steering,
 		ds_data        => $self->get_deliveryservices(),
 		fbox_layout    => 1
 	);
@@ -95,6 +98,77 @@ sub get_deliveryservices {
 }
 
 sub update {
+	my $self = shift;
+	my $ds_id = $self->param('id');
+	my $st = $self->param('st');
+	my $targets;
+	foreach my $id (@{$st->{'target_id'}}) {
+		print STDERR Dumper($id);
+		print STDERR Dumper($st->{"target_weight_$id"});
+		if ( $st->{"target_weight_$id"} eq "" ) { $st->{"target_weight_$id"} = 0 };
+		$targets->{$id} = $st->{"target_weight_$id"};
+	}
+	print STDERR Dumper($targets);
+	if ( $self->is_valid($targets) ) {
+		#delete current entries
+		my $delete = $self->db->resultset('SteeringTarget')
+			->search( { deliveryservice => $ds_id } );
+		if ( defined($delete) ) {
+			$delete->delete();
+		}
+		
+		#add new entries
+		foreach my $target ( keys %$targets ) {
+			my $insert = $self->db->resultset('SteeringTarget')->create(
+				{   deliveryservice => $ds_id,
+					target          => $target,
+					weight          => $targets->{$target},
+				}
+			);
+			$insert->insert();
+		}
+		
+		$self->flash(
+			      message => "Successfully saved steering assignments for "
+				. $self->get_ds_name($ds_id)
+				. "!" );
+	}
+	else {
+		print STDERR Dumper("at else somehow");
+		my $steering_obj;
+		my @steering;
+		my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
+		my %steering_targets;
+		while ( my $row = $st_rs->next ) {
+			$steering_targets{ $row->target } = $row->weight;
+		}
+		my $i = 0;
+		#print STDERR Dumper(\%steering_targets);
+		my @keys = sort keys %steering_targets;
+		while ( (my $target, my $weight) = each %steering_targets ) {
+			$steering_obj->{"target_$i"}->{'target_id'} = $target;
+			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $target );
+			$steering_obj->{"target_$i"}->{'target_weight'}   = $weight;
+			if (!defined($steering_obj->{"target_$i"}->{'target_weight'})) { $steering_obj->{"target_$i"}->{'target_weight'} = 0; }
+			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_name'});
+			push ( @steering, $steering_obj->{"target_$i"} );
+			$i++;
+		}
+		&stash_role($self);
+		$self->stash(
+			ds_id          => $ds_id,
+			ds_name        => $self->get_ds_name($ds_id),
+			steering       => \@steering,
+			ds_data        => $self->get_deliveryservices(),
+			fbox_layout    => 1
+		);
+		$self->render("steering/index");
+	}
+
+	$self->redirect_to("/ds/$ds_id/steering");
+}
+
+sub old_update {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
 	my $tid1  = $self->param('steering.target_id_1');
@@ -169,42 +243,30 @@ sub update {
 
 sub is_valid {
 	my $self  = shift;
+	my $targets = shift;
+	my $last_cdn;
 
-	#validate DSs are in the same CDN (same profile...)
-	my $t1 = $self->param('steering.target_id_1');
-	my $t2 = $self->param('steering.target_id_2');
-	my $t1_profile;
-	my $t2_profile;
-	my $tid1_weight = $self->param('steering.target_id_1_weight');
-	my $t1_name = $self->param('steering.target_name_1');
-	my $tid2_weight = $self->param('steering.target_id_2_weight');
-	my $t2_name = $self->param('steering.target_name_2');
-
-	unless ( $t1 eq '' ) {
-		$t1_profile = $self->get_ds_cdn( $self->param('steering.target_id_1') );
-	}
-	unless ( $t2 eq '' ) {
-		$t2_profile = $self->get_ds_cdn( $self->param('steering.target_id_2') );
-	}
-	
-	unless ( $t1 ) {
-		$self->field('steering.target_id_1')->is_equal( "",  "Steering targets cannot be blank!" );
-	}
-	unless ( $t2 ) {
-		$self->field('steering.target_id_2')->is_equal( "",  "Steering targets cannot be blank!" );
-	}
-
-	unless ( $t1_profile eq $t2_profile ) {
-		$self->field('steering.target_id_1')->is_equal( "",  "Target Deliveryservices must be in the same CDN!" );
-	}
-	unless ( $tid1_weight eq int($tid1_weight) && $tid1_weight >= 0 ) {
-		$self->field('steering.target_id_1_weight')->is_equal( "", "Error: \"$tid1_weight\" is not a valid integer of 0 or greater." );
-	}
-	unless ( $tid2_weight eq int($tid2_weight) && $tid2_weight >= 0 ) {
-		$self->field('steering.target_id_2_weight')->is_equal( "", "Error: \"$tid2_weight\" is not a valid integer of 0 or greater." );
+	foreach my $target ( keys %$targets ) {
+		my $cdn = $self->get_ds_cdn( $target );
+		if ( defined($last_cdn) ) {
+			if ( $cdn == $last_cdn ) {
+				next;
+			}
+			else { 
+				$self->flash(message => "Target Deliveryservices must be in the same CDN!" );
+				return;
+			}
+		}
+		else {
+			$last_cdn = $cdn;
+			
+			next;
+		}
+		
 	}
 
 	return $self->valid;
+
 }
 
 sub get_ds_cdn {
