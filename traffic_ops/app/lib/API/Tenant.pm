@@ -255,6 +255,12 @@ sub delete {
 		return $self->alert("Tenant '$name' has children tenant(s): e.g '$existing_child'. Please update these tenants and retry.");
 	}
 
+	#The order of the below tests is intentional
+	my $existing_cdn = $self->db->resultset('Cdn')->search( { tenant_id => $id }, {order_by => 'me.name' })->get_column('name')->first();
+	if ($existing_cdn) {
+		return $self->alert("Tenant '$name' is assign with CDNs(s): e.g. '$existing_cdn'. Please update/delete these CDNs and retry.");
+	}
+
 	my $existing_user = $self->db->resultset('TmUser')->search( { tenant_id => $id }, {order_by => 'me.username' })->get_column('username')->first();
 	if ($existing_user) {
 		return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");

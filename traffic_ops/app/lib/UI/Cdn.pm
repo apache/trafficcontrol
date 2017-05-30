@@ -150,7 +150,9 @@ sub create {
         return $self->redirect_to( '/cdn/edit/' . $new_id );
     }
     else {
-        my $insert = $self->db->resultset('Cdn')->create( { name => $name, domain_name => $domain_name, dnssec_enabled => $dnssec_enabled } );
+        my $insert = $self->db->resultset('Cdn')->create( { name => $name, domain_name => $domain_name, dnssec_enabled => $dnssec_enabled, 
+        						    tenant_id => current_user_tenant($self), #Tenancy is not dealt by the UI for now. getting the tenancy from the user
+        						  } );
         $insert->insert();
         $new_id = $insert->id;
     }
