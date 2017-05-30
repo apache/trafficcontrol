@@ -436,9 +436,12 @@ sub api_routes {
 	$r->get("/api/$version/cdns/routing")->over( authenticated => 1 )->to( 'Cdn#routing', namespace => $namespace );
 
 	# -- CDNS: SNAPSHOT
+	$r->get("/api/$version/cdns/:name/snapshot")->over( authenticated => 1 )->to( 'Topology#get_snapshot', namespace => $namespace );
+	$r->get("/api/$version/cdns/:name/snapshot/new")->over( authenticated => 1 )->to( 'Topology#get_new_snapshot', namespace => $namespace );
 	$r->put( "/api/$version/cdns/:id/snapshot" => [ id => qr/\d+/ ] )->over( authenticated => 1 )
-		->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
+	->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 	$r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
+
 
 	# -- CDNS: METRICS
 	#WARNING: this is an intentionally "unauthenticated" route.
