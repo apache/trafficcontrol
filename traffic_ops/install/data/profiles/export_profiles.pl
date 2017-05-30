@@ -108,7 +108,7 @@ sub parameterInsert {
 
 sub scrub_value {
     my $value = shift;
-	$value =~ s/ xmt="%\<\{X-MoneyTrace\}cqh>"//g;
+	$value =~ s/ xmt="%<\{X-MoneyTrace\}cqh>"//g;
 	return $value;
 }
 
