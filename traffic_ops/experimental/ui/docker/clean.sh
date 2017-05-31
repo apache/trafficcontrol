@@ -18,5 +18,5 @@
 
 #docker-compose -p trafficops build
 
-docker rmi trafficops_ui
+docker rmi traffic_portal
 docker ps -a

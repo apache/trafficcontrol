@@ -16,15 +16,15 @@
 #-----------------------------------------
 #
 [Unit]
-Description=Traffic Ops UI Docker Container
+Description=Traffic Portal Docker Container
 Requires=docker.service
 After=docker.service
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/docker-compose -p trafficops -f /opt/traffic_ops_ui/docker/docker-compose.yml up
-ExecStop=/usr/bin/docker-compose -p trafficops -f /opt/traffic_ops_ui/docker/docker-compose.yml down -v
-WorkingDirectory=/opt/traffic_ops_ui
+ExecStart=/usr/bin/docker-compose -p traffic -f /opt/traffic_portal/docker/docker-compose.yml up
+ExecStop=/usr/bin/docker-compose -p traffic -f /opt/traffic_portal/docker/docker-compose.yml down -v
+WorkingDirectory=/opt/traffic_portal/docker
 
 [Install]
 WantedBy=default.target
