@@ -24,17 +24,9 @@ under the License.
             <li class="active">{{parameterName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <!--todo: show cache groups for a parameter-->
-                    <!--<li role="menuitem"><a ng-click="viewCacheGroups()">View Cache Groups</a></li>-->
-                    <li role="menuitem"><a ng-click="viewProfiles()">View Profiles</a></li>
-                </ul>
-            </div>
+            <button class="btn btn-primary" title="View Profiles" ng-click="viewProfiles()">View Profiles</button>
+            <!-- todo: show cachegroups for a parameter -->
+            <!--<button class="btn btn-primary" title="View Cache Groups" ng-click="viewCacheGroups()">View Cache Groups</button>-->
         </div>
         <div class="clearfix"></div>
     </div>

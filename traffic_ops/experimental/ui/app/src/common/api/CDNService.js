@@ -19,9 +19,30 @@
 
 var CDNService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
 
-    this.getCDNs = function(queryParams) {
-        return Restangular.all('cdns').getList(queryParams);
+    this.getCDNs = function(all) {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "cdns")
+            .then(
+                function(result) {
+                    var response;
+                    if (all) { // there is a CDN called "ALL" that is not really a CDN but you might want it...
+                        response = result.data.response;
+                    } else {
+                        response = _.filter(result.data.response, function(cdn) {
+                            return cdn.name != 'ALL';
+                        });
+                    }
+                    request.resolve(response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
     };
+
 
     this.getCDN = function(id) {
         return Restangular.one("cdns", id).get();
@@ -80,7 +101,7 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
         return Restangular.one("cdns", id).customPOST( { action: "dequeue"}, "queue_update" )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cancelled CDN server updates' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Cleared CDN server updates' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

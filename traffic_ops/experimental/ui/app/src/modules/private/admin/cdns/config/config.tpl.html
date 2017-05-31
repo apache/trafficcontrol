@@ -34,38 +34,38 @@ under the License.
     <div id="snapshotContainer" class="x_content">
         <uib-tabset active="active" justified="true">
             <uib-tab index="0" class="tab" ng-click="diffConfig(500)">
-                <uib-tab-heading>
-                    General [ <span uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{configCount.added}} | {{configCount.removed}}</span> ]
+                <uib-tab-heading uib-popover-template="configCount.templateUrl" popover-title="{{configCount.added + configCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    General [ {{configCount.added}} | {{configCount.removed}} ]
                 </uib-tab-heading>
                 <pre id="config"></pre>
             </uib-tab>
             <uib-tab index="1" class="tab" ng-click="diffContentRouters(500)">
-                <uib-tab-heading>
-                    Traffic Routers [ <span uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{contentRoutersCount.added}} | {{contentRoutersCount.removed}}</span> ]
+                <uib-tab-heading uib-popover-template="contentRoutersCount.templateUrl" popover-title="{{contentRoutersCount.added + contentRoutersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Traffic Routers [ {{contentRoutersCount.added}} | {{contentRoutersCount.removed}} ]
                 </uib-tab-heading>
                 <pre id="contentRouters"></pre>
             </uib-tab>
             <uib-tab index="2" class="tab" ng-click="diffContentServers(500)">
-                <uib-tab-heading>
-                    Traffic Servers [ <span uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{contentServersCount.added}} | {{contentServersCount.removed}}</span> ]
+                <uib-tab-heading uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Traffic Servers [ {{contentServersCount.added}} | {{contentServersCount.removed}} ]
                 </uib-tab-heading>
                 <pre id="contentServers"></pre>
             </uib-tab>
             <uib-tab index="3" class="tab" ng-click="diffDeliveryServices(500)">
-                <uib-tab-heading>
-                    Delivery Services [ <span uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}}</span> ]
+                <uib-tab-heading uib-popover-template="deliveryServicesCount.templateUrl" popover-title="{{deliveryServicesCount.added + deliveryServicesCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Delivery Services [ {{deliveryServicesCount.added}} | {{deliveryServicesCount.removed}} ]
                 </uib-tab-heading>
                 <pre id="deliveryServices"></pre>
             </uib-tab>
             <uib-tab index="4" class="tab" ng-click="diffEdgeLocations(500)">
-                <uib-tab-heading>
-                    Edge Cache Groups [ <span uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}}</span> ]
+                <uib-tab-heading uib-popover-template="edgeLocationsCount.templateUrl" popover-title="{{edgeLocationsCount.added + edgeLocationsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Edge Cache Groups [ {{edgeLocationsCount.added}} | {{edgeLocationsCount.removed}} ]
                 </uib-tab-heading>
                 <pre id="edgeLocations"></pre>
             </uib-tab>
             <uib-tab index="5" class="tab" ng-click="diffStats(500)">
-                <uib-tab-heading>
-                    Stats [ <span uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{statsCount.added}} | {{statsCount.removed}}</span> ]
+                <uib-tab-heading uib-popover-template="statsCount.templateUrl" popover-title="{{statsCount.added + statsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Stats [ {{statsCount.added}} | {{statsCount.removed}} ]
                 </uib-tab-heading>
                 <pre id="stats"></pre>
             </uib-tab>

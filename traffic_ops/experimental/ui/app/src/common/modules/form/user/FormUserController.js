@@ -17,12 +17,19 @@
  * under the License.
  */
 
-var FormUserController = function(user, $scope, $location, formUtils, stringUtils, locationUtils, roleService) {
+var FormUserController = function(user, $scope, $location, formUtils, stringUtils, locationUtils, roleService, tenantService) {
 
     var getRoles = function() {
         roleService.getRoles()
             .then(function(result) {
                 $scope.roles = result;
+            });
+    };
+
+    var getTenants = function() {
+        tenantService.getTenants()
+            .then(function(result) {
+                $scope.tenants = result;
             });
     };
 
@@ -42,10 +49,11 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
 
     var init = function () {
         getRoles();
+        getTenants();
     };
     init();
 
 };
 
-FormUserController.$inject = ['user', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'roleService'];
+FormUserController.$inject = ['user', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'roleService', 'tenantService'];
 module.exports = FormUserController;

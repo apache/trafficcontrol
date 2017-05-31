@@ -41,7 +41,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
     var getCDNs = function() {
-        cdnService.getCDNs()
+        cdnService.getCDNs(true)
             .then(function(result) {
                 $scope.cdns = result;
             });
@@ -55,9 +55,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
     var getProfiles = function() {
-        profileService.getProfiles()
+        profileService.getProfiles({ orderby: 'name' })
             .then(function(result) {
-                $scope.profiles = result;
+                $scope.profiles = _.filter(result, function(profile) {
+                    return profile.type != 'DS_PROFILE';
+                });
             });
     };
 

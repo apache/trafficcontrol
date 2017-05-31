@@ -24,15 +24,22 @@ under the License.
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
+            <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
+                <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-key"></i>&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
                     <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
-                    <li class="divider"></li>
+                </ul>
+            </div>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
                     <li role="menuitem"><a ng-click="viewRegexes()">View Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewJobs()">View Invalidate Content Jobs</a></li>
