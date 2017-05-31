@@ -22,55 +22,158 @@
 		alert(alertmsg);
 	</script>
 	% }
+	<script language="javascript">
+
+	    function togglevis() {
+	
+	        var ele = document.getElementById("toggleText");
+	        var button = document.getElementById("addTarget");
+	
+	        if (ele.style.visibility == "visible") {
+
+	        }
+	        else {
+	
+	            ele.style.visibility = "visible";
+	            button.style.visibility = "hidden";
+	        }
+	    }
+	 </script>
+	 <script>
+	 	function changeText(id, divId, targetName) {
+	 		var r = confirm("Are you sure you want to delete " + targetName + " from the list of targets?");
+	 		if (r == true) {
+	 			x = document.getElementById(id);
+    			x.options[x.selectedIndex].value = "";
+    			x.options[x.selectedIndex].text = "Delete Target";
+    			var ele = document.getElementById(divId);
+	        	var text = document.getElementById(divId);
+		
+	        	if (ele.style.visibility == "visible") {
+	        	    ele.style.visibility = "hidden";
+	        	}
+	        	else {
+		
+	        	    ele.style.visibility = "visible";
+	        	}
+	        	document.getElementById("submit_button").click();
+	 		} else {
+
+	 		}
+
+	 		
+	 	}
+	 </script>
+	
 
 </head>
 <body id="steering">
 	<div id="accordion">
 		<div class="dialog_body">
-			<h3><a href="#">Steering Assignments</a></h3>
+			<h3><a href="#">Steering Assignment</a></h3>
 			<div>
 				%= include 'common/_errors'
 				%= include 'common/_flash'
 				<div class="main">
-					<h1>Steering Information:</h1>
+					<h1>Steering Assignment: <%= $ds_name %></h1>
 					<form method="post" action="/ds/<%= $ds_id %>/steering/update" id="steering_form">
-						<div class="block">
-							%= label_for 'ds_name' => 'Steering Delivery Service: ', class => 'label', style=>"width:150px;"
-							%= field('ds_name')->text(class => 'readonly_field', id => 'ds_name', name => 'ds_name', readonly => 'readonly');
-						</div><br><br>
+						
+						<% my $i = 0; %>
 						<% foreach my $st (@{$steering}) { %>
-							<div>
+							<div id="target_<%= $i %>" style="visibility: visible">
+							<div style="margin-left: 20px;">
+							<h4>Target #  <%= $i+1; %></h4>
+							</div>
+							<div style="margin-left: 30px;">
 								<% unless (field('st.target_id')->valid) { %>
 									<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
 								<% } %>
-								%= label_for 'st.target_name' => 'Target Name:', class => 'label', style=>"width:150px;"
-								<select style="max-width:250px" name="st.target_id">
+								%= label_for 'st.target_name' => 'Delivery Service:', class => 'label', style=>"width:150px;"
+								<select style="max-width:250px" name="st.target_id" id="st.target_id_<%=$i%>">
+									<option value="">Delete Target</option>
 									<% if (defined($st->{target_id})) { %>
-									<option value="<%=$st->{target_id}%>" selected><%=$st->{target_name}%></option>
+										<option value="<%=$st->{target_id}%>" selected><%=$st->{target_name}%></option>
 									<% } else { %>
-									<option value="" selected></option>
+										<option value="" selected></option>
 									<% } %>
 									<% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { %>
-									<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
+										<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
 									<% } %>
 								</select>
-							</div><br>
-							<div>
-								<% unless (field('st.target_weight')->valid) { %>
-								<span class="field-with-error"><%= field('st.target_weight')->error %></span><br><br>
+								<span style="display:inline-block; width: 10px;"></span>
+								<% unless (field('st.target_type')->valid) { %>
+								<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
 							<% } %>
-							%= label_for 'st.target_weight' => 'Target Weight (0 is default): ', class => 'label'
-							<input type="text" name="st.target_weight_<%= $st->{target_id} %>" value = "<%= $st->{target_weight} %>">
-							<!-- %= field('st.target_weight')->text(class => 'field', id => 'st.target_weight', style => 'width:60px', name => 'st.target_weight'); -->
-						</div><br>
+							%= label_for 'st.target_type' => ' Type: ', class => 'label'
+							<select style="max-width:250px" name="st.target_type">
+							<option value="<%=$st->{target_type}%>" selected><%=$st->{target_type}%></option>
+							<% if ( $st->{target_type} =~ /weight/ ) { %>
+								<option value="order">order</option>
+							<% } elsif ( $st->{target_type} =~ /order/ ) { %>
+								<option value="weight">weight</option>
+							<% } else { %>
+								<option value="order">order</option>
+								<option value="weight">weight</option>
+							<% } %>
+							</select>
+							<span style="display:inline-block; width: 10px;"></span>
+								<% unless (field('st.target_value')->valid) { %>
+								<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
+							<% } %>
+							%= label_for 'st.target_value' => 'Value: ', class => 'label'
+							<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "<%= $st->{target_value} %>">
+							<span style="display:inline-block; width: 10px;"></span>
+							<!-- <a id="deleteTarget" href="">Delete Target</a> -->
+							<input type="button" onclick="changeText('st.target_id_<%= $i %>', 'target_<%= $i %>', '<%=$st->{target_name}%>')" value="Delete Target">
+							<br>
+							<% $i++; %>
+							</div>
+							</div><br>
 						<% } %>
+						<div id="toggleText" style="visibility: hidden">
+						<div style="margin-left: 20px;">
+						<h4>New Target</h4>
+						</div>
+						<div style="margin-left: 30px;">
+						<% unless (field('st.target_id')->valid) { %>
+									<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
+								<% } %>
+								%= label_for 'st.target_name' => 'Delivery Service:', class => 'label', style=>"width:150px;"
+								<select style="max-width:250px" name="st.target_id">
+								<option value="" selected></option>
+								<% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { %>
+								<option value="<%=$id%>"><%=$ds_data->{$id}%></option><% } %>
+								</select>
+								<span style="display:inline-block; width: 10px;"></span>
+								<% unless (field('st.target_type')->valid) { %>
+								<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
+							<% } %>
+							%= label_for 'st.target_type' => ' Type: ', class => 'label'
+							<select style="max-width:250px" name="st.target_type">
+								<option value="order">order</option>
+								<option value="weight" selected>weight</option>
+							</select>
+							<span style="display:inline-block; width: 10px;"></span>
+								<% unless (field('st.target_value')->valid) { %>
+								<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
+							<% } %>
+							%= label_for 'st.target_value' => 'Value: ', class => 'label'
+							<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "0">
+							</div>
+						</div>
+						
+						
 					<div class="buttons-section" style="margin-bottom: 20px;">
 						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
 							<% if ($priv_level >= 20) { %>  <!-- operations and admins only!! -->
 							<button class="button" id="submit_button">Save</button>
 							<% } %>
+							<span style="display:inline-block; width: 10px;"></span>
+							<input type="button" class="button" id="addTarget" onclick="togglevis();" value="Add Target">
 						</div>
 					</form>
+					<div style="margin-top: 25px; float:center; margin-right: 50px">
+					</div>
 					<div style="margin-top: 25px; float:right; margin-right: 50px">
 						<button class="button" id="close_button">Close</button>
 					</div>

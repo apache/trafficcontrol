@@ -92,10 +92,20 @@ sub find_steering {
 
         my $targets = $steering_entry->{"targets"};
 
-        push(@{$targets},{
+        if ( $row->type =~ /order/ ) {
+            push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
-            'weight' => $row->weight,
-        });
+            'order' => $row->value,
+            'weight'  => 0
+            });
+        }
+        else {
+            push(@{$targets},{
+            'deliveryService' => $row->target_xml_id,
+            'order' => 0,
+            'weight'  => $row->value
+            });
+        }
 
     }
 
