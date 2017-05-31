@@ -40,27 +40,34 @@ sub index {
 	#my $steering = { ds_id => $ds_id, ds_name => $self->get_ds_name($ds_id) };
 	my $steering_obj;
 	my @steering;
-	my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
+	my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "weight" }, { order_by => 'value DESC' } );
+	my $i = 0;
 	if ( $st_rs > 0 ) {
-		my %steering_targets;
 		while ( my $row = $st_rs->next ) {
-			$steering_targets{ $row->target } = $row->weight;
-		}
-		my $i = 0;
-		#print STDERR Dumper(\%steering_targets);
-		my @keys = sort keys %steering_targets;
-		while ( (my $target, my $weight) = each %steering_targets ) {
-			$steering_obj->{"target_$i"}->{'target_id'} = $target;
-			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $target );
-			$steering_obj->{"target_$i"}->{'target_weight'}   = $weight;
-			if (!defined($steering_obj->{"target_$i"}->{'target_weight'})) { $steering_obj->{"target_$i"}->{'target_weight'} = 0; }
-			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_name'});
+			$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
+			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
+			$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
+			if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
+			$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
+			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
 			push ( @steering, $steering_obj->{"target_$i"} );
 			$i++;
 		}
 	}
-	
-	#print STDERR Dumper(\@steering);
+	$st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "order" }, { order_by => 'value ASC' } );
+	if ( $st_rs > 0 ) {
+		while ( my $row = $st_rs->next ) {
+			$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
+			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
+			$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
+			if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
+			$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
+			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
+			push ( @steering, $steering_obj->{"target_$i"} );
+			$i++;
+		}
+	}
+
 	$self->stash(
 		ds_id          => $ds_id,
 		ds_name        => $self->get_ds_name($ds_id),
@@ -97,19 +104,55 @@ sub get_deliveryservices {
 	return \%ds_data;
 }
 
-sub update {
+sub testupdate {
 	my $self = shift;
 	my $ds_id = $self->param('id');
 	my $st = $self->param('st');
-	my $targets;
-	foreach my $id (@{$st->{'target_id'}}) {
-		print STDERR Dumper($id);
-		print STDERR Dumper($st->{"target_weight_$id"});
-		if ( $st->{"target_weight_$id"} eq "" ) { $st->{"target_weight_$id"} = 0 };
-		$targets->{$id} = $st->{"target_weight_$id"};
+	my @target_id = $self->param('st.target_id');
+	my @target_value = $self->param('st.target_value');
+	my @target_type = $self->param('st.target_type');
+	my @target_delete = $self->param('st.target_delete');
+	my @all = $self->req->params();
+	print STDERR Dumper(\@all);
+	print STDERR Dumper(\@target_id);
+	print STDERR Dumper(\@target_value);
+	print STDERR Dumper(\@target_type);
+	foreach my $i (0 .. $#target_id) {
+	#foreach my $id, $weight (@{$st->{'target_id'}}, @{$st->{'target_weight'}}) {
+		print STDERR Dumper($target_id[$i]);
+		print STDERR Dumper($target_value[$i]);
+		print STDERR Dumper($target_type[$i]);
 	}
-	print STDERR Dumper($targets);
-	if ( $self->is_valid($targets) ) {
+	$self->redirect_to("/ds/$ds_id/steering");
+}
+
+sub update {
+	my $self = shift;
+	my $ds_id = $self->param('id');
+	my @target_id = $self->param('st.target_id');
+	my @target_value = $self->param('st.target_value');
+	my @target_type = $self->param('st.target_type');
+	#my $st = $self->param('st');
+	my @targets;
+	my $steering_obj;
+	foreach my $i (0 .. $#target_id) {
+	#foreach my $id (@{$st->{'target_id'}}) {
+		#print STDERR Dumper($i);
+		#print STDERR Dumper(@target_id[$i]);
+		#print STDERR Dumper(@target_weight[$i]);
+		if ( $target_id[$i] eq '' ) {
+			#print STDERR Dumper("This one is blank");
+			next;
+		}
+		if ( $target_value[$i] eq "" ) { $target_value[$i] = 0 };
+		$steering_obj->{"target_$i"}->{'target_id'} = $target_id[$i];
+		$steering_obj->{"target_$i"}->{'target_value'} = $target_value[$i];
+		$steering_obj->{"target_$i"}->{'target_type'} = $target_type[$i];
+		push ( @targets, $steering_obj->{"target_$i"} );
+	}
+	print STDERR Dumper(\@targets);
+	#if ( 1 ==1 ) {
+	if ( $self->is_valid(\@targets) ) {
 		#delete current entries
 		my $delete = $self->db->resultset('SteeringTarget')
 			->search( { deliveryservice => $ds_id } );
@@ -118,11 +161,14 @@ sub update {
 		}
 		
 		#add new entries
-		foreach my $target ( keys %$targets ) {
+		#my $i = 0;
+		foreach my $i ( keys @targets ) {
+			print STDERR Dumper($targets[$i]->{'target_id'});
 			my $insert = $self->db->resultset('SteeringTarget')->create(
 				{   deliveryservice => $ds_id,
-					target          => $target,
-					weight          => $targets->{$target},
+					target          => $targets[$i]->{'target_id'},
+					value           => $targets[$i]->{'target_value'},
+					type            => $targets[$i]->{'target_type'}
 				}
 			);
 			$insert->insert();
@@ -137,22 +183,32 @@ sub update {
 		print STDERR Dumper("at else somehow");
 		my $steering_obj;
 		my @steering;
-		my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
-		my %steering_targets;
-		while ( my $row = $st_rs->next ) {
-			$steering_targets{ $row->target } = $row->weight;
-		}
+		my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "weight" }, { order_by => 'value DESC' } );
 		my $i = 0;
-		#print STDERR Dumper(\%steering_targets);
-		my @keys = sort keys %steering_targets;
-		while ( (my $target, my $weight) = each %steering_targets ) {
-			$steering_obj->{"target_$i"}->{'target_id'} = $target;
-			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $target );
-			$steering_obj->{"target_$i"}->{'target_weight'}   = $weight;
-			if (!defined($steering_obj->{"target_$i"}->{'target_weight'})) { $steering_obj->{"target_$i"}->{'target_weight'} = 0; }
-			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_name'});
-			push ( @steering, $steering_obj->{"target_$i"} );
-			$i++;
+		if ( $st_rs > 0 ) {
+			while ( my $row = $st_rs->next ) {
+				$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
+				$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
+				$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
+				if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
+				$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
+				#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
+				push ( @steering, $steering_obj->{"target_$i"} );
+				$i++;
+			}
+		}
+		$st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "order" }, { order_by => 'value ASC' } );
+		if ( $st_rs > 0 ) {
+			while ( my $row = $st_rs->next ) {
+				$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
+				$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
+				$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
+				if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
+				$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
+				#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
+				push ( @steering, $steering_obj->{"target_$i"} );
+				$i++;
+			}
 		}
 		&stash_role($self);
 		$self->stash(
@@ -243,11 +299,12 @@ sub old_update {
 
 sub is_valid {
 	my $self  = shift;
-	my $targets = shift;
+	my @targets = @{$_[0]};
 	my $last_cdn;
-
-	foreach my $target ( keys %$targets ) {
-		my $cdn = $self->get_ds_cdn( $target );
+	
+	foreach my $i ( keys @targets ) {
+		print STDERR Dumper($targets[$i]->{'target_id'});
+		my $cdn = $self->get_ds_cdn( $targets[$i]->{'target_id'} );
 		if ( defined($last_cdn) ) {
 			if ( $cdn == $last_cdn ) {
 				next;
@@ -259,7 +316,6 @@ sub is_valid {
 		}
 		else {
 			$last_cdn = $cdn;
-			
 			next;
 		}
 		
@@ -268,6 +324,7 @@ sub is_valid {
 	return $self->valid;
 
 }
+
 
 sub get_ds_cdn {
 	my $self  = shift;
