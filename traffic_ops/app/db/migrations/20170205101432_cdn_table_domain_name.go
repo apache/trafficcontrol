@@ -86,7 +86,7 @@ func Up_20170205101432(txn *sql.Tx) {
 		"AND parameter.id in (select parameter from profile_parameter WHERE profile_parameter.profile=server.profile) "+
 		"AND parameter.name='domain_name' "+
 		"AND config_file='CRConfig.json') AS domainlist "+
-		"WHERE id = domainlist.cdn_id", txn)
+		"WHERE cdn_id = domainlist.cdn_id", txn)
 
 	doExec("UPDATE public.cdn SET domain_name='-' WHERE name='ALL'", txn)
 
