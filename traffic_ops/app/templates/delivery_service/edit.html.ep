@@ -336,8 +336,8 @@ function setup_form(speed) {
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
 		}
-		else if (type_selected.match(/^STEERING$/)) {
-            $('#protocoli_row').hide(speed);
+		else if (type_selected.match(/STEERING$/)) {
+            $('#protocoli_row').show(speed);
             $('#dscp_row').hide(speed);
             $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
@@ -366,6 +366,7 @@ function setup_form(speed) {
             $('#ds_regexp_table').show(speed);
             $('#tr_response_headers').hide(speed);
             $('#multi_site_origin_row').hide(speed);
+            $('#multi_site_origin_algorithm_row').hide(speed);
             $('#initial_dispersion_row').hide(speed);
             $('#geo_provider_row').hide(speed);
             $('#tr_request_headers').hide(speed);
