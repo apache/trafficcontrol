@@ -22,7 +22,7 @@ services:
       - 80:80
       - 443:443
     volumes:
-			- /etc/traffic_portal/conf:/etc/traffic_portal/conf
+      - /etc/traffic_portal/conf:/etc/traffic_portal/conf
       - /etc/pki:/etc/pki
     networks:
       - default
