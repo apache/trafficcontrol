@@ -20,7 +20,7 @@
 var FormProfileController = function(profile, $scope, $location, formUtils, locationUtils, cdnService) {
 
     var getCDNs = function() {
-        cdnService.getCDNs()
+        cdnService.getCDNs(true)
             .then(function(result) {
                 $scope.cdns = result;
             });

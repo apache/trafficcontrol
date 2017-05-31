@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $anchorScroll, locationUtils, authService, trafficOpsService, changeLogService, changeLogModel, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, authService, trafficOpsService, changeLogService, cdnService, changeLogModel, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -53,11 +53,61 @@ var HeaderController = function($rootScope, $scope, $state, $anchorScroll, locat
     };
 
     $scope.dumpDB = function() {
-        trafficOpsService.dumpDB();
+        alert('not working yet');
+        // trafficOpsService.dumpDB();
+    };
+
+    $scope.confirmQueueServerUpdates = function() {
+        var params = {
+            title: 'Queue Server Updates',
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdn) {
+            cdnService.queueServerUpdates(cdn.id);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    $scope.snapshot = function() {
+        var params = {
+            title: 'Diff CDN Config Snapshot',
+            message: "Please select a CDN"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+            controller: 'DialogSelectController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(cdnService) {
+                    return cdnService.getCDNs();
+                }
+            }
+        });
+        modalInstance.result.then(function(cdn) {
+            $location.path('/admin/cdns/' + cdn.id + '/config/changes');
+        }, function () {
+            // do nothing
+        });
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
-
 
     var scrollToTop = function() {
         $anchorScroll(); // hacky?
@@ -109,5 +159,5 @@ var HeaderController = function($rootScope, $scope, $state, $anchorScroll, locat
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$anchorScroll', 'locationUtils', 'authService', 'trafficOpsService', 'changeLogService', 'changeLogModel', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'authService', 'trafficOpsService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
 module.exports = HeaderController;

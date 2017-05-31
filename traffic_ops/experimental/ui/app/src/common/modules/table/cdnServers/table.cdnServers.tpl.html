@@ -25,8 +25,16 @@ under the License.
             <li class="active">Servers</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Queue {{::cdn.name}} Server Updates" ng-click="queueServerUpdates(cdn)"><i class="fa fa-flag"></i></button>
-            <button class="btn btn-primary" title="Cancel {{::cdn.name}} Server Updates" ng-click="clearServerUpdates(cdn)"><i class="fa fa-ban"></i></button>
+            <div class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
+                <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    Queue Updates&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="queueServerUpdates(cdn)">Queue {{cdn.name}} Server Updates</a></li>
+                    <li role="menuitem"><a ng-click="clearServerUpdates(cdn)">Clear {{cdn.name}} Server Updates</a></li>
+                </ul>
+            </div>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>

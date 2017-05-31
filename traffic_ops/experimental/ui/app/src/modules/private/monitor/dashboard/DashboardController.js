@@ -21,10 +21,7 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 
 	$scope.cacheGroupHealth = cacheGroupHealth;
 
-	$scope.cdns = _.filter(cdns, function(cdn) {
-		// we don't want the "ALL" cdn which is not really a cdn
-		return cdn.name != 'ALL';
-	});
+	$scope.cdns = cdns;
 
 	$scope.totalStats = _.find(currentStats.currentStats, function(item) {
 		// total stats are buried in a hash where cdn = total

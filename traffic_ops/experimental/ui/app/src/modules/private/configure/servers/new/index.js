@@ -29,7 +29,8 @@ module.exports = angular.module('trafficOps.private.configure.servers.new', [])
                         resolve: {
                             server: function() {
                                 return {
-                                    updPending: false
+                                    updPending: false,
+                                    statusId: 1 // todo: 1 is the ID of OFFLINE, need to get the ID dynamically
                                 };
                             }
                         }

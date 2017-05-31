@@ -30,9 +30,9 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
     this.createServer = function(server) {
         return Restangular.service('servers').post(server)
             .then(
-                function() {
+                function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                    locationUtils.navigateToPath('/configure/servers');
+                    locationUtils.navigateToPath('/configure/servers/' + response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -88,7 +88,7 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
         return Restangular.one("servers", id).customPOST( { action: "dequeue"}, "queue_update" )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cancelled server updates' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Cleared server updates' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
