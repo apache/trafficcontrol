@@ -45,15 +45,17 @@ sub index {
 	my $tenantUtils = UI::TenantUtils->new($self);
 	my @tenants_list = $tenantUtils->get_hierarchic_tenants_list();
 	foreach my $row (@tenants_list) {
-		push(
-			@data, {
-				"id"           => $row->id,
-				"name"         => $row->name,
-				"active"       => \$row->active,
-				"parentId"     => $row->parent_id,
-				"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
-			}
-		);
+		if ($tenantUtils->is_tenant_resource_readable($row->id)) {
+			push(
+				@data, {
+					"id"           => $row->id,
+					"name"         => $row->name,
+					"active"       => \$row->active,
+					"parentId"     => $row->parent_id,
+					"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
+				}
+			);
+		}
 	}
 	$self->success( \@data );
 }
@@ -71,17 +73,20 @@ sub show {
 		$idnames{ $row->id } = $row->name;
 	}
 
+	my $tenantUtils = UI::TenantUtils->new($self);
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"id"           => $row->id,
-				"name"         => $row->name,
-				"active"       => \$row->active,
-				"parentId"     => $row->parent_id,
-				"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
-			}
-		);
+		if ($tenantUtils->is_tenant_resource_readable($row->id)) {
+			push(
+				@data, {
+					"id"           => $row->id,
+					"name"         => $row->name,
+					"active"       => \$row->active,
+					"parentId"     => $row->parent_id,
+					"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
+				}
+			);
+		}
 	}
 	$self->success( \@data );
 }
@@ -134,6 +139,22 @@ sub update {
 		return $self->alert("Root tenant cannot be in-active.");
 	}
 
+	#this is a write operation, allowed only by parents of the tenant (which are the owners of the resource of type tenant)	
+	my $current_resource_tenancy = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('parent_id')->single();
+	if (!defined($current_resource_tenancy)) {
+		#no parent - the tenant is its-own owner
+		$current_resource_tenancy = $id;
+	}
+	
+	if (!$tenantUtils->is_tenant_resource_writeable($current_resource_tenancy)) {
+		return $self->alert("Current owning tenant is not under user's tenancy.");
+	}
+
+	if (!$tenantUtils->is_tenant_resource_writeable($params->{parentId})) {
+		return $self->alert("Parent tenant to be set is not under user's tenancy.");
+	}
+
+
 	#operation	
 	my $values = {
 		name      => $params->{name},
@@ -185,6 +206,11 @@ sub create {
 	my $parent_id = $params->{parentId};
 	if ( !defined($parent_id) ) {
 		return $self->alert("Parent Id is required.");
+	}
+	
+	my $tenantUtils = UI::TenantUtils->new($self);
+	if (!$tenantUtils->is_tenant_resource_writeable($params->{parentId})) {
+		return $self->alert("Parent tenant to be set is not under user's tenancy.");
 	}
 
 	my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
@@ -245,6 +271,13 @@ sub delete {
 	if ( !defined($tenant) ) {
 		return $self->not_found();
 	}	
+
+	my $parent_tenant = $tenant->parent_id;
+	
+	my $tenantUtils = UI::TenantUtils->new($self);
+	if (!$tenantUtils->is_tenant_resource_writeable($parent_tenant)) {
+		return $self->alert("Parent tenant is not under user's tenancy.");
+	}
 
 	my $name = $tenant->name;
 	
