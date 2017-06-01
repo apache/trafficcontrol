@@ -53,7 +53,7 @@ ok $t->post_ok(
 		'tm_user.role'                 => 1,
 		'tm_user.company'              => 'ABC Company',
 	}
-)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a user be created?';
+)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Can a user be created?';
 
 ok $t->get_ok('/datauser')->status_is(200)->json_is( '/0/username', 'admin' )->json_is( '/0/role', 4 ), 'Does the admin username exist?';
 
