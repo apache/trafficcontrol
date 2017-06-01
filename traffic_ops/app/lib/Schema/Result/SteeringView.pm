@@ -30,9 +30,10 @@ __PACKAGE__->table("SteeringView");
 __PACKAGE__->result_source_instance->is_virtual(1);
 
 __PACKAGE__->result_source_instance->view_definition(
-    "select s.xml_id as steering_xml_id, s.id as steering_id, t.xml_id as target_xml_id, t.id as target_id, value, steering_target.type from steering_target
+    "select s.xml_id as steering_xml_id, s.id as steering_id, t.xml_id as target_xml_id, t.id as target_id, value, tp.name as type from steering_target
     join deliveryservice s on s.id = steering_target.deliveryservice
-    join deliveryservice t on t.id = steering_target.target"
+    join deliveryservice t on t.id = steering_target.target
+    join type tp on tp.id = steering_target.type"
 );
 
 __PACKAGE__->add_columns(
@@ -45,9 +46,9 @@ __PACKAGE__->add_columns(
     "target_id",
     { data_type => "integer", is_nullable => 0, size => 11 },
     "value",
-    { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 1 },
+    { data_type => "integer", extra => { unsigned => 1 }, is_nullable => 0 },
     "type",
-    { data_type => "text", is_nullable => 1 }
+    { data_type => "integer", is_nullable => 0 }
 );
 
 1;

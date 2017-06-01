@@ -27,62 +27,67 @@ use Scalar::Util qw(looks_like_number);
 use JSON;
 use POSIX qw(strftime);
 use Date::Parse;
-use Data::Dumper;
 
 sub index {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
-	#print STDERR Dumper($ds_id);
-
-	&navbarpage($self);
-
-	# select * from steering_target where deliveryservice = ds_id;
-	#my $steering = { ds_id => $ds_id, ds_name => $self->get_ds_name($ds_id) };
 	my $steering_obj;
 	my @steering;
-	my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "weight" }, { order_by => 'value DESC' } );
-	my $i = 0;
-	if ( $st_rs > 0 ) {
-		while ( my $row = $st_rs->next ) {
-			$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
-			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
-			$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
-			if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
-			$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
-			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
-			push ( @steering, $steering_obj->{"target_$i"} );
-			$i++;
+
+	my $t_rs = $self->db->resultset('Type')->search( { use_in_table => 'steering_target'} );
+	my $type_names;
+	my $type_ids;
+
+	if ( $t_rs > 0 ) {
+		while ( my $row = $t_rs->next ) {
+			$type_names->{$row->id} = $row->name;
+			$type_ids->{$row->name} = $row->id;
 		}
 	}
-	$st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "order" }, { order_by => 'value ASC' } );
-	if ( $st_rs > 0 ) {
-		while ( my $row = $st_rs->next ) {
-			$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
-			$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
-			$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
-			if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
-			$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
-			#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
-			push ( @steering, $steering_obj->{"target_$i"} );
+
+	my $weight_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_WEIGHT'} }, { order_by => 'value DESC' } );
+
+	if ( $weight_rs > 0 ) {
+		my $i = 0;
+		while ( my $row = $weight_rs->next ) {
+			my $t = $steering_obj->{"target_$i"};
+			$t->{'target_id'} = $row->target;
+			$t->{'target_name'}   = $self->get_ds_name( $row->target );
+			$t->{'target_value'}   = $row->value;
+			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
+			$t->{'target_type'}   = $row->type->id;
+			push ( @steering, $t );
 			$i++;
 		}
+		
 	}
+	my $order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'} }, { order_by => 'value ASC' } );
+
+	if ( $order_rs > 0 ) {
+		my $i = 0;
+		while ( my $row = $order_rs->next ) {
+			my $t = $steering_obj->{"target_$i"};
+			$t->{'target_id'} = $row->target;
+			$t->{'target_name'}   = $self->get_ds_name( $row->target );
+			$t->{'target_value'}   = $row->value;
+			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
+			$t->{'target_type'}   = $row->type->id;
+			push ( @steering, $t );
+			$i++;
+		}
+		
+	}
+	
+	&navbarpage($self);
 
 	$self->stash(
 		ds_id          => $ds_id,
 		ds_name        => $self->get_ds_name($ds_id),
 		steering       => \@steering,
-		ds_data        => $self->get_deliveryservices(),
+		ds_data        => $self->get_deliveryservices($ds_id),
+		types          => $type_names,
 		fbox_layout    => 1
 	);
-}
-
-sub get_target_weight{
-	my $self = shift;
-	my $ds_id = shift;
-	my $target_id = shift;
-	my $weight = $self->db->resultset('SteeringTarget')->search( { -and => [target => $target_id, deliveryservice => $ds_id] } )->get_column('weight')->single();
-	return $weight;
 }
 
 sub get_ds_name {
@@ -91,10 +96,20 @@ sub get_ds_name {
 	return $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single();
 }
 
+sub get_cdn {
+	my $self = shift;
+	my $ds_id = shift;
+	return $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('cdn_id')->single();
+
+}
+
 sub get_deliveryservices {
 	my $self = shift;
+	my $ds_id = shift;
+	my $cdn_id = $self->get_cdn($ds_id);
 	my %ds_data;
-	my $rs = $self->db->resultset('Deliveryservice')->search(undef, { prefetch => [ 'type' ] });
+	#search for only the delivery services that match the CDN ID of the supplied delivery service.
+	my $rs = $self->db->resultset('Deliveryservice')->search({ cdn_id => $cdn_id } , { prefetch => [ 'type' ] });
 	while ( my $row = $rs->next ) {
 		if ( $row->type->name =~ m/^HTTP/ ) {
 			$ds_data{ $row->id } = $row->xml_id;
@@ -104,44 +119,17 @@ sub get_deliveryservices {
 	return \%ds_data;
 }
 
-sub testupdate {
-	my $self = shift;
-	my $ds_id = $self->param('id');
-	my $st = $self->param('st');
-	my @target_id = $self->param('st.target_id');
-	my @target_value = $self->param('st.target_value');
-	my @target_type = $self->param('st.target_type');
-	my @target_delete = $self->param('st.target_delete');
-	my @all = $self->req->params();
-	print STDERR Dumper(\@all);
-	print STDERR Dumper(\@target_id);
-	print STDERR Dumper(\@target_value);
-	print STDERR Dumper(\@target_type);
-	foreach my $i (0 .. $#target_id) {
-	#foreach my $id, $weight (@{$st->{'target_id'}}, @{$st->{'target_weight'}}) {
-		print STDERR Dumper($target_id[$i]);
-		print STDERR Dumper($target_value[$i]);
-		print STDERR Dumper($target_type[$i]);
-	}
-	$self->redirect_to("/ds/$ds_id/steering");
-}
-
 sub update {
 	my $self = shift;
 	my $ds_id = $self->param('id');
 	my @target_id = $self->param('st.target_id');
 	my @target_value = $self->param('st.target_value');
 	my @target_type = $self->param('st.target_type');
-	#my $st = $self->param('st');
 	my @targets;
 	my $steering_obj;
 	foreach my $i (0 .. $#target_id) {
-	#foreach my $id (@{$st->{'target_id'}}) {
-		#print STDERR Dumper($i);
-		#print STDERR Dumper(@target_id[$i]);
-		#print STDERR Dumper(@target_weight[$i]);
+		#look for and remove the blank entries - this filters out the deleted entries and the unused new target entry.
 		if ( $target_id[$i] eq '' ) {
-			#print STDERR Dumper("This one is blank");
 			next;
 		}
 		if ( $target_value[$i] eq "" ) { $target_value[$i] = 0 };
@@ -150,8 +138,6 @@ sub update {
 		$steering_obj->{"target_$i"}->{'target_type'} = $target_type[$i];
 		push ( @targets, $steering_obj->{"target_$i"} );
 	}
-	print STDERR Dumper(\@targets);
-	#if ( 1 ==1 ) {
 	if ( $self->is_valid(\@targets) ) {
 		#delete current entries
 		my $delete = $self->db->resultset('SteeringTarget')
@@ -161,9 +147,7 @@ sub update {
 		}
 		
 		#add new entries
-		#my $i = 0;
 		foreach my $i ( keys @targets ) {
-			print STDERR Dumper($targets[$i]->{'target_id'});
 			my $insert = $self->db->resultset('SteeringTarget')->create(
 				{   deliveryservice => $ds_id,
 					target          => $targets[$i]->{'target_id'},
@@ -180,42 +164,60 @@ sub update {
 				. "!" );
 	}
 	else {
-		print STDERR Dumper("at else somehow");
-		my $steering_obj;
+		my $steering;
 		my @steering;
-		my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "weight" }, { order_by => 'value DESC' } );
-		my $i = 0;
-		if ( $st_rs > 0 ) {
-			while ( my $row = $st_rs->next ) {
-				$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
-				$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
-				$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
-				if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
-				$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
-				#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
-				push ( @steering, $steering_obj->{"target_$i"} );
-				$i++;
+
+		my $t_rs = $self->db->resultset('Type')->search( { use_in_table => 'steering_target'} );
+		my $type_names;
+		my $type_ids;
+	
+		if ( $t_rs > 0 ) {
+			while ( my $row = $t_rs->next ) {
+				$type_names->{$row->id} = $row->name;
+				$type_ids->{$row->name} = $row->id;
 			}
 		}
-		$st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => "order" }, { order_by => 'value ASC' } );
-		if ( $st_rs > 0 ) {
-			while ( my $row = $st_rs->next ) {
-				$steering_obj->{"target_$i"}->{'target_id'} = $row->target;
-				$steering_obj->{"target_$i"}->{'target_name'}   = $self->get_ds_name( $row->target );
-				$steering_obj->{"target_$i"}->{'target_value'}   = $row->value;
-				if (!defined($steering_obj->{"target_$i"}->{'target_value'})) { $steering_obj->{"target_$i"}->{'target_value'} = 0; }
-				$steering_obj->{"target_$i"}->{'target_type'}   = $row->type;
-				#print STDERR Dumper($steering_obj->{"target_$i"}->{'target_type'});
-				push ( @steering, $steering_obj->{"target_$i"} );
+	
+		my $weight_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_WEIGHT'} }, { order_by => 'value DESC' } );
+	
+		if ( $weight_rs > 0 ) {
+			my $i = 0;
+			while ( my $row = $weight_rs->next ) {
+				my $t = $steering_obj->{"target_$i"};
+				$t->{'target_id'} = $row->target;
+				$t->{'target_name'}   = $self->get_ds_name( $row->target );
+				$t->{'target_value'}   = $row->value;
+				if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
+				$t->{'target_type'}   = $row->type->id;
+				push ( @steering, $t );
 				$i++;
 			}
+			
 		}
+		my $order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'} }, { order_by => 'value ASC' } );
+	
+		if ( $order_rs > 0 ) {
+			my $i = 0;
+			while ( my $row = $order_rs->next ) {
+				my $t = $steering_obj->{"target_$i"};
+				$t->{'target_id'} = $row->target;
+				$t->{'target_name'}   = $self->get_ds_name( $row->target );
+				$t->{'target_value'}   = $row->value;
+				if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
+				$t->{'target_type'}   = $row->type->id;
+				push ( @steering, $t );
+				$i++;
+			}
+			
+		}
+		
 		&stash_role($self);
 		$self->stash(
 			ds_id          => $ds_id,
 			ds_name        => $self->get_ds_name($ds_id),
 			steering       => \@steering,
 			ds_data        => $self->get_deliveryservices(),
+			types          => $type_names,
 			fbox_layout    => 1
 		);
 		$self->render("steering/index");
@@ -224,113 +226,33 @@ sub update {
 	$self->redirect_to("/ds/$ds_id/steering");
 }
 
-sub old_update {
-	my $self  = shift;
-	my $ds_id = $self->param('id');
-	my $tid1  = $self->param('steering.target_id_1');
-	my $tid2  = $self->param('steering.target_id_2');
-	my $tid1_weight = $self->param('steering.target_id_1_weight');
-	my $tid2_weight = $self->param('steering.target_id_2_weight');
-	if ( $tid1_weight eq "" ) { $tid1_weight = 0; }
-	if ( $tid2_weight eq "" ) { $tid2_weight = 0; }
-	if ( $self->is_valid() ) {
-		my $targets;
-		$targets->{$tid1} = $tid1_weight;
-		$targets->{$tid2} = $tid2_weight;
-		
-
-		#delete current entries
-		my $delete = $self->db->resultset('SteeringTarget')
-			->search( { deliveryservice => $ds_id } );
-		if ( defined($delete) ) {
-			$delete->delete();
-		}
-
-		#add new entries
-		foreach my $target ( keys %$targets ) {
-			my $insert = $self->db->resultset('SteeringTarget')->create(
-				{   deliveryservice => $ds_id,
-					target          => $target,
-					weight          => $targets->{$target},
-				}
-			);
-
-			$insert->insert();
-		}
-
-		$self->flash(
-			      message => "Successfully saved steering assignments for "
-				. $self->get_ds_name($ds_id)
-				. "!" );
-
-		$self->redirect_to("/ds/$ds_id/steering");
-	}
-	else {
-		&stash_role($self);
-		my $target_name_1;
-		my $target_name_2;
-		my $target_id_1_weight;
-		my $target_id_2_weight;
-		if ($tid1 ) {
-			$target_name_1 = $self->get_ds_name($tid1);
-			$target_id_1_weight = $self->get_target_weight( $ds_id, $tid1 );
-		}
-		if ($tid2 ) {
-			$target_name_2 = $self->get_ds_name($tid2);
-			$target_id_2_weight = $self->get_target_weight( $ds_id, $tid2 );
-		}
-		$self->stash(
-			steering => {
-				ds_id           => $ds_id,
-				ds_name         => $self->get_ds_name($ds_id),
-				target_id_1     => $tid1,
-				target_id_2     => $tid2,
-				target_name_1   => $target_name_1,
-				target_name_2   => $target_name_2,
-				target_id_1_weight => $target_id_1_weight,
-				target_id_2_weight => $target_id_2_weight
-			},
-			ds_data        => $self->get_deliveryservices(),
-			fbox_layout    => 1
-		);
-		$self->render("steering/index");
-	}
-}
 
 sub is_valid {
 	my $self  = shift;
 	my @targets = @{$_[0]};
-	my $last_cdn;
-	
+	my %tracker;
+
 	foreach my $i ( keys @targets ) {
-		print STDERR Dumper($targets[$i]->{'target_id'});
-		my $cdn = $self->get_ds_cdn( $targets[$i]->{'target_id'} );
-		if ( defined($last_cdn) ) {
-			if ( $cdn == $last_cdn ) {
-				next;
-			}
-			else { 
-				$self->flash(message => "Target Deliveryservices must be in the same CDN!" );
+		my $t = $targets[$i];
+		my $t_name = $self->db->resultset('Type')->search( { id => "$t->{'target_type'}" } )->get_column('name')->single();
+		if ( $t_name eq "STEERING_ORDER" && $t->{'target_value'} ne int($t->{'target_value'})) {
+			$self->flash(message => "STEERING_ORDER values must be integers." );
+			return;
+		}
+		elsif ( $t_name eq "STEERING_WEIGHT" && ( $t->{'target_value'} ne int($t->{'target_value'}) || ($t->{'target_value'} < 0 ) ) )  {
+			$self->flash(message => "STEERING_WEIGHT values must be integers greater than 0." );
+			return;
+		}
+		if (exists($t->{'target_id'})) {
+			$tracker{$t->{'target_id'}}++;
+			if ( $tracker{$t->{'target_id'}} > 1 ) {
+				$self->flash(message => "Target delivery services must be unique." );
 				return;
 			}
 		}
-		else {
-			$last_cdn = $cdn;
-			next;
-		}
-		
 	}
 
 	return $self->valid;
-
-}
-
-
-sub get_ds_cdn {
-	my $self  = shift;
-	my $ds_id = shift;
-	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->single();
-	return $ds->cdn_id;
 }
 
 1;
