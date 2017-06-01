@@ -135,7 +135,7 @@ sub update {
 	my $is_active = $params->{active};
 	
 	if ( !$params->{active} && $self->isRootTenant($id)) {
-		return $self->alert("Root user cannot be in-active.");
+		return $self->alert("Root tenant cannot be in-active.");
 	}
 
 	if ( !defined($params->{parentId}) && !isRootTenant($id) ) {
