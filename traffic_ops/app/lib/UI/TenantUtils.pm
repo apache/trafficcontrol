@@ -56,6 +56,21 @@ sub get_hierarchic_tenants_list {
 	return @result;	
 }
 
+sub is_root_tenant {
+	my $self = shift;
+	my $tenant_id = shift;
+	
+	if (!defined($tenant_id)) {
+		return 0;
+	}
+	
+	if (defined($self->{tenants_dict})) {
+		return !(defined($self->{tenants_dict}{$tenant_id}{parent}));
+	}
+	return !defined($self->{context}->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('parent_id')->single()); 
+}
+
+
 ##############################################################
 
 sub _init_tenants {
