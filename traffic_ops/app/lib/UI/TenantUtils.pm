@@ -80,6 +80,21 @@ sub is_root_tenant {
 	return !defined($self->{context}->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('parent_id')->single()); 
 }
 
+sub is_tenant_resource_readable {
+    my $self = shift;
+    my $resource_tenancy = shift;
+    
+    return _is_resource_accessable ($self, $resource_tenancy, "r");
+}
+
+sub is_tenant_resource_writeable {
+    my $self = shift;
+    my $resource_tenancy = shift;
+    
+    return _is_resource_accessable ($self, $resource_tenancy, "w");
+}
+
+
 
 ##############################################################
 
@@ -117,6 +132,70 @@ sub _init_tenants_if_needed {
 	if (!defined($self->{tenants_dict})) {
 		$self->_init_tenants();
 	}
+}
+
+sub _max_tenancy_heirarchy {
+	my $self = shift;
+	return 100;
+}
+
+sub _is_resource_accessable {
+	my $self = shift;
+	my $resource_tenant = shift;
+	my $operation = shift;
+
+	if (!defined($resource_tenant)) {
+		#the object has no tenancy - opened for all
+	        return 1;
+    	}
+
+	if (&is_ldap($self->{context})) {
+		if ($operation eq "r") {
+			#ldap user, can read all tenants - temporary for now as an LDAP user as no tenant and is part of the TC operator.
+			# should be removed when LDAP is gone
+			return 1;
+		}
+		#ldap user, has no tenancy, cannot write anything
+		return 0;
+	}
+    	
+    	my $user_tenant = current_user_tenant($self);
+	if (!defined($user_tenant)) {
+		#the user has no tenancy, - cannot approach items with tenancy
+		return 0;
+	}
+
+	$self->_init_tenants_if_needed();
+	my $tenant_record = $self->{tenants_dict}->{$user_tenant};
+	my $is_active_tenant = $tenant_record->{row}->active;
+	if (! $is_active_tenant) {
+		#user tenant is in-active - cannot do any operation
+		return 0;
+	}
+
+	if ($user_tenant == $resource_tenant) {
+	    #resource has same tenancy of the user, operations are allowed
+	    return 1;
+	}
+
+	#checking if the user tenant is an ancestor of the resource tenant
+	for (my $depth = 0; $depth < $self->_max_tenancy_heirarchy(); $depth++) {
+	
+		if (!defined($resource_tenant)){
+			#reached top tenant, resource is not under the user tenancy
+			return 0;
+		}
+
+        	if ($user_tenant == $resource_tenant) {
+		    #resource has child tenancy of the user, operations are allowed
+        	    return 1;
+		}
+		
+		$resource_tenant =  $self->{tenants_dict}->{$resource_tenant}->{parent};
+	};
+	
+	#not found - recursion limit, give only access to root tenant
+	return $self->is_root_tenant(current_user_tenant($self));
 }
 
 1;
