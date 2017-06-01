@@ -18,6 +18,7 @@ package API::User;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use UI::TenantUtils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Utils::Helper;
@@ -404,7 +405,7 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
-
+	my $tenantUtils = UI::TenantUtils->new($self);
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 
