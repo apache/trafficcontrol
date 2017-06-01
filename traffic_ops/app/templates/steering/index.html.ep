@@ -81,10 +81,10 @@
 						<% my $i = 0; %>
 						<% foreach my $st (@{$steering}) { %>
 							<div id="target_<%= $i %>" style="visibility: visible">
-							<div style="margin-left: 20px;">
+							<div style="margin-left: 0px;">
 							<h4>Target #  <%= $i+1; %></h4>
 							</div>
-							<div style="margin-left: 30px;">
+							<div style="margin-left: 2px;">
 								<% unless (field('st.target_id')->valid) { %>
 									<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
 								<% } %>
@@ -100,41 +100,36 @@
 										<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
 									<% } %>
 								</select>
-								<span style="display:inline-block; width: 10px;"></span>
+								<span style="display:inline-block; width: 5px;"></span>
 								<% unless (field('st.target_type')->valid) { %>
 								<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
 							<% } %>
 							%= label_for 'st.target_type' => ' Type: ', class => 'label'
 							<select style="max-width:250px" name="st.target_type">
-							<option value="<%=$st->{target_type}%>" selected><%=$st->{target_type}%></option>
-							<% if ( $st->{target_type} =~ /weight/ ) { %>
-								<option value="order">order</option>
-							<% } elsif ( $st->{target_type} =~ /order/ ) { %>
-								<option value="weight">weight</option>
-							<% } else { %>
-								<option value="order">order</option>
-								<option value="weight">weight</option>
+							<option value="<%=$st->{target_type}%>" selected><%=$types->{$st->{target_type}}%></option>
+							<% foreach my $type (keys $types) { %>
+								<option value="<%= $type %>"><%= $types->{$type} %></option>
 							<% } %>
 							</select>
-							<span style="display:inline-block; width: 10px;"></span>
+							<span style="display:inline-block; width: 5px;"></span>
 								<% unless (field('st.target_value')->valid) { %>
 								<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
 							<% } %>
 							%= label_for 'st.target_value' => 'Value: ', class => 'label'
 							<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "<%= $st->{target_value} %>">
-							<span style="display:inline-block; width: 10px;"></span>
+							<span style="display:inline-block; width: 5px;"></span>
 							<!-- <a id="deleteTarget" href="">Delete Target</a> -->
-							<input type="button" onclick="changeText('st.target_id_<%= $i %>', 'target_<%= $i %>', '<%=$st->{target_name}%>')" value="Delete Target">
+							<input type="button" onclick="changeText('st.target_id_<%= $i %>', 'target_<%= $i %>', '<%=$st->{target_name}%>')" value="Delete">
 							<br>
 							<% $i++; %>
 							</div>
 							</div><br>
 						<% } %>
 						<div id="toggleText" style="visibility: hidden">
-						<div style="margin-left: 20px;">
+						<div style="margin-left: 0px;">
 						<h4>New Target</h4>
 						</div>
-						<div style="margin-left: 30px;">
+						<div style="margin-left: 2px;">
 						<% unless (field('st.target_id')->valid) { %>
 									<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
 								<% } %>
@@ -144,16 +139,17 @@
 								<% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { %>
 								<option value="<%=$id%>"><%=$ds_data->{$id}%></option><% } %>
 								</select>
-								<span style="display:inline-block; width: 10px;"></span>
+								<span style="display:inline-block; width: 5px;"></span>
 								<% unless (field('st.target_type')->valid) { %>
 								<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
 							<% } %>
 							%= label_for 'st.target_type' => ' Type: ', class => 'label'
 							<select style="max-width:250px" name="st.target_type">
-								<option value="order">order</option>
-								<option value="weight" selected>weight</option>
+							<% foreach my $type (keys $types) { %>
+								<option value="<%= $type %>"><%= $types->{$type} %></option>
+							<% } %>
 							</select>
-							<span style="display:inline-block; width: 10px;"></span>
+							<span style="display:inline-block; width: 5px;"></span>
 								<% unless (field('st.target_value')->valid) { %>
 								<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
 							<% } %>
