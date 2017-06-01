@@ -27,15 +27,9 @@ use MojoPlugins::Response;
 my $finfo = __FILE__ . ":";
 
 sub getTenantName {
-	my $self		= shift;
+	my $self 		= shift;
 	my $tenant_id		= shift;
 	return defined($tenant_id) ? $self->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('name')->single() : "n/a";
-}
-
-sub isRootTenant {
-	my $self	= shift;
-	my $tenant_id	= shift;
-	return !defined($self->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('parent_id')->single());
 }
 
 sub index {
@@ -122,7 +116,9 @@ sub update {
 		}	
 	}	
 
-	if ( !defined( $params->{parentId}) && !$self->isRootTenant($id) ) {
+	my $tenantUtils = UI::TenantUtils->new($self);
+
+	if ( !defined( $params->{parentId}) && !$tenantUtils->is_root_tenant($id) ) {
 		# Cannot turn a simple tenant to a root tenant.
 		# Practically there is no problem with doing so, but it is to risky to be done by mistake. 
 		return $self->alert("Parent Id is required.");
@@ -134,14 +130,10 @@ sub update {
 
 	my $is_active = $params->{active};
 	
-	if ( !$params->{active} && $self->isRootTenant($id)) {
+	if ( !$params->{active} && $tenantUtils->is_root_tenant($id)) {
 		return $self->alert("Root tenant cannot be in-active.");
 	}
 
-	if ( !defined($params->{parentId}) && !isRootTenant($id) ) {
-		return $self->alert("Only the \"root\" tenant can have no parent.");
-	}
-	
 	#operation	
 	my $values = {
 		name      => $params->{name},
