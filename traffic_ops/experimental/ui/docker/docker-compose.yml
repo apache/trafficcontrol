@@ -14,7 +14,7 @@
 version: '2'
 
 services:
-  ui:
+  portal:
     build:
       context: ..
       dockerfile: /opt/traffic_portal/docker/Dockerfile
