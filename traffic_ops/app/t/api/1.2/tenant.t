@@ -35,7 +35,7 @@ my $t      = Test::Mojo->new('TrafficOps');
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_ROOT_USER, p => Test::TestHelper::ADMIN_ROOT_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 #verifying the basic cfg
@@ -63,7 +63,12 @@ ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
         "name" => "tenantB" })->status_is(400);
 
+#now getting it excepted
+ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
+        "name" => "tenantB", "parentId" => $root_tenant_id })->status_is(200);
+
 my $tenantA_id = &get_tenant_id('tenantA');
+my $tenantB_id = &get_tenant_id('tenantB');
 #rename, and move to active
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
 			"name" => "tenantA2", "active" => 1, "parentId" => $root_tenant_id 
@@ -140,17 +145,25 @@ ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
 	->json_is( "/response/parentId" =>  $tenantA_id)
             , 'Does the tenant details return?';
 
+my $tenantD_id = &get_tenant_id('tenantD');
+my $tenantE_id = &get_tenant_id('tenantE');
+
+-#list tenants- verify heirachic order
+$t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/id", $root_tenant_id )
+	->json_is( "/response/1/id", $tenantA_id)
+	->json_is( "/response/2/id", $tenantD_id)
+	->json_is( "/response/3/id", $tenantE_id)
+	->json_is( "/response/4/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
 #cannot delete a tenant that have children
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(400)
 	->json_is( "/alerts/0/text" => "Tenant 'tenantA2' has children tenant(s): e.g 'tenantD'. Please update these tenants and retry." )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-my $tenantD_id = &get_tenant_id('tenantD');
-my $tenantE_id = &get_tenant_id('tenantE');
-
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantE_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantD_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->delete_ok('/api/1.2/tenants/' . $tenantB_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #cannot delete a tenant that have a delivery-service
 ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
