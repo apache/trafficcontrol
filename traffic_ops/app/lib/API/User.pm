@@ -256,10 +256,6 @@ sub create {
 		return $self->alert("confirm-local-password is required.");
 	}
 
-	if ($params->{localPassword} ne $params->{confirmLocalPassword}){
-		return $self->alert("local-password and confirmed-local-password mismatch.");
-	}
-	
 	if ( !defined($params->{role}) ) {
 		return $self->alert("role is required.");
 	}
