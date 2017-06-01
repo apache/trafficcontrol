@@ -32,6 +32,16 @@ sub new {
 	return bless $self, $class;
 }
 
+
+sub current_user_tenant {
+	my $self = shift;
+	if ($self->{user_tenant_id} == -1) 
+	{
+		$self->{user_tenant_id} = $self->{context}->db->resultset('TmUser')->search( { username => $self->{context}->current_user()->{username} } )->get_column('tenant_id')->single();
+	}
+	return $self->{user_tenant_id};
+}
+
 sub get_hierarchic_tenants_list {
 	my $self = shift;
 	my $tree_root = shift;	
