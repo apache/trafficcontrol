@@ -705,7 +705,7 @@ sub totals {
 
 }
 
-sub status {
+sub status_count {
 	my $self = shift;
 
 	my $rs = $self->db->resultset('Server')->search(
@@ -724,6 +724,84 @@ sub status {
 	}
 
 	return $self->success( $response );
+}
+
+sub update_status {
+	my $self 	= shift;
+	my $id     	= $self->param('id');
+	my $params 	= $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $server = $self->db->resultset('Server')->find( { id => $id }, { prefetch => [ 'type' ] } );
+	if ( !defined($server) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined( $params->{status} ) ) {
+		return $self->alert("Status is required.");
+	}
+
+	my $server_status;
+	if  ( $params->{status} =~ /\d+/ ) {
+		$server_status = $self->db->resultset('Status')->search( { id => $params->{status} }, { columns => [qw/id name/] } )->single();
+	} else {
+		$server_status = $self->db->resultset('Status')->search( { name => $params->{status} }, { columns => [qw/id name/] } )->single();
+	}
+
+	if ( !defined($server_status) ) {
+		return $self->alert("Invalid status.");
+	}
+
+	my $offline_reason = $params->{offlineReason};
+	if ( $server_status->name eq 'ADMIN_DOWN' || $server_status->name eq 'OFFLINE' ) {
+		if ( !defined( $offline_reason ) ) {
+			return $self->alert("Offline reason is required for ADMIN_DOWN or OFFLINE status.");
+		} else {
+			# prepend current user to offline message
+			my $current_username = $self->current_user()->{username};
+			$offline_reason = "$current_username: $offline_reason";
+
+		}
+	} else {
+		$offline_reason = undef;
+	}
+
+	my $values = {
+		status           => $server_status->id,
+		offline_reason   => $offline_reason,
+	};
+
+	my $update = $server->update($values);
+	if ($update) {
+		my $fqdn = $update->host_name . "." . $update->domain_name;
+		my $msg = "Updated status [ " . $server_status->name . " ] for $fqdn [ $offline_reason ]";
+
+		# queue updates on child servers if server is ^EDGE or ^MID
+		if ( $server->type->name =~ m/^EDGE/ || $server->type->name =~ m/^MID/ ) {
+			my @cg_ids = $self->get_child_cachegroup_ids($server);
+			my $servers = $self->db->resultset('Server')->search( undef, { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
+			$servers->update( { upd_pending => 1 } );
+			$msg .= " and queued updates on all child caches";
+		}
+
+        &log( $self, $msg, "APICHANGE" );
+		return $self->success_message( $msg );
+	}
+	else {
+		return $self->alert( "Server status update failed." );
+	}
+
+}
+
+sub get_child_cachegroup_ids {
+    my $self    = shift;
+    my $server    = shift;
+
+    my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
+    return map { $_->id } @edge_cache_groups;
 }
 
 sub get_count_by_type {

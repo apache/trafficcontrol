@@ -1315,6 +1315,66 @@ Server
 
 |
 
+**PUT /api/1.2/servers/{:id}/status**
+
+  Updates server status and queues updates on all child caches if server type is EDGE or MID. Also, captures offline reason if status is set to ADMIN_DOWN or OFFLINE and prepends offline reason with the user that initiated the status change.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Route Parameters**
+
+  +------+----------+-------------------------------+
+  | Name | Required | Description                   |
+  +======+==========+===============================+
+  | id   | yes      | The id of the server.         |
+  +------+----------+-------------------------------+
+
+  **Request Properties**
+
+  +----------------+----------+-------------------------------------------------+
+  |      Name      | Required |                  Description                    |
+  +================+==========+=================================================+
+  | status         | yes      | Status ID or name.                              |
+  +----------------+----------+-------------------------------------------------+
+  | offlineReason  | yes|no   | Required if status is ADMIN_DOWN or OFFLINE.    |
+  +----------------+----------+-------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "status": "ADMIN_DOWN",
+        "offlineReason": "Bad drives"
+    }
+
+|
+
+  **Response Properties**
+
+  +-------------+--------+----------------------------------+
+  |  Parameter  |  Type  |           Description            |
+  +=============+========+==================================+
+  | ``alerts``  | array  | A collection of alert messages.  |
+  +-------------+--------+----------------------------------+
+  | ``>level``  | string | Success, info, warning or error. |
+  +-------------+--------+----------------------------------+
+  | ``>text``   | string | Alert message.                   |
+  +-------------+--------+----------------------------------+
+
+  **Response Example** ::
+
+    {
+          "alerts": [
+                    {
+                            "level": "success",
+                            "text": "Updated status [ ADMIN_DOWN ] for foo.bar.net [ user23: bad drives ] and queued updates on all child caches"
+                    }
+            ],
+    }
+
+|
+
 **DELETE /api/1.2/servers/{:id}**
 
   Allow user to delete server through api.

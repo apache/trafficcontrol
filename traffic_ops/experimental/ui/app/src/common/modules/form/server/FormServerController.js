@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -64,10 +64,16 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
     var updateStatus = function(status) {
-        // todo: hook this into PUT /api/version/server/:id/status
-        console.log(status.name);
-        console.log(status.offlineReason);
-        alert('this still needs to be hooked into the api');
+        serverService.updateStatus(server.id, { status: status.id, offlineReason: status.offlineReason })
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                    refresh();
+                },
+	            function(fault) {
+		            messageModel.setMessages(fault.data.alerts, false);
+	            }
+            );
     };
     
     var refresh = function() {
@@ -112,6 +118,9 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             controller: 'DialogSelectStatusController',
             size: 'md',
             resolve: {
+                server: function() {
+                    return server;
+                },
                 statuses: function() {
                     return $scope.statuses;
                 }
@@ -151,5 +160,5 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
 module.exports = FormServerController;
