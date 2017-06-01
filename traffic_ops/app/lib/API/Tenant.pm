@@ -17,6 +17,7 @@ package API::Tenant;
 #
 
 use UI::Utils;
+use UI::TenantUtils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -26,30 +27,30 @@ use MojoPlugins::Response;
 my $finfo = __FILE__ . ":";
 
 sub getTenantName {
-	my $self 		= shift;
+	my $self		= shift;
 	my $tenant_id		= shift;
 	return defined($tenant_id) ? $self->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('name')->single() : "n/a";
 }
 
 sub isRootTenant {
-	my $self 	= shift;
+	my $self	= shift;
 	my $tenant_id	= shift;
 	return !defined($self->db->resultset('Tenant')->search( { id => $tenant_id } )->get_column('parent_id')->single());
 }
 
 sub index {
 	my $self 	= shift;
-	my @data = ();
-	my %idnames;
-	my $orderby = $self->param('orderby') || "name";
 
+	my %idnames;
 	my $rs_data = $self->db->resultset("Tenant")->search();
 	while ( my $row = $rs_data->next ) {
 		$idnames{ $row->id } = $row->name;
 	}
 
-	my $rs_data = $self->db->resultset("Tenant")->search( undef, {order_by => 'me.' . $orderby } );
-	while ( my $row = $rs_data->next ) {
+	my @data = ();
+	my $tenantUtils = UI::TenantUtils->new($self);
+	my @tenants_list = $tenantUtils->get_hierarchic_tenants_list();
+	foreach my $row (@tenants_list) {
 		push(
 			@data, {
 				"id"           => $row->id,
@@ -122,6 +123,8 @@ sub update {
 	}	
 
 	if ( !defined( $params->{parentId}) && !$self->isRootTenant($id) ) {
+		# Cannot turn a simple tenant to a root tenant.
+		# Practically there is no problem with doing so, but it is to risky to be done by mistake. 
 		return $self->alert("Parent Id is required.");
 	}
 	
@@ -134,12 +137,12 @@ sub update {
 	if ( !$params->{active} && $self->isRootTenant($id)) {
 		return $self->alert("Root user cannot be in-active.");
 	}
-	
 
 	if ( !defined($params->{parentId}) && !isRootTenant($id) ) {
 		return $self->alert("Only the \"root\" tenant can have no parent.");
 	}
 	
+	#operation	
 	my $values = {
 		name      => $params->{name},
 		active    => $params->{active},
@@ -185,6 +188,8 @@ sub create {
 		return $self->alert("Tenant name is required.");
 	}
 
+	#not allowing to create additional root tenants.
+	#there is no real problem with that, but no real use also
 	my $parent_id = $params->{parentId};
 	if ( !defined($parent_id) ) {
 		return $self->alert("Parent Id is required.");
@@ -248,6 +253,7 @@ sub delete {
 	if ( !defined($tenant) ) {
 		return $self->not_found();
 	}	
+
 	my $name = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('name')->single();
 	
 	my $existing_child = $self->db->resultset('Tenant')->search( { parent_id => $id }, {order_by => 'me.name' } )->get_column('name')->first();
