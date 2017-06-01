@@ -126,7 +126,7 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 #cannot change root-tenant to inactive
 ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
 			"name" => "root", "active" => 0, "parentId" => undef})
-			->json_is( "/alerts/0/text" => "Root user cannot be in-active.")
+			->json_is( "/alerts/0/text" => "Root tenant cannot be in-active.")
 			->status_is(400);
 
 #adding a child tenant
@@ -148,7 +148,7 @@ ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
 my $tenantD_id = &get_tenant_id('tenantD');
 my $tenantE_id = &get_tenant_id('tenantE');
 
--#list tenants- verify heirachic order
+#list tenants- verify heirachic order
 $t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/id", $root_tenant_id )
 	->json_is( "/response/1/id", $tenantA_id)
 	->json_is( "/response/2/id", $tenantD_id)
