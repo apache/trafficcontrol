@@ -246,7 +246,7 @@ sub delete {
 		return $self->not_found();
 	}	
 
-	my $name = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('name')->single();
+	my $name = $tenant->name;
 	
 	my $existing_child = $self->db->resultset('Tenant')->search( { parent_id => $id }, {order_by => 'me.name' } )->get_column('name')->first();
 	if ($existing_child) {
