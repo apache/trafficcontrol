@@ -725,10 +725,13 @@ sub api_routes {
 	$r->get("/api/$version/servers/totals")->over( authenticated => 1 )->to( 'Server#totals', namespace => $namespace );
 
 	# -- SERVERS: COUNT BY STATUS
-	$r->get("/api/$version/servers/status")->over( authenticated => 1 )->to( 'Server#status', namespace => $namespace );
+	$r->get("/api/$version/servers/status")->over( authenticated => 1 )->to( 'Server#status_count', namespace => $namespace );
 
 	# -- SERVERS: QUEUE/DEQUEUE SERVER UPDATES
 	$r->post("/api/$version/servers/:id/queue_update" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
+
+	# -- SERVERS: UPDATE STATUS
+	$r->put("/api/$version/servers/:id/status" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Server#update_status', namespace => $namespace );
 
 	# -- SERVERS: SERVER CHECKS
 	$r->get("/api/$version/servers/checks")->over( authenticated => 1 )->to( 'ServerCheck#read', namespace => $namespace );

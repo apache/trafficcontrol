@@ -1012,7 +1012,7 @@ Health
 .. _to-api-v12-ds-server:
 
 Delivery Service Server
-++++++
++++++++++++++++++++++++
 
 **GET /api/1.2/deliveryserviceserver**
 

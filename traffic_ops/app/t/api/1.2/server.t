@@ -526,8 +526,43 @@ ok $t->put_ok('/api/1.2/servers/' . $server_id => {Accept => 'application/json'}
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Does the server update succeed because ip6Address is already used by the profile but...by this server?';
 
+ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'application/json'} => json => {
+			"status" => 'CARROT' })
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level", "error" )
+		->json_is( "/alerts/0/text", "Invalid status." )
+	, 'Does the server status update fail because the status is invalid?';
+
+ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'application/json'} => json => {
+			"status" => 'OFFLINE' })
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level", "error" )
+		->json_is( "/alerts/0/text", "Offline reason is required for ADMIN_DOWN or OFFLINE status." )
+	, 'Does the server status update fail because offline reason was not provided?';
+
+ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'application/json'} => json => {
+			"status" => 1,
+			"offlineReason" => "taco tuesday" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level", "success" )
+	, 'Does the server status update succeed with status ID?';
+
+ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'application/json'} => json => {
+			"status" => "OFFLINE",
+			"offlineReason" => "wacky wednesday" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level", "success" )
+	, 'Does the server status update succeed with status name?';
+
+ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'application/json'} => json => {
+			"status" => "ONLINE" })
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level", "success" )
+		->json_is( "/alerts/0/text", "Updated status [ ONLINE ] for my-server-host-ip6.example-domain.com [  ] and queued updates on all child caches" )
+	, 'Does the server status update succeed and updates are queued when the status is changed on an Edge server?';
+
 ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/response/ONLINE", 17 )
+		->json_is( "/response/ONLINE", 18 )
 		->json_is( "/response/REPORTED", 5 )
 		->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

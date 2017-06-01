@@ -55,6 +55,12 @@ under the License.
                     <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" ng-disabled="true"></select>
                 </div>
             </div>
+            <div class="form-group" ng-show="server.offlineReason.length > 0">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Offline Reason</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="server.offlineReason" ng-maxlength="256" ng-readonly="true">
+                </div>
+            </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.updPending), 'has-feedback': hasError(serverForm.updPending)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Update Pending *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
@@ -177,14 +183,6 @@ under the License.
                     <input id="rack" name="rack" type="text" class="form-control" ng-model="server.rack" ng-maxlength="64" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.rack, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(serverForm.rack)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-            <div class="form-group" ng-class="{'has-error': hasError(serverForm.offlineReason), 'has-feedback': hasError(serverForm.offlineReason)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Offline Reason</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="server.offlineReason" ng-maxlength="256" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.offlineReason, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(serverForm.offlineReason)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.mgmtIpAddress), 'has-feedback': hasError(serverForm.mgmtIpAddress)}">

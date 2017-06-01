@@ -21,7 +21,7 @@ Capabilities
 .. _to-api-v12-capability-route:
 
 /api/1.2/capabilities
-+++++++++++++
++++++++++++++++++++++
 
 **GET /api/1.2/capabilities**
 

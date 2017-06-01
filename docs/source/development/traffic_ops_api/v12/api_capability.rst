@@ -16,12 +16,12 @@
 .. _to-api-v12-api_capability:
 
 API-Capabilities
-============
+================
 
 .. _to-api-v12-api-capability-route:
 
 /api/1.2/api_capabilities
-+++++++++++++
++++++++++++++++++++++++++
 
 **GET /api/1.2/api_capabilities**
 

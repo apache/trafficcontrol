@@ -17,7 +17,9 @@
  * under the License.
  */
 
-var DialogSelectStatusController = function(statuses, $scope, $uibModalInstance) {
+var DialogSelectStatusController = function(server, statuses, $scope, $uibModalInstance) {
+
+	$scope.server = server;
 
 	$scope.statuses = statuses;
 
@@ -36,6 +38,10 @@ var DialogSelectStatusController = function(statuses, $scope, $uibModalInstance)
 		$uibModalInstance.close($scope.status);
 	};
 
+	$scope.needsUpdates = function(server) {
+		return (server.type.indexOf('EDGE') != -1) || (server.type.indexOf('MID') != -1);
+	};
+
 	$scope.cancel = function () {
 		$uibModalInstance.dismiss('cancel');
 	};
@@ -47,5 +53,5 @@ var DialogSelectStatusController = function(statuses, $scope, $uibModalInstance)
 
 };
 
-DialogSelectStatusController.$inject = ['statuses', '$scope', '$uibModalInstance'];
+DialogSelectStatusController.$inject = ['server', 'statuses', '$scope', '$uibModalInstance'];
 module.exports = DialogSelectStatusController;
