@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var UserService = function(Restangular, $http, $location, $q, authService, locationUtils, userModel, messageModel, ENV) {
+var UserService = function(Restangular, $http, $location, $q, authService, httpService, locationUtils, userModel, messageModel, ENV) {
 
     var service = this;
 
@@ -49,20 +49,6 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
         }
     };
 
-
-    this.updateCurrentUser = function(user) {
-        return user.put()
-            .then(
-                function() {
-                    userModel.setUser(user);
-                    messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
-                },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
-                }
-            );
-    };
-
     this.getUsers = function(queryParams) {
         return Restangular.all('users').getList(queryParams);
     };
@@ -85,13 +71,17 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
     };
 
     this.updateUser = function(user) {
-        return user.put()
+        return $http.put(ENV.api['root'] + "users/" + user.id, user)
             .then(
                 function() {
+                    if (userModel.user.id == user.id) {
+                        // if you are updating the currently logged in user...
+                        userModel.setUser(user);
+                    }
                     messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
                 },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
                 }
             );
     };
@@ -110,5 +100,5 @@ var UserService = function(Restangular, $http, $location, $q, authService, locat
 
 };
 
-UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];
+UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'httpService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];
 module.exports = UserService;
