@@ -36,12 +36,6 @@ sub index {
 	my $self 	= shift;	
 	my $orderby = $self->param('orderby') || "name";
 
-	my %idnames;
-	my $rs_data = $self->db->resultset("Tenant")->search();
-	while ( my $row = $rs_data->next ) {
-		$idnames{ $row->id } = $row->name;
-	}
-
 	my @data = ();
 	my $tenantUtils = UI::TenantUtils->new($self);
 	my @tenants_list = $tenantUtils->get_hierarchic_tenants_list(undef, $orderby);
@@ -53,7 +47,7 @@ sub index {
 					"name"         => $row->name,
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
+					"parentName"   => ( defined $row->parent_id ) ? $tenantUtils->get_tenant($row->parent_id)->name : undef,
 				}
 			);
 		}
@@ -67,13 +61,6 @@ sub show {
 	my $id   = $self->param('id');
 
 	my @data = ();
-	my %idnames;
-
-	my $rs_idnames = $self->db->resultset("Tenant")->search( undef, { columns => [qw/id name/] } );
-	while ( my $row = $rs_idnames->next ) {
-		$idnames{ $row->id } = $row->name;
-	}
-
 	my $tenantUtils = UI::TenantUtils->new($self);
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
@@ -84,7 +71,7 @@ sub show {
 					"name"         => $row->name,
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $idnames{ $row->parent_id } : undef,
+					"parentName"   => ( defined $row->parent_id ) ? $tenantUtils->get_tenant($row->parent_id)->name : undef,
 				}
 			);
 		}

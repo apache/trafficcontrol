@@ -44,6 +44,29 @@ sub current_user_tenant {
 	return $self->{user_tenant_id};
 }
 
+sub get_tenant {
+	my $self = shift;
+	my $tenant_id = shift;	
+	
+	$self->_init_tenants_if_needed(undef);
+
+	return $self->{tenants_dict}->{$tenant_id}{row};
+}
+
+sub get_tenants_list {
+	my $self = shift;
+	my $order_by = shift;	
+	
+	$self->_init_tenants_if_needed($order_by);
+
+	my @result = ();
+	foreach my $tenant_id (@{ $self->{ordered_by} }) {
+		push @result, $self->{tenants_dict}->{$tenant_id}{row};
+	}
+
+	return @result;	
+}
+
 sub get_hierarchic_tenants_list {
 	my $self = shift;
 	my $tree_root = shift;	
