@@ -976,6 +976,62 @@ sub request {
 	}
 }
 
+sub assign_servers {
+	my $self      = shift;
+	my $ds_xml_Id = $self->param('xml_id');
+	my $params    = $self->req->json;
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters are JSON format, please check!");
+	}
+	if ( !&is_oper($self) ) {
+		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+	}
+
+	if ( !exists( $params->{serverNames} ) ) {
+		return $self->alert("Parameter 'serverNames' is required.");
+	}
+
+	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();
+	if ( !defined($dsid) ) {
+		return $self->alert( "DeliveryService[" . $ds_xml_Id . "] is not found." );
+	}
+
+	my @server_ids;
+	my $svrs = $params->{serverNames};
+	foreach my $svr (@$svrs) {
+		my $svr_id = $self->db->resultset('Server')->search( { host_name => $svr } )->get_column('id')->single();
+		if ( !defined($svr_id) ) {
+			return $self->alert( "Server[" . $svr . "] is not found in database." );
+		}
+		push( @server_ids, $svr_id );
+	}
+
+	# clean up
+	my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsid } );
+	$delete->delete();
+
+	# assign servers
+	foreach my $s_id (@server_ids) {
+		my $insert = $self->db->resultset('DeliveryserviceServer')->create(
+			{
+				deliveryservice => $dsid,
+				server          => $s_id,
+			}
+		);
+		$insert->insert();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+
+	my $response;
+	$response->{xmlId} = $ds->xml_id;
+	$response->{'serverNames'} = \@$svrs;
+
+	return $self->success($response);
+}
+
 sub is_deliveryservice_request_valid {
 	my $self    = shift;
 	my $details = shift;
