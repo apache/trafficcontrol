@@ -20,7 +20,7 @@
 var UserEditController = function($scope) {
 
     $scope.settings = {
-        isNew: true,
+        isNew: false,
         saveLabel: 'Update'
     };
 

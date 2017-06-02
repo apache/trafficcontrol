@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var UserController = function($scope, $state, $uibModal, formUtils, locationUtils, userService, authService, roleService, userModel) {
+var UserController = function($scope, $state, $location, $uibModal, formUtils, locationUtils, userService, authService, roleService, tenantService, userModel) {
 
     var updateUser = function(user, options) {
-        userService.updateCurrentUser(user)
+        userService.updateUser(user)
             .then(function() {
                 if (options.signout) {
                     authService.logout();
@@ -32,6 +32,13 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
         roleService.getRoles()
             .then(function(result) {
                 $scope.roles = result;
+            });
+    };
+
+    var getTenants = function() {
+        tenantService.getTenants()
+            .then(function(result) {
+                $scope.tenants = result;
             });
     };
 
@@ -65,6 +72,10 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
         }
     };
 
+    $scope.viewDeliveryServices = function() {
+        $location.path('/admin/users/' + $scope.user.id + '/delivery-services');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -73,10 +84,11 @@ var UserController = function($scope, $state, $uibModal, formUtils, locationUtil
 
     var init = function () {
         getRoles();
+        getTenants();
     };
     init();
 
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'roleService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$location', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'roleService', 'tenantService', 'userModel'];
 module.exports = UserController;
