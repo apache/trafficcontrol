@@ -58,7 +58,7 @@ sub run_ut {
 	my $addedUserEmail = "abc\@z.com";
 
 	ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
-        	"username" => $addedUserName, "fullName"=>"full name", "email" => $addedUserEmail, "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4 })
+        	"username" => $addedUserName, "fullName"=>"full name", "email" => $addedUserEmail, "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4 })
         	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/username" =>  $addedUserName )
 		->json_is( "/response/email" =>  $addedUserEmail)
@@ -67,19 +67,19 @@ sub run_ut {
 
 	#same name again - fail
 	ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
-        	"username" => $addedUserName, "fullName"=>"full name1", "email" => "xy\@z.com", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4 })
+        	"username" => $addedUserName, "fullName"=>"full name1", "email" => "xy\@z.com", "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4 })
         	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		       , 'Success same user...';
 
 	#bad email - fail
 	ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
-        	"username" => "user2", "fullName"=>"full name2", "email" => "xy", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4 })
+        	"username" => "user2", "fullName"=>"full name2", "email" => "xy", "localPassword" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4 })
         	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	       , 'Success bad email...';
 
 	#adding same email again - fail
 	ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
-        	"username" => "new-user", "fullName"=>"full name3", "email" => $addedUserEmail, "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role`" => 4 })
+        	"username" => "new-user", "fullName"=>"full name3", "email" => $addedUserEmail, "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4 })
         	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	       , 'Success same email...';
 	       
@@ -88,14 +88,14 @@ sub run_ut {
 	if (defined($tenant_id)){
 		#verify the update with no "tenant" removed the tenant
 		$t->put_ok( '/api/1.2/users/'.$userid,
-			json => { "username" => $addedUserName."1", "fullName"=>"full name", "email" => $addedUserEmail."1", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4} )
+			json => { "username" => $addedUserName."1", "fullName"=>"full name", "email" => $addedUserEmail."1", "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4} )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/alerts/0/text", "User update was successful." )
 			->json_is( "/response/tenantId", undef);
 			
 		#putting the tenant back the tenant
 		$t->put_ok( '/api/1.2/users/'.$userid,
-			json => { "username" => $addedUserName."2", "tenantId" => $tenant_id, "fullName"=>"full name", "email" => $addedUserEmail."2", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4} )
+			json => { "username" => $addedUserName."2", "tenantId" => $tenant_id, "fullName"=>"full name", "email" => $addedUserEmail."2", "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4} )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/tenantId", $tenant_id)
 			->json_is( "/alerts/0/text", "User update was successful." );
@@ -103,7 +103,7 @@ sub run_ut {
 	
 		#removed the tenant explicitly
 		$t->put_ok( '/api/1.2/users/'.$userid,
-	 	json => {  "username" => $addedUserName."3", "tenantId" => undef, "fullName"=>"full name", "email" => $addedUserEmail."3", "localPassword" => "pass", "confirmLocalPassword"=> "pass", "role" => 4} )
+	 	json => {  "username" => $addedUserName."3", "tenantId" => undef, "fullName"=>"full name", "email" => $addedUserEmail."3", "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4} )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/alerts/0/text", "User update was successful." )
 			->json_is( "/response/tenantId", undef);
