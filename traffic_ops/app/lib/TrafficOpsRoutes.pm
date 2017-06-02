@@ -506,7 +506,7 @@ sub api_routes {
 
 	# delivery service / server assignments
 	$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1 )
-		->to( 'Deliveryservice2#assign_servers', namespace => $namespace );
+		->to( 'Deliveryservice#assign_servers', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservice_server/:dsId/:serverId" => [ dsId => qr/\d+/, serverId => qr/\d+/ ] )->over( authenticated => 1 )->to( 'DeliveryServiceServer#remove_server_from_ds', namespace => $namespace );
 
 	# alternate deliveryservice routes
