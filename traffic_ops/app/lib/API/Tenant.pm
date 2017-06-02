@@ -36,18 +36,20 @@ sub index {
 	my $self 	= shift;	
 	my $orderby = $self->param('orderby') || "name";
 
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db($orderby);
+
 	my @data = ();
-	my $tenantUtils = UI::TenantUtils->new($self);
-	my @tenants_list = $tenantUtils->get_hierarchic_tenants_list(undef, $orderby);
+	my @tenants_list = $tenant_utils->get_hierarchic_tenants_list($tenants_data, undef, $orderby);
 	foreach my $row (@tenants_list) {
-		if ($tenantUtils->is_tenant_resource_readable($row->id)) {
+		if ($tenant_utils->is_tenant_resource_readable($tenants_data, $row->id)) {
 			push(
 				@data, {
 					"id"           => $row->id,
 					"name"         => $row->name,
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $tenantUtils->get_tenant($row->parent_id)->name : undef,
+					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
 				}
 			);
 		}
@@ -60,18 +62,20 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
+
 	my @data = ();
-	my $tenantUtils = UI::TenantUtils->new($self);
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
-		if ($tenantUtils->is_tenant_resource_readable($row->id)) {
+		if ($tenant_utils->is_tenant_resource_readable($tenants_data, $row->id)) {
 			push(
 				@data, {
 					"id"           => $row->id,
 					"name"         => $row->name,
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $tenantUtils->get_tenant($row->parent_id)->name : undef,
+					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
 				}
 			);
 		}
@@ -109,9 +113,10 @@ sub update {
 		}	
 	}	
 
-	my $tenantUtils = UI::TenantUtils->new($self);
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 
-	if ( !defined( $params->{parentId}) && !$tenantUtils->is_root_tenant($id) ) {
+	if ( !defined( $params->{parentId}) && !$tenant_utils->is_root_tenant($tenants_data, $id) ) {
 		# Cannot turn a simple tenant to a root tenant.
 		# Practically there is no problem with doing so, but it is to risky to be done by mistake. 
 		return $self->alert("Parent Id is required.");
@@ -123,7 +128,7 @@ sub update {
 
 	my $is_active = $params->{active};
 	
-	if ( !$params->{active} && $tenantUtils->is_root_tenant($id)) {
+	if ( !$params->{active} && $tenant_utils->is_root_tenant($tenants_data, $id)) {
 		return $self->alert("Root tenant cannot be in-active.");
 	}
 
@@ -134,11 +139,11 @@ sub update {
 		$current_resource_tenancy = $id;
 	}
 	
-	if (!$tenantUtils->is_tenant_resource_writeable($current_resource_tenancy)) {
+	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $current_resource_tenancy)) {
 		return $self->alert("Current owning tenant is not under user's tenancy.");
 	}
 
-	if (!$tenantUtils->is_tenant_resource_writeable($params->{parentId})) {
+	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $params->{parentId})) {
 		return $self->alert("Parent tenant to be set is not under user's tenancy.");
 	}
 
@@ -150,6 +155,7 @@ sub update {
 		parent_id => $params->{parentId}
 	};
 
+	#$tenants_data is about to become outdated
 	my $rs = $tenant->update($values);
 	if ($rs) {
 		my %idnames;
@@ -196,8 +202,10 @@ sub create {
 		return $self->alert("Parent Id is required.");
 	}
 	
-	my $tenantUtils = UI::TenantUtils->new($self);
-	if (!$tenantUtils->is_tenant_resource_writeable($params->{parentId})) {
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
+	
+	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $params->{parentId})) {
 		return $self->alert("Parent tenant to be set is not under user's tenancy.");
 	}
 
@@ -218,6 +226,7 @@ sub create {
 		parent_id 	=> $params->{parentId}
 	};
 
+	#$tenants_data is about to become outdated
 	my $insert = $self->db->resultset('Tenant')->create($values);
 	my $rs = $insert->insert();
 	if ($rs) {
@@ -262,8 +271,10 @@ sub delete {
 
 	my $parent_tenant = $tenant->parent_id;
 	
-	my $tenantUtils = UI::TenantUtils->new($self);
-	if (!$tenantUtils->is_tenant_resource_writeable($parent_tenant)) {
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
+	
+	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $parent_tenant)) {
 		return $self->alert("Parent tenant is not under user's tenancy.");
 	}
 
@@ -285,6 +296,7 @@ sub delete {
 		return $self->alert("Tenant '$name' is assign with user(s): e.g. '$existing_user'. Please update these users and retry.");
 	}
 
+	#$tenants_data is about to become outdated
 	my $rs = $tenant->delete();
 	if ($rs) {
 		return $self->success_message("Tenant deleted.");
