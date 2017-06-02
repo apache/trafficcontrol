@@ -55,9 +55,8 @@ sub index {
 sub newlogcount {
 	my $self   = shift;
 	my $cookie = $self->cookie('last_seen_log');
-	my $user   = $self->current_user()->{userid};
-
 	my $count = 0;
+
 	if ( !defined($cookie) ) {
 		my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
 		chomp($date_string);
@@ -65,7 +64,7 @@ sub newlogcount {
 	}
 	else {
 		my $since_string = "> \'" . $cookie . "\'";
-		$count = $self->db->resultset('Log')->search( { -and => [ { tm_user => { '!=' => $user } }, { last_updated => \$since_string } ] }, )->count();
+		$count = $self->db->resultset('Log')->search( { last_updated => \$since_string }, )->count() // 0;
 	}
 	my $jdata = { newLogcount => $count };
 	$self->success($jdata);
