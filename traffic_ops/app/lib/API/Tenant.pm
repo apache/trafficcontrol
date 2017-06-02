@@ -33,7 +33,8 @@ sub getTenantName {
 }
 
 sub index {
-	my $self 	= shift;
+	my $self 	= shift;	
+	my $orderby = $self->param('orderby') || "name";
 
 	my %idnames;
 	my $rs_data = $self->db->resultset("Tenant")->search();
@@ -43,7 +44,7 @@ sub index {
 
 	my @data = ();
 	my $tenantUtils = UI::TenantUtils->new($self);
-	my @tenants_list = $tenantUtils->get_hierarchic_tenants_list();
+	my @tenants_list = $tenantUtils->get_hierarchic_tenants_list(undef, $orderby);
 	foreach my $row (@tenants_list) {
 		if ($tenantUtils->is_tenant_resource_readable($row->id)) {
 			push(

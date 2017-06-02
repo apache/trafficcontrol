@@ -61,14 +61,14 @@ ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
 
 #no parent - would not accept
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenantB" })->status_is(400);
+        "name" => "tenant" })->status_is(400);
 
 #now getting it excepted
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenantB", "parentId" => $root_tenant_id })->status_is(200);
+        "name" => "tenant", "parentId" => $root_tenant_id })->status_is(200);
 
 my $tenantA_id = &get_tenant_id('tenantA');
-my $tenantB_id = &get_tenant_id('tenantB');
+my $tenantB_id = &get_tenant_id('tenant');
 #rename, and move to active
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
 			"name" => "tenantA2", "active" => 1, "parentId" => $root_tenant_id 
@@ -148,12 +148,29 @@ ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
 my $tenantD_id = &get_tenant_id('tenantD');
 my $tenantE_id = &get_tenant_id('tenantE');
 
-#list tenants- verify heirachic order
-$t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/id", $root_tenant_id )
+#list tenants- verify heirachic order - order by id
+$t->get_ok("/api/1.2/tenants?orderby=id")->status_is(200)
+	->json_is( "/response/0/id", $root_tenant_id )
 	->json_is( "/response/1/id", $tenantA_id)
 	->json_is( "/response/2/id", $tenantD_id)
 	->json_is( "/response/3/id", $tenantE_id)
 	->json_is( "/response/4/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+#list tenants- verify heirachic order - order by name
+$t->get_ok("/api/1.2/tenants?orderby=name")->status_is(200)
+	->json_is( "/response/0/id", $root_tenant_id )
+	->json_is( "/response/2/id", $tenantA_id)
+	->json_is( "/response/3/id", $tenantD_id)
+	->json_is( "/response/4/id", $tenantE_id)
+	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+#list tenants- verify heirachic order - order by name (default)
+$t->get_ok("/api/1.2/tenants")->status_is(200)
+	->json_is( "/response/0/id", $root_tenant_id )
+	->json_is( "/response/2/id", $tenantA_id)
+	->json_is( "/response/3/id", $tenantD_id)
+	->json_is( "/response/4/id", $tenantE_id)
+	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 #cannot delete a tenant that have children
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(400)

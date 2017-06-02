@@ -28,6 +28,8 @@ sub new {
 		user_tenant_id => -1,		
 		tenants_dict => undef,
 		root_tenants => undef,
+		order_by => -1,
+		ordered_by => undef,
 	};
 	return bless $self, $class;
 }
@@ -45,8 +47,9 @@ sub current_user_tenant {
 sub get_hierarchic_tenants_list {
 	my $self = shift;
 	my $tree_root = shift;	
+	my $order_by = shift;	
 	
-	$self->_init_tenants_if_needed();
+	$self->_init_tenants_if_needed($order_by);
 
 	my @stack = ();
 	if (defined($tree_root)){
@@ -100,12 +103,13 @@ sub is_tenant_resource_writeable {
 
 sub _init_tenants {
 	my $self = shift;
-	my $tenants_table = $self->{context}->db->resultset("Tenant")->search( undef, { order_by => "id" });
+	$self->{order_by} = shift || "name";#some default
+	my $tenants_table = $self->{context}->db->resultset("Tenant")->search( undef, { order_by => $self->{order_by} });
 	
-	my @ordered_by_id = ();
+	$self->{ordered_by} = ();
 	$self->{tenants_dict} = {};
 	while ( my $row = $tenants_table->next ) {
-		push (@ordered_by_id, $row->id);
+		push (@{ $self->{ordered_by} }, $row->id);
 		$self->{tenants_dict}->{$row->id} = {
 			row => $row,
 			parent => $row->parent_id,
@@ -114,7 +118,7 @@ sub _init_tenants {
 	}
 	
 	$self->{root_tenants} = ();
-	foreach my $key (@ordered_by_id) {
+	foreach my $key (@{ $self->{ordered_by} }) {
 		my $value = $self->{tenants_dict}->{$key};
 		my $parent = $value->{parent};
 		if (!defined($parent))
@@ -129,8 +133,10 @@ sub _init_tenants {
 
 sub _init_tenants_if_needed {
 	my $self = shift;
-	if (!defined($self->{tenants_dict})) {
-		$self->_init_tenants();
+	my $order_by = shift;
+	if (($self->{order_by} == -1) || (defined($order_by) && $order_by != $self->{order_by})) {
+		## first run to build the list OR (the order is important AND is not the current order)
+		$self->_init_tenants($order_by);
 	}
 }
 
@@ -165,7 +171,7 @@ sub _is_resource_accessable {
 		return 0;
 	}
 
-	$self->_init_tenants_if_needed();
+	$self->_init_tenants_if_needed(undef);
 	my $tenant_record = $self->{tenants_dict}->{$user_tenant};
 	my $is_active_tenant = $tenant_record->{row}->active;
 	if (! $is_active_tenant) {
