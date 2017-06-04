@@ -22,6 +22,7 @@ use warnings;
 no warnings 'once';
 use warnings 'all';
 use Test::TestHelper;
+use UI::TenantUtils;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
 #no_transactions=>0 ==> delete fixtures after every execution
@@ -172,53 +173,111 @@ ok $t->get_ok("/api/1.2/tenants")->status_is(200)
 	->json_is( "/response/4/id", $tenantE_id)
 	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
-#tenants heirarchy- test depth and height
-ok $t->get_ok("/api/1.2/tenants/$root_tenant_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 0)
-	->json_is( "/response/0/heirarchyHeight", 2)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+#tenants heirarchy- test depth, height, root
+my $tenant_utils_of_root = UI::TenantUtils->new(undef, $root_tenant_id, $schema);
+my $tenants_data = $tenant_utils_of_root->create_tenants_data_from_db();
 
-ok $t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 1)
-	->json_is( "/response/0/heirarchyHeight", 1)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+ok $tenant_utils_of_root->is_root_tenant($tenants_data, $root_tenant_id) == 1; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $root_tenant_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $root_tenant_id) == 2; 
 
-ok $t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 1)
-	->json_is( "/response/0/heirarchyHeight", 0)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
-	
-ok $t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 2)
-	->json_is( "/response/0/heirarchyHeight", 0)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantA_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantA_id) == 1; 
 
-ok $t->get_ok("/api/1.2/tenants/$tenantE_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 2)
-	->json_is( "/response/0/heirarchyHeight", 0)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
-	
-	
+ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantB_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantB_id) == 1; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantB_id) == 0; 
+
+ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantD_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantD_id) == 2; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantD_id) == 0; 
+
+ok $tenant_utils_of_root->is_root_tenant($tenants_data, $tenantE_id) == 0; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_depth($tenants_data, $tenantE_id) == 2; 
+ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantE_id) == 0; 
+
+############################
+#testing tenancy checks
+#root tenant - touch entire hierarchy as well as null
+ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, $root_tenant_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, $root_tenant_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, undef) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, undef) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, $tenantE_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, $tenantE_id) == 1; 
+
+my $tenant_utils_of_a = UI::TenantUtils->new(undef, $tenantA_id, $schema);
+my $tenants_data_of_a = $tenant_utils_of_a->create_tenants_data_from_db();
+#parent - no access
+ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $root_tenant_id) == 0; 
+ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $root_tenant_id) == 0;
+#undef - all have access 
+ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, undef) == 1; 
+ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, undef) == 1; 
+#itself - full access
+ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $tenantA_id) == 1; 
+ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $tenantA_id) == 1; 
+# child - full access
+ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $tenantE_id) == 1; 
+ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $tenantE_id) == 1; 
+# Brother - no access
+ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $tenantB_id) == 0; 
+ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $tenantB_id) == 0; 
+
+#leaf test
+my $tenant_utils_of_d = UI::TenantUtils->new(undef, $tenantD_id, $schema);
+my $tenants_data_of_d = $tenant_utils_of_d->create_tenants_data_from_db();
+#anchestor - no access
+ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $root_tenant_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $root_tenant_id) == 0;
+#undef - all have access 
+ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, undef) == 1; 
+ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, undef) == 1; 
+# parent - no access
+ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $tenantA_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $tenantA_id) == 0; 
+# itself - full access
+ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $tenantD_id) == 1; 
+ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $tenantD_id) == 1; 
+# uncle - no access
+ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $tenantB_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $tenantB_id) == 0; 
+
+#inactive - nothing can do
+my $tenant_utils_of_e = UI::TenantUtils->new(undef, $tenantE_id, $schema);
+my $tenants_data_of_e = $tenant_utils_of_e->create_tenants_data_from_db();
+#anchestor - no access
+ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $root_tenant_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $root_tenant_id) == 0;
+#undef - all have access 
+ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, undef) == 0; 
+ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, undef) == 0; 
+# parent - no access
+ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $tenantA_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $tenantA_id) == 0; 
+# itself - full access
+ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $tenantE_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $tenantE_id) == 0; 
+# uncle - no access
+ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $tenantB_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $tenantB_id) == 0; 
+
+
+#################
 #moving A to be the child of B
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
 			"active" => 1, "parentId" => $tenantB_id, name => "tenantA2"})
 			->status_is(200);
 			
-ok $t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 1)
-	->json_is( "/response/0/heirarchyHeight", 2)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
-
 ok $t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
 	->json_is( "/response/0/parentId", $tenantB_id)
-	->json_is( "/response/0/heirarchyDepth", 2)
-	->json_is( "/response/0/heirarchyHeight", 1)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 	
 ok $t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
 	->json_is( "/response/0/parentId", $tenantA_id)
-	->json_is( "/response/0/heirarchyDepth", 3)
-	->json_is( "/response/0/heirarchyHeight", 0)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 
@@ -241,8 +300,6 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 
 ok $t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
 	->json_is( "/response/0/parentId", $root_tenant_id)
-	->json_is( "/response/0/heirarchyDepth", 1)
-	->json_is( "/response/0/heirarchyHeight", 1)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 	
 #cannot delete a tenant that have children

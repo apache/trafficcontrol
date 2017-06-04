@@ -40,7 +40,7 @@ sub index {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db($orderby);
 
 	my @data = ();
-	my @tenants_list = $tenant_utils->get_hierarchic_tenants_list($tenants_data, undef, $orderby);
+	my @tenants_list = $tenant_utils->get_hierarchic_tenants_list($tenants_data, undef);
 	foreach my $row (@tenants_list) {
 		if ($tenant_utils->is_tenant_resource_readable($tenants_data, $row->id)) {
 			push(
@@ -50,8 +50,6 @@ sub index {
 					"active"         => \$row->active,
 					"parentId"       => $row->parent_id,
 					"parentName"     => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
-					"heirarchyDepth" => $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $row->id),
-					"heirarchyHeight" => $tenant_utils->get_tenant_heirarchy_height($tenants_data, $row->id),
 				}
 			);
 		}
@@ -78,8 +76,6 @@ sub show {
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
 					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
-					"heirarchyDepth" => $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $row->id),
-					"heirarchyHeight" => $tenant_utils->get_tenant_heirarchy_height($tenants_data, $row->id),
 				}
 			);
 		}

@@ -36,15 +36,23 @@ use UI::Utils;
 sub new {
 	my $class = shift;
 	my $context = shift;
-	# For now, until the current user tenant ID will come from the jwt, the current user tenant is taken from the DB.
-	my $current_user_tenant = $context->db->resultset('TmUser')->search( { username => $context->current_user()->{username} } )->get_column('tenant_id')->single();
-	my $dbh = $context->db; 
+	my $current_user_tenant = shift; #optional - allowing the user tenancy to be set from outside, for testing capabilities	
+	if (!defined($current_user_tenant)) {
+		# For now, until the current user tenant ID will come from the jwt, the current user tenant is taken from the DB.
+		$current_user_tenant = $context->db->resultset('TmUser')->search( { username => $context->current_user()->{username} } )->get_column('tenant_id')->single();
+	}
+	
+	my $dbh = shift;  #optional - allowing the DB handle to be set from outside, for testing capabilities	
+	if (!defined($dbh)){
+		$dbh = $context->db
+	}
+	
 	my $self  = {		
 	        dbh => $dbh,
 		# In order to reduce the number of calls from the DB, the current user tenant is taken in the class creation.
 		# the below parameters are held temporarily until the info is taken from the jwt
 	        current_user_tenant => $current_user_tenant,
-	        is_ldap => $context->is_ldap(),
+	        is_ldap => defined($context) ? $context->is_ldap() : 0,
 	};
 	bless $self, $class;
 	return $self;
@@ -105,7 +113,6 @@ sub get_tenant {
 sub get_tenants_list {
 	my $self = shift;
 	my $tenants_data = shift;
-	my $order_by = shift;	
 	
 	my @result = ();
 	foreach my $tenant_id (@{ $tenants_data->{ordered_by} }) {
@@ -119,7 +126,6 @@ sub get_hierarchic_tenants_list {
 	my $self = shift;
 	my $tenants_data = shift;
 	my $tree_root = shift;	
-	my $order_by = shift;	
 	
 	my @stack = ();
 	if (defined($tree_root)){
@@ -286,6 +292,16 @@ sub _is_resource_accessable {
 	my $resource_tenant = shift;
 	my $operation = shift;
 
+    	my $user_tenant = $self->current_user_tenant();
+	if (defined($user_tenant)) {
+		my $tenant_record = $tenants_data->{tenants_dict}->{$user_tenant};
+		my $is_active_tenant = $tenant_record->{row}->active;
+		if (! $is_active_tenant) {
+			#user tenant is in-active - cannot do any operation
+			return 0;
+		}
+	}
+
 	if (!defined($resource_tenant)) {
 		#the object has no tenancy - opened for all
 	        return 1;
@@ -304,13 +320,6 @@ sub _is_resource_accessable {
     	my $user_tenant = $self->current_user_tenant();
 	if (!defined($user_tenant)) {
 		#the user has no tenancy, - cannot approach items with tenancy
-		return 0;
-	}
-
-	my $tenant_record = $tenants_data->{tenants_dict}->{$user_tenant};
-	my $is_active_tenant = $tenant_record->{row}->active;
-	if (! $is_active_tenant) {
-		#user tenant is in-active - cannot do any operation
 		return 0;
 	}
 
