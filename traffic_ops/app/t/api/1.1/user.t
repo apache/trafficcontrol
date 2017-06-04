@@ -51,26 +51,26 @@ $t->get_ok('/api/1.1/user/current.json')->status_is(200)->or( sub { diag $t->tx-
 
 # Test required fields
 $t->post_ok( '/api/1.1/user/current/update',
-	json => { user => { username => Test::TestHelper::PORTAL_USER, email => 'testportal1@kabletown.com', address_line1 => 'newaddress' } } )
+	json => { user => { username => Test::TestHelper::PORTAL_USER, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 2 } } )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
 
 # Ensure unique emails
-ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, email => 'testportal1@kabletown.com' } } )
+ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, email => 'testportal1@kabletown.com', role => 2 } } )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "success" ),
 	"Verify that the emails are unique";
 
-ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, email => '@kabletown.com' } } )
+ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, email => '@kabletown.com', role => 2 } } )
 	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
 	"Verify that the emails are properly formatted";
 
-ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, email => '@kabletown.com' } } )
+ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, email => '@kabletown.com', role => 2 } } )
 	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
 	"Verify that the usernames are unique";
 
-$t->post_ok( '/api/1.1/user/current/update', json => { user => { email => 'testportal1@kabletown.com' } } )->status_is(400)
+$t->post_ok( '/api/1.1/user/current/update', json => { user => { email => 'testportal1@kabletown.com', "role" => 4 } } )->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "username is required" );
 
-$t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER } } )->status_is(400)
+$t->post_ok( '/api/1.1/user/current/update', json => { user => { username => Test::TestHelper::PORTAL_USER, "role" => 6 } } )->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "email is required" );
 
 ok $t->post_ok('/api/1.1/user/logout')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
