@@ -45,11 +45,13 @@ sub index {
 		if ($tenant_utils->is_tenant_resource_readable($tenants_data, $row->id)) {
 			push(
 				@data, {
-					"id"           => $row->id,
-					"name"         => $row->name,
-					"active"       => \$row->active,
-					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
+					"id"             => $row->id,
+					"name"           => $row->name,
+					"active"         => \$row->active,
+					"parentId"       => $row->parent_id,
+					"parentName"     => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
+					"heirarchyDepth" => $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $row->id),
+					"heirarchyHeight" => $tenant_utils->get_tenant_heirarchy_height($tenants_data, $row->id),
 				}
 			);
 		}
@@ -76,6 +78,8 @@ sub show {
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
 					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
+					"heirarchyDepth" => $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $row->id),
+					"heirarchyHeight" => $tenant_utils->get_tenant_heirarchy_height($tenants_data, $row->id),
 				}
 			);
 		}
@@ -148,6 +152,46 @@ sub update {
 	}
 
 
+	if ($params->{parentId} != $tenant->parent) {
+		#parent replacement
+		if (!defined($tenant_utils->get_tenant($tenants_data, $params->{parentId}))) {
+			return $self->alert("Parent tenant does not exists.");
+		}
+		my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
+		if (!defined($parent_depth))
+		{
+			return $self->alert("Failed to retrieve parent tenant depth.");
+		}
+
+		my $tenant_height = $tenant_utils->get_tenant_heirarchy_height($tenants_data, $id);
+		if (!defined($tenant_height))
+		{
+			return $self->alert("Failed to retrieve tenant height.");
+		}
+	
+		if ($parent_depth+$tenant_height+1 > $tenant_utils->max_heirarchy_limit())
+		{
+			return $self->alert("Parent tenant is invalid: heirarchy limit reached.");
+		}
+	
+		if ($params->{parentId} == $id){
+			return $self->alert("Parent tenant is invalid: same as updated tenant.");
+		}
+
+		my $is_tenant_achestor_of_parent = $tenant_utils->is_anchestor_of($tenants_data, $id, $params->{parentId});
+		if (!defined($is_tenant_achestor_of_parent))
+		{
+			return $self->alert("Failed to check tenant and parent current relations.");
+		}
+
+		if ($is_tenant_achestor_of_parent)
+		{
+			return $self->alert("Parent tenant is invalid: a child of the updated tenant.");
+		}		
+	
+	}
+
+
 	#operation	
 	my $values = {
 		name      => $params->{name},
@@ -209,6 +253,22 @@ sub create {
 		return $self->alert("Parent tenant to be set is not under user's tenancy.");
 	}
 
+	if (!defined($tenant_utils->get_tenant($tenants_data, $params->{parentId}))) {
+		return $self->alert("Parent tenant does not exists.");
+	}
+	
+	my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
+
+	if (!defined($parent_depth))
+	{
+		return $self->alert("Failed to retrieve parent tenant depth.");
+	}
+	
+	if ($parent_depth+1 > $tenant_utils->max_heirarchy_limit()-1)
+	{
+		return $self->alert("Parent tenant is invalid: heirarchy limit reached.");
+	}
+	
 	my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
 	if ($existing) {
 		return $self->alert("A tenant with name \"$name\" already exists.");
