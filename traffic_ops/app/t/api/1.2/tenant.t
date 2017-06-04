@@ -172,6 +172,79 @@ $t->get_ok("/api/1.2/tenants")->status_is(200)
 	->json_is( "/response/4/id", $tenantE_id)
 	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
+#tenants heirarchy- test depth and height
+$t->get_ok("/api/1.2/tenants/$root_tenant_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 0)
+	->json_is( "/response/0/heirarchyHeight", 2)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+$t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 1)
+	->json_is( "/response/0/heirarchyHeight", 1)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+$t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 1)
+	->json_is( "/response/0/heirarchyHeight", 0)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+	
+$t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 2)
+	->json_is( "/response/0/heirarchyHeight", 0)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+$t->get_ok("/api/1.2/tenants/$tenantE_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 2)
+	->json_is( "/response/0/heirarchyHeight", 0)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+	
+	
+#moving A to be the child of B
+ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
+			"active" => 1, "parentId" => $tenantB_id, name => "tenantA2"})
+			->status_is(200);
+			
+$t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 2)
+	->json_is( "/response/0/heirarchyHeight", 3)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+$t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
+	->json_is( "/response/0/parentId", $tenantB_id)
+	->json_is( "/response/0/heirarchyDepth", 3)
+	->json_is( "/response/0/heirarchyHeight", 2)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+	
+$t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
+	->json_is( "/response/0/parentId", $tenantA_id)
+	->json_is( "/response/0/heirarchyDepth", 4)
+	->json_is( "/response/0/heirarchyHeight", 1)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+
+#Cannot move B to be the child of itself
+ok $t->put_ok('/api/1.2/tenants/' . $tenantB_id  => {Accept => 'application/json'} => json => {
+			"active" => 1, "parentId" => $tenantB_id, name => "tenant"})
+			->json_is( "/alerts/0/text" => "Parent tenant is invalid: same as updated tenant.")
+			->status_is(400);
+	
+#Cannot move B to be the child of A (a descendant)
+ok $t->put_ok('/api/1.2/tenants/' . $tenantB_id  => {Accept => 'application/json'} => json => {
+			"active" => 1, "parentId" => $tenantA_id, name => "tenant"})
+			->json_is( "/alerts/0/text" => "Parent tenant is invalid: a child of the updated tenant.")
+			->status_is(400);
+
+#move A back
+ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
+			"active" => 1, "parentId" => $root_tenant_id, name => "tenantA2"})
+			->status_is(200);
+
+$t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
+	->json_is( "/response/0/parentId", $root_tenant_id)
+	->json_is( "/response/0/heirarchyDepth", 2)
+	->json_is( "/response/0/heirarchyHeight", 2)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+	
 #cannot delete a tenant that have children
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(400)
 	->json_is( "/alerts/0/text" => "Tenant 'tenantA2' has children tenant(s): e.g 'tenantD'. Please update these tenants and retry." )

@@ -170,14 +170,115 @@ sub is_tenant_resource_writeable {
 	return $self->_is_resource_accessable ($tenants_data, $resource_tenancy, "w");
 }
 
+sub get_tenant_heirarchy_depth {
+	#return "undef" in case of error
+	#a root tenant is of depth 0
+	my $self = shift;
+	my $tenants_data = shift;
+	my $tenant_id = shift;
+
+	if (!defined($tenants_data->{tenants_dict}{$tenant_id})) {
+		return undef; #tenant does not exists #TODO -ask jeremy how to log
+	}
+
+	my $iter_id = $tenant_id;
+
+	my $depth = 0; 
+	while (defined($iter_id)) {
+		$iter_id = $tenants_data->{tenants_dict}{$iter_id}{parent};
+		$depth++; 
+		if ($depth > $self->max_heirarchy_limit()) 		
+		{
+			return undef; #heirarchy limit #TODO -ask jeremy how to log
+		}		
+	}
+	
+	return $depth-1;
+}
+
+sub get_tenant_heirarchy_height {
+	#return "undef" in case of error
+	#a leaf tenant is of height 0
+	my $self 	= shift;
+	my $tenants_data = shift;
+	my $tenant_id	= shift;
+
+	if (!defined($tenants_data->{tenants_dict}{$tenant_id})) {
+		return undef; #tenant does not exists #TODO -ask jeremy how to log
+	}
+
+	#calc tenant height
+	my @tenants_list = reverse($self->get_hierarchic_tenants_list($tenants_data, $tenant_id));
+	my %tenants_height = {};
+	
+	foreach my $tenant_row (@tenants_list) {
+		my $tid = $tenant_row->id;
+		$tenants_height{$tid} = 0;
+	}
+	
+	foreach my $tenant_row (@tenants_list) {
+		my $tid = $tenant_row->id;
+		my $par_id = $tenant_row->parent_id;
+		if (($tenants_height{$par_id}) < ($tenants_height{$tid}+1)) {
+			$tenants_height{$par_id} = $tenants_height{$tid}+1;
+		}
+	}	 
+	
+	return $tenants_height{$tenant_id}; 
+}
 
 
-##############################################################
+sub is_anchestor_of {
+	#return "undef" in case of error
+	my $self = shift;
+	my $tenants_data = shift;
+	my $anchestor_id = shift;
+	my $descendant_id = shift;
 
-sub _tenancy_heirarchy_limit {
+	if (!defined($anchestor_id)) {
+		return undef; #anchestor tenant is not defined #TODO -ask jeremy how to log
+	}
+	
+	if (!defined($tenants_data->{tenants_dict}{$anchestor_id})) {
+		return undef; #anchestor tenant does not exists #TODO -ask jeremy how to log
+	}
+
+	if (!defined($descendant_id)) {
+		return undef; #descendant tenant is not defined #TODO -ask jeremy how to log
+	}
+	
+	if (!defined($tenants_data->{tenants_dict}{$descendant_id})) {
+		return undef; #descendant tenant does not exists #TODO -ask jeremy how to log
+	}
+
+	my $iter_id = $descendant_id;
+
+	my $descendant_depth = 0; 
+	while (defined($iter_id)) {
+		if ($anchestor_id == $iter_id)
+		{
+			return 1;
+		}
+		$iter_id = $tenants_data->{tenants_dict}{$iter_id}{parent};
+		$descendant_depth++; 
+		if ($descendant_depth > $self->max_heirarchy_limit()) 		
+		{#recursion limit
+			return undef; #TODO -ask jeremy how to log 
+		}		
+	}
+	
+	return 0;
+}
+
+sub max_heirarchy_limit {
 	my $self = shift;
 	return 100;
 }
+
+
+
+
+##############################################################
 
 sub _is_resource_accessable {
 	my $self = shift;
@@ -219,23 +320,12 @@ sub _is_resource_accessable {
 	}
 
 	#checking if the user tenant is an ancestor of the resource tenant
-	for (my $depth = 0; $depth < $self->_tenancy_heirarchy_limit(); $depth++) {
-	
-		if (!defined($resource_tenant)){
-			#reached top tenant, resource is not under the user tenancy
-			return 0;
-		}
-
-        	if ($user_tenant == $resource_tenant) {
-		    #resource has child tenancy of the user, operations are allowed
-        	    return 1;
-		}
-		
-		$resource_tenant =  $tenants_data->{tenants_dict}->{$resource_tenant}->{parent};
-	};
-	
-	#not found - recursion limit, give only access to root tenant
-	return $self->is_root_tenant($tenants_data, $user_tenant);
+	my $is_user_tenat_parent_of_resource = $self->is_anchestor_of($tenants_data, $user_tenant, $resource_tenant);
+	if (!defined($is_user_tenat_parent_of_resource)) {
+		#error - give access only to root tenant (so it can fix the problem)
+		return $self->is_root_tenant($tenants_data, $user_tenant);
+	}
+	return $is_user_tenat_parent_of_resource;
 }
 
 1;
