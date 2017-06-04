@@ -39,7 +39,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_ROOT_USER, p
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 #verifying the basic cfg
-$t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/name", "root" )->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+ok $t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/name", "root" )->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 my $root_tenant_id = &get_tenant_id('root');
 
@@ -149,7 +149,7 @@ my $tenantD_id = &get_tenant_id('tenantD');
 my $tenantE_id = &get_tenant_id('tenantE');
 
 #list tenants- verify heirachic order - order by id
-$t->get_ok("/api/1.2/tenants?orderby=id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants?orderby=id")->status_is(200)
 	->json_is( "/response/0/id", $root_tenant_id )
 	->json_is( "/response/1/id", $tenantA_id)
 	->json_is( "/response/2/id", $tenantD_id)
@@ -157,7 +157,7 @@ $t->get_ok("/api/1.2/tenants?orderby=id")->status_is(200)
 	->json_is( "/response/4/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 #list tenants- verify heirachic order - order by name
-$t->get_ok("/api/1.2/tenants?orderby=name")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants?orderby=name")->status_is(200)
 	->json_is( "/response/0/id", $root_tenant_id )
 	->json_is( "/response/2/id", $tenantA_id)
 	->json_is( "/response/3/id", $tenantD_id)
@@ -165,7 +165,7 @@ $t->get_ok("/api/1.2/tenants?orderby=name")->status_is(200)
 	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 #list tenants- verify heirachic order - order by name (default)
-$t->get_ok("/api/1.2/tenants")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants")->status_is(200)
 	->json_is( "/response/0/id", $root_tenant_id )
 	->json_is( "/response/2/id", $tenantA_id)
 	->json_is( "/response/3/id", $tenantD_id)
@@ -173,27 +173,27 @@ $t->get_ok("/api/1.2/tenants")->status_is(200)
 	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 #tenants heirarchy- test depth and height
-$t->get_ok("/api/1.2/tenants/$root_tenant_id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants/$root_tenant_id")->status_is(200)
 	->json_is( "/response/0/heirarchyDepth", 0)
 	->json_is( "/response/0/heirarchyHeight", 2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
-$t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
 	->json_is( "/response/0/heirarchyDepth", 1)
 	->json_is( "/response/0/heirarchyHeight", 1)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
-$t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
 	->json_is( "/response/0/heirarchyDepth", 1)
 	->json_is( "/response/0/heirarchyHeight", 0)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 	
-$t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
 	->json_is( "/response/0/heirarchyDepth", 2)
 	->json_is( "/response/0/heirarchyHeight", 0)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
-$t->get_ok("/api/1.2/tenants/$tenantE_id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants/$tenantE_id")->status_is(200)
 	->json_is( "/response/0/heirarchyDepth", 2)
 	->json_is( "/response/0/heirarchyHeight", 0)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
@@ -204,21 +204,21 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 			"active" => 1, "parentId" => $tenantB_id, name => "tenantA2"})
 			->status_is(200);
 			
-$t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
-	->json_is( "/response/0/heirarchyDepth", 2)
-	->json_is( "/response/0/heirarchyHeight", 3)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
-
-$t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
-	->json_is( "/response/0/parentId", $tenantB_id)
-	->json_is( "/response/0/heirarchyDepth", 3)
+ok $t->get_ok("/api/1.2/tenants/$tenantB_id")->status_is(200)
+	->json_is( "/response/0/heirarchyDepth", 1)
 	->json_is( "/response/0/heirarchyHeight", 2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
-	
-$t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
-	->json_is( "/response/0/parentId", $tenantA_id)
-	->json_is( "/response/0/heirarchyDepth", 4)
+
+ok $t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
+	->json_is( "/response/0/parentId", $tenantB_id)
+	->json_is( "/response/0/heirarchyDepth", 2)
 	->json_is( "/response/0/heirarchyHeight", 1)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+	
+ok $t->get_ok("/api/1.2/tenants/$tenantD_id")->status_is(200)
+	->json_is( "/response/0/parentId", $tenantA_id)
+	->json_is( "/response/0/heirarchyDepth", 3)
+	->json_is( "/response/0/heirarchyHeight", 0)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 
@@ -239,10 +239,10 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 			"active" => 1, "parentId" => $root_tenant_id, name => "tenantA2"})
 			->status_is(200);
 
-$t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
+ok $t->get_ok("/api/1.2/tenants/$tenantA_id")->status_is(200)
 	->json_is( "/response/0/parentId", $root_tenant_id)
-	->json_is( "/response/0/heirarchyDepth", 2)
-	->json_is( "/response/0/heirarchyHeight", 2)
+	->json_is( "/response/0/heirarchyDepth", 1)
+	->json_is( "/response/0/heirarchyHeight", 1)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 	
 #cannot delete a tenant that have children
@@ -269,6 +269,29 @@ ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# verify a null tenant user cannot access tenats resources he shouldn't
+ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+
+ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
+        "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+        
+ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
+			"name" => "rooty", "active" => 1, "parentId" => undef})
+		->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#no tenants in the list
+ok $t->get_ok("/api/1.2/tenants")->status_is(200)
+	->json_is( "/response/0/id", undef)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+ok $t->get_ok("/api/1.2/tenants/$root_tenant_id")->status_is(403)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );;
+
+ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+
 $dbh->disconnect();
 done_testing();
 

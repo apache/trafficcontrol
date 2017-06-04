@@ -83,6 +83,9 @@ sub show {
 				}
 			);
 		}
+		else {
+			return $self->forbidden();
+		}
 	}
 	$self->success( \@data );
 }
@@ -144,11 +147,11 @@ sub update {
 	}
 	
 	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $current_resource_tenancy)) {
-		return $self->alert("Current owning tenant is not under user's tenancy.");
+		return $self->forbidden(); #Current owning tenant is not under user's tenancy
 	}
 
 	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $params->{parentId})) {
-		return $self->alert("Parent tenant to be set is not under user's tenancy.");
+		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
 	}
 
 
@@ -250,7 +253,7 @@ sub create {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
 	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $params->{parentId})) {
-		return $self->alert("Parent tenant to be set is not under user's tenancy.");
+		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
 	}
 
 	if (!defined($tenant_utils->get_tenant($tenants_data, $params->{parentId}))) {
@@ -329,13 +332,13 @@ sub delete {
 		return $self->not_found();
 	}	
 
-	my $parent_tenant = $tenant->parent_id;
+	my $parent_tenant = $tenant->parent_id;		
 	
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
 	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $parent_tenant)) {
-		return $self->alert("Parent tenant is not under user's tenancy.");
+		return $self->forbidden(); #Parent tenant is not under user's tenancy
 	}
 
 	my $name = $tenant->name;
