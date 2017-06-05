@@ -182,6 +182,17 @@ sub startup {
 		}
 	);
 
+	$self->hook(around_action => sub {
+		my ($next, $c, $action, $last) = @_;
+		my $user = $c->current_user();
+		my $username = '';
+		if ( defined($user) ) {
+			$username = $user->{username};
+		}
+		$c->set_username($username);
+		return $next->();
+	});
+
 	my $r = $self->routes;
 
 	# Look in the PERL5LIB for any TrafficOpsRoutes.pm files and load them as well
@@ -339,6 +350,7 @@ sub setup_mojo_plugins {
 	$self->plugin(
 		AccessLog => {
 			log    => "$logging_root_dir/access.log",
+			uname_helper => 'set_username',
 			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
 		}
 	);
