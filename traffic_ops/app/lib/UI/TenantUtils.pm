@@ -27,6 +27,14 @@ package UI::TenantUtils;
 #
 # For now, until the current user tenant ID will come from the jwt, the current user tenant is taken from the DB.
 # In order to reduce the number of calls from the DB, the current user tenant is taken in the class creation
+# 
+#
+# A usage example - examing if a tenant can update a delivery-service: 
+# my $tenant_utils = UI::TenantUtils->new($self);
+# my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+# if (!$tenant_utils->is_ds_writeable($tenants_data, <resource_tenant>)) {
+# 	return $self->forbidden(); #Parent tenant is not under user's tenancy
+# }
 #
 
 use Data::Dumper;
@@ -37,18 +45,21 @@ sub new {
 	my $class = shift;
 	my $context = shift;
 	my $current_user_tenant = shift; #optional - allowing the user tenancy to be set from outside, for testing capabilities	
+	my $dbh = shift;  #optional - allowing the DB handle to be set from outside, for testing capabilities	
+
 	if (!defined($current_user_tenant)) {
 		# For now, until the current user tenant ID will come from the jwt, the current user tenant is taken from the DB.
 		$current_user_tenant = $context->db->resultset('TmUser')->search( { username => $context->current_user()->{username} } )->get_column('tenant_id')->single();
 	}
 	
-	my $dbh = shift;  #optional - allowing the DB handle to be set from outside, for testing capabilities	
 	if (!defined($dbh)){
 		$dbh = $context->db
 	}
 	
 	my $self  = {		
 	        dbh => $dbh,
+		context => $context, #saving the context - use it only for log please...
+
 		# In order to reduce the number of calls from the DB, the current user tenant is taken in the class creation.
 		# the below parameters are held temporarily until the info is taken from the jwt
 	        current_user_tenant => $current_user_tenant,
@@ -60,20 +71,24 @@ sub new {
 
 sub create_tenants_data_from_db {
 	my $self = shift;
+	my $orderby = shift || "name";#some default
+				
 	my $tenants_data = {
 		tenants_dict => undef,
 		root_tenants => undef,
 		order_by => -1,
-		ordered_by => undef,
+		ordered_tenants_list => undef,
 	};
-	$tenants_data->{order_by} = shift || "name";#some default
+	$tenants_data->{order_by} = $orderby;
 	
+	# read the data from the DB
 	my $tenants_table = $self->{dbh}->resultset("Tenant")->search( undef, { order_by => $tenants_data->{order_by} });
 	
-	$tenants_data->{ordered_by} = ();
+	# build the tenants dict and list. tenants list is kept ordered
+	$tenants_data->{ordered_tenants_list} = ();
 	$tenants_data->{tenants_dict} = {};
 	while ( my $row = $tenants_table->next ) {
-		push (@{ $tenants_data->{ordered_by} }, $row->id);
+		push (@{ $tenants_data->{ordered_tenants_list} }, $row->id);
 		$tenants_data->{tenants_dict}->{$row->id} = {
 			row => $row,
 			parent => $row->parent_id,
@@ -81,8 +96,9 @@ sub create_tenants_data_from_db {
 		}
 	}
 	
+	#build the root and children tenants lists, ordered by the orderby
 	$tenants_data->{root_tenants} = ();
-	foreach my $key (@{ $tenants_data->{ordered_by} }) {
+	foreach my $key (@{ $tenants_data->{ordered_tenants_list} }) {
 		my $value = $tenants_data->{tenants_dict}->{$key};
 		my $parent = $value->{parent};
 		if (!defined($parent))
@@ -102,7 +118,7 @@ sub current_user_tenant {
 	return $self->{current_user_tenant};
 }
 
-sub get_tenant {
+sub get_tenant_by_id {
 	my $self = shift;
 	my $tenants_data = shift;
 	my $tenant_id = shift;	
@@ -115,7 +131,7 @@ sub get_tenants_list {
 	my $tenants_data = shift;
 	
 	my @result = ();
-	foreach my $tenant_id (@{ $tenants_data->{ordered_by} }) {
+	foreach my $tenant_id (@{ $tenants_data->{ordered_tenants_list} }) {
 		push @result, $tenants_data->{tenants_dict}->{$tenant_id}{row};
 	}
 
@@ -127,18 +143,25 @@ sub get_hierarchic_tenants_list {
 	my $tenants_data = shift;
 	my $tree_root = shift;	
 	
+	#building an heirarchic list via standard DFS.
+	#First - adding to the stack the root nodes under which we want to get the tenats 
 	my @stack = ();
 	if (defined($tree_root)){
 		push (@stack, $tree_root);
 	}
 	else {
+		# root is not set, putting all roots, using "reverse" as we push it into a stack 
+		# (from which we pop) and we want to keep the original order
 		push (@stack, reverse(@{$tenants_data->{root_tenants}}));
 	}
 
+	#starting the actual DFS, poping from the stack, and pushing the poped node children
 	my @result = ();
 	while (@stack) {
 		my $tenant_id = pop @stack;
 		push (@result, $tenants_data->{tenants_dict}->{$tenant_id}{row});
+		# pushing the children in a reverse order, as we working with stack and we 
+		# pop from the end (but want to keep the overall order)
 		push (@stack, reverse(@{$tenants_data->{tenants_dict}->{$tenant_id}{children}}));
 	}
 		
@@ -153,14 +176,12 @@ sub is_root_tenant {
 	if (!defined($tenant_id)) {
 		return 0;
 	}
-	
-	if (defined($tenants_data->{tenants_dict})) {
-		return !(defined($tenants_data->{tenants_dict}{$tenant_id}{parent}));
-	}
-	return !defined($self->{dbh}->resultset('Tenant')->search( { id => $tenant_id } )->get_column('parent_id')->single()); 
+
+	#root <==> parent is undef	
+	return !(defined($tenants_data->{tenants_dict}{$tenant_id}{parent}));
 }
 
-sub is_tenant_resource_readable {
+sub is_tenant_readable {
 	my $self = shift;
 	my $tenants_data = shift;
 	my $resource_tenancy = shift;
@@ -168,7 +189,7 @@ sub is_tenant_resource_readable {
 	return $self->_is_resource_accessable ($tenants_data, $resource_tenancy, "r");
 }
 
-sub is_tenant_resource_writeable {
+sub is_tenant_writeable {
 	my $self = shift;
 	my $tenants_data = shift;
 	my $resource_tenancy = shift;
@@ -184,7 +205,8 @@ sub get_tenant_heirarchy_depth {
 	my $tenant_id = shift;
 
 	if (!defined($tenants_data->{tenants_dict}{$tenant_id})) {
-		return undef; #tenant does not exists #TODO -ask jeremy how to log
+		$self->_error("Check tenancy depth - tenant $tenant_id does not exists");
+		return undef;
 	}
 
 	my $iter_id = $tenant_id;
@@ -195,7 +217,8 @@ sub get_tenant_heirarchy_depth {
 		$depth++; 
 		if ($depth > $self->max_heirarchy_limit()) 		
 		{
-			return undef; #heirarchy limit #TODO -ask jeremy how to log
+			$self->_error("Check tenancy depth for tenant $tenant_id - reached heirarchy limit");
+			return undef; 
 		}		
 	}
 	
@@ -210,7 +233,8 @@ sub get_tenant_heirarchy_height {
 	my $tenant_id	= shift;
 
 	if (!defined($tenants_data->{tenants_dict}{$tenant_id})) {
-		return undef; #tenant does not exists #TODO -ask jeremy how to log
+		$self->_error("Check tenancy height - tenant $tenant_id does not exists");
+		return undef; 
 	}
 
 	#calc tenant height
@@ -242,19 +266,23 @@ sub is_anchestor_of {
 	my $descendant_id = shift;
 
 	if (!defined($anchestor_id)) {
-		return undef; #anchestor tenant is not defined #TODO -ask jeremy how to log
+		$self->_error("Check tenants relations - got undef anchestor");
+		return undef;
 	}
 	
 	if (!defined($tenants_data->{tenants_dict}{$anchestor_id})) {
-		return undef; #anchestor tenant does not exists #TODO -ask jeremy how to log
+		$self->_error("Check tenants relations - tenant $anchestor_id does not exists");
+		return undef;
 	}
 
 	if (!defined($descendant_id)) {
-		return undef; #descendant tenant is not defined #TODO -ask jeremy how to log
+		$self->_error("Check tenants relations - got undef descendant");
+		return undef;
 	}
 	
 	if (!defined($tenants_data->{tenants_dict}{$descendant_id})) {
-		return undef; #descendant tenant does not exists #TODO -ask jeremy how to log
+		$self->_error("Check tenants relations - tenant $descendant_id does not exists");
+		return undef;
 	}
 
 	my $iter_id = $descendant_id;
@@ -269,7 +297,8 @@ sub is_anchestor_of {
 		$descendant_depth++; 
 		if ($descendant_depth > $self->max_heirarchy_limit()) 		
 		{#recursion limit
-			return undef; #TODO -ask jeremy how to log 
+			$self->_error("Tenants relation failed for tenants $anchestor_id / $descendant_id - reached heirarchy limit");
+			return undef;
 		}		
 	}
 	
@@ -285,6 +314,19 @@ sub max_heirarchy_limit {
 
 
 ##############################################################
+
+sub _error {
+	my $self    = shift;
+	my $message = shift;
+	
+	$context = $self->{context}; 
+	if (defined($context)) {
+		$context->app->log->error($message);
+	}
+	else {
+		print "Error: ", $message, "\n";
+	}
+}
 
 sub _is_resource_accessable {
 	my $self = shift;
