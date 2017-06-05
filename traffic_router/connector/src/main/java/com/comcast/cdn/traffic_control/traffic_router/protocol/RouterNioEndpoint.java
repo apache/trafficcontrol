@@ -21,8 +21,6 @@ import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import java.util.List;
 
-
-
 public class RouterNioEndpoint extends NioEndpoint {
     protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
     // Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
