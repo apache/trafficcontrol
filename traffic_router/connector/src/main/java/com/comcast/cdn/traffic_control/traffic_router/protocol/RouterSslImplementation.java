@@ -15,36 +15,34 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SSLSupport;
-import org.apache.tomcat.util.net.ServerSocketFactory;
-import org.apache.tomcat.util.net.jsse.JSSEImplementation;
+import org.apache.tomcat.util.net.jsse.JSSESupport;
+//import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
+//import org.apache.tomcat.util.net.openssl.OpenSSLUtil;
+import org.apache.tomcat.util.net.SSLImplementation;
+import org.apache.tomcat.util.net.SSLUtil;
 
 import javax.net.ssl.SSLSession;
-import java.net.Socket;
 
-public class RouterSslImplementation extends JSSEImplementation {
-	RouterJsseFactory factory = new RouterJsseFactory();
-
-	public RouterSslImplementation() throws ClassNotFoundException {
-	}
-
-	@Override
-	public String getImplementationName() {
-		return getClass().getSimpleName();
-	}
-
-	@Override
-	public ServerSocketFactory getServerSocketFactory() {
-		return factory.getSocketFactory();
-	}
-
-	@Override
-	public SSLSupport getSSLSupport(final Socket sock) {
-		return factory.getSSLSupport(sock);
-	}
-
-	@Override
+//public class RouterSslImplementation extends OpenSSLImplementation {
+public class RouterSslImplementation extends SSLImplementation {
+    @Override
 	public SSLSupport getSSLSupport(final SSLSession session) {
-		return factory.getSSLSupport(session);
+        return new JSSESupport(session);
 	}
+
+    @Override
+//    public OpenSSLUtil getSSLUtil(SSLHostConfigCertificate certificate) {
+//        return new RouterSslUtil(certificate);
+//    }
+        public SSLUtil getSSLUtil(SSLHostConfigCertificate certificate) {
+            return new RouterSslUtil(certificate);
+    }
+
+
+    @Override
+    public boolean isAlpnSupported() {
+        return false;
+    }
 }

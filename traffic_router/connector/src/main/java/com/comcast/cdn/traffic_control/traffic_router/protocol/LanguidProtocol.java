@@ -15,19 +15,16 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
-import org.apache.coyote.http11.Http11Protocol;
 
-public class LanguidProtocol extends Http11Protocol implements RouterProtocolHandler {
+import org.apache.coyote.http11.Http11NioProtocol;
+
+public class LanguidProtocol extends Http11NioProtocol implements RouterProtocolHandler {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
 	private boolean ready = false;
 	private boolean initialized = false;
 	private String mbeanPath;
 	private String readyAttribute;
 	private String portAttribute;
-
-	public LanguidProtocol() {
-		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
-	}
 
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")

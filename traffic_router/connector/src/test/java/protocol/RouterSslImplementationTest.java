@@ -16,27 +16,38 @@
 package protocol;
 
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation;
-import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslServerSocketFactory;
-import org.apache.tomcat.util.net.jsse.JSSEFactory;
+import org.apache.tomcat.util.net.SSLHostConfig;
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
+import org.apache.tomcat.util.net.SSLSupport;
+import org.apache.tomcat.util.net.SSLUtil;
+import org.apache.tomcat.util.net.jsse.JSSEUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.api.mockito.PowerMockito;
+
+import javax.net.ssl.SSLSession;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({RouterSslImplementation.class, JSSEFactory.class})
+@PrepareForTest({RouterSslImplementation.class, SSLHostConfigCertificate.class})
 public class RouterSslImplementationTest {
+	SSLSession sslSession = PowerMockito.mock(SSLSession.class);
+	SSLHostConfig sslHostConfig = PowerMockito.mock(SSLHostConfig.class);
+	SSLHostConfigCertificate.Type type = PowerMockito.mock(SSLHostConfigCertificate.Type.class);
+	SSLHostConfigCertificate sslHostConfigCertificate = new SSLHostConfigCertificate(sslHostConfig, type);
+
 	@Test
-	public void itReturnsItsName() throws Exception {
-		assertThat(new RouterSslImplementation().getImplementationName(), equalTo("RouterSslImplementation"));
+	public void itReturnsSSLSupport() throws Exception {
+		assertThat(new RouterSslImplementation().getSSLSupport(sslSession), instanceOf(SSLSupport.class));
 	}
 
 	@Test
-	public void itReturnsRouterSslServerSocketFactory() throws Exception {
-		assertThat(new RouterSslImplementation().getServerSocketFactory(), instanceOf(RouterSslServerSocketFactory.class));
+	public void itReturnsSSLUtil() throws Exception {
+		assertThat(new RouterSslImplementation().getSSLUtil(sslHostConfigCertificate), instanceOf(SSLUtil.class));
 	}
+
 }
