@@ -330,11 +330,10 @@ sub reset_password {
 
 }
 
-sub get_available_deliveryservices {
+sub get_deliveryservices_not_assigned_to_user {
 	my $self = shift;
 	my @data;
 	my $id = $self->param('id');
-	my %dsids;
 	my %takendsids;
 
 	my $rs_takendsids = undef;
@@ -347,11 +346,54 @@ sub get_available_deliveryservices {
 	my $rs_links = $self->db->resultset("Deliveryservice")->search( undef, { order_by => "xml_id" } );
 	while ( my $row = $rs_links->next ) {
 		if ( !exists( $takendsids{ $row->id } ) ) {
-			push( @data, { "id" => $row->id, "xmlId" => $row->xml_id } );
+			push( @data, {
+				"id" 			=> $row->id,
+				"xmlId" 		=> $row->xml_id,
+				"displayName" 	=> $row->display_name,
+			} );
 		}
 	}
 
 	$self->success( \@data );
+}
+
+sub assign_deliveryservices {
+	my $self 				= shift;
+	my $params 				= $self->req->json;
+	my $user_id 			= $params->{userId};
+	my $delivery_services 	= $params->{deliveryServices};
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( ref($delivery_services) ne 'ARRAY' ) {
+		return $self->alert("Delivery services must be an array");
+	}
+
+	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+
+	$self->db->txn_begin();
+	foreach my $ds_id (@{ $delivery_services }) {
+		my $ds_exist = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+		if ( !defined($ds_exist) ) {
+			$self->db->txn_rollback();
+			return $self->alert("Delivery service with id [ " . $ds_id . " ] doesn't exist");
+		}
+		my $ds_user_exist = $self->db->resultset('DeliveryserviceTmuser')->find( { deliveryservice => $ds_id, tm_user_id => $user_id } );
+		if ( !defined($ds_user_exist) ) {
+			$self->db->resultset('DeliveryserviceTmuser')->create( { deliveryservice => $ds_id, tm_user_id => $user_id } )->insert();
+		}
+	}
+	$self->db->txn_commit();
+
+	&log( $self, "Delivery services were assigned to " . $user->username, "APICHANGE" );
+
+	my $response = $params;
+	return $self->success($response, "Delivery service assignments complete.");
 }
 
 # Read the current user profile and produce the result

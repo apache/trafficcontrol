@@ -98,6 +98,46 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
             );
     };
 
+    this.getUnassignedUserDeliveryServices = function(userId) {
+        var deferred = $q.defer();
+
+        $http.get(ENV.api['root'] + "user/" + userId + "/deliveryservices/available")
+            .then(
+                function(result) {
+                    deferred.resolve(result.data.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
+
+        return deferred.promise;
+    };
+
+    this.deleteUserDeliveryService = function(userId, dsId) {
+        return httpService.delete(ENV.api['root'] + 'deliveryservice_user/' + dsId + '/' + userId)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User and delivery service were unlinked.' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
+            );
+    };
+
+    this.assignUserDeliveryServices = function(userDSMappings) {
+        return Restangular.service('deliveryservice_user').post(userDSMappings)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery services linked to user' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
 };
 
 UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'httpService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];

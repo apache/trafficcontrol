@@ -1148,6 +1148,93 @@ Delivery Service Server
 
 |
 
+.. _to-api-v12-ds-user:
+
+Delivery Service User
++++++++++++++++++++++
+
+**POST /api/1.2/deliveryservice_user**
+
+  Create one or more user / delivery service assignments.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Parameters**
+
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | Name                            | Required | Description                                                       |
+  +=================================+==========+===================================================================+
+  | ``userId``                      | yes      | The ID of the user.                                               |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``deliveryServices``            | yes      | An array of delivery service IDs.                                 |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "userId": 50,
+        "deliveryServices": [ 23, 34, 45, 56, 67 ]
+    }
+
+  **Response Properties**
+
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | Parameter                          | Type   | Description                                                       |
+  +====================================+========+===================================================================+
+  | ``dsId``                           | int    | The ID of the delivery service.                                   |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``servers``                        | array  | An array of server IDs.                                           |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+        "alerts": [
+                  {
+                          "level": "success",
+                          "text": "Delivery service assignments complete."
+                  }
+          ],
+        "response": {
+            "userId" : 50,
+            "deliveryServices": [ 23, 34, 45, 56, 67 ]
+        }
+    }
+
+|
+
+**DELETE /api/1.2/deliveryservice_user/:dsId/:userId**
+
+  Removes a delivery service from a user.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Route Parameters**
+
+  +-----------------+----------+---------------------------------------------------+
+  | Name            | Required | Description                                       |
+  +=================+==========+===================================================+
+  | ``dsId``        | yes      | Delivery service ID.                              |
+  +-----------------+----------+---------------------------------------------------+
+  | ``userId``      | yes      | User ID.                                          |
+  +-----------------+----------+---------------------------------------------------+
+
+   **Response Example** ::
+
+    {
+           "alerts": [
+                     {
+                             "level": "success",
+                             "text": "User and delivery service were unlinked."
+                     }
+             ],
+    }
+
+|
 
 .. _to-api-v12-ds-sslkeys:
 
