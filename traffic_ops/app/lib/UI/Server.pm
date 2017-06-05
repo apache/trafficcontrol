@@ -958,7 +958,9 @@ sub postupdate {
 	my $reval_updated = $self->param("reval_updated");
 	my $host_name = $self->param("host_name");
 
-	if ( !&is_admin($self) ) {
+	&stash_role($self);
+	# Intentionally <= 10 rather than < 20 to allow an ORT role with level 11 to post to this, but not other admin routes.
+	if ( $self->stash('priv_level') <= 10 ) {
 		$self->render( text => "Forbidden", status => 403, layout => undef );
 		return;
 	}
