@@ -408,9 +408,4 @@ sub defined_or_default {
 	return defined($val) ? $val : $default;
 }
 
-sub current_user_tenant {
-    my $self = shift;
-    return $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('tenant_id')->single();
-}    
-
 1;
