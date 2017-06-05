@@ -20,7 +20,6 @@ import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.net.NioChannel;
 import org.apache.tomcat.util.net.SSLImplementation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.Security;
 
 
@@ -72,9 +71,6 @@ public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> i
 		log.info("Traffic Router is ready; calling super.init()");
 		super.setSslImplementationName(sslClassName);
 		super.init();
-
-
-
 		setInitialized(true);
 	}
 

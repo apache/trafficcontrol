@@ -44,8 +44,6 @@ public class CatalinaTrafficRouter {
 		catalina = new Catalina();
 		catalina.load(new String[] {"-config", serverXmlPath});
 
-
-
 		// Override the port and app base property of server.xml
 		StandardService trafficRouterService = (StandardService) catalina.getServer().findService("traffic_router_core");
 
