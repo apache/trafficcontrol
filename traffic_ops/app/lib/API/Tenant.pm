@@ -42,14 +42,14 @@ sub index {
 	my @data = ();
 	my @tenants_list = $tenant_utils->get_hierarchic_tenants_list($tenants_data, undef);
 	foreach my $row (@tenants_list) {
-		if ($tenant_utils->is_tenant_resource_readable($tenants_data, $row->id)) {
+		if ($tenant_utils->is_tenant_readable($tenants_data, $row->id)) {
 			push(
 				@data, {
 					"id"             => $row->id,
 					"name"           => $row->name,
 					"active"         => \$row->active,
 					"parentId"       => $row->parent_id,
-					"parentName"     => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
+					"parentName"     => ( defined $row->parent_id ) ? $tenant_utils->get_tenant_by_id($tenants_data, $row->parent_id)->name : undef,
 				}
 			);
 		}
@@ -68,14 +68,14 @@ sub show {
 	my @data = ();
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
-		if ($tenant_utils->is_tenant_resource_readable($tenants_data, $row->id)) {
+		if ($tenant_utils->is_tenant_readable($tenants_data, $row->id)) {
 			push(
 				@data, {
 					"id"           => $row->id,
 					"name"         => $row->name,
 					"active"       => \$row->active,
 					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant($tenants_data, $row->parent_id)->name : undef,
+					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant_by_id($tenants_data, $row->parent_id)->name : undef,
 				}
 			);
 		}
@@ -142,18 +142,18 @@ sub update {
 		$current_resource_tenancy = $id;
 	}
 	
-	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $current_resource_tenancy)) {
+	if (!$tenant_utils->is_tenant_writeable($tenants_data, $current_resource_tenancy)) {
 		return $self->forbidden(); #Current owning tenant is not under user's tenancy
 	}
 
-	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $params->{parentId})) {
+	if (!$tenant_utils->is_tenant_writeable($tenants_data, $params->{parentId})) {
 		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
 	}
 
 
 	if ($params->{parentId} != $tenant->parent) {
 		#parent replacement
-		if (!defined($tenant_utils->get_tenant($tenants_data, $params->{parentId}))) {
+		if (!defined($tenant_utils->get_tenant_by_id($tenants_data, $params->{parentId}))) {
 			return $self->alert("Parent tenant does not exists.");
 		}
 		my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
@@ -248,11 +248,11 @@ sub create {
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
-	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $params->{parentId})) {
+	if (!$tenant_utils->is_tenant_writeable($tenants_data, $params->{parentId})) {
 		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
 	}
 
-	if (!defined($tenant_utils->get_tenant($tenants_data, $params->{parentId}))) {
+	if (!defined($tenant_utils->get_tenant_by_id($tenants_data, $params->{parentId}))) {
 		return $self->alert("Parent tenant does not exists.");
 	}
 	
@@ -333,7 +333,7 @@ sub delete {
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
-	if (!$tenant_utils->is_tenant_resource_writeable($tenants_data, $parent_tenant)) {
+	if (!$tenant_utils->is_tenant_writeable($tenants_data, $parent_tenant)) {
 		return $self->forbidden(); #Parent tenant is not under user's tenancy
 	}
 

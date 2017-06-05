@@ -200,70 +200,70 @@ ok $tenant_utils_of_root->get_tenant_heirarchy_height($tenants_data, $tenantE_id
 ############################
 #testing tenancy checks
 #root tenant - touch entire hierarchy as well as null
-ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, $root_tenant_id) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, $root_tenant_id) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, undef) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, undef) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, $tenantA_id) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, $tenantA_id) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_readable($tenants_data, $tenantE_id) == 1; 
-ok $tenant_utils_of_root->is_tenant_resource_writeable($tenants_data, $tenantE_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_readable($tenants_data, $root_tenant_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_writeable($tenants_data, $root_tenant_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_readable($tenants_data, undef) == 1; 
+ok $tenant_utils_of_root->is_tenant_writeable($tenants_data, undef) == 1; 
+ok $tenant_utils_of_root->is_tenant_readable($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_writeable($tenants_data, $tenantA_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_readable($tenants_data, $tenantE_id) == 1; 
+ok $tenant_utils_of_root->is_tenant_writeable($tenants_data, $tenantE_id) == 1; 
 
 my $tenant_utils_of_a = UI::TenantUtils->new(undef, $tenantA_id, $schema);
 my $tenants_data_of_a = $tenant_utils_of_a->create_tenants_data_from_db();
 #parent - no access
-ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $root_tenant_id) == 0; 
-ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $root_tenant_id) == 0;
+ok $tenant_utils_of_a->is_tenant_readable($tenants_data_of_a, $root_tenant_id) == 0; 
+ok $tenant_utils_of_a->is_tenant_writeable($tenants_data_of_a, $root_tenant_id) == 0;
 #undef - all have access 
-ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, undef) == 1; 
-ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, undef) == 1; 
+ok $tenant_utils_of_a->is_tenant_readable($tenants_data_of_a, undef) == 1; 
+ok $tenant_utils_of_a->is_tenant_writeable($tenants_data_of_a, undef) == 1; 
 #itself - full access
-ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $tenantA_id) == 1; 
-ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $tenantA_id) == 1; 
+ok $tenant_utils_of_a->is_tenant_readable($tenants_data_of_a, $tenantA_id) == 1; 
+ok $tenant_utils_of_a->is_tenant_writeable($tenants_data_of_a, $tenantA_id) == 1; 
 # child - full access
-ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $tenantE_id) == 1; 
-ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $tenantE_id) == 1; 
+ok $tenant_utils_of_a->is_tenant_readable($tenants_data_of_a, $tenantE_id) == 1; 
+ok $tenant_utils_of_a->is_tenant_writeable($tenants_data_of_a, $tenantE_id) == 1; 
 # Brother - no access
-ok $tenant_utils_of_a->is_tenant_resource_readable($tenants_data_of_a, $tenantB_id) == 0; 
-ok $tenant_utils_of_a->is_tenant_resource_writeable($tenants_data_of_a, $tenantB_id) == 0; 
+ok $tenant_utils_of_a->is_tenant_readable($tenants_data_of_a, $tenantB_id) == 0; 
+ok $tenant_utils_of_a->is_tenant_writeable($tenants_data_of_a, $tenantB_id) == 0; 
 
 #leaf test
 my $tenant_utils_of_d = UI::TenantUtils->new(undef, $tenantD_id, $schema);
 my $tenants_data_of_d = $tenant_utils_of_d->create_tenants_data_from_db();
 #anchestor - no access
-ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $root_tenant_id) == 0; 
-ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $root_tenant_id) == 0;
+ok $tenant_utils_of_d->is_tenant_readable($tenants_data_of_d, $root_tenant_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_writeable($tenants_data_of_d, $root_tenant_id) == 0;
 #undef - all have access 
-ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, undef) == 1; 
-ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, undef) == 1; 
+ok $tenant_utils_of_d->is_tenant_readable($tenants_data_of_d, undef) == 1; 
+ok $tenant_utils_of_d->is_tenant_writeable($tenants_data_of_d, undef) == 1; 
 # parent - no access
-ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $tenantA_id) == 0; 
-ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $tenantA_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_readable($tenants_data_of_d, $tenantA_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_writeable($tenants_data_of_d, $tenantA_id) == 0; 
 # itself - full access
-ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $tenantD_id) == 1; 
-ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $tenantD_id) == 1; 
+ok $tenant_utils_of_d->is_tenant_readable($tenants_data_of_d, $tenantD_id) == 1; 
+ok $tenant_utils_of_d->is_tenant_writeable($tenants_data_of_d, $tenantD_id) == 1; 
 # uncle - no access
-ok $tenant_utils_of_d->is_tenant_resource_readable($tenants_data_of_d, $tenantB_id) == 0; 
-ok $tenant_utils_of_d->is_tenant_resource_writeable($tenants_data_of_d, $tenantB_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_readable($tenants_data_of_d, $tenantB_id) == 0; 
+ok $tenant_utils_of_d->is_tenant_writeable($tenants_data_of_d, $tenantB_id) == 0; 
 
 #inactive - nothing can do
 my $tenant_utils_of_e = UI::TenantUtils->new(undef, $tenantE_id, $schema);
 my $tenants_data_of_e = $tenant_utils_of_e->create_tenants_data_from_db();
 #anchestor - no access
-ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $root_tenant_id) == 0; 
-ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $root_tenant_id) == 0;
+ok $tenant_utils_of_e->is_tenant_readable($tenants_data_of_e, $root_tenant_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_writeable($tenants_data_of_e, $root_tenant_id) == 0;
 #undef - all have access 
-ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, undef) == 0; 
-ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, undef) == 0; 
+ok $tenant_utils_of_e->is_tenant_readable($tenants_data_of_e, undef) == 0; 
+ok $tenant_utils_of_e->is_tenant_writeable($tenants_data_of_e, undef) == 0; 
 # parent - no access
-ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $tenantA_id) == 0; 
-ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $tenantA_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_readable($tenants_data_of_e, $tenantA_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_writeable($tenants_data_of_e, $tenantA_id) == 0; 
 # itself - full access
-ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $tenantE_id) == 0; 
-ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $tenantE_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_readable($tenants_data_of_e, $tenantE_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_writeable($tenants_data_of_e, $tenantE_id) == 0; 
 # uncle - no access
-ok $tenant_utils_of_e->is_tenant_resource_readable($tenants_data_of_e, $tenantB_id) == 0; 
-ok $tenant_utils_of_e->is_tenant_resource_writeable($tenants_data_of_e, $tenantB_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_readable($tenants_data_of_e, $tenantB_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_writeable($tenants_data_of_e, $tenantB_id) == 0; 
 
 
 #################
