@@ -250,7 +250,8 @@ sub create {
 	}
 
 	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $self->current_user_tenant();
+	my $tenantUtils = UI::TenantUtils->new($self);
+	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $tenantUtils->current_user_tenant();
 
 	my $values = {
 		address_line1        => $params->{addressLine1},
