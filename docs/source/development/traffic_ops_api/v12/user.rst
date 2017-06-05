@@ -1004,7 +1004,7 @@ Role(s) Required: None
 
 |
 
-**GET /api/1.2/user/:id/deliveryservices/available.json**
+**GET /api/1.2/user/:id/deliveryservices/available**
 
   Authentication Required: Yes
 
@@ -1023,9 +1023,11 @@ Role(s) Required: None
   +----------------------+--------+------------------------------------------------+
   | Parameter            | Type   | Description                                    |
   +======================+========+================================================+
-  |``xmlId``             | string |                                                |
-  +----------------------+--------+------------------------------------------------+
   |``id``                | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``displayName``       | string |                                                |
+  +----------------------+--------+------------------------------------------------+
+  |``xmlId``             | string |                                                |
   +----------------------+--------+------------------------------------------------+
 
   **Response Example** ::
@@ -1034,12 +1036,14 @@ Role(s) Required: None
     {
      "response": [
         {
-           "xmlId": "ns-img",
-           "id": "90"
+           "id": "90",
+           "displayName": "Foo Bar DS",
+           "xmlId": "foo-bar"
         },
         {
-           "xmlId": "ns-img-secure",
-           "id": "280"
+           "id": "92",
+           "displayName": "Foo Baz DS",
+           "xmlId": "foo-baz"
         }
      ],
     }

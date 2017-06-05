@@ -68,7 +68,7 @@ sub domains {
 	$self->success( \@data );
 }
 
-sub create {
+sub assign_servers_to_ds {
 	my $self 		= shift;
 	my $params 		= $self->req->json;
 	my $ds_id 		= $params->{dsId};
