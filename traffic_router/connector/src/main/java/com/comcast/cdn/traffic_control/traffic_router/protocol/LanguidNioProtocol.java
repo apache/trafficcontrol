@@ -16,8 +16,10 @@
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import org.apache.coyote.http11.Http11NioProtocol;
+//import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
 import org.apache.tomcat.util.net.SSLImplementation;
-import org.apache.tomcat.util.net.jsse.JSSEImplementation;
+
+
 
 public class LanguidNioProtocol extends Http11NioProtocol implements RouterProtocolHandler {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidNioProtocol.class);
@@ -26,11 +28,11 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 	private String mbeanPath;
 	private String readyAttribute;
 	private String portAttribute;
-	private String sslClassName = JSSEImplementation.class.getCanonicalName();
+//	String sslClassName = OpenSSLImplementation.class.getCanonicalName();
+	String sslClassName = SSLImplementation.class.getCanonicalName();
 
 	public LanguidNioProtocol() {
 		log.warn("Serving wildcard certs for multiple domains");
-		ep = new RouterNioEndpoint();
 		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
 	}
 
@@ -40,9 +42,11 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 			this.sslClassName = sslClassName;
 			return true;
 		} catch (ClassNotFoundException e) {
-			log.error("Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to JSSE");
-			this.sslClassName = JSSEImplementation.class.getCanonicalName();
+			log.error("Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to OpenSSL");
+//			this.sslClassName = OpenSSLImplementation.class.getCanonicalName();
+			this.sslClassName = SSLImplementation.class.getCanonicalName();
 		}
+
 
 		return false;
 	}
@@ -57,9 +61,8 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 		}
 
 		log.info("Traffic Router is ready; calling super.init()");
+		super.setSslImplementationName(sslClassName);
 		super.init();
-
-		sslImplementation = (JSSEImplementation) SSLImplementation.getInstance(sslClassName);
 		setInitialized(true);
 	}
 
@@ -80,6 +83,7 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 
 		super.start();
 	}
+
 
 	@Override
 	public boolean isReady() {
@@ -129,5 +133,10 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 	@Override
 	public void setPortAttribute(final String portAttribute) {
 		this.portAttribute = portAttribute;
+	}
+
+	@Override
+	protected String getSslImplementationShortName() {
+		return "openssl";
 	}
 }

@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
+//import org.apache.catalina.Container;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
@@ -22,7 +23,6 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardService;
 import org.apache.catalina.startup.Catalina;
 import org.springframework.util.SocketUtils;
-
 import java.util.logging.Level;
 
 public class CatalinaTrafficRouter {
@@ -42,8 +42,8 @@ public class CatalinaTrafficRouter {
 		System.setProperty("catalina.home", "");
 
 		catalina = new Catalina();
-		catalina.process(new String[] {"-config", serverXmlPath});
-		catalina.load();
+		catalina.load(new String[] {"-config", serverXmlPath});
+
 
 		// Override the port and app base property of server.xml
 		StandardService trafficRouterService = (StandardService) catalina.getServer().findService("traffic_router_core");
@@ -67,7 +67,7 @@ public class CatalinaTrafficRouter {
 		standardHost.setAppBase(appBase);
 
 		// We have to manually set up the default servlet, the Catalina class doesn't do this for us
-		StandardContext rootContext = (StandardContext) standardHost.findChild("/");
+		StandardContext rootContext = (StandardContext) standardHost.findChild("");
 		Wrapper defaultServlet = rootContext.createWrapper();
 		defaultServlet.setName("default");
 		defaultServlet.setServletClass("org.apache.catalina.servlets.DefaultServlet");

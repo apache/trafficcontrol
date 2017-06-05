@@ -22,6 +22,7 @@ import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
 
+
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
@@ -33,7 +34,7 @@ public class TomcatLifecycleListener implements LifecycleListener {
 	@Override
 	@SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
 	public void lifecycleEvent(final LifecycleEvent event) {
-		if (!Lifecycle.INIT_EVENT.equals(event.getType())) {
+		if (!Lifecycle.AFTER_INIT_EVENT.equals(event.getType())) {
 			return;
 		}
 
