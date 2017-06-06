@@ -248,7 +248,7 @@ sub update() {
     my $req_targets = $self->req->json->{'targets'};
 
     foreach my $req_target (@{$req_targets}) {
-        if (!$req_target->{'deliveryService'} && ( !$req_target->{'weight'} || !$req_target->{'order'} )) {
+        if (!$req_target->{'deliveryService'} && ( !$req_target->{'weight'} || !$req_target->{'order'} ) || ( $req_target->{'weight'} && $req_target->{'order'} ) ) {
            return $self->render(json => {"message" => "please provide a valid json for targets"}, status => 400);
         }
         if (!exists($valid_targets->{$req_target->{'deliveryService'}})) {

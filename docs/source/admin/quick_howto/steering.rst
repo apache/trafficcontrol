@@ -43,7 +43,7 @@ Configure Delivery Service Steering
 	:scale: 100%
 	:align: center
 
-5) As the steering user, assign weights to target delivery services.  This will require logging in to Traffic Ops first via ``http://to.kabletown.net/api/1.2/user/login`` and storing the mojolicious cookie.
+5) As the steering user, assign weights or orders to target delivery services.  Assignments must either have a value for weight or order, but not both.  The value of weight must be a positive integer, while the value of order can be any integer.  This will require logging in to Traffic Ops first via ``http://to.kabletown.net/api/1.2/user/login`` and storing the mojolicious cookie.
 
 	Sample cURL: ``curl -H "Cookie: mojolicious=xxxyyy" -XPUT "https://to.kabletown.net/internal/api/1.2/steering/steering-ds" -d @/tmp/steering.json``
 
@@ -60,6 +60,14 @@ Configure Delivery Service Steering
      {
        "weight": "9000",
        "deliveryService": "target-deliveryservice-2"
+     }
+     {
+       "order": -1,
+       "deliveryService": "target-deliveryservice-3"
+     }
+     {
+       "order": 3,
+       "deliveryService": "target-deliveryservice-4"
      }
     ]
    }
@@ -88,8 +96,16 @@ Configure Delivery Service Steering
        "weight": "9000",
        "deliveryService": "target-deliveryservice-2"
      }
+     {
+       "order": -1,
+       "deliveryService": "target-deliveryservice-3"
+     }
+     {
+       "order": 3,
+       "deliveryService": "target-deliveryservice-4"
+     }
     ]
    }
 
-7) Any requests to Traffic Router for the steering delivery service should now be routed to target delivery services based on configured weight.  Example: ``curl -Lvs http://tr.steering-ds.cdn.kabletown.net/foo``
+7) Any requests to Traffic Router for the steering delivery service should now be routed to target delivery services based on configured weight or order.  Example: ``curl -Lvs http://tr.steering-ds.cdn.kabletown.net/foo``
 
