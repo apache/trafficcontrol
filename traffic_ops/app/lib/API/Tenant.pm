@@ -42,7 +42,7 @@ sub index {
 	my @data = ();
 	my @tenants_list = $tenant_utils->get_hierarchic_tenants_list($tenants_data, undef);
 	foreach my $row (@tenants_list) {
-		if ($tenant_utils->is_tenant_readable($tenants_data, $row->id)) {
+		if ($tenant_utils->is_tenant_resource_accessible($tenants_data, $row->id)) {
 			push(
 				@data, {
 					"id"             => $row->id,
@@ -68,7 +68,7 @@ sub show {
 	my @data = ();
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
-		if ($tenant_utils->is_tenant_readable($tenants_data, $row->id)) {
+		if ($tenant_utils->is_tenant_resource_accessible($tenants_data, $row->id)) {
 			push(
 				@data, {
 					"id"           => $row->id,
@@ -142,11 +142,11 @@ sub update {
 		$current_resource_tenancy = $id;
 	}
 	
-	if (!$tenant_utils->is_tenant_writeable($tenants_data, $current_resource_tenancy)) {
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $current_resource_tenancy)) {
 		return $self->forbidden(); #Current owning tenant is not under user's tenancy
 	}
 
-	if (!$tenant_utils->is_tenant_writeable($tenants_data, $params->{parentId})) {
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
 		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
 	}
 
@@ -248,7 +248,7 @@ sub create {
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
-	if (!$tenant_utils->is_tenant_writeable($tenants_data, $params->{parentId})) {
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
 		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
 	}
 
@@ -333,7 +333,7 @@ sub delete {
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
-	if (!$tenant_utils->is_tenant_writeable($tenants_data, $parent_tenant)) {
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $parent_tenant)) {
 		return $self->forbidden(); #Parent tenant is not under user's tenancy
 	}
 
