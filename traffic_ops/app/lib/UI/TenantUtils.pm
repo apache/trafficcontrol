@@ -190,22 +190,12 @@ sub is_root_tenant {
     return !( defined( $tenants_data->{tenants_dict}{$tenant_id}{parent} ) );
 }
 
-sub is_tenant_readable {
+sub is_tenant_resource_accessible {
     my $self             = shift;
     my $tenants_data     = shift;
     my $resource_tenancy = shift;
 
-    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy,
-        "r" );
-}
-
-sub is_tenant_writeable {
-    my $self             = shift;
-    my $tenants_data     = shift;
-    my $resource_tenancy = shift;
-
-    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy,
-        "w" );
+    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
 }
 
 sub get_tenant_heirarchy_depth {
@@ -349,7 +339,6 @@ sub _is_resource_accessable {
     my $self            = shift;
     my $tenants_data    = shift;
     my $resource_tenant = shift;
-    my $operation       = shift;
 
     my $user_tenant = $self->current_user_tenant();
     if ( defined($user_tenant) ) {
