@@ -367,6 +367,7 @@ sub process_cfg_file {
 		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
 		$result =~ s/__HOSTNAME__/$hostname_short/g;
 		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
+		$result =~ s/\s*__RETURN__\s*/\n/g;
 	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
@@ -1105,6 +1106,11 @@ sub process_config_files {
 			$cfg_file_tracker->{$file}->{'service'} = "system";
 			$return = &process_cfg_file($file);
 		}
+		elsif ( $script_mode == $SYNCDS && defined( $cfg_file_tracker->{$file}->{'url'} ) && defined ( $cfg_file_tracker->{$file}->{'location'} ) ) {
+			( $log_level >> $DEBUG ) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
+			$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
+			$return = &process_cfg_file($file);
+		}
 		elsif ( $script_mode != $SYNCDS ) {
 			if (
 				package_installed("trafficserver")
@@ -1395,7 +1401,13 @@ sub lwp_get {
 	while( $retry_counter > 0 ) {
 
 		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
 		my $request = $traffic_ops_host . $uri;
+		if ( $uri =~ m/^http/ ) {
+			$request = $uri;
+			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
+		}
+
 
 		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
@@ -1779,10 +1791,16 @@ sub get_cfg_file_list {
 				( $log_level >> $INFO )
 					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
-				if ($api_in_use == 1) {
+				if ( defined($cfg_file->{'apiUri'} ) ) {
 					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+					( $log_level >> $DEBUG ) && print "DEBUG apiUri found: $cfg_files->{$fname_on_disk}->{'apiUri'}.\n";
+				}
+				elsif ( defined($cfg_file->{'url'} ) ) {
+					$cfg_files->{$fname_on_disk}->{'url'} = $cfg_file->{'url'};
+					( $log_level >> $DEBUG ) && print "DEBUG URL found: $cfg_files->{$fname_on_disk}->{'url'}.\n";
 				}
 				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+
 			}
 		}
 		else {
@@ -2488,6 +2506,10 @@ sub set_uri {
 	my $URI;
 	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'apiUri'};
+	}
+	elsif ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'url'}) ) {
+		$URI = $cfg_file_tracker->{$filename}->{'url'};
+		( $log_level >> $DEBUG ) && print "DEBUG Setting external download URL.\n";
 	}
 	else {
 		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};

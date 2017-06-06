@@ -227,7 +227,6 @@ sub get_cdn_config {
 	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename ); }
-	elsif ( $filename eq "download" && defined($ext_url) ) { $file_contents = $self->download_file( $ext_url ) }
 	else { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
@@ -333,7 +332,6 @@ sub get_scope {
 	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
 	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
-	elsif ( $fname eq "download" )                             { $scope = 'cdns' }
 	elsif ( $fname =~ /hdr_rw_.*\.config/ )                    { $scope = 'cdns' }
 	elsif ( $fname =~ /regex_remap_.*\.config/ )               { $scope = 'cdns' }
 	elsif ( $fname eq "regex_revalidate.config" )              { $scope = 'cdns' }
@@ -1001,18 +999,6 @@ sub facts {
 	return $text;
 }
 
-#downloads a file from an external source and returns it.
-sub download_file {
-	my $self = shift;
-	my $url  = shift;
-
-	my $ua = Mojo::UserAgent->new;
-	$ua     = $ua->max_redirects(3);
-	$ua         = $ua->request_timeout(5);
-	my $download = $ua->get($url)->res;
-	if ( $download->code == '200' ) { return $download->body; }
-	else { return; }
-}
 
 #generates a generic config file based on a server and parameters which match the supplied filename.
 sub take_and_bake_server {
