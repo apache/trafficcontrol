@@ -69,6 +69,7 @@ insert into role (name, description, priv_level) values ('steering', 'Role for S
 insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('ort', 'ORT User', 11) ON CONFLICT (name) DO NOTHING;
 
 -- tenants
 insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
