@@ -18,7 +18,6 @@ package API::Configs::ApacheTrafficServer;
 #
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
-use Mojo::UserAgent;
 use Date::Manip;
 use NetAddr::IP;
 use Data::Dumper;
@@ -119,9 +118,8 @@ sub get_config_metadata {
 			$scope_id = $server_obj->host_name;
 		}
 		if (defined ( $config_file_obj->{$config_file}->{'url'} ) ) {
-			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/download?url=" . $config_file_obj->{$config_file}->{'url'};
 			#delete the url element so we don't see it in the metadata:
-			delete $config_file_obj->{$config_file}->{'url'};
+			delete $config_file_obj->{$config_file}->{'apiUri'};
 		}
 		else {
 			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
