@@ -67,7 +67,6 @@ sub new {
 # In order to reduce the number of calls from the DB, the current user tenant is taken in the class creation.
 # the below parameters are held temporarily until the info is taken from the jwt
         current_user_tenant => $current_user_tenant,
-        is_ldap             => defined($context) ? $context->is_ldap() : 0,
     };
     bless $self, $class;
     return $self;
@@ -367,18 +366,6 @@ sub _is_resource_accessable {
 
         #the object has no tenancy - opened for all
         return 1;
-    }
-
-    if ( $self->{is_ldap} ) {
-        if ( $operation eq "r" ) {
-
-#ldap user, can read all tenants - temporary for now as an LDAP user as no tenant and is part of the TC operator.
-# should be removed when LDAP is gone
-            return 1;
-        }
-
-        #ldap user, has no tenancy, cannot write anything
-        return 0;
     }
 
     my $user_tenant = $self->current_user_tenant();
