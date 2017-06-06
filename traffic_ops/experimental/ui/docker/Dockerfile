@@ -22,5 +22,3 @@ RUN npm install -g bower grunt-cli
 RUN echo '{ "allow_root": true }' > /root/.bowerrc
 RUN cd /usr/src/app && /usr/local/bin/bower install
 RUN cd /usr/src/app && /usr/local/bin/grunt dist
-
-EXPOSE 8888
