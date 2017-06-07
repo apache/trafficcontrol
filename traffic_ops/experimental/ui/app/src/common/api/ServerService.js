@@ -69,7 +69,11 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
     };
 
     this.getUnassignedDeliveryServiceServers = function(dsId) {
-        return Restangular.one('deliveryservices', dsId).getList('unassigned_servers');
+        return Restangular.one('deliveryservices', dsId).getList('servers/unassigned');
+    };
+
+    this.getEligibleDeliveryServiceServers = function(dsId) {
+        return Restangular.one('deliveryservices', dsId).getList('servers/eligible');
     };
 
     this.queueServerUpdates = function(id) {

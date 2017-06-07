@@ -84,8 +84,8 @@ var DeliveryServiceService = function(Restangular, locationUtils, httpService, m
             );
     };
 
-    this.assignDeliveryServiceServers = function(dsServerMappings) {
-        return Restangular.service('deliveryserviceserver').post(dsServerMappings)
+    this.assignDeliveryServiceServers = function(dsId, servers) {
+        return Restangular.service('deliveryserviceserver').post( { dsId: dsId, servers: servers, replace: true })
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Servers linked to delivery service' } ], false);

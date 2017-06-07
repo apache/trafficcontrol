@@ -45,14 +45,16 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 				deliveryService: function() {
 					return deliveryService;
 				},
-				servers: function(serverService) {
-					return serverService.getUnassignedDeliveryServiceServers(deliveryService.id);
+				eligibleServers: function(serverService) {
+					return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
+				},
+				assignedServers: function() {
+					return servers;
 				}
 			}
 		});
 		modalInstance.result.then(function(selectedServerIds) {
-			var serverAssignments = { dsId: deliveryService.id, servers: selectedServerIds };
-			deliveryServiceService.assignDeliveryServiceServers(serverAssignments)
+			deliveryServiceService.assignDeliveryServiceServers(deliveryService.id, selectedServerIds)
 				.then(
 					function() {
 						$scope.refresh();

@@ -27,15 +27,15 @@ under the License.
     <table id="dsServersUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
-            <th></th>
+            <th style="padding-left: 10px;"><input type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
             <th>hostName</th>
             <th>cachegroup</th>
             <th>profile</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="server in ::unassignedServers">
-            <td><input type="checkbox" ng-click="updateServers($event, server.id)"></td>
+        <tr ng-repeat="server in ::selectedServers">
+            <td><input type="checkbox" ng-click="updateServers($event, server.id)" ng-checked="server.selected"></td>
             <td>{{::server.hostName}}</td>
             <td>{{::server.cachegroup}}</td>
             <td>{{::server.profile}}</td>
