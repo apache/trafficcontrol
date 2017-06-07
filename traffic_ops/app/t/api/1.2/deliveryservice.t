@@ -66,6 +66,10 @@ ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'
 $t->get_ok('/api/1.2/deliveryservices/100/servers/unassigned')->status_is(200)->$count_response(2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+# there are currently 6 servers of type EDGE or ORG that can be assigned to ds 100
+$t->get_ok('/api/1.2/deliveryservices/100/servers/eligible')->status_is(200)->$count_response(6)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 # It gets existing delivery services
 ok $t->get_ok("/api/1.2/deliveryservices/list")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "steering-ds1" )
