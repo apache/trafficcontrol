@@ -49,7 +49,7 @@ my $count_response = sub {
 };
 
 # there are currently 3 servers of type EDGE or ORG where server.cdn == ds.cdn not assigned to ds 100
-$t->get_ok('/api/1.2/deliveryservices/100/unassigned_servers')->status_is(200)->$count_response(4)
+$t->get_ok('/api/1.2/deliveryservices/100/servers/unassigned')->status_is(200)->$count_response(4)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # we will assign 2 more servers to ds 100
@@ -63,7 +63,7 @@ ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'
 	, 'Are the servers assigned to the delivery service?';
 
 # there are now 2 servers of type EDGE or ORG where server.cdn == ds.cdn not assigned to ds 100
-$t->get_ok('/api/1.2/deliveryservices/100/unassigned_servers')->status_is(200)->$count_response(2)
+$t->get_ok('/api/1.2/deliveryservices/100/servers/unassigned')->status_is(200)->$count_response(2)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # It gets existing delivery services
