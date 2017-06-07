@@ -17,22 +17,59 @@
  * under the License.
  */
 
-var TableDSServersUnassignedController = function(deliveryService, servers, $scope, $uibModalInstance) {
+var TableDSServersUnassignedController = function(deliveryService, eligibleServers, assignedServers, $scope, $uibModalInstance) {
 
-	var selectedServers = [];
-
-	$scope.deliveryService = deliveryService;
-
-	$scope.unassignedServers = servers;
+	var selectedServerIds = [];
 
 	var addServer = function(serverId) {
-		if (_.indexOf(selectedServers, serverId) == -1) {
-			selectedServers.push(serverId);
+		if (_.indexOf(selectedServerIds, serverId) == -1) {
+			selectedServerIds.push(serverId);
 		}
 	};
 
 	var removeServer = function(serverId) {
-		selectedServers = _.without(selectedServers, serverId);
+		selectedServerIds = _.without(selectedServerIds, serverId);
+	};
+
+	var addAll = function() {
+		markServers(true);
+		selectedServerIds = _.pluck(eligibleServers, 'id');
+	};
+
+	var removeAll = function() {
+		markServers(false);
+		selectedServerIds = [];
+	};
+
+	var markServers = function(selected) {
+		$scope.selectedServers = _.map(eligibleServers, function(server) {
+			server['selected'] = selected;
+			return server;
+		});
+	};
+
+	$scope.deliveryService = deliveryService;
+
+	$scope.selectedServers = _.map(eligibleServers, function(eligibleServer) {
+		var isAssigned = _.find(assignedServers, function(assignedServer) { return assignedServer.id == eligibleServer.id });
+		if (isAssigned) {
+			eligibleServer['selected'] = true; // so the checkbox will be checked
+			selectedServerIds.push(eligibleServer.id); // so the server is added to selected servers
+		}
+		return eligibleServer;
+	});
+
+	$scope.allSelected = function() {
+		return eligibleServers.length == selectedServerIds.length;
+	};
+
+	$scope.selectAll = function($event) {
+		var checkbox = $event.target;
+		if (checkbox.checked) {
+			addAll();
+		} else {
+			removeAll();
+		}
 	};
 
 	$scope.updateServers = function($event, serverId) {
@@ -45,7 +82,7 @@ var TableDSServersUnassignedController = function(deliveryService, servers, $sco
 	};
 
 	$scope.submit = function() {
-		$uibModalInstance.close(selectedServers);
+		$uibModalInstance.close(selectedServerIds);
 	};
 
 	$scope.cancel = function () {
@@ -66,5 +103,5 @@ var TableDSServersUnassignedController = function(deliveryService, servers, $sco
 
 };
 
-TableDSServersUnassignedController.$inject = ['deliveryService', 'servers', '$scope', '$uibModalInstance'];
+TableDSServersUnassignedController.$inject = ['deliveryService', 'eligibleServers', 'assignedServers', '$scope', '$uibModalInstance'];
 module.exports = TableDSServersUnassignedController;
