@@ -46,7 +46,7 @@ ok $t->get_ok("/api/1.2/servers/100/configfiles/ats")->status_is(200)->or( sub {
 # Check server routes
 ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/12M_facts")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/ip_allow.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
-ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/remap.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
+ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/remap.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/parent.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 ok $t->get_ok("/api/1.2/profiles/100/configfiles/ats/cache.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
 ok $t->get_ok("/api/1.2/servers/100/configfiles/ats/hosting.config")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } );
