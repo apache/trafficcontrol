@@ -641,9 +641,165 @@ Delivery Service
 
 |
 
-**GET /api/1.2/deliveryservices/:id/unassigned_servers**
+**GET /api/1.2/deliveryservices/:id/servers/unassigned**
 
   Retrieves properties of CDN EDGE or ORG servers not assigned to a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations or delivery service must be assigned to user
+
+  **Request Route Parameters**
+
+  +-----------------+----------+---------------------------------------------------+
+  | Name            | Required | Description                                       |
+  +=================+==========+===================================================+
+  | ``id``          | yes      | Delivery service ID.                              |
+  +-----------------+----------+---------------------------------------------------+
+
+  **Response Properties**
+
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  |     Parameter      |  Type  |                                                Description                                                 |
+  +====================+========+============================================================================================================+
+  | ``cachegroup``     | string | The cache group name (see :ref:`to-api-v11-cachegroup`).                                                   |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``cachegroupId``   | string | The cache group id.                                                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``cdnId``          | string | Id of the CDN to which the server belongs to.                                                              |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``cdnName``        | string | Name of the CDN to which the server belongs to.                                                            |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``domainName``     | string | The domain name part of the FQDN of the cache.                                                             |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``guid``           | string | An identifier used to uniquely identify the server.                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``hostName``       | string | The host name part of the cache.                                                                           |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``httpsPort``      | string | The HTTPS port on which the main application listens (443 in most cases).                                  |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``id``             | string | The server id (database row number).                                                                       |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``iloIpAddress``   | string | The IPv4 address of the lights-out-management port.                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``iloIpGateway``   | string | The IPv4 gateway address of the lights-out-management port.                                                |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``iloIpNetmask``   | string | The IPv4 netmask of the lights-out-management port.                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``iloPassword``    | string | The password of the of the lights-out-management user (displays as ****** unless you are an 'admin' user). |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``iloUsername``    | string | The user name for lights-out-management.                                                                   |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``interfaceMtu``   | string | The Maximum Transmission Unit (MTU) to configure for ``interfaceName``.                                    |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``interfaceName``  | string | The network interface name used for serving traffic.                                                       |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``ip6Address``     | string | The IPv6 address/netmask for ``interfaceName``.                                                            |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``ip6Gateway``     | string | The IPv6 gateway for ``interfaceName``.                                                                    |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``ipAddress``      | string | The IPv4 address for ``interfaceName``.                                                                    |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``ipGateway``      | string | The IPv4 gateway for ``interfaceName``.                                                                    |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``ipNetmask``      | string | The IPv4 netmask for ``interfaceName``.                                                                    |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``lastUpdated``    | string | The Time and Date for the last update for this server.                                                     |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``mgmtIpAddress``  | string | The IPv4 address of the management port (optional).                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``mgmtIpGateway``  | string | The IPv4 gateway of the management port (optional).                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``mgmtIpNetmask``  | string | The IPv4 netmask of the management port (optional).                                                        |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``offlineReason``  | string | A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status.                                   |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``physLocation``   | string | The physical location name (see :ref:`to-api-v11-phys-loc`).                                               |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``physLocationId`` | string | The physical location id (see :ref:`to-api-v11-phys-loc`).                                                 |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``profile``        | string | The assigned profile name (see :ref:`to-api-v11-profile`).                                                 |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``profileDesc``    | string | The assigned profile description (see :ref:`to-api-v11-profile`).                                          |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``profileId``      | string | The assigned profile Id (see :ref:`to-api-v11-profile`).                                                   |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``rack``           | string | A string indicating rack location.                                                                         |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``routerHostName`` | string | The human readable name of the router.                                                                     |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``routerPortName`` | string | The human readable name of the router port.                                                                |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``status``         | string | The Status string (See :ref:`to-api-v11-status`).                                                          |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``statusId``       | string | The Status id (See :ref:`to-api-v11-status`).                                                              |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``tcpPort``        | string | The default TCP port on which the main application listens (80 for a cache in most cases).                 |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``type``           | string | The name of the type of this server (see :ref:`to-api-v11-type`).                                          |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``typeId``         | string | The id of the type of this server (see :ref:`to-api-v11-type`).                                            |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+  | ``updPending``     |  bool  |                                                                                                            |
+  +--------------------+--------+------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+   {
+      "response": [
+          {
+              "cachegroup": "us-il-chicago",
+              "cachegroupId": "3",
+              "cdnId": "3",
+              "cdnName": "CDN-1",
+              "domainName": "chi.kabletown.net",
+              "guid": null,
+              "hostName": "atsec-chi-00",
+              "id": "19",
+              "iloIpAddress": "172.16.2.6",
+              "iloIpGateway": "172.16.2.1",
+              "iloIpNetmask": "255.255.255.0",
+              "iloPassword": "********",
+              "iloUsername": "",
+              "interfaceMtu": "9000",
+              "interfaceName": "bond0",
+              "ip6Address": "2033:D0D0:3300::2:2/64",
+              "ip6Gateway": "2033:D0D0:3300::2:1",
+              "ipAddress": "10.10.2.2",
+              "ipGateway": "10.10.2.1",
+              "ipNetmask": "255.255.255.0",
+              "lastUpdated": "2015-03-08 15:57:32",
+              "mgmtIpAddress": "",
+              "mgmtIpGateway": "",
+              "mgmtIpNetmask": "",
+              "offlineReason": "N/A",
+              "physLocation": "plocation-chi-1",
+              "physLocationId": "9",
+              "profile": "EDGE1_CDN1_421_SSL",
+              "profileDesc": "EDGE1_CDN1_421_SSL profile",
+              "profileId": "12",
+              "rack": "RR 119.02",
+              "routerHostName": "rtr-chi.kabletown.net",
+              "routerPortName": "2",
+              "status": "ONLINE",
+              "statusId": "6",
+              "tcpPort": "80",
+              "httpsPort": "443",
+              "type": "EDGE",
+              "typeId": "3",
+              "updPending": false
+          },
+          {
+          ... more server data
+          }
+        ]
+    }
+
+|
+
+**GET /api/1.2/deliveryservices/:id/servers/eligible**
+
+  Retrieves properties of CDN EDGE or ORG servers not eligible for assignment to a delivery service.
 
   Authentication Required: Yes
 
@@ -1082,12 +1238,15 @@ Delivery Service Server
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``servers``                     | yes      | An array of server IDs.                                           |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``replace``                     | no       | Replace existing ds/server assignments? (true|false)              |
+  +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
     {
         "dsId": 246,
-        "servers": [ 2, 3, 4, 5, 6 ]
+        "servers": [ 2, 3, 4, 5, 6 ],
+        "replace": true
     }
 
   **Response Properties**
@@ -1112,6 +1271,7 @@ Delivery Service Server
         "response": {
             "dsId" : 246,
             "servers" : [ 2, 3, 4, 5, 6 ],
+            "replace" : true
         }
     }
 

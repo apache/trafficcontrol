@@ -639,6 +639,84 @@ sub get_unassigned_servers_by_dsid {
 
 	return $self->success( \@data );
 }
+sub get_eligible_servers_by_dsid {
+	my $self    = shift;
+	my $ds_id   = $self->param('id');
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my %ds_server_criteria;
+	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
+
+	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+		return $self->alert("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my %server_criteria; # please fetch the following...
+	$server_criteria{'type.name'} = [ { -like => 'EDGE%' }, { -like => 'ORG' } ]; # ...of type EDGE% or ORG...
+	$server_criteria{'cdn.id'} = $ds->cdn_id; # ...that belongs to the same cdn as the ds...
+
+	my $servers = $self->db->resultset('Server')->search(
+		\%server_criteria,
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
+	);
+
+	my @data;
+	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
+		while ( my $row = $servers->next ) {
+			push(
+				@data, {
+					"cachegroup"     => $row->cachegroup->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
+					"guid"           => $row->guid,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => \$row->upd_pending
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
 
 sub get_servers_by_type {
 	my $self              = shift;

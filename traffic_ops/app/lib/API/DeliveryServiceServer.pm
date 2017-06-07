@@ -73,6 +73,8 @@ sub assign_servers_to_ds {
 	my $params 		= $self->req->json;
 	my $ds_id 		= $params->{dsId};
 	my $servers 	= $params->{servers};
+	my $replace 	= $params->{replace};
+	my $count		= 0;
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
@@ -87,6 +89,12 @@ sub assign_servers_to_ds {
 		return $self->not_found();
 	}
 
+	if ( $replace ) {
+		# start fresh and delete existing deliveryservice/server associations
+		my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
+		$delete->delete();
+	}
+
 	$self->db->txn_begin();
 	foreach my $server (@{ $servers }) {
 		my $server_exist = $self->db->resultset('Server')->find( { id => $server } );
@@ -97,11 +105,12 @@ sub assign_servers_to_ds {
 		my $ds_server_exist = $self->db->resultset('DeliveryserviceServer')->find( { deliveryservice => $ds_id, server => $server } );
 		if ( !defined($ds_server_exist) ) {
 			$self->db->resultset('DeliveryserviceServer')->create( { deliveryservice => $ds_id, server => $server } )->insert();
+			$count++;
 		}
 	}
 	$self->db->txn_commit();
 
-	&log( $self, "Servers were assigned to " . $ds->xml_id, "APICHANGE" );
+	&log( $self, $count . " servers were assigned to " . $ds->xml_id, "APICHANGE" );
 
 	my $response = $params;
 	return $self->success($response, "Server assignments complete.");
