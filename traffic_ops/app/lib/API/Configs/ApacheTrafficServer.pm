@@ -168,7 +168,7 @@ sub get_server_config {
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename ); }
-	elsif ( $filename eq "remap.config" ) { $file_contents = $self->server_scope_remap_dot_config( $server_obj, $filename ); }
+	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "packages" ) {
 		$file_contents = $self->get_package_versions( $server_obj, $filename );
 		$file_contents = encode_json($file_contents);
@@ -269,7 +269,6 @@ sub get_profile_config {
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
-	elsif ( $filename eq "remap.config" ) { $file_contents = $self->profile_scope_remap_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
@@ -316,7 +315,7 @@ sub get_scope {
 	elsif ( $fname eq "packages" )                             { $scope = 'servers' }
 	elsif ( $fname eq "chkconfig" )                            { $scope = 'servers' }
 	elsif ( $fname eq "remap.config" && $type =~ m/^MID/ )     { $scope = 'servers' }
-	elsif ( $fname eq "remap.config" )                         { $scope = 'profiles' }
+	elsif ( $fname eq "remap.config" )                         { $scope = 'servers' }
 	elsif ( $fname eq "12M_facts" )                            { $scope = 'profiles' }
 	elsif ( $fname eq "50-ats.rules" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "astats.config" )                        { $scope = 'profiles' }
@@ -2129,7 +2128,7 @@ sub parent_dot_config {
 	}
 }
 
-sub server_scope_remap_dot_config {
+sub remap_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $data;
@@ -2174,66 +2173,11 @@ sub server_scope_remap_dot_config {
 	foreach my $ds ( @{ $data->{dslist} } ) {
 		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
 			my $map_to = $ds->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $server_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
 			my $map_to = $ds->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $server_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
-		}
-	}
-	return $text;
-}
-
-sub profile_scope_remap_dot_config {
-	my $self       = shift;
-	my $profile_obj = shift;
-	my $data;
-
-	my $pdata = $self->profile_param_data( $profile_obj->id, 'package' );
-	my $text = $self->header_comment( $profile_obj->name );
-	if ( !defined($data) ) {
-		$data = $self->profile_ds_data($profile_obj);
-	}
-
-	if ( $profile_obj->name =~ m/^MID/ ) {
-		my %mid_remap;
-		foreach my $ds ( @{ $data->{dslist} } ) {
-			if ( $ds->{type} =~ /LIVE/ && $ds->{type} !~ /NATNL/ ) {
-				next;    # Live local delivery services skip mids
-			}
-			if ( defined( $ds->{org} ) && defined( $mid_remap{ $ds->{org} } ) ) {
-				next;    # skip remap rules from extra HOST_REGEXP entries
-			}
-
-			if ( defined( $ds->{mid_header_rewrite} ) && $ds->{mid_header_rewrite} ne "" ) {
-				$mid_remap{ $ds->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $ds->{mid_hdr_rw_file};
-			}
-			if ( $ds->{qstring_ignore} == 1 ) {
-				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
-			}
-			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
-				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
-			}
-			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
-				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";
-			}
-		}
-		foreach my $key ( keys %mid_remap ) {
-			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
-		}
-
-		return $text;
-	}
-
-	# mids don't get here.
-	foreach my $ds ( @{ $data->{dslist} } ) {
-		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
-			my $map_to = $ds->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
-		}
-		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
-			my $map_to = $ds->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj->id, $pdata, $text, $data, $ds, $map_from, $map_to );
+			$text = $self->build_remap_line( $server_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
 		}
 	}
 	return $text;
@@ -2241,7 +2185,7 @@ sub profile_scope_remap_dot_config {
 
 sub build_remap_line {
 	my $self        = shift;
-	my $id  		= shift;
+	my $server_obj 	= shift;
 	my $pdata       = shift;
 	my $text        = shift;
 	my $data        = shift;
@@ -2255,8 +2199,9 @@ sub build_remap_line {
 	}
 
 	my $dscp      = $remap->{dscp};
+	my $hostname  = $server_obj->host_name;
 
-	$map_from =~ s/ccr/__HOSTNAME__/;
+	$map_from =~ s/ccr/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
@@ -2275,7 +2220,7 @@ sub build_remap_line {
 		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
 	elsif ( $remap->{qstring_ignore} == 1 ) {
-		my $global_exists = $self->profile_param_value( $id, 'cacheurl.config', 'location', undef );
+		my $global_exists = $self->profile_param_value( $server_obj->profile->id, 'cacheurl.config', 'location', undef );
 		if ($global_exists) {
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
