@@ -314,7 +314,6 @@ sub get_scope {
 	elsif ( $fname eq "hosting.config" )                       { $scope = 'servers' }
 	elsif ( $fname eq "packages" )                             { $scope = 'servers' }
 	elsif ( $fname eq "chkconfig" )                            { $scope = 'servers' }
-	elsif ( $fname eq "remap.config" && $type =~ m/^MID/ )     { $scope = 'servers' }
 	elsif ( $fname eq "remap.config" )                         { $scope = 'servers' }
 	elsif ( $fname eq "12M_facts" )                            { $scope = 'profiles' }
 	elsif ( $fname eq "50-ats.rules" )                         { $scope = 'profiles' }
