@@ -16,7 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-#docker-compose -p trafficops build
+sudo systemctl stop traffic_portal
 
-docker rmi traffic_portal
+docker rm traffic_portal_1 #remove container
+docker rmi traffic_portal #remove image
 docker ps -a
+
+sudo systemctl start traffic_portal
+
+
+
