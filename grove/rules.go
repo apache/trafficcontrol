@@ -209,16 +209,17 @@ func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheCon
 		return ReuseCannot
 	}
 
-	if !Fresh(respHeaders, respCacheControl, respReqTime, respRespTime) && !AllowedStale(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime, strictRFC) {
-		log.Debugf("CanReuseStored false - not fresh, not allowed stale\n") // debug
-		return ReuseCannot
+	if !Fresh(respHeaders, respCacheControl, respReqTime, respRespTime) {
+		allowedStale := AllowedStale(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime, strictRFC)
+		log.Debugf("CanReuseStored not fresh, allowed stale: %v\n", allowedStale) // debug
+		return allowedStale
 	}
 
-	if HasPragmaNoCache(reqHeaders) && !strictRFC {
+	if HasPragmaNoCache(reqHeaders) && strictRFC {
 		log.Debugf("CanReuseStored MustRevalidate - has pragma no-cache\n")
 		return ReuseMustRevalidate
 	}
-	if _, ok := reqCacheControl["no-cache"]; ok && !strictRFC {
+	if _, ok := reqCacheControl["no-cache"]; ok && strictRFC {
 		log.Debugf("CanReuseStored false - request has cache-control no-cache\n")
 		return ReuseCannot
 	}
@@ -400,36 +401,38 @@ func GetCurrentAge(respHeaders http.Header, respReqTime time.Time, respRespTime 
 // TODO add warning generation funcs
 
 // AllowedStale checks the constraints in RFC7234§4 via RFC7234§4.2.4
-func AllowedStale(respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqTime time.Time, respRespTime time.Time, strictRFC bool) bool {
+func AllowedStale(respHeaders http.Header, reqCacheControl CacheControl, respCacheControl CacheControl, respReqTime time.Time, respRespTime time.Time, strictRFC bool) Reuse {
 	// TODO return ReuseMustRevalidate where permitted
 	_, reqHasMaxAge := reqCacheControl["max-age"]
 	_, reqHasMaxStale := reqCacheControl["max-stale"]
-	if !strictRFC && reqHasMaxAge && !reqHasMaxStale {
-		return false
+	if strictRFC && reqHasMaxAge && !reqHasMaxStale {
+		return ReuseCan
 	}
 	if _, ok := respCacheControl["must-revalidate"]; ok {
-		return false
+		return ReuseMustRevalidate
 	}
 	if _, ok := respCacheControl["no-cache"]; ok {
-		return false
+		return ReuseCannot // TODO verify RFC doesn't allow Revalidate here
 	}
 	if _, ok := respCacheControl["no-store"]; ok {
-		return false
+		return ReuseCannot // TODO verify RFC doesn't allow revalidate here
 	}
 	if !InMaxStale(respHeaders, respCacheControl, respReqTime, respRespTime) {
-		return false
+		return ReuseMustRevalidate // TODO verify RFC allows
 	}
-	return true
+	return ReuseCan
 }
 
 // InMaxStale returns whether the given response is within the `max-stale` request directive. If no `max-stale` directive exists in the request, `true` is returned.
 func InMaxStale(respHeaders http.Header, respCacheControl CacheControl, respReqTime time.Time, respRespTime time.Time) bool {
 	maxStale, ok := GetHTTPDeltaSecondsCacheControl(respCacheControl, "max-stale")
 	if !ok {
+		// maxStale = 5 // debug
 		return true // no max-stale => within max-stale
 	}
 	freshnessLifetime := GetFreshnessLifetime(respHeaders, respCacheControl)
 	currentAge := GetCurrentAge(respHeaders, respReqTime, respRespTime)
+	log.Errorf("DEBUGR InMaxStale maxStale %v freshnessLifetime %v currentAge %v => %v > (%v, %v)\n", maxStale, freshnessLifetime, currentAge, maxStale, currentAge, freshnessLifetime) // DEBUG
 	inMaxStale := maxStale > (currentAge - freshnessLifetime)
 	return inMaxStale
 }
