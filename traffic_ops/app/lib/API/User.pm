@@ -358,10 +358,12 @@ sub get_deliveryservices_not_assigned_to_user {
 }
 
 sub assign_deliveryservices {
-	my $self 				= shift;
-	my $params 				= $self->req->json;
-	my $user_id 			= $params->{userId};
-	my $delivery_services 	= $params->{deliveryServices};
+	my $self				= shift;
+	my $params				= $self->req->json;
+	my $user_id				= $params->{userId};
+	my $delivery_services	= $params->{deliveryServices};
+	my $replace				= $params->{replace};
+	my $count				= 0;
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
@@ -376,21 +378,22 @@ sub assign_deliveryservices {
 		return $self->not_found();
 	}
 
-	$self->db->txn_begin();
-	foreach my $ds_id (@{ $delivery_services }) {
-		my $ds_exist = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
-		if ( !defined($ds_exist) ) {
-			$self->db->txn_rollback();
-			return $self->alert("Delivery service with id [ " . $ds_id . " ] doesn't exist");
-		}
-		my $ds_user_exist = $self->db->resultset('DeliveryserviceTmuser')->find( { deliveryservice => $ds_id, tm_user_id => $user_id } );
-		if ( !defined($ds_user_exist) ) {
-			$self->db->resultset('DeliveryserviceTmuser')->create( { deliveryservice => $ds_id, tm_user_id => $user_id } )->insert();
-		}
+	if ( $replace ) {
+		# start fresh and delete existing user/deliveryservice associations
+		my $delete = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
+		$delete->delete();
 	}
-	$self->db->txn_commit();
 
-	&log( $self, "Delivery services were assigned to " . $user->username, "APICHANGE" );
+	my @values = ( [ qw( deliveryservice tm_user_id ) ]); # column names are required for 'populate' function
+
+	foreach my $ds_id (@{ $delivery_services }) {
+		push(@values, [ $ds_id, $user_id ]);
+		$count++;
+	}
+
+	$self->db->resultset("DeliveryserviceTmuser")->populate(\@values);
+
+	&log( $self, $count . " delivery services were assigned to " . $user->username, "APICHANGE" );
 
 	my $response = $params;
 	return $self->success($response, "Delivery service assignments complete.");
