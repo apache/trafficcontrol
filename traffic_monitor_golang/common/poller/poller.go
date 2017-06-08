@@ -96,6 +96,11 @@ type MonitorCfg struct {
 	Cfg to.TrafficMonitorConfigMap
 }
 
+type MonitorCfg struct {
+	CDN string
+	Cfg to.TrafficMonitorConfigMap
+}
+
 type MonitorConfigPoller struct {
 	Session          towrap.ITrafficOpsSession
 	SessionChannel   chan towrap.ITrafficOpsSession
