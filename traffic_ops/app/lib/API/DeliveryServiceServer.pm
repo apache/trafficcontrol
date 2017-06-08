@@ -95,20 +95,14 @@ sub assign_servers_to_ds {
 		$delete->delete();
 	}
 
-	$self->db->txn_begin();
-	foreach my $server (@{ $servers }) {
-		my $server_exist = $self->db->resultset('Server')->find( { id => $server } );
-		if ( !defined($server_exist) ) {
-			$self->db->txn_rollback();
-			return $self->alert("Server with id [ " . $server . " ] doesn't exist");
-		}
-		my $ds_server_exist = $self->db->resultset('DeliveryserviceServer')->find( { deliveryservice => $ds_id, server => $server } );
-		if ( !defined($ds_server_exist) ) {
-			$self->db->resultset('DeliveryserviceServer')->create( { deliveryservice => $ds_id, server => $server } )->insert();
-			$count++;
-		}
+	my @values = ( [ qw( deliveryservice server ) ]); # column names are required for 'populate' function
+
+	foreach my $server_id (@{ $servers }) {
+		push(@values, [ $ds_id, $server_id ]);
+		$count++;
 	}
-	$self->db->txn_commit();
+
+	$self->db->resultset("DeliveryserviceServer")->populate(\@values);
 
 	&log( $self, $count . " servers were assigned to " . $ds->xml_id, "APICHANGE" );
 
