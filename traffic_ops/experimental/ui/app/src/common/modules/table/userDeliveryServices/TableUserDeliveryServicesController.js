@@ -41,15 +41,17 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, $
 				user: function() {
 					return user;
 				},
-				deliveryServices: function(userService) {
-					return userService.getUnassignedUserDeliveryServices(user.id);
+				deliveryServices: function(deliveryServiceService) {
+					return deliveryServiceService.getDeliveryServices();
+				},
+				userDeliveryServices: function() {
+					return userDeliveryServices;
 				}
 			}
 		});
 		modalInstance.result.then(function(selectedDSIds) {
 			console.log(selectedDSIds);
-			var userDSAssignments = { userId: user.id, deliveryServices: selectedDSIds };
-			userService.assignUserDeliveryServices(userDSAssignments)
+			userService.assignUserDeliveryServices(user.id, selectedDSIds)
 				.then(
 					function() {
 						$scope.refresh();

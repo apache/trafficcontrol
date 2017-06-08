@@ -126,8 +126,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
             );
     };
 
-    this.assignUserDeliveryServices = function(userDSMappings) {
-        return Restangular.service('deliveryservice_user').post(userDSMappings)
+    this.assignUserDeliveryServices = function(userId, deliveryServices) {
+        return Restangular.service('deliveryservice_user').post( { userId: userId, deliveryServices: deliveryServices, replace: true } )
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Delivery services linked to user' } ], false);

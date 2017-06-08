@@ -27,14 +27,14 @@ under the License.
     <table id="userDSUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
-            <th></th>
+            <th style="padding-left: 10px;"><input type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
             <th>xmlId</th>
             <th>displayName</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="ds in ::unassignedDeliveryServices">
-            <td><input type="checkbox" ng-click="updateDeliveryServices($event, ds.id)"></td>
+        <tr ng-repeat="ds in ::selectedDSs">
+            <td><input type="checkbox" ng-click="updateDeliveryServices($event, ds.id)" ng-checked="ds.selected"></td>
             <td>{{::ds.xmlId}}</td>
             <td>{{::ds.displayName}}</td>
         </tr>

@@ -17,22 +17,59 @@
  * under the License.
  */
 
-var TableUserDSUnassignedController = function(user, deliveryServices, $scope, $uibModalInstance) {
+var TableUserDSUnassignedController = function(user, deliveryServices, userDeliveryServices, $scope, $uibModalInstance) {
 
-	var selectedDeliveryServices = [];
-
-	$scope.user = user;
-
-	$scope.unassignedDeliveryServices = deliveryServices;
+	var selectedDeliveryServiceIds = [];
 
 	var addDS = function(dsId) {
-		if (_.indexOf(selectedDeliveryServices, dsId) == -1) {
-			selectedDeliveryServices.push(dsId);
+		if (_.indexOf(selectedDeliveryServiceIds, dsId) == -1) {
+			selectedDeliveryServiceIds.push(dsId);
 		}
 	};
 
 	var removeDS = function(dsId) {
-		selectedDeliveryServices = _.without(selectedDeliveryServices, dsId);
+		selectedDeliveryServiceIds = _.without(selectedDeliveryServiceIds, dsId);
+	};
+
+	var addAll = function() {
+		markDSs(true);
+		selectedDeliveryServiceIds = _.pluck(deliveryServices, 'id');
+	};
+
+	var removeAll = function() {
+		markDSs(false);
+		selectedDeliveryServiceIds = [];
+	};
+
+	var markDSs = function(selected) {
+		$scope.selectedDSs = _.map(deliveryServices, function(ds) {
+			ds['selected'] = selected;
+			return ds;
+		});
+	};
+
+	$scope.user = user;
+
+	$scope.selectedDSs = _.map(deliveryServices, function(ds) {
+		var isAssigned = _.find(userDeliveryServices, function(userDS) { return userDS.id == ds.id });
+		if (isAssigned) {
+			ds['selected'] = true; // so the checkbox will be checked
+			selectedDeliveryServiceIds.push(ds.id); // so the ds is added to selected delivery services
+		}
+		return ds;
+	});
+
+	$scope.allSelected = function() {
+		return deliveryServices.length == selectedDeliveryServiceIds.length;
+	};
+
+	$scope.selectAll = function($event) {
+		var checkbox = $event.target;
+		if (checkbox.checked) {
+			addAll();
+		} else {
+			removeAll();
+		}
 	};
 
 	$scope.updateDeliveryServices = function($event, dsId) {
@@ -45,7 +82,7 @@ var TableUserDSUnassignedController = function(user, deliveryServices, $scope, $
 	};
 
 	$scope.submit = function() {
-		$uibModalInstance.close(selectedDeliveryServices);
+		$uibModalInstance.close(selectedDeliveryServiceIds);
 	};
 
 	$scope.cancel = function () {
@@ -66,5 +103,5 @@ var TableUserDSUnassignedController = function(user, deliveryServices, $scope, $
 
 };
 
-TableUserDSUnassignedController.$inject = ['user', 'deliveryServices', '$scope', '$uibModalInstance'];
+TableUserDSUnassignedController.$inject = ['user', 'deliveryServices', 'userDeliveryServices', '$scope', '$uibModalInstance'];
 module.exports = TableUserDSUnassignedController;
