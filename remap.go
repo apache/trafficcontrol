@@ -25,6 +25,25 @@ func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
 	return hr.remapper.Rules()
 }
 
+// getFQDN returns the FQDN. It tries to get the FQDN from a Remap Rule. Remap Rules should always begin with the scheme, e.g. `http://`. If the given rule does not begin with a valid scheme, behavior is undefined.
+// TODO test
+func getFQDN(rule string) string {
+	schemeStr := "://"
+	schemePos := strings.Index(rule, schemeStr)
+	if schemePos == -1 {
+		return rule // invalid rule, doesn't start with a scheme
+	}
+	schemePos += len(schemeStr)
+	rule = rule[schemePos:]
+
+	slashPos := strings.Index(rule, "/")
+	if slashPos == -1 {
+		return rule // rule is just the scheme+FQDN, perfectly normal
+	}
+	rule = rule[:slashPos] // strip off the path
+	return rule
+}
+
 // Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, whether the requestor's IP is allowed, whether the rule calls for sending a connection close header, whether a rule was found, and any error.
 func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http.Request, string, string, bool, bool, bool, error) {
 	// NewRequest(method, urlStr string, body io.Reader)
@@ -59,6 +78,15 @@ func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string) (*http
 		return r, "", "", false, rule.ConnectionClose, false, nil
 	}
 	copyHeader(r.Header, &newReq.Header)
+
+	log.Errorf("DEBUGQ oldUri: %v, Host: %v\n", oldUri, newReq.Header.Get("Host"))
+	log.Errorf("DEBUGQ newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
+
+	if newReq.Header.Get("Host") == oldUri {
+		log.Errorf("DEBUGQ setting Host header\n")
+		newReq.Header.Set("Host", getFQDN(newUri))
+	}
+	// newReq.Header.Add("If-Modified-Since", cacheObj.respTime.Format(time.RFC1123))
 	return newReq, rule.Name, cacheKey, true, rule.ConnectionClose, true, nil
 }
 

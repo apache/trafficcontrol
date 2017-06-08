@@ -121,6 +121,72 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.TryServe(w, r)
 }
 
+// GetAndCache makes a client request for the given `http.Request` and caches it if `CanCache`.
+// THe `ruleThrottler` may be nil, in which case the request will be unthrottled.
+func GetAndCache(req *http.Request, cacheKey string, remapName string, reqHeader http.Header, reqTime time.Time, strictRFC bool, cache Cache, ruleThrottler Throttler, revalidateObj *CacheObj) *CacheObj {
+	// TODO this is awkward, with 'revalidateObj' indicating whether the request is a Revalidate. Should Getting and Caching be split up? How?
+	get := func() *CacheObj {
+		// TODO figure out why respReqTime isn't used
+		log.Errorf("DEBUGS GetAndCache calling request\n")
+		// TODO Verify overriding the passed reqTime is the right thing to do
+		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(req)
+		if err != nil {
+			log.Debugf("origin err for %v rule %v err %v\n", cacheKey, remapName, err)
+			code := http.StatusInternalServerError
+			body := []byte(http.StatusText(code))
+			return NewCacheObj(reqHeader, body, code, respHeader, reqTime, reqRespTime, reqRespTime)
+		}
+
+		respRespTime, ok := GetHTTPDate(respHeader, "Date")
+		if !ok {
+			log.Errorf("request %v returned no Date header - RFC Violation!\n", req.RequestURI)
+			respRespTime = reqRespTime // if no Date was returned using the client response time simulates latency 0
+		}
+
+		obj := (*CacheObj)(nil)
+		if CanCache(reqHeader, respCode, respHeader, strictRFC) {
+			log.Debugf("h.cache.AddSize %v\n", cacheKey)
+			log.Debugf("GetAndCache respCode %v\n", respCode)
+			if revalidateObj == nil || respCode < 300 || respCode > 399 {
+				log.Debugf("GetAndCache new %v\n", cacheKey)
+				obj = NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, respRespTime)
+			} else {
+				log.Debugf("GetAndCache revalidating %v\n", cacheKey)
+				// must copy, because this cache object may be concurrently read by other goroutines
+				newRespHeader := http.Header{}
+				copyHeader(revalidateObj.respHeaders, &newRespHeader)
+				newRespHeader.Set("Date", respHeader.Get("Date"))
+				obj = &CacheObj{
+					body:             revalidateObj.body,
+					reqHeaders:       revalidateObj.reqHeaders,
+					respHeaders:      newRespHeader,
+					respCacheControl: revalidateObj.respCacheControl,
+					code:             revalidateObj.code,
+					reqTime:          reqTime,
+					reqRespTime:      reqRespTime,
+					respRespTime:     respRespTime,
+					size:             revalidateObj.size,
+				}
+			}
+			cache.AddSize(cacheKey, obj, obj.size) // TODO store pointer?
+		}
+		return obj
+	}
+
+	c := (*CacheObj)(nil)
+	if ruleThrottler == nil {
+		log.Errorf("rule %v not in ruleThrottlers map. Requesting with no origin limit!\n", remapName)
+		ruleThrottler = NewNoThrottler()
+	}
+	ruleThrottler.Throttle(func() { c = get() })
+	return c
+}
+
+func CanReuse(reqHeader http.Header, reqCacheControl CacheControl, cacheObj *CacheObj, strictRFC bool, revalidateCanReuse bool) bool {
+	canReuse := CanReuseStored(reqHeader, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqRespTime, cacheObj.respRespTime, strictRFC)
+	return canReuse == ReuseCan || (canReuse == ReuseMustRevalidate && revalidateCanReuse)
+}
+
 // TryServe attempts to serve the given request, as a caching reverse proxy.
 // Serving acts as a state machine.
 func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
@@ -152,51 +218,15 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	connectionClose := h.connectionClose || ruleConnectionClose
 
 	getAndCache := func() *CacheObj {
-		get := func() *CacheObj {
-			// TODO figure out why respReqTime isn't used
-			respCode, respHeader, respBody, _, respRespTime, err := h.request(remappedReq)
-			if err != nil {
-				log.Debugf("origin err for %v rule %v err %v\n", cacheKey, remapName, err)
-				code := http.StatusInternalServerError
-				body := []byte(http.StatusText(code))
-				return NewCacheObj(reqHeader, body, code, respHeader, reqTime, respRespTime)
-			}
-			obj := NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, respRespTime)
-			if CanCache(reqHeader, respCode, respHeader, h.strictRFC) {
-				log.Debugf("h.cache.AddSize %v\n", cacheKey)
-				h.cache.AddSize(cacheKey, obj, obj.size) // TODO store pointer?
-			}
-			return obj
-		}
-
-		c := (*CacheObj)(nil)
-		ruleThrottler, ok := h.ruleThrottlers[remapName]
-		if !ok {
-			log.Errorf("rule %v returned, but not in ruleThrottlers map. Requesting with no rule (origin) limit!\n", remapName)
-			ruleThrottler = NewNoThrottler()
-		}
-		ruleThrottler.Throttle(func() {
-			c = get()
-		})
-		return c
+		return GetAndCache(remappedReq, cacheKey, remapName, reqHeader, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapName], nil)
 	}
 
 	reqCacheControl := ParseCacheControl(reqHeader)
 	log.Debugf("TryServe got Cache-Control %+v\n", reqCacheControl)
+
 	// return true for Revalidate, and issue revalidate requests separately.
 	canReuse := func(cacheObj *CacheObj) bool {
-		canReuse := CanReuseStored(reqHeader, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime, h.strictRFC)
-		switch canReuse {
-		case ReuseCan:
-			return true
-		case ReuseCannot:
-			return false
-		case ReuseMustRevalidate:
-			return true
-		default:
-			log.Errorf("CanReuseStored returned unknown %v\n", canReuse)
-			return false
-		}
+		return CanReuse(reqHeader, reqCacheControl, cacheObj, h.strictRFC, true)
 	}
 
 	iCacheObj, ok := h.cache.Get(cacheKey)
@@ -219,7 +249,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	reqHeaders := r.Header
 
-	canReuseStored := CanReuseStored(reqHeaders, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqTime, cacheObj.respTime, h.strictRFC)
+	canReuseStored := CanReuseStored(reqHeaders, cacheObj.respHeaders, reqCacheControl, cacheObj.respCacheControl, cacheObj.reqHeaders, cacheObj.reqRespTime, cacheObj.respRespTime, h.strictRFC)
 
 	switch canReuseStored {
 	case ReuseCan:
@@ -229,8 +259,12 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
 	case ReuseMustRevalidate:
 		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate\n", cacheKey)
-		// TODO implement revalidate
-		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
+
+		ifModifiedSinceReq := remappedReq
+		ifModifiedSinceReq.Header.Add("If-Modified-Since", cacheObj.respRespTime.Format(time.RFC1123))
+		// Note this makes Revalidate obey the Rule/Origin limit, but not the per-URI-concurrent-request limit
+		// TODO ensure this is ok
+		cacheObj = GetAndCache(ifModifiedSinceReq, cacheKey, remapName, reqHeader, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapName], cacheObj)
 	}
 	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 }
@@ -263,7 +297,7 @@ func (h *CacheHandler) serveReqErr(w http.ResponseWriter) {
 
 // 	noCache := false // TODO fix
 // 	h.ThrottleRequest(remapName, key, noCache, func() {
-// 		respCode, respHeader, respBody, respReqTime, respRespTime, err = h.request(remappedReq)
+// 		respCode, respHeader, respBody, respReqTime, respRespTime, err = request(remappedReq)
 // 	})
 // 	if err != nil {
 // 		fmt.Printf("DEBUG origin err for %v rule %v err %v\n", key, remapName, err)
@@ -300,7 +334,8 @@ func (h *CacheHandler) serveReqErr(w http.ResponseWriter) {
 // }
 
 // request makes the given request and returns its response code, headers, body, the request time, response time, and any error.
-func (h *CacheHandler) request(r *http.Request) (int, http.Header, []byte, time.Time, time.Time, error) {
+func request(r *http.Request) (int, http.Header, []byte, time.Time, time.Time, error) {
+	log.Errorf("DEBUGP requesting %v headers %v\n", r.RequestURI, r.Header)
 	rr := r
 	// Create a client and query the target
 	var transport http.Transport
