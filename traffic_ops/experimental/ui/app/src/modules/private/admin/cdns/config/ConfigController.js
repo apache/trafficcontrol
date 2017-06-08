@@ -22,22 +22,25 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 	$scope.cdn = cdn;
 
 	var oldConfig = currentSnapshot.config || null,
-		newConfig = newSnapshot.config;
+		newConfig = newSnapshot.config || null;
 
 	var oldContentRouters = currentSnapshot.contentRouters || null,
-		newContentRouters = newSnapshot.contentRouters;
+		newContentRouters = newSnapshot.contentRouters || null;
+
+	var oldMonitors = currentSnapshot.monitors || null,
+		newMonitors = newSnapshot.monitors || null;
 
 	var oldContentServers = currentSnapshot.contentServers || null,
-		newContentServers = newSnapshot.contentServers;
+		newContentServers = newSnapshot.contentServers || null;
 
 	var oldDeliveryServices = currentSnapshot.deliveryServices || null,
-		newDeliveryServices = newSnapshot.deliveryServices;
+		newDeliveryServices = newSnapshot.deliveryServices || null;
 
 	var oldEdgeLocations = currentSnapshot.edgeLocations || null,
-		newEdgeLocations = newSnapshot.edgeLocations;
+		newEdgeLocations = newSnapshot.edgeLocations || null;
 
 	var oldStats = currentSnapshot.stats || null,
-		newStats = newSnapshot.stats;
+		newStats = newSnapshot.stats || null;
 
 	var performDiff = function(oldJSON, newJSON, destination) {
 		var div = null,
@@ -69,7 +72,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 			display.innerHTML = '';
 			display.appendChild(fragment);
 		} else {
-			display.innerHTML = 'Existing snapshot cannot be found. Please perform snapshot.';
+			display.innerHTML = 'Diff failed. You may need to perform your first snapshot.';
 		}
 
 	};
@@ -88,6 +91,12 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		added: 0,
 		removed: 0,
 		templateUrl: 'crPopoverTemplate.html'
+	};
+
+	$scope.monitorsCount = {
+		added: 0,
+		removed: 0,
+		templateUrl: 'mPopoverTemplate.html'
 	};
 
 	$scope.contentServersCount = {
@@ -125,6 +134,13 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		$('#contentRouters').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Generating diff...');
 		$timeout(function() {
 			performDiff(oldContentRouters, newContentRouters, 'contentRouters');
+		}, timeout);
+	};
+
+	$scope.diffMonitors = function(timeout) {
+		$('#monitors').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Generating diff...');
+		$timeout(function() {
+			performDiff(oldMonitors, newMonitors, 'monitors');
 		}, timeout);
 	};
 
@@ -183,6 +199,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 	angular.element(document).ready(function () {
 		$scope.diffConfig(0);
 		$scope.diffContentRouters(0);
+		$scope.diffMonitors(0);
 		$scope.diffContentServers(0);
 		$scope.diffDeliveryServices(0);
 		$scope.diffEdgeLocations(0);

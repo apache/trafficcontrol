@@ -45,6 +45,12 @@ under the License.
                 </uib-tab-heading>
                 <pre id="contentRouters"></pre>
             </uib-tab>
+            <uib-tab index="1" class="tab" ng-click="diffMonitors(500)">
+                <uib-tab-heading uib-popover-template="monitorsCount.templateUrl" popover-title="{{monitorsCount.added + monitorsCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
+                    Traffic Monitors [ {{monitorsCount.added}} | {{monitorsCount.removed}} ]
+                </uib-tab-heading>
+                <pre id="monitors"></pre>
+            </uib-tab>
             <uib-tab index="2" class="tab" ng-click="diffContentServers(500)">
                 <uib-tab-heading uib-popover-template="contentServersCount.templateUrl" popover-title="{{contentServersCount.added + contentServersCount.removed}} Total Changes" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true">
                     Traffic Servers [ {{contentServersCount.added}} | {{contentServersCount.removed}} ]
@@ -87,6 +93,11 @@ under the License.
 <script type="text/ng-template" id="crPopoverTemplate.html">
     <div>{{contentRoutersCount.added}} additions (++)</div>
     <div>{{contentRoutersCount.removed}} removals (--)</div>
+</script>
+
+<script type="text/ng-template" id="mPopoverTemplate.html">
+    <div>{{monitorsCount.added}} additions (++)</div>
+    <div>{{monitorsCount.removed}} removals (--)</div>
 </script>
 
 <script type="text/ng-template" id="csPopoverTemplate.html">
