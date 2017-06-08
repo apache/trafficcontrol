@@ -11,8 +11,9 @@ type CacheObj struct {
 	respHeaders      http.Header
 	respCacheControl CacheControl
 	code             int
-	reqTime          time.Time
-	respTime         time.Time
+	reqTime          time.Time // this is our client's time when the object was requested
+	reqRespTime      time.Time // this is our client's time when the object was received
+	respRespTime     time.Time // this is the origin server's Date time when the object was sent
 	size             uint64
 }
 
@@ -22,7 +23,7 @@ func (c CacheObj) ComputeSize() uint64 {
 	return uint64(len(c.body))
 }
 
-func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, respTime time.Time) *CacheObj {
+func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, reqRespTime time.Time, respRespTime time.Time) *CacheObj {
 	obj := &CacheObj{
 		body:             bytes,
 		reqHeaders:       http.Header{},
@@ -30,7 +31,8 @@ func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.
 		respCacheControl: ParseCacheControl(respHeader),
 		code:             code,
 		reqTime:          reqTime,
-		respTime:         respTime,
+		reqRespTime:      reqRespTime,
+		respRespTime:     respRespTime,
 		size:             0,
 	}
 	// copyHeader(reqHeader, &obj.reqHeaders)
