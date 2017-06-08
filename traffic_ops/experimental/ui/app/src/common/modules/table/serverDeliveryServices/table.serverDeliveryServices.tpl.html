@@ -21,19 +21,19 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
-            <li><a ng-click="navigateToPath('/configure/servers/' + server.id)">{{server.hostName}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/servers/' + server.id)">{{::server.hostName}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right" role="group">
-            <button class="btn btn-primary" title="Add Delivery Service" ng-click="addDeliveryService()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Link Delivery Services to Server" ng-click="addDeliveryService()"><i class="fa fa-link"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
+                    More&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li><a ng-click="cloneDsAssignments()">Clone Assignments</a></li>
+                    <li><a ng-click="cloneDsAssignments()">Clone Delivery Service Assignments</a></li>
                 </ul>
             </div>
         </div>
@@ -62,22 +62,22 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="deliveryService in serverDeliveryServices">
-                <td>{{deliveryService.xmlId}}</td>
-                <td>{{deliveryService.orgServerFqdn}}</td>
-                <td>{{deliveryService.cdnName}}</td>
-                <td>{{deliveryService.profileName}}</td>
-                <td>{{deliveryService.ccrDnsTtl}}</td>
-                <td>{{deliveryService.active}}</td>
-                <td>{{deliveryService.type}}</td>
-                <td>{{deliveryService.dscp}}</td>
-                <td>{{deliveryService.signed}}</td>
-                <td>{{deliveryService.qstringIgnore}}</td>
-                <td>{{deliveryService.geoLimit}}</td>
-                <td>{{deliveryService.protocol}}</td>
-                <td>{{deliveryService.ipv6RoutingEnabled}}</td>
-                <td>{{deliveryService.rangeRequestHandling}}</td>
-                <td><button type="button" class="btn btn-link" title="Remove Delivery Service" ng-click="removeDeliveryService()"><i class="fa fa-trash-o"></i></button></td>
+            <tr ng-repeat="deliveryService in ::serverDeliveryServices">
+                <td>{{::deliveryService.xmlId}}</td>
+                <td>{{::deliveryService.orgServerFqdn}}</td>
+                <td>{{::deliveryService.cdnName}}</td>
+                <td>{{::deliveryService.profileName}}</td>
+                <td>{{::deliveryService.ccrDnsTtl}}</td>
+                <td>{{::deliveryService.active}}</td>
+                <td>{{::deliveryService.type}}</td>
+                <td>{{::deliveryService.dscp}}</td>
+                <td>{{::deliveryService.signed}}</td>
+                <td>{{::deliveryService.qstringIgnore}}</td>
+                <td>{{::deliveryService.geoLimit}}</td>
+                <td>{{::deliveryService.protocol}}</td>
+                <td>{{::deliveryService.ipv6RoutingEnabled}}</td>
+                <td>{{::deliveryService.rangeRequestHandling}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from Server" ng-click="removeDeliveryService(deliveryService.id, server.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

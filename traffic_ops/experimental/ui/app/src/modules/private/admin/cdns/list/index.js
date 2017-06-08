@@ -28,7 +28,7 @@ module.exports = angular.module('trafficOps.private.admin.cdns.list', [])
                         controller: 'TableCDNsController',
                         resolve: {
                             cdns: function(cdnService) {
-                                return cdnService.getCDNs();
+                                return cdnService.getCDNs(true);
                             }
                         }
                     }

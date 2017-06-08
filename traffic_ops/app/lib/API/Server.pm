@@ -556,6 +556,168 @@ sub get_edge_servers_by_dsid {
 	return $self->success( \@data );
 }
 
+sub get_unassigned_servers_by_dsid {
+	my $self    = shift;
+	my $ds_id   = $self->param('id');
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my %ds_server_criteria;
+	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
+
+	my @assigned_servers;
+	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+		@assigned_servers = $self->db->resultset('DeliveryserviceServer')->search( \%ds_server_criteria, { prefetch => [ 'deliveryservice', 'server' ] } )->get_column('server')->all();
+	}
+	else {
+		return $self->alert("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my %server_criteria; # please fetch the following...
+	$server_criteria{'me.id'} = { 'not in' => \@assigned_servers }; # ...unassigned servers...
+	$server_criteria{'type.name'} = [ { -like => 'EDGE%' }, { -like => 'ORG' } ]; # ...of type EDGE% or ORG...
+	$server_criteria{'cdn.id'} = $ds->cdn_id; # ...that belongs to the same cdn as the ds...
+
+	my $servers = $self->db->resultset('Server')->search(
+		\%server_criteria,
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
+	);
+
+	my @data;
+	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
+		while ( my $row = $servers->next ) {
+			push(
+				@data, {
+					"cachegroup"     => $row->cachegroup->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
+					"guid"           => $row->guid,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => \$row->upd_pending
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
+sub get_eligible_servers_by_dsid {
+	my $self    = shift;
+	my $ds_id   = $self->param('id');
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my %ds_server_criteria;
+	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
+
+	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+		return $self->alert("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my %server_criteria; # please fetch the following...
+	$server_criteria{'type.name'} = [ { -like => 'EDGE%' }, { -like => 'ORG' } ]; # ...of type EDGE% or ORG...
+	$server_criteria{'cdn.id'} = $ds->cdn_id; # ...that belongs to the same cdn as the ds...
+
+	my $servers = $self->db->resultset('Server')->search(
+		\%server_criteria,
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
+	);
+
+	my @data;
+	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
+		while ( my $row = $servers->next ) {
+			push(
+				@data, {
+					"cachegroup"     => $row->cachegroup->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
+					"guid"           => $row->guid,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => \$row->upd_pending
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
+
 sub get_servers_by_type {
 	my $self              = shift;
 	my $current_user      = shift;
@@ -619,6 +781,105 @@ sub totals {
 
 	return $self->success( \@data );
 
+}
+
+sub status_count {
+	my $self = shift;
+
+	my $rs = $self->db->resultset('Server')->search(
+		undef,
+		{
+			join     => [qw/ status /],
+			select   => [ 'status.name', { count => 'me.id' } ],
+			as       => [qw/ status_name server_count /],
+			group_by => [qw/ status.id /]
+		}
+	);
+
+	my $response;
+	while ( my $row = $rs->next ) {
+		$response->{ $row->{'_column_data'}->{'status_name'} } = $row->{'_column_data'}->{'server_count'};
+	}
+
+	return $self->success( $response );
+}
+
+sub update_status {
+	my $self 	= shift;
+	my $id     	= $self->param('id');
+	my $params 	= $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $server = $self->db->resultset('Server')->find( { id => $id }, { prefetch => [ 'type' ] } );
+	if ( !defined($server) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined( $params->{status} ) ) {
+		return $self->alert("Status is required.");
+	}
+
+	my $server_status;
+	if  ( $params->{status} =~ /\d+/ ) {
+		$server_status = $self->db->resultset('Status')->search( { id => $params->{status} }, { columns => [qw/id name/] } )->single();
+	} else {
+		$server_status = $self->db->resultset('Status')->search( { name => $params->{status} }, { columns => [qw/id name/] } )->single();
+	}
+
+	if ( !defined($server_status) ) {
+		return $self->alert("Invalid status.");
+	}
+
+	my $offline_reason = $params->{offlineReason};
+	if ( $server_status->name eq 'ADMIN_DOWN' || $server_status->name eq 'OFFLINE' ) {
+		if ( !defined( $offline_reason ) ) {
+			return $self->alert("Offline reason is required for ADMIN_DOWN or OFFLINE status.");
+		} else {
+			# prepend current user to offline message
+			my $current_username = $self->current_user()->{username};
+			$offline_reason = "$current_username: $offline_reason";
+
+		}
+	} else {
+		$offline_reason = undef;
+	}
+
+	my $values = {
+		status           => $server_status->id,
+		offline_reason   => $offline_reason,
+	};
+
+	my $update = $server->update($values);
+	if ($update) {
+		my $fqdn = $update->host_name . "." . $update->domain_name;
+		my $msg = "Updated status [ " . $server_status->name . " ] for $fqdn [ $offline_reason ]";
+
+		# queue updates on child servers if server is ^EDGE or ^MID
+		if ( $server->type->name =~ m/^EDGE/ || $server->type->name =~ m/^MID/ ) {
+			my @cg_ids = $self->get_child_cachegroup_ids($server);
+			my $servers = $self->db->resultset('Server')->search( undef, { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
+			$servers->update( { upd_pending => 1 } );
+			$msg .= " and queued updates on all child caches";
+		}
+
+        &log( $self, $msg, "APICHANGE" );
+		return $self->success_message( $msg );
+	}
+	else {
+		return $self->alert( "Server status update failed." );
+	}
+
+}
+
+sub get_child_cachegroup_ids {
+    my $self    = shift;
+    my $server    = shift;
+
+    my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
+    return map { $_->id } @edge_cache_groups;
 }
 
 sub get_count_by_type {
@@ -862,7 +1123,7 @@ sub get_servers_by_phys_loc {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
+	$servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
@@ -888,6 +1149,21 @@ sub is_server_valid {
 
 	if ( !$self->is_valid_server_type( $params->{typeId} ) ) {
 		return ( 0, "Invalid server type" );
+	}
+
+	my $cdn_mismatch;
+	if ($id) {
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $params->{profileId}}, { prefetch => ['cdn'] } )->single();
+		if ( !defined($profile->cdn) ) {
+			$cdn_mismatch = 1;
+		} 
+		elsif ( $params->{cdnId} != $profile->cdn->id ) {
+			$cdn_mismatch = 1;
+		}
+	}
+
+	if ($cdn_mismatch) {
+		return ( 0, "CDN of profile does not match Server CDN" );
 	}
 
 	my $ip_used_for_profile;

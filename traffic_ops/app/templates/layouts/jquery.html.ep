@@ -59,6 +59,14 @@ setInterval( function() {
 
 </script>
 
+<script>
+	$.extend( true, $.fn.dataTable.defaults, {
+		column: {
+	    	render: $.fn.dataTable.render.text()
+		}
+	});
+</script>
+
 % }
 
 <%# There's a reason this is down here, must be loaded after everything else %>

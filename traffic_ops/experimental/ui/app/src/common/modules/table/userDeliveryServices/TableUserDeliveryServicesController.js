@@ -17,18 +17,47 @@
  * under the License.
  */
 
-var TableUserDeliveryServicesController = function(user, userDeliveryServices, $scope, $state, locationUtils) {
+var TableUserDeliveryServicesController = function(user, userDeliveryServices, $scope, $state, $uibModal, locationUtils, userService) {
 
 	$scope.user = user;
 
 	$scope.userDeliveryServices = userDeliveryServices;
 
-	$scope.addDeliveryService = function() {
-		alert('not hooked up yet: addDeliveryService to user');
+	$scope.removeDS = function(dsId) {
+		userService.deleteUserDeliveryService(user.id, dsId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
-	$scope.removeDeliveryService = function() {
-		alert('not hooked up yet: removeDeliveryService from user');
+	$scope.selectDSs = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/userDeliveryServices/table.userDSUnassigned.tpl.html',
+			controller: 'TableUserDSUnassignedController',
+			size: 'lg',
+			resolve: {
+				user: function() {
+					return user;
+				},
+				deliveryServices: function(userService) {
+					return userService.getUnassignedUserDeliveryServices(user.id);
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedDSIds) {
+			console.log(selectedDSIds);
+			var userDSAssignments = { userId: user.id, deliveryServices: selectedDSIds };
+			userService.assignUserDeliveryServices(userDSAssignments)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.refresh = function() {
@@ -40,11 +69,12 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, $
 	angular.element(document).ready(function () {
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 25,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', '$state', 'locationUtils'];
+TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', '$state', '$uibModal', 'locationUtils', 'userService'];
 module.exports = TableUserDeliveryServicesController;

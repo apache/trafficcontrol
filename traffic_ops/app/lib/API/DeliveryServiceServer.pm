@@ -68,6 +68,54 @@ sub domains {
 	$self->success( \@data );
 }
 
+sub assign_servers_to_ds {
+	my $self 		= shift;
+	my $params 		= $self->req->json;
+	my $ds_id 		= $params->{dsId};
+	my $servers 	= $params->{servers};
+	my $replace 	= $params->{replace};
+	my $count		= 0;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( ref($servers) ne 'ARRAY' ) {
+		return $self->alert("Servers must be an array");
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	if ( $replace ) {
+		# start fresh and delete existing deliveryservice/server associations
+		my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
+		$delete->delete();
+	}
+
+	$self->db->txn_begin();
+	foreach my $server (@{ $servers }) {
+		my $server_exist = $self->db->resultset('Server')->find( { id => $server } );
+		if ( !defined($server_exist) ) {
+			$self->db->txn_rollback();
+			return $self->alert("Server with id [ " . $server . " ] doesn't exist");
+		}
+		my $ds_server_exist = $self->db->resultset('DeliveryserviceServer')->find( { deliveryservice => $ds_id, server => $server } );
+		if ( !defined($ds_server_exist) ) {
+			$self->db->resultset('DeliveryserviceServer')->create( { deliveryservice => $ds_id, server => $server } )->insert();
+			$count++;
+		}
+	}
+	$self->db->txn_commit();
+
+	&log( $self, $count . " servers were assigned to " . $ds->xml_id, "APICHANGE" );
+
+	my $response = $params;
+	return $self->success($response, "Server assignments complete.");
+}
+
 sub assign_ds_to_cachegroup {
 	my $self   = shift;
 	my $cg_id  = $self->param('id');
@@ -174,6 +222,30 @@ sub assign_ds_to_cachegroup {
 	$response->{serverNames} = \@server_names;
 	$response->{deliveryServices} = $params->{deliveryServices};
 	$self->success( $response, "Delivery services successfully assigned to all the servers of cache group $cg_id" );
+}
+
+sub remove_server_from_ds {
+	my $self     	= shift;
+	my $ds_id  	 	= $self->param('dsId');
+	my $server_id	= $self->param('serverId');
+
+	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+		$self->forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my $ds_server = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id, server => $server_id }, { prefetch => [ 'deliveryservice', 'server' ] } );
+	if ( $ds_server->count == 0 ) {
+		return $self->not_found();
+	}
+
+	my $row = $ds_server->next;
+	my $rs = $ds_server->delete();
+	if ($rs) {
+		&log( $self, "Server [ " . $row->server->id . " | " . $row->server->host_name . " ] unlinked from deliveryservice [ " . $row->deliveryservice->id . " | " . $row->deliveryservice->xml_id . " ].", "APICHANGE" );
+		return $self->success_message("Server unlinked from delivery service.");
+	}
+
+	return $self->alert( "Failed to unlink server from delivery service." );
 }
 
 1;

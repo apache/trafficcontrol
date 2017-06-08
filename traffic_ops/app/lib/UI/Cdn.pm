@@ -71,6 +71,7 @@ sub update {
     my $self       = shift;
     my $id         = $self->param('id');
     my $priv_level = $self->stash('priv_level');
+    my $dnssec_enabled = defined($self->param('cdn_data.dnssec_enabled')) ? $self->param('cdn_data.dnssec_enabled') : 0;
 
     $self->stash(
         id          => $id,
@@ -95,12 +96,17 @@ sub update {
     else {
         my $update = $self->db->resultset('Cdn')->find( { id => $self->param('id') } );
         $update->name( $self->param('cdn_data.name') );
+        $update->domain_name( $self->param('cdn_data.domain_name') );
+        $update->dnssec_enabled( $dnssec_enabled );
         $update->update();
 
         # if the update has failed, we don't even get here, we go to the exception page.
     }
 
-    &log( $self, "Update Cdn with name:" . $self->param('cdn_data.name'), "UICHANGE" );
+    my $msg = "Update Cdn with name:" . $self->param('cdn_data.name') .
+              "; domain_name: " . $self->param('cdn_data.domain_name') .
+              "; dnssec_enabled: " . $self->param('cdn_data.dnssec_enabled');
+    &log( $self, $msg, "UICHANGE" );
     $self->flash( message => "Successfully updated CDN." );
     return $self->redirect_to( '/cdn/edit/' . $id );
 }

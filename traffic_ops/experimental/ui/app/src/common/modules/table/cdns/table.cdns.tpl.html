@@ -39,10 +39,10 @@ under the License.
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in cdns">
-                    <td>{{cdn.name}}</td>
-                    <td>{{cdn.domainName}}</td>
-                    <td>{{cdn.dnssecEnabled}}</td>
+                <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in ::cdns">
+                    <td>{{::cdn.name}}</td>
+                    <td>{{::cdn.domainName}}</td>
+                    <td>{{::cdn.dnssecEnabled}}</td>
                 </tr>
             </tbody>
         </table>

@@ -367,6 +367,7 @@ sub process_cfg_file {
 		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
 		$result =~ s/__HOSTNAME__/$hostname_short/g;
 		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
+		$result =~ s/\s*__RETURN__\s*/\n/g;
 	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
@@ -867,7 +868,6 @@ sub check_syncds_state {
 		else {
 			$reval_in_use = 0;
 		}
-		( $dispersion > 0 ) && &sleep_timer($random_duration);
 
 		$upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -889,6 +889,7 @@ sub check_syncds_state {
 		}
 
 		if ( $upd_pending == 1 ) {
+			( $dispersion > 0 ) && &sleep_timer($random_duration);
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
@@ -936,7 +937,8 @@ sub check_syncds_state {
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
-			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. I'm outta here.\n";
+			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. Running revalidation before exiting.\n";
+			&revalidate_while_sleeping();
 			exit 0;
 		}
 		else {
@@ -1104,6 +1106,11 @@ sub process_config_files {
 			$cfg_file_tracker->{$file}->{'service'} = "system";
 			$return = &process_cfg_file($file);
 		}
+		elsif ( $script_mode == $SYNCDS && defined( $cfg_file_tracker->{$file}->{'url'} ) && defined ( $cfg_file_tracker->{$file}->{'location'} ) ) {
+			( $log_level >> $DEBUG ) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
+			$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
+			$return = &process_cfg_file($file);
+		}
 		elsif ( $script_mode != $SYNCDS ) {
 			if (
 				package_installed("trafficserver")
@@ -1264,7 +1271,7 @@ sub check_plugins {
 					( my @parts ) = split( /\//, $plugin_config_file );
 					$plugin_config_file = $parts[$#parts];
 					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
+					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
 						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
 					}
 				}
@@ -1394,7 +1401,13 @@ sub lwp_get {
 	while( $retry_counter > 0 ) {
 
 		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
 		my $request = $traffic_ops_host . $uri;
+		if ( $uri =~ m/^http/ ) {
+			$request = $uri;
+			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
+		}
+
 
 		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
@@ -1778,10 +1791,16 @@ sub get_cfg_file_list {
 				( $log_level >> $INFO )
 					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
-				if ($api_in_use == 1) {
+				if ( defined($cfg_file->{'apiUri'} ) ) {
 					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+					( $log_level >> $DEBUG ) && print "DEBUG apiUri found: $cfg_files->{$fname_on_disk}->{'apiUri'}.\n";
+				}
+				elsif ( defined($cfg_file->{'url'} ) ) {
+					$cfg_files->{$fname_on_disk}->{'url'} = $cfg_file->{'url'};
+					( $log_level >> $DEBUG ) && print "DEBUG URL found: $cfg_files->{$fname_on_disk}->{'url'}.\n";
 				}
 				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+
 			}
 		}
 		else {
@@ -2488,6 +2507,10 @@ sub set_uri {
 	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'apiUri'};
 	}
+	elsif ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'url'}) ) {
+		$URI = $cfg_file_tracker->{$filename}->{'url'};
+		( $log_level >> $DEBUG ) && print "DEBUG Setting external download URL.\n";
+	}
 	else {
 		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	}
@@ -2528,12 +2551,6 @@ sub can_read_write_file {
 
 	my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
 	( $log_level >> $TRACE ) && print "TRACE User to validate $file against: $username\n";
-
-	if ( -z $file ) {
-		( $log_level >> $ERROR ) && print "ERROR $file has size=0!\n";
-		$cfg_file_tracker->{$filename}->{'audit_failed'}++;
-		return 0;
-	}
 
 	if ( !-R $file ) {
 		( $log_level >> $ERROR ) && print "ERROR $file is not readable by $username!\n";
@@ -2899,7 +2916,7 @@ sub setup_lwp {
 	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
 
 	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
-	$browser->timeout(15);
+	$browser->timeout(30);
 
 	return $browser;
 }

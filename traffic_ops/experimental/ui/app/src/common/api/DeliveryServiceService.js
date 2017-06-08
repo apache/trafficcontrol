@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceService = function(Restangular, locationUtils, messageModel) {
+var DeliveryServiceService = function(Restangular, locationUtils, httpService, messageModel, ENV) {
 
     this.getDeliveryServices = function(queryParams) {
         return Restangular.all('deliveryservices').getList(queryParams);
@@ -32,7 +32,7 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
             .then(
                 function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
-                    locationUtils.navigateToPath('/configure/delivery-services/' + response.id);
+                    locationUtils.navigateToPath('/configure/delivery-services/' + response.id + '?type=' + response.type);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -72,7 +72,32 @@ var DeliveryServiceService = function(Restangular, locationUtils, messageModel) 
         return Restangular.one('users', userId).getList('deliveryservices');
     };
 
+    this.deleteDeliveryServiceServer = function(dsId, serverId) {
+        return httpService.delete(ENV.api['root'] + 'deliveryservice_server/' + dsId + '/' + serverId)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service and server were unlinked.' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
+            );
+    };
+
+    this.assignDeliveryServiceServers = function(dsId, servers) {
+        return Restangular.service('deliveryserviceserver').post( { dsId: dsId, servers: servers, replace: true })
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Servers linked to delivery service' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+
 };
 
-DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'httpService', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceService;

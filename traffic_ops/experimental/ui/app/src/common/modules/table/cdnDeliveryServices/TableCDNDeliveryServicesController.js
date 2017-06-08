@@ -23,8 +23,8 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 
 	$scope.deliveryServices = deliveryServices;
 
-	$scope.editDeliveryService = function(id) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + id);
+	$scope.editDeliveryService = function(ds) {
+		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
 	};
 
 	$scope.refresh = function() {
@@ -36,7 +36,8 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 	angular.element(document).ready(function () {
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1
+			"iDisplayLength": 25,
+			"aaSorting": []
 		});
 	});
 

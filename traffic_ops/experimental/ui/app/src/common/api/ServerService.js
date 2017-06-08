@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ServerService = function(Restangular, locationUtils, messageModel) {
+var ServerService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
 
     this.getServers = function(queryParams) {
         return Restangular.all('servers').getList(queryParams);
@@ -30,9 +30,9 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
     this.createServer = function(server) {
         return Restangular.service('servers').post(server)
             .then(
-                function() {
+                function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                    locationUtils.navigateToPath('/configure/servers');
+                    locationUtils.navigateToPath('/configure/servers/' + response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -68,6 +68,14 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one('deliveryservices', dsId).getList('servers');
     };
 
+    this.getUnassignedDeliveryServiceServers = function(dsId) {
+        return Restangular.one('deliveryservices', dsId).getList('servers/unassigned');
+    };
+
+    this.getEligibleDeliveryServiceServers = function(dsId) {
+        return Restangular.one('deliveryservices', dsId).getList('servers/eligible');
+    };
+
     this.queueServerUpdates = function(id) {
         return Restangular.one("servers", id).customPOST( { action: "queue"}, "queue_update" )
             .then(
@@ -84,7 +92,7 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one("servers", id).customPOST( { action: "dequeue"}, "queue_update" )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Cancelled server updates' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Cleared server updates' } ], false);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -92,7 +100,39 @@ var ServerService = function(Restangular, locationUtils, messageModel) {
             );
     };
 
+    this.getStatusCount = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "servers/status")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.updateStatus = function(id, payload) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "servers/" + id + "/status", payload)
+            .then(
+                function(result) {
+                    request.resolve(result);
+                },
+                function(fault) {
+                    request.reject(fault);
+                }
+            );
+
+        return request.promise;
+    };
+
 };
 
-ServerService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+ServerService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ServerService;

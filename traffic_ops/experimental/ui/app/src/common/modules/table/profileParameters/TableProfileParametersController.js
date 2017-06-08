@@ -17,34 +17,66 @@
  * under the License.
  */
 
-var TableProfileParametersController = function(profile, profileParameters, $scope, $state, locationUtils) {
+var TableProfileParametersController = function(profile, profileParameters, $scope, $state, $uibModal, locationUtils, profileParameterService) {
 
 	$scope.profile = profile;
 
 	$scope.profileParameters = profileParameters;
 
-	$scope.addParameter = function() {
-		alert('not hooked up yet: add parameter to profile');
-	};
-
-	$scope.removeParameter = function() {
-		alert('not hooked up yet: remove Parameter from profile');
+	$scope.removeParameter = function(paramId) {
+		profileParameterService.unlinkProfileParameter(profile.id, paramId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.selectParams = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/profileParameters/table.profileParamsUnassigned.tpl.html',
+			controller: 'TableProfileParamsUnassignedController',
+			size: 'lg',
+			resolve: {
+				profile: function(parameterService) {
+					return profile;
+				},
+				parameters: function(parameterService) {
+					return parameterService.getProfileUnassignedParams(profile.id);
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedParams) {
+			var massagedArray = [];
+			for (i = 0; i < selectedParams.length; i++) {
+				massagedArray.push( { profileId: profile.id, parameterId: selectedParams[i] } );
+			}
+			profileParameterService.linkProfileParameters(massagedArray)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#parametersTable').dataTable({
+		$('#profileParametersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 25,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', '$state', 'locationUtils'];
+TableProfileParametersController.$inject = ['profile', 'profileParameters', '$scope', '$state', '$uibModal', 'locationUtils', 'profileParameterService'];
 module.exports = TableProfileParametersController;

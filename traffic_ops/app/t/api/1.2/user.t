@@ -46,68 +46,83 @@ sub run_ut {
 	Test::TestHelper->load_core_data($schema);
 	
 	my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
-	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "null";
+	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : undef;
+	my $tenant = defined ($tenant_name) ? $tenant_name : "null";
 
 	ok my $portal_user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Tenant $tenant_name: Does the portal user exist?';
+
 
 	# Verify the Portal user
 	$t->post_ok( '/api/1.2/user/login', json => { u => $login_user, p => $login_password} )->status_is(200);
 	$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/username", $login_user )
-		->json_is( "/response/tenantId", $tenant_id);
+		->json_is( "/response/tenantId", $tenant_id)
+		->json_is( "/response/tenant",   $tenant_name);
 
 	# Test required fields
 	$t->post_ok( '/api/1.2/user/current/update',
-		json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id} } )
+		json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 2 } } )
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
 	
 	#verify tenancy	
 	$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/username", $login_user )
-		->json_is( "/response/tenantId", $tenant_id);
+		->json_is( "/response/tenantId", $tenant_id)
+		->json_is( "/response/tenant",   $tenant_name);
 
 	# Test required fields
 	if (defined($tenant_id)){
 		#verify the update with no "tenant" do not removed the tenant
 		$t->post_ok( '/api/1.2/user/current/update',
-			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress'} } )
+			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 2 } } )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
 		#verify tenancy	
 		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/username", $login_user )
-			->json_is( "/response/tenantId", $tenant_id);
+			->json_is( "/response/tenantId", $tenant_id)
+			->json_is( "/response/tenant",   $tenant_name);
 
 		#cannot removed the tenant on current user
 		$t->post_ok( '/api/1.2/user/current/update',
-			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => undef} } )
+			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => undef, role => 2 } } )
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
+		#verify tenancy	
+		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/username", $login_user )
+			->json_is( "/response/tenantId", $tenant_id)
+			->json_is( "/response/tenant",   $tenant_name);
+	
+		#putting the tenant back the update with no "tenant" removed the tenant
+		$t->post_ok( '/api/1.2/user/current/update',
+			json => { user => { username => $login_user, email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 2 } } )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
 		#verify tenancy	
 		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/username", $login_user )
 			->json_is( "/response/tenantId", $tenant_id);
-	
 	}
 	
 	# Ensure unique emails
-	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => 'testportal1@kabletown.com', tenantId => $tenant_id } } )
+	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => 'testportal1@kabletown.com', tenantId => $tenant_id, role => 2 } } )
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "success" ),
-		"Tenant $tenant_name: Verify that the emails are unique";
+		"Tenant $tenant: Verify that the emails are unique";
 
-	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => '@kabletown.com', tenantId => $tenant_id } } )
+	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => '@kabletown.com', tenantId => $tenant_id, role => 2 } } )
 		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
-		"Tenant $tenant_name: Verify that the emails are properly formatted";
+		"Tenant $tenant: Verify that the emails are properly formatted";
 
-	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => '@kabletown.com', tenantId => $tenant_id } } )
+	ok $t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, email => '@kabletown.com', tenantId => $tenant_id, role => 2 } } )
 		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level", "error" ),
-		"Tenant $tenant_name: Verify that the usernames are unique";
+		"Tenant $tenant: Verify that the usernames are unique";
 
-	$t->post_ok( '/api/1.2/user/current/update', json => { user => { email => 'testportal1@kabletown.com', tenantId => $tenant_id } } )->status_is(400)
+	$t->post_ok( '/api/1.2/user/current/update', json => { user => { email => 'testportal1@kabletown.com', tenantId => $tenant_id, role => 2 } } )->status_is(400)
 		->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "username is required" );
 
-	$t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, tenantId => $tenant_id } } )->status_is(400)
+	$t->post_ok( '/api/1.2/user/current/update', json => { user => { username => $login_user, tenantId => $tenant_id, role => 2 } } )->status_is(400)
 		->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "email is required" );
 
 	ok $t->post_ok('/api/1.2/user/logout')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );

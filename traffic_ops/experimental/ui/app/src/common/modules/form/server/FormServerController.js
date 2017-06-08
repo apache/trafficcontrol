@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -41,7 +41,7 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
     };
 
     var getCDNs = function() {
-        cdnService.getCDNs()
+        cdnService.getCDNs(true)
             .then(function(result) {
                 $scope.cdns = result;
             });
@@ -55,12 +55,27 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
     };
 
     var getProfiles = function() {
-        profileService.getProfiles()
+        profileService.getProfiles({ orderby: 'name' })
             .then(function(result) {
-                $scope.profiles = result;
+                $scope.profiles = _.filter(result, function(profile) {
+                    return profile.type != 'DS_PROFILE';
+                });
             });
     };
 
+    var updateStatus = function(status) {
+        serverService.updateStatus(server.id, { status: status.id, offlineReason: status.offlineReason })
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                    refresh();
+                },
+	            function(fault) {
+		            messageModel.setMessages(fault.data.alerts, false);
+	            }
+            );
+    };
+    
     var refresh = function() {
         $state.reload(); // reloads all the resolves for the view
     };
@@ -97,24 +112,30 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
             );
     };
 
-    $scope.queueUpdates = function() {
-        alert('not hooked up yet: queuing updates for server');
+    $scope.confirmStatusUpdate = function() {
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/status/dialog.select.status.tpl.html',
+            controller: 'DialogSelectStatusController',
+            size: 'md',
+            resolve: {
+                server: function() {
+                    return server;
+                },
+                statuses: function() {
+                    return $scope.statuses;
+                }
+            }
+        });
+        modalInstance.result.then(function(status) {
+            updateStatus(status);
+        }, function () {
+            // do nothing
+        });
     };
 
-    $scope.dequeueUpdates = function() {
-        alert('not hooked up yet: dequeuing updates for server');
-    };
 
     $scope.viewConfig = function() {
         alert('not hooked up yet: view config files for server');
-    };
-
-    $scope.offlineServer = function() {
-        alert('not hooked up yet: offlineServer for server');
-    };
-
-    $scope.onlineServer = function() {
-        alert('not hooked up yet: onlineServer for server');
     };
 
     $scope.viewDeliveryServices = function() {
@@ -139,5 +160,5 @@ var FormServerController = function(server, $scope, $location, $state, formUtils
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
 module.exports = FormServerController;

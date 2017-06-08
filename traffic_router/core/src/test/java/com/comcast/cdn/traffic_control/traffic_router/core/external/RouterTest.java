@@ -239,19 +239,6 @@ public class RouterTest {
 	}
 
 	@Test
-	public void itHasAHomePage() throws IOException {
-		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/index.html");
-
-		CloseableHttpResponse response = null;
-		try {
-			response = httpClient.execute(httpGet);
-			assertThat(EntityUtils.toString(response.getEntity()), containsString("This is a test!"));
-		} finally {
-			if (response != null) response.close();
-		}
-	}
-
-	@Test
 	public void itRedirectsValidHttpRequests() throws IOException, InterruptedException {
 		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + deliveryServiceId + ".bar");

@@ -39,10 +39,10 @@ under the License.
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editType(type.id)" ng-repeat="type in types">
-                    <td>{{type.name}}</td>
-                    <td>{{type.useInTable}}</td>
-                    <td>{{type.description}}</td>
+                <tr ng-click="editType(type.id)" ng-repeat="type in ::types">
+                    <td>{{::type.name}}</td>
+                    <td>{{::type.useInTable}}</td>
+                    <td>{{::type.description}}</td>
                 </tr>
             </tbody>
         </table>

@@ -24,15 +24,7 @@ under the License.
             <li class="active">{{physLocationName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
-                </ul>
-            </div>
+            <button class="btn btn-primary" title="View Servers" ng-click="viewServers()">View Servers</button>
         </div>
         <div class="clearfix"></div>
     </div>

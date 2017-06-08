@@ -34,10 +34,6 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         alert('not hooked up yet: manageSSL for cdn');
     };
 
-    $scope.cachegroupHealth = function() {
-        alert('not hooked up yet: cachegroupHealth for CDN');
-    };
-
     $scope.queueServerUpdates = function(cdn) {
         cdnService.queueServerUpdates(cdn.id);
     };
@@ -46,8 +42,8 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         cdnService.clearServerUpdates(cdn.id);
     };
 
-    $scope.manageSnapshots = function() {
-        alert('not hooked up yet: manageSnapshots for CDN');
+    $scope.viewConfig = function() {
+        $location.path($location.path() + '/config/changes');
     };
 
     $scope.viewProfiles = function() {

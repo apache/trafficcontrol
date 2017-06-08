@@ -34,6 +34,11 @@ var TrafficOpsService = function($http, $q) {
         return deferred.promise;
     };
 
+    this.dumpDB = function() {
+        // todo: need to fix this so it is not hard-coded
+        window.location = 'http://localhost:3000/api/1.2/dbdump';
+    };
+
 };
 
 TrafficOpsService.$inject = ['$http', '$q'];

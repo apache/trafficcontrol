@@ -40,14 +40,14 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.1/asns.json")->status_is(200)->json_is( "/response/asns/0/id", 100 )->json_is( "/response/asns/0/cachegroup", "mid-northeast-group" )
+$t->get_ok("/api/1.1/asns")->status_is(200)->json_is( "/response/asns/0/id", 100 )->json_is( "/response/asns/0/cachegroup", "mid-northeast-group" )
 	->json_is( "/response/asns/0/asn", 9939 )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.1/asns.json?orderby=id")->status_is(200)->json_is( "/response/asns/0/id", 100 )
+$t->get_ok("/api/1.1/asns?orderby=id")->status_is(200)->json_is( "/response/asns/0/id", 100 )
 	->json_is( "/response/asns/0/cachegroup", "mid-northeast-group" )->json_is( "/response/asns/0/asn", 9939 )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.1/asns.json?orderby=cachegroup")->status_is(200)->json_is( "/response/asns/0/id", 100 )
+$t->get_ok("/api/1.1/asns?orderby=cachegroup")->status_is(200)->json_is( "/response/asns/0/id", 100 )
 	->json_is( "/response/asns/0/cachegroup", "mid-northeast-group" )->json_is( "/response/asns/0/asn", 9939 )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

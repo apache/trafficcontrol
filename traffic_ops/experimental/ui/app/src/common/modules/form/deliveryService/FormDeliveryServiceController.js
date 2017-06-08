@@ -17,14 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, $scope, $location, formUtils, locationUtils, cdnService, profileService, typeService) {
-
-    var getTypes = function() {
-        typeService.getTypes({ useInTable: 'deliveryservice' })
-            .then(function(result) {
-                $scope.types = result;
-            });
-    };
+var FormDeliveryServiceController = function(deliveryService, types, $scope, $location, formUtils, locationUtils, cdnService, profileService, typeService) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -36,11 +29,15 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
     var getProfiles = function() {
         profileService.getProfiles()
             .then(function(result) {
-                $scope.profiles = result;
+                $scope.profiles = _.filter(result, function(profile) {
+                    return profile.type == 'DS_PROFILE';
+                });
             });
     };
 
     $scope.deliveryService = deliveryService;
+
+    $scope.types = types;
 
     $scope.falseTrue = [
         { value: false, label: 'false' },
@@ -122,16 +119,12 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
-    $scope.assignServers = function() {
+    $scope.viewServers = function() {
         $location.path($location.path() + '/servers');
     };
 
     $scope.viewRegexes = function() {
         $location.path($location.path() + '/regexes');
-    };
-
-    $scope.cachegroupHealth = function() {
-        alert('not hooked up yet: cachegroupHealth for DS');
     };
 
     $scope.viewJobs = function() {
@@ -157,7 +150,6 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
     var init = function () {
-        getTypes();
         getCDNs();
         getProfiles();
     };
@@ -165,5 +157,5 @@ var FormDeliveryServiceController = function(deliveryService, $scope, $location,
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'typeService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'typeService'];
 module.exports = FormDeliveryServiceController;

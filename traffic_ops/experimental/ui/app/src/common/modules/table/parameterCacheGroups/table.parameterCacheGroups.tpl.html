@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/parameters')">Parameters</a></li>
-            <li><a ng-click="navigateToPath('/admin/parameters/' + parameter.id)">{{parameter.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/parameters/' + parameter.id)">{{::parameter.name}}</a></li>
             <li class="active">Cache Groups</li>
         </ol>
         <div class="pull-right">
@@ -44,12 +44,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="cacheGroup in cacheGroups">
-                <td>{{cacheGroup.name}}</td>
-                <td>{{cacheGroup.shortName}}</td>
-                <td>{{cacheGroup.typeName}}</td>
-                <td>{{cacheGroup.latitude}}</td>
-                <td>{{cacheGroup.longitude}}</td>
+            <tr ng-repeat="cacheGroup in ::cacheGroups">
+                <td>{{::cacheGroup.name}}</td>
+                <td>{{::cacheGroup.shortName}}</td>
+                <td>{{::cacheGroup.typeName}}</td>
+                <td>{{::cacheGroup.latitude}}</td>
+                <td>{{::cacheGroup.longitude}}</td>
                 <td><button type="button" class="btn btn-link" title="Remove Cache Group" ng-click="removeCacheGroup()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>

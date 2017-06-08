@@ -26,7 +26,7 @@
 		%= label_for 'xml_id' => '* XML ID', class => 'label'
 		<% if ($priv_level >= 20) { %>
 		%= field('ds.xml_id')->text(class => 'field', required => 'required', name => 'ds.xml_id', id => 'ds.xml_id')
-		<% } else { %> 
+		<% } else { %>
 		%= field('ds.xml_id')->text(class => 'field', readonly => 'readonly')
 		<% } %>
 	</div>
@@ -37,7 +37,7 @@
 		%= label_for 'display_name' => '* Display Name', class => 'label'
 		<% if ($priv_level >= 20) { %>
 		%= field('ds.display_name')->text(class => 'field', required => 'required', name => 'ds.display_name', id => 'ds.display_name')
-		<% } else { %> 
+		<% } else { %>
 		%= field('ds.display_name')->text(class => 'field', readonly => 'readonly')
 		<% } %>
 	</div>
@@ -60,9 +60,9 @@
 		<% if ($mode =~ /edit/) { %>
 			%= field('ds.type.name')->text(class => 'field', required => 'required', id => 'type', name => 'ds.type', readonly => 'readonly');
 			%= field('ds.type.id')->hidden(class => 'field', required => 'required', id => 'ds.type.id', name => 'ds.type.id', type => 'hidden');
-		<% } else { %> 
+		<% } else { %>
 			%= field('ds.type')->select(class => 'field', required => 'required', id => 'type', name => 'ds.type');
-		<% } %> 
+		<% } %>
 	</div>
 	<div class="block form-row" id="protocoli_row">
 		<% unless (field('ds.protocol')->valid) { %>
@@ -127,7 +127,7 @@
 			%= field('ds.dscp')->text(class => 'field', value =>  '48  - CS6', readonly => 'readonly');
 			<% } elsif ($ds->dscp == 45) {%>
 			%= field('ds.dscp')->text(class => 'field', value =>  '56  - CS7', readonly => 'readonly');
-			<% } 
+			<% }
 		<% } %>
 	</div>
 	<div class="block form-row" id="signed_row">
@@ -320,7 +320,7 @@
 		<% } %>
 		%= label_for 'max_dns_answers' => 'Maximum IP addresses in DNS answer (0 means all)', class => 'label'
 		<% if ($priv_level >= 20) { %>
-			<% if ($mode =~ /edit/) { %>	
+			<% if ($mode =~ /edit/) { %>
 				%= field('ds.max_dns_answers')->text(class => 'field', id => 'max_dns_answers', name => 'ds.max_dns_answers');
 			<% } else { %>
 				%= field('ds.max_dns_answers')->text(class => 'field', id => 'max_dns_answers', name => 'ds.max_dns_answers', default => 0);
@@ -335,7 +335,7 @@
 		<% } %>
 		%= label_for 'ccr_dns_ttl' => 'Delivery Service DNS TTL', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.ccr_dns_ttl')->text(class => 'field', id => 'ccr_dns_ttl', name => 'ds.ccr_dns_ttl', value => 3600);
+		%= field('ds.ccr_dns_ttl')->text(class => 'field', id => 'ccr_dns_ttl', name => 'ds.ccr_dns_ttl');
 		<% } else { %>
 		%= field('ds.ccr_dns_ttl')->text(class => 'field', readonly => 'readonly');
 		<% } %>
@@ -374,7 +374,7 @@
 		<% if ($priv_level >= 20) { %>
 		%= field('ds.profile')->select( \@{$profiles} );
 		<% } else { %>
-		%= field('ds.profile.name')->text(class => 'field', readonly => 'readonly');
+		%= field('ds.profile')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div>
 	<div class="block form-row" id="global_max_mbps_row">

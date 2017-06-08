@@ -74,7 +74,9 @@ sub register {
 						my $r         = $rascal_data->{$cdn_name}->{state}->{$cache};
 						my $h         = $health_config->{profiles}->{ $c->{type} }->{ $c->{profile} };
 						my $min_avail = $h->{"health.threshold.availableBandwidthInKbps"};
-						$min_avail =~ s/\D//g;
+						if ($min_avail) {
+							$min_avail =~ s/\D//g;
+						}
 
 						if (   ref($args) eq "HASH"
 							&& exists( $args->{delivery_service} )

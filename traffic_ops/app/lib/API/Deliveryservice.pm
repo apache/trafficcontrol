@@ -41,16 +41,16 @@ sub index {
 
 	my %criteria;
 	if ( defined $cdn_id ) {
-		$criteria{'cdn_id'} = $cdn_id;
+		$criteria{'me.cdn_id'} = $cdn_id;
 	}
 	if ( defined $profile_id ) {
-		$criteria{'profile'} = $profile_id;
+		$criteria{'me.profile'} = $profile_id;
 	}
 	if ( defined $type_id ) {
-		$criteria{'type'} = $type_id;
+		$criteria{'me.type'} = $type_id;
 	}
 	if ( defined $logs_enabled ) {
-		$criteria{'logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
+		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
 	}
 
 	if ( !&is_privileged($self) ) {
@@ -59,13 +59,28 @@ sub index {
 		$criteria{'me.id'} = { -in => \@ds_ids },;
 	}
 
-	my $rs_data = $self->db->resultset("Deliveryservice")->search( \%criteria, { prefetch => [ 'cdn', 'profile', 'type' ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Deliveryservice")->search(
+		\%criteria,
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ], order_by => 'me.' . $orderby }
+	);
+
 	while ( my $row = $rs_data->next ) {
 
 		# build example urls for each delivery service
 		my @example_urls = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
-		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
+		my $cdn_domain   = $row->cdn->domain_name;
+		my $ds_regexes = $row->deliveryservice_regexes;
+		my $regexp_set;
+		my $i = 0;
+
+		while ( my $ds_regex = $ds_regexes->next ) {
+			$regexp_set->[$i]->{id}         = $ds_regex->id;
+			$regexp_set->[$i]->{pattern}    = $ds_regex->regex->pattern;
+			$regexp_set->[$i]->{type}    	= $ds_regex->regex->type->name;
+			$regexp_set->[$i]->{set_number} = $ds_regex->set_number;
+			$i++;
+		}
+
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
@@ -144,7 +159,10 @@ sub show {
 		return $self->forbidden() if ( !exists( $map{$id} ) );
 	}
 
-	my $rs = $self->db->resultset("Deliveryservice")->search( { id => $id } );
+	my $rs = $self->db->resultset("Deliveryservice")->search(
+		{ 'me.id' => $id },
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ] }
+	);
 	while ( my $row = $rs->next ) {
 
 		# build the matchlist (the list of ds regexes and their type)
@@ -163,8 +181,20 @@ sub show {
 
 		# build example urls for the delivery service
 		my @example_urls = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $row->id );
-		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $row->id );
+		my $cdn_domain   = $row->cdn->domain_name;
+
+		$ds_regexes->reset; # need to reset the curson
+		my $regexp_set;
+		my $i = 0;
+
+		while ( my $ds_regex = $ds_regexes->next ) {
+			$regexp_set->[$i]->{id}         = $ds_regex->id;
+			$regexp_set->[$i]->{pattern}    = $ds_regex->regex->pattern;
+			$regexp_set->[$i]->{type}    	= $ds_regex->regex->type->name;
+			$regexp_set->[$i]->{set_number} = $ds_regex->set_number;
+			$i++;
+		}
+
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $row->id, $regexp_set, $row, $cdn_domain, $row->protocol );
 
 		push(
@@ -316,7 +346,7 @@ sub update {
 
 		# build example urls
 		my @example_urls  = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $rs->id );
+		my $cdn_domain    = $rs->cdn->domain_name;
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
 
@@ -495,7 +525,7 @@ sub create {
 
 		# build example urls
 		my @example_urls  = ();
-		my $cdn_domain   = $self->get_cdn_domain_by_ds_id( $insert->id );
+		my $cdn_domain   = $insert->cdn->domain_name;
 		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $insert->id );
 		@example_urls = &UI::DeliveryService::get_example_urls( $self, $insert->id, $regexp_set, $insert, $cdn_domain, $insert->protocol );
 
@@ -896,10 +926,10 @@ sub state {
 						my $type     = shift(@k);
 						my $location = undef;
 
-						if ( $type eq "DNS" ) {
+						if ( $type =~ /^DNS/ ) {
 							$location = $c->{bypassDestination}->{$type}->{ip};
 						}
-						elsif ( $type eq "HTTP" ) {
+						elsif ( $type =~ /^HTTP/ ) {
 							my $port = ( exists( $c->{bypassDestination}->{$type}->{port} ) ) ? ":" . $c->{bypassDestination}->{$type}->{port} : "";
 							$location = sprintf( "http://%s%s", $c->{bypassDestination}->{$type}->{fqdn}, $port );
 						}
@@ -944,6 +974,62 @@ sub request {
 	else {
 		return $self->alert($result);
 	}
+}
+
+sub assign_servers {
+	my $self      = shift;
+	my $ds_xml_Id = $self->param('xml_id');
+	my $params    = $self->req->json;
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters are JSON format, please check!");
+	}
+	if ( !&is_oper($self) ) {
+		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+	}
+
+	if ( !exists( $params->{serverNames} ) ) {
+		return $self->alert("Parameter 'serverNames' is required.");
+	}
+
+	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();
+	if ( !defined($dsid) ) {
+		return $self->alert( "DeliveryService[" . $ds_xml_Id . "] is not found." );
+	}
+
+	my @server_ids;
+	my $svrs = $params->{serverNames};
+	foreach my $svr (@$svrs) {
+		my $svr_id = $self->db->resultset('Server')->search( { host_name => $svr } )->get_column('id')->single();
+		if ( !defined($svr_id) ) {
+			return $self->alert( "Server[" . $svr . "] is not found in database." );
+		}
+		push( @server_ids, $svr_id );
+	}
+
+	# clean up
+	my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsid } );
+	$delete->delete();
+
+	# assign servers
+	foreach my $s_id (@server_ids) {
+		my $insert = $self->db->resultset('DeliveryserviceServer')->create(
+			{
+				deliveryservice => $dsid,
+				server          => $s_id,
+			}
+		);
+		$insert->insert();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+
+	my $response;
+	$response->{xmlId} = $ds->xml_id;
+	$response->{'serverNames'} = \@$svrs;
+
+	return $self->success($response);
 }
 
 sub is_deliveryservice_request_valid {
@@ -992,26 +1078,26 @@ sub is_deliveryservice_valid {
 
 		# Validation checks to perform
 		checks => [
-			active               => [ is_required("is required") ],
+			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
+			typeId               => [ is_required("is required") ],
 			cdnId                => [ is_required("is required") ],
+			active               => [ is_required("is required") ],
 			displayName          => [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
-			dscp                 => [ is_required("is required") ],
-			geoLimit             => [ is_required("is required") ],
-			geoProvider          => [ is_required("is required") ],
-			initialDispersion    => [ is_required("is required") ],
+			dscp                 => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
+			geoLimit             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
+			geoProvider          => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
+			initialDispersion    => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			ipv6RoutingEnabled   => [ is_required("is required") ],
 			logsEnabled          => [ is_required("is required") ],
 			missLat              => [ \&is_valid_lat ],
 			missLong             => [ \&is_valid_long ],
 			multiSiteOrigin      => [ is_required("is required") ],
-			orgServerFqdn        => [ is_required("is required"), is_like( qr/^(https?:\/\/)/, "must start with http:// or https://" ) ],
-			protocol             => [ is_required("is required") ],
-			qstringIgnore        => [ is_required("is required") ],
-			rangeRequestHandling => [ is_required("is required") ],
+			orgServerFqdn        => [ sub { is_valid_org_server_fqdn($self, @_) } ],
+			protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
+			qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
+			rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			regionalGeoBlocking  => [ is_required("is required") ],
 			signed               => [ is_required("is required") ],
-			typeId               => [ is_required("is required") ],
-			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
 		]
 	};
 
@@ -1073,6 +1159,24 @@ sub is_valid_long {
 	return undef;
 }
 
+sub is_valid_org_server_fqdn {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	if ( (!defined $value or $value eq '') ) {
+		my $type_name = $self->db->resultset("Type")->find( { id => $params->{typeId} } )->get_column('name') // undef;
+		if ( defined($type_name) && ( $type_name =~ /(^ANY_MAP$|^.*STEERING.*$)/ ) ) {
+			return undef;
+		}
+	}
+
+	if ( !( $value =~ /^(https?:\/\/)/ ) ) {
+		return "invalid. Must start with http:// or https://.";
+	}
+
+	return undef;
+}
+
 sub sanitize_geo_limit_countries {
 	my $geo_limit_countries = shift;
 
@@ -1105,6 +1209,24 @@ sub create_default_ds_regex {
 		&log( $self, "Created delivery service regex at position 0 [ " . $rs_regex->pattern . " ] for deliveryservice: " . $ds_id, "APICHANGE" );
 	}
 
+}
+
+sub get_regexp_set {
+	my $self    	= shift;
+	my @ds_regexes 	= shift;
+
+	my $regexp_set;
+	my $i = 0;
+
+	foreach my $ds_regex (@ds_regexes) {
+		$regexp_set->[$i]->{id}         = $ds_regex->id;
+		$regexp_set->[$i]->{pattern}    = $ds_regex->regex->pattern;
+		$regexp_set->[$i]->{type}    	= $ds_regex->regex->type->name;
+		$regexp_set->[$i]->{set_number} = $ds_regex->set_number;
+		$i++;
+	}
+
+	return $regexp_set;
 }
 
 1;

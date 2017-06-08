@@ -24,11 +24,19 @@ under the License.
             <li class="active">{{cacheGroupName}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="Queue {{cacheGroup.name}} server updates" ng-click="confirmQueueServerUpdates(cacheGroup)"><i class="fa fa-flag"></i></button>
-            <button class="btn btn-primary" title="Clear {{cacheGroup.name}} server updates" ng-click="confirmClearServerUpdates(cacheGroup)"><i class="fa fa-ban"></i></button>
+            <div class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
+                <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    Queue Updates&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="confirmQueueServerUpdates(cacheGroup)"><i class="fa fa-flag"></i>&nbsp;&nbsp;Queue {{cacheGroupName}} Server Updates</a></li>
+                    <li role="menuitem"><a ng-click="confirmClearServerUpdates(cacheGroup)"><i class="fa fa-ban"></i>&nbsp;&nbsp;Clear {{cacheGroupName}} Server Updates</a></li>
+                </ul>
+            </div>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
+                    More&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>

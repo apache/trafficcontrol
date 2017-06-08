@@ -1,0 +1,55 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+    <h4 class="modal-title">Update {{::server.hostName}} status</h4>
+    <h5 ng-if="needsUpdates(server)">Note: Config file updates will be queued on ALL child caches</h5>
+</div>
+<div class="modal-body">
+    <form name="statusForm" novalidate>
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <div class="form-group" ng-class="{'has-error': hasError(statusForm.status), 'has-feedback': hasError(statusForm.status)}">
+                    <label class="control-label" for="status">Status *
+                        <small class="input-error" ng-show="hasPropertyError(statusForm.status, 'required')">Required</small>
+                    </label>
+                    <select id="status" name="status" class="form-control" ng-model="selectedStatusId" ng-options="status.id as status.name for status in statuses" required>
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row" ng-show="offline()">
+            <div class="col-sm-12 col-md-12">
+                <div class="form-group" ng-class="{'has-error': hasError(statusForm.offlineReason), 'has-feedback': hasError(statusForm.offlineReason)}">
+                    <label class="control-label" for="offlineReason">Offline Reason *
+                        <small class="input-error" ng-show="hasPropertyError(statusForm.offlineReason, 'maxlength')">Too Long</small>
+                    </label>
+                    <input id="offlineReason" name="offlineReason" type="text" class="form-control" ng-model="status.offlineReason" ng-maxlength="256" ng-required="offline()" autofocus>
+                    <span ng-show="hasError(statusForm.offlineReason)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button class="btn action-btn" ng-click="cancel()">Cancel</button>
+    <button class="btn btn-link" ng-disabled="statusForm.$invalid" ng-click="select()">Submit</button>
+</div>

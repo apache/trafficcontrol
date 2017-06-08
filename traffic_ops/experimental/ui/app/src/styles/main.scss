@@ -33,6 +33,10 @@ $fa-font-path: "../assets/fonts";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/table/table";
 @import "../common/modules/release/release";
+@import "../common/modules/widget/capacity/widget.capacity";
+@import "../common/modules/widget/cacheGroups/widget.cacheGroups";
+@import "../common/modules/widget/cdnChart/widget.cdnChart";
+@import "../common/modules/widget/routing/widget.routing";
 
 // public
 @import "../modules/public/login/login";
@@ -44,8 +48,7 @@ $fa-font-path: "../assets/fonts";
 
 // admin
 @import "../modules/private/admin/admin";
-@import "../modules/private/admin/divisions/divisions";
-@import "../modules/private/admin/physLocations/physLocations";
+@import "../modules/private/admin/cdns/config/config";
 @import "../modules/private/admin/regions/regions";
 @import "../modules/private/admin/tenants/tenants";
 @import "../modules/private/admin/users/users";
@@ -60,10 +63,8 @@ $fa-font-path: "../assets/fonts";
 @import "../modules/private/monitor/monitor";
 
 // dashboards
-@import "../modules/private/monitor/dashboards/dashboards";
-@import "../modules/private/monitor/dashboards/one/dashboards.one";
-@import "../modules/private/monitor/dashboards/two/dashboards.two";
-@import "../modules/private/monitor/dashboards/three/dashboards.three";
+@import "../modules/private/monitor/dashboard/dashboard";
+@import "../modules/private/monitor/map/map";
 
 [ng-click] {
   cursor: pointer;
@@ -87,7 +88,6 @@ body .container.body .main-content {
 
 body.nav-md .container.body .main-content {
   padding: 10px 20px 0;
-  margin-left: 230px;
 }
 
 body.nav-sm .container.body .main-content {
@@ -140,3 +140,10 @@ body.nav-sm .container.body .main-content {
   }
 
 }
+
+@media(min-width:992px) {
+  body.nav-md .container.body .main-content {
+    margin-left: 230px;
+  }
+}
+

@@ -335,7 +335,7 @@ under the License.
 					 }
 				 }
 
-				 for (var i = 0, row; row = table.rows[i]; i++) {
+				 for (var i = 1, row; row = table.rows[i]; i++) { // start at 1, because row[0] is the header
 					 var server = row.id.replace(/^cache-states-/, '');
 					 if(!(server in jdata)) {
 						 table.deleteRow(i);

@@ -24,15 +24,16 @@ under the License.
             <li class="active">{{profileName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="View Parameters" ng-click="viewParams()"><i class="fa fa-clone"></i></button>
+            <button class="btn btn-primary" title="View Parameters" ng-click="viewParams()">View Parameters</button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
+                    More&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="viewDeliveryServices()" ng-show="profile.type == 'DS_PROFILE'">View Delivery Services</a></li>
-                    <li role="menuitem"><a ng-click="viewServers()" ng-show="profile.type != 'DS_PROFILE'">View Servers</a></li>
+                    <li role="menuitem"><a ng-click="viewDeliveryServices()" ng-if="profile.type == 'DS_PROFILE'">View Delivery Services</a></li>
+                    <li role="menuitem"><a ng-click="viewParams()">View Parameters</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()" ng-if="profile.type != 'DS_PROFILE'">View Servers</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="cloneProfile()">Clone Profile</a></li>
                     <li role="menuitem"><a ng-click="exportProfile()">Export Profile</a></li>

@@ -20,14 +20,11 @@ package poller
  */
 
 import (
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
 	"sync/atomic"
 	"time"
-
-	"gopkg.in/fsnotify.v1"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
@@ -56,8 +53,9 @@ type PollConfig struct {
 }
 
 type HttpPollerConfig struct {
-	Urls     map[string]PollConfig
-	Interval time.Duration
+	Urls        map[string]PollConfig
+	Interval    time.Duration
+	NoKeepAlive bool
 	// noSleep indicates to use the InsomniacPoller. Note this is only used with the initial Poll call, which decides which Poller mechanism to use. After that, this is ignored when the HttpPollerConfig is passed over the ConfigChannel.
 	noSleep bool
 }
@@ -91,12 +89,6 @@ func NewHTTP(
 			UserAgent: userAgent,
 		},
 	}
-}
-
-type FilePoller struct {
-	File                string
-	ResultChannel       chan interface{}
-	NotificationChannel chan int
 }
 
 type MonitorCfg struct {
@@ -177,12 +169,13 @@ func (p MonitorConfigPoller) Poll() {
 var debugPollNum uint64
 
 type HTTPPollInfo struct {
-	Interval time.Duration
-	Timeout  time.Duration
-	ID       string
-	URL      string
-	Host     string
-	Handler  handler.Handler
+	NoKeepAlive bool
+	Interval    time.Duration
+	Timeout     time.Duration
+	ID          string
+	URL         string
+	Host        string
+	Handler     handler.Handler
 }
 
 func (p HttpPoller) Poll() {
@@ -212,10 +205,23 @@ func (p HttpPoller) SleepPoll() {
 			killChans[info.ID] = kill
 
 			fetcher := p.FetcherTemplate
-			if info.Timeout != 0 { // if the timeout isn't explicitly set, use the template value.
+			if info.Timeout != 0 || info.NoKeepAlive { // if the timeout isn't explicitly set, use the template value.
 				c := *fetcher.Client
 				fetcher.Client = &c // copy the client, so we don't change other fetchers.
-				fetcher.Client.Timeout = info.Timeout
+				if info.Timeout != 0 {
+					fetcher.Client.Timeout = info.Timeout
+				}
+				if info.NoKeepAlive {
+					transportI := http.DefaultTransport
+					transport, ok := transportI.(*http.Transport)
+					if !ok {
+						log.Errorf("failed to set NoKeepAlive for '%v': http.DefaultTransport expected type *http.Transport actual %T\n", info.URL, transportI)
+					} else {
+						transport.DisableKeepAlives = info.NoKeepAlive
+						fetcher.Client.Transport = transport
+						log.Infof("Setting transport.DisableKeepAlives %v for %v\n", transport.DisableKeepAlives, info.URL)
+					}
+				}
 			}
 			go sleepPoller(info.Interval, info.ID, info.URL, info.Host, fetcher, kill)
 		}
@@ -348,54 +354,23 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 	}
 }
 
-func (p FilePoller) Poll() {
-	// initial read before watching for changes
-	contents, err := ioutil.ReadFile(p.File)
-
-	if err != nil {
-		log.Errorf("reading %s: %s\n", p.File, err)
-		os.Exit(1) // TODO: this is a little drastic -jse
-	} else {
-		p.ResultChannel <- contents
-	}
-
-	watcher, _ := fsnotify.NewWatcher()
-	watcher.Add(p.File)
-
-	for {
-		select {
-		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				contents, err := ioutil.ReadFile(p.File)
-
-				if err != nil {
-					log.Errorf("opening %s: %s\n", p.File, err)
-				} else {
-					p.ResultChannel <- contents
-				}
-			}
-		case err := <-watcher.Errors:
-			log.Errorln(time.Now(), "error:", err)
-		}
-	}
-}
-
 // diffConfigs takes the old and new configs, and returns a list of deleted IDs, and a list of new polls to do
 func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPollInfo) {
 	deletions := []string{}
 	additions := []HTTPPollInfo{}
 
-	if old.Interval != new.Interval {
+	if old.Interval != new.Interval || old.NoKeepAlive != new.NoKeepAlive {
 		for id, _ := range old.Urls {
 			deletions = append(deletions, id)
 		}
 		for id, pollCfg := range new.Urls {
 			additions = append(additions, HTTPPollInfo{
-				Interval: new.Interval,
-				ID:       id,
-				URL:      pollCfg.URL,
-				Host:     pollCfg.Host,
-				Timeout:  pollCfg.Timeout,
+				Interval:    new.Interval,
+				NoKeepAlive: new.NoKeepAlive,
+				ID:          id,
+				URL:         pollCfg.URL,
+				Host:        pollCfg.Host,
+				Timeout:     pollCfg.Timeout,
 			})
 		}
 		return deletions, additions
@@ -408,11 +383,12 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 		} else if newPollCfg != oldPollCfg {
 			deletions = append(deletions, id)
 			additions = append(additions, HTTPPollInfo{
-				Interval: new.Interval,
-				ID:       id,
-				URL:      newPollCfg.URL,
-				Host:     newPollCfg.Host,
-				Timeout:  newPollCfg.Timeout,
+				Interval:    new.Interval,
+				NoKeepAlive: new.NoKeepAlive,
+				ID:          id,
+				URL:         newPollCfg.URL,
+				Host:        newPollCfg.Host,
+				Timeout:     newPollCfg.Timeout,
 			})
 		}
 	}
@@ -421,11 +397,12 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 		_, oldIdExists := old.Urls[id]
 		if !oldIdExists {
 			additions = append(additions, HTTPPollInfo{
-				Interval: new.Interval,
-				ID:       id,
-				URL:      newPollCfg.URL,
-				Host:     newPollCfg.Host,
-				Timeout:  newPollCfg.Timeout,
+				Interval:    new.Interval,
+				NoKeepAlive: new.NoKeepAlive,
+				ID:          id,
+				URL:         newPollCfg.URL,
+				Host:        newPollCfg.Host,
+				Timeout:     newPollCfg.Timeout,
 			})
 		}
 	}

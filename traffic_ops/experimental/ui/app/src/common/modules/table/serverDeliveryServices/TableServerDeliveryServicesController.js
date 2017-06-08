@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, locationUtils) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, locationUtils, deliveryServiceService) {
 
 	$scope.server = server;
 
@@ -31,8 +31,13 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		alert('not hooked up yet: addDeliveryService to server');
 	};
 
-	$scope.removeDeliveryService = function() {
-		alert('not hooked up yet: removeDeliveryService from server');
+	$scope.removeDeliveryService = function(dsId, serverId) {
+		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
@@ -44,11 +49,12 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 	angular.element(document).ready(function () {
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 25,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', 'locationUtils'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', 'locationUtils', 'deliveryServiceService'];
 module.exports = TableServerDeliveryServicesController;

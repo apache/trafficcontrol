@@ -184,10 +184,8 @@ sub ds_data {
 	my @server_ids = ();
 	my $rs;
 	if ( $server->type->name =~ m/^MID/ ) {
-
 		# the mids will do all deliveryservices in this CDN
-		my $domain = $self->get_cdn_domain_by_profile_id( $server->profile->id );
-		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [$domain] } );
+		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server->cdn->name ] } );
 	}
 	else {
 		$rs = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server->id ] } );
@@ -1239,7 +1237,15 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				my $qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+				# then edges will use the qstring handling value specified in the parameter for all profiles.
+				my $qsh = $self->profile_param_value( $server->profile->id, 'parent.config', 'psel.qstring_handling');
+				# If there is no defined parameter in the profile, then check the delivery service profile.
+				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+				# This is used only if not overridden by a server profile qstring handling parameter.
+				if (!defined($qsh)) {
+					$qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				}
 				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
 				if ( $remap->{qstring_ignore} == 0 && !defined($qsh) ) {
 					$parent_qstring = "consider";
@@ -1255,6 +1261,10 @@ sub parent_dot_config {
 					elsif ( $parent->{secondary_parent} ) {
 						push @secondary_parent_info, $ptxt;
 					}
+				}
+				if ( scalar @parent_info == 0  ) {
+					@parent_info = @secondary_parent_info;
+					@secondary_parent_info = ();
 				}
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;

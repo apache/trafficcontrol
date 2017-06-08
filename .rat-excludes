@@ -5,6 +5,7 @@ VERSION(?:                           This very short file doesn't support commen
 .*\.css\.map(?:                      debug files for minified css. License borne by source. ){0}
 \..*(?:                              hidden files ought not to be code. These are generally things like projects, ignore files and such. ){0}
 LICEN[SC]E.*(?:                      Licenses do not usually require meta-licenses. ){0}
+^licenses/*(?:                         Licenses do not usually require meta-licenses. ){0}
 .*\.conf(?:ig)?(?:\.?.*)?(?:         Config files aren't code and don't typically require licenses. ){0}
 .*\.cfg(?:                           config file ){0}
 .*\.logrotate(?:                     config file ){0}

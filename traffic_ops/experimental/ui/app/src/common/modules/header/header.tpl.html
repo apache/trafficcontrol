@@ -22,39 +22,38 @@ under the License.
         <div class="nav toggle">
             <a id="menu_toggle"><i class="fa fa-bars"></i></a>
         </div>
-        <ul class="nav navbar-nav navbar-right" ng-show="userLoaded">
+        <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>
                 <div class="btn-group" uib-dropdown is-open="userMenu.isopen">
                     <button id="userButton" type="button" class="btn btn-link" uib-dropdown-toggle>
-                        <span id="headerUsername">{{user.username}}</span><span ng-show="user.newUser">New User</span> <i class="fa fa-angle-down fa-lg"></i>
+                        <span id="headerUsername">{{::user.username}}</span><span ng-if="user.newUser">New User</span> <i class="fa fa-angle-down fa-lg"></i>
                     </button>
                     <ul class="uib-dropdown-menu dropdown-usermenu animated fadeInDown" role="menu" aria-labelledby="userMenu-button">
                         <li><a ui-sref="trafficOps.private.user.edit">Manage User Profile</a></li>
-                        <li ng-show="!userLoaded"><a ui-sref="trafficOps.public.login">Login</a></li>
-                        <li ng-show="userLoaded"><a ng-click="logout()">Logout</a></li>
+                        <li ng-if="userLoaded"><a ng-click="logout()">Logout</a></li>
                     </ul>
                 </div>
             </li>
             <li role="presentation" class="dropdown">
                 <div class="btn-group" uib-dropdown is-open="alerts.isopen">
-                    <button id="alertsButton" type="button" class="btn btn-link" uib-dropdown-toggle>
+                    <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
                         <i class="fa fa-comment-o"></i>
-                        <span class="badge bg-green">6</span>
+                        <span class="badge bg-green">{{newLogCount()}}</span>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
-                        <li ng-repeat="i in [1, 2, 3, 4, 5, 6]">
-                            <a>
+                        <li ng-repeat="changeLog in changeLogs">
+                            <a ng-click="$event.stopPropagation()">
                                 <span>
-                                    <span>User Name</span>
-                                    <span class="time">{{i}} mins ago</span>
+                                    <span>{{::changeLog.user}}</span>
+                                    <span class="time">{{::getRelativeTime(changeLog.lastUpdated)}}</span>
                                 </span>
-                                <span class="message">Contents of Log.message goes here</span>
+                                <span class="message">{{::changeLog.message}}</span>
                             </a>
                         </li>
                         <li>
                             <div class="text-center">
                                 <a>
-                                    <strong><a href="javascript:void(0);">See All Change Logs</a></strong>
+                                    <strong><a ng-click="navigateToPath('/admin/change-logs')">See All Change Logs</a></strong>
                                     <i class="fa fa-angle-right"></i>
                                 </a>
                             </div>
@@ -64,7 +63,17 @@ under the License.
             </li>
             <li>
                 <div class="btn-group" title="Download DB">
-                    <button type="button" class="btn btn-link" ng-click="downloadDB()"><i class="fa fa-download"></i></button>
+                    <button type="button" class="btn btn-link" ng-click="dumpDB()"><i class="fa fa-download"></i></button>
+                </div>
+            </li>
+            <li>
+                <div class="btn-group" title="Queue CDN Server Updates">
+                    <button type="button" class="btn btn-link" ng-click="confirmQueueServerUpdates()"><i class="fa fa-flag"></i></button>
+                </div>
+            </li>
+            <li>
+                <div class="btn-group" title="Diff CDN Config Snapshot">
+                    <button type="button" class="btn btn-link" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
                 </div>
             </li>
         </ul>

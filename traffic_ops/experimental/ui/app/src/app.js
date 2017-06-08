@@ -58,12 +58,15 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/admin/asns/list').name,
         require('./modules/private/admin/asns/new').name,
         require('./modules/private/admin/cdns').name,
+        require('./modules/private/admin/cdns/config').name,
         require('./modules/private/admin/cdns/deliveryServices').name,
         require('./modules/private/admin/cdns/edit').name,
         require('./modules/private/admin/cdns/list').name,
         require('./modules/private/admin/cdns/new').name,
         require('./modules/private/admin/cdns/profiles').name,
         require('./modules/private/admin/cdns/servers').name,
+        require('./modules/private/admin/changeLogs').name,
+        require('./modules/private/admin/changeLogs/list').name,
         require('./modules/private/admin/divisions').name,
         require('./modules/private/admin/divisions/edit').name,
         require('./modules/private/admin/divisions/list').name,
@@ -152,16 +155,16 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/monitor').name,
 
         // dashboards
-        require('./modules/private/monitor/dashboards').name,
-        require('./modules/private/monitor/dashboards/one').name,
-        require('./modules/private/monitor/dashboards/two').name,
-        require('./modules/private/monitor/dashboards/three').name,
+        require('./modules/private/monitor/dashboard').name,
+        require('./modules/private/monitor/dashboard/view').name,
+        require('./modules/private/monitor/map').name,
 
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/delete').name,
         require('./common/modules/dialog/reset').name,
         require('./common/modules/dialog/select').name,
+        require('./common/modules/dialog/select/status').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
@@ -224,6 +227,7 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/cacheGroupParameters').name,
         require('./common/modules/table/cacheGroupServers').name,
         require('./common/modules/table/cacheGroupStaticDnsEntries').name,
+        require('./common/modules/table/changeLogs').name,
         require('./common/modules/table/asns').name,
         require('./common/modules/table/cdns').name,
         require('./common/modules/table/cdnDeliveryServices').name,
@@ -262,6 +266,13 @@ var trafficOps = angular.module('trafficOps', [
         require('./common/modules/table/users').name,
         require('./common/modules/table/userDeliveryServices').name,
 
+        // widgets
+        require('./common/modules/widget/cacheGroups').name,
+        require('./common/modules/widget/capacity').name,
+        require('./common/modules/widget/cdnChart').name,
+        require('./common/modules/widget/changeLogs').name,
+        require('./common/modules/widget/routing').name,
+
         // models
         require('./common/models').name,
         require('./common/api').name,
@@ -283,6 +294,7 @@ var trafficOps = angular.module('trafficOps', [
             RestangularProvider.setBaseUrl(ENV.api['root']);
 
             RestangularProvider.setResponseInterceptor(function(data, operation, what) {
+
                 if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
                     if (operation == 'getList') {
                         return data.response;

@@ -17,23 +17,54 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, locationUtils, serverUtils) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, $uibModal, locationUtils, serverUtils, deliveryServiceService) {
 
 	$scope.deliveryService = deliveryService;
 
 	$scope.servers = servers;
 
-	$scope.addServer = function() {
-		alert('not hooked up yet: addServer to ds');
-	};
-
-	$scope.removeServer = function() {
-		alert('not hooked up yet: removeServer from ds');
+	$scope.removeServer = function(dsId, serverId) {
+		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
 	};
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};
+
+	$scope.selectServers = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/deliveryServiceServers/table.dsServersUnassigned.tpl.html',
+			controller: 'TableDSServersUnassignedController',
+			size: 'lg',
+			resolve: {
+				deliveryService: function() {
+					return deliveryService;
+				},
+				eligibleServers: function(serverService) {
+					return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
+				},
+				assignedServers: function() {
+					return servers;
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedServerIds) {
+			deliveryServiceService.assignDeliveryServiceServers(deliveryService.id, selectedServerIds)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -44,11 +75,12 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	angular.element(document).ready(function () {
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 100
+			"iDisplayLength": 25,
+			"aaSorting": []
 		});
 	});
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'deliveryServiceService'];
 module.exports = TableDeliveryServiceServersController;

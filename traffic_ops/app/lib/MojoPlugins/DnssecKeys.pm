@@ -92,8 +92,7 @@ sub register {
 
 			#then get deliveryservices
 			my %search = ( profile => $profile_id );
-			my @ds_rs
-				= $self->db->resultset('Deliveryservice')->search( \%search );
+			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search , { prefetch => [ { 'cdn' => undef }]});
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
 					&& $ds->type->name !~ m/^DNS/ )
@@ -104,8 +103,7 @@ sub register {
 				my $ds_id  = $ds->id;
 
 				#create the ds domain name for dnssec keys
-				my $domain_name
-					= UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+				my $domain_name = $ds->cdn->domain_name;
 				my $ds_regexes
 					= UI::DeliveryService::get_regexp_set( $self, $ds_id );
 				my $rs_ds = $self->db->resultset('Deliveryservice')->search(

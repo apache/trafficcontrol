@@ -271,6 +271,7 @@ sub is_valid {
 
 	$self->field('tm_user.local_passwd')->is_equal( 'tm_user.confirm_local_passwd', "The 'Password' and 'Confirm Password' must match." );
 	$self->field('tm_user.local_passwd')->is_like( qr/^.{8,100}$/, "Password must be greater than 7 chars." );
+	$self->is_password_uncommon();
 
 	return $self->valid;
 }

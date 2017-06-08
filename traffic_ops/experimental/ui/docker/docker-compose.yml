@@ -14,14 +14,16 @@
 version: '2'
 
 services:
-  ui:
+  portal:
     build:
       context: ..
-      dockerfile: /opt/traffic_ops_ui/docker/Dockerfile
+      dockerfile: /opt/traffic_portal/docker/Dockerfile
     ports:
-      - 80:8080
+      - 80:80
+      - 443:443
     volumes:
-      - /etc/traffic_ops_ui/conf:/etc/traffic_ops_ui/conf
+      - /etc/traffic_portal/conf:/etc/traffic_portal/conf
+      - /etc/pki:/etc/pki
     networks:
       - default
 

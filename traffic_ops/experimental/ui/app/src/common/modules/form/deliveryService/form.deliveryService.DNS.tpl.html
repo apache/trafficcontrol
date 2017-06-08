@@ -1,0 +1,457 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
+            <li class="active">{{deliveryServiceName}}</li>
+        </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
+                <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-key"></i>&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                </ul>
+            </div>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
+                    <li role="menuitem"><a ng-click="viewRegexes()">View Regexes</a></li>
+                    <li role="menuitem"><a ng-click="viewJobs()">View Invalidate Content Jobs</a></li>
+                    <li role="menuitem"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="deliveryServiceForm" class="form-horizontal form-label-left" novalidate>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type.id), 'has-feedback': hasError(deliveryServiceForm.type.id)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Content Routing Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="type" name="type" class="form-control" ng-model="deliveryService.typeId" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">XML ID *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="xmlId" name="xmlId" type="text" class="form-control" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
+                    <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Display Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" ng-required="true" ng-maxlength="48" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Active *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="active" name="active" class="form-control" ng-model="deliveryService.active" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="cdn" name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.protocol), 'has-feedback': hasError(deliveryServiceForm.protocol)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Protocol *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="protocol" name="protocol" class="form-control" ng-model="deliveryService.protocol" ng-options="protocol.value as protocol.label for protocol in protocols" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.protocol, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dscp), 'has-feedback': hasError(deliveryServiceForm.dscp)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DSCP Tag *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="dscp" name="dscp" class="form-control" ng-model="deliveryService.dscp" ng-options="dcsp.value as dcsp.label for dcsp in dscps" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dscp, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signed), 'has-feedback': hasError(deliveryServiceForm.signed)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Signed URLs *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="signed" name="signed" class="form-control" ng-model="deliveryService.signed" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signed, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.qstringIgnore), 'has-feedback': hasError(deliveryServiceForm.qstringIgnore)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Query String Handling *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="qstringIgnore" name="qstringIgnore" class="form-control" ng-model="deliveryService.qstringIgnore" ng-options="qs.value as qs.label for qs in qStrings" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.qstringIgnore, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="geoLimit" name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" ng-options="gl.value as gl.label for gl in geoLimits" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitCountries), 'has-feedback': hasError(deliveryServiceForm.geoLimitCountries)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit Countries</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" ng-maxlength="255" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimitCountries, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.geoLimitCountries)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoProvider), 'has-feedback': hasError(deliveryServiceForm.geoProvider)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Provider *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="geoProvider" name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" ng-options="gp.value as gp.label for gp in geoProviders" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geolimitRedirectUrl), 'has-feedback': hasError(deliveryServiceForm.geolimitRedirectUrl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Limit Redirect URL</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="geolimitRedirectUrl" name="geolimitRedirectUrl" type="text" class="form-control" ng-model="deliveryService.geolimitRedirectUrl" ng-maxlength="255" ng-pattern="/^(https?:\/\/)/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geolimitRedirectUrl, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geolimitRedirectUrl, 'pattern')">Must start with http:// or https://</small>
+                    <span ng-show="hasError(deliveryServiceForm.geolimitRedirectUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ipv6RoutingEnabled), 'has-feedback': hasError(deliveryServiceForm.ipv6RoutingEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">IPv6 Routing Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="ipv6RoutingEnabled" name="ipv6RoutingEnabled" class="form-control" ng-model="deliveryService.ipv6RoutingEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ipv6RoutingEnabled, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.rangeRequestHandling), 'has-feedback': hasError(deliveryServiceForm.rangeRequestHandling)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Range Request Handling *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="rangeRequestHandling" name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" ng-options="rrh.value as rrh.label for rrh in rrhs" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.rangeRequestHandling, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dnsBypassIp), 'has-feedback': hasError(deliveryServiceForm.dnsBypassIp)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DNS Bypass IP</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="dnsBypassIp" name="dnsBypassIp" type="text" class="form-control" ng-model="deliveryService.dnsBypassIp" ng-maxlength="45" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dnsBypassIp, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.dnsBypassIp)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dnsBypassIp6), 'has-feedback': hasError(deliveryServiceForm.dnsBypassIp6)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DNS Bypass IPv6</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="dnsBypassIp6" name="dnsBypassIp6" type="text" class="form-control" ng-model="deliveryService.dnsBypassIp6" ng-maxlength="45" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dnsBypassIp6, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.dnsBypassIp6)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dnsBypassCname), 'has-feedback': hasError(deliveryServiceForm.dnsBypassCname)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DNS Bypass Cname</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="dnsBypassCname" name="dnsBypassCname" type="text" class="form-control" ng-model="deliveryService.dnsBypassCname" ng-maxlength="255" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dnsBypassCname, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.dnsBypassCname)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dnsBypassTtl), 'has-feedback': hasError(deliveryServiceForm.dnsBypassTtl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DNS Bypass TTL</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="dnsBypassTtl" name="dnsBypassTtl" type="text" class="form-control" ng-model="deliveryService.dnsBypassTtl" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dnsBypassTtl, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.dnsBypassTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.maxDNSAnswers), 'has-feedback': hasError(deliveryServiceForm.maxDNSAnswers)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Max DNS Answers</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="maxDNSAnswers" name="maxDNSAnswers" type="text" class="form-control" ng-model="deliveryService.maxDNSAnswers" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.maxDNSAnswers, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.maxDNSAnswers)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ccrDNSTtl), 'has-feedback': hasError(deliveryServiceForm.ccrDNSTtl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service DNS TTL</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="ccrDNSTtl" name="ccrDNSTtl" type="text" class="form-control" ng-model="deliveryService.ccrDNSTtl" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ccrDNSTtl, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.ccrDNSTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.orgServerFqdn), 'has-feedback': hasError(deliveryServiceForm.orgServerFqdn)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Origin Server Base URL *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="orgServerFqdn" name="orgServerFqdn" type="text" class="form-control" ng-model="deliveryService.orgServerFqdn" ng-maxlength="255" ng-pattern="/^(https?:\/\/)/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'pattern')">Must start with http:// or https://</small>
+                    <span ng-show="hasError(deliveryServiceForm.orgServerFqdn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.multiSiteOrigin), 'has-feedback': hasError(deliveryServiceForm.multiSiteOrigin)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Use Multi Site Origin Feature *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="multiSiteOrigin" name="multiSiteOrigin" class="form-control" ng-model="deliveryService.multiSiteOrigin" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.multiSiteOrigin, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxMbps), 'has-feedback': hasError(deliveryServiceForm.globalMaxMbps)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Global Max Mbps</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="globalMaxMbps" name="globalMaxMbps" type="text" class="form-control" ng-model="deliveryService.globalMaxMbps" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxMbps, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.globalMaxMbps)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxTps), 'has-feedback': hasError(deliveryServiceForm.globalMaxTps)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Global Max TPS</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="globalMaxTps" name="globalMaxTps" type="text" class="form-control" ng-model="deliveryService.globalMaxTps" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxTps, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.globalMaxTps)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.missLat), 'has-feedback': hasError(deliveryServiceForm.missLat)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Miss Default Latitude</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="missLat" name="missLat" type="text" class="form-control" ng-model="deliveryService.missLat" ng-maxlength="11" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.missLat, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Invalid coordinate</small>
+                    <span ng-show="hasError(deliveryServiceForm.missLat)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.missLong), 'has-feedback': hasError(deliveryServiceForm.missLong)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Miss Default Longitude</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="missLong" name="missLong" type="text" class="form-control" ng-model="deliveryService.missLong" ng-maxlength="11" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.missLong, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">Invalid coordinate</small>
+                    <span ng-show="hasError(deliveryServiceForm.missLong)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.edgeHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.edgeHeaderRewrite)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Edge Header Rewrite Rules</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="edgeHeaderRewrite" name="edgeHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="2048" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.edgeHeaderRewrite, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.edgeHeaderRewrite)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.midHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.midHeaderRewrite)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Mid Header Rewrite Rules</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="midHeaderRewrite" name="midHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="2048" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.midHeaderRewrite, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.midHeaderRewrite)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Traffic Router Additional Response Headers</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="trResponseHeaders" name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trResponseHeaders, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.trResponseHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trRequestHeaders), 'has-feedback': hasError(deliveryServiceForm.trRequestHeaders)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Traffic Router Log Request Headers</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="trRequestHeaders" name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trRequestHeaders, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.trRequestHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regexRemap), 'has-feedback': hasError(deliveryServiceForm.regexRemap)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Regex remap expression</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="regexRemap" name="regexRemap" type="text" class="form-control" ng-model="deliveryService.regexRemap" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.regexRemap, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.regexRemap)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cacheurl), 'has-feedback': hasError(deliveryServiceForm.cacheurl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Cache URL expression</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="cacheurl" name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cacheurl, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.cacheurl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.remapText), 'has-feedback': hasError(deliveryServiceForm.remapText)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Raw remap text</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="remapText" name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" ng-maxlength="2048" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.remapText, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.remapText)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc), 'has-feedback': hasError(deliveryServiceForm.longDesc)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="longDesc" name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description 1</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="longDesc1" name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc1, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Long Description 2</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="longDesc2" name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc2, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Info URL</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="infoUrl" name="infoUrl" type="text" class="form-control" ng-model="deliveryService.infoUrl" ng-maxlength="255" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.checkPath), 'has-feedback': hasError(deliveryServiceForm.checkPath)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Check Path</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" ng-maxlength="255" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.originShield), 'has-feedback': hasError(deliveryServiceForm.originShield)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Origin Shield (Pipe Delimited String)</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="originShield" name="originShield" type="text" class="form-control" ng-model="deliveryService.originShield" ng-maxlength="1024" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.originShield, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.originShield)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.sslKeyVersion), 'has-feedback': hasError(deliveryServiceForm.sslKeyVersion)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">SSL Key Version</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="sslKeyVersion" name="sslKeyVersion" type="text" class="form-control" ng-model="deliveryService.sslKeyVersion" ng-maxlength="11" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.sslKeyVersion, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(deliveryServiceForm.sslKeyVersion)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regionalGeoBlocking), 'has-feedback': hasError(deliveryServiceForm.regionalGeoBlocking)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Regional Geoblocking *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="regionalGeoBlocking" name="regionalGeoBlocking" class="form-control" ng-model="deliveryService.regionalGeoBlocking" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.regionalGeoBlocking, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.logsEnabled), 'has-feedback': hasError(deliveryServiceForm.logsEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Logs Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="logsEnabled" name="logsEnabled" class="form-control" ng-model="deliveryService.logsEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(deliveryService)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

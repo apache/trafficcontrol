@@ -21,10 +21,19 @@ package manager
 
 import (
 	"crypto/tls"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"os/signal"
+
+	"golang.org/x/sys/unix"
+
+	"github.com/davecheney/gmx"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
@@ -33,13 +42,12 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
-	"github.com/davecheney/gmx"
 )
 
 //
 // Start starts the poller and handler goroutines
 //
-func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData) {
+func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
 	counters := fetcher.Counters{
 		Success: gmx.NewCounter("fetchSuccess"),
@@ -155,7 +163,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		cfg,
 	)
 
+	if err := startMonitorConfigFilePoller(trafficMonitorConfigFileName); err != nil {
+		return fmt.Errorf("starting monitor config file poller: %v", err)
+	}
+
 	healthTickListener(cacheHealthPoller.TickChan, healthIteration)
+	return nil
 }
 
 // healthTickListener listens for health ticks, and writes to the health iteration variable. Does not return.
@@ -163,4 +176,46 @@ func healthTickListener(cacheHealthTick <-chan uint64, healthIteration threadsaf
 	for i := range cacheHealthTick {
 		healthIteration.Set(i)
 	}
+}
+
+func startMonitorConfigFilePoller(filename string) error {
+	onChange := func(bytes []byte, err error) {
+		if err != nil {
+			log.Errorf("monitor config file poll, polling file '%v': %v", filename, err)
+			return
+		}
+
+		cfg, err := config.LoadBytes(bytes)
+		if err != nil {
+			log.Errorf("monitor config file poll, loading bytes '%v' from '%v': %v", string(bytes), filename, err)
+			return
+		}
+
+		eventW, errW, warnW, infoW, debugW, err := config.GetLogWriters(cfg)
+		if err != nil {
+			log.Errorf("monitor config file poll, getting log writers '%v': %v", filename, err)
+			return
+		}
+		log.Init(eventW, errW, warnW, infoW, debugW)
+	}
+
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	onChange(bytes, nil)
+
+	startSignalFileReloader(filename, unix.SIGHUP, onChange)
+	return nil
+}
+
+// signalFileReloader starts a goroutine which, when the given signal is received, attempts to load the given file and calls the given function with its bytes or error. There is no way to stop the goroutine or stop listening for signals, thus this should not be called if it's ever necessary to stop handling or change the listened file. The initialRead parameter determines whether the given handler is called immediately with an attempted file read (without a signal).
+func startSignalFileReloader(filename string, sig os.Signal, f func([]byte, error)) {
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, sig)
+		for range c {
+			f(ioutil.ReadFile(filename))
+		}
+	}()
 }

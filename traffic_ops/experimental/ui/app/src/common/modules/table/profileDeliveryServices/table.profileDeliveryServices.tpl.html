@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/admin/profiles')">Profiles</a></li>
-            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{profile.name}}</a></li>
+            <li><a ng-click="navigateToPath('/admin/profiles/' + profile.id)">{{::profile.name}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
@@ -51,21 +51,21 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDeliveryService(deliveryService.id)" ng-repeat="deliveryService in deliveryServices">
-                <td>{{deliveryService.xmlId}}</td>
-                <td>{{deliveryService.orgServerFqdn}}</td>
-                <td>{{deliveryService.cdnName}}</td>
-                <td>{{deliveryService.profileName}}</td>
-                <td>{{deliveryService.ccrDnsTtl}}</td>
-                <td>{{deliveryService.active}}</td>
-                <td>{{deliveryService.type}}</td>
-                <td>{{deliveryService.dscp}}</td>
-                <td>{{deliveryService.signed}}</td>
-                <td>{{deliveryService.qstringIgnore}}</td>
-                <td>{{deliveryService.geoLimit}}</td>
-                <td>{{deliveryService.protocol}}</td>
-                <td>{{deliveryService.ipv6RoutingEnabled}}</td>
-                <td>{{deliveryService.rangeRequestHandling}}</td>
+            <tr ng-click="editDeliveryService(deliveryService)" ng-repeat="deliveryService in ::deliveryServices">
+                <td>{{::deliveryService.xmlId}}</td>
+                <td>{{::deliveryService.orgServerFqdn}}</td>
+                <td>{{::deliveryService.cdnName}}</td>
+                <td>{{::deliveryService.profileName}}</td>
+                <td>{{::deliveryService.ccrDnsTtl}}</td>
+                <td>{{::deliveryService.active}}</td>
+                <td>{{::deliveryService.type}}</td>
+                <td>{{::deliveryService.dscp}}</td>
+                <td>{{::deliveryService.signed}}</td>
+                <td>{{::deliveryService.qstringIgnore}}</td>
+                <td>{{::deliveryService.geoLimit}}</td>
+                <td>{{::deliveryService.protocol}}</td>
+                <td>{{::deliveryService.ipv6RoutingEnabled}}</td>
+                <td>{{::deliveryService.rangeRequestHandling}}</td>
             </tr>
             </tbody>
         </table>

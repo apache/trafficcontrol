@@ -48,6 +48,32 @@ sub index {
 	$self->success( \@data );
 }
 
+sub show {
+    my $self = shift;
+    my $id     = $self->param('id');
+
+    my $find = $self->db->resultset('Parameter')->find({ id => $id } );
+    if ( !defined($find) ) {
+        return $self->not_found("parameter [id:".$id."] does not exist.");
+    }
+    if ( $find->secure != 0 && !&is_admin($self)) {
+        return $self->forbidden("You must be an admin to perform this operation!");
+    }
+
+    my @data = ();
+    push(
+        @data, {
+            "id"          => $find->id,
+            "name"        => $find->name,
+            "configFile"  => $find->config_file,
+            "value"       => $find->value,
+            "secure"      => \$find->secure,
+            "lastUpdated" => $find->last_updated
+        }
+    );
+    $self->success( \@data );
+}
+
 sub get_profile_params {
 	my $self         = shift;
 	my $profile_id   = $self->param('id');
@@ -81,6 +107,42 @@ sub get_profile_params {
 	$self->success( \@data );
 }
 
+sub get_profile_params_unassigned {
+    my $self         = shift;
+    my $profile_id   = $self->param('id');
+    my $profile_name = $self->param('name');
+
+    my %criteria;
+    if ( defined $profile_id ) {
+        $criteria{'profile.id'} = $profile_id;
+    } elsif ( defined $profile_name ) {
+        $criteria{'profile.name'} = $profile_name;
+    } else {
+        return $self->alert("Profile ID or Name is required");
+    }
+
+    my @assigned_params =
+        $self->db->resultset('ProfileParameter')->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter')->all();
+
+    my $rs_data = $self->db->resultset("Parameter")->search( 'me.id' => { 'not in' => \@assigned_params } );
+    my @data = ();
+    while ( my $row = $rs_data->next ) {
+        my $value = $row->value;
+        &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
+        push(
+            @data, {
+                "name"        => $row->name,
+                "id"          => $row->id,
+                "configFile"  => $row->config_file,
+                "value"       => $value,
+                "secure"      => \$row->secure,
+                "lastUpdated" => $row->last_updated
+            }
+        );
+    }
+    $self->success( \@data );
+}
+
 sub get_cachegroup_params {
 	my $self         = shift;
 	my $cg_id   = $self->param('id');
@@ -109,6 +171,39 @@ sub get_cachegroup_params {
 		);
 	}
 	$self->success( \@data );
+}
+
+sub get_cachegroup_params_unassigned {
+	my $self        = shift;
+	my $cg_id       = $self->param('id');
+
+	my %criteria;
+	if ( defined $cg_id ) {
+		$criteria{'cachegroup.id'} = $cg_id;
+	} else {
+        return $self->alert("Cache Group ID is required");
+    }
+
+    my @assigned_params =
+        $self->db->resultset('CachegroupParameter')->search( \%criteria, { prefetch => [ 'parameter', 'cachegroup' ] } )->get_column('parameter')->all();
+
+    my $rs_data = $self->db->resultset("Parameter")->search( 'me.id' => { 'not in' => \@assigned_params } );
+    my @data = ();
+    while ( my $row = $rs_data->next ) {
+        my $value = $row->value;
+        &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
+        push(
+            @data, {
+                "name"        => $row->name,
+                "id"          => $row->id,
+                "configFile"  => $row->config_file,
+                "value"       => $value,
+                "secure"      => \$row->secure,
+                "lastUpdated" => $row->last_updated
+            }
+        );
+    }
+    $self->success( \@data );
 }
 
 sub create {
@@ -199,33 +294,7 @@ sub create {
     return $self->success($response, "Create ". scalar(@new_parameters) . " parameters successfully.");
 }
 
-sub get {
-    my $self = shift;
-    my $id     = $self->param('id');
-
-    my $find = $self->db->resultset('Parameter')->find({ id => $id } );
-    if ( !defined($find) ) {
-        return $self->not_found("parameter [id:".$id."] does not exist.");
-    }
-    if ( $find->secure != 0 && !&is_admin($self)) {
-        return $self->forbidden("You must be an admin to perform this operation!");
-    }
-
-	my @data = ();
-	push(
-		@data, {
-			"id"          => $find->id,
-			"name"        => $find->name,
-			"configFile"  => $find->config_file,
-			"value"       => $find->value,
-			"secure"      => \$find->secure,
-			"lastUpdated" => $find->last_updated
-		}
-	);
-	$self->success( \@data );
-}
-
-sub edit {
+sub update {
     my $self = shift;
     my $id     = $self->param('id');
     my $params = $self->req->json;

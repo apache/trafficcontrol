@@ -18,4 +18,5 @@
  */
 
 module.exports = angular.module('trafficOps.table.profileParameters', [])
-	.controller('TableProfileParametersController', require('./TableProfileParametersController'));
+	.controller('TableProfileParametersController', require('./TableProfileParametersController'))
+	.controller('TableProfileParamsUnassignedController', require('./TableProfileParamsUnassignedController'));

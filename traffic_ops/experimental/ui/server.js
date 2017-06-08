@@ -24,14 +24,13 @@ var constants = require('constants'),
     path = require('path'),
     fs = require('fs'),
     morgan = require('morgan'),
-    errorhandler = require('errorhandler'),
     modRewrite = require('connect-modrewrite'),
     timeout = require('connect-timeout');
 
 var config;
 
 try {
-    config = require('/etc/traffic_ops_ui/conf/config');
+    config = require('/etc/traffic_portal/conf/config');
 }
 catch(e) {
     config = require('./conf/config');
@@ -44,16 +43,30 @@ var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
 
 var app = express();
+
+app.use(function(req, res, next) {
+    var err = null;
+    try {
+        decodeURIComponent(req.path)
+    }
+    catch(e) {
+        err = e;
+    }
+    if (err){
+        console.log(err, req.url);
+    }
+    next();
+});
+
 // Add a handler to inspect the req.secure flag (see
 // http://expressjs.com/api#req.secure). This allows us
 // to know whether the request was via http or https.
 app.all ("/*", function (req, res, next) {
     if (useSSL && !req.secure) {
-        var headersHost = req.headers.host.split(':');
-        var httpsUrl = 'https://' + headersHost[0] + ':' +  config.sslPort + req.url;
         // request was via http, so redirect to https
-        res.redirect(httpsUrl);
+        return res.redirect(['https://', req.get('Host'), ':', config.sslPort, req.url].join(''));
     } else {
+        // request was via https or useSSL=false, so do no special handling
         next();
     }
 });
@@ -68,7 +81,6 @@ app.use(morgan('combined', {
     stream: logStream,
     skip: function (req, res) { return res.statusCode < 400 }
 }));
-app.use(errorhandler());
 app.use(timeout(config.timeout));
 
 if (app.get('env') === 'dev') {
@@ -79,6 +91,39 @@ if (app.get('env') === 'dev') {
 } else {
     app.set('env', 'production');
 }
+
+// special handling required for dbdump. haven't got this to work yet
+// app.get('/dbdump', function (req, res) {
+//     var port = (useSSL) ? config.sslPort : config.port,
+//         options = {
+//             method: 'GET',
+//             host: 'localhost',
+//             port: port,
+//             path: '/api/1.2/dbdump',
+//             headers: {
+//                 cookie: req.headers['cookie']
+//             }
+//         };
+//
+//     var request = http.request(options, function(response) {
+//         var data = [];
+//         console.log(response.statusCode);
+//         response.on('data', function(chunk) {
+//             data.push(chunk);
+//         });
+//         response.on('end', function() {
+//             data = Buffer.concat(data);
+//             res.writeHead(200, {
+//                 'Content-Type': 'application/download',
+//                 'Content-Disposition': 'attachment; filename=foo.dump.gz',
+//                 'Content-Length': data.length
+//             });
+//             res.end(data);
+//         });
+//     });
+//
+//     request.end();
+// });
 
 // Enable reverse proxy support in Express. This causes the
 // the "X-Forwarded-Proto" header field to be trusted so its

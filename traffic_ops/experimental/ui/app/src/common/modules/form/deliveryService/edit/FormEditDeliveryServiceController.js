@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,56 +17,60 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceController = function(deliveryService, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
+var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
 
-    // extends the FormDeliveryServiceController to inherit common methods
-    angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, $scope: $scope }));
+	var filteredTypes = _.filter(types, function(currentType) {
+		return currentType.name.indexOf(type) != -1;
+	});
 
-    var deleteDeliveryService = function(deliveryService) {
-        deliveryServiceService.deleteDeliveryService(deliveryService.id)
-            .then(function() {
-                locationUtils.navigateToPath('/configure/delivery-services');
-            });
-    };
+	// extends the FormDeliveryServiceController to inherit common methods
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, types: filteredTypes, $scope: $scope }));
 
-    $scope.deliveryServiceName = angular.copy(deliveryService.displayName);
+	var deleteDeliveryService = function(deliveryService) {
+		deliveryServiceService.deleteDeliveryService(deliveryService.id)
+			.then(function() {
+				locationUtils.navigateToPath('/configure/delivery-services');
+			});
+	};
 
-    $scope.settings = {
-        isNew: false,
-        saveLabel: 'Update'
-    };
+	$scope.deliveryServiceName = angular.copy(deliveryService.displayName);
 
-    $scope.save = function(deliveryService) {
-        deliveryServiceService.updateDeliveryService(deliveryService).
-            then(function() {
-                $scope.deliveryServiceName = angular.copy(deliveryService.displayName);
-                $anchorScroll(); // scrolls window to top
-            });
-    };
+	$scope.settings = {
+		isNew: false,
+		saveLabel: 'Update'
+	};
 
-    $scope.confirmDelete = function(deliveryService) {
-        var params = {
-            title: 'Delete Delivery Service: ' + deliveryService.displayName,
-            key: deliveryService.xmlId
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteDeliveryService(deliveryService);
-        }, function () {
-            // do nothing
-        });
-    };
+	$scope.save = function(deliveryService) {
+		deliveryServiceService.updateDeliveryService(deliveryService).
+		then(function() {
+			$scope.deliveryServiceName = angular.copy(deliveryService.displayName);
+			$anchorScroll(); // scrolls window to top
+		});
+	};
+
+	$scope.confirmDelete = function(deliveryService) {
+		var params = {
+			title: 'Delete Delivery Service: ' + deliveryService.displayName,
+			key: deliveryService.xmlId
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+			controller: 'DialogDeleteController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deleteDeliveryService(deliveryService);
+		}, function () {
+			// do nothing
+		});
+	};
 
 };
 
-FormEditDeliveryServiceController.$inject = ['deliveryService', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService'];
+FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService'];
 module.exports = FormEditDeliveryServiceController;

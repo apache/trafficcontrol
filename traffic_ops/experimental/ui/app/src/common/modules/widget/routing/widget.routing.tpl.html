@@ -1,0 +1,157 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_title">
+    <h2>Routing Methods</h2>
+    <ul class="nav navbar-right panel_toolbox">
+        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+        <li><a class="close-link"><i class="fa fa-close"></i></a></li>
+    </ul>
+    <div class="clearfix"></div>
+</div>
+<div class="x_content">
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Native</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': native + '%'}" style="background-color: #357EBD;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{native | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>3rd Party</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': thirdParty + '%'}" style="background-color: #263C53;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{thirdParty | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Federated</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': federated + '%'}" style="background-color: #8a00e6;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{federated | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Miss</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': miss + '%'}" style="background-color: #a94442;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{miss | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Static</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': static + '%'}" style="background-color: #cccccc;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{static | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>DSR</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': dsr + '%'}" style="background-color: #3c763d;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{dsr | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Error</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': error + '%'}" style="background-color: #E74C3C"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{error | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Regional Alternate</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': regionalAlternate + '%'}" style="background-color: #666666;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{regionalAlternate | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="widget_summary">
+        <div class="w_left w_25">
+            <span>Regional Denied</span>
+        </div>
+        <div class="w_center w_55">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" ng-style="{'width': regionalDenied + '%'}" style="background-color: #666666;"></div>
+            </div>
+        </div>
+        <div class="w_right w_20">
+            <span>{{regionalDenied | number:3}}%</span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+</div>
+

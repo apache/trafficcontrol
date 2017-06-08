@@ -41,10 +41,7 @@ RUN	yum -y install \
 		tar && \
 	yum -y clean all
 
-CMD set -x; cp -a /trafficcontrol /tmp/. && \
-	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
-	./build/build.sh traffic_ops 2>&1 | tee ./dist/build-traffic_ops.log && \
-	mkdir -p /trafficcontrol/dist && \
-	cp dist/*traffic_ops* /trafficcontrol/dist
+ADD infrastructure/docker/build/clean_build.sh /
+CMD /clean_build.sh traffic_ops
 
 # vi:syntax=Dockerfile

@@ -22,7 +22,11 @@ use Mojo::Base 'Mojolicious::Controller';
 sub index {
 	my $self    = shift;
 	my $numdays = defined( $self->param('days') ) ? $self->param('days') : 30;
-	my $rows    = defined( $self->param('days') ) ? 1000000 : 1000;              # all of them gets to be too much
+	my $rows    = defined( $self->param('limit') ) ? $self->param('limit') : defined( $self->param('days') ) ? 1000000 : 1000;
+
+	my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
+	chomp($date_string);
+	$self->cookie( last_seen_log => $date_string, { path => "/", max_age => 604800 } );    # expires in a week.
 
 	my @data;
 	my $interval = "> now() - interval '" . $numdays . " day'";                  # postgres
@@ -51,9 +55,8 @@ sub index {
 sub newlogcount {
 	my $self   = shift;
 	my $cookie = $self->cookie('last_seen_log');
-	my $user   = $self->current_user()->{userid};
-
 	my $count = 0;
+
 	if ( !defined($cookie) ) {
 		my $date_string = `date "+%Y-%m-%d% %H:%M:%S"`;
 		chomp($date_string);
@@ -61,7 +64,7 @@ sub newlogcount {
 	}
 	else {
 		my $since_string = "> \'" . $cookie . "\'";
-		$count = $self->db->resultset('Log')->search( { -and => [ { tm_user => { '!=' => $user } }, { last_updated => \$since_string } ] }, )->count();
+		$count = $self->db->resultset('Log')->search( { last_updated => \$since_string }, )->count() // 0;
 	}
 	my $jdata = { newLogcount => $count };
 	$self->success($jdata);

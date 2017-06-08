@@ -17,13 +17,33 @@
  * under the License.
  */
 
-var ProfileParameterService = function(Restangular) {
+var ProfileParameterService = function(Restangular, httpService, messageModel, ENV) {
 
-	this.getProfileParameters = function(profileId) {
-		return Restangular.one('profiles', profileId).getList('parameters')
+	this.unlinkProfileParameter = function(profileId, paramId) {
+		return httpService.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Profile and parameter were unlinked.' } ], false);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, true);
+				}
+			);
+	};
+
+	this.linkProfileParameters = function(profileParamMappings) {
+		return Restangular.service('profileparameters').post(profileParamMappings)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
 	};
 
 };
 
-ProfileParameterService.$inject = ['Restangular'];
+ProfileParameterService.$inject = ['Restangular', 'httpService', 'messageModel', 'ENV'];
 module.exports = ProfileParameterService;

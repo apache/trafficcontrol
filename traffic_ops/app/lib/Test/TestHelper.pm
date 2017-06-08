@@ -31,6 +31,7 @@ use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
 use Fixtures::Cachegroup;
 use Fixtures::EdgeCachegroup;
+use Fixtures::Log;
 use Fixtures::Job;
 use Fixtures::JobAgent;
 use Fixtures::JobStatus;
