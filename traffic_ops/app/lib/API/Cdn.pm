@@ -271,6 +271,11 @@ sub queue_updates {
 		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
 	}
 
+	my $cdn = $self->db->resultset('Cdn')->find( { id => $cdn_id } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
 	my $cdn_servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
 
 	if ( $cdn_servers->count() < 1 ) {
@@ -291,10 +296,14 @@ sub queue_updates {
 
 	$cdn_servers->update( { upd_pending => $setqueue } );
 
+	my $msg = "Server updates " . $params->{action} . "d for " . $cdn->name;
+	&log( $self, $msg, "APICHANGE" );
+
 	my $response;
 	$response->{cdnId} = $cdn_id;
 	$response->{action} = $params->{action};
-	return $self->success($response);
+
+	return $self->success($response, $msg);
 }
 
 
