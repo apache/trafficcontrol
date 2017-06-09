@@ -125,6 +125,9 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 					axisLabelPadding: 3
 				}
 			],
+			legend: {
+				position: "nw"
+			},
 			grid: {
 				hoverable: true,
 				axisMargin: 20

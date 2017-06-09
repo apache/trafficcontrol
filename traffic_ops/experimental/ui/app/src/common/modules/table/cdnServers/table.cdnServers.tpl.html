@@ -47,16 +47,13 @@ under the License.
                 <th>Update?</th>
                 <th>hostName</th>
                 <th>domainName</th>
-                <th>cdn</th>
-                <th>cachegroup</th>
-                <th>type</th>
-                <th>location</th>
                 <th>ipAddress</th>
                 <th>ip6Address</th>
                 <th>status</th>
+                <th>type</th>
                 <th>profile</th>
-                <th>iloIpAddress</th>
-                <th>iloIpGateway</th>
+                <th>cdn</th>
+                <th>cachegroup</th>
             </tr>
             </thead>
             <tbody>
@@ -67,19 +64,16 @@ under the License.
                 </td>
                 <td>{{::server.hostName}}</td>
                 <td>{{::server.domainName}}</td>
-                <td>{{::server.cdnName}}</td>
-                <td>{{::server.cachegroup}}</td>
-                <td>{{::server.type}}</td>
-                <td>{{::server.physLocation}}</td>
                 <td>{{::server.ipAddress}}</td>
                 <td>{{::server.ip6Address}}</td>
                 <td>
                     <span ng-if="!isOffline(server.status)">{{::server.status}}</span>
                     <span ng-if="isOffline(server.status)" uib-popover="{{::offlineReason(server)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::server.status}}</span>
                 </td>
+                <td>{{::server.type}}</td>
                 <td>{{::server.profile}}</td>
-                <td>{{::server.iloIpAddress}}</td>
-                <td>{{::server.iloIpGateway}}</td>
+                <td>{{::server.cdnName}}</td>
+                <td>{{::server.cachegroup}}</td>
             </tr>
             </tbody>
         </table>

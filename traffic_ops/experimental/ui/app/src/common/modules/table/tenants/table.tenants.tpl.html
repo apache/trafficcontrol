@@ -33,7 +33,6 @@ under the License.
         <table id="tenantsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>id</th>
                 <th>name</th>
                 <th>active</th>
                 <th>parent</th>
@@ -41,10 +40,9 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editTenant(tenant.id)" ng-repeat="tenant in ::tenants">
-                <td>{{::tenant.id}}</td>
                 <td>{{::tenant.name}}</td>
                 <td>{{::tenant.active}}</td>
-                <td>{{::tenant.parentId}}</td>
+                <td>{{::tenant.parentName}}</td>
             </tr>
             </tbody>
         </table>
