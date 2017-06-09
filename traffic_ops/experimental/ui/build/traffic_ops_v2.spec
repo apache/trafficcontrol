@@ -22,7 +22,7 @@ Release:	%{build_number}
 Summary:	Traffic Ops v2
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/Comcast/traffic_control/
+URL:		https://github.com/apache/incubator-trafficcontrol/
 Source:		%{_sourcedir}/traffic_ops_v2-%{traffic_control_version}.tgz
 AutoReqProv: no
 Requires: nodejs

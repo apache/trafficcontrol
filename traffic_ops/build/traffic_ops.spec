@@ -28,8 +28,8 @@ License:          Apache License, Version 2.0
 Group:            Base System/System Tools
 Prefix:           /opt/traffic_ops
 Source:           %{_sourcedir}/traffic_ops-%{version}.tgz
-URL:	          https://github.com/Comcast/traffic_control/
-Vendor:	          Comcast
+URL:              https://github.com/apache/incubator-trafficcontrol/
+Vendor:           Apache Software Foundation
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
 Requires:         cpanminus, expat-devel, gcc-c++, libcurl, libpcap-devel, mkisofs, tar
