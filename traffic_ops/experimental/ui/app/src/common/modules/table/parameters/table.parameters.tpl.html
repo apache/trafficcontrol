@@ -33,7 +33,6 @@ under the License.
         <table id="parametersTable" class="table responsive-utilities jambo_table" >
             <thead>
                 <tr class="headings">
-                    <th>id</th>
                     <th>name</th>
                     <th>configFile</th>
                     <th>value</th>
@@ -41,7 +40,6 @@ under the License.
             </thead>
             <tbody>
                 <tr ng-click="editParameter(parameter.id)" ng-repeat="parameter in ::parameters">
-                    <td>{{::parameter.id}}</td>
                     <td>{{::parameter.name}}</td>
                     <td>{{::parameter.configFile}}</td>
                     <td>{{::parameter.value}}</td>
