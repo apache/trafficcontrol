@@ -264,6 +264,7 @@ sub reverse_schema {
 			debug                   => 1,
 			dump_directory          => './lib',
 			overwrite_modifications => 1,
+			exclude => 'goose_db_version',
 		},
 		[ $dsn, $user, $pass ],
 	);

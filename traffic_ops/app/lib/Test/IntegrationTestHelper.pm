@@ -39,7 +39,6 @@ use Fixtures::Integration::FederationFederationResolver;
 use Fixtures::Integration::Federation;
 use Fixtures::Integration::FederationResolver;
 use Fixtures::Integration::FederationTmuser;
-use Fixtures::Integration::GooseDbVersion;
 use Fixtures::Integration::Hwinfo;
 use Fixtures::Integration::JobAgent;
 use Fixtures::Integration::Job;
