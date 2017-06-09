@@ -23,6 +23,7 @@ use Data::Dumper;
 use JSON;
 my $builder;
 use Extensions::TrafficStats::Delegate::CacheStatistics;
+use Utils::Helper;
 use Utils::Helper::Extensions;
 Utils::Helper::Extensions->use;
 use Validate::Tiny ':all';
@@ -138,7 +139,8 @@ sub get_current_bandwidth {
 	my $rs = $self->db->resultset('Cdn');
 	while ( my $cdn = $rs->next ) {
 		my $cdn_name = $cdn->name;
-		my $query = "SELECT last(value) FROM \"monthly\".\"bandwidth.cdn.1min\" WHERE cdn = \'$cdn_name\'";
+		my $escaped_cdn_name = Utils::Helper::escape_influxql($cdn_name);
+		my $query = "SELECT last(value) FROM \"monthly\".\"bandwidth.cdn.1min\" WHERE cdn = \'$escaped_cdn_name\'";
 		my $bandwidth = $self->get_stat("cache_stats", $query);
 		if ($bandwidth) {
 			$bw->{$cdn_name} = $bandwidth/1000000;
@@ -156,7 +158,8 @@ sub get_current_connections {
 	my $rs = $self->db->resultset('Cdn');
 	while ( my $cdn = $rs->next ) {
 		my $cdn_name = $cdn->name;
-		my $query = "select last(value) from \"monthly\".\"connections.cdn.1min\" where cdn = \'$cdn_name\'";
+		my $escaped_cdn_name = Utils::Helper::escape_influxql($cdn_name);
+		my $query = "select last(value) from \"monthly\".\"connections.cdn.1min\" where cdn = \'$escaped_cdn_name\'";
 		my $connections = $self->get_stat("cache_stats", $query);
 		if ($connections) {
 			$conn->{$cdn_name} = $connections;
@@ -173,7 +176,8 @@ sub get_current_capacity {
 	my $rs = $self->db->resultset('Cdn');
 	while ( my $cdn = $rs->next ) {
 		my $cdn_name = $cdn->name;
-		my $query = "select last(value) from \"monthly\".\"maxkbps.cdn.1min\" where cdn = \'$cdn_name\'";
+		my $escaped_cdn_name = Utils::Helper::escape_influxql($cdn_name);
+		my $query = "select last(value) from \"monthly\".\"maxkbps.cdn.1min\" where cdn = \'$escaped_cdn_name\'";
 		my $capacity = $self->get_stat("cache_stats", $query);
 		if ($capacity) {
 		$capacity = $capacity/1000000; #convert to Gbps
@@ -201,14 +205,15 @@ sub daily_summary {
 		#get max bw
 		$max->{"cdn"} = $cdn;
 		$bytes_served->{"cdn"} = $cdn;
-		my $max_bw = $self->get_stat($database, "select max(value) from \"daily_maxgbps\" where cdn = \'$cdn\'");
+		my $escaped_cdn = Utils::Helper::escape_influxql($cdn);
+		my $max_bw = $self->get_stat($database, "select max(value) from \"daily_maxgbps\" where cdn = \'$escaped_cdn\'");
 		$max->{"highest"} = $max_bw;
 		#get last bw
-		my $last_bw = $self->get_stat($database, "select last(value) from \"daily_maxgbps\" where cdn = \'$cdn\'");
+		my $last_bw = $self->get_stat($database, "select last(value) from \"daily_maxgbps\" where cdn = \'$escaped_cdn\'");
 		$max->{"yesterday"} = $last_bw;
 		push(@max_gbps, $max);
 		#get bytesserved
-		my $bytesserved = $self->get_stat($database, "select sum(value) from \"daily_bytesserved\" where cdn = \'$cdn\'");
+		my $bytesserved = $self->get_stat($database, "select sum(value) from \"daily_bytesserved\" where cdn = \'$escaped_cdn\'");
 		$bytes_served->{"bytesServed"} = $bytesserved/1000;
 		push(@pb_served, $bytes_served);
 		$total_bytesserved += $bytesserved;

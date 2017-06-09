@@ -36,6 +36,15 @@ sub mojo {
 	return ( $self->{MOJO} );
 }
 
+sub escape_influxql {
+	my $query = shift;
+	$query=~s#\\#\\\\#g;
+	$query=~s#'#\\'#g;
+	$query=~s#"#\\"#g;
+	$query=~s#\n#\\n#g;
+	return $query
+}
+
 sub is_valid_delivery_service {
 	my $self = shift || confess("Call on an instance of Utils::Helper");
 	my $id   = shift || confess("Please supply a delivery service ID");
