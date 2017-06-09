@@ -62,7 +62,7 @@ my $usage = "\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
 	. "down  - Roll back a single migration from the current version.\n"
 	. "drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).\n"
-	. "patch  - Execute sql from db/patches.sql for loading post-migration data patches.\n"; 
+	. "patch  - Execute sql from db/patches.sql for loading post-migration data patches.\n" 
 	. "redo  - Roll back the most recently applied migration, then run it again.\n"
 	. "reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.\n"
 	. "reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.\n"
@@ -144,6 +144,7 @@ if ( defined($argument) ) {
 	}
 	elsif ( $argument eq 'patch' ) {
 		patches();
+	}
 	else {
 		print $usage;
 	}
@@ -197,6 +198,7 @@ sub patches {
 	local $ENV{PGPASSWORD} = $db_password;
 	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/patches.sql") != 0 ) {
 		die "Can't patch database w/ required data\n";
+	}
 }
 
 sub load_schema {
