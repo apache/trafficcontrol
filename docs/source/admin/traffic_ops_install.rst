@@ -63,7 +63,7 @@ To begin the install:
 
 2. Install Traffic Ops
 
-  Install the postgres1l 9.6 dev libraries, and then download the traffic_ops rpm package from http://trafficcontrol.apache.org/downloads/index.html or from our jenkins builds, and install it (update URL as approriate), on the traffic ops host (to): :: 
+  Install the postgresql 9.6 dev libraries, and then download the traffic_ops rpm package from http://trafficcontrol.apache.org/downloads/index.html or from our jenkins builds, and install it (update URL as approriate), on the traffic ops host (to): :: 
   
     to-$ sudo su -
     to-# yum update
