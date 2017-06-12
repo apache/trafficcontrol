@@ -57,6 +57,7 @@ To begin the install:
   to the appropriate section of this file. Edit the ``/var/lib/pgsql/9.6/data/postgresql.conf`` file to add the approriate listen_addresses or ``listen_addresses = '*'``,  and start the database: ::
 
     pg-$ exit
+    pg-# systemctl enable postgresql-9.6
     pg-# systemctl start postgresql-9.6
     pg-# systemctl status postgresql-9.6
 
