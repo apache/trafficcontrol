@@ -208,8 +208,17 @@ sub generateCdnConf {
         $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
     }
     if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
-        my @secrets   = @{ $cdnConf->{secrets} };
+        my @secrets;
         my $newSecret = InstallUtils::randomWord();
+
+        if (defined($cdnConf->{secrets})) {
+            @secrets   = @{ $cdnConf->{secrets} };
+            $cdnConf->{secrets} = \@secrets;
+            InstallUtils::logger( "Secrets found in cdn.conf file", "debug" );
+        } else {
+            $cdnConf->{secrets} = \@secrets;
+            InstallUtils::logger( "No secrets found in cdn.conf file", "debug" );
+        }
         unshift @secrets, InstallUtils::randomWord();
         if ( $cdnConfiguration{keepSecrets} > 0 && $#secrets > $cdnConfiguration{keepSecrets} - 1 ) {
 
@@ -217,7 +226,9 @@ sub generateCdnConf {
             $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
+    $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     InstallUtils::writePerl( $fileName, $cdnConf );
+    InstallUtils::logger( "CDN configuration has been saved", "info" );
 }
 
 # userInput: The entire input config file which is either user input or the defaults
@@ -420,6 +431,10 @@ sub getDefaults {
             {
                 "Number of secrets to keep?" => "10",
                 "config_var"                 => "keepSecrets"
+            },
+            {
+                "Number of workers?" => "96",
+                "config_var"         => "workers"
             }
         ],
         $ldapConfFile => [
