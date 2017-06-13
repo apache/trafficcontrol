@@ -428,11 +428,23 @@ sub check_deliveryservice_input {
 	my $org_host_name = $self->param('ds.org_server_fqdn');
 	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin Server Base URL must start with http(s)://" );
 	$org_host_name =~ s!^https?://?!!i;
-	$org_host_name =~ s/:(.*)$//;
-	my $port = defined($1) ? $1 : 80;
-	if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
-		$self->field('ds.org_server_fqdn')
+	my $port;
+	if ( $org_host_name =~ /^\[.*\]/ ) { #IPv6 address
+		$org_host_name =~ s/\]:(.*)$//;
+		$port = defined($1) ? $1 : 80;
+		$org_host_name =~ s/^\[//;
+		$org_host_name =~ s/\]$//;
+		if ( !&is_ip6address($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
+			$self->field('ds.org_server_fqdn')
+			->is_equal( "", $org_host_name . " is not a valid IPv6 address or " . $port . " is not a valid port");
+		}
+	} else {
+		$org_host_name =~ s/:(.*)$//;
+		$port = defined($1) ? $1 : 80;
+		if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
+			$self->field('ds.org_server_fqdn')
 			->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
+		}
 	}
 	if ( $self->param('ds.http_bypass_fqdn') ne ""
 		&& !&is_hostname( $self->param('ds.http_bypass_fqdn') ) )
