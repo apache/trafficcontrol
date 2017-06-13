@@ -1,8 +1,11 @@
-Building Traffic Control Components
-===================================
+.. _dev-building:
 
-Build using docker-compose
---------------------------
+Building Traffic Control
+========================
+
+
+Build using pkg
+---------------
 
 This is the easiest way to build all the components of Traffic Control;
 all requirements are automatically loaded into the image used to build
@@ -19,15 +22,8 @@ If ``docker-compose`` is not available, the ``pkg`` script will
 automatically download and run it in a container. This is noticeably
 slower than running it natively.
 
-Steps
+Usage
 ~~~~~
-
-From the top level of the incubator-trafficcontrol directory. The source
-in the current directory is used for the process. One or more components
-(with \_build suffix added) can be added on the command line.
-
-This is all run automatically by the ``pkg`` script at the root of the
-repository.
 
 ::
 
@@ -46,8 +42,38 @@ repository.
                 - traffic_ops_build
                 - traffic_stats_build
 
-If no component names are provided on the command line, all components
-will be built.
 
-All rpms are copied to ``dist`` at the top level of the
+If any project names are provided on the command line, only those will be built.
+Otherwise, all projects are built.
+
+All artifacts (rpms, logs, source tar ball) are copied to ``dist`` at the top level of the
 ``incubator-trafficcontrol`` directory.
+
+Example
+~~~~~~~
+
+::
+
+    $ ./pkg -v source traffic_ops_build
+    Building source.
+    Building traffic_ops_build.
+
+Build using docker-compose
+--------------------------
+
+If the ``pkg`` script fails, ``docker-compose`` can still be used directly.
+
+Usage
+~~~~~
+
+::
+
+    $ docker-compose -f ./infrastructure/docker/build/docker-compose.yml down -v
+    $ docker-compose -f ./infrastructure/docker/build/docker-compose.yml up --build source traffic_ops_build
+    $ ls -1 dist/
+    build-traffic_ops.log
+    traffic_ops-2.1.0-6396.07033d6d.el7.src.rpm
+    traffic_ops-2.1.0-6396.07033d6d.el7.x86_64.rpm
+    traffic_ops_ort-2.1.0-6396.07033d6d.el7.src.rpm
+    traffic_ops_ort-2.1.0-6396.07033d6d.el7.x86_64.rpm
+    trafficcontrol-incubating-2.1.0.tar.gz
