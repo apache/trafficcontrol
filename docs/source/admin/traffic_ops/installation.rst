@@ -61,9 +61,15 @@ To begin the install:
     pg-# systemctl start postgresql-9.6
     pg-# systemctl status postgresql-9.6
 
-2. Install Traffic Ops
 
-  Install the postgres1l 9.6 dev libraries, and then download the traffic_ops rpm package from http://trafficcontrol.apache.org/downloads/index.html or from our jenkins builds, and install it (update URL as approriate), on the traffic ops host (to): :: 
+2. Build Traffic Ops
+
+   Build a Traffic Ops rpm using the instructions under the :ref:`dev-building` page.
+
+
+3. Install Postgresql 
+
+  Install the postgresql 9.6 dev libraries. ::
   
     to-$ sudo su -
     to-# yum update
@@ -85,9 +91,7 @@ To begin the install:
 
     to-# psql -h 99.33.99.1 -U postgres
     Password for user postgres: 
-    psql (9.2.18, server 9.6.3)
-    WARNING: psql version 9.2, server version 9.6.
-            Some psql features might not work.
+    psql (9.6.3)
     Type "help" for help.
     
     postgres=# 
