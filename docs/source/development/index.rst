@@ -20,6 +20,7 @@ Use this guide to start developing applications that consume the Traffic Control
 .. toctree::
   :maxdepth: 2
 
+  building
   traffic_ops
   traffic_portal
   traffic_router
