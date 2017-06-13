@@ -1005,12 +1005,18 @@ sub take_and_bake_server {
 	my $filename   = shift;
 
 	my $data = $self->param_data( $server_obj, $filename );
-	my $text = $self->header_comment( $server_obj->host_name );
+	my $header = $self->header_comment( $server_obj->host_name );
+	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
+		if ( $parameter eq "no_header" ) {
+			$header = "";
+		}
 		$text .= $data->{$parameter} . "\n";
 	}
+
 	$text =~ s/\s*__RETURN__\s*/\n/g;
-	return $text;
+	my $response = $header . $text;
+	return $response;
 }
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
@@ -1020,12 +1026,18 @@ sub take_and_bake_profile {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, $filename );
-	my $text = $self->header_comment( $profile_obj->name );
+	my $header = $self->header_comment( $profile_obj->name );
+	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
+		if ( $parameter eq "no_header" ) {
+			$header = "";
+		}
 		$text .= $data->{$parameter} . "\n";
 	}
+	
 	$text =~ s/\s*__RETURN__\s*/\n/g;
-	return $text;
+	my $response = $header . $text;
+	return $response;
 }
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
