@@ -203,6 +203,14 @@ sub is_tenant_resource_accessible {
     return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
 }
 
+sub is_user_resource_accessible {
+    my $self             = shift;
+    my $tenants_data     = shift;
+    my $resource_tenancy = shift;
+
+    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
+}
+
 sub get_tenant_heirarchy_depth {
 
     #return "undef" in case of error

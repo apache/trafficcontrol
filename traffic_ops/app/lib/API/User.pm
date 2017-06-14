@@ -76,7 +76,13 @@ sub index {
 		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	while ( my $row = $dbh->next ) {
+		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
 		push(
 			@data, {
 				"addressLine1"     => $row->address_line1,
@@ -113,7 +119,14 @@ sub show {
 
 	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role', 'tenant' ] } );
 	my @data = ();
+
+	my $tenant_utils = Utils::Tenant->new($self);
+   	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	while ( my $row = $rs_data->next ) {
+		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+			return $self->forbidden();#FOR the reviewer - what is the correct response - 403 or 200 with empty list?
+		}
 		push(
 			@data, {
 				"addressLine1"     => $row->address_line1,
@@ -158,14 +171,25 @@ sub update {
 		return $self->not_found();
 	}
 
+	#setting tenant_id to undef if tenant is not set.
+	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : undef;
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden();
+	}
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
+		#no access to target tenancy
+		return $self->forbidden();
+	}
+
 	my ( $is_valid, $result ) = $self->is_valid( $params, $user_id );
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
 	}
-
-	#setting tenant_id to undef if tenant is not set.
-	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : undef;
 
 	my $values = {
 		address_line1     => $params->{addressLine1},
@@ -235,6 +259,14 @@ sub create {
 		return $self->forbidden();
 	}
 
+	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $tenant_utils->current_user_tenant();
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->forbidden();
+	}
+
 	my ( $is_valid, $result ) = $self->is_valid( $params, 0 );
 
 	if ( !$is_valid ) {
@@ -249,9 +281,6 @@ sub create {
 		return $self->alert("confirmLocalPasswd is required.");
 	}
 
-	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-	my $tenantUtils = Utils::Tenant->new($self);
-	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $tenantUtils->current_user_tenant();
 
 	my $values = {
 		address_line1        => $params->{addressLine1},
