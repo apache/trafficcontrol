@@ -27,6 +27,7 @@ use JSON;
 use Hash::Merge qw(merge);
 use String::CamelCase qw(decamelize);
 use DBI;
+use Utils::Tenant;
 
 # Yes or no
 my %yesno = ( 0 => "no", 1 => "yes", 2 => "no" );
@@ -648,8 +649,13 @@ sub auser {
 
     my $rs = $self->db->resultset('TmUser')->search( undef, { prefetch => [ { 'role' => undef } ] } );
 
-    while ( my $row = $rs->next ) {
+    my $tenant_utils = Utils::Tenant->new($self);
+    my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
+    while ( my $row = $rs->next ) {
+        if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+            next;
+        }
         my @line = [
             $row->id,           $row->username, $row->role->name, $row->full_name, $row->company,   $row->email,
             $row->phone_number, $row->uid,      $row->gid,        \1,              \$row->new_user, $row->last_updated
