@@ -13,20 +13,20 @@
 .. limitations under the License.
 ..
 
-.. |graph| image:: ../../../traffic_ops/app/public/images/graph.png
-.. |info| image:: ../../../traffic_ops/app/public/images/info.png
-.. |checkmark| image:: ../../../traffic_ops/app/public/images/good.png
-.. |X| image:: ../../../traffic_ops/app/public/images/bad.png
-.. |clock| image:: ../../../traffic_ops/app/public/images/clock-black.png
+.. |graph| image:: ../../../../traffic_ops/app/public/images/graph.png
+.. |info| image:: ../../../../traffic_ops/app/public/images/info.png
+.. |checkmark| image:: ../../../../traffic_ops/app/public/images/good.png
+.. |X| image:: ../../../../traffic_ops/app/public/images/bad.png
+.. |clock| image:: ../../../../traffic_ops/app/public/images/clock-black.png
 
-Using Traffic Ops
-%%%%%%%%%%%%%%%%%
+Traffic Ops - Using
+%%%%%%%%%%%%%%%%%%%
 
 
 The Traffic Ops Menu
 ====================
 
-.. image:: 12m.png
+.. image:: ../12m.png
 
 The following tabs are available in the menu at the top of the Traffic Ops user interface.
 
