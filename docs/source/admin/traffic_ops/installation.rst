@@ -16,10 +16,10 @@
 .. index::
   Traffic Ops - Installing 
   
-.. _rl-ps:
+.. _rl-to-install:
 
-Installing Traffic Ops
-%%%%%%%%%%%%%%%%%%%%%%
+Traffic Ops - Installing
+%%%%%%%%%%%%%%%%%%%%%%%%
 
 System Requirements
 -------------------
