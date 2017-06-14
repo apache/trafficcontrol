@@ -13,8 +13,8 @@
 .. limitations under the License.
 .. 
 
-Configuring Traffic Ops
-%%%%%%%%%%%%%%%%%%%%%%%
+Traffic Ops - Configuring
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Follow the steps below to configure the newly installed Traffic Ops Instance.
 

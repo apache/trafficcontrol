@@ -34,10 +34,11 @@ Once everything is installed, you will need to configure the servers to talk to 
 .. toctree::
   :maxdepth: 3
 
-  traffic_ops_install.rst
-  traffic_ops_config.rst
-  traffic_ops_using.rst
-  traffic_ops_extensions.rst
+  traffic_ops/installation.rst
+  traffic_ops/migration_from_10_to_20.rst
+  traffic_ops/configuration.rst
+  traffic_ops/using.rst
+  traffic_ops/extensions.rst
   traffic_portal.rst
   traffic_monitor.rst
   traffic_router.rst
@@ -45,4 +46,3 @@ Once everything is installed, you will need to configure the servers to talk to 
   traffic_server.rst
   traffic_vault.rst
   quick_howto/index.rst
-
