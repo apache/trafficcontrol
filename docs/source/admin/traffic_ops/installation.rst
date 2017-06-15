@@ -231,7 +231,7 @@ To upgrade:
 
 1. Enter the following command:``service traffic_ops stop``
 2. Enter the following command:``yum upgrade traffic_ops``
-3. See :ref:`rl-ps` to run postinstall.
+3. See :ref:`rl-to-install` to run postinstall.
 4. Enter the following command:``service traffic_ops start``
 
 
