@@ -243,6 +243,11 @@ For the Inconsolata and Lato fonts:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Regular.ttf
 ./licenses/SIL-1.1
 
+For the RobotoSlab fonts
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/RobotoSlab-Bold.ttf
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/RobotoSlab-Regular.ttf
+./licenses/AL2-RobotoSlab
+
 For the bootstrap component:
 @misc/traffic-control-cdn/*/bootstrap*
 ./licenses/MIT-bootstrap
