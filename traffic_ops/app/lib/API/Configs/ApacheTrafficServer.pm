@@ -2243,7 +2243,6 @@ sub build_remap_line {
 	}
 
 	if ( defined( $remap->{'param'}->{'cachekey.config'} ) ) {
-		print STDERR Dumper($remap->{'param'}->{'cachekey.config'});
 		$text .= " \@plugin=cachekey.so";
 		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {
 			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
