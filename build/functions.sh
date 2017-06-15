@@ -162,13 +162,14 @@ function createTarball() {
 	local projName=trafficcontrol
 	local version=$(getVersion "$TC_DIR")
 	local tarball="dist/apache-$projName-$version-incubating.tar.gz"
+	local tardir=$(basename $tarball .tar.gz)
 
 	# Create a BULDNUMBER file and add to tarball
 	local bndir=$(mktemp -d)
         getBuildNumber >"$bndir/BUILD_NUMBER"
 
         # create the tarball only from files in repo and BUILD_NUMBER
-        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$projName-$version-incubating/@S" $(git ls-files)
+        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$tardir/@S" $(git ls-files)
         rm -r "$bndir"
         echo "$tarball"
 }
