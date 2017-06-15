@@ -1,21 +1,21 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 .. index::
-  Traffic Ops - Installing 
-  
+  Traffic Ops - Installing
+
 .. _rl-to-install:
 
 Traffic Ops - Installing
@@ -67,36 +67,36 @@ To begin the install:
    Build a Traffic Ops rpm using the instructions under the :ref:`dev-building` page.
 
 
-3. Install Postgresql 
+3. Install Postgresql
 
-  Install the postgresql 9.6 dev libraries. ::
-  
+  Install the postgresql 9.6 yum repository access. ::
+
     to-$ sudo su -
-    to-# yum update
     to-# yum -y install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
-    to-# yum install  postgresql96-devel
-    to-# wget -q https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-master-build/lastSuccessfulBuild/artifact/dist/traffic_ops-2.1.0-6388.20de6ae2.el7.x86_64.rpm
-    to-# yum -y install traffic_ops-2.0.0-5608.afd8fd30.el7.x86_64.rpm 
+
+4. Install the rpm built in step 2. ::
+
+    to-# yum -y install ./dist/traffic_ops-2.0.0-xxxx.yyyyyyy.el7.x86_64.rpm
 
 
-  Install some additional packages that it depends on that were not installed as dependecies in the previous step (these are for the 2.1 dev install, this may change, but the pre-installs won't hurt): ::
+  Install some additional packages that it depends on that were not installed as dependecies in the previous step (these are for the 2.0.0 install, this may change, but the pre-installs won't hurt): ::
 
     to-# yum -y install git
     to-# wget -q https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz
-    to-# tar -C /usr/local -xzf go1.8.3.linux-amd64.tar.gz 
-    to-# PATH=$PATH:/usr/local/go/bin             # go bins are needed in the path for postinstall 
+    to-# tar -C /usr/local -xzf go1.8.3.linux-amd64.tar.gz
+    to-# PATH=$PATH:/usr/local/go/bin             # go bins are needed in the path for postinstall
     to-# go get bitbucket.org/liamstask/goose/cmd/goose
 
-  At this point you should be able to login to the database from the ``to`` host to the ``pg`` host like: :: 
+  At this point you should be able to login to the database from the ``to`` host to the ``pg`` host like: ::
 
     to-# psql -h 99.33.99.1 -U postgres
-    Password for user postgres: 
+    Password for user postgres:
     psql (9.6.3)
     Type "help" for help.
-    
-    postgres=# 
 
-  Use this connectivity to create the user and database. In  this example, we use user: ``traffic_ops``, password: ``tcr0cks``, database: ``traffic_ops``: :: 
+    postgres=#
+
+  Use this connectivity to create the user and database. In  this example, we use user: ``traffic_ops``, password: ``tcr0cks``, database: ``traffic_ops``: ::
 
     to-# psql -U postgres -h 99.33.99.1 -c "CREATE USER traffic_ops  WITH ENCRYPTED PASSWORD 'tcr0cks';"
     Password for user postgres:
@@ -109,9 +109,9 @@ To begin the install:
   Now, run the following command as root: ``/opt/traffic_ops/install/bin/postinstall``
 
   The postinstall will first get all packages needed from CPAN. This may take a while, expect up to 30 minutes on the first install.
-  If there are any prompts in this phase, please just answer with the defaults (some CPAN installs can prompt for install questions). 
+  If there are any prompts in this phase, please just answer with the defaults (some CPAN installs can prompt for install questions).
 
-  When this phase is complete, you will see:: 
+  When this phase is complete, you will see::
 
       Complete! Modules were installed into /opt/traffic_ops/app/local
 
@@ -177,13 +177,13 @@ To begin the install:
       Resolving geolite.maxmind.com (geolite.maxmind.com)... 2400:cb00:2048:1::6810:262f, 2400:cb00:2048:1::6810:252f, 104.16.38.47, ...
       Connecting to geolite.maxmind.com (geolite.maxmind.com)|2400:cb00:2048:1::6810:262f|:80... connected.
 
-      ... much SQL output skipped 
+      ... much SQL output skipped
 
       Starting Traffic Ops
       Restarting traffic_ops (via systemctl):                    [  OK  ]
       Waiting for Traffic Ops to restart
       Success! Postinstall complete.
-      
+
       to-# ifconfig
 
 
