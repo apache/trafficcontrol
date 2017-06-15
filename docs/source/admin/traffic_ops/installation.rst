@@ -223,6 +223,10 @@ To begin the install:
 
 Traffic Ops is now installed!
 
+
+**To complete the Traffic Ops Setup See:** :ref:`rl-to-default-profiles`
+
+
 Upgrading Traffic Ops
 =====================
 To upgrade:
