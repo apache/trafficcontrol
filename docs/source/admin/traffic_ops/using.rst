@@ -91,6 +91,10 @@ The following tabs are available in the menu at the top of the Traffic Ops user 
   +---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
   | Select Profile      | Select the parameter list by profile first, then get a table of just the parameters for that profile.                                                               |
   +---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+  | Export Profile      | Profiles can be exported from one Traffic Ops instance to another using 'Select Profile' and under the "Profile Details" dialog for the desired profile             |
+  +---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+  | Import Profile      | Profiles can be imported from one Traffic Ops instance to another using the button "Import Profile" after using the "Export Profile" feature                        |
+  +---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
   | Orphaned Parameters | A table of parameters that are not associated to any profile of cache group. These parameters either should be deleted or associated with a profile of cache group. |
   +---------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
