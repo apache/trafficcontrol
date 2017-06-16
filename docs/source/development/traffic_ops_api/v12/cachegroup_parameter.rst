@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v12-profileparameters:
+.. _to-api-v12-cachegroupparameters:
 
 
 Cache Group parameters

@@ -223,6 +223,10 @@ To begin the install:
 
 Traffic Ops is now installed!
 
+
+**To complete the Traffic Ops Setup See:** :ref:`rl-to-default-profiles`
+
+
 Upgrading Traffic Ops
 =====================
 To upgrade:
@@ -231,7 +235,7 @@ To upgrade:
 
 1. Enter the following command:``service traffic_ops stop``
 2. Enter the following command:``yum upgrade traffic_ops``
-3. See :ref:`rl-ps` to run postinstall.
+3. See :ref:`rl-to-install` to run postinstall.
 4. Enter the following command:``service traffic_ops start``
 
 
