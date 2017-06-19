@@ -18,14 +18,11 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.jsse.JSSESupport;
-//import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
-//import org.apache.tomcat.util.net.openssl.OpenSSLUtil;
 import org.apache.tomcat.util.net.SSLImplementation;
 import org.apache.tomcat.util.net.SSLUtil;
 
 import javax.net.ssl.SSLSession;
 
-//public class RouterSslImplementation extends OpenSSLImplementation {
 public class RouterSslImplementation extends SSLImplementation {
     @Override
 	public SSLSupport getSSLSupport(final SSLSession session) {
@@ -33,16 +30,12 @@ public class RouterSslImplementation extends SSLImplementation {
 	}
 
     @Override
-//    public OpenSSLUtil getSSLUtil(SSLHostConfigCertificate certificate) {
-//        return new RouterSslUtil(certificate);
-//    }
         public SSLUtil getSSLUtil(SSLHostConfigCertificate certificate) {
             return new RouterSslUtil(certificate);
     }
 
-
     @Override
     public boolean isAlpnSupported() {
-        return false;
+        return true;
     }
 }

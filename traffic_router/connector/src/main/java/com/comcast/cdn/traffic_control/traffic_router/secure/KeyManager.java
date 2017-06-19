@@ -122,4 +122,8 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 		return null;
 	}
 
+	public CertificateRegistry getCertificateRegistry() {
+		return certificateRegistry;
+	}
+
 }

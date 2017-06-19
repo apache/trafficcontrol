@@ -15,26 +15,28 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
-import org.apache.coyote.http11.Http11NioProtocol;
-//import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
+import org.apache.coyote.http11.AbstractHttp11JsseProtocol;
+import org.apache.juli.logging.Log;
+import org.apache.tomcat.util.net.NioChannel;
+import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLImplementation;
 
 
-
-public class LanguidNioProtocol extends Http11NioProtocol implements RouterProtocolHandler {
+public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> implements RouterProtocolHandler {
 	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidNioProtocol.class);
 	private boolean ready = false;
 	private boolean initialized = false;
 	private String mbeanPath;
 	private String readyAttribute;
 	private String portAttribute;
-//	String sslClassName = OpenSSLImplementation.class.getCanonicalName();
 	String sslClassName = SSLImplementation.class.getCanonicalName();
 
 	public LanguidNioProtocol() {
+		super(new RouterNioEndpoint());
 		log.warn("Serving wildcard certs for multiple domains");
 		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
 	}
+
 
 	public boolean setSSLImplementation(final String sslClassName) {
 		try {
@@ -43,7 +45,6 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 			return true;
 		} catch (ClassNotFoundException e) {
 			log.error("Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to OpenSSL");
-//			this.sslClassName = OpenSSLImplementation.class.getCanonicalName();
 			this.sslClassName = SSLImplementation.class.getCanonicalName();
 		}
 
@@ -63,6 +64,9 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 		log.info("Traffic Router is ready; calling super.init()");
 		super.setSslImplementationName(sslClassName);
 		super.init();
+
+
+
 		setInitialized(true);
 	}
 
@@ -139,4 +143,16 @@ public class LanguidNioProtocol extends Http11NioProtocol implements RouterProto
 	protected String getSslImplementationShortName() {
 		return "openssl";
 	}
+
+	@Override
+	protected String getNamePrefix() {
+		if (isSSLEnabled()) {
+			return ("https-" + getSslImplementationShortName()+ "-nio");
+		} else {
+			return ("http-nio");
+		}
+	}
+
+	@Override
+	protected Log getLog() { return log; }
 }
