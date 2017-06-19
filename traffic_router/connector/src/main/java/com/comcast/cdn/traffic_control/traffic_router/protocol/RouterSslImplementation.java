@@ -30,7 +30,7 @@ public class RouterSslImplementation extends SSLImplementation {
 	}
 
     @Override
-        public SSLUtil getSSLUtil(final SSLHostConfigCertificate certificate) {
+        public SSLUtil getSSLUtil(SSLHostConfigCertificate certificate) {
             return new RouterSslUtil(certificate);
     }
 
