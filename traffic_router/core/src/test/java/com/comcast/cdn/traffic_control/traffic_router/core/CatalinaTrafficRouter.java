@@ -33,7 +33,7 @@ public class CatalinaTrafficRouter {
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
 		java.util.logging.Handler[] handlers = logger.getHandlers();
 		for (java.util.logging.Handler handler : handlers) {
-			handler.setLevel(Level.WARNING);
+			handler.setLevel(Level.INFO);
 		}
 
 		System.setProperty("dns.tcp.port", "1053");
