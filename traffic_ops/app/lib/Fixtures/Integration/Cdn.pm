@@ -31,7 +31,7 @@ my %definition_for = (
 
 		using => {
 			id => 1,
-			name => 'cdn_number_1',
+			name => 'CDN1',
 			dnssec_enabled => '0',
 			domain_name => 'cdn1.kabletown.net',
 			last_updated => '2015-12-10 15:43:45',
@@ -41,7 +41,7 @@ my %definition_for = (
 		new => 'Cdn',
 		using => {
 			id => 2,
-			name => 'cdn_number_2',
+			name => 'CDN2',
 			dnssec_enabled => '0',
 			domain_name => 'cdn2.kabletown.net',
 			last_updated => '2015-12-10 15:43:45',

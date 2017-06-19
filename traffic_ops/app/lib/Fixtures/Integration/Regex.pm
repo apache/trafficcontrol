@@ -32,7 +32,7 @@ my %definition_for = (
 		using => {
 			pattern => '.*\.games\..*',
 			last_updated => '2015-12-10 15:43:45',
-			type => '20',
+			type => '16',
 		},
 	},
 	## id => 2
@@ -41,7 +41,7 @@ my %definition_for = (
 		using => {
 			pattern => '.*\.games\..*',
 			last_updated => '2015-12-10 15:43:45',
-			type => '20',
+			type => '16',
 		},
 	},
 	## id => 3
@@ -50,7 +50,7 @@ my %definition_for = (
  		using => {
 			pattern => '.*\.images\..*',
  			last_updated => '2015-12-10 15:43:45',
- 			type => '20',
+ 			type => '16',
  		},
 	},
 	## id => 4
@@ -59,7 +59,7 @@ my %definition_for = (
 		using => {
 			pattern => '.*\.images\..*',
 			last_updated => '2015-12-10 15:43:45',
-			type => '20',
+			type => '16',
 		},
 	},
 	## id => 5
@@ -67,7 +67,7 @@ my %definition_for = (
 		new => 'Regex',
 		using => {
 			pattern => '.*\.movies\..*',
-			type => '20',
+			type => '16',
 			last_updated => '2015-12-10 15:43:45',
 		},
 	},
@@ -77,7 +77,7 @@ my %definition_for = (
 		using => {
 			pattern => '.*\.movies\..*',
 			last_updated => '2015-12-10 15:43:45',
-			type => '20',
+			type => '16',
 		},
 	},
 	## id => 7
@@ -86,7 +86,7 @@ my %definition_for = (
  		using => {
 			pattern => '.*\.tv\..*',
  			last_updated => '2015-12-10 15:43:45',
- 			type => '20',
+ 			type => '16',
  		},
 	},
 	## id => 8
@@ -95,7 +95,7 @@ my %definition_for = (
  		using => {
 			pattern => '.*\.tv\..*',
  			last_updated => '2015-12-10 15:43:45',
- 			type => '20',
+ 			type => '16',
  		},
 	},
 );
