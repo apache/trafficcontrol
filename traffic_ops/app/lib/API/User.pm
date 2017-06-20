@@ -265,8 +265,8 @@ sub create {
 		role                 => $params->{role},
 		state_or_province    => $params->{stateOrProvince},
 		username             => $params->{username},
-		local_passwd         => sha1_hex( $params->{localPassword} ),
-		confirm_local_passwd => sha1_hex( $params->{confirmLocalPassword} ),
+		local_passwd         => Utils::Helper::hash_pass( $params->{localPasswd} ),
+		confirm_local_passwd => Utils::Helper::hash_pass( $params->{confirmLocalPasswd} ),
 		tenant_id            => $tenant_id,
 	};
 
