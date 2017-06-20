@@ -2020,7 +2020,11 @@ sub parent_dot_config {
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
-					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					if ( $unavailable_server_retry_responses ne "") {
+						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					} else {
+						$text .= " parent_retry=$parent_retry";
+					}
 					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
 				}
 				$text .= "\n";
