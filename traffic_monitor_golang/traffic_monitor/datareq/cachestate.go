@@ -195,6 +195,7 @@ func cacheStatusAndPoller(server enum.CacheName, serverInfo to.TrafficServer, lo
 	if statusVal.Why != "" {
 		return statusVal.Why, statusVal.Poller
 	}
+
 	if statusVal.Available {
 		return fmt.Sprintf("%s - available", statusVal.Status), statusVal.Poller
 	}

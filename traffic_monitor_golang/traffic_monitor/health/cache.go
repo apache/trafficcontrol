@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
@@ -171,13 +172,35 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 }
 
 // CalcAvailability calculates the availability of the cache, from the given result. Availability is stored in `localCacheStatus` and `localStates`, and if the status changed an event is added to `events`. statResultHistory may be nil, for pollers which don't poll stats.
+// When processing IPV6 results and ipv6 result enforcement is turned on, CalcAvailability updates localCacheStatusesIpv4 with ipv6 information, because the traffic router right now only consumes ipv4 status.
+// For the same reason when processing IPV4 results, and cfg.inforce_ipv6 is on, if ipv6 is reported as unavailable, ipv4 is also marked as unavailable
 // TODO add enum for poller names?
-func CalcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc to.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
-	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
+func CalcAvailability(results []cache.Result,
+	pollerName string,
+	statResultHistory cache.ResultStatHistory,
+	mc to.TrafficMonitorConfigMap,
+	toData todata.TOData,
+	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
+	localCacheStatusIpv6Threadsafe threadsafe.CacheAvailableStatus,
+	localStates peer.CRStatesThreadsafe,
+	events ThreadsafeEvents,
+	cfg config.Config) {
+
+	localCacheStatusesIpv4 := localCacheStatusThreadsafe.Get().Copy()
+	localCacheStatusesIpv6 := localCacheStatusIpv6Threadsafe.Get().Copy()
+	var localCacheStatuses cache.AvailableStatuses
+
 	for _, result := range results {
+
 		statResults := cache.ResultStatValHistory(nil)
 		if statResultHistory != nil {
 			statResults = statResultHistory[result.ID]
+		}
+
+		if result.Ipv4 {
+			localCacheStatuses = localCacheStatusesIpv4
+		} else {
+			localCacheStatuses = localCacheStatusesIpv6
 		}
 
 		isAvailable, whyAvailable, unavailableStat := EvalCache(cache.ToInfo(result), statResults, &mc)
@@ -188,6 +211,29 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 				return
 			}
 		}
+
+		// if we are ipv6 checking, but not inforcing, just append ipv6 result to Ipv4
+		// pure ipv6 results still available in its own end node
+		if result.Ipv4 && cfg.CheckIpv6 && !cfg.InforceIpv6 {
+			if ipv6Status, ok := localCacheStatusesIpv6[result.ID]; ok && ipv6Status.Available {
+				whyAvailable = whyAvailable + " (ipv6 polled OK)"
+			} else {
+				whyAvailable = whyAvailable + " (ipv6 polled ERROR)"
+			}
+		}
+
+		if result.Ipv4 && cfg.InforceIpv6 {
+			if ipv6Status, ok := localCacheStatusesIpv6[result.ID]; ok && !ipv6Status.Available {
+				isAvailable = false
+				whyAvailable = ipv6Status.Why
+			} else if !ok {
+				isAvailable = false
+				whyAvailable = whyAvailable + " (ipv6 polled ERROR)"
+			} else if ok && ipv6Status.Available {
+				whyAvailable = whyAvailable + " (ipv6 polled OK)"
+			}
+		}
+
 		localCacheStatuses[result.ID] = cache.AvailableStatus{
 			Available:       isAvailable,
 			Status:          mc.TrafficServer[string(result.ID)].Status,
@@ -196,15 +242,22 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			Poller:          pollerName,
 		} // TODO move within localStates?
 
+		if cfg.InforceIpv6 && !result.Ipv4 {
+			localCacheStatusesIpv4[result.ID] = localCacheStatuses[result.ID]
+		}
+
 		if available, ok := localStates.GetCache(result.ID); !ok || available.IsAvailable != isAvailable {
 			log.Infof("Changing state for %s was: %t now: %t because %s poller: %v error: %v", result.ID, available.IsAvailable, isAvailable, whyAvailable, pollerName, result.Error)
 			events.Add(Event{Time: Time(time.Now()), Description: whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
 		}
 
-		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
+		if result.Ipv4 || cfg.InforceIpv6 {
+			localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
+		}
 	}
 	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
-	localCacheStatusThreadsafe.Set(localCacheStatuses)
+	localCacheStatusThreadsafe.Set(localCacheStatusesIpv4)
+	localCacheStatusIpv6Threadsafe.Set(localCacheStatusesIpv6)
 }
 
 func setErr(newResult *cache.Result, err error) {
@@ -214,6 +267,7 @@ func setErr(newResult *cache.Result, err error) {
 
 // ExceedsThresholdMsg returns a human-readable message for why the given value exceeds the threshold. It does NOT check whether the value actually exceeds the threshold; call `InThreshold` to check first.
 func exceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64) string {
+
 	switch threshold.Comparator {
 	case "=":
 		return fmt.Sprintf("%s not equal (%.2f != %.2f)", stat, val, threshold.Val)

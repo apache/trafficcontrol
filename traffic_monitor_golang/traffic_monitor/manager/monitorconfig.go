@@ -122,6 +122,7 @@ func StartMonitorConfigManager(
 	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
+	healthURLSubscriberIpv6 chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
 	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
@@ -137,6 +138,7 @@ func StartMonitorConfigManager(
 		peerStates,
 		statURLSubscriber,
 		healthURLSubscriber,
+		healthURLSubscriberIpv6,
 		peerURLSubscriber,
 		toIntervalSubscriber,
 		cachesChangeSubscriber,
@@ -190,6 +192,7 @@ func monitorConfigListen(
 	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
+	healthURLSubscriberIpv6 chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
 	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
@@ -258,8 +261,18 @@ func monitorConfigListen(
 			)
 			url = r.Replace(url)
 
+			url6 := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
+			r = strings.NewReplacer(
+				"${hostname}", "["+srv.IP6+"]",
+				"${interface_name}", srv.InterfaceName,
+				"application=plugin.remap", "application=system",
+				"application=", "application=system",
+			)
+			url6 = r.Replace(url6)
+
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url, URL6: url6, Host: srv.FQDN, Timeout: connTimeout}
+
 			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout}
@@ -279,9 +292,15 @@ func monitorConfigListen(
 			peerSet[enum.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive, Ipv4: true}
+		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive, Ipv4: true}
+
+		if cfg.CheckIpv6 {
+			healthURLSubscriberIpv6 <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive, Ipv4: false}
+		}
+
+		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive, Ipv4: true}
+
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)

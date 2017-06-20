@@ -67,6 +67,8 @@ type Config struct {
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
 	StaticFileDir                string        `json:"static_file_dir"`
+	CheckIpv6                    bool          `json:"check_ipv6"`
+	InforceIpv6                  bool          `json:"inforce_ipv6"`
 }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
@@ -92,6 +94,8 @@ var DefaultConfig = Config{
 	HealthToStatRatio:            4,
 	HTTPPollNoSleep:              false,
 	StaticFileDir:                StaticFileDir,
+	CheckIpv6:                    false,
+	InforceIpv6:                  false,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
