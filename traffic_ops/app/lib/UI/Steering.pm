@@ -31,9 +31,25 @@ use Date::Parse;
 sub index {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
-	my $steering_obj;
-	my @steering;
 
+	my ($type_names, $type_ids) = $self->get_types();
+
+	my @steering = $self->get_target_data($ds_id, $type_ids);
+
+	&navbarpage($self);
+
+	$self->stash(
+		ds_id          => $ds_id,
+		ds_name        => $self->get_ds_name($ds_id),
+		steering       => \@steering,
+		ds_data        => $self->get_deliveryservices($ds_id),
+		types          => $type_names,
+		fbox_layout    => 1
+	);
+}
+
+sub get_types {
+	my $self = shift;
 	my $t_rs = $self->db->resultset('Type')->search( { use_in_table => 'steering_target'} );
 	my $type_names;
 	my $type_ids;
@@ -43,6 +59,35 @@ sub index {
 			$type_names->{$row->id} = $row->name;
 			$type_ids->{$row->name} = $row->id;
 		}
+	}
+
+	return ($type_names, $type_ids);
+}
+
+sub get_target_data {
+	my $self = shift;
+	my $ds_id = shift;
+	my $type_ids = shift;
+	my $steering_obj;
+	my @steering;
+	my @positive_order_steering;
+
+
+
+	my $neg_order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'}, value => { '<', 0 } }, { order_by => 'value ASC' } );
+
+	if ( $neg_order_rs > 0 ) {
+		my $i = 0;
+		while ( my $row = $neg_order_rs->next ) {
+			my $t = $steering_obj->{"target_$i"};
+			$t->{'target_id'} = $row->target;
+			$t->{'target_name'}   = $self->get_ds_name( $row->target );
+			$t->{'target_value'}   = $row->value;
+			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
+			$t->{'target_type'}   = $row->type->id;
+			push ( @steering, $t );
+			$i++;
+		}	
 	}
 
 	my $weight_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_WEIGHT'} }, { order_by => 'value DESC' } );
@@ -59,13 +104,13 @@ sub index {
 			push ( @steering, $t );
 			$i++;
 		}
-		
 	}
-	my $order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'} }, { order_by => 'value ASC' } );
 
-	if ( $order_rs > 0 ) {
+	my $pos_order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'}, value => { '>=', 0 } }, { order_by => 'value ASC' } );
+
+	if ( $pos_order_rs > 0 ) {
 		my $i = 0;
-		while ( my $row = $order_rs->next ) {
+		while ( my $row = $pos_order_rs->next ) {
 			my $t = $steering_obj->{"target_$i"};
 			$t->{'target_id'} = $row->target;
 			$t->{'target_name'}   = $self->get_ds_name( $row->target );
@@ -74,20 +119,9 @@ sub index {
 			$t->{'target_type'}   = $row->type->id;
 			push ( @steering, $t );
 			$i++;
-		}
-		
+		}	
 	}
-	
-	&navbarpage($self);
-
-	$self->stash(
-		ds_id          => $ds_id,
-		ds_name        => $self->get_ds_name($ds_id),
-		steering       => \@steering,
-		ds_data        => $self->get_deliveryservices($ds_id),
-		types          => $type_names,
-		fbox_layout    => 1
-	);
+	return @steering;
 }
 
 sub get_ds_name {
@@ -164,52 +198,11 @@ sub update {
 				. "!" );
 	}
 	else {
-		my $steering;
-		my @steering;
-
-		my $t_rs = $self->db->resultset('Type')->search( { use_in_table => 'steering_target'} );
-		my $type_names;
-		my $type_ids;
+		
+		
+		my ($type_names, $type_ids) = $self->get_types();
 	
-		if ( $t_rs > 0 ) {
-			while ( my $row = $t_rs->next ) {
-				$type_names->{$row->id} = $row->name;
-				$type_ids->{$row->name} = $row->id;
-			}
-		}
-	
-		my $weight_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_WEIGHT'} }, { order_by => 'value DESC' } );
-	
-		if ( $weight_rs > 0 ) {
-			my $i = 0;
-			while ( my $row = $weight_rs->next ) {
-				my $t = $steering_obj->{"target_$i"};
-				$t->{'target_id'} = $row->target;
-				$t->{'target_name'}   = $self->get_ds_name( $row->target );
-				$t->{'target_value'}   = $row->value;
-				if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
-				$t->{'target_type'}   = $row->type->id;
-				push ( @steering, $t );
-				$i++;
-			}
-			
-		}
-		my $order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'} }, { order_by => 'value ASC' } );
-	
-		if ( $order_rs > 0 ) {
-			my $i = 0;
-			while ( my $row = $order_rs->next ) {
-				my $t = $steering_obj->{"target_$i"};
-				$t->{'target_id'} = $row->target;
-				$t->{'target_name'}   = $self->get_ds_name( $row->target );
-				$t->{'target_value'}   = $row->value;
-				if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
-				$t->{'target_type'}   = $row->type->id;
-				push ( @steering, $t );
-				$i++;
-			}
-			
-		}
+		my @steering = $self->get_target_data($ds_id, $type_ids);
 		
 		&stash_role($self);
 		$self->stash(
