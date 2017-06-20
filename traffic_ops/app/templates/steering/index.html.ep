@@ -26,15 +26,14 @@
 
 	    function togglevis() {
 	
-	        var ele = document.getElementById("toggleText");
+	        var ele = document.getElementById("st_row_new");
 	        var button = document.getElementById("addTarget");
 	
-	        if (ele.style.visibility == "visible") {
-
+	        if (ele.style.visibility == 'visible') {
 	        }
 	        else {
 	
-	            ele.style.visibility = "visible";
+	            ele.style.visibility = 'visible';
 	            button.style.visibility = "hidden";
 	        }
 	    }
@@ -49,19 +48,9 @@
     			var ele = document.getElementById(divId);
 	        	var text = document.getElementById(divId);
 		
-	        	if (ele.style.visibility == "visible") {
-	        	    ele.style.visibility = "hidden";
-	        	}
-	        	else {
-		
-	        	    ele.style.visibility = "visible";
-	        	}
+
 	        	document.getElementById("submit_button").click();
-	 		} else {
-
 	 		}
-
-	 		
 	 	}
 	 </script>
 	
@@ -77,104 +66,100 @@
 				<div class="main">
 					<h1>Steering Assignment: <%= $ds_name %></h1>
 					<form method="post" action="/ds/<%= $ds_id %>/steering/update" id="steering_form">
-						
-						<% my $i = 0; %>
-						<% foreach my $st (@{$steering}) { %>
-							<div id="target_<%= $i %>" style="visibility: visible">
-							<div style="margin-left: 0px;">
-							<h4>Target #  <%= $i+1; %></h4>
-							</div>
-							<div style="margin-left: 2px;">
-								<% unless (field('st.target_id')->valid) { %>
-									<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
-								<% } %>
-								%= label_for 'st.target_name' => 'Delivery Service:', class => 'label', style=>"width:150px;"
-								<select style="max-width:250px" name="st.target_id" id="st.target_id_<%=$i%>">
-									<option value="">Delete Target</option>
-									<% if (defined($st->{target_id})) { %>
-										<option value="<%=$st->{target_id}%>" selected><%=$st->{target_name}%></option>
-									<% } else { %>
+						<table id="target_table" width=100% cellpadding="10">	
+							<% my $i = 0; %>
+							<% foreach my $st (@{$steering}) { %>
+								<tr id="st_row_<%= $st->{id} %>">
+	            					<td width="160">
+										<span id="target_<%= $i %>" style="visibility: visible">
+										<% unless (field('st.target_id')->valid) { %>
+											<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
+										<% } %>
+										<select style="display:none" style="max-width:250px" name="st.target_id" id="st.target_id_<%=$i%>">
+											<option value="">Delete Target</option>
+											<% if (defined($st->{target_id})) { %>
+												<option value="<%=$st->{target_id}%>" selected><%=$st->{target_name}%></option>
+											<% } else { %>
+												<option value="" selected></option>
+											<% } %>
+										</select>
+										<%=$st->{target_name}%>
+									</td>
+									<td style="text-align:center;" width="160">
+										<% unless (field('st.target_type')->valid) { %>
+											<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
+										<% } %>
+										%= label_for 'st.target_type' => ' Type: ', class => 'label'
+										<select style="max-width:140px" name="st.target_type">
+											<% foreach my $type (keys $types) { %>
+												<% if ( $type == $st->{target_type} ) { %>
+													<option value="<%= $type %>" selected><%= $types->{$type} %></option>
+												<% } else { %>
+													<option value="<%= $type %>"><%= $types->{$type} %></option>
+												<% } %>
+											<% } %>
+										</select>
+									</td>
+									<td width="75" style="text-align:center;">
+										<% unless (field('st.target_value')->valid) { %>
+											<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
+										<% } %>
+										%= label_for 'st.target_value' => 'Value: ', class => 'label'
+										<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "<%= $st->{target_value} %>">
+									</td>
+									<td width="50" style="text-align:center;">
+										<!-- <a id="deleteTarget" href="">Delete Target</a> -->
+										<input type="button" onclick="changeText('st.target_id_<%= $i %>', 'target_<%= $i %>', '<%=$st->{target_name}%>')" value="Delete">
+									</td>
+								</tr>
+								<% $i++; %>
+							<% } %>
+							<tr id="st_row_new" style="visibility: hidden;">
+								<td width="160">
+									<% unless (field('st.target_id')->valid) { %>
+										<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
+									<% } %>
+									<select style="max-width:150px" name="st.target_id">
 										<option value="" selected></option>
+										<% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { %>
+											<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
+										<% } %>
+									</select>
+								</td>
+								<td width="160" style="text-align:center;">
+									<% unless (field('st.target_type')->valid) { %>
+										<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
 									<% } %>
-									<% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { %>
-										<option value="<%=$id%>"><%=$ds_data->{$id}%></option>
+									%= label_for 'st.target_type' => ' Type: ', class => 'label'
+									<select style="max-width:150px" name="st.target_type">
+									<% foreach my $type (keys $types) { %>
+										<option value="<%= $type %>"><%= $types->{$type} %></option>
 									<% } %>
-								</select>
-								<span style="display:inline-block; width: 5px;"></span>
-								<% unless (field('st.target_type')->valid) { %>
-								<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
-							<% } %>
-							%= label_for 'st.target_type' => ' Type: ', class => 'label'
-							<select style="max-width:250px" name="st.target_type">
-							<option value="<%=$st->{target_type}%>" selected><%=$types->{$st->{target_type}}%></option>
-							<% foreach my $type (keys $types) { %>
-								<% if ( $type != $st->{target_type} ) { %>
-									<option value="<%= $type %>"><%= $types->{$type} %></option>
-								<% } %>
-							<% } %>
-							</select>
-							<span style="display:inline-block; width: 5px;"></span>
-								<% unless (field('st.target_value')->valid) { %>
-								<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
-							<% } %>
-							%= label_for 'st.target_value' => 'Value: ', class => 'label'
-							<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "<%= $st->{target_value} %>">
-							<span style="display:inline-block; width: 5px;"></span>
-							<!-- <a id="deleteTarget" href="">Delete Target</a> -->
-							<input type="button" onclick="changeText('st.target_id_<%= $i %>', 'target_<%= $i %>', '<%=$st->{target_name}%>')" value="Delete">
-							<br>
-							<% $i++; %>
-							</div>
-							</div><br>
-						<% } %>
-						<div id="toggleText" style="visibility: hidden">
-						<div style="margin-left: 0px;">
-						<h4>New Target</h4>
-						</div>
-						<div style="margin-left: 2px;">
-						<% unless (field('st.target_id')->valid) { %>
-									<span class="field-with-error"><%= field('st.target_id')->error %></span><br>
-								<% } %>
-								%= label_for 'st.target_name' => 'Delivery Service:', class => 'label', style=>"width:150px;"
-								<select style="max-width:250px" name="st.target_id">
-								<option value="" selected></option>
-								<% foreach my $id (sort{$ds_data->{$a} cmp $ds_data->{$b}} keys %$ds_data) { %>
-								<option value="<%=$id%>"><%=$ds_data->{$id}%></option><% } %>
-								</select>
-								<span style="display:inline-block; width: 5px;"></span>
-								<% unless (field('st.target_type')->valid) { %>
-								<span class="field-with-error"><%= field('st.target_type')->error %></span><br><br>
-							<% } %>
-							%= label_for 'st.target_type' => ' Type: ', class => 'label'
-							<select style="max-width:250px" name="st.target_type">
-							<% foreach my $type (keys $types) { %>
-								<option value="<%= $type %>"><%= $types->{$type} %></option>
-							<% } %>
-							</select>
-							<span style="display:inline-block; width: 5px;"></span>
-								<% unless (field('st.target_value')->valid) { %>
-								<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
-							<% } %>
-							%= label_for 'st.target_value' => 'Value: ', class => 'label'
-							<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "0">
-							</div>
-						</div>
+									</select>
+								</td>
+								<td width="75" style="text-align:center;">
+									<% unless (field('st.target_value')->valid) { %>
+										<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
+									<% } %>
+									%= label_for 'st.target_value' => 'Value: ', class => 'label'
+									<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "0">
+								</td>
+							</tr>
+						</table>	
 						
-						
-					<div class="buttons-section" style="margin-bottom: 20px;">
-						<div style="margin-top: 25px; margin-left: 10px; position: relative; display: inline-block; float: left;">
-							<% if ($priv_level >= 20) { %>  <!-- operations and admins only!! -->
-							<button class="button" id="submit_button">Save</button>
-							<% } %>
-							<span style="display:inline-block; width: 10px;"></span>
-							<input type="button" class="button" id="addTarget" onclick="togglevis();" value="Add Target">
-						</div>
+						<div class="buttons-section" style="margin-bottom: 20px;">
+							<div style="margin-top: 25px; margin-left: 15px; position: relative; display: inline-block; float: left;">
+								<% if ($priv_level >= 20) { %>  <!-- operations and admins only!! -->
+									<button class="button" id="submit_button">Save</button>
+								<% } %>
+								<span style="display:inline-block; width: 10px;"></span>
+								<input type="button" class="button" id="addTarget" onclick="togglevis();" value="Add Target">
+							</div>
+							<div style="margin-top: 25px; float:right; margin-right: 15px">
+								<button class="button" id="close_button">Close</button>
+							</div>
+						</div>			
 					</form>
-					<div style="margin-top: 25px; float:center; margin-right: 50px">
-					</div>
-					<div style="margin-top: 25px; float:right; margin-right: 50px">
-						<button class="button" id="close_button">Close</button>
-					</div>
 				</div>
 			</div>
 		</div>
