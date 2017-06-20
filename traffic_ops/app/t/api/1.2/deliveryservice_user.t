@@ -54,8 +54,8 @@ my $count_response = sub {
 $t->get_ok('/api/1.2/users/200/deliveryservices')->status_is(200)->$count_response(1)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-# there are currently 12 delivery services NOT assigned to user with id=200
-$t->get_ok('/api/1.2/user/200/deliveryservices/available')->status_is(200)->$count_response(12)
+# there are currently 13 delivery services NOT assigned to user with id=200
+$t->get_ok('/api/1.2/user/200/deliveryservices/available')->status_is(200)->$count_response(13)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # assign one ds to user with id=200
@@ -75,7 +75,7 @@ $t->get_ok('/api/1.2/users/200/deliveryservices')->status_is(200)->$count_respon
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are now 11 delivery services NOT assigned to user with id=200
-$t->get_ok('/api/1.2/user/200/deliveryservices/available')->status_is(200)->$count_response(11)
+$t->get_ok('/api/1.2/user/200/deliveryservices/available')->status_is(200)->$count_response(12)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # now remove ds=300 from user=200
@@ -88,8 +88,8 @@ ok $t->delete_ok('/api/1.2/deliveryservice_user/200/200')->status_is(404)->or( s
 $t->get_ok('/api/1.2/users/200/deliveryservices')->status_is(200)->$count_response(1)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-# there are now 12 delivery services NOT assigned to user with id=200
-$t->get_ok('/api/1.2/user/200/deliveryservices/available')->status_is(200)->$count_response(12)
+# there are now 13 delivery services NOT assigned to user with id=200
+$t->get_ok('/api/1.2/user/200/deliveryservices/available')->status_is(200)->$count_response(13)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
