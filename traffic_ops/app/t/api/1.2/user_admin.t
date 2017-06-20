@@ -83,7 +83,15 @@ sub run_ut {
         	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	       , 'Success same email...';
 	       
-	my $userid = $schema->resultset('TmUser')->find( { username => $addedUserName } )->id, 'Does the portal user exist?';
+	my $userid = $schema->resultset('TmUser')->find( { username => $addedUserName } )->id, 'Does the user exist?';
+
+	#login as the user, and do something, to verify the user can log in with the given password
+	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	ok $t->post_ok( '/login', => form => { u => $addedUserName, p => "longerpass"} )->status_is(302);
+	ok $t->get_ok('/api/1.2/users/'.$userid)->status_is(200);
+	#back to the standard user
+	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password} )->status_is(302);
 	       
 	if (defined($tenant_id)){
 		#verify the update with no "tenant" removed the tenant
