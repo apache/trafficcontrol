@@ -68,15 +68,24 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent, "ipv4")
+
+	cacheHealthHandlerIpv6 := cache.NewHandler()
+	cacheHealthPollerIpv6 := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandlerIpv6, cfg.HTTPPollNoSleep, staticAppData.UserAgent, "ipv6")
+
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent, "ipv4")
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent, "ipv4")
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
+
+	if cfg.CheckIpv6 {
+		go cacheHealthPollerIpv6.Poll()
+	}
+
 	go cacheStatPoller.Poll()
 	go peerPoller.Poll()
 
@@ -91,6 +100,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		peerStates,
 		cacheStatPoller.ConfigChannel,
 		cacheHealthPoller.ConfigChannel,
+		cacheHealthPollerIpv6.ConfigChannel,
 		peerPoller.ConfigChannel,
 		monitorConfigPoller.IntervalChan,
 		cachesChanged,
@@ -109,7 +119,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		combineStateFunc,
 	)
 
-	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
+	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus, localCacheStatusIpv6 := StartStatHistoryManager(
 		cacheStatHandler.ResultChan(),
 		localStates,
 		combinedStates,
@@ -133,6 +143,21 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		cfg,
 		events,
 		localCacheStatus,
+		localCacheStatusIpv6,
+	)
+
+	lastHealthDurationsIpv6, healthHistoryIpv6 := StartHealthResultManager(
+		cacheHealthHandlerIpv6.ResultChan(),
+		toData,
+		localStates,
+		monitorConfig,
+		combinedStates,
+		fetchCount,
+		errorCount,
+		cfg,
+		events,
+		localCacheStatus,
+		localCacheStatusIpv6,
 	)
 
 	StartOpsConfigManager(
@@ -148,16 +173,19 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		statResultHistory,
 		statMaxKbpses,
 		healthHistory,
+		healthHistoryIpv6,
 		lastKbpsStats,
 		dsStats,
 		events,
 		staticAppData,
 		cacheHealthPoller.Config.Interval,
 		lastHealthDurations,
+		lastHealthDurationsIpv6,
 		fetchCount,
 		healthIteration,
 		errorCount,
 		localCacheStatus,
+		localCacheStatusIpv6,
 		unpolledCaches,
 		monitorConfig,
 		cfg,

@@ -87,6 +87,7 @@ type Result struct {
 	PollFinished    chan<- uint64
 	PrecomputedData PrecomputedData
 	Available       bool
+	Ipv4            bool
 }
 
 // HasStat returns whether the given stat is in the Result.
@@ -279,14 +280,16 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64, ipv4 bool) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
+
 	result := Result{
 		ID:           enum.CacheName(id),
 		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
 		PollFinished: pollFinished,
+		Ipv4:         ipv4,
 	}
 
 	if reqErr != nil {
