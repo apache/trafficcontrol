@@ -36,13 +36,20 @@ sub index {
 
 	my @steering = $self->get_target_data($ds_id, $type_ids);
 
+	my @targets;
+	foreach my $i ( keys @steering ) {
+		push ( @targets, $steering[$i]->{'target_id'} );
+	}
+
+	my %ds_data = $self->get_deliveryservices($ds_id, \@targets);
+
 	&navbarpage($self);
 
 	$self->stash(
 		ds_id          => $ds_id,
 		ds_name        => $self->get_ds_name($ds_id),
 		steering       => \@steering,
-		ds_data        => $self->get_deliveryservices($ds_id),
+		ds_data        => \%ds_data,
 		types          => $type_names,
 		fbox_layout    => 1
 	);
@@ -71,8 +78,6 @@ sub get_target_data {
 	my $steering_obj;
 	my @steering;
 	my @positive_order_steering;
-
-
 
 	my $neg_order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'}, value => { '<', 0 } }, { order_by => 'value ASC' } );
 
@@ -140,17 +145,22 @@ sub get_cdn {
 sub get_deliveryservices {
 	my $self = shift;
 	my $ds_id = shift;
+	my @targets = @{$_[0]};
+
 	my $cdn_id = $self->get_cdn($ds_id);
 	my %ds_data;
 	#search for only the delivery services that match the CDN ID of the supplied delivery service.
 	my $rs = $self->db->resultset('Deliveryservice')->search({ cdn_id => $cdn_id } , { prefetch => [ 'type' ] });
 	while ( my $row = $rs->next ) {
+		my $ds = $row->id;
 		if ( $row->type->name =~ m/^HTTP/ ) {
-			$ds_data{ $row->id } = $row->xml_id;
+			if (!grep( /$ds/, @targets )) {
+				$ds_data{ $row->id } = $row->xml_id;
+			}
 		}
 	}
 
-	return \%ds_data;
+	return %ds_data;
 }
 
 sub update {
@@ -203,13 +213,20 @@ sub update {
 		my ($type_names, $type_ids) = $self->get_types();
 	
 		my @steering = $self->get_target_data($ds_id, $type_ids);
+
+		my @targets;
+		foreach my $i ( keys @steering ) {
+			push ( @targets, $steering[$i]->{'target_id'} );
+		}
+
+		my %ds_data = $self->get_deliveryservices($ds_id, \@targets);
 		
 		&stash_role($self);
 		$self->stash(
 			ds_id          => $ds_id,
 			ds_name        => $self->get_ds_name($ds_id),
 			steering       => \@steering,
-			ds_data        => $self->get_deliveryservices(),
+			ds_data        => \%ds_data,
 			types          => $type_names,
 			fbox_layout    => 1
 		);
