@@ -39,6 +39,7 @@ type HttpFetcher struct {
 	UserAgent string
 	Headers   map[string]string
 	Handler   handler.Handler
+	Ipv4      bool
 	Counters
 }
 
@@ -55,15 +56,28 @@ type Counters struct {
 }
 
 func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, pollFinishedChan chan<- uint64) {
-	log.Debugf("poll %v %v fetch start\n", pollId, time.Now())
+	log.Debugf("poll %v %v fetch start, url %v\n", pollId, time.Now(), url)
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
+
+	if err != nil {
+		err = fmt.Errorf("poll %v", err)
+		currTime := time.Now()
+		zeroDuration := currTime.Sub(currTime)
+		if f.Fail != nil {
+			f.Fail.Inc()
+		}
+		f.Handler.Handle(id, nil, zeroDuration, currTime, err, pollId, pollFinishedChan, f.Ipv4)
+		return
+	}
+
 	req.Header.Set("User-Agent", f.UserAgent)
 	req.Header.Set("Connection", "keep-alive")
 	req.Host = host
 	if f.Pending != nil {
 		f.Pending.Inc()
 	}
+
 	startReq := time.Now()
 	response, err := f.Client.Do(req)
 	reqEnd := time.Now()
@@ -71,6 +85,7 @@ func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, po
 	if f.Pending != nil {
 		f.Pending.Dec()
 	}
+
 	defer func() {
 		if response != nil && response.Body != nil {
 			ioutil.ReadAll(response.Body) // TODO determine if necessary
@@ -93,11 +108,11 @@ func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, po
 			f.Success.Inc()
 		}
 		log.Debugf("poll %v %v fetch end\n", pollId, time.Now())
-		f.Handler.Handle(id, response.Body, reqTime, reqEnd, err, pollId, pollFinishedChan)
+		f.Handler.Handle(id, response.Body, reqTime, reqEnd, err, pollId, pollFinishedChan, f.Ipv4)
 	} else {
 		if f.Fail != nil {
 			f.Fail.Inc()
 		}
-		f.Handler.Handle(id, nil, reqTime, reqEnd, err, pollId, pollFinishedChan)
+		f.Handler.Handle(id, nil, reqTime, reqEnd, err, pollId, pollFinishedChan, f.Ipv4)
 	}
 }

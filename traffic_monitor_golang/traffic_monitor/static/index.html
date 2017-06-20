@@ -289,18 +289,20 @@ under the License.
 					 if (jdata[server].hasOwnProperty("status")) {
 						 document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
 						 var row = document.getElementById("cache-states-" + server);
+						 var available = jdata[server].status.match(/^.* available *($|\()/);
+
 						 if (jdata[server].status.indexOf("ADMIN_DOWN") != -1 || jdata[server].status.indexOf("OFFLINE") != -1) {
-							 row.classList.add("warning");
-							 row.classList.remove("error");
-							 row.classList.remove("stripes");
-						 } else if (jdata[server].status.indexOf(" available") == -1 && jdata[server].status.indexOf("ONLINE") != 0) {
-							 row.classList.add("error");
-							 row.classList.remove("warning");
-							 row.classList.remove("stripes");
+								row.classList.add("warning");
+								row.classList.remove("error");
+								row.classList.remove("stripes");
+						 } else if (!available && jdata[server].status.indexOf("ONLINE") != 0) {
+								row.classList.add("error");
+								row.classList.remove("warning");
+								row.classList.remove("stripes");
 						 } else {
-							 row.classList.add("stripe");
-							 row.classList.remove("warning");
-							 row.classList.remove("error");
+								row.classList.add("stripe");
+								row.classList.remove("warning");
+								row.classList.remove("error");
 						 }
 					 }
 					 if (jdata[server].hasOwnProperty("load_average")) {
