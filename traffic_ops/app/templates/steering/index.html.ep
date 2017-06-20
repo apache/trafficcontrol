@@ -105,7 +105,7 @@
 											<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
 										<% } %>
 										%= label_for 'st.target_value' => 'Value: ', class => 'label'
-										<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "<%= $st->{target_value} %>">
+										<input type="text" style="max-width:35px; text-align:right" name="st.target_value" value = "<%= $st->{target_value} %>">
 									</td>
 									<td width="50" style="text-align:center;">
 										<!-- <a id="deleteTarget" href="">Delete Target</a> -->
@@ -142,7 +142,7 @@
 										<span class="field-with-error"><%= field('st.target_value')->error %></span><br><br>
 									<% } %>
 									%= label_for 'st.target_value' => 'Value: ', class => 'label'
-									<input type="text" style="max-width:25px; text-align:right" name="st.target_value" value = "0">
+									<input type="text" style="max-width:35px; text-align:right" name="st.target_value" value = "0">
 								</td>
 							</tr>
 						</table>	
