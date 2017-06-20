@@ -108,7 +108,9 @@
 							<select style="max-width:250px" name="st.target_type">
 							<option value="<%=$st->{target_type}%>" selected><%=$types->{$st->{target_type}}%></option>
 							<% foreach my $type (keys $types) { %>
-								<option value="<%= $type %>"><%= $types->{$type} %></option>
+								<% if ( $type != $st->{target_type} ) { %>
+									<option value="<%= $type %>"><%= $types->{$type} %></option>
+								<% } %>
 							<% } %>
 							</select>
 							<span style="display:inline-block; width: 5px;"></span>
