@@ -126,6 +126,13 @@ login_to_tenant_admin ("A1", $tenants_data);
 my $num_of_tenants_can_be_accessed = 3; #A1, A1a, A1b
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
+#cannot change its tenancy
+ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
+        json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
+        ->json_is( "/alerts/0/text" => "Cannot change user tenancy")
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Cannot change my tenancy: tenant: A1?';
+
 logout_from_tenant_admin();
 #access to himself
 test_user_resource_read_allow_access ("A1", "A1", $tenants_data);
@@ -160,6 +167,12 @@ login_to_tenant_admin ("A3", $tenants_data);
 $num_of_tenants_can_be_accessed = 0;
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
+#cannot change its tenancy
+ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
+        json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
+        ->json_is( "/alerts/0/text" => "Cannot change user tenancy")
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Cannot change my tenancy: tenant: A1?';
 logout_from_tenant_admin();
 #no access to anywhere
 test_user_resource_read_block_access ("A3", "A3", $tenants_data);
@@ -184,6 +197,12 @@ login_to_tenant_admin ("none", $tenants_data);
 $num_of_tenants_can_be_accessed = 0;
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
+#cannot change its tenancy
+ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
+        json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
+        ->json_is( "/alerts/0/text" => "Cannot change user tenancy")
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Cannot change my tenancy: tenant: A1?';
 logout_from_tenant_admin();
 #access to himself
 test_user_resource_read_allow_access ("none", "none", $tenants_data);
@@ -534,3 +553,4 @@ sub test_user_resource_write_block_access {
     #deleting the user for cleanup - no API for that yet
     ok $schema->resultset('TmUser')->find( { id => $new_userid2 } )->delete();
 }
+
