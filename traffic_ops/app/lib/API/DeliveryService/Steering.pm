@@ -94,7 +94,7 @@ sub find_steering {
 
         my $type = $self->get_type($row->type);
 
-        if ( $row->type =~ /STEERING_ORDER/ ) {
+        if ( $row->type eq "STEERING_ORDER" ) {
             push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
             'order' => $row->value,
@@ -231,7 +231,7 @@ sub update() {
     my $dsu_row = $self->db->resultset('DeliveryserviceTmuser')->search(
         {tm_user_id => $user_id, deliveryservice => $row->steering_id})->single;
 
-    if (!$dsu_row && !(&is_admin($self)) ) {
+    if (!$dsu_row && !&is_admin($self) ) {
         return $self->render(json => {"message" => "unauthorized"}, status => 401);
     }
 
