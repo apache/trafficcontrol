@@ -1008,10 +1008,12 @@ sub take_and_bake_server {
 	my $header = $self->header_comment( $server_obj->host_name );
 	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
-		if ( $parameter eq "no_header" ) {
+		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
 			$header = "";
 		}
-		$text .= $data->{$parameter} . "\n";
+		else {
+			$text .= $data->{$parameter} . "\n";
+		}
 	}
 
 	$text =~ s/\s*__RETURN__\s*/\n/g;
@@ -1029,10 +1031,12 @@ sub take_and_bake_profile {
 	my $header = $self->header_comment( $profile_obj->name );
 	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
-		if ( $parameter eq "no_header" ) {
+		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
 			$header = "";
 		}
-		$text .= $data->{$parameter} . "\n";
+		else {
+			$text .= $data->{$parameter} . "\n";
+		}
 	}
 	
 	$text =~ s/\s*__RETURN__\s*/\n/g;
