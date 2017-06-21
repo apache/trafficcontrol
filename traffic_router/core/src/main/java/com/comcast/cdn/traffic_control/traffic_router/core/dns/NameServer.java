@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedFlags;
 import org.xbill.DNS.Flags;
@@ -36,7 +37,10 @@ import org.xbill.DNS.Section;
 import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
+import org.xbill.DNS.EDNSOption;
+import org.xbill.DNS.ClientSubnetOption;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 public class NameServer {
@@ -74,7 +78,7 @@ public class NameServer {
 		return response;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
 	private void addAnswers(final Message request, final Message response, final InetAddress clientAddress, final DNSAccessRecord.Builder builder) {
 		final Record question = request.getQuestion();
 
@@ -82,9 +86,12 @@ public class NameServer {
 			final int qclass = question.getDClass();
 			final Name qname = question.getName();
 			final OPTRecord qopt = request.getOPT();
+			List<EDNSOption> list = Collections.EMPTY_LIST;
 			boolean dnssecRequest = false;
 			int qtype = question.getType();
-
+			final CacheRegister data = trafficRouterManager.getTrafficRouter().getCacheRegister();
+			final JSONObject config = data.getConfig();
+			final boolean ecsEnable = config.optBoolean("ecsEnable", false);
 			int flags = 0;
 
 			if ((qopt != null) && (qopt.getVersion() > MAX_SUPPORTED_EDNS_VERS)) {
@@ -108,13 +115,46 @@ public class NameServer {
 				qtype = Type.ANY;
 				flags |= FLAG_SIGONLY;
 			}
-
-			lookup(qname, qtype, clientAddress, response, flags, dnssecRequest, builder);
-
+			// Get list of options matching client subnet option code (8)
+			if (qopt != null ){
+				list = qopt.getOptions(EDNSOption.Code.CLIENT_SUBNET);
+			}
+			InetAddress ipaddr = null;
+			int nmask = 0;
+			if (ecsEnable) {
+				for (final EDNSOption option : list) {
+					assert (option instanceof ClientSubnetOption);
+					// If there are multiple ClientSubnetOptions in the Option RR, then
+					// choose the one with longest source prefix. RFC 7871
+					if (((ClientSubnetOption)option).getSourceNetmask() > nmask) {
+						nmask = ((ClientSubnetOption)option).getSourceNetmask();
+						ipaddr = ((ClientSubnetOption)option).getAddress();
+					}
+				}
+			}
+			if ((ipaddr!= null) && (ecsEnable)) {
+				LOGGER.debug("DNS: Using Client IP Address from ECS Option" + ipaddr.getHostAddress() + "/" 
+						+ nmask);
+				lookup(qname, qtype, ipaddr, response, flags, dnssecRequest, builder);
+			} else {
+				lookup(qname, qtype, clientAddress, response, flags, dnssecRequest, builder);
+			}
+			
 			if (response.getHeader().getRcode() == Rcode.REFUSED) {
 				return;
 			}
-
+			
+			// Check if we had incoming ClientSubnetOption in Option RR, then we need
+			// to return with the response, setting the scope subnet as well
+			if ((nmask != 0) && (ecsEnable)) {	
+				final ClientSubnetOption cso = new ClientSubnetOption(nmask, nmask, ipaddr);
+				final List<ClientSubnetOption> csoList = new ArrayList<ClientSubnetOption>(1);
+				csoList.add(cso);	
+				// OptRecord Arguments: payloadSize = 1280, xrcode = 0, version=0, flags=0, option List
+				final OPTRecord opt = new OPTRecord(1280, 0, 0, 0, csoList);
+				response.addRecord(opt, Section.ADDITIONAL);
+			}
+		
 			if (qopt != null && flags == FLAG_DNSSECOK) {
 				final int optflags = ExtendedFlags.DO;
 				final OPTRecord opt = new OPTRecord(1280, (byte) 0, (byte) 0, optflags);
