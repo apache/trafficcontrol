@@ -1011,6 +1011,9 @@ sub take_and_bake_server {
 		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
 			$header = "";
 		}
+		elsif ( $parameter eq "header" ) {
+			$header = $data->{$parameter} . "\n";
+		}
 		else {
 			$text .= $data->{$parameter} . "\n";
 		}
@@ -1033,6 +1036,9 @@ sub take_and_bake_profile {
 	foreach my $parameter ( sort keys %{$data} ) {
 		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
 			$header = "";
+		}
+		elsif ( $parameter eq "header" ) {
+			$header = $data->{$parameter} . "\n";
 		}
 		else {
 			$text .= $data->{$parameter} . "\n";
