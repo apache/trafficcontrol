@@ -61,11 +61,9 @@ sub get_types {
 	my $type_names;
 	my $type_ids;
 
-	if ( $t_rs > 0 ) {
-		while ( my $row = $t_rs->next ) {
-			$type_names->{$row->id} = $row->name;
-			$type_ids->{$row->name} = $row->id;
-		}
+	while ( my $row = $t_rs->next ) {
+		$type_names->{$row->id} = $row->name;
+		$type_ids->{$row->name} = $row->id;
 	}
 
 	return ($type_names, $type_ids);
@@ -77,54 +75,34 @@ sub get_target_data {
 	my $type_ids = shift;
 	my $steering_obj;
 	my @steering;
-	my @positive_order_steering;
+	my @weight_steering;
+	my @pos_order_steering;
+	my @neg_order_steering;
 
-	my $neg_order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'}, value => { '<', 0 } }, { order_by => 'value ASC' } );
+	my $target_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
 
-	if ( $neg_order_rs > 0 ) {
+	if ( $target_rs > 0 ) {
 		my $i = 0;
-		while ( my $row = $neg_order_rs->next ) {
+		while ( my $row = $target_rs->next ) {
 			my $t = $steering_obj->{"target_$i"};
 			$t->{'target_id'} = $row->target;
 			$t->{'target_name'}   = $self->get_ds_name( $row->target );
 			$t->{'target_value'}   = $row->value;
 			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
 			$t->{'target_type'}   = $row->type->id;
-			push ( @steering, $t );
-			$i++;
-		}	
-	}
-
-	my $weight_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_WEIGHT'} }, { order_by => 'value DESC' } );
-
-	if ( $weight_rs > 0 ) {
-		my $i = 0;
-		while ( my $row = $weight_rs->next ) {
-			my $t = $steering_obj->{"target_$i"};
-			$t->{'target_id'} = $row->target;
-			$t->{'target_name'}   = $self->get_ds_name( $row->target );
-			$t->{'target_value'}   = $row->value;
-			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
-			$t->{'target_type'}   = $row->type->id;
-			push ( @steering, $t );
+			if ( $row->type->name eq "STEERING_ORDER" && $row->value < 0 ) {
+				push (@neg_order_steering, $t);	
+			}
+			elsif ( $row->type->name eq "STEERING_ORDER" && $row->value >= 0 ) {
+				push (@pos_order_steering, $t);
+			}
+			else { push (@weight_steering, $t); }
 			$i++;
 		}
-	}
-
-	my $pos_order_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id, type => $type_ids->{'STEERING_ORDER'}, value => { '>=', 0 } }, { order_by => 'value ASC' } );
-
-	if ( $pos_order_rs > 0 ) {
-		my $i = 0;
-		while ( my $row = $pos_order_rs->next ) {
-			my $t = $steering_obj->{"target_$i"};
-			$t->{'target_id'} = $row->target;
-			$t->{'target_name'}   = $self->get_ds_name( $row->target );
-			$t->{'target_value'}   = $row->value;
-			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
-			$t->{'target_type'}   = $row->type->id;
-			push ( @steering, $t );
-			$i++;
-		}	
+		@weight_steering = sort { $b->{target_value} <=> $a->{target_value} } @weight_steering;
+		@neg_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @neg_order_steering;
+		@pos_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @pos_order_steering;
+		push (@steering, @neg_order_steering, @weight_steering, @pos_order_steering);
 	}
 	return @steering;
 }
@@ -153,13 +131,10 @@ sub get_deliveryservices {
 	my $rs = $self->db->resultset('Deliveryservice')->search({ cdn_id => $cdn_id } , { prefetch => [ 'type' ] });
 	while ( my $row = $rs->next ) {
 		my $ds = $row->id;
-		if ( $row->type->name =~ m/^HTTP/ ) {
-			if (!grep( /$ds/, @targets )) {
+		if ( $row->type->name =~ m/^HTTP/ && !grep( /$ds/, @targets ) ) {
 				$ds_data{ $row->id } = $row->xml_id;
-			}
 		}
 	}
-
 	return %ds_data;
 }
 
