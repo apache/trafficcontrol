@@ -42,17 +42,18 @@ sub index {
 	my @data = ();
 	my @tenants_list = $tenant_utils->get_hierarchic_tenants_list($tenants_data, undef);
 	foreach my $row (@tenants_list) {
-		if ($tenant_utils->is_tenant_resource_accessible($tenants_data, $row->id)) {
-			push(
-				@data, {
-					"id"             => $row->id,
-					"name"           => $row->name,
-					"active"         => \$row->active,
-					"parentId"       => $row->parent_id,
-					"parentName"     => ( defined $row->parent_id ) ? $tenant_utils->get_tenant_by_id($tenants_data, $row->parent_id)->name : undef,
-				}
-			);
-		}
+		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $row->id)) {
+            next;
+        }
+        push(
+            @data, {
+                "id"             => $row->id,
+                "name"           => $row->name,
+                "active"         => \$row->active,
+                "parentId"       => $row->parent_id,
+                "parentName"     => ( defined $row->parent_id ) ? $tenant_utils->get_tenant_by_id($tenants_data, $row->parent_id)->name : undef,
+            }
+        );
 	}
 	$self->success( \@data );
 }
@@ -68,20 +69,18 @@ sub show {
 	my @data = ();
 	my $rs_data = $self->db->resultset("Tenant")->search( { 'me.id' => $id });
 	while ( my $row = $rs_data->next ) {
-		if ($tenant_utils->is_tenant_resource_accessible($tenants_data, $row->id)) {
-			push(
-				@data, {
-					"id"           => $row->id,
-					"name"         => $row->name,
-					"active"       => \$row->active,
-					"parentId"     => $row->parent_id,
-					"parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant_by_id($tenants_data, $row->parent_id)->name : undef,
-				}
-			);
-		}
-		else {
-			return $self->forbidden();
-		}
+		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $row->id)) {
+            return $self->forbidden();
+        }
+        push(
+            @data, {
+                "id"           => $row->id,
+                "name"         => $row->name,
+                "active"       => \$row->active,
+                "parentId"     => $row->parent_id,
+                "parentName"   => ( defined $row->parent_id ) ? $tenant_utils->get_tenant_by_id($tenants_data, $row->parent_id)->name : undef,
+            }
+        );
 	}
 	$self->success( \@data );
 }
