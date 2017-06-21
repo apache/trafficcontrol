@@ -163,7 +163,7 @@ func makeTLSConfig(config *Config) *tls.Config {
 
 	s := false 
 	if config.InsecureSkipVerify == true {
-		Logger.Printf("NOTICE: Skip sertificate verification")
+		Logger.Printf("NOTICE: Skip certificate verification")
 		s = true
 	}
 	return &tls.Config{InsecureSkipVerify: s}
@@ -309,7 +309,7 @@ func makeHandler(r *FwdRule) (http.Handler, error) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // ServeHTTP matches the Request with a forward rule and, if found, serves the
-// request with therule's handler. If the rule's secure field is true, it will
+// request with the rule's handler. If the rule's secure field is true, it will
 // only allow access if the request has a valid JWT bearer token.
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
@@ -378,7 +378,7 @@ func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
     }
 
     if (satisfied > 0) {
-		Logger.Printf("%v %v Route found but required capabilitoes not satisfied. HAS %v, NEED %v", 
+		Logger.Printf("%v %v Route found but required capabilities not satisfied. HAS %v, NEED %v", 
 			req.Method, req.URL.RequestURI(), claims.Capabilities, method)
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return false

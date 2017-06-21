@@ -1,5 +1,7 @@
 
-A simple authentication server written in go that authenticates user agains the `tm_user` table and returns a jwt representing the user, incl. its API access capabilities, derived from the user's role.
+A simple authentication server written in go that authenticates user against the `tm_user` table and returns a jwt access token representing the user, incl. its API access capabilities, derived from the user's role.
+
+Note that the authentication server is designed to work in conjunction with the "webfront" server, that acts as an API GW. Once you obtain an access token from the auth service you can use it with "webfront" to authenticate your API calls. See [here](../webfront/README.md) for webfront documentation.
 
 #### Legacy TO support
 
