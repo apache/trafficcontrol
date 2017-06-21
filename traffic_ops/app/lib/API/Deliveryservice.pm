@@ -54,7 +54,10 @@ sub index {
 		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
 	}
 
-	if ( !&is_privileged($self) ) {
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
 		$criteria{'me.id'} = { -in => \@ds_ids },;
@@ -66,7 +69,9 @@ sub index {
 	);
 
 	while ( my $row = $rs_data->next ) {
-
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
 		# build example urls for each delivery service
 		my @example_urls = ();
 		my $cdn_domain   = $row->cdn->domain_name;
