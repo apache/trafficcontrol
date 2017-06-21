@@ -367,6 +367,17 @@ sub get_deliveryservices_not_assigned_to_user {
 	my $id = $self->param('id');
 	my %takendsids;
 
+	my $user = $self->db->resultset('TmUser')->find( { id => $id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden();
+	}
+
 	my $rs_takendsids = undef;
 	$rs_takendsids = $self->db->resultset("DeliveryserviceTmuser")->search( { 'tm_user_id' => $id } );
 
@@ -407,6 +418,12 @@ sub assign_deliveryservices {
 	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
 	if ( !defined($user) ) {
 		return $self->not_found();
+	}
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden();
 	}
 
 	if ( $replace ) {
