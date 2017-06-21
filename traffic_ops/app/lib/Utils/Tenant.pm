@@ -64,6 +64,10 @@ sub new {
         ->get_column('value')->single();
     my $ignore_tenancy = defined($ignore_tenancy_value) ? $ignore_tenancy_value : 0;
 
+    my $ignore_ds_tmuser_assignment_value = $dbh->resultset("Parameter")->search( { config_file => 'global', name => 'ignore-ds-tmuser-assignment' } )
+        ->get_column('value')->single();
+    my $ignore_ds_tmuser_assignment = defined($ignore_ds_tmuser_assignment_value) ? $ignore_ds_tmuser_assignment_value : 0;
+
     my $self = {
         dbh     => $dbh,
         context => $context, #saving the context - use it only for log please...
@@ -72,6 +76,7 @@ sub new {
 # the below parameters are held temporarily until the info is taken from the jwt
         current_user_tenant => $current_user_tenant,
         ignore_tenancy => $ignore_tenancy,
+        ignore_ds_tmuser_assignment => $ignore_ds_tmuser_assignment,
     };
     bless $self, $class;
     return $self;
@@ -209,6 +214,25 @@ sub is_user_resource_accessible {
     my $resource_tenancy = shift;
 
     return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
+}
+
+sub is_ds_resource_accessible {
+    my $self             = shift;
+    my $tenants_data     = shift;
+    my $resource_tenancy = shift;
+
+    return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
+}
+
+sub ignore_ds_users_table {
+    # With tenancy, the DS/User mapping is no longer required for isolation.
+    # So we need a knob to turn of this mechanisem if/as-long it is not depraceted.
+    my $self = shift;
+    if ($self->{ignore_ds_tmuser_assignment}) {
+        #mechanisem disabled
+        return 1;
+    }
+    return 0;
 }
 
 sub get_tenant_heirarchy_depth {
