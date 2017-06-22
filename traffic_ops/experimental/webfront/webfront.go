@@ -323,7 +323,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		authorized := rule.authorize(w, req)
 		if !authorized {
 			return
-		}
+		}			
 	}
 
 	if h := rule.handler; h != nil {
@@ -336,6 +336,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	// LEGACY: If request contains a Mojo cookie instead of a JWT, we bypass token authorization 
+	// and let legacy TO handle all authorization. 
+	var cookie, err = req.Cookie("mojolicious")
+	if cookie != nil {
+		Logger.Printf("LEGACY: Found mojolicious cookie. Bypass authorization")
+		return true
+	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	token, err := validateToken(req.Header.Get("Authorization"))
 
@@ -391,8 +401,6 @@ func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
 	// LEGACY: Pass legacy authentication token upon every secured request...
 	legacyCookie := claims.LegacyCookie;
 	req.Header.Add("Cookie", legacyCookie)			
-	// Logger.Printf("Set legacy cookie: %v", legacyCookie)
-	// LEGACY: encoding
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	return true

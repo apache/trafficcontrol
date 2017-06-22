@@ -3,12 +3,16 @@ A simple authentication server written in go that authenticates user against the
 
 Note that the authentication server is designed to work in conjunction with the "webfront" server, that acts as an API GW. Once you obtain an access token from the auth service you can use it with "webfront" to authenticate your API calls. See [webfront documentation](../webfront/README.md)
 
-#### Legacy TO support
+**Legacy TO support**
 
-Legacy TO authorization code requires any API call to pass a mojolicious access token in its access control headers.
-Untill this code is deprecated, the Auth server and the API GW handle legacy authorization in the following way:
-Upon every sucessful login the auth server performs additional login against legacy TO (mojolicious app) and recieves a legacy TO authentication token.
-This token is passed back on the user's JWT, and used by the API GW to set access control headers upon any consecutive API calls.
+Currently, the Mojo app reqires a valid Mojo token. As long as the Mojo code use a Mojo token for authorization, the Auth server and the API GW handle legacy authorization in the following way
+
+* Upon every sucessful login, the auth server performs additional login against the Mojo app and recieves a Mojo token
+* The Mojo token is added as a claim to the user's JWT
+* Upon successive API calls, the API GW pulls the claim from the JWT and set a "mojolicious" cookie on the request
+
+In addition, if a request contains a "mojolicious" cookie instead of an authentication bearer token, the API GW bypass JWT authentication. 
+This is to support legacy code that access TO API without logging in via the new auth server.
 
 **Before you begin**
 

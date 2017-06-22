@@ -37,12 +37,24 @@ Example authorised routes file:
 No restart is needed to re-read the forwarding rule file and apply; within 60 seconds of a change in the file, it will pick up the new mappings.
 However, authorized routes files are not re-read. Touch the forwarding rule file to trigger an update.
 
+**Legacy TO support**
+
+Currently, the Mojo app reqires a valid Mojo token. As long as the Mojo code use a Mojo token for authorization, the Auth server and the API GW handle legacy authorization in the following way
+
+* Upon every sucessful login, the auth server performs additional login against the Mojo app and recieves a Mojo token
+* The Mojo token is added as a claim to the user's JWT
+* Upon successive API calls, the API GW pulls the claim from the JWT and set a "mojolicious" cookie on the request
+
+In addition, if a request contains a "mojolicious" cookie instead of an authentication bearer token, the API GW bypass JWT authentication. 
+This is to support legacy code that access TO API without logging in via the new auth server.
+
 **Before you begin**
 
 You will need to generate a server certificate for ssl connections against webfront. In the project directory, run
 ~~~~
 openssl req -x509 -sha256 -nodes -days 3650 -newkey rsa:2048 -keyout server.key -out server.crt
 ~~~~
+
 
 **Run the server**
 
@@ -60,3 +72,6 @@ openssl req -x509 -sha256 -nodes -days 3650 -newkey rsa:2048 -keyout server.key 
 
     `curl --insecure -H'Authorization: Bearer <token>' -Lkvs  https://localhost:8080/ds/`
 
+#### Legacy TO support
+
+    1 Since Mojo app requires a valid Mojo token, the auth server performs a legacy Traffic Ops login upon ever 
