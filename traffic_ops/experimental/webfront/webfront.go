@@ -49,9 +49,11 @@ import (
 
 // Config holds the configuration of the server.
 type Config struct {
+	ListenPort   			int    	`json:"listen-port"`
 	RuleFile     			string 	`json:"rule-file"`
 	PollInterval 			int    	`json:"poll-interval"`
-	ListenPort   			int    	`json:"listen-port"`
+	CrtFile					string  `json:"crt-file"`
+	KeyFile					string  `json:"key-file"`
 	InsecureSkipVerify 		bool	`json:"insecure-skip-verify"`
 }
 
@@ -94,9 +96,11 @@ var Logger *log.Logger
 
 func printUsage() {
 	exampleConfig := `{
-	"listen-port":   9000,
+	"listen-port":   8080,
 	"rule-file":     "rules.json",
-	"poll-interval": 60,
+	"poll-interval": 5,
+	"crt-file":      "server.crt",
+	"key-file":      "server.key",
 	"insecure-skip-verify": false
 }`
 	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
@@ -128,11 +132,11 @@ func main() {
 		return
 	}
 
-	if _, err := os.Stat("server.crt"); os.IsNotExist(err) {
-		Logger.Fatal("server.crt file not found")
+	if _, err := os.Stat(config.CrtFile); os.IsNotExist(err) {
+		Logger.Fatalf("%s file not found", config.CrtFile)
 	}
-	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
-		Logger.Fatal("server.key file not found")
+	if _, err := os.Stat(config.KeyFile); os.IsNotExist(err) {
+		Logger.Fatalf("%s file not found", config.KeyFile)
 	}
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = makeTLSConfig(&config)
@@ -142,7 +146,7 @@ func main() {
 	}
 
 	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.crt", "server.key", s))
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), config.CrtFile, config.KeyFile, s))
 }
 
 // NewServer constructs a Server that reads Rules from file with a period 

@@ -40,6 +40,8 @@ type Config struct {
 	DbServer       string `json:"db-server"`
 	DbPort         uint   `json:"db-port"`
 	ListenPort     uint   `json:"listen-port"`
+	CrtFile		   string `json:"crt-file"`
+	KeyFile		   string `json:"key-file"`
 	LegacyLoginURL string `json:"legacy-login-url"`
 }
 
@@ -88,6 +90,8 @@ func printUsage() {
 	"db_server":       "localhost",
 	"db_port":         5432,
 	"listen_port":     9004,
+	"crt-file":        "server.crt",
+	"key-file":        "server.key",
 	"legacy_to_login": "http://localhost:3000/api/1.2/user/login"
 }`
 	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
@@ -127,16 +131,15 @@ func main() {
 	handler, _ := makeHandler(&config)
 	http.HandleFunc("/login", handler)
 	
-	if _, err := os.Stat("server.crt"); os.IsNotExist(err) {
-		Logger.Fatal("server.crt file not found")
+	if _, err := os.Stat(config.CrtFile); os.IsNotExist(err) {
+		Logger.Fatalf("%s file not found", config.CrtFile)
 	}
-
-	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
-		Logger.Fatal("server.key file not found")
+	if _, err := os.Stat(config.KeyFile); os.IsNotExist(err) {
+		Logger.Fatalf("%s file not found", config.KeyFile)
 	}
 
 	Logger.Printf("Starting server on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.crt", "server.key", nil))
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), config.CrtFile, config.KeyFile, nil))
 }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
