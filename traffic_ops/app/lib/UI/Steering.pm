@@ -28,6 +28,7 @@ use JSON;
 use POSIX qw(strftime);
 use Date::Parse;
 
+#Collect and stash info required for the steering index.
 sub index {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
@@ -36,6 +37,7 @@ sub index {
 
 	my @steering = $self->get_target_data($ds_id, $type_ids);
 
+	#get the target delivery service IDs to pass to get_deliveryservices
 	my @targets;
 	foreach my $i ( keys @steering ) {
 		push ( @targets, $steering[$i]->{'target_id'} );
@@ -55,6 +57,7 @@ sub index {
 	);
 }
 
+#get the steering type IDs and names from the type table.
 sub get_types {
 	my $self = shift;
 	my $t_rs = $self->db->resultset('Type')->search( { use_in_table => 'steering_target'} );
@@ -69,6 +72,7 @@ sub get_types {
 	return ($type_names, $type_ids);
 }
 
+#returns the steering target information from a delivery service ID in an array of hashes
 sub get_target_data {
 	my $self = shift;
 	my $ds_id = shift;
@@ -99,20 +103,25 @@ sub get_target_data {
 			else { push (@weight_steering, $t); }
 			$i++;
 		}
+		#sort them by value - weight descending, order ascending
 		@weight_steering = sort { $b->{target_value} <=> $a->{target_value} } @weight_steering;
 		@neg_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @neg_order_steering;
 		@pos_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @pos_order_steering;
+
+		#push everything into an a single array - negative order values first, weights second, positive order last.
 		push (@steering, @neg_order_steering, @weight_steering, @pos_order_steering);
 	}
 	return @steering;
 }
 
+#gets the name of a delivery service from an id
 sub get_ds_name {
 	my $self  = shift;
 	my $ds_id = shift;
 	return $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single();
 }
 
+#returns the CDN ID associated with a delivery service by DS ID.
 sub get_cdn {
 	my $self = shift;
 	my $ds_id = shift;
@@ -120,6 +129,7 @@ sub get_cdn {
 
 }
 
+#returns all delivery services on the cdn that matches the supplied ds id, minus any services already used as targets.
 sub get_deliveryservices {
 	my $self = shift;
 	my $ds_id = shift;
@@ -138,6 +148,7 @@ sub get_deliveryservices {
 	return %ds_data;
 }
 
+#processes updated data.  validates and replaces database with data provided by the UI.
 sub update {
 	my $self = shift;
 	my $ds_id = $self->param('id');
@@ -146,6 +157,8 @@ sub update {
 	my @target_type = $self->param('st.target_type');
 	my @targets;
 	my $steering_obj;
+	
+	#process the parameters and put them into an array of hashes
 	foreach my $i (0 .. $#target_id) {
 		#look for and remove the blank entries - this filters out the deleted entries and the unused new target entry.
 		if ( $target_id[$i] eq '' ) {
@@ -157,6 +170,7 @@ sub update {
 		$steering_obj->{"target_$i"}->{'target_type'} = $target_type[$i];
 		push ( @targets, $steering_obj->{"target_$i"} );
 	}
+	#validate the array, then replace the data in the database with the array data.
 	if ( $self->is_valid(\@targets) ) {
 		#delete current entries
 		my $delete = $self->db->resultset('SteeringTarget')
@@ -182,8 +196,8 @@ sub update {
 				. $self->get_ds_name($ds_id)
 				. "!" );
 	}
+	#if array data is invalid, reload the page with any errors found in validation.  closely matches index section.
 	else {
-		
 		
 		my ($type_names, $type_ids) = $self->get_types();
 	
@@ -211,7 +225,7 @@ sub update {
 	$self->redirect_to("/ds/$ds_id/steering");
 }
 
-
+#validate data by ensuring that provided values are correct for their type, and that all delivery services are unique.
 sub is_valid {
 	my $self  = shift;
 	my @targets = @{$_[0]};
