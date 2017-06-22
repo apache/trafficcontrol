@@ -127,8 +127,8 @@ func main() {
 	handler, _ := makeHandler(&config)
 	http.HandleFunc("/login", handler)
 	
-	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
-		Logger.Fatal("server.pem file not found")
+	if _, err := os.Stat("server.crt"); os.IsNotExist(err) {
+		Logger.Fatal("server.crt file not found")
 	}
 
 	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
@@ -136,7 +136,7 @@ func main() {
 	}
 
 	Logger.Printf("Starting server on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", nil))
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.crt", "server.key", nil))
 }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {

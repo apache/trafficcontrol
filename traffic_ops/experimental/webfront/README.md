@@ -37,18 +37,26 @@ Example authorised routes file:
 No restart is needed to re-read the forwarding rule file and apply; within 60 seconds of a change in the file, it will pick up the new mappings.
 However, authorized routes files are not re-read. Touch the forwarding rule file to trigger an update.
 
-* To run:
+**Before you begin**
+
+You will need to generate a server certificate for ssl connections against webfront. In the project directory, run
+~~~~
+openssl req -x509 -sha256 -nodes -days 3650 -newkey rsa:2048 -keyout server.key -out server.crt
+~~~~
+
+**Run the server**
 
     `go run webfront.go webfront.config my-secret`
 
     `my-secret` is used for jwt signing
 
 
-* To login:
+**Perform a login call (to get a token)**
 
     `curl -X POST --insecure -Lkvs --header "Content-Type:application/json" https://localhost:9004/login -d'{"username":"foo", "password":"bar"}'`
    
-* To use a token:
+**Perform an API call (using the token
+)**
 
     `curl --insecure -H'Authorization: Bearer <token>' -Lkvs  https://localhost:8080/ds/`
 

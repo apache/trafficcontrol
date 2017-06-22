@@ -128,21 +128,21 @@ func main() {
 		return
 	}
 
-	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
-	if err != nil {
-		Logger.Fatal(err)
-	}
-
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = makeTLSConfig(&config)
-	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
-		Logger.Fatal("server.pem file not found")
+	if _, err := os.Stat("server.crt"); os.IsNotExist(err) {
+		Logger.Fatal("server.crt file not found")
 	}
 	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
 		Logger.Fatal("server.key file not found")
 	}
 
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = makeTLSConfig(&config)
+	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
+	if err != nil {
+		Logger.Fatal(err)
+	}
+
 	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", s))
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.crt", "server.key", s))
 }
 
 // NewServer constructs a Server that reads Rules from file with a period 
