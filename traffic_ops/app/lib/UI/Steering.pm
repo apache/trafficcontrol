@@ -19,6 +19,7 @@ package UI::Steering;
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
 use Mojo::Base 'Mojolicious::Controller';
+use Mojo::Parameters;
 use Data::Dumper;
 use UI::DeliveryService;
 use API::Cdn;
@@ -27,183 +28,230 @@ use JSON;
 use POSIX qw(strftime);
 use Date::Parse;
 
+#Collect and stash info required for the steering index.
 sub index {
 	my $self  = shift;
 	my $ds_id = $self->param('id');
 
+	my ($type_names, $type_ids) = $self->get_types();
+
+	my @steering = $self->get_target_data($ds_id, $type_ids);
+
+	#get the target delivery service IDs to pass to get_deliveryservices
+	my @targets;
+	foreach my $i ( keys @steering ) {
+		push ( @targets, $steering[$i]->{'target_id'} );
+	}
+
+	my %ds_data = $self->get_deliveryservices($ds_id, \@targets);
+
 	&navbarpage($self);
 
-	# select * from steering_target where deliveryservice = ds_id;
-	my $steering = { ds_id => $ds_id, ds_name => $self->get_ds_name($ds_id) };
-	my $st_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
-	if ( $st_rs > 0 ) {
-		my %steering_targets;
-		while ( my $row = $st_rs->next ) {
-			$steering_targets{ $row->target } = $row->weight;
-		}
-		my @keys = sort keys %steering_targets;
-		$steering->{'target_id_1'}     = $keys[0];
-		$steering->{'target_id_2'}     = $keys[1];
-		$steering->{'target_name_1'}   = $self->get_ds_name( $keys[0] );
-		$steering->{'target_name_2'}   = $self->get_ds_name( $keys[1] );
-		$steering->{'target_id_1_weight'}   = $self->get_target_weight( $ds_id, $keys[0] );
-		$steering->{'target_id_2_weight'}   = $self->get_target_weight( $ds_id, $keys[1] );
-	}
-	if (!defined($steering->{'target_id_1_weight'})) { $steering->{'target_id_1_weight'} = 0; }
-	if (!defined($steering->{'target_id_2_weight'})) { $steering->{'target_id_2_weight'} = 0; }
-	
 	$self->stash(
-		steering       => $steering,
-		ds_data        => $self->get_deliveryservices(),
+		ds_id          => $ds_id,
+		ds_name        => $self->get_ds_name($ds_id),
+		steering       => \@steering,
+		ds_data        => \%ds_data,
+		types          => $type_names,
 		fbox_layout    => 1
 	);
 }
 
-sub get_target_weight{
+#get the steering type IDs and names from the type table.
+sub get_types {
 	my $self = shift;
-	my $ds_id = shift;
-	my $target_id = shift;
-	my $weight = $self->db->resultset('SteeringTarget')->search( { -and => [target => $target_id, deliveryservice => $ds_id] } )->get_column('weight')->single();
-	return $weight;
+	my $t_rs = $self->db->resultset('Type')->search( { use_in_table => 'steering_target'} );
+	my $type_names;
+	my $type_ids;
+
+	while ( my $row = $t_rs->next ) {
+		$type_names->{$row->id} = $row->name;
+		$type_ids->{$row->name} = $row->id;
+	}
+
+	return ($type_names, $type_ids);
 }
 
+#returns the steering target information from a delivery service ID in an array of hashes
+sub get_target_data {
+	my $self = shift;
+	my $ds_id = shift;
+	my $type_ids = shift;
+	my $steering_obj;
+	my @steering;
+	my @weight_steering;
+	my @pos_order_steering;
+	my @neg_order_steering;
+
+	my $target_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
+
+	if ( $target_rs > 0 ) {
+		my $i = 0;
+		while ( my $row = $target_rs->next ) {
+			my $t = $steering_obj->{"target_$i"};
+			$t->{'target_id'} = $row->target;
+			$t->{'target_name'}   = $self->get_ds_name( $row->target );
+			$t->{'target_value'}   = $row->value;
+			if (!defined($t->{'target_value'})) { $t->{'target_value'} = 0; }
+			$t->{'target_type'}   = $row->type->id;
+			if ( $row->type->name eq "STEERING_ORDER" && $row->value < 0 ) {
+				push (@neg_order_steering, $t);	
+			}
+			elsif ( $row->type->name eq "STEERING_ORDER" && $row->value >= 0 ) {
+				push (@pos_order_steering, $t);
+			}
+			else { push (@weight_steering, $t); }
+			$i++;
+		}
+		#sort them by value - weight descending, order ascending
+		@weight_steering = sort { $b->{target_value} <=> $a->{target_value} } @weight_steering;
+		@neg_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @neg_order_steering;
+		@pos_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @pos_order_steering;
+
+		#push everything into an a single array - negative order values first, weights second, positive order last.
+		push (@steering, @neg_order_steering, @weight_steering, @pos_order_steering);
+	}
+	return @steering;
+}
+
+#gets the name of a delivery service from an id
 sub get_ds_name {
 	my $self  = shift;
 	my $ds_id = shift;
 	return $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('xml_id')->single();
 }
 
-sub get_deliveryservices {
+#returns the CDN ID associated with a delivery service by DS ID.
+sub get_cdn {
 	my $self = shift;
-	my %ds_data;
-	my $rs = $self->db->resultset('Deliveryservice')->search(undef, { prefetch => [ 'type' ] });
-	while ( my $row = $rs->next ) {
-		if ( $row->type->name =~ m/^HTTP/ ) {
-			$ds_data{ $row->id } = $row->xml_id;
-		}
-	}
+	my $ds_id = shift;
+	return $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('cdn_id')->single();
 
-	return \%ds_data;
 }
 
-sub update {
-	my $self  = shift;
-	my $ds_id = $self->param('id');
-	my $tid1  = $self->param('steering.target_id_1');
-	my $tid2  = $self->param('steering.target_id_2');
-	my $tid1_weight = $self->param('steering.target_id_1_weight');
-	my $tid2_weight = $self->param('steering.target_id_2_weight');
-	if ( $tid1_weight eq "" ) { $tid1_weight = 0; }
-	if ( $tid2_weight eq "" ) { $tid2_weight = 0; }
-	if ( $self->is_valid() ) {
-		my $targets;
-		$targets->{$tid1} = $tid1_weight;
-		$targets->{$tid2} = $tid2_weight;
-		
+#returns all delivery services on the cdn that matches the supplied ds id, minus any services already used as targets.
+sub get_deliveryservices {
+	my $self = shift;
+	my $ds_id = shift;
+	my @targets = @{$_[0]};
 
+	my $cdn_id = $self->get_cdn($ds_id);
+	my %ds_data;
+	#search for only the delivery services that match the CDN ID of the supplied delivery service.
+	my $rs = $self->db->resultset('Deliveryservice')->search({ cdn_id => $cdn_id } , { prefetch => [ 'type' ] });
+	while ( my $row = $rs->next ) {
+		my $ds = $row->id;
+		if ( $row->type->name =~ m/^HTTP/ && !grep( /$ds/, @targets ) ) {
+				$ds_data{ $row->id } = $row->xml_id;
+		}
+	}
+	return %ds_data;
+}
+
+#processes updated data.  validates and replaces database with data provided by the UI.
+sub update {
+	my $self = shift;
+	my $ds_id = $self->param('id');
+	my @target_id = $self->param('st.target_id');
+	my @target_value = $self->param('st.target_value');
+	my @target_type = $self->param('st.target_type');
+	my @targets;
+	my $steering_obj;
+	
+	#process the parameters and put them into an array of hashes
+	foreach my $i (0 .. $#target_id) {
+		#look for and remove the blank entries - this filters out the deleted entries and the unused new target entry.
+		if ( $target_id[$i] eq '' ) {
+			next;
+		}
+		if ( $target_value[$i] eq "" ) { $target_value[$i] = 0 };
+		$steering_obj->{"target_$i"}->{'target_id'} = $target_id[$i];
+		$steering_obj->{"target_$i"}->{'target_value'} = $target_value[$i];
+		$steering_obj->{"target_$i"}->{'target_type'} = $target_type[$i];
+		push ( @targets, $steering_obj->{"target_$i"} );
+	}
+	#validate the array, then replace the data in the database with the array data.
+	if ( $self->is_valid(\@targets) ) {
 		#delete current entries
 		my $delete = $self->db->resultset('SteeringTarget')
 			->search( { deliveryservice => $ds_id } );
 		if ( defined($delete) ) {
 			$delete->delete();
 		}
-
+		
 		#add new entries
-		foreach my $target ( keys %$targets ) {
+		foreach my $i ( keys @targets ) {
 			my $insert = $self->db->resultset('SteeringTarget')->create(
 				{   deliveryservice => $ds_id,
-					target          => $target,
-					weight          => $targets->{$target},
+					target          => $targets[$i]->{'target_id'},
+					value           => $targets[$i]->{'target_value'},
+					type            => $targets[$i]->{'target_type'}
 				}
 			);
-
 			$insert->insert();
 		}
-
+		
 		$self->flash(
 			      message => "Successfully saved steering assignments for "
 				. $self->get_ds_name($ds_id)
 				. "!" );
-
-		$self->redirect_to("/ds/$ds_id/steering");
 	}
+	#if array data is invalid, reload the page with any errors found in validation.  closely matches index section.
 	else {
+		
+		my ($type_names, $type_ids) = $self->get_types();
+	
+		my @steering = $self->get_target_data($ds_id, $type_ids);
+
+		my @targets;
+		foreach my $i ( keys @steering ) {
+			push ( @targets, $steering[$i]->{'target_id'} );
+		}
+
+		my %ds_data = $self->get_deliveryservices($ds_id, \@targets);
+		
 		&stash_role($self);
-		my $target_name_1;
-		my $target_name_2;
-		my $target_id_1_weight;
-		my $target_id_2_weight;
-		if ($tid1 ) {
-			$target_name_1 = $self->get_ds_name($tid1);
-			$target_id_1_weight = $self->get_target_weight( $ds_id, $tid1 );
-		}
-		if ($tid2 ) {
-			$target_name_2 = $self->get_ds_name($tid2);
-			$target_id_2_weight = $self->get_target_weight( $ds_id, $tid2 );
-		}
 		$self->stash(
-			steering => {
-				ds_id           => $ds_id,
-				ds_name         => $self->get_ds_name($ds_id),
-				target_id_1     => $tid1,
-				target_id_2     => $tid2,
-				target_name_1   => $target_name_1,
-				target_name_2   => $target_name_2,
-				target_id_1_weight => $target_id_1_weight,
-				target_id_2_weight => $target_id_2_weight
-			},
-			ds_data        => $self->get_deliveryservices(),
+			ds_id          => $ds_id,
+			ds_name        => $self->get_ds_name($ds_id),
+			steering       => \@steering,
+			ds_data        => \%ds_data,
+			types          => $type_names,
 			fbox_layout    => 1
 		);
 		$self->render("steering/index");
 	}
+
+	$self->redirect_to("/ds/$ds_id/steering");
 }
 
+#validate data by ensuring that provided values are correct for their type, and that all delivery services are unique.
 sub is_valid {
 	my $self  = shift;
+	my @targets = @{$_[0]};
+	my %tracker;
 
-	#validate DSs are in the same CDN (same profile...)
-	my $t1 = $self->param('steering.target_id_1');
-	my $t2 = $self->param('steering.target_id_2');
-	my $t1_profile;
-	my $t2_profile;
-	my $tid1_weight = $self->param('steering.target_id_1_weight');
-	my $t1_name = $self->param('steering.target_name_1');
-	my $tid2_weight = $self->param('steering.target_id_2_weight');
-	my $t2_name = $self->param('steering.target_name_2');
-
-	unless ( $t1 eq '' ) {
-		$t1_profile = $self->get_ds_cdn( $self->param('steering.target_id_1') );
-	}
-	unless ( $t2 eq '' ) {
-		$t2_profile = $self->get_ds_cdn( $self->param('steering.target_id_2') );
-	}
-	
-	unless ( $t1 ) {
-		$self->field('steering.target_id_1')->is_equal( "",  "Steering targets cannot be blank!" );
-	}
-	unless ( $t2 ) {
-		$self->field('steering.target_id_2')->is_equal( "",  "Steering targets cannot be blank!" );
-	}
-
-	unless ( $t1_profile eq $t2_profile ) {
-		$self->field('steering.target_id_1')->is_equal( "",  "Target Deliveryservices must be in the same CDN!" );
-	}
-	unless ( $tid1_weight eq int($tid1_weight) && $tid1_weight >= 0 ) {
-		$self->field('steering.target_id_1_weight')->is_equal( "", "Error: \"$tid1_weight\" is not a valid integer of 0 or greater." );
-	}
-	unless ( $tid2_weight eq int($tid2_weight) && $tid2_weight >= 0 ) {
-		$self->field('steering.target_id_2_weight')->is_equal( "", "Error: \"$tid2_weight\" is not a valid integer of 0 or greater." );
+	foreach my $i ( keys @targets ) {
+		my $t = $targets[$i];
+		my $t_name = $self->db->resultset('Type')->search( { id => "$t->{'target_type'}" } )->get_column('name')->single();
+		if ( $t_name eq "STEERING_ORDER" && $t->{'target_value'} ne int($t->{'target_value'})) {
+			$self->flash(message => "STEERING_ORDER values must be integers." );
+			return;
+		}
+		elsif ( $t_name eq "STEERING_WEIGHT" && ( $t->{'target_value'} ne int($t->{'target_value'}) || ($t->{'target_value'} < 0 ) ) )  {
+			$self->flash(message => "STEERING_WEIGHT values must be integers greater than 0." );
+			return;
+		}
+		if (exists($t->{'target_id'})) {
+			$tracker{$t->{'target_id'}}++;
+			if ( $tracker{$t->{'target_id'}} > 1 ) {
+				$self->flash(message => "Target delivery services must be unique." );
+				return;
+			}
+		}
 	}
 
 	return $self->valid;
-}
-
-sub get_ds_cdn {
-	my $self  = shift;
-	my $ds_id = shift;
-	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->single();
-	return $ds->cdn_id;
 }
 
 1;

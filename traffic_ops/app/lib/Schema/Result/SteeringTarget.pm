@@ -34,7 +34,7 @@ __PACKAGE__->table("steering_target");
   data_type: 'bigint'
   is_nullable: 0
 
-=head2 weight
+=head2 value
 
   data_type: 'bigint'
   is_nullable: 0
@@ -46,6 +46,12 @@ __PACKAGE__->table("steering_target");
   is_nullable: 1
   original: {default_value => \"now()"}
 
+=head2 type
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -53,7 +59,7 @@ __PACKAGE__->add_columns(
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "target",
   { data_type => "bigint", is_nullable => 0 },
-  "weight",
+  "value",
   { data_type => "bigint", is_nullable => 0 },
   "last_updated",
   {
@@ -62,6 +68,8 @@ __PACKAGE__->add_columns(
     is_nullable   => 1,
     original      => { default_value => \"now()" },
   },
+  "type",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -110,9 +118,24 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
+=head2 type
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2016-11-15 09:35:47
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gZIXjQohI79d92yjQT6sxg
+Type: belongs_to
+
+Related object: L<Schema::Result::Type>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "type",
+  "Schema::Result::Type",
+  { id => "type" },
+  { is_deferrable => 0, on_delete => "NO ACTION", on_update => "NO ACTION" },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-05-31 20:31:43
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DYSNby1kQgL/sEtaCwOgbw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
