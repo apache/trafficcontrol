@@ -60,6 +60,10 @@ sub new {
         $dbh = $context->db;
     }
 
+    my $ignore_tenancy_value = $dbh->resultset("Parameter")->search( { config_file => 'global', name => 'ignore-tenancy' } )
+        ->get_column('value')->single();
+    my $ignore_tenancy = defined($ignore_tenancy_value) ? $ignore_tenancy_value : 0;
+
     my $self = {
         dbh     => $dbh,
         context => $context, #saving the context - use it only for log please...
@@ -67,6 +71,7 @@ sub new {
 # In order to reduce the number of calls from the DB, the current user tenant is taken in the class creation.
 # the below parameters are held temporarily until the info is taken from the jwt
         current_user_tenant => $current_user_tenant,
+        ignore_tenancy => $ignore_tenancy,
     };
     bless $self, $class;
     return $self;
@@ -339,6 +344,12 @@ sub _is_resource_accessable {
     my $self            = shift;
     my $tenants_data    = shift;
     my $resource_tenant = shift;
+
+    if ($self->{ignore_tenancy}) {
+        #mechanisem disabled
+        return 1;
+    }
+
 
     my $user_tenant = $self->current_user_tenant();
     if ( defined($user_tenant) ) {
