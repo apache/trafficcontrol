@@ -81,16 +81,6 @@ my $count_response_test = sub {
     return $t->success( is( $t->$responses_counter(), $count ) );
 };
 
-#Get the null tenants counters
-ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-        ->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
-
-my $fixture_num_of_tenants = $t->get_ok('/api/1.2/tenants')->status_is(200)->$responses_counter();
-my $fixture_num_of_users = $t->get_ok('/api/1.2/users')->status_is(200)->$responses_counter();
-
-ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-
 #Building up the setup
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_ROOT_USER, p => Test::TestHelper::ADMIN_ROOT_USER_PASSWORD } )->status_is(302)
         ->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
@@ -116,6 +106,14 @@ deactivate_tenant("A3", $tenants_data);
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+#Get the null tenants counters
+ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+        ->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+
+my $fixture_num_of_tenants = $t->get_ok('/api/1.2/tenants')->status_is(200)->$responses_counter();
+my $fixture_num_of_users = $t->get_ok('/api/1.2/users')->status_is(200)->$responses_counter();
+
+ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 
 ########################################################################################
@@ -126,6 +124,7 @@ login_to_tenant_admin ("A1", $tenants_data);
 my $num_of_tenants_can_be_accessed = 3; #A1, A1a, A1b
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
+ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_users);
 #cannot change its tenancy
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
@@ -166,7 +165,8 @@ test_user_resource_write_allow_access("A1", "none", $tenants_data);
 login_to_tenant_admin ("A3", $tenants_data);
 $num_of_tenants_can_be_accessed = 0;
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
-ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
+ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test(0);
+ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(0);
 #cannot change its tenancy
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
