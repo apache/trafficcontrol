@@ -244,7 +244,38 @@ ok $tenant_utils_of_e->is_tenant_resource_accessible($tenants_data_of_e, $tenant
 # itself - full access
 ok $tenant_utils_of_e->is_tenant_resource_accessible($tenants_data_of_e, $tenantE_id) == 0; 
 # uncle - no access
-ok $tenant_utils_of_e->is_tenant_resource_accessible($tenants_data_of_e, $tenantB_id) == 0; 
+ok $tenant_utils_of_e->is_tenant_resource_accessible($tenants_data_of_e, $tenantB_id) == 0;
+
+
+#Test disable capabilities
+ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =>
+        {
+            'name'  => 'ignore-tenancy',
+            'configFile' => 'global',
+            'value'      => '1',
+            'secure'     => '0'
+        }
+    )->status_is(200)
+    , 'Was the disabling paramter created?';
+
+my $tenant_utils_of_d_disabled = UI::TenantUtils->new(undef, $tenantD_id, $schema);
+my $tenants_data_of_d_disabled = $tenant_utils_of_d_disabled->create_tenants_data_from_db();
+#anchestor - now can access
+ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, $root_tenant_id) == 1;
+#undef - all have access
+ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, undef) == 1;
+# parent - now can access
+ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, $tenantA_id) == 1;
+# itself - full access
+ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, $tenantD_id) == 1;
+# uncle - now can access
+ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, $tenantB_id) == 1;
+
+ok $t->delete_ok('/api/1.2/parameters/' . &get_param_id('ignore-tenancy') )->status_is(200)
+        ->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Was the disabling paramter deleted?';
+
+
 
 
 #################
@@ -343,4 +374,16 @@ sub get_tenant_id {
 	my $id = $p->[0]->{id};
 	return $id;
 }
+
+sub get_param_id {
+    my $name = shift;
+    my $q      = "select id from parameter where name = \'$name\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}
+
 
