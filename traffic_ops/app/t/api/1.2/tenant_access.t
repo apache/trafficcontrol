@@ -134,32 +134,23 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
 
 logout_from_tenant_admin();
 #access to himself
-test_user_resource_read_allow_access ("A1", "A1", $tenants_data);
-test_user_resource_write_allow_access("A1", "A1", $tenants_data);
+test_tenants_allow_access ("A1", "A1", $tenants_data);
 #access to child
-test_user_resource_read_allow_access ("A1", "A1a", $tenants_data);
-test_user_resource_write_allow_access("A1", "A1a", $tenants_data);
+test_tenants_allow_access ("A1", "A1a", $tenants_data);
 #access to even if child is inactive
-test_user_resource_read_allow_access ("A1", "A1a", $tenants_data);
-test_user_resource_write_allow_access("A1", "A1a", $tenants_data);
+test_tenants_allow_access ("A1", "A1a", $tenants_data);
 #No access to parent
-test_user_resource_read_block_access ("A1", "A", $tenants_data);
-test_user_resource_write_block_access("A1", "A", $tenants_data);
+test_tenants_block_access ("A1", "A", $tenants_data);
 #No access to brother
-test_user_resource_read_block_access ("A1", "A2", $tenants_data);
-test_user_resource_write_block_access("A1", "A2", $tenants_data);
+test_tenants_block_access ("A1", "A2", $tenants_data);
 #No access to nephew
-test_user_resource_read_block_access ("A1", "A2a", $tenants_data);
-test_user_resource_write_block_access("A1", "A2a", $tenants_data);
+test_tenants_block_access ("A1", "A2a", $tenants_data);
 #No access to uncle
-test_user_resource_read_block_access ("A1", "B", $tenants_data);
-test_user_resource_write_block_access("A1", "B", $tenants_data);
+test_tenants_block_access ("A1", "B", $tenants_data);
 #No access to grandfather
-test_user_resource_read_block_access ("A1", "root", $tenants_data);
-test_user_resource_write_block_access("A1", "root", $tenants_data);
+test_tenants_block_access ("A1", "root", $tenants_data);
 #access to "no-tenant"
-test_user_resource_read_allow_access ("A1", "none", $tenants_data);
-test_user_resource_write_allow_access("A1", "none", $tenants_data);
+test_tenants_allow_access ("A1", "none", $tenants_data);
 
 #####Working as user from inactive tenant "A3"
 login_to_tenant_admin ("A3", $tenants_data);
@@ -175,20 +166,15 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
     , 'Cannot change my tenancy: tenant: A1?';
 logout_from_tenant_admin();
 #no access to anywhere
-test_user_resource_read_block_access ("A3", "A3", $tenants_data);
-test_user_resource_write_block_access("A3", "A3", $tenants_data);
+test_tenants_block_access ("A3", "A3", $tenants_data);
 #child
-test_user_resource_read_block_access ("A3", "A1a", $tenants_data);
-test_user_resource_write_block_access("A3", "A1a", $tenants_data);
+test_tenants_block_access ("A3", "A1a", $tenants_data);
 #to parent
-test_user_resource_read_block_access ("A3", "A", $tenants_data);
-test_user_resource_write_block_access("A3", "A", $tenants_data);
+test_tenants_block_access ("A3", "A", $tenants_data);
 #No access to brother
-test_user_resource_read_block_access ("A3", "A2", $tenants_data);
-test_user_resource_write_block_access("A3", "A2", $tenants_data);
+test_tenants_block_access ("A3", "A2", $tenants_data);
 #no access to "no-tenant"
-test_user_resource_read_block_access ("A3", "none", $tenants_data);
-test_user_resource_write_block_access("A3", "none", $tenants_data);
+test_tenants_block_access ("A3", "none", $tenants_data);
 
 
 
@@ -205,11 +191,9 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
     , 'Cannot change my tenancy: tenant: A1?';
 logout_from_tenant_admin();
 #access to himself
-test_user_resource_read_allow_access ("none", "none", $tenants_data);
-test_user_resource_write_allow_access("none", "none", $tenants_data);
+test_tenants_allow_access ("none", "none", $tenants_data);
 #No access to tenant
-test_user_resource_read_block_access ("none", "A", $tenants_data);
-test_user_resource_write_block_access("none", "A", $tenants_data);
+test_tenants_block_access ("none", "A", $tenants_data);
 
 ########################################################################################
 # All is done - lets cleanup
@@ -323,6 +307,24 @@ sub deactivate_tenant {
     ok $t->put_ok('/api/1.2/tenants/'.$tenants_data->{$name}->{'id'} => {Accept => 'application/json'} => json => $response)
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Success deactivate tenant '.$name.'?';
+}
+
+sub test_tenants_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+
+    test_user_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_user_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+}
+
+sub test_tenants_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+
+    test_user_resource_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_user_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 
 sub login_to_tenant_admin {
