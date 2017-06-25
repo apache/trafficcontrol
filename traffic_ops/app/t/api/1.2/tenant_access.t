@@ -112,6 +112,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 my $fixture_num_of_tenants = $t->get_ok('/api/1.2/tenants')->status_is(200)->$responses_counter();
 my $fixture_num_of_users = $t->get_ok('/api/1.2/users')->status_is(200)->$responses_counter();
+my $fixture_num_of_dses = $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$responses_counter();
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -142,7 +143,7 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         ->json_is( "/alerts/0/text" => "email is required")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Can change my tenancy: tenant: A1?';
-
+ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses);
 logout_from_tenant_admin();
 #access to himself
 test_tenants_allow_access ("A1", "A1", $tenants_data);
@@ -175,6 +176,7 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment.")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Cannot change my tenancy: tenant: A1?';
+ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test(0);
 logout_from_tenant_admin();
 #no access to anywhere
 test_tenants_block_access ("A3", "A3", $tenants_data);
@@ -221,6 +223,8 @@ clear_tenant("A1b", $tenants_data);
 clear_tenant("A1a", $tenants_data);
 clear_tenant("A1", $tenants_data);
 clear_tenant("A", $tenants_data);
+clear_tenant("none", $tenants_data);
+clear_tenant("root", $tenants_data);
 
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -280,7 +284,42 @@ sub prepare_tenant {
 
     my $admin_userid = $schema->resultset('TmUser')->find( { username => $admin_username } )->id;
 
-    add_tenant_record($tenants_data, $name, $tenant_id, $admin_username, $admin_userid);
+    # It creates new delivery services
+    my $ds_name = $name."_ds1";
+    my $ds_xml_id = $name."_ds1";
+    ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+                "xmlId" => $ds_xml_id,
+                "displayName" => $ds_name,
+                "protocol" => "1",
+                "orgServerFqdn" => "http://10.75.168.91",
+                "cdnName" => "cdn1",
+                "tenantId" => $tenant_id,
+                "profileId" => 300,
+                "typeId" => "36",
+                "multiSiteOrigin" => "0",
+                "regionalGeoBlocking" => "1",
+                "active" => "false",
+                "dscp" => 0,
+                "ipv6RoutingEnabled" => "true",
+                "logsEnabled" => "true",
+                "initialDispersion" => 0,
+                "cdnId" => 100,
+                "signed" => "false",
+                "rangeRequestHandling" => 0,
+                "geoLimit" => 0,
+                "geoProvider" => 0,
+                "qstringIgnore" => 0,
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" => $ds_xml_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/displayName" => $ds_name)
+            ->json_is( "/response/0/tenantId" => $tenant_id)
+        , 'Was the DS properly added and reported?';
+
+    my $ds_id = $schema->resultset('Deliveryservice')->find( { xml_id => $ds_xml_id } )->id;
+
+
+    add_tenant_record($tenants_data, $name, $tenant_id, $admin_username, $admin_userid, $ds_id, $ds_xml_id);
 }
 
 sub add_tenant_record {
@@ -290,6 +329,8 @@ sub add_tenant_record {
         'id' => shift,
         'admin_username' => shift,
         'admin_uid' => shift,
+        'ds_id' => shift,
+        'ds_xml_id' => shift,
     };
 }
 
@@ -297,6 +338,12 @@ sub clear_tenant {
     my $name = shift;
     my $tenants_data = shift;
 
+    #deleting the DS
+    ok $t->delete_ok('/api/1.2/deliveryservices/' . $tenants_data->{$name}->{'ds_id'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+    if ($name eq "root" or $name eq "none") {
+        return;
+    }
     #deleting the user - as the user do operations this is not so simple. We move it to the root tenant and the fixture cleanup will do
     my $json = decode_json( $t->get_ok('/api/1.2/users/'.$tenants_data->{$name}->{'admin_uid'})->tx->res->content->asset->slurp );
     my $response    = $json->{response}[0];
