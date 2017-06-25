@@ -464,7 +464,14 @@ sub adeliveryservice {
         }
     );
 
+    my $tenant_utils = UI::TenantUtils->new($self);
+    my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
     while ( my $row = $rs->next ) {
+        if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+            next;
+        }
+
         my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 
         # This will be undefined for 'Steering' delivery services
