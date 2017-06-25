@@ -158,7 +158,10 @@ sub show {
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
-	if ( !&is_privileged($self) ) {
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
 
 		# check to see if deliveryservice is assigned to user, if not return forbidden
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
@@ -172,7 +175,9 @@ sub show {
 		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ] }
 	);
 	while ( my $row = $rs->next ) {
-
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+			return $self->forbidden();
+		}
 		# build the matchlist (the list of ds regexes and their type)
 		my @matchlist  = ();
 		my $ds_regexes = $row->deliveryservice_regexes;
@@ -278,14 +283,20 @@ sub update {
 		return $self->forbidden();
 	}
 
-	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
-	if ( !$is_valid ) {
-		return $self->alert($result);
-	}
-
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
 	if ( !defined($ds) ) {
 		return $self->not_found();
+	}
+
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	my $xml_id = $params->{xmlId};
@@ -297,7 +308,10 @@ sub update {
 	}
 	
 	#setting tenant_id to undef if tenant is not set. 
-	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->forbidden();
+	}
 
 	my $values = {
 		active                 => $params->{active},
@@ -455,6 +469,14 @@ sub create {
 		return $self->forbidden();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	#setting tenant_id to the user id if tenant is not set.
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenant_utils->current_user_tenant();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->forbidden();
+	}
+
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
 
 	if ( !$is_valid ) {
@@ -468,10 +490,6 @@ sub create {
 		return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
 	}
 	
-	#setting tenant_id to the user id if tenant is not set. 
-	my $tenantUtils = Utils::Tenant->new($self);
-	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenantUtils->current_user_tenant();
-
 	my $values = {
 		active                 => $params->{active},
 		cacheurl               => $params->{cacheurl},
@@ -642,6 +660,14 @@ sub delete {
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
 	if ( !defined($ds) ) {
 		return $self->not_found();
+	}
+
+	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	#setting tenant_id to the user id if tenant is not set.
+	my $tenant_id = $ds->tenant_id;
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->forbidden();
 	}
 
 	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
