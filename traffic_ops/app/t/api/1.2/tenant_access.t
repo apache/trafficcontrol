@@ -374,6 +374,8 @@ sub test_tenants_allow_access {
 
     test_user_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
     test_user_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 
 sub test_tenants_block_access {
@@ -383,6 +385,8 @@ sub test_tenants_block_access {
 
     test_user_resource_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
     test_user_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 
 sub login_to_tenant_admin {
@@ -625,3 +629,262 @@ sub test_user_resource_write_block_access {
     ok $schema->resultset('TmUser')->find( { id => $new_userid2 } )->delete();
 }
 
+sub test_ds_resource_read_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'})
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" =>  $tenants_data->{$resource_tenant}->{'ds_xml_id'} )
+            ->json_is( "/response/0/tenantId" =>  $tenants_data->{$resource_tenant}->{'id'})
+        , 'Success read ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant_admin();
+}
+
+sub test_ds_resource_read_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'})
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , '403 for read ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant_admin();
+}
+
+sub test_ds_resource_write_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #adding a ds
+    my $new_ds_xml_id="test_ds";
+    ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+                "xmlId" => $new_ds_xml_id,
+                "displayName" => $new_ds_xml_id,
+                "protocol" => "1",
+                "orgServerFqdn" => "http://10.75.168.91",
+                "cdnName" => "cdn1",
+                "tenantId" => $tenants_data->{$resource_tenant}->{'id'},
+                "profileId" => 300,
+                "typeId" => "36",
+                "multiSiteOrigin" => "0",
+                "regionalGeoBlocking" => "1",
+                "active" => "false",
+                "dscp" => 0,
+                "ipv6RoutingEnabled" => "true",
+                "logsEnabled" => "true",
+                "initialDispersion" => 0,
+                "cdnId" => 100,
+                "signed" => "false",
+                "rangeRequestHandling" => 0,
+                "geoLimit" => 0,
+                "geoProvider" => 0,
+                "qstringIgnore" => 0,
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" => $new_ds_xml_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/displayName" => $new_ds_xml_id)
+            ->json_is( "/response/0/tenantId" => $tenants_data->{$resource_tenant}->{'id'})
+        , 'Success add ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+
+    my $new_ds_record = $schema->resultset('Deliveryservice')->find( { xml_id => $new_ds_xml_id } );
+    $t->success(defined($new_ds_record));
+    if (!defined($new_ds_record)){
+        return;
+    }
+    my $new_ds_id = $new_ds_record->id;
+
+    #get the data
+    my $json = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$new_ds_id)->tx->res->content->asset->slurp );
+    my $response2edit = $json->{response}[0];
+    $t->success(is($new_ds_xml_id,                            $response2edit->{"xmlId"}));
+    $t->success(is($tenants_data->{$resource_tenant}->{'id'}, $response2edit->{"tenantId"}));
+
+    #change the "orgServerFqdn"
+    $response2edit->{"orgServerFqdn"} = "http://10.75.168.92";
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
+            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
+            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
+        , 'Success change ds orgServerFqdn: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #change the tenant to my tenant
+    $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
+            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
+            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
+        , 'Success change ds tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #change the tenant back to his tenant
+    $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
+            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
+            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
+        , 'Success change ds tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #delete the ds for test and cleanup
+    ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success delete ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant_admin();
+}
+
+sub test_ds_resource_write_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #adding a ds
+    my $new_ds_xml_id="test_ds";
+    ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+                "xmlId" => $new_ds_xml_id,
+                "displayName" => $new_ds_xml_id,
+                "protocol" => "1",
+                "orgServerFqdn" => "http://10.75.168.91",
+                "cdnName" => "cdn1",
+                "tenantId" => $tenants_data->{$resource_tenant}->{'id'},
+                "profileId" => 300,
+                "typeId" => "36",
+                "multiSiteOrigin" => "0",
+                "regionalGeoBlocking" => "1",
+                "active" => "false",
+                "dscp" => 0,
+                "ipv6RoutingEnabled" => "true",
+                "logsEnabled" => "true",
+                "initialDispersion" => 0,
+                "cdnId" => 100,
+                "signed" => "false",
+                "rangeRequestHandling" => 0,
+                "geoLimit" => 0,
+                "geoProvider" => 0,
+                "qstringIgnore" => 0,
+            })
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot add ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+
+    my $new_ds_record = $schema->resultset('Deliveryservice')->find( { xml_id => $new_ds_xml_id } );
+    $t->success(!defined($new_ds_record));
+    if (defined($new_ds_record)){
+        return;
+    }
+
+    #get the data for trying to update the user
+    logout_from_tenant_admin();
+    login_to_tenant_admin("root", $tenants_data);
+    my $json = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'})->tx->res->content->asset->slurp );
+    my $orig_response = $json->{response}[0];
+    my $response2edit = { %$orig_response };
+    $t->success(is($tenants_data->{$resource_tenant}->{'ds_xml_id'}, $response2edit->{"xmlId"}));
+    $t->success(is($tenants_data->{$resource_tenant}->{'id'},        $response2edit->{"tenantId"}));
+    my $new_ds_id = $tenants_data->{$resource_tenant}->{'ds_id'};
+    logout_from_tenant_admin();
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #change the "orgServerFqdn"
+    $response2edit->{"orgServerFqdn"} = "http://10.75.168.92";
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot change ds orgServerFqdn: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    $response2edit = { %$orig_response };
+
+    #change the tenant to my tenant
+    $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot change ds tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    $response2edit = { %$orig_response };
+
+    #verify no change
+    logout_from_tenant_admin();
+    login_to_tenant_admin("root", $tenants_data);
+    my $json1 = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$new_ds_id)->tx->res->content->asset->slurp );
+    my $new_response = $json1->{response}[0];
+    $t->success(is($orig_response->{"xmlId"}, $new_response->{"xmlId"}));
+    $t->success(is($orig_response->{"tenantId"}, $new_response->{"tenantId"}));
+    $t->success(is($orig_response->{"orgServerFqdn"},    $new_response->{"orgServerFqdn"}));
+    logout_from_tenant_admin();
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #create a ds with my tenancy and change his tenancy to the tested resource tenant
+    #adding a ds
+    logout_from_tenant_admin();
+    login_to_tenant_admin("root", $tenants_data);
+    my $new_ds_xml_id2="test_ds2";
+    ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+                "xmlId" => $new_ds_xml_id2,
+                "displayName" => $new_ds_xml_id,
+                "protocol" => "1",
+                "orgServerFqdn" => "http://10.75.168.91",
+                "cdnName" => "cdn1",
+                "tenantId" => $tenants_data->{$resource_tenant}->{'id'},
+                "profileId" => 300,
+                "typeId" => "36",
+                "multiSiteOrigin" => "0",
+                "regionalGeoBlocking" => "1",
+                "active" => "false",
+                "dscp" => 0,
+                "ipv6RoutingEnabled" => "true",
+                "logsEnabled" => "true",
+                "initialDispersion" => 0,
+                "cdnId" => 100,
+                "signed" => "false",
+                "rangeRequestHandling" => 0,
+                "geoLimit" => 0,
+                "geoProvider" => 0,
+                "qstringIgnore" => 0,
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" =>  $new_ds_xml_id2 )
+            ->json_is( "/response/0/tenantId" =>  $tenants_data->{$resource_tenant}->{'id'})
+        , 'Success add ds: login tenant:'.$login_tenant.'?';
+
+    #get its data
+    my $new_ds_record2 = $schema->resultset('Deliveryservice')->find( { xml_id => $new_ds_xml_id2 } );
+    $t->success(defined($new_ds_record2));
+    if (!defined($new_ds_record2)){
+        return;
+    }
+    my $new_ds_id2 = $new_ds_record2->id;
+    my $json2 = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$new_ds_id2)->tx->res->content->asset->slurp );
+    my $response2edit2    = $json2->{response}[0];
+    $t->success(is($new_ds_xml_id2,                           $response2edit2->{"xmlId"}));
+    $t->success(is($tenants_data->{$resource_tenant}->{'id'}, $response2edit2->{"tenantId"}));
+    logout_from_tenant_admin();
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #changing only its tenancy
+    $response2edit2->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot change ds tenant to the target resource tenant: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot delete ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant_admin();
+
+    #deleting the ds for cleanup - no API for that yet
+    logout_from_tenant_admin();
+    login_to_tenant_admin("root", $tenants_data);
+    ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Deleted the added tenant:'. $login_tenant.' resource tenant: '.$resource_tenant.'?';
+    logout_from_tenant_admin();
+}
