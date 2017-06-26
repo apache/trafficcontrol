@@ -61,7 +61,7 @@ sub index {
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search(
 		\%criteria,
-		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ], order_by => 'me.' . $orderby }
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ], order_by => 'me.' . $orderby }
 	);
 
 	while ( my $row = $rs_data->next ) {
@@ -133,7 +133,8 @@ sub index {
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
-				"tenantId"		   => $row->tenant_id,
+				"tenantId"		       => $row->tenant_id,
+				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
 				"type"                 => $row->type->name,
@@ -162,7 +163,7 @@ sub show {
 
 	my $rs = $self->db->resultset("Deliveryservice")->search(
 		{ 'me.id' => $id },
-		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ] }
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ] }
 	);
 	while ( my $row = $rs->next ) {
 
@@ -250,6 +251,7 @@ sub show {
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"             => $row->tenant_id,
+				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
 				"type"                 => $row->type->name,
@@ -662,7 +664,7 @@ sub get_deliveryservices_by_serverId {
 	my $server_ds_ids = $self->db->resultset('DeliveryserviceServer')->search( { server => $server_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ] } );
+		->search( { 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
 
 	my @data;
 	if ( defined($deliveryservices) ) {
@@ -717,6 +719,7 @@ sub get_deliveryservices_by_serverId {
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
+					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 					"trRequestHeaders"     => $row->tr_request_headers,
 					"trResponseHeaders"    => $row->tr_response_headers,
 					"type"                 => $row->type->name,
@@ -737,7 +740,7 @@ sub get_deliveryservices_by_userId {
 	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ] } );
+		->search( { 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
 
 	my @data;
 	if ( defined($deliveryservices) ) {
@@ -792,6 +795,7 @@ sub get_deliveryservices_by_userId {
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
+					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 					"trRequestHeaders"     => $row->tr_request_headers,
 					"trResponseHeaders"    => $row->tr_response_headers,
 					"type"                 => $row->type->name,

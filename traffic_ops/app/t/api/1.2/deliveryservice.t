@@ -90,6 +90,7 @@ ok $t->get_ok("/api/1.2/deliveryservices/list?logsEnabled=true")->status_is(200)
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "test-ds1-root" )
 		->json_is( "/response/1/tenantId", 10**9 )
+		->json_is( "/response/1/tenant", "root" )
 		->json_is( "/response/2/xmlId", "test-ds4" );
 
 # It creates new delivery services

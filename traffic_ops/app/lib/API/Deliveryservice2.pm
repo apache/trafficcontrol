@@ -130,7 +130,8 @@ sub delivery_services {
 					"remapText"                => $row->remap_text,
 					"signed"                   => \$row->signed,
 					"sslKeyVersion"            => $row->ssl_key_version,
-					"tenantId"		   => $row->tenant_id,
+					"tenantId"		           => $row->tenant_id,
+					"tenant"                   => defined( $row->tenant ) ? $row->tenant->name : undef,
 					"trRequestHeaders"         => $row->tr_request_headers,
 					"trResponseHeaders"        => $row->tr_response_headers,
 					"type"                     => $row->type->name,
@@ -151,7 +152,7 @@ sub get_delivery_services_by_user {
 	my $tm_user_id;
 	my $rs;
 	if ( &is_privileged($self) ) {
-		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'deliveryservice_regexes', 'tenant' ], order_by => 'xml_id' } );
 	}
 	else {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
@@ -159,7 +160,7 @@ sub get_delivery_services_by_user {
 
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user_id } )->get_column('deliveryservice')->all();
 		$rs = $self->db->resultset('Deliveryservice')
-			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes', 'tenant' ], order_by => 'xml_id' } );
 	}
 
 	return ( $rs, $tm_user_id );
@@ -186,7 +187,7 @@ sub get_delivery_service_params {
 			$condition = ( { 'me.logs_enabled' => $logs_enabled } );
 		}
 		$rs =
-			$self->db->resultset('Deliveryservice')->search( $condition, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+			$self->db->resultset('Deliveryservice')->search( $condition, { prefetch => [ 'cdn', 'deliveryservice_regexes', 'tenant' ], order_by => 'xml_id' } );
 	}
 	elsif ( $self->is_delivery_service_assigned($id) ) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
@@ -197,7 +198,7 @@ sub get_delivery_service_params {
 			->all();
 		$rs =
 			$self->db->resultset('Deliveryservice')
-			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes' ], order_by => 'xml_id' } );
+			->search( { 'me.id' => { -in => \@ds_ids } }, { prefetch => [ 'cdn', 'deliveryservice_regexes', 'tenant' ], order_by => 'xml_id' } );
 	}
 	elsif ( !$self->is_delivery_service_assigned($id) ) {
 		$forbidden = "true";
