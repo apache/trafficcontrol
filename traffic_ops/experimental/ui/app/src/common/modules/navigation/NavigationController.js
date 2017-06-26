@@ -17,7 +17,11 @@
  * under the License.
  */
 
-var NavigationController = function($scope, $log, $state, $location, $timeout, $uibModal, authService, trafficOpsService, userModel) {
+var NavigationController = function($scope, $log, $state, $location, $window, $timeout, $uibModal, authService, trafficOpsService, propertiesModel, userModel) {
+
+    $scope.appName = propertiesModel.properties.name;
+
+    $scope.customMenuItems = propertiesModel.properties.customMenu.items;
 
     $scope.userLoaded = userModel.loaded;
 
@@ -60,6 +64,17 @@ var NavigationController = function($scope, $log, $state, $location, $timeout, $
                     }
                 });
             });
+    };
+
+    $scope.openCustomItem = function(url, embed) {
+        if (embed) {
+            $location.url('/custom').search({ url: encodeURIComponent(url) });
+        } else {
+            $window.open(
+                url,
+                '_blank'
+            );
+        }
     };
 
     var explodeMenu = function() {
@@ -133,5 +148,5 @@ var NavigationController = function($scope, $log, $state, $location, $timeout, $
 
 };
 
-NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$timeout', '$uibModal', 'authService', 'trafficOpsService', 'userModel'];
+NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$window', '$timeout', '$uibModal', 'authService', 'trafficOpsService', 'propertiesModel', 'userModel'];
 module.exports = NavigationController;

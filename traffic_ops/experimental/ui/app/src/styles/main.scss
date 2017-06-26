@@ -59,11 +59,16 @@ $fa-font-path: "../assets/fonts";
 @import "../modules/private/configure/deliveryServices/deliveryServices";
 @import "../modules/private/configure/servers/servers";
 
+// custom
+@import "../modules/private/custom/custom";
+
 // monitor
 @import "../modules/private/monitor/monitor";
 
-// dashboards
+// dashboard
 @import "../modules/private/monitor/dashboard/dashboard";
+
+// map
 @import "../modules/private/monitor/map/map";
 
 [ng-click] {
