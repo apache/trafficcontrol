@@ -114,6 +114,8 @@ my $fixture_num_of_tenants = $t->get_ok('/api/1.2/tenants')->status_is(200)->$re
 my $fixture_num_of_users = $t->get_ok('/api/1.2/users')->status_is(200)->$responses_counter();
 my $fixture_num_of_dses = $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$responses_counter();
 my $fixture_num_of_dses_server_mapping = $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$responses_counter();
+my $fixture_num_of_ds_regexes = $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$responses_counter();
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 
@@ -128,6 +130,8 @@ ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_
 ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(2*$num_of_tenants_can_be_accessed+$fixture_num_of_users);
 ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses);
 ok $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses_server_mapping);
+ok $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_ds_regexes);
+
 #cannot change its tenancy
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A"}->{'id'},
@@ -180,6 +184,8 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Cannot change my tenancy: tenant: A1?';
 ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test(0);
+ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test(0);
+ok $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$count_response_test(0);
 logout_from_tenant();
 #no access to anywhere
 test_tenants_block_access ("A3", "A3", $tenants_data);
@@ -342,6 +348,24 @@ sub prepare_tenant {
         , 'Was the DS properly added and reported?';
 
     my $ds_id = $schema->resultset('Deliveryservice')->find( { xml_id => $ds_xml_id } )->id;
+    my $ds_regex_pattern = '.*\.'.$ds_xml_id.'_added\..*';
+
+    ok $t->post_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes' => {Accept => 'application/json'} => json => {
+                "pattern" => $ds_regex_pattern,
+                "type" => 19,
+                "setNumber" => 2,
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/pattern" => $ds_regex_pattern )
+            ->json_is( "/response/type" => 19 )
+            ->json_is( "/response/typeName" => "HOST_REGEXP" )
+            ->json_is( "/response/setNumber" => 2 )
+            ->json_is( "/alerts/0/level" => "success" )
+            ->json_is( "/alerts/0/text" => "Delivery service regex creation was successful." )
+        , 'Is the delivery service regex created?';
+
+    my $ds_regex_id = $schema->resultset('Regex')->find( { pattern => $ds_regex_pattern } )->id;
+
 
     # assign one ds to user with id=200
     ok $t->post_ok('/api/1.2/deliveryservice_user' => {Accept => 'application/json'} => json => {
@@ -406,6 +430,7 @@ sub prepare_tenant {
         $admin_username, $admin_userid,
         $portal_username, $portal_userid,
         $ds_id, $ds_xml_id,
+        $ds_regex_id, $ds_regex_pattern,
         $cg_to_use_id, $cg_to_use_name,
         $server_id_to_use, $server_name_to_use);
 }
@@ -421,6 +446,8 @@ sub add_tenant_record {
         'portal_uid' => shift,
         'ds_id' => shift,
         'ds_xml_id' => shift,
+        'ds_regex_id' => shift,
+        'ds_regex_pattern' => shift,
         'cg_id_to_use' => shift,
         'cg_name_to_use' => shift,
         'server_id_to_use' => shift,
@@ -437,6 +464,8 @@ sub clear_tenant {
     ok $t->delete_ok('/api/1.2/servers/' . $tenants_data->{$name}->{'server_id_to_use'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
     ok $t->delete_ok('/api/1.2/cachegroups/' . $tenants_data->{$name}->{'cg_id_to_use'} )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , "Deleting CG";
+    #deleting the DS regex
+    ok $t->delete_ok('/api/1.2/deliveryservices/'. $tenants_data->{$name}->{'ds_id'}.'/regexes/'. $tenants_data->{$name}->{'ds_regex_id'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
     #deleting the DS
     ok $t->delete_ok('/api/1.2/deliveryservice_user/'.$tenants_data->{$name}->{'ds_id'}.'/'.$tenants_data->{$name}->{'portal_uid'} => {Accept => 'application/json'})
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -489,6 +518,8 @@ sub test_tenants_allow_access {
     test_ds_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_server_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_server_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_regex_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_regex_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 sub test_tenants_block_access {
     my $login_tenant = shift;
@@ -501,6 +532,8 @@ sub test_tenants_block_access {
     test_ds_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_server_resource_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_server_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_regex_resource_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_regex_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 
 sub login_to_tenant_admin {
@@ -1043,7 +1076,6 @@ sub test_ds_server_resource_read_allow_access {
     my $tenants_data = shift;
     login_to_tenant_portal($login_tenant, $tenants_data);
 
-
     ok $t->get_ok('/api/1.2/servers/'.$tenants_data->{$resource_tenant}->{'server_id_to_use'}.'/deliveryservices')->status_is(200)->$count_response_test(1);
 
     my $ds_id = $tenants_data->{$resource_tenant}->{'ds_id'};
@@ -1076,7 +1108,6 @@ sub test_ds_server_resource_read_allow_access {
             ->json_is( "/response/0/deliveryservices/1" =>  undef)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Success index serverss\'s: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-
     logout_from_tenant();
 }
 
@@ -1107,7 +1138,6 @@ sub test_ds_server_resource_read_block_access {
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/0/deliveryservices/0" =>  undef)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'empty list when index serverss\'s: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
-
 
     logout_from_tenant();
 }
@@ -1199,6 +1229,151 @@ sub test_ds_server_resource_write_block_access {
                 "servers" => [ $server_id ]})
             ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Cannot the delivery services assigned to the server (DS/Server API)?:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+
+}
+
+
+sub test_ds_regex_resource_read_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_portal($login_tenant, $tenants_data);
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}."/regexes")
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/1/pattern" =>  $tenants_data->{$resource_tenant}->{'ds_regex_pattern'} )
+        , 'Success index ds regexes: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}."/regexes/".$tenants_data->{$resource_tenant}->{'ds_regex_id'})
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/pattern" =>  $tenants_data->{$resource_tenant}->{'ds_regex_pattern'} )
+        , 'Success read ds regex: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+}
+
+sub test_ds_regex_resource_read_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_portal($login_tenant, $tenants_data);
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}."/regexes")
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot index ds regexes: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}."/regexes/".$tenants_data->{$resource_tenant}->{'ds_regex_id'})
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot read ds regex: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+}
+
+sub test_ds_regex_resource_write_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #adding a ds-regex
+    my $ds_id = $tenants_data->{$resource_tenant}->{'ds_id'};
+    my $new_ds_regex_pattern='.*\.test_ds_regex\..*';
+    ok $t->post_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes' => {Accept => 'application/json'} => json => {
+                "pattern" => $new_ds_regex_pattern,
+                "type" => 19,
+                "setNumber" => 3,
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/pattern" => $new_ds_regex_pattern )
+        , 'Success add ds regex: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    my $new_ds_regex_record = $schema->resultset('Regex')->find( { pattern => $new_ds_regex_pattern } );
+
+    $t->success(defined($new_ds_regex_record));
+    if (!defined($new_ds_regex_record)){
+        return;
+    }
+    my $new_ds_regex_id = $new_ds_regex_record->id;
+
+    #get the data
+    my $json = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$new_ds_regex_id)->tx->res->content->asset->slurp );
+    my $response2edit = $json->{response}[0];
+    $t->success(is($new_ds_regex_pattern,                     $response2edit->{"pattern"}));
+
+    #change the "setNumber"
+    $response2edit->{"setNumber"} = "4";
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$new_ds_regex_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/pattern" =>  $response2edit->{"pattern"})
+            ->json_is( "/response/setNumber" =>  $response2edit->{"setNumber"} )
+        , 'Success change ds regex setNumber: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #delete the ds regex for test and cleanup
+    ok $t->delete_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$new_ds_regex_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success delete ds regex: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+}
+
+sub test_ds_regex_resource_write_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+
+    login_to_tenant_admin($login_tenant, $tenants_data);
+    #adding a ds-regex
+
+    my $ds_id = $tenants_data->{$resource_tenant}->{'ds_id'};
+    my $new_ds_regex_pattern="test_ds_regex";
+    ok $t->post_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes' => {Accept => 'application/json'} => json => {
+                "pattern" => $new_ds_regex_pattern,
+                "type" => 19,
+                "setNumber" => 3,
+            })
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot add ds-regex: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    my $new_ds_regex_record = $schema->resultset('Regex')->find( { pattern => $new_ds_regex_pattern } );
+    $t->success(!defined($new_ds_regex_record));
+    if (defined($new_ds_regex_record)){
+        return;
+    }
+
+    #get the data for trying to update the regex
+    logout_from_tenant();
+    login_to_tenant_admin("root", $tenants_data);
+    my $json = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$tenants_data->{$resource_tenant}->{'ds_regex_id'})->tx->res->content->asset->slurp );
+    my $orig_response = $json->{response}[0];
+    my $response2edit = { %$orig_response };
+    $t->success(is($tenants_data->{$resource_tenant}->{'ds_regex_pattern'}, $response2edit->{"pattern"}));
+    my $new_ds_regex_id = $tenants_data->{$resource_tenant}->{'ds_regex_id'};
+    logout_from_tenant();
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    #change the "setNumber"
+    $response2edit->{"setNumber"} = "4";
+    ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$new_ds_regex_id => {Accept => 'application/json'} => json => $response2edit)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot change ds setNumber: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    $response2edit = { %$orig_response };
+
+
+    #verify no change
+    logout_from_tenant();
+    login_to_tenant_admin("root", $tenants_data);
+    my $json1 = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$new_ds_regex_id)->tx->res->content->asset->slurp );
+    my $new_response = $json1->{response}[0];
+    $t->success(is($orig_response->{"pattern"}, $new_response->{"pattern"}));
+    $t->success(is($orig_response->{"setNumber"}, $new_response->{"setNumber"}));
+    logout_from_tenant();
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    ok $t->delete_ok('/api/1.2/deliveryservices/'.$ds_id.'/regexes/'.$new_ds_regex_id => {Accept => 'application/json'})
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot delete ds-regex: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant();
 
