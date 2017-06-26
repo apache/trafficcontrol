@@ -278,34 +278,38 @@ func makeHandler(config *Config) (func(http.ResponseWriter, *http.Request), erro
 				rolesIds = append(rolesIds, elem.RoleId)
 			}
 
-			// Get user's capabilities according to the user's roles
-			sql, args, err := sqlx.In("SELECT cap_name FROM role_capability WHERE role_id IN (?)", rolesIds)
-			if err != nil {
-				Logger.Printf("DB error: %s", err.Error())
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-
-			// Replace the "?" bindvar syntax with DB specific syntax ($1, $2, ... for PostgreSQL)
-			sql = db.Rebind(sql)
-
-			stmt1, err := db.Preparex(sql)
-			if err != nil {
-				Logger.Printf("DB error: %s", err.Error())
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-
-			err = stmt1.Select(&capList, args...)
-			if err != nil {
-				Logger.Printf("DB error: %s", err.Error())
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-
 			capabilities := []string{}
-			for _, elem := range capList {
-				capabilities = append(capabilities, elem.CapName)
+
+			if len(rolesIds) > 0 {
+
+				// Get user's capabilities according to the user's roles
+				sql, args, err := sqlx.In("SELECT cap_name FROM role_capability WHERE role_id IN (?)", rolesIds)
+				if err != nil {
+					Logger.Printf("DB error: %s", err.Error())
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				// Replace the "?" bindvar syntax with DB specific syntax ($1, $2, ... for PostgreSQL)
+				sql = db.Rebind(sql)
+
+				stmt1, err := db.Preparex(sql)
+				if err != nil {
+					Logger.Printf("DB error: %s", err.Error())
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				err = stmt1.Select(&capList, args...)
+				if err != nil {
+					Logger.Printf("DB error: %s", err.Error())
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				for _, elem := range capList {
+					capabilities = append(capabilities, elem.CapName)
+				}
 			}
 
 			Logger.Printf("User %s authenticated. Role Ids %v. Capabilities %v", login.Username, rolesIds, capabilities)
