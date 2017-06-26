@@ -42,6 +42,7 @@ sub delete {
         #no access to resource tenant
         return $self->forbidden();
     }
+    #not checking DS tenancy on deletion - we manage the user here - we remove permissions to touch a DS
 
     my $ds_user = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $user_id }, { prefetch => [ 'deliveryservice', 'tm_user' ] } );
     if ( $ds_user->count == 0 ) {
