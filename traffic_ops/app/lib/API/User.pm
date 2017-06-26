@@ -184,6 +184,16 @@ sub update {
 		#no access to target tenancy
 		return $self->forbidden();
 	}
+    if (defined ($user->tenant_id) and $user->tenant_id != $tenant_id){
+        #not allowing a tenant to be changed once not "none".
+        if (!defined($tenant_id) and $tenant_utils->is_root_tenant($tenants_data, $tenant_utils->current_user_tenant())) {
+            #however, as currently user deletion is not supported, a "root" tenant can
+            #move a user to undef tenant.
+        }
+        else{
+            return $self->alert("User tenant cannot be changed.");
+        }
+    }
 
 	my ( $is_valid, $result ) = $self->is_valid( $params, $user_id );
 
