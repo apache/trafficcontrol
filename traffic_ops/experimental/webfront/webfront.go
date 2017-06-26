@@ -297,15 +297,24 @@ func parseRoutes(file string) ([]*Route, error) {
 // makeHandler constructs the appropriate Handler for the given FwdRule.
 func makeHandler(r *FwdRule) (http.Handler, error) {
 
-	if h := r.Forward; h == "" {
+	host := r.Forward
+	pathPrefix := "/"
+
+	if i := strings.Index(r.Forward, "/"); i >= 0 {
+		host = r.Forward[:i]
+		pathPrefix = r.Forward[i:]
+	}
+
+	if host == "" {
 		return nil, fmt.Errorf("Not a forward rule")
 	}
 
 	return &httputil.ReverseProxy {
 		Director: func(req *http.Request) {
 			req.URL.Scheme = r.Scheme
-			req.URL.Host = r.Forward
-			// req.URL.Path = "/boo1" // TODO JvD - regex to change path here
+			req.URL.Host = host
+			req.URL.Path = pathPrefix + strings.TrimPrefix(req.URL.Path, r.Path)
+			Logger.Printf("Proxy: HOST: %s PATH: %s", req.URL.Host, req.URL.Path)
 		},
 	}, nil
 }
@@ -454,6 +463,8 @@ func (s *Server) matchRule(req *http.Request) *FwdRule {
 func (r *FwdRule) matchRoute(req *http.Request) *Route {
 
 	// TODO(amiry) - Naive implementation
+
+	Logger.Printf("MATCH ROUTE: PATH %s", req.URL.Path)
 
 	// h := req.Host
 	p := req.URL.Path
