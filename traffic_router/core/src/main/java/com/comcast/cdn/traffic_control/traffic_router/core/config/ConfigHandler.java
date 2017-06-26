@@ -193,13 +193,24 @@ public class ConfigHandler {
 				parseLocationConfig(jo.getJSONObject("edgeLocations"), cacheRegister);
 				parseCacheConfig(jo.getJSONObject("contentServers"), cacheRegister);
 				parseMonitorConfig(jo.getJSONObject("monitors"));
-				NetworkNode.getInstance().clearCacheLocations();
+
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
 				steeringWatcher.setCacheRegister(cacheRegister);
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.optJSONArray("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
+
+				/*
+				 * NetworkNode uses lazy loading to associate CacheLocations with NetworkNodes at request time in TrafficRouter.
+				 * Therefore this must be done last, as any thread that holds a reference to the CacheRegister might contain a reference
+				 * to a Cache that no longer exists. In that case, the old CacheLocation and List<Cache> will be set on a
+				 * given CacheLocation within a NetworkNode, leading to an OFFLINE cache to be served, or an ONLINE cache to
+				 * never have traffic routed to it, as the old List<Cache> does not contain the Cache that was moved to ONLINE.
+				 * NetworkNode is a singleton and is managed asynchronously. As long as we swap out the CacheRegister first,
+				 * then clear cache locations, the lazy loading should work as designed. See issue TC-401 for details.
+				 */
+				NetworkNode.getInstance().clearCacheLocations();
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				isProcessing.set(false);

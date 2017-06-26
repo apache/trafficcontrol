@@ -614,6 +614,7 @@ public class TrafficRouter {
 		// find CacheLocation
 		cacheLocation = getCacheRegister().getCacheLocationById(networkNode.getLoc());
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
+			// lazy loading in case a CacheLocation has not yet been associated with this NetworkNode
 			networkNode.setCacheLocation(cacheLocation);
 			return cacheLocation;
 		}
