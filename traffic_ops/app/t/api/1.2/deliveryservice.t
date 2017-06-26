@@ -73,7 +73,8 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 		->json_is( "/response/0/xmlId", "test-ds1" )
 		->json_is( "/response/0/logsEnabled", 1 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-		->json_is( "/response/1/xmlId", "test-ds1-root" );
+        ->json_is( "/response/1/xmlId", defined($tenant_id) ? "test-ds1-root" : "test-ds4" )
+        ->json_is( "/response/1/tenantId", defined($tenant_id) ? $tenant_id : undef );
 
 ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 			"active" => \0,
@@ -95,11 +96,12 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 			"regionalGeoBlocking" => 0,
 			"signed" => 0,
 			"typeId" => 7,
-			"xmlId" => "ds_1",
-		})
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            "tenantId" => $tenant_id,
+            "xmlId" => "ds_1",
+		})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/0/active" => 0)
-		->json_is( "/response/0/cdnName" => "cdn1")
+        ->json_is( "/response/0/tenantId" => $tenant_id)
+        ->json_is( "/response/0/cdnName" => "cdn1")
 		->json_is( "/response/0/displayName" => "ds_displayname_1")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
@@ -182,7 +184,7 @@ ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->t
 	->json_is( "/response/0/xmlId", "steering-ds1" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 	->json_is( "/response/1/xmlId", "steering-ds2" );
 
-$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(3);
+$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 3 : 2);
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
