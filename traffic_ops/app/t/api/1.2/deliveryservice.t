@@ -115,7 +115,8 @@ my $ds_id = &get_ds_id('ds_1');
 ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 			"active" => \1,
 			"cdnId" => 100,
-			"displayName" => "ds_displayname_11",
+            "tenantId" => $tenant_id,
+            "displayName" => "ds_displayname_11",
 			"dscp" => 1,
 			"geoLimit" => 1,
 			"geoProvider" => 1,
@@ -137,6 +138,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/0/active" => 1)
 		->json_is( "/response/0/cdnName" => "cdn1")
+        ->json_is( "/response/tenantId" => $tenant_id)
 		->json_is( "/response/0/displayName" => "ds_displayname_11")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)

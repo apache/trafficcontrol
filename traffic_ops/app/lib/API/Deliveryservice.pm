@@ -312,6 +312,10 @@ sub update {
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
 		return $self->forbidden();
 	}
+	if (defined ($ds->tenant_id) and $ds->tenant_id != $tenant_id){
+		#not allowing a tenant to be changed once not "none".
+		return $self->alert("Delivery-service tenant cannot be changed.");
+	}
 
 	my $values = {
 		active                 => $params->{active},
