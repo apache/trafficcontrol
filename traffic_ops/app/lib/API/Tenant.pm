@@ -108,17 +108,22 @@ sub update {
 	}
 	
 	if ( $params->{name} ne $self->getTenantName($id) ) {
-	        my $name = $params->{name};
+        my $name = $params->{name};
 		my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
 		if ($existing) {
 			return $self->alert("A tenant with name \"$name\" already exists.");
 		}	
-	}	
+	}
+
 
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 
-	if ( !defined( $params->{parentId}) && !$tenant_utils->is_root_tenant($tenants_data, $id) ) {
+	if ( $tenant_utils->is_root_tenant($tenants_data, $id) ) {
+		return $self->alert("Root tenant cannot be updated.");
+	}
+
+	if ( !defined( $params->{parentId}) ) {
 		# Cannot turn a simple tenant to a root tenant.
 		# Practically there is no problem with doing so, but it is to risky to be done by mistake. 
 		return $self->alert("Parent Id is required.");
@@ -128,19 +133,13 @@ sub update {
 		return $self->alert("Active field is required.");
 	}
 
-	my $is_active = $params->{active};
-	
 	if ( !$params->{active} && $tenant_utils->is_root_tenant($tenants_data, $id)) {
 		return $self->alert("Root tenant cannot be in-active.");
 	}
 
 	#this is a write operation, allowed only by parents of the tenant (which are the owners of the resource of type tenant)	
 	my $current_resource_tenancy = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('parent_id')->single();
-	if (!defined($current_resource_tenancy)) {
-		#no parent - the tenant is its-own owner
-		$current_resource_tenancy = $id;
-	}
-	
+
 	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $current_resource_tenancy)) {
 		return $self->forbidden(); #Current owning tenant is not under user's tenancy
 	}
@@ -243,7 +242,7 @@ sub create {
 	if ( !defined($parent_id) ) {
 		return $self->alert("Parent Id is required.");
 	}
-	
+
 	my $tenant_utils = UI::TenantUtils->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	

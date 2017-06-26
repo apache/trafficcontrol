@@ -406,8 +406,7 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
-	my $tenantUtils = UI::TenantUtils->new($self);
-	if ( &is_ldap($self) ) {
+it 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 
 		push(
