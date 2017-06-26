@@ -1023,8 +1023,13 @@ sub routing {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden();
+			}
 			my $cdn_name = $result->cdn->name;
 
 			# we expect type to be a dns or http type, but strip off any trailing bit
@@ -1058,8 +1063,13 @@ sub capacity {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden();
+			}
 			my $cdn_name = $result->cdn->name;
 
 			$self->get_cache_capacity( { delivery_service => $result->xml_id, cdn_name => $cdn_name } );
@@ -1078,8 +1088,13 @@ sub health {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden();
+			}
 			my $cdn_name = $result->cdn->name;
 
 			return ( $self->get_cache_health( { server_type => "caches", delivery_service => $result->xml_id, cdn_name => $cdn_name } ) );
@@ -1099,8 +1114,13 @@ sub state {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden();
+			}
 			my $cdn_name    = $result->cdn->name;
 			my $ds_name     = $result->xml_id;
 			my $rascal_data = $self->get_rascal_state_data( { type => "RASCAL", state_type => "deliveryServices", cdn_name => $cdn_name } );
