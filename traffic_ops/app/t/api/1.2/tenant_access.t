@@ -377,7 +377,6 @@ sub test_tenants_allow_access {
     test_ds_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
 }
-
 sub test_tenants_block_access {
     my $login_tenant = shift;
     my $resource_tenant = shift;
@@ -641,6 +640,23 @@ sub test_ds_resource_read_allow_access {
             ->json_is( "/response/0/tenantId" =>  $tenants_data->{$resource_tenant}->{'id'})
         , 'Success read ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/health')
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success for read ds health: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/capacity')
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success for read ds capacity: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #comment out for now - crash - maybe because regex is not defined
+    #ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/routing')
+    #        ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    #    , 'Success for read ds routing: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/state')
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success for read ds state: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
     logout_from_tenant_admin();
 }
 
@@ -653,6 +669,22 @@ sub test_ds_resource_read_block_access {
     ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'})
             ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , '403 for read ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/health')
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , '403 for read ds health: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/capacity')
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , '403 for read ds capacity: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/routing')
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , '403 for read ds routing: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/state')
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , '403 for read ds state: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant_admin();
 }
