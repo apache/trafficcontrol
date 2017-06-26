@@ -970,6 +970,8 @@ sub get_deliveryservices_by_userId {
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
+			### we do not check here if we have access to the DS.i
+			#This is not a DS operation, but a user operation viewing his capabilities.
 			push(
 				@data, {
 					"active"               => \$row->active,
