@@ -39,6 +39,18 @@ var TrafficOpsService = function($http, $q) {
         window.location = 'http://localhost:3000/api/1.2/dbdump';
     };
 
+    this.getProperties = function() {
+        var deferred = $q.defer();
+        $http.get('traffic_ops_properties.json')
+            .then(
+                function(result) {
+                    deferred.resolve(result.data.properties);
+                }
+            );
+
+        return deferred.promise;
+    };
+
 };
 
 TrafficOpsService.$inject = ['$http', '$q'];

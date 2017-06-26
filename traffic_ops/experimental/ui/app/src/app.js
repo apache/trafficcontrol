@@ -151,12 +151,17 @@ var trafficOps = angular.module('trafficOps', [
         require('./modules/private/configure/servers/new').name,
         require('./modules/private/configure/servers/list').name,
 
+        // custom
+        require('./modules/private/custom').name,
+
         // monitor
         require('./modules/private/monitor').name,
 
-        // dashboards
+        // dashboard
         require('./modules/private/monitor/dashboard').name,
         require('./modules/private/monitor/dashboard/view').name,
+
+        // map
         require('./modules/private/monitor/map').name,
 
         // common modules
@@ -311,7 +316,16 @@ var trafficOps = angular.module('trafficOps', [
                 .state('trafficOps', {
                     url: '/',
                     abstract: true,
-                    templateUrl: 'common/templates/master.tpl.html'
+                    templateUrl: 'common/templates/master.tpl.html',
+                        resolve: {
+                                properties: function(trafficOpsService, propertiesModel) {
+                                        return trafficOpsService.getProperties()
+                                            .then(function(result) {
+                                                    propertiesModel.setProperties(result);
+                                            });
+                                }
+                        }
+
                 });
         })
 
