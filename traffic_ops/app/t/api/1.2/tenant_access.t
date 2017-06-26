@@ -289,7 +289,7 @@ sub clear_tenant {
     #deleting the user - as the user do operations this is not so simple. We move it to the root tenant and the fixture cleanup will do
     my $json = decode_json( $t->get_ok('/api/1.2/users/'.$tenants_data->{$name}->{'admin_uid'})->tx->res->content->asset->slurp );
     my $response    = $json->{response}[0];
-    $response->{"tenantId"} = get_tenant_id("root");
+    $response->{"tenantId"} = undef;
     ok $t->put_ok('/api/1.2/users/'.$tenants_data->{$name}->{'admin_uid'} => {Accept => 'application/json'} => json => $response)
         ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Success move user?';
@@ -424,22 +424,22 @@ sub test_user_resource_write_allow_access {
         , 'Success change user email: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     #change the tenant to my tenant
-    $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
-    ok $t->put_ok('/api/1.2/users/'.$new_userid => {Accept => 'application/json'} => json => $response2edit)
-            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/response/username" =>  $response2edit->{"username"})
-            ->json_is( "/response/email" =>  $response2edit->{"email"} )
-            ->json_is( "/response/tenantId" =>  $response2edit->{"tenantId"})
-        , 'Success change user tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
-
-    #change the tenant to his tenant
-    $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
-    ok $t->put_ok('/api/1.2/users/'.$new_userid => {Accept => 'application/json'} => json => $response2edit)
-            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/response/username" =>  $response2edit->{"username"})
-            ->json_is( "/response/email" =>  $response2edit->{"email"} )
-            ->json_is( "/response/tenantId" =>  $response2edit->{"tenantId"})
-        , 'Success change user tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    if ($resource_tenant eq "none" or $resource_tenant eq $login_tenant) {
+        $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
+        ok $t->put_ok('/api/1.2/users/'.$new_userid => { Accept => 'application/json' } => json => $response2edit)
+                ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+                ->json_is( "/response/username" => $response2edit->{"username"})
+                ->json_is( "/response/email" => $response2edit->{"email"} )
+                ->json_is( "/response/tenantId" => $response2edit->{"tenantId"})
+            , 'Success change user tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    }
+    else{
+        $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
+        ok $t->put_ok('/api/1.2/users/'.$new_userid => { Accept => 'application/json' } => json => $response2edit)
+                ->json_is( "/alerts/0/text" => "User tenant cannot be changed.")
+                ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            , 'Cannot change tenancy as it is not allowed: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    }
 
     logout_from_tenant_admin();
 
