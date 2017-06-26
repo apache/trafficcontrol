@@ -22,7 +22,7 @@ use warnings;
 no warnings 'once';
 use warnings 'all';
 use Test::TestHelper;
-use UI::TenantUtils;
+use Utils::Tenant;
 
 #no_transactions=>1 ==> keep fixtures after every execution, beware of duplicate data!
 #no_transactions=>0 ==> delete fixtures after every execution
@@ -174,7 +174,7 @@ ok $t->get_ok("/api/1.2/tenants")->status_is(200)
 	->json_is( "/response/1/id", $tenantB_id)->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 #tenants heirarchy- test depth, height, root
-my $tenant_utils_of_root = UI::TenantUtils->new(undef, $root_tenant_id, $schema);
+my $tenant_utils_of_root = Utils::Tenant->new(undef, $root_tenant_id, $schema);
 my $tenants_data = $tenant_utils_of_root->create_tenants_data_from_db();
 
 ok $tenant_utils_of_root->is_root_tenant($tenants_data, $root_tenant_id) == 1; 
@@ -205,7 +205,7 @@ ok $tenant_utils_of_root->is_tenant_resource_accessible($tenants_data, undef) ==
 ok $tenant_utils_of_root->is_tenant_resource_accessible($tenants_data, $tenantA_id) == 1; 
 ok $tenant_utils_of_root->is_tenant_resource_accessible($tenants_data, $tenantE_id) == 1; 
 
-my $tenant_utils_of_a = UI::TenantUtils->new(undef, $tenantA_id, $schema);
+my $tenant_utils_of_a = Utils::Tenant->new(undef, $tenantA_id, $schema);
 my $tenants_data_of_a = $tenant_utils_of_a->create_tenants_data_from_db();
 #parent - no access
 ok $tenant_utils_of_a->is_tenant_resource_accessible($tenants_data_of_a, $root_tenant_id) == 0; 
@@ -219,7 +219,7 @@ ok $tenant_utils_of_a->is_tenant_resource_accessible($tenants_data_of_a, $tenant
 ok $tenant_utils_of_a->is_tenant_resource_accessible($tenants_data_of_a, $tenantB_id) == 0; 
 
 #leaf test
-my $tenant_utils_of_d = UI::TenantUtils->new(undef, $tenantD_id, $schema);
+my $tenant_utils_of_d = Utils::Tenant->new(undef, $tenantD_id, $schema);
 my $tenants_data_of_d = $tenant_utils_of_d->create_tenants_data_from_db();
 #anchestor - no access
 ok $tenant_utils_of_d->is_tenant_resource_accessible($tenants_data_of_d, $root_tenant_id) == 0; 
@@ -233,7 +233,7 @@ ok $tenant_utils_of_d->is_tenant_resource_accessible($tenants_data_of_d, $tenant
 ok $tenant_utils_of_d->is_tenant_resource_accessible($tenants_data_of_d, $tenantB_id) == 0; 
 
 #inactive - nothing can do
-my $tenant_utils_of_e = UI::TenantUtils->new(undef, $tenantE_id, $schema);
+my $tenant_utils_of_e = Utils::Tenant->new(undef, $tenantE_id, $schema);
 my $tenants_data_of_e = $tenant_utils_of_e->create_tenants_data_from_db();
 #anchestor - no access
 ok $tenant_utils_of_e->is_tenant_resource_accessible($tenants_data_of_e, $root_tenant_id) == 0; 
@@ -258,7 +258,7 @@ ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =
     )->status_is(200)
     , 'Was the disabling paramter created?';
 
-my $tenant_utils_of_d_disabled = UI::TenantUtils->new(undef, $tenantD_id, $schema);
+my $tenant_utils_of_d_disabled = Utils::Tenant->new(undef, $tenantD_id, $schema);
 my $tenants_data_of_d_disabled = $tenant_utils_of_d_disabled->create_tenants_data_from_db();
 #anchestor - now can access
 ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, $root_tenant_id) == 1;
