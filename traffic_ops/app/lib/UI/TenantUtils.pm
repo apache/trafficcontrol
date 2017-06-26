@@ -341,9 +341,18 @@ sub _error {
 }
 
 sub _is_resource_accessable {
+    my $self = shift;
+    my $tenants_data = shift;
+    my $resource_tenant = shift;
+    my $user_tenant = $self->current_user_tenant();
+    return $self->_is_resource_accessable_to_tenant($tenants_data, $resource_tenant, $user_tenant)
+}
+
+sub _is_resource_accessable_to_tenant {
     my $self            = shift;
     my $tenants_data    = shift;
     my $resource_tenant = shift;
+    my $user_tenant     = shift;
 
     if ($self->{ignore_tenancy}) {
         #mechanisem disabled
@@ -351,7 +360,6 @@ sub _is_resource_accessable {
     }
 
 
-    my $user_tenant = $self->current_user_tenant();
     if ( defined($user_tenant) ) {
         my $tenant_record    = $tenants_data->{tenants_dict}->{$user_tenant};
         my $is_active_tenant = $tenant_record->{row}->active;
