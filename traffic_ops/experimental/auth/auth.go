@@ -17,7 +17,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -218,6 +217,7 @@ func makeHandler(config *Config) (func(http.ResponseWriter, *http.Request), erro
 				return
 			}
 
+			/*
 	    	hasher := sha1.New()
 	    	hasher.Write([]byte(login.Password))
 	    	hashedPassword := fmt.Sprintf("%x", hasher.Sum(nil))
@@ -227,6 +227,36 @@ func makeHandler(config *Config) (func(http.ResponseWriter, *http.Request), erro
 				http.Error(w, "Invalid username/password", http.StatusUnauthorized)
 				return
 			}
+			*/
+
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+			// LEGACY: Perform login against legacy TO. This is required until AAA is disabled in TO
+			legacyResp, err := LegacyTOLogin(login, config.LegacyLoginURL, w);
+			if err != nil {
+				Logger.Printf("Traffic Ops login error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return;
+			}
+
+			if legacyResp.StatusCode != http.StatusOK {
+				Logger.Printf("Invalid username/password. Username=%s]", login.Username)
+				http.Error(w, "Invalid username/password", http.StatusUnauthorized)
+				return
+			}
+
+			legacyCookies := legacyResp.Cookies()
+
+			if (legacyCookies == nil) || (len(legacyCookies) != 1) || (legacyCookies[0].Name != "mojolicious") {
+				Logger.Printf("Error parsing Traffic Ops response cookies. Cookies: %v ", legacyCookies)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			Logger.Printf("LEGACY LOGIN TOKEN: %s %s %s", legacyCookies[0].Name, legacyCookies[0].Value, legacyCookies[0].Expires)
+			
+			// LEGACY: End
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 			// We have validated the user's password, now lets get the user's roles
 			stmt, err = db.PrepareNamed("SELECT role_id FROM user_role WHERE user_id=:id")
@@ -277,34 +307,6 @@ func makeHandler(config *Config) (func(http.ResponseWriter, *http.Request), erro
 			for _, elem := range capList {
 				capabilities = append(capabilities, elem.CapName)
 			}
-
-			/////////////////////////////////////////////////////////////////////////////////////////////////
-			// LEGACY: Perform login against legacy TO. This is required until AAA is disabled in TO
-			legacyResp, err := LegacyTOLogin(login, config.LegacyLoginURL, w);
-			if err != nil {
-				Logger.Printf("Legacy TO login error: %s", err.Error())
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return;
-			}
-
-			if legacyResp.StatusCode != http.StatusOK {
-				Logger.Printf("Legacy TO login returned bad status: %s", legacyResp.Status)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-
-			legacyCookies := legacyResp.Cookies()
-
-			if (legacyCookies == nil) || (len(legacyCookies) != 1) || (legacyCookies[0].Name != "mojolicious") {
-				Logger.Printf("Error parsing legacy response cookie. Legacy cookies %v ", legacyCookies)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-
-			Logger.Printf("LEGACY LOGIN TOKEN: %s %s %s", legacyCookies[0].Name, legacyCookies[0].Value, legacyCookies[0].Expires)
-			
-			// LEGACY: End
-			/////////////////////////////////////////////////////////////////////////////////////////////////
 
 			Logger.Printf("User %s authenticated. Role Ids %v. Capabilities %v", login.Username, rolesIds, capabilities)
 
