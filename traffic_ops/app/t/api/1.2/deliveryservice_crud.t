@@ -42,7 +42,7 @@ sub run_ut {
 	Test::TestHelper->load_core_data($schema);
 
 	my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
-	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "null";
+	my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : undef;
 
 	ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password } )->status_is(302)
 		->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
@@ -101,6 +101,7 @@ sub run_ut {
 	    ->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 	    ->json_is( "/response/0/cdnId" => 100)
 	    ->json_is( "/response/0/tenantId" => $tenant_id)
+	    ->json_is( "/response/0/tenant" => $tenant_name)
 	    ->json_is( "/response/0/profileId" => 300)
 	    ->json_is( "/response/0/protocol" => "1")
 	    ->json_is( "/response/0/typeId" => 36)
