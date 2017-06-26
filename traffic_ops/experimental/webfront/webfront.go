@@ -23,11 +23,15 @@ import (
 	"encoding/json"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/lestrrat/go-apache-logformat"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,12 +39,8 @@ import (
 	"time"
 )
 
-// TODO(amiry) - Refresh tokens
-// TODO(amiry) - Rewrite rules
-// TODO(amiry) - Access log
 // TODO(amiry) - Cantralized, managed route configuration
 // TODO(amiry) - Auth server: Legacy token expiration should be longer than JWT expiration
-
 // TODO(amiry) - Test regex match performance
 // TODO(amiry) - Test/Document: Deprecate API with empty "auth" object in json
 // TODO(amiry) - Add "/" route for admin user? This will cause non existant routes to return Forbidden instead of Not Found
@@ -54,6 +54,16 @@ type Config struct {
 	PollInterval 			int    	`json:"poll-interval"`
 	CrtFile					string  `json:"crt-file"`
 	KeyFile					string  `json:"key-file"`
+	LogDir					string 	`json:"log-dir"`
+
+	DbgLogMaxSize			int 	`json:"dbg-log-max-size"`		// Megabytes
+	DbgLogMaxAge			int 	`json:"dbg-log-max-age"`		// Days
+	DbgLogMaxBackups		int 	`json:"dbg-log-max-backups"`
+
+	AccessLogMaxSize		int 	`json:"access-log-max-size"`	// Megabytes
+	AccessLogMaxAge			int 	`json:"access-log-max-age"`		// Days
+	AccessLogMaxBackups		int 	`json:"access-log-max-backups"`
+
 	InsecureSkipVerify 		bool	`json:"insecure-skip-verify"`
 }
 
@@ -92,7 +102,9 @@ type Claims struct {
     jwt.StandardClaims
 }
 
-var Logger *log.Logger
+var logger *log.Logger
+var accessLogger *lumberjack.Logger
+var apacheCombinedLogPlusDuration, _ = apachelog.New(`%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-agent}i" %D`)
 
 func printUsage() {
 	exampleConfig := `{
@@ -116,11 +128,10 @@ func main() {
 		return
 	}
 
-	Logger = log.New(os.Stdout, " ", log.Ldate|log.Ltime|log.Lshortfile)
-
+	// Load config
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		Logger.Println("Error opening config file:", err)
+		fmt.Printf("Error opening config file %s: %s\n", os.Args[1], err)
 		return
 	}
 
@@ -128,25 +139,50 @@ func main() {
 	config := Config{}
 	err = decoder.Decode(&config)
 	if err != nil {
-		Logger.Println("Error reading config file:", err)
+		fmt.Printf("Error reading config file %s: %s\n", os.Args[1], err)
 		return
 	}
 
+	dbgLogFileName, _ := filepath.Abs(path.Join(config.LogDir, "debug.log"))
+	accessLogFileName,_ := filepath.Abs(path.Join(config.LogDir, "access.log"))
+
+	dbgLog := &lumberjack.Logger{
+	    Filename:   dbgLogFileName,
+	    MaxSize:    config., // megabytes
+	    MaxAge:     28,  // days
+	    MaxBackups: 3,
+	}
+
+	accessLog := &lumberjack.Logger{
+	    Filename:   accessLogFileName,
+	    MaxSize:    500, // megabytes
+	    MaxAge:     28,  // days
+	    MaxBackups: 3,
+	}
+
+	// Log to roling file and stdout. Point stdout to /dev/null in production
+	dbgLogDestinations := io.MultiWriter(dbgLog, os.Stdout)
+	logger = log.New(dbgLogDestinations, "", log.Ldate|log.Ltime|log.Lshortfile)
+
+	logger.Printf("Debug log %s", dbgLogFileName)
+	logger.Printf("Access log %s", accessLogFileName)
+
 	if _, err := os.Stat(config.CrtFile); os.IsNotExist(err) {
-		Logger.Fatalf("%s file not found", config.CrtFile)
+		logger.Fatalf("%s file not found", config.CrtFile)
 	}
 	if _, err := os.Stat(config.KeyFile); os.IsNotExist(err) {
-		Logger.Fatalf("%s file not found", config.KeyFile)
+		logger.Fatalf("%s file not found", config.KeyFile)
+	}
+
+	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
+	if err != nil {
+		logger.Fatal(err)
 	}
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = makeTLSConfig(&config)
-	s, err := NewServer(config.RuleFile, time.Duration(config.PollInterval)*time.Second)
-	if err != nil {
-		Logger.Fatal(err)
-	}
-
-	Logger.Printf("Starting webfront on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), config.CrtFile, config.KeyFile, s))
+	logger.Printf("Starting webfront on port %d...", config.ListenPort)
+	logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), config.CrtFile, config.KeyFile, 
+		apacheCombinedLogPlusDuration.Wrap(s, accessLog)))
 }
 
 // NewServer constructs a Server that reads Rules from file with a period 
@@ -154,7 +190,7 @@ func main() {
 func NewServer(file string, poll time.Duration) (*Server, error) {
 	s := new(Server)
 	if err := s.loadRules(file); err != nil {
-		Logger.Fatal(fmt.Errorf("Load rules failed: %s", err))
+		logger.Fatal(fmt.Errorf("Load rules failed: %s", err))
 	}
 
 	// TODO(amiry) - Reload config using NOHUP signal instead of poll for changes
@@ -167,7 +203,7 @@ func makeTLSConfig(config *Config) *tls.Config {
 
 	s := false 
 	if config.InsecureSkipVerify == true {
-		Logger.Printf("NOTICE: Skip certificate verification")
+		logger.Printf("NOTICE: Skip certificate verification")
 		s = true
 	}
 	return &tls.Config{InsecureSkipVerify: s}
@@ -204,7 +240,7 @@ func (s *Server) loadRules(file string) error {
 func (s *Server) refreshRules(file string, poll time.Duration) {
 	for {
 		if err := s.loadRules(file); err != nil {
-			Logger.Printf("Refresh rules failed: %s", err)
+			logger.Printf("Refresh rules failed: %s", err)
 		}
 		time.Sleep(poll)
 	}
@@ -220,7 +256,8 @@ func parseRules(file string) ([]*FwdRule, error) {
 	}
 	defer f.Close()
 
-	Logger.Printf("Loading rules file: %s", file)
+	absPath, _ := filepath.Abs(file)
+	logger.Printf("Loading rules file: %s", absPath)
 
 	var rules []*FwdRule
 	if err := json.NewDecoder(f).Decode(&rules); err != nil {
@@ -232,18 +269,18 @@ func parseRules(file string) ([]*FwdRule, error) {
 		if r.Auth {
 			r.routes, err = parseRoutes(r.RoutesFile)
 			if err != nil {
-				Logger.Printf("Skip rule %s ERROR: %s", r.Path, err)
+				logger.Printf("Skip rule %s ERROR: %s", r.Path, err)
 				continue
 			}			
 		}
 
 		r.handler, err = makeHandler(r)
 		if err != nil {
-			Logger.Printf("Skip rule %s ERROR: %s", r.Path, err)
+			logger.Printf("Skip rule %s ERROR: %s", r.Path, err)
 			continue
 		}
 
-		// Logger.Printf("Loaded rule: %s", r.Path)
+		// logger.Printf("Loaded rule: %s", r.Path)
 	}
 
 	return rules, nil
@@ -265,7 +302,8 @@ func parseRoutes(file string) ([]*Route, error) {
 	}
 	defer cf.Close()
 
-	Logger.Printf("Loading routes file: %s", file)
+	absPath, _ := filepath.Abs(file)
+	logger.Printf("Loading routes file: %s", absPath)
 
 	var routes []*Route
 	if err := json.NewDecoder(cf).Decode(&routes); err != nil {
@@ -284,11 +322,11 @@ func parseRoutes(file string) ([]*Route, error) {
 
 		r.matchRegexp, err = regexp.Compile(r.Match + "$")
 		if err != nil {
-			Logger.Printf("Skip route %s ERROR: %s", r.Match, err)
+			logger.Printf("Skip route %s ERROR: %s", r.Match, err)
 			continue
 		}
 
-		// Logger.Printf("Loaded route: %s", r.Match)
+		// logger.Printf("Loaded route: %s", r.Match)
 	}
 
 	return routes, nil
@@ -314,7 +352,7 @@ func makeHandler(r *FwdRule) (http.Handler, error) {
 			req.URL.Scheme = r.Scheme
 			req.URL.Host = host
 			req.URL.Path = pathPrefix + strings.TrimPrefix(req.URL.Path, r.Path)
-			Logger.Printf("Proxy: HOST: %s PATH: %s", req.URL.Host, req.URL.Path)
+			// logger.Printf("Proxy: HOST: %s PATH: %s", req.URL.Host, req.URL.Path)
 		},
 	}, nil
 }
@@ -355,7 +393,7 @@ func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
 	// and let legacy TO handle all authorization. 
 	var cookie, err = req.Cookie("mojolicious")
 	if cookie != nil {
-		Logger.Printf("LEGACY: Found mojolicious cookie. Bypass authorization")
+		logger.Printf("LEGACY: Found mojolicious cookie. Bypass authorization")
 		return true
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -363,28 +401,28 @@ func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
 	token, err := validateToken(req.Header.Get("Authorization"))
 
 	if err != nil {
-		Logger.Printf("%v %v Token error: %s", req.Method, req.URL.RequestURI(), err)
+		logger.Printf("%v %v Token error: %s", req.Method, req.URL.RequestURI(), err)
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return false
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		Logger.Printf("%v %v Token valid but cannot parse claims", req.Method, req.URL.RequestURI())
+		logger.Printf("%v %v Token valid but cannot parse claims", req.Method, req.URL.RequestURI())
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return false
 	}
 
 	route := rule.matchRoute(req)
 	if route == nil {
-		Logger.Printf("%v %v Route not found", req.Method, req.URL.RequestURI())
+		logger.Printf("%v %v Route not found", req.Method, req.URL.RequestURI())
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return false
 	}
 
     method := route.Auth[req.Method]
     if method == nil {
-		Logger.Printf("%v %v Route found but method forbidden", req.Method, req.URL.RequestURI())
+		logger.Printf("%v %v Route found but method forbidden", req.Method, req.URL.RequestURI())
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return false
     }
@@ -401,13 +439,13 @@ func (rule *FwdRule) authorize(w http.ResponseWriter, req *http.Request) bool {
     }
 
     if (satisfied > 0) {
-		Logger.Printf("%v %v Route found but required capabilities not satisfied. HAS %v, NEED %v", 
+		logger.Printf("%v %v Route found but required capabilities not satisfied. HAS %v, NEED %v", 
 			req.Method, req.URL.RequestURI(), claims.Capabilities, method)
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return false
     }
 
-	Logger.Printf("%v %v Authorized. Subject=%v, ExpiresAt=%v, Rule=%s, Route=%s, Has=%v, Need=%v", 
+	logger.Printf("%v %v Authorized. Subject=%v, ExpiresAt=%v, Rule=%s, Route=%s, Has=%v, Need=%v", 
 		req.Method, req.URL.RequestURI(), claims.Subject, claims.ExpiresAt, rule.Path, route.Match, method, claims.Capabilities)
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -449,14 +487,14 @@ func (s *Server) matchRule(req *http.Request) *FwdRule {
 	for _, r := range s.Rules {
 
 		// Rules are matched in order! Longer rules should take precedence in rule file.
-		// Logger.Printf("CHECK RULE: PATH %s BEGINS WITH %s ?", p, r.Path)		
+		// logger.Printf("CHECK RULE: PATH %s BEGINS WITH %s ?", p, r.Path)		
 		if strings.HasPrefix(p, r.Path) {
-			// Logger.Printf("FOUND RULE: %s", r.Path)
+			// logger.Printf("FOUND RULE: %s", r.Path)
 			return r
 		}
 	}
 
-	// Logger.Printf("Rule not found for path: %s", p)
+	// logger.Printf("Rule not found for path: %s", p)
 	return nil
 }
 
@@ -464,7 +502,7 @@ func (r *FwdRule) matchRoute(req *http.Request) *Route {
 
 	// TODO(amiry) - Naive implementation
 
-	Logger.Printf("MATCH ROUTE: PATH %s", req.URL.Path)
+	logger.Printf("MATCH ROUTE: PATH %s", req.URL.Path)
 
 	// h := req.Host
 	p := req.URL.Path
@@ -479,13 +517,13 @@ func (r *FwdRule) matchRoute(req *http.Request) *Route {
 	for _, r := range r.routes {
 
 		// Routes are matched in order! Longer routes should take precedence in rule file.
-		// Logger.Printf("CHECK ROUTE: PATH %s MATCHES %s ?", p, r.Match)
+		// logger.Printf("CHECK ROUTE: PATH %s MATCHES %s ?", p, r.Match)
 		if r.matchRegexp.MatchString(p) {
-			// Logger.Printf("FOUND ROUTE: %s", r.matchRegexp)
+			// logger.Printf("FOUND ROUTE: %s", r.matchRegexp)
 			return r
 		}
 	}
 
-	// Logger.Printf("Route not found for path: %s", p)
+	// logger.Printf("Route not found for path: %s", p)
 	return nil
 }
