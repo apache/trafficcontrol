@@ -1,4 +1,4 @@
-package UI::TenantUtils;
+package Utils::Tenant;
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ package UI::TenantUtils;
 #
 #
 # A usage example - examing if a tenant can update a delivery-service:
-# my $tenant_utils = UI::TenantUtils->new($self);
+# my $tenant_utils = Utils::Tenant->new($self);
 # my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 # if (!$tenant_utils->is_ds_writeable($tenants_data, <resource_tenant>)) {
 # 	return $self->forbidden(); #Parent tenant is not under user's tenancy

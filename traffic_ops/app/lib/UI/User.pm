@@ -18,7 +18,7 @@ package UI::User;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
-use UI::TenantUtils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Utils::Helper;
@@ -286,7 +286,7 @@ sub is_send_register_valid {
 sub create_user {
 	my $self   = shift;
 	my $new_id = -1;
-	my $tenantUtils = UI::TenantUtils->new($self);
+	my $tenantUtils = Utils::Tenant->new($self);
 	my $dbh    = $self->db->resultset('TmUser')->create(
 		{
 			full_name            => $self->param('tm_user.full_name'),

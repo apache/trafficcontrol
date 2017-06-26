@@ -17,7 +17,7 @@ package API::Tenant;
 #
 
 use UI::Utils;
-use UI::TenantUtils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -36,7 +36,7 @@ sub index {
 	my $self 	= shift;	
 	my $orderby = $self->param('orderby') || "name";
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db($orderby);
 
 	my @data = ();
@@ -63,7 +63,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 
 	my @data = ();
@@ -116,7 +116,7 @@ sub update {
 	}
 
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 
 	if ( $tenant_utils->is_root_tenant($tenants_data, $id) ) {
@@ -243,7 +243,7 @@ sub create {
 		return $self->alert("Parent Id is required.");
 	}
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
 	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
@@ -328,7 +328,7 @@ sub delete {
 
 	my $parent_tenant = $tenant->parent_id;		
 	
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
 	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $parent_tenant)) {

@@ -18,7 +18,7 @@ package API::User;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
-use UI::TenantUtils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Utils::Helper;
@@ -250,7 +250,7 @@ sub create {
 	}
 
 	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-	my $tenantUtils = UI::TenantUtils->new($self);
+	my $tenantUtils = Utils::Tenant->new($self);
 	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $tenantUtils->current_user_tenant();
 
 	my $values = {
@@ -406,7 +406,7 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
-it 	if ( &is_ldap($self) ) {
+	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 
 		push(
