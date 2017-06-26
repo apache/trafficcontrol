@@ -54,7 +54,7 @@ sub index {
 		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
 	}
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
 	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
@@ -158,7 +158,7 @@ sub show {
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
 	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
@@ -288,7 +288,7 @@ sub update {
 		return $self->not_found();
 	}
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 		return $self->forbidden();
@@ -784,7 +784,7 @@ sub delete {
 		return $self->not_found();
 	}
 
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	#setting tenant_id to the user id if tenant is not set.
 	my $tenant_id = $ds->tenant_id;
@@ -1027,7 +1027,7 @@ sub routing {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
@@ -1067,7 +1067,7 @@ sub capacity {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
@@ -1092,7 +1092,7 @@ sub health {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
@@ -1118,7 +1118,7 @@ sub state {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		my $tenant_utils = UI::TenantUtils->new($self);
+		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();

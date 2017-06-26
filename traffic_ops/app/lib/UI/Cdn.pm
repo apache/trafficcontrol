@@ -464,7 +464,7 @@ sub adeliveryservice {
         }
     );
 
-    my $tenant_utils = UI::TenantUtils->new($self);
+    my $tenant_utils = Utils::Tenant->new($self);
     my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
     while ( my $row = $rs->next ) {
