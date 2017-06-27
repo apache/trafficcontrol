@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.physLocation.edit', [])
+module.exports = angular.module('trafficPortal.form.physLocation.edit', [])
     .controller('FormEditPhysLocationController', require('./FormEditPhysLocationController'));

@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.changeLogs.list', [])
+module.exports = angular.module('trafficPortal.private.admin.changeLogs.list', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.admin.changeLogs.list', {
+			.state('trafficPortal.private.admin.changeLogs.list', {
 				url: '',
 				views: {
 					changeLogsContent: {

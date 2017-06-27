@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.job', [])
+module.exports = angular.module('trafficPortal.form.job', [])
 	.controller('FormJobController', require('./FormJobController'));

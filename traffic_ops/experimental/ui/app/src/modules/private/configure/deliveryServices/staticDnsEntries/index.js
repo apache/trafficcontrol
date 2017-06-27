@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.staticDnsEntries', [])
+module.exports = angular.module('trafficPortal.private.configure.deliveryServices.staticDnsEntries', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.staticDnsEntries', {
+			.state('trafficPortal.private.configure.deliveryServices.staticDnsEntries', {
 				url: '/{deliveryServiceId}/static-dns-entries',
 				views: {
 					deliveryServicesContent: {

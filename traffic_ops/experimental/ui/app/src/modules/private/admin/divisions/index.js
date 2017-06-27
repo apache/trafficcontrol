@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.divisions', [])
+module.exports = angular.module('trafficPortal.private.admin.divisions', [])
     .controller('DivisionsController', require('./DivisionsController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.admin.divisions', {
+            .state('trafficPortal.private.admin.divisions', {
                 url: '/divisions',
                 abstract: true,
                 views: {

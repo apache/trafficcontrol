@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.cacheGroups.staticDnsEntries', [])
+module.exports = angular.module('trafficPortal.private.configure.cacheGroups.staticDnsEntries', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.cacheGroups.staticDnsEntries', {
+			.state('trafficPortal.private.configure.cacheGroups.staticDnsEntries', {
 				url: '/{cacheGroupId}/static-dns-entries',
 				views: {
 					cacheGroupsContent: {

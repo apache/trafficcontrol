@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.dialog.delete', [])
+module.exports = angular.module('trafficPortal.dialog.delete', [])
     .controller('DialogDeleteController', require('./DialogDeleteController'));

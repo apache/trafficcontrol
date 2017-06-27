@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.dialog.reset', [])
+module.exports = angular.module('trafficPortal.dialog.reset', [])
     .controller('DialogResetController', require('./DialogResetController'));

@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.header', [])
+module.exports = angular.module('trafficPortal.header', [])
     .controller('HeaderController', require('./HeaderController'));

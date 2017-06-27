@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.types.edit', [])
+module.exports = angular.module('trafficPortal.private.admin.types.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.admin.types.edit', {
+            .state('trafficPortal.private.admin.types.edit', {
                 url: '/{typeId:[0-9]{1,8}}',
                 views: {
                     typesContent: {

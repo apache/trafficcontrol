@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.divisions', [])
+module.exports = angular.module('trafficPortal.table.divisions', [])
     .controller('TableDivisionsController', require('./TableDivisionsController'));

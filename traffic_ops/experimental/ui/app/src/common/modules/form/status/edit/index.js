@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.status.edit', [])
+module.exports = angular.module('trafficPortal.form.status.edit', [])
     .controller('FormEditStatusController', require('./FormEditStatusController'));

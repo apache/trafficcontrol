@@ -1,7 +1,7 @@
 {
-    "name": "trafficOps",
-    "version": "2.0.0",
-    "description": "Traffic Ops UI",
+    "name": "trafficPortal",
+    "version": "2.x",
+    "description": "Traffic Portal",
     "repository": {
         "type": "git",
         "url": "git@github.com:Comcast/traffic_control.git"
@@ -17,6 +17,6 @@
         "requirejs": "2.1.22"
     },
     "engines": {
-        "node": ">=0.12.0"
+        "node": "0.11.14"
     }
 }

@@ -29,7 +29,7 @@ under the License.
                         <span id="headerUsername">{{::user.username}}</span><span ng-if="user.newUser">New User</span> <i class="fa fa-angle-down fa-lg"></i>
                     </button>
                     <ul class="uib-dropdown-menu dropdown-usermenu animated fadeInDown" role="menu" aria-labelledby="userMenu-button">
-                        <li><a ui-sref="trafficOps.private.user.edit">Manage User Profile</a></li>
+                        <li><a ui-sref="trafficPortal.private.user.edit">Manage User Profile</a></li>
                         <li ng-if="userLoaded"><a ng-click="logout()">Logout</a></li>
                     </ul>
                 </div>

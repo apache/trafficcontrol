@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.divisionRegions', [])
+module.exports = angular.module('trafficPortal.table.divisionRegions', [])
 	.controller('TableDivisionRegionsController', require('./TableDivisionRegionsController'));

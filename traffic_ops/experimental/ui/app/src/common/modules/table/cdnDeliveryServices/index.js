@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.cdnDeliveryServices', [])
+module.exports = angular.module('trafficPortal.table.cdnDeliveryServices', [])
 	.controller('TableCDNDeliveryServicesController', require('./TableCDNDeliveryServicesController'));

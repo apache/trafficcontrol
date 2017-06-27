@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.changeLogs', [])
+module.exports = angular.module('trafficPortal.private.admin.changeLogs', [])
 	.controller('ChangeLogsController', require('./ChangeLogsController'))
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.admin.changeLogs', {
+			.state('trafficPortal.private.admin.changeLogs', {
 				url: '/change-logs',
 				abstract: true,
 				views: {

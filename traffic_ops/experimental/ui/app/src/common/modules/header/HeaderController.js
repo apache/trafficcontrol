@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, authService, trafficOpsService, changeLogService, cdnService, changeLogModel, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -54,7 +54,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.dumpDB = function() {
         alert('not working yet');
-        // trafficOpsService.dumpDB();
+        // trafficPortalService.dumpDB();
     };
 
     $scope.confirmQueueServerUpdates = function() {
@@ -159,5 +159,5 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'authService', 'trafficOpsService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
 module.exports = HeaderController;

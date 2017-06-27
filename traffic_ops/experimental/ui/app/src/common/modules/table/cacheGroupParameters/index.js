@@ -17,6 +17,6 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.cacheGroupParameters', [])
+module.exports = angular.module('trafficPortal.table.cacheGroupParameters', [])
 	.controller('TableCacheGroupParametersController', require('./TableCacheGroupParametersController'))
 	.controller('TableCacheGroupParamsUnassignedController', require('./TableCacheGroupParamsUnassignedController'));

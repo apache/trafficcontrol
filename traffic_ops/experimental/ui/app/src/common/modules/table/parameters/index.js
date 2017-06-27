@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.parameters', [])
+module.exports = angular.module('trafficPortal.table.parameters', [])
     .controller('TableParametersController', require('./TableParametersController'));

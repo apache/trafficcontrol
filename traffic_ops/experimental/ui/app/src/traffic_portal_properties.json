@@ -1,7 +1,7 @@
 {
-  "_comment": "These are the default properties for Traffic Ops. To customize these values, create your own traffic_ops_properties.json and copy to your web root replacing the existing one.",
+  "_comment": "These are the default properties for Traffic Ops. To customize these values, create your own traffic_portal_properties.json and copy to your web root replacing the existing one.",
   "properties": {
-    "name": "TP v2",
+    "name": "Butt v2",
     "customMenu": {
       "_comments": "These are custom items you want to add to the menu. 'items' is an array of hashes where each hash has 'name' (the menu item name), 'embed' (true|false to determine if content is embedded in TP or not), and 'url' (the url of the content)",
       "items": []

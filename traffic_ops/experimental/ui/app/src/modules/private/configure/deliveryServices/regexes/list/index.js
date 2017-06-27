@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes.list', [])
+module.exports = angular.module('trafficPortal.private.configure.deliveryServices.regexes.list', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.regexes.list', {
+			.state('trafficPortal.private.configure.deliveryServices.regexes.list', {
 				url: '',
 				views: {
 					deliveryServiceRegexesContent: {

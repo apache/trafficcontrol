@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.public.login', [])
+module.exports = angular.module('trafficPortal.public.login', [])
     .controller('LoginController', require('./LoginController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.public.login', {
+            .state('trafficPortal.public.login', {
                 url: '',
                 views: {
                     publicContent: {
