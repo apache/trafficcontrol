@@ -18,8 +18,10 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 import org.apache.coyote.http11.AbstractHttp11JsseProtocol;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLImplementation;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import java.security.Security;
 
 
 public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> implements RouterProtocolHandler {
@@ -30,6 +32,12 @@ public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> i
 	private String readyAttribute;
 	private String portAttribute;
 	String sslClassName = SSLImplementation.class.getCanonicalName();
+
+	//add BouncyCastle provider to support converting PKCS1 to PKCS8 since OpenSSL does not support PKCS1
+	//TODO:  Figure out if we can convert from PKCS1 to PKCS8 with out BC
+	static { log.warn("Adding BouncyCastle provider");
+			Security.addProvider(new BouncyCastleProvider());
+	}
 
 	public LanguidNioProtocol() {
 		super(new RouterNioEndpoint());
