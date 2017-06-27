@@ -17,25 +17,22 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.apache.tomcat.util.net.*;
-import org.apache.tomcat.util.net.jsse.JSSEUtil;
+import org.apache.tomcat.util.net.SSLContext;
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
+import org.apache.tomcat.util.net.SSLUtilBase;
 import org.apache.tomcat.util.net.openssl.OpenSSLContext;
 import org.apache.tomcat.util.net.openssl.OpenSSLEngine;
-import org.apache.tomcat.util.net.openssl.OpenSSLUtil;
 
-import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.TrustManager;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 public class RouterSslUtil extends SSLUtilBase {
 
     private static final Log log = LogFactory.getLog(RouterSslUtil.class);
 
-    public RouterSslUtil(SSLHostConfigCertificate certificate) {
+    public RouterSslUtil(final SSLHostConfigCertificate certificate) {
         super(certificate);
     }
 
@@ -58,23 +55,25 @@ public class RouterSslUtil extends SSLUtilBase {
 
 
     @Override
-    public SSLContext createSSLContext(List<String> negotiableProtocols) throws Exception {
+    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
+    public SSLContext createSSLContext(final List<String> negotiableProtocols) throws Exception {
         return new OpenSSLContext(certificate, negotiableProtocols);
     }
 
     @Override
-    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
+    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
     public javax.net.ssl.KeyManager[] getKeyManagers() throws Exception {
         return new javax.net.ssl.KeyManager[] { new com.comcast.cdn.traffic_control.traffic_router.secure.KeyManager() };
     }
 
     @Override
+    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
     public TrustManager[] getTrustManagers() throws Exception {
             return null;
     }
 
     @Override
-    public void configureSessionContext(SSLSessionContext sslSessionContext) {
+    public void configureSessionContext(final SSLSessionContext sslSessionContext) {
     }
 
 }
