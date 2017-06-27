@@ -350,6 +350,14 @@ sub logout_from_tenant_admin {
     ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 }
 
+sub is_tenant_active{
+    my $tenant_name = shift;
+    if ($tenant_name eq "none"){
+        return 1;
+    }
+    return $schema->resultset('Tenant')->find( { name => $tenant_name } )->active;
+}
+
 sub test_user_resource_read_allow_access {
     my $login_tenant = shift;
     my $resource_tenant = shift;
@@ -453,6 +461,7 @@ sub test_user_resource_write_block_access {
     my $tenants_data = shift;
     login_to_tenant_admin($login_tenant, $tenants_data);
 
+    my $is_login_tenant_active = is_tenant_active($login_tenant);
     #adding a user
     my $new_username="test_user";
     ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
@@ -464,7 +473,8 @@ sub test_user_resource_write_block_access {
                 "role" => 4,
                 "tenantId" => $tenants_data->{$resource_tenant}->{'id'},
             })
-            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment." )
         , 'Cannot add user: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
 
@@ -544,10 +554,11 @@ sub test_user_resource_write_block_access {
     logout_from_tenant_admin();
     login_to_tenant_admin($login_tenant, $tenants_data);
 
-    #changing only its tenancy
+    #changing only its tenancy (403 if the basic resource cannot be accessed, 400 if the change is invalid)
     $response2edit2->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
     ok $t->put_ok('/api/1.2/users/'.$new_userid2 => {Accept => 'application/json'} => json => $response2edit2)
-            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->status_is($is_login_tenant_active ? 400 : 403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden")
         , 'Cannot change user tenant to the target resource tenant: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant_admin();
