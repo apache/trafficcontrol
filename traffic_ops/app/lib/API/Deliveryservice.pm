@@ -310,7 +310,7 @@ sub update {
 	#setting tenant_id to undef if tenant is not set. 
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
-		return $self->forbidden();
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my $values = {
@@ -592,7 +592,7 @@ sub create {
 	#setting tenant_id to the user id if tenant is not set.
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenant_utils->current_user_tenant();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
-		return $self->forbidden();
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
