@@ -108,18 +108,21 @@ sub update {
 	}
 	
 	if ( $params->{name} ne $self->getTenantName($id) ) {
-        my $name = $params->{name};
+	        my $name = $params->{name};
 		my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
 		if ($existing) {
 			return $self->alert("A tenant with name \"$name\" already exists.");
 		}	
-	}
-
+	}	
 
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 
-	if ( $tenant_utils->is_root_tenant($tenants_data, $id) ) {
+    if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $id)) {
+        return $self->forbidden(); #Current owning tenant is not under user's tenancy
+    }
+
+    if ( $tenant_utils->is_root_tenant($tenants_data, $id) ) {
 		return $self->alert("Root tenant cannot be updated.");
 	}
 
@@ -137,22 +140,18 @@ sub update {
 		return $self->alert("Root tenant cannot be in-active.");
 	}
 
-	#this is a write operation, allowed only by parents of the tenant (which are the owners of the resource of type tenant)	
-	my $current_resource_tenancy = $self->db->resultset('Tenant')->search( { id => $id } )->get_column('parent_id')->single();
-
-	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $current_resource_tenancy)) {
-		return $self->forbidden(); #Current owning tenant is not under user's tenancy
-	}
-
-	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
-		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
-	}
-
-
 	if ($params->{parentId} != $tenant->parent) {
 		#parent replacement
+		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $tenant->parent)) {
+			#Current owning tenant is not under user's tenancy
+			return $self>alert("Invalid parent tenant change. The current tenant parent is not avaialble for you to edit");
+		}
 		if (!defined($tenant_utils->get_tenant_by_id($tenants_data, $params->{parentId}))) {
 			return $self->alert("Parent tenant does not exists.");
+		}
+		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
+			#Parent tenant to be set is not under user's tenancy
+			return $self->alert("Invalid parent tenant. This tenant is not available to you for parent assignment.");
 		}
 		my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
 		if (!defined($parent_depth))
@@ -242,19 +241,19 @@ sub create {
 	if ( !defined($parent_id) ) {
 		return $self->alert("Parent Id is required.");
 	}
-
+	
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
-	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
-		return $self->forbidden(); #Parent tenant to be set is not under user's tenancy
-	}
-
 	if (!defined($tenant_utils->get_tenant_by_id($tenants_data, $params->{parentId}))) {
 		return $self->alert("Parent tenant does not exists.");
 	}
-	
-	my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
+
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $params->{parentId})) {
+		return $self->alert("Invalid parent tenant. This tenant is not available to you for parent assignment.");
+	}
+
+    my $parent_depth = $tenant_utils->get_tenant_heirarchy_depth($tenants_data, $params->{parentId});
 
 	if (!defined($parent_depth))
 	{
@@ -326,13 +325,11 @@ sub delete {
 		return $self->not_found();
 	}	
 
-	my $parent_tenant = $tenant->parent_id;		
-	
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
-	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $parent_tenant)) {
-		return $self->forbidden(); #Parent tenant is not under user's tenancy
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $id)) {
+		return $self->forbidden(); #tenant is not under user's tenancy
 	}
 
 	my $name = $tenant->name;

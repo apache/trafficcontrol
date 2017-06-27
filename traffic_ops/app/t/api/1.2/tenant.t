@@ -344,11 +344,11 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+        "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
         
 ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
 			"name" => "rooty", "active" => 1, "parentId" => undef})
-		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+		->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #no tenants in the list
 ok $t->get_ok("/api/1.2/tenants")->status_is(200)
