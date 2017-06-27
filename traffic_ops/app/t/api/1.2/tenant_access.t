@@ -779,6 +779,8 @@ sub test_ds_resource_write_block_access {
     my $login_tenant = shift;
     my $resource_tenant = shift;
     my $tenants_data = shift;
+
+    my $is_login_tenant_active = is_tenant_active($login_tenant);
     login_to_tenant_admin($login_tenant, $tenants_data);
 
     #adding a ds
@@ -806,7 +808,8 @@ sub test_ds_resource_write_block_access {
                 "geoProvider" => 0,
                 "qstringIgnore" => 0,
             })
-            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment.")
         , 'Cannot add ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
 
@@ -903,7 +906,8 @@ sub test_ds_resource_write_block_access {
     #changing only its tenancy
     $response2edit2->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
     ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
-            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->status_is($is_login_tenant_active ? 400 : 403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden")
         , 'Cannot change ds tenant to the target resource tenant: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
