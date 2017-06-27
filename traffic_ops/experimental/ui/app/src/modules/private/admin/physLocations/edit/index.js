@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.physLocations.edit', [])
+module.exports = angular.module('trafficPortal.private.admin.physLocations.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.admin.physLocations.edit', {
+            .state('trafficPortal.private.admin.physLocations.edit', {
                 url: '/{physLocationId:[0-9]{1,8}}',
                 views: {
                     physLocationsContent: {

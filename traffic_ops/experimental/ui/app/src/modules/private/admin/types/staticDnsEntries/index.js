@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.types.staticDnsEntries', [])
+module.exports = angular.module('trafficPortal.private.admin.types.staticDnsEntries', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.admin.types.staticDnsEntries', {
+			.state('trafficPortal.private.admin.types.staticDnsEntries', {
 				url: '/{typeId}/static-dns-entries',
 				views: {
 					typesContent: {

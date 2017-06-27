@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.server.edit', [])
+module.exports = angular.module('trafficPortal.form.server.edit', [])
     .controller('FormEditServerController', require('./FormEditServerController'));

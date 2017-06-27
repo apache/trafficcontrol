@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.monitor', [])
+module.exports = angular.module('trafficPortal.private.monitor', [])
     .controller('MonitorController', require('./MonitorController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.monitor', {
+            .state('trafficPortal.private.monitor', {
                 url: 'monitor',
                 abstract: true,
                 views: {

@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.widget.cdnChart', [])
+module.exports = angular.module('trafficPortal.widget.cdnChart', [])
 	.controller('WidgetCDNChartController', require('./WidgetCDNChartController'));

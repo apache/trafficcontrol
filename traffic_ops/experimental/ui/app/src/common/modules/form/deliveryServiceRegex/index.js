@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.deliveryServiceRegex', [])
+module.exports = angular.module('trafficPortal.form.deliveryServiceRegex', [])
 	.controller('FormDeliveryServiceRegexController', require('./FormDeliveryServiceRegexController'));

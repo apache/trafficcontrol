@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.cacheGroupStaticDnsEntries', [])
+module.exports = angular.module('trafficPortal.table.cacheGroupStaticDnsEntries', [])
 	.controller('TableCacheGroupStaticDnsEntriesController', require('./TableCacheGroupStaticDnsEntriesController'));

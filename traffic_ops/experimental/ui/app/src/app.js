@@ -26,7 +26,7 @@ var App = function($urlRouterProvider) {
 
 App.$inject = ['$urlRouterProvider'];
 
-var trafficOps = angular.module('trafficOps', [
+var trafficPortal = angular.module('trafficPortal', [
         'config',
         'ngAnimate',
         'ngResource',
@@ -313,13 +313,13 @@ var trafficOps = angular.module('trafficOps', [
             $controllerProvider.allowGlobals();
             $logProvider.debugEnabled(true);
             $stateProvider
-                .state('trafficOps', {
+                .state('trafficPortal', {
                     url: '/',
                     abstract: true,
                     templateUrl: 'common/templates/master.tpl.html',
                         resolve: {
-                                properties: function(trafficOpsService, propertiesModel) {
-                                        return trafficOpsService.getProperties()
+                                properties: function(trafficPortalService, propertiesModel) {
+                                        return trafficPortalService.getProperties()
                                             .then(function(result) {
                                                     propertiesModel.setProperties(result);
                                             });
@@ -335,7 +335,7 @@ var trafficOps = angular.module('trafficOps', [
         })
     ;
 
-trafficOps.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
+trafficPortal.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
     return {
         responseError: function (rejection) {
             var url = $location.url(),
@@ -372,7 +372,7 @@ trafficOps.factory('authInterceptor', function ($q, $window, $location, $timeout
     };
 });
 
-trafficOps.config(function ($httpProvider) {
+trafficPortal.config(function ($httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');
 });
 

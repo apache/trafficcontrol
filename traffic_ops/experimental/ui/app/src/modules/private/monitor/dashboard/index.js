@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.monitor.dashboard', [])
+module.exports = angular.module('trafficPortal.private.monitor.dashboard', [])
     .controller('DashboardController', require('./DashboardController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.monitor.dashboard', {
+            .state('trafficPortal.private.monitor.dashboard', {
                 url: '/dashboard',
                 abstract: true,
                 views: {

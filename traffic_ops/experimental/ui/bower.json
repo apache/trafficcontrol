@@ -1,7 +1,7 @@
 {
-    "name": "trafficOps",
+    "name": "trafficPortal",
     "version": "2.0.0",
-    "description": "Traffic Ops UI",
+    "description": "Traffic Portal",
     "dependencies": {
         "angular": "1.6.4",
         "angular-animate": "1.6.4",

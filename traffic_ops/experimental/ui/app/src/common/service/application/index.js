@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.application', [])
+module.exports = angular.module('trafficPortal.application', [])
     .service('applicationService', require('./ApplicationService'));

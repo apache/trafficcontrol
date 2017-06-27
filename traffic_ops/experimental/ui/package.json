@@ -1,7 +1,7 @@
 {
-    "name": "trafficOps",
-    "version": "2.0.0",
-    "description": "Traffic Ops UI",
+    "name": "trafficPortal",
+    "version": "2.x",
+    "description": "Traffic Portal",
     "repository": {
         "type": "git",
         "url": "git@github.com:apache/incubator-trafficcontrol.git"

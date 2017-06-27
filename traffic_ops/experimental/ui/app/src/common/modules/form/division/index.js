@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.division', [])
+module.exports = angular.module('trafficPortal.form.division', [])
     .controller('FormDivisionController', require('./FormDivisionController'));

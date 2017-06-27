@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.regexes.edit', [])
+module.exports = angular.module('trafficPortal.private.configure.deliveryServices.regexes.edit', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.regexes.edit', {
+			.state('trafficPortal.private.configure.deliveryServices.regexes.edit', {
 				url: '/{regexId:[0-9]{1,8}}',
 				views: {
 					deliveryServiceRegexesContent: {

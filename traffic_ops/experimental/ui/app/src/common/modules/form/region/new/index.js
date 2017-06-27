@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.region.new', [])
+module.exports = angular.module('trafficPortal.form.region.new', [])
     .controller('FormNewRegionController', require('./FormNewRegionController'));

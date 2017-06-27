@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.cacheGroups.asns', [])
+module.exports = angular.module('trafficPortal.private.configure.cacheGroups.asns', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.cacheGroups.asns', {
+			.state('trafficPortal.private.configure.cacheGroups.asns', {
 				url: '/{cacheGroupId}/asns',
 				views: {
 					cacheGroupsContent: {

@@ -17,6 +17,6 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.userDeliveryServices', [])
+module.exports = angular.module('trafficPortal.table.userDeliveryServices', [])
 	.controller('TableUserDeliveryServicesController', require('./TableUserDeliveryServicesController'))
 	.controller('TableUserDSUnassignedController', require('./TableUserDSUnassignedController'));

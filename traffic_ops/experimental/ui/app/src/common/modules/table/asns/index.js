@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.asns', [])
+module.exports = angular.module('trafficPortal.table.asns', [])
     .controller('TableASNsController', require('./TableASNsController'));

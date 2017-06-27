@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure.deliveryServices.users', [])
+module.exports = angular.module('trafficPortal.private.configure.deliveryServices.users', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.configure.deliveryServices.users', {
+			.state('trafficPortal.private.configure.deliveryServices.users', {
 				url: '/{deliveryServiceId}/users',
 				views: {
 					deliveryServicesContent: {

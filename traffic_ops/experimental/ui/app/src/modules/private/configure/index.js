@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.configure', [])
+module.exports = angular.module('trafficPortal.private.configure', [])
     .controller('ConfigureController', require('./ConfigureController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.configure', {
+            .state('trafficPortal.private.configure', {
                 url: 'configure',
                 abstract: true,
                 views: {

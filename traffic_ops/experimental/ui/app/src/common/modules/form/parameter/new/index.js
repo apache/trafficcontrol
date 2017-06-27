@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.parameter.new', [])
+module.exports = angular.module('trafficPortal.form.parameter.new', [])
     .controller('FormNewParameterController', require('./FormNewParameterController'));

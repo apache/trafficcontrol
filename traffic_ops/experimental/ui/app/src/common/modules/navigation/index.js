@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.navigation', [])
+module.exports = angular.module('trafficPortal.navigation', [])
     .controller('NavigationController', require('./NavigationController'));

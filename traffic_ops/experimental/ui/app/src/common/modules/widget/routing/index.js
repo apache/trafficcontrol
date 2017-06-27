@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.widget.routing', [])
+module.exports = angular.module('trafficPortal.widget.routing', [])
 	.controller('WidgetRoutingController', require('./WidgetRoutingController'));

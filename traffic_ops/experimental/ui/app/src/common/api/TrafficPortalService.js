@@ -17,11 +17,11 @@
  * under the License.
  */
 
-var TrafficOpsService = function($http, $q) {
+var TrafficPortalService = function($http, $q) {
 
     this.getReleaseVersionInfo = function() {
         var deferred = $q.defer();
-        $http.get('traffic_ops_release.json')
+        $http.get('traffic_portal_release.json')
             .then(
                 function(result) {
                     deferred.resolve(result);
@@ -41,7 +41,7 @@ var TrafficOpsService = function($http, $q) {
 
     this.getProperties = function() {
         var deferred = $q.defer();
-        $http.get('traffic_ops_properties.json')
+        $http.get('traffic_portal_properties.json')
             .then(
                 function(result) {
                     deferred.resolve(result.data.properties);
@@ -53,5 +53,5 @@ var TrafficOpsService = function($http, $q) {
 
 };
 
-TrafficOpsService.$inject = ['$http', '$q'];
-module.exports = TrafficOpsService;
+TrafficPortalService.$inject = ['$http', '$q'];
+module.exports = TrafficPortalService;

@@ -15,11 +15,11 @@
 
  */
 
-module.exports = angular.module('trafficOps.private.custom', [])
+module.exports = angular.module('trafficPortal.private.custom', [])
 	.controller('CustomController', require('./CustomController'))
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.custom', {
+			.state('trafficPortal.private.custom', {
 				url: 'custom',
 				views: {
 					privateContent: {

@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.deliveryServiceStaticDnsEntries', [])
+module.exports = angular.module('trafficPortal.table.deliveryServiceStaticDnsEntries', [])
 	.controller('TableDeliveryServiceStaticDnsEntriesController', require('./TableDeliveryServiceStaticDnsEntriesController'));

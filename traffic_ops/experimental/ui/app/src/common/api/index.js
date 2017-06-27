@@ -17,7 +17,7 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.api', [])
+module.exports = angular.module('trafficPortal.api', [])
     .service('authService', require('./AuthService'))
     .service('asnService', require('./ASNService'))
     .service('cacheGroupService', require('./CacheGroupService'))
@@ -41,6 +41,6 @@ module.exports = angular.module('trafficOps.api', [])
     .service('statusService', require('./StatusService'))
     .service('tenantService', require('./TenantService'))
     .service('typeService', require('./TypeService'))
-    .service('trafficOpsService', require('./TrafficOpsService'))
+    .service('trafficPortalService', require('./TrafficPortalService'))
     .service('userService', require('./UserService'))
 ;

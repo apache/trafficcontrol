@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.dialog.select', [])
+module.exports = angular.module('trafficPortal.dialog.select', [])
 	.controller('DialogSelectController', require('./DialogSelectController'));

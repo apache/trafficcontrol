@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.asn.edit', [])
+module.exports = angular.module('trafficPortal.form.asn.edit', [])
     .controller('FormEditASNController', require('./FormEditASNController'));

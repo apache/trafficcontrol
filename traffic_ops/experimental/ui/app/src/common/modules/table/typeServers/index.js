@@ -18,5 +18,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.typeServers', [])
+module.exports = angular.module('trafficPortal.table.typeServers', [])
 	.controller('TableTypeServersController', require('./TableTypeServersController'));

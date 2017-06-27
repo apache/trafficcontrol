@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.cacheGroupServers', [])
+module.exports = angular.module('trafficPortal.table.cacheGroupServers', [])
 	.controller('TableCacheGroupServersController', require('./TableCacheGroupServersController'));

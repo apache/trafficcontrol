@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var NavigationController = function($scope, $log, $state, $location, $window, $timeout, $uibModal, authService, trafficOpsService, propertiesModel, userModel) {
+var NavigationController = function($scope, $log, $state, $location, $window, $timeout, $uibModal, authService, trafficPortalService, propertiesModel, userModel) {
 
     $scope.appName = propertiesModel.properties.name;
 
@@ -51,7 +51,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
     };
 
     $scope.releaseVersion = function() {
-        trafficOpsService.getReleaseVersionInfo()
+        trafficPortalService.getReleaseVersionInfo()
             .then(function(result) {
                 $uibModal.open({
                     templateUrl: 'common/modules/release/release.tpl.html',
@@ -148,5 +148,5 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
 };
 
-NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$window', '$timeout', '$uibModal', 'authService', 'trafficOpsService', 'propertiesModel', 'userModel'];
+NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$window', '$timeout', '$uibModal', 'authService', 'trafficPortalService', 'propertiesModel', 'userModel'];
 module.exports = NavigationController;
