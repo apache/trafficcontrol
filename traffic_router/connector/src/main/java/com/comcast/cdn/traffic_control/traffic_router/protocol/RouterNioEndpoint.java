@@ -49,7 +49,6 @@ public class RouterNioEndpoint extends NioEndpoint {
                     hostname = sslHostConfig.getHostName();
                 }
 
-
             }
 
             log.info("java.library.path = "+System.getProperty("java.library.path"));
