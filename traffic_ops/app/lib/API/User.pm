@@ -125,7 +125,7 @@ sub show {
 
 	while ( my $row = $rs_data->next ) {
 		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
-			return $self->forbidden();#FOR the reviewer - what is the correct response - 403 or 200 with empty list?
+			return $self->forbidden();
 		}
 		push(
 			@data, {
@@ -182,7 +182,7 @@ sub update {
 	}
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
 		#no access to target tenancy
-		return $self->forbidden();
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my ( $is_valid, $result ) = $self->is_valid( $params, $user_id );
@@ -264,7 +264,7 @@ sub create {
 	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $tenant_utils->current_user_tenant();
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
-		return $self->forbidden();
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my ( $is_valid, $result ) = $self->is_valid( $params, 0 );
