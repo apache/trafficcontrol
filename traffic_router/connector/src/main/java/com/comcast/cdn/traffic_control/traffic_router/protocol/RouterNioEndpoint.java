@@ -25,22 +25,24 @@ import java.util.List;
 
 public class RouterNioEndpoint extends NioEndpoint {
 
+    // Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
+    // and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
+    // since it won't be found in our registry.  This allows OpenSSL to start successfully and serve our
+    // certificates.  When we are done we call the parent classes initialiseSsl.
+    @SuppressWarnings({"PMD.SignatureDeclareThrowsException"})
     @Override
     protected void initialiseSsl() throws Exception {
         if (isSSLEnabled()) {
-           //Create sslHostConfig for each of our aliases.
-            KeyManager keyManager = new KeyManager();
-            CertificateRegistry certificateRegistry =  keyManager.getCertificateRegistry();
-            List<String> aliases = certificateRegistry.getAliases();
+            final KeyManager keyManager = new KeyManager();
+            final CertificateRegistry certificateRegistry =  keyManager.getCertificateRegistry();
+            final List<String> aliases = certificateRegistry.getAliases();
 
             //remove default config since it won't be found in our keystore
             sslHostConfigs.clear();
 
-            for (String alias : aliases) {
-                SSLHostConfig sslHostConfig = new SSLHostConfig();
+            for (final String alias : aliases) {
+                final SSLHostConfig sslHostConfig = new SSLHostConfig();
                 sslHostConfig.setCertificateKeyAlias(alias);
-//                sslHostConfig.setHostName(alias);
-
                 addSslHostConfig(sslHostConfig);
             }
 
