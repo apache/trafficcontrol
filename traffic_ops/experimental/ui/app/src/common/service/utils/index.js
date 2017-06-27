@@ -17,7 +17,7 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.utils', [])
+module.exports = angular.module('trafficPortal.utils', [])
     .service('dateUtils', require('./DateUtils'))
     .service('formUtils', require('./FormUtils'))
     .service('locationUtils', require('./LocationUtils'))

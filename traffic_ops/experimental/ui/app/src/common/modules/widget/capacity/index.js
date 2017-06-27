@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.widget.capacity', [])
+module.exports = angular.module('trafficPortal.widget.capacity', [])
 	.controller('WidgetCapacityController', require('./WidgetCapacityController'));

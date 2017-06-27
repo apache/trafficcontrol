@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.server.new', [])
+module.exports = angular.module('trafficPortal.form.server.new', [])
     .controller('FormNewServerController', require('./FormNewServerController'));

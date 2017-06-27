@@ -17,7 +17,7 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.filters', [])
+module.exports = angular.module('trafficPortal.filters', [])
     .filter('offsetFilter', require('./OffsetFilter'))
 	.filter('percentFilter', require('./PercentFilter'))
 ;

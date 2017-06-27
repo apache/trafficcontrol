@@ -39,8 +39,8 @@ module.exports = {
                 dest: '<%= globalConfig.distdir %>/public',
                 src: [
                     '*.html',
-                    'trafficOps_release.json',
-                    'traffic_ops_properties.json'
+                    'traffic_portal_release.json',
+                    'traffic_portal_properties.json'
                 ]
             }
         ]
@@ -66,8 +66,8 @@ module.exports = {
                 dest: '<%= globalConfig.distdir %>/public',
                 src: [
                     '*.html',
-                    'trafficOps_release.json',
-                    'traffic_ops_properties.json'
+                    'traffic_portal_release.json',
+                    'traffic_portal_properties.json'
                 ]
             }
         ]

@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.cdn.new', [])
+module.exports = angular.module('trafficPortal.form.cdn.new', [])
     .controller('FormNewCDNController', require('./FormNewCDNController'));

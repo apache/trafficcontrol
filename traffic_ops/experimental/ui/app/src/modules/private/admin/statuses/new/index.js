@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.statuses.new', [])
+module.exports = angular.module('trafficPortal.private.admin.statuses.new', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.admin.statuses.new', {
+            .state('trafficPortal.private.admin.statuses.new', {
                 url: '/new',
                 views: {
                     statusesContent: {

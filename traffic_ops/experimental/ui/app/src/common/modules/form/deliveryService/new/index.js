@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.deliveryService.new', [])
+module.exports = angular.module('trafficPortal.form.deliveryService.new', [])
 	.controller('FormNewDeliveryServiceController', require('./FormNewDeliveryServiceController'));

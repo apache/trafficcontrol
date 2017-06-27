@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.user.new', [])
+module.exports = angular.module('trafficPortal.form.user.new', [])
     .controller('FormNewUserController', require('./FormNewUserController'));

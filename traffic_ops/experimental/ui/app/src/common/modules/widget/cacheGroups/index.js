@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.widget.cacheGroups', [])
+module.exports = angular.module('trafficPortal.widget.cacheGroups', [])
 	.controller('WidgetCacheGroupsController', require('./WidgetCacheGroupsController'));

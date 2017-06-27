@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.changeLogs', [])
+module.exports = angular.module('trafficPortal.table.changeLogs', [])
 	.controller('TableChangeLogsController', require('./TableChangeLogsController'));

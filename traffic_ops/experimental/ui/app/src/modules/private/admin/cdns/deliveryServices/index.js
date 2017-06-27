@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.cdns.deliveryServices', [])
+module.exports = angular.module('trafficPortal.private.admin.cdns.deliveryServices', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.admin.cdns.deliveryServices', {
+			.state('trafficPortal.private.admin.cdns.deliveryServices', {
 				url: '/{cdnId}/delivery-services',
 				views: {
 					cdnsContent: {

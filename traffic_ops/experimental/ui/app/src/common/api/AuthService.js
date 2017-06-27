@@ -50,11 +50,11 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
             then(
                 function(result) {
                     $rootScope.$broadcast('authService::logout');
-                    if ($state.current.name == 'trafficOps.public.login') {
+                    if ($state.current.name == 'trafficPortal.public.login') {
                         messageModel.setMessages(result.alerts, false);
                     } else {
                         messageModel.setMessages(result.alerts, true);
-                        $state.go('trafficOps.public.login');
+                        $state.go('trafficPortal.public.login');
                     }
                     return result;
                 }

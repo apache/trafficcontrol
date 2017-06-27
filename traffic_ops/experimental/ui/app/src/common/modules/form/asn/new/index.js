@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.asn.new', [])
+module.exports = angular.module('trafficPortal.form.asn.new', [])
     .controller('FormNewASNController', require('./FormNewASNController'));

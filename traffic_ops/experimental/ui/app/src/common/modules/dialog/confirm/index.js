@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.dialog.confirm', [])
+module.exports = angular.module('trafficPortal.dialog.confirm', [])
     .controller('DialogConfirmController', require('./DialogConfirmController'));

@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.type', [])
+module.exports = angular.module('trafficPortal.form.type', [])
     .controller('FormTypeController', require('./FormTypeController'));

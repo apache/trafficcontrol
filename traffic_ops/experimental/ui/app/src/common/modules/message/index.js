@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.message', [])
+module.exports = angular.module('trafficPortal.message', [])
     .controller('MessageController', require('./MessageController'));

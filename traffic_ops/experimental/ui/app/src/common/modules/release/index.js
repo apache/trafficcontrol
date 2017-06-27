@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.release', [])
+module.exports = angular.module('trafficPortal.release', [])
     .controller('ReleaseController', require('./ReleaseController'));

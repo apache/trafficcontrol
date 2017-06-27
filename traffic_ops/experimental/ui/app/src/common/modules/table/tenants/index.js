@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.tenants', [])
+module.exports = angular.module('trafficPortal.table.tenants', [])
     .controller('TableTenantsController', require('./TableTenantsController'));

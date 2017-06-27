@@ -17,11 +17,11 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.user', [])
+module.exports = angular.module('trafficPortal.private.user', [])
     .controller('UserController', require('./UserController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.user', {
+            .state('trafficPortal.private.user', {
                 url: 'user',
                 abstract: true,
                 views: {

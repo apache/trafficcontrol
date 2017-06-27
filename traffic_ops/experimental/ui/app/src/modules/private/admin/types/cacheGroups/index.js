@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.types.cacheGroups', [])
+module.exports = angular.module('trafficPortal.private.admin.types.cacheGroups', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficOps.private.admin.types.cacheGroups', {
+			.state('trafficPortal.private.admin.types.cacheGroups', {
 				url: '/{typeId}/cache-groups',
 				views: {
 					typesContent: {

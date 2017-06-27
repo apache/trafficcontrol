@@ -17,10 +17,10 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.private.admin.divisions.edit', [])
+module.exports = angular.module('trafficPortal.private.admin.divisions.edit', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
-            .state('trafficOps.private.admin.divisions.edit', {
+            .state('trafficPortal.private.admin.divisions.edit', {
                 url: '/{divisionId:[0-9]{1,8}}',
                 views: {
                     divisionsContent: {

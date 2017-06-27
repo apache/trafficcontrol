@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.cacheGroup', [])
+module.exports = angular.module('trafficPortal.form.cacheGroup', [])
     .controller('FormCacheGroupController', require('./FormCacheGroupController'));

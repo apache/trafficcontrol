@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.widget.changeLogs', [])
+module.exports = angular.module('trafficPortal.widget.changeLogs', [])
 	.controller('WidgetChangeLogsController', require('./WidgetChangeLogsController'));

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.models', [])
+module.exports = angular.module('trafficPortal.models', [])
     .service('changeLogModel', require('./ChangeLogModel'))
     .service('messageModel', require('./MessageModel'))
 	.service('propertiesModel', require('./PropertiesModel'))

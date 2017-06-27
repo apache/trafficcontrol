@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.profile', [])
+module.exports = angular.module('trafficPortal.form.profile', [])
     .controller('FormProfileController', require('./FormProfileController'));

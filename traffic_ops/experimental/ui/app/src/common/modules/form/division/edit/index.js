@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.form.division.edit', [])
+module.exports = angular.module('trafficPortal.form.division.edit', [])
     .controller('FormEditDivisionController', require('./FormEditDivisionController'));

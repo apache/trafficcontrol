@@ -17,5 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficOps.table.physLocations', [])
+module.exports = angular.module('trafficPortal.table.physLocations', [])
     .controller('TablePhysLocationsController', require('./TablePhysLocationsController'));
