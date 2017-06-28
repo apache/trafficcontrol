@@ -269,8 +269,7 @@ sub run_ut {
 	    ->json_is( "/response/0/tenantId" => $tenant_id)
 	            , 'Was the tenant id dervied from the creating user?';
 
-	my $ds_id = &get_ds_id('ds_1');
-	ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	ok $t->delete_ok('/api/1.2/deliveryservices/' . &get_ds_id('ds_1'))->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

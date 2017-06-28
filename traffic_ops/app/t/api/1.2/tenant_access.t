@@ -856,6 +856,10 @@ sub test_ds_resource_write_block_access {
     logout_from_tenant_admin();
     login_to_tenant_admin($login_tenant, $tenants_data);
 
+    ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'})
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Cannot delete ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
     #create a ds with my tenancy and change his tenancy to the tested resource tenant
     #adding a ds
     logout_from_tenant_admin();
@@ -867,7 +871,7 @@ sub test_ds_resource_write_block_access {
                 "protocol" => "1",
                 "orgServerFqdn" => "http://10.75.168.91",
                 "cdnName" => "cdn1",
-                "tenantId" => $tenants_data->{$resource_tenant}->{'id'},
+                "tenantId" => $tenants_data->{$login_tenant}->{'id'},
                 "profileId" => 300,
                 "typeId" => "36",
                 "multiSiteOrigin" => "0",
@@ -886,7 +890,7 @@ sub test_ds_resource_write_block_access {
             })
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/0/xmlId" =>  $new_ds_xml_id2 )
-            ->json_is( "/response/0/tenantId" =>  $tenants_data->{$resource_tenant}->{'id'})
+            ->json_is( "/response/0/tenantId" =>  $tenants_data->{$login_tenant}->{'id'})
         , 'Success add ds: login tenant:'.$login_tenant.'?';
 
     #get its data
@@ -899,7 +903,7 @@ sub test_ds_resource_write_block_access {
     my $json2 = decode_json( $t->get_ok('/api/1.2/deliveryservices/'.$new_ds_id2)->tx->res->content->asset->slurp );
     my $response2edit2    = $json2->{response}[0];
     $t->success(is($new_ds_xml_id2,                           $response2edit2->{"xmlId"}));
-    $t->success(is($tenants_data->{$resource_tenant}->{'id'}, $response2edit2->{"tenantId"}));
+    $t->success(is($tenants_data->{$login_tenant}->{'id'}, $response2edit2->{"tenantId"}));
     logout_from_tenant_admin();
     login_to_tenant_admin($login_tenant, $tenants_data);
 
@@ -909,10 +913,6 @@ sub test_ds_resource_write_block_access {
             ->status_is($is_login_tenant_active ? 400 : 403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden")
         , 'Cannot change ds tenant to the target resource tenant: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
-
-    ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
-            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-        , 'Cannot delete ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant_admin();
 
