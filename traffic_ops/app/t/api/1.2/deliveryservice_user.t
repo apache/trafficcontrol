@@ -141,7 +141,8 @@ ok $t->post_ok('/api/1.2/deliveryservice_user' => {Accept => 'application/json'}
             "userId" => $portal_user_id,
             "deliveryServices" => [ 300 ]
         })
-        ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/text" => "Invalid user. This user is not available to you for assignment.")
     , 'Does the delivery services assignment blocked?';
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

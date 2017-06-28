@@ -371,7 +371,7 @@ sub get_available_deliveryservices_not_assigned_to_user {
 	if ( !defined($user) ) {
 		return $self->not_found();
 	}
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
 		#no access to resource tenant
@@ -423,11 +423,11 @@ sub assign_deliveryservices {
 	if ( !defined($user) ) {
 		return $self->not_found();
 	}
-	my $tenant_utils = UI::TenantUtils->new($self);
+	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
 		#no access to resource tenant
-		return $self->forbidden();
+		return $self->alert("Invalid user. This user is not available to you for assignment.");
 	}
 
 	if ( $replace ) {
