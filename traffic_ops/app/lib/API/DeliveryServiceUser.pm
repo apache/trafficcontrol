@@ -18,7 +18,7 @@ package API::DeliveryServiceUser;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
-use UI::TenantUtils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Utils::Helper;
@@ -36,7 +36,7 @@ sub delete {
     if ( !defined($user) ) {
         return $self->not_found();
     }
-    my $tenant_utils = UI::TenantUtils->new($self);
+    my $tenant_utils = Utils::Tenant->new($self);
     my $tenants_data = $tenant_utils->create_tenants_data_from_db();
     if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
         #no access to resource tenant
