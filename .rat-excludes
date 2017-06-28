@@ -1,4 +1,3 @@
-.*\.md(?:                            Markdown files aren't usually code. ){0}
 BUILD_NUMBER(?:                      This very short file doesn't support comments and doesn't constitute code. ){0}
 VERSION(?:                           This very short file doesn't support comments and doesn't constitute code. ){0}
 .*\.min\.css(?:                      minified files are generated files, more akin to compiled binaries. Their source bears the license. ){0}
