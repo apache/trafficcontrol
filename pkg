@@ -141,4 +141,11 @@ if (( $failure )); then
 	echo "Failed to build$badproj."
 fi
 
+if [[ -d dist ]]; then
+        echo "Results in 'dist':"
+        ls -lt dist
+else
+        echo "dist artifact directory not found."
+fi
+
 exit $failure
