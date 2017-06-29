@@ -107,6 +107,22 @@ ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_i
 ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds2/urlkeys.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can unassigned DeliveryService url keys can be viewed?';
 
+# Test copying of url_sig_keys
+# api/$version/deliveryservices/xmlId/:xmlId/fromXmlId/:copyFromXmlId/urlkeys/copy
+
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/fromXmlId/test-ds2/urlkeys/copy')->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can an unassigned DeliveryService url keys be copied to an assigned DeliveryService url keys?';
+
+
+#need to compare contents of calls below both should be equal.
+ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can assigned DeliveryService url keys can be viewed?';
+
+ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds2/urlkeys.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can unassigned DeliveryService url keys can be viewed?';
+
+
 # Negative Testing
 # With error content
 my $fake_put_300 = HTTP::Response->new( 300, undef, HTTP::Headers->new, "You messed it up!" );

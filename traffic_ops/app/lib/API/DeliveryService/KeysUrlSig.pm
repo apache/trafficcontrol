@@ -29,11 +29,92 @@ our @EXPORT_OK = qw(URL_SIG_KEYS_BUCKET);
 sub view_by_xmlid {
 	my $self                = shift;
 	my $xml_id              = $self->param('xmlId');
-	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $xml_id );
-	my $url_sig_values_json = $response_container->{"response"};
+	my $config_file = $self->url_sig_config_file_name($xml_id);
+	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $config_file );
+	my $rc                  = $response_container->{"response"}->{_rc};
+	if ( $rc eq '200' ) {
+		my $url_sig_values_json = $response_container->{"response"}->{_content};
+		return $self->success($url_sig_values_json);
+	} else {
+		return $self->alert("Unable to retrieve keys from Delivery Service '$xml_id'");
+	} 
+}
 
-	#$self->app->log->debug( "url_sig_values_json #-> " . Dumper($url_sig_values_json) );
-	return $self->success($url_sig_values_json);
+sub copy_url_sig_keys {
+	my $self                = shift;
+	my $xml_id              = $self->param('xmlId'); #copying to this service
+	my $copy_from_xml_id    = $self->param('copyFromXmlId'); # copying from this service
+
+	my $current_user = $self->current_user()->{username};
+
+	#check ds and generate config file name
+	my $rs = $self->db->resultset("Deliveryservice")->find( { xml_id => $xml_id } ); 
+	my $ds_id;
+	if ( defined($rs) ) {
+		$ds_id = $rs->id;
+	}
+	else {
+		return $self->alert("Delivery Service '$xml_id' does not exist.");
+	}
+	my $config_file = $self->url_sig_config_file_name($xml_id);
+
+	#check ds to copy from and generate config file name
+	my $copy_rs = $self->db->resultset("Deliveryservice")->find( { xml_id => $copy_from_xml_id } );
+	my $copy_ds_id;
+	if ( defined($copy_rs) ) {
+		$copy_ds_id = $copy_rs->id;
+	}
+	else {
+		return $self->alert("Delivery Service to copy from '$copy_from_xml_id' does not exist.");
+	}
+	my $copy_config_file = $self->url_sig_config_file_name($copy_from_xml_id);
+
+	my $helper = new Utils::Helper( { mojo => $self } );
+	my $url_sig_key_values_json;
+
+	#verify we can copy keys out
+	if ( $helper->is_valid_delivery_service($copy_ds_id) ) {
+		if ( &is_admin($self) || $helper->is_delivery_service_assigned($copy_ds_id) ) {
+			my $response_container = $self->riak_get( URL_SIG_KEYS_BUCKET, $copy_config_file ); # verify this
+			my $rc                 = $response_container->{"response"}->{_rc};
+			if ( $rc eq '200' ) {
+				$url_sig_key_values_json = $response_container->{"response"}->{_content};
+			}
+		}
+		else {
+			return $self->forbidden("Forbidden. Delivery service to copy from not assigned to user.");
+		}
+	}
+	else {
+		return $self->alert("Delivery Service to copy from '$copy_from_xml_id' is not a valid delivery service.");
+	}
+
+	if ( defined($url_sig_key_values_json) ) { # verify we got keys copied
+		# Admins can always do this, otherwise verify the user
+		if ( $helper->is_valid_delivery_service($ds_id) ) {
+			if ( &is_admin($self) || $helper->is_delivery_service_assigned($ds_id) ) {
+				$self->app->log->debug( "url_sig_key_values_json #-> " . $url_sig_key_values_json );
+				my $response_container = $self->riak_put( URL_SIG_KEYS_BUCKET, $config_file, $url_sig_key_values_json );
+				my $response           = $response_container->{"response"};
+				my $rc                 = $response->{_rc};
+				if ( $rc eq '204' ) {
+					return $self->success_message("Successfully copied and stored keys");
+				}
+				else {
+					return $self->alert( $response->{_content} );
+				}
+			}
+			else {
+				return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+			}
+		}
+		else {
+			return $self->alert("Delivery Service '$xml_id' is not a valid delivery service.");
+		}
+	}
+	else {
+		return $self->alert("Unable to retrieve keys from Delivery Service '$copy_from_xml_id'");
+	}
 }
 
 sub generate {

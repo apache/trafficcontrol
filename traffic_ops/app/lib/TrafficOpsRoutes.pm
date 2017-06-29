@@ -160,7 +160,7 @@ sub ui_routes {
 	$r->get('/ds/:id/sslkeys/add')->to( 'SslKeys#add', namespace => $namespace );
 	$r->post('/ds/sslkeys/create')->over( authenticated => 1, not_ldap => 1 )->to( 'SslKeys#create', namespace => $namespace );
 
-	# -- Keys - SSL Key management
+	# -- Keys - URL Sig Key management
 	$r->get('/ds/:id/urlsigkeys/add')->to( 'UrlSigKeys#add', namespace => $namespace );
 
 	# -- Steering DS assignment
@@ -567,6 +567,8 @@ sub api_routes {
 	# -- DELIVERY SERVICE: URL SIG KEYS
 	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys/generate")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#generate', namespace => 'API::DeliveryService' );
+	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/fromXmlId/:copyFromXmlId/urlkeys/copy")->over( authenticated => 1, not_ldap => 1 )
+		->to( 'KeysUrlSig#copy_url_sig_keys', namespace => 'API::DeliveryService' );
 	$r->get("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
 
