@@ -25,7 +25,11 @@
 		<% } %>
 		%= label_for 'xml_id' => '* XML ID', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.xml_id')->text(class => 'field', required => 'required', name => 'ds.xml_id', id => 'ds.xml_id')
+			<% if ($mode =~ /edit/) { %>
+			%= field('ds.xml_id')->text(class => 'field', required => 'required', readonly => 'readonly', name => 'ds.xml_id', id => 'ds.xml_id')
+			<% } else { %>
+			%= field('ds.xml_id')->text(class => 'field', required => 'required', name => 'ds.xml_id', id => 'ds.xml_id')
+			<% } %>
 		<% } else { %>
 		%= field('ds.xml_id')->text(class => 'field', readonly => 'readonly')
 		<% } %>
