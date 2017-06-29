@@ -41,7 +41,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/response/ONLINE", 14 )
+		->json_is( "/response/ONLINE", 16 )
 		->json_is( "/response/REPORTED", 1 )
 		->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -586,8 +586,8 @@ ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'applic
 	, 'Does the server status update succeed and updates are queued when the status is changed on an Edge server?';
 
 ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/response/ONLINE", 18 )
-		->json_is( "/response/REPORTED", 5 )
+		->json_is( "/response/ONLINE", 17 )
+		->json_is( "/response/REPORTED", 1 )
 		->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
