@@ -288,7 +288,7 @@ sub delete_ds {
 	my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
 	$delete_re->delete();
 
-	# Delete config file parameter
+	# Delete config file parameters,       should we also delete url_sig_keys from riak at this step?
 	my @cfg_prefixes = ( "hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_" );
 	foreach my $cfg_prefix (@cfg_prefixes) {
 		my $cfg_file = $cfg_prefix . $dsname . ".config";
