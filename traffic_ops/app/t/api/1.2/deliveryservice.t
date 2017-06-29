@@ -149,10 +149,35 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 		->json_is( "/response/0/protocol" => 2)
 		->json_is( "/response/0/regionalGeoBlocking" => 1)
 		->json_is( "/response/0/type" => "DNS")
-            , 'Does the deliveryservice details return?';
+            , 'Does the deliveryservice update successfully?';
 
+	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
+				"active" => \1,
+				"cdnId" => 100,
+				"displayName" => "ds_displayname_11",
+				"dscp" => 1,
+				"geoLimit" => 1,
+				"geoProvider" => 1,
+				"initialDispersion" => 2,
+				"ipv6RoutingEnabled" => 1,
+				"logsEnabled" => 1,
+				"missLat" => 45,
+				"missLong" => 45,
+				"multiSiteOrigin" => 0,
+				"orgServerFqdn" => "http://10.75.168.91",
+				"protocol" => 2,
+				"qstringIgnore" => 1,
+				"rangeRequestHandling" => 1,
+				"regionalGeoBlocking" => 1,
+				"signed" => 1,
+				"typeId" => 7,
+				"xmlId" => "ds_2",
+			})
+			->json_is( "/alerts/0/text" => "A deliveryservice xmlId is immutable.")
+			->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		, 'Does the deliveryservice update fail when you try to change the xmlId?';
 
-ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 			"active" => \1,

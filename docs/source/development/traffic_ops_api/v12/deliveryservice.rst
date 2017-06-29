@@ -2528,7 +2528,7 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | typeId                 | yes      | The type of this deliveryservice (one of :ref:to-api-v12-types use_in_table='deliveryservice').         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | xmlId                  | yes      | Unique string that describes this deliveryservice.                                                      |
+  | xmlId                  | yes      | Unique string that describes this deliveryservice. This value cannot be changed on update.              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
 
 
