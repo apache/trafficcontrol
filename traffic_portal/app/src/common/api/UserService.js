@@ -1,21 +1,23 @@
 /*
-
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
-var UserService = function($http, $state, $q, $location, authService, userModel, messageModel, ENV) {
+var UserService = function(Restangular, $http, $location, $q, authService, httpService, locationUtils, userModel, messageModel, ENV) {
 
     var service = this;
 
@@ -32,74 +34,111 @@ var UserService = function($http, $state, $q, $location, authService, userModel,
                     }
                 );
         } else {
-            $http.get(ENV.apiEndpoint['1.2'] + "user/current.json")
-                .success(function(result) {
-                    userModel.setUser(result.response);
-                    deferred.resolve(result.response);
-                })
-                .error(function(fault) {
-                    deferred.reject(fault);
-                });
+            $http.get(ENV.api['root'] + "user/current")
+                .then(
+                    function(result) {
+                        userModel.setUser(result.data.response);
+                        deferred.resolve(result.data.response);
+                    },
+                    function(fault) {
+                        deferred.reject(fault);
+                    }
+                );
 
             return deferred.promise;
         }
     };
 
-    this.updateCurrentUser = function(userData) {
-        var deferred = $q.defer();
-        var user = _.omit(userData, 'loaded'); // let's pull the loaded key off of there
-        $http.post(ENV.apiEndpoint['1.2'] + "user/current/update", { user: user })
-            .success(function(result) {
-                userModel.setUser(userData);
-                messageModel.setMessages(result.alerts, false);
-                deferred.resolve(result);
-            })
-            .error(function(fault) {
-                if (angular.isDefined(fault.alerts)) {
-                    messageModel.setMessages(fault.alerts, false);
+    this.getUsers = function(queryParams) {
+        return Restangular.all('users').getList(queryParams);
+    };
+
+    this.getUser = function(id) {
+        return Restangular.one("users", id).get();
+    };
+
+    this.createUser = function(user) {
+        return Restangular.service('users').post(user)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
+                    locationUtils.navigateToPath('/admin/users');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
-                deferred.reject();
-            });
+            );
+    };
+
+    this.updateUser = function(user) {
+        return $http.put(ENV.api['root'] + "users/" + user.id, user)
+            .then(
+                function() {
+                    if (userModel.user.id == user.id) {
+                        // if you are updating the currently logged in user...
+                        userModel.setUser(user);
+                    }
+                    messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
+                }
+            );
+    };
+
+    this.deleteUser = function(id) {
+        return Restangular.one("users", id).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
+            );
+    };
+
+    this.getUnassignedUserDeliveryServices = function(userId) {
+        var deferred = $q.defer();
+
+        $http.get(ENV.api['root'] + "user/" + userId + "/deliveryservices/available")
+            .then(
+                function(result) {
+                    deferred.resolve(result.data.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
         return deferred.promise;
     };
 
-    this.resetPassword = function(email) {
-        var deferred = $q.defer();
-        $http.post(
-                ENV.apiEndpoint['1.2'] + "user/reset_password", { email: email })
-            .success(function(result) {
-                messageModel.setMessages(result.alerts, false);
-                deferred.resolve(result);
-            })
-            .error(function(fault) {
-                if (angular.isDefined(fault.alerts)) {
-                    messageModel.setMessages(fault.alerts, false);
+    this.deleteUserDeliveryService = function(userId, dsId) {
+        return httpService.delete(ENV.api['root'] + 'deliveryservice_user/' + dsId + '/' + userId)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'User and delivery service were unlinked.' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
-                deferred.reject();
-            });
-
-        return deferred.promise;
+            );
     };
 
-    this.createUserPurgeJob = function(jobParams) {
-        var deferred = $q.defer();
-        $http.post(ENV.apiEndpoint['1.2'] + "user/current/jobs", jobParams)
-            .success(function(result) {
-                messageModel.setMessages(result.alerts, false);
-                deferred.resolve(result);
-            })
-            .error(function(fault) {
-                if (angular.isDefined(fault.alerts)) {
-                    messageModel.setMessages(fault.alerts, false);
+    this.assignUserDeliveryServices = function(userId, deliveryServices) {
+        return Restangular.service('deliveryservice_user').post( { userId: userId, deliveryServices: deliveryServices, replace: true } )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery services linked to user' } ], false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
-                deferred.reject();
-            });
-
-        return deferred.promise;
+            );
     };
 
 };
 
-UserService.$inject = ['$http', '$state', '$q', '$location', 'authService', 'userModel', 'messageModel', 'ENV'];
+UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'httpService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];
 module.exports = UserService;

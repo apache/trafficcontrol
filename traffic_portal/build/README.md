@@ -24,9 +24,7 @@
 * Configure Traffic Portal
 
     ```
-    $ cd /etc/traffic_portal/conf
-    $ sudo cp config-template.js config.js
-    $ sudo vi config.js (read the inline comments)
+    $ sudo vi /etc/traffic_portal/conf/config.js (read the inline comments)
     ```
 
 ### 4. Run
