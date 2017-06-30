@@ -13,17 +13,17 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
- */
+*/
 
 var PropertiesModel = function() {
 
-    this.properties = {};
-    this.loaded = false;
+	this.properties = {};
+	this.loaded = false;
 
-    this.setProperties = function(properties) {
-        this.properties = properties;
-        this.loaded = true;
-    };
+	this.setProperties = function(properties) {
+		this.properties = properties;
+		this.loaded = true;
+	};
 
 };
 

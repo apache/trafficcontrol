@@ -14,67 +14,123 @@
  limitations under the License.
 
 */
-
-#header {
-
-  .navbar-nav .navbar-dropdown {
-    padding-top: 8px;
-  }
-
-  .no-transition {
-    -webkit-transition: height 0.01s;
-    -moz-transition: height 0.01s;
-    -ms-transition: height 0.01s;
-    -o-transition: height 0.01s;
-    transition: height 0.01s;
-  }
-
-  .nav-divider {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  .top-navbar {
-    margin-bottom: 5px;
-  }
-
-  .sub-navbar {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-
-  .divider {
-    height: 2px;
-  }
-
+body.nav-sm .main_container .top_nav {
+  padding: 0 !important;
+  display: block;
+  margin-left: 70px;
+  z-index: 2;
 }
 
-#scrollable-ds-nav-menu {
-  height: auto;
-  max-height: 300px;
-  max-width: 500px;
-  overflow-y: auto;
-
-  .ds-name-link {
-    overflow: hidden;
-    text-overflow: ellipsis;
+#alertsButton, #userButton {
+  &:hover, &:focus {
+    text-decoration: none;
   }
-
 }
 
-#headerUsername {
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.main_container .top_nav {
+  padding: 0 !important;
+  display: block;
+  padding: 10px 20px 0;
+  margin-left: 230px;
+}
+
+.top_nav .navbar-right {
+  margin: 0;
+  width: 70%;
+  float: right;
+}
+
+.top_nav .navbar-right li {
   display: inline-block;
-  margin-bottom: -5px;
+  float: right;
+}
+
+.top_nav .dropdown-menu {
+  min-width: 220px;
+}
+
+.top_nav .dropdown-menu li {
+  width: 100%;
+}
+
+.top_nav .dropdown-menu li a {
+  width: 100%;
+  padding: 12px 20px;
+}
+
+.top_nav li a i {
+  font-size: 15px
+}
+
+.navbar {
+  margin-bottom: 0
+}
+
+.navbar-header {
+  background: #34495E;
+}
+
+.navbar-right {
+  margin-right: 0;
+}
+
+.navbar-static-top {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.navbar-brand,
+.navbar-nav>li>.btn-group>.btn-link {
+  color: #fff !important;
+}
+
+.navbar-brand,
+.navbar-nav>li>.btn-group>.btn-link {
+  margin-bottom: 5px
+}
+
+.nav.navbar-nav>li>.btn-group>.btn-link {
+  color: #515356 !important;
+}
+
+.nav.top_menu>li>a {
+  position: relative;
+  display: block;
+  padding: 10px 15px;
+  color: #34495E !important;
+}
+
+.nav>li>a:hover,
+.nav>li>a:focus {
+  background-color: transparent;
+}
+
+.toggle {
+  float: left;
+  margin: 0;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  width: 70px;
+}
+
+.toggle a {
+  padding: 15px 15px 0;
+  margin: 0;
+}
+
+.toggle a i {
+  font-size: 26px;
 }
 
 @media (max-width: 991px) {
-  #header {
-    .nav-divider {
-      display: none;
-    }
+
+  body.nav-md .container.body .top_nav {
+    width: 100%;
+    margin: 0;
   }
+
 }
+
+
+
