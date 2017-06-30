@@ -1,66 +1,81 @@
 /*
-
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 var constants = require('constants'),
     express = require('express'),
     http = require('http'),
     https = require('https'),
+    path = require('path'),
     fs = require('fs'),
     morgan = require('morgan'),
-    errorhandler = require('errorhandler'),
     modRewrite = require('connect-modrewrite'),
     timeout = require('connect-timeout');
 
 var config;
 
 try {
-    // this should exist in prod environment. no need to create this file in dev as it will use the fallback (see catch)
     config = require('/etc/traffic_portal/conf/config');
 }
 catch(e) {
-    // this is used for dev environment
-    config = require('../conf/config');
+    config = require('./conf/config');
 }
 
-var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' });
-var useSSL = config.useSSL;
+var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
+    useSSL = config.useSSL;
 
 // Disable for self-signed certs in dev/test
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
 
 var app = express();
+
+app.use(function(req, res, next) {
+    var err = null;
+    try {
+        decodeURIComponent(req.path)
+    }
+    catch(e) {
+        err = e;
+    }
+    if (err){
+        console.log(err, req.url);
+    }
+    next();
+});
+
 // Add a handler to inspect the req.secure flag (see
 // http://expressjs.com/api#req.secure). This allows us
 // to know whether the request was via http or https.
 app.all ("/*", function (req, res, next) {
     if (useSSL && !req.secure) {
-        var headersHost = req.headers.host.split(':');
-        var httpsUrl = 'https://' + headersHost[0] + ':' +  config.sslPort + req.url;
         // request was via http, so redirect to https
-        res.redirect(httpsUrl);
+        return res.redirect(['https://', req.get('Host'), ':', config.sslPort, req.url].join(''));
     } else {
+        // request was via https or useSSL=false, so do no special handling
         next();
     }
 });
 
 app.use(modRewrite([
-        '^/api/(.*?)\\?(.*)$ ' + config.api.base_url + '$1?$2 [P]',
-        '^/api/(.*)$ ' + config.api.base_url + '$1 [P]'
+    '^/api/(.*?)\\?(.*)$ ' + config.api.base_url + '$1?$2 [P]',
+    '^/api/(.*)$ ' + config.api.base_url + '$1 [P]'
 ]));
+
 app.use(express.static(config.files.static));
 app.use(morgan('combined', {
     stream: logStream,
@@ -69,10 +84,46 @@ app.use(morgan('combined', {
 app.use(timeout(config.timeout));
 
 if (app.get('env') === 'dev') {
-    app.use(errorhandler());
+    app.use(require('connect-livereload')({
+        port: 35728,
+        excludeList: ['.woff', '.flv']
+    }));
 } else {
-    app.set('env', "production");
+    app.set('env', 'production');
 }
+
+// special handling required for dbdump. haven't got this to work yet
+// app.get('/dbdump', function (req, res) {
+//     var port = (useSSL) ? config.sslPort : config.port,
+//         options = {
+//             method: 'GET',
+//             host: 'localhost',
+//             port: port,
+//             path: '/api/1.2/dbdump',
+//             headers: {
+//                 cookie: req.headers['cookie']
+//             }
+//         };
+//
+//     var request = http.request(options, function(response) {
+//         var data = [];
+//         console.log(response.statusCode);
+//         response.on('data', function(chunk) {
+//             data.push(chunk);
+//         });
+//         response.on('end', function() {
+//             data = Buffer.concat(data);
+//             res.writeHead(200, {
+//                 'Content-Type': 'application/download',
+//                 'Content-Disposition': 'attachment; filename=foo.dump.gz',
+//                 'Content-Length': data.length
+//             });
+//             res.end(data);
+//         });
+//     });
+//
+//     request.end();
+// });
 
 // Enable reverse proxy support in Express. This causes the
 // the "X-Forwarded-Proto" header field to be trusted so its
@@ -106,5 +157,4 @@ if (useSSL) {
 }
 
 console.log("Traffic Portal Port         : %s", config.port);
-console.log("Traffic Portal Proxy Port   : %s", config.proxyPort);
 console.log("Traffic Portal SSL Port     : %s", config.sslPort);
