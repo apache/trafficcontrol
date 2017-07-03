@@ -1,0 +1,8 @@
+[
+    { "match": "/cdns/dnsseckeys/refresh",  "auth": { "GET": ["cdn-security-keys-read"] }},
+    { "match": "/current_stats",            "auth": { "GET": ["cache-stats-read"] }},
+    { "match": "/daily_summary",            "auth": { "GET": ["cache-stats-read"] }},
+    { "match": "/federations",              "auth": { "GET": ["federations-read"] }},
+    { "match": "/steering/[^\/]+/?",        "auth": { "GET": ["ds-steering-read"], "PUT":  ["ds-steering-write"], "PATCH": ["ds-steering-write"], "DELETE": ["ds-steering-write"] }},
+    { "match": "/steering",                 "auth": { "GET": ["ds-steering-read"], "POST": ["ds-steering-write"] }}
+]

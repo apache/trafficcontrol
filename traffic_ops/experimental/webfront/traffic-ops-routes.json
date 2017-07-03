@@ -1,0 +1,125 @@
+[
+    { "match": "/asns/[^\/]+/?",                      "auth": { "GET": ["asn-read"], "PUT":  ["asn-write"], "PATCH": ["asn-write"], "DELETE": ["asn-write"] }},
+    { "match": "/asns",                               "auth": { "GET": ["asn-read"], "POST": ["asn-write"] }},
+
+    { "match": "/cachegroups/[^\/]+/queue_update",    "auth": { "POST": ["queue-updates-write"] }},
+    { "match": "/cachegroups/[^\/]+/parameters",      "auth": { "GET":  ["params-read"] }},
+    { "match": "/cachegroups/[^\/]+/?",               "auth": { "GET":  ["cache-group-read"], "PUT":  ["cache-group-write"], "PATCH": ["cache-group-write"], "DELETE": ["cache-group-write"] }},
+    { "match": "/cachegroups",                        "auth": { "GET":  ["cache-group-read"], "POST": ["cache-group-write"] }},
+
+    { "match": "/cachegroupparameters",               "auth": { "GET":    ["params-read"] }},
+
+    { "match": "/cdns/health",                        "auth": { "GET":  ["cdn-health-read"] }},
+    { "match": "/cdns/capacity",                      "auth": { "GET":  ["cdn-health-read"] }},
+    { "match": "/cdns/usage/overview",                "auth": { "GET":  ["cdn-stats-read"] }},
+    { "match": "/cdns/name/dnsseckeys/generate",      "auth": { "GET":  ["cdn-security-keys-read"] }},
+    { "match": "/cdns/name/[^\/]+/?",                 "auth": { "GET":  ["cdn-read"] }},
+    { "match": "/cdns/name/[^\/]+/sslkeys",           "auth": { "GET":  ["cdn-security-keys-read"] }},
+    { "match": "/cdns/name/[^\/]+/dnsseckeys",        "auth": { "GET":  ["cdn-security-keys-read"] }},
+    { "match": "/cdns/name/[^\/]+/dnsseckeys/delete", "auth": { "GET":  ["cdn-security-keys-write"] }},
+    { "match": "/cdns/[^\/]+/queue_update",           "auth": { "POST": ["queue-updates-write"] }},
+    { "match": "/cdns/[^\/]+/snapshot",               "auth": { "PUT":  ["cdn-config-snapshot-write"] }},
+    { "match": "/cdns/[^\/]+/health",                 "auth": { "GET":  ["cdn-health-read"] }},
+    { "match": "/cdns/[^\/]+/?",                      "auth": { "GET":  ["cdn-read"], "PUT":  ["cdn-write"], "PATCH": ["cdn-write"], "DELETE": ["cdn-write"] }},
+    { "match": "/cdns",                               "auth": { "GET":  ["cdn-read"], "POST": ["cdn-write"] }},
+
+    { "match": "/deliveryservices/list",                          "auth": { "GET":  ["ds-read"] }},
+    { "match": "/deliveryservices/request",                       "auth": { "POST": ["ds-write"] }},
+    { "match": "/deliveryservices/sslkeys/generate",              "auth": { "POST": ["ds-security-keys-write"] }},
+    { "match": "/deliveryservices/sslkeys/add",                   "auth": { "POST": ["ds-security-keys-write"] }},
+    { "match": "/deliveryservices/hostname/[^\/]+/sslkeys",       "auth": { "GET":  ["ds-security-keys-read"] }},
+    { "match": "/deliveryservices/xmlId/[^\/]+/sslkeys",          "auth": { "GET":  ["ds-security-keys-read"] }},
+    { "match": "/deliveryservices/xmlId/[^\/]+/sslkeys/delete",   "auth": { "GET":  ["ds-security-keys-write"] }},
+    { "match": "/deliveryservices/xmlId/[^\/]+/urlkeys",          "auth": { "GET":  ["ds-security-keys-read"] }},
+    { "match": "/deliveryservices/xmlId/[^\/]+/urlkeys/generate", "auth": { "POST": ["ds-security-keys-write"] }},
+    { "match": "/deliveryservices/[^\/]+/get",                    "auth": { "GET":  ["ds-read"] }},
+    { "match": "/deliveryservices/[^\/]+/health",                 "auth": { "GET":  ["ds-health-read"] }},
+    { "match": "/deliveryservices/[^\/]+/capacity",               "auth": { "GET":  ["ds-health-read"] }},
+    { "match": "/deliveryservices/[^\/]+/routing",                "auth": { "GET":  ["ds-read"] }},
+    { "match": "/deliveryservices/[^\/]+/state",                  "auth": { "GET":  ["ds-read"] }},
+    { "match": "/deliveryservices/[^\/]+/regexes",                "auth": { "GET":  ["ds-read"] }},
+    { "match": "/[^\/]+/deliveryservices/create",                 "auth": { "POST": ["ds-write"] }},
+    { "match": "/[^\/]+/deliveryservices/update",                 "auth": { "PUT":  ["ds-write"] }},
+    { "match": "/deliveryservices/[^\/]+/regexes/[^\/]+/?",       "auth": { "GET":  ["ds-read"], "PUT":  ["ds-write"], "PATCH": ["ds-write"], "DELETE": ["ds-write"] }},
+    { "match": "/deliveryservices/[^\/]+/regexes",                "auth": { "GET":  ["ds-read"], "POST": ["ds-write"] }},
+    { "match": "/deliveryservices/[^\/]+/?",                      "auth": { "GET":  ["ds-read"], "PUT":  ["ds-write"], "PATCH": ["ds-write"], "DELETE": ["ds-write"] }},
+    { "match": "/deliveryservices",                               "auth": { "GET":  ["ds-read"], "POST": ["ds-write"] }},
+
+    { "match": "/divisions/[^\/]+/regions",         "auth": { "GET": ["region-read"],   "POST": ["region-write"] }},
+    { "match": "/divisions/[^\/]+/?",               "auth": { "GET": ["division-read"], "PUT":  ["division-write"], "PATCH": ["division-write"], "DELETE": ["division-write"] }},
+    { "match": "/divisions",                        "auth": { "GET": ["division-read"], "POST": ["division-write"] }},
+
+    { "match": "/federations/[^\/]+/?",             "auth": { "GET": ["federation-routing-read"], "PUT":  ["federation-routing-write"], "PATCH": ["federation-routing-write"], "DELETE": ["federation-routing-write"] }},
+    { "match": "/federations",                      "auth": { "GET": ["federation-routing-read"], "POST": ["federation-routing-write"] }},
+
+    { "match": "/logs",                             "auth": { "GET": ["change-log-read"] }},
+    { "match": "/logs/newcount",                    "auth": { "GET": ["change-log-read"] }},
+    { "match": "/logs/[^\/]+/days",                 "auth": { "GET": ["cdn-health-read"] }},
+
+    { "match": "/parameters/profile",               "auth": { "GET":  ["params-read"] }},
+    { "match": "/parameters/[^\/]+/validate",       "auth": { "POST": ["params-write"] }},
+    { "match": "/parameters/[^\/]+/?",              "auth": { "GET":  ["params-read"], "PUT":  ["params-write"], "PATCH": ["params-write"], "DELETE": ["params-write"] }},
+    { "match": "/parameters",                       "auth": { "GET":  ["params-read"], "POST": ["params-write"] }},
+
+    { "match": "/profiles/trimmed",                 "auth": { "GET":  ["profile-read"] }},
+    { "match": "/profiles/name/[^\/]+/copy",        "auth": { "POST": ["profile-write"] }},
+    { "match": "/profiles/name/[^\/]+/parameters",  "auth": { "GET":  ["profile-read"], "POST": ["profile-write"] }},
+    { "match": "/profiles/[^\/]+/parameters",       "auth": { "GET":  ["profile-read"], "POST": ["profile-write"] }},
+    { "match": "/profiles/[^\/]+/?",                "auth": { "GET":  ["profile-read"], "PUT":  ["profile-write"], "PATCH": ["profile-write"], "DELETE": ["profile-write"] }},
+    { "match": "/profiles",                         "auth": { "GET":  ["profile-read"], "POST": ["profile-write"] }},
+
+    { "match": "/profileparameters/[^\/]+/[^\/]+/?", "auth": { "DELETE": ["params-write"] }},
+    { "match": "/profileparameters",                 "auth": { "GET":    ["params-read"], "POST": ["params-write"] }},
+
+    { "match": "/phys_locations/trimmed",            "auth": { "GET":  ["types-read"] }},
+    { "match": "/phys_locations/[^\/]+/?",           "auth": { "GET":  ["types-read"], "PUT":  ["types-write"], "PATCH": ["types-write"], "DELETE": ["types-write"] }},
+    { "match": "/phys_locations",                    "auth": { "GET":  ["types-read"], "POST": ["types-write"] }},
+
+    { "match": "/regions/[^\/]+/phys_locations",     "auth": { "POST": ["types-write"] }},
+    { "match": "/regions/[^\/]+/?",                  "auth": { "GET":  ["region-read"], "PUT":  ["region-write"], "PATCH": ["region-write"], "DELETE": ["region-write"] }},
+    { "match": "/regions",                           "auth": { "GET":  ["region-read"], "POST": ["region-write"] }},
+
+    { "match": "/riak/ping",                            "auth": { "GET":  ["cdn-security-keys-write"] }},
+    { "match": "/riak/stats",                           "auth": { "GET":  ["security-keys-read"] }},
+    { "match": "/riak/bucket/[^\/]+/key/[^\/]+/values", "auth": { "GET":  ["security-keys-read"] }},
+
+    { "match": "/servers/details",                  "auth": { "GET":  ["server-read"] }},
+    { "match": "/servers/totals",                   "auth": { "GET":  ["server-read"] }},
+    { "match": "/servers/checks",                   "auth": { "GET":  ["server-read"] }},
+    { "match": "/servers/[^\/]+/queue_update",      "auth": { "POST": ["queue-updates-write"] }},
+    { "match": "/servers/[^\/]+/?",                 "auth": { "GET":  ["server-read"], "PUT":  ["server-write"], "PATCH": ["server-write"], "DELETE": ["server-write"] }},
+    { "match": "/servers",                          "auth": { "GET":  ["server-read"] }},
+
+    { "match": "/serverscheck",                     "auth": { "POST": ["server-write"] }},
+    { "match": "/serverscheck/aadata",              "auth": { "GET":  ["server-read"] }},
+
+    { "match": "/snapshot/[^\/]+/?",                "auth": { "PUT": ["cdn-config-snapshot-write"] }},
+
+    { "match": "/statuses/[^\/]+/?",                "auth": { "GET": ["status-read"] }},
+    { "match": "/statuses",                         "auth": { "GET": ["status-read"] }},
+
+    { "match": "/to_extensions/[^\/]+/delete",      "auth": { "POST": ["to-extension-write"] }},
+    { "match": "/to_extensions",                    "auth": { "GET":  ["to-extension-read"], "POST": ["to-extension-write"] }},
+
+    { "match": "/types/trimmed",                    "auth": { "GET":  ["type-read"] }},
+    { "match": "/types/[^\/]+/?",                   "auth": { "GET":  ["type-read"], "PUT":  ["type-write"], "PATCH": ["type-write"], "DELETE": ["type-write"] }},
+    { "match": "/types",                            "auth": { "GET":  ["type-read"], "POST": ["type-write"] }},
+
+    { "match": "/users/[^\/]+/?",                   "auth": { "GET": ["user-read"], "PUT": ["user-write"] }},
+    { "match": "/users",                            "auth": { "GET": ["user-read"] }},
+
+    { "match": "/cache_stats",                      "auth": { "GET": ["cache-stats-read"] }},
+    { "match": "/deliveryservice_matches",          "auth": { "GET": ["ds-read"] }},
+    { "match": "/deliveryservice_regexes",          "auth": { "GET": ["ds-read"] }},
+    { "match": "/deliveryservice_stats",            "auth": { "GET": ["ds-stats-read"] }},
+    { "match": "/deliveryserviceserver",            "auth": { "GET": ["ds-cache-read"] }},
+    { "match": "/hwinfo",                           "auth": { "GET": ["all-read"] }},
+    { "match": "/keys/ping",                        "auth": { "GET": ["security-keys-read"] }},
+    { "match": "/roles",                            "auth": { "GET": ["role-read"] }},
+    { "match": "/staticdnsentries",                 "auth": { "GET": ["static-dns-read"] }},
+    { "match": "/system/info",                      "auth": { "GET": ["basic-read"] }},
+
+    { "match": "/[^\/]+/stats_summary/create",      "auth": { "PUT": ["cdn-stats-read"] }},
+    { "match": "/[^\/]+/stats_summary",             "auth": { "PUT": ["cdn-stats-read"] }}
+
+]

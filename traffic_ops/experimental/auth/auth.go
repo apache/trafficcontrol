@@ -16,7 +16,7 @@
 package main
 
 import (
-	"crypto/sha1"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -33,12 +33,15 @@ import (
 
 // Config holds the configuration of the server.
 type Config struct {
-	DbName      string `json:"db-name"`
-	DbUser      string `json:"db-user"`
-	DbPassword  string `json:"db-password"`
-	DbServer    string `json:"db-server"`
-	DbPort      uint   `json:"db-port"`
-	ListenPort  uint   `json:"listen-port"`
+	DbName         string `json:"db-name"`
+	DbUser         string `json:"db-user"`
+	DbPassword     string `json:"db-password"`
+	DbServer       string `json:"db-server"`
+	DbPort         uint   `json:"db-port"`
+	ListenPort     uint   `json:"listen-port"`
+	CrtFile		   string `json:"crt-file"`
+	KeyFile		   string `json:"key-file"`
+	LegacyLoginURL string `json:"legacy-login-url"`
 }
 
 type Login struct {
@@ -46,13 +49,27 @@ type Login struct {
 	Password    string `json:"password"`
 }
 
+type LegacyLogin struct {
+	Username    string `json:"u"`
+	Password    string `json:"p"`
+}
+
 type TmUser struct {
-	Role        uint   `db:"role"`
+	UserId      int    `db:"id"`
 	Password    string `db:"local_passwd"`
 }
 
+type UserRole struct {
+	RoleId      int    `db:"role_id"`
+}
+
+type Capability struct {
+	CapName     string `db:"cap_name"`
+}
+
 type Claims struct {
-    Capabilities []string `json:"cap"`
+    Capabilities []string     `json:"cap"`
+    LegacyCookie string       `json:"legacy-cookie"`	// LEGACY: The legacy cookie to be passed to API GW
     jwt.StandardClaims
 }
 
@@ -66,12 +83,15 @@ var Logger *log.Logger
 
 func printUsage() {
 	exampleConfig := `{
-	"db_name":     "to_development",
-	"db_user":     "username",
-	"db_password": "password",
-	"db_server":   "localhost",
-	"db_port":     5432,
-	"listen_port": 9004
+	"db_name":         "to_development",
+	"db_user":         "username",
+	"db_password":     "password",
+	"db_server":       "localhost",
+	"db_port":         5432,
+	"listen_port":     9004,
+	"crt-file":        "server.crt",
+	"key-file":        "server.key",
+	"legacy_to_login": "http://localhost:3000/api/1.2/user/login"
 }`
 	fmt.Println("Usage: " + path.Base(os.Args[0]) + " config-file secret")
 	fmt.Println("")
@@ -107,18 +127,18 @@ func main() {
 		return
 	}
 
+	handler, _ := makeHandler(&config)
 	http.HandleFunc("/login", handler)
 	
-	if _, err := os.Stat("server.pem"); os.IsNotExist(err) {
-		Logger.Fatal("server.pem file not found")
+	if _, err := os.Stat(config.CrtFile); os.IsNotExist(err) {
+		Logger.Fatalf("%s file not found", config.CrtFile)
 	}
-
-	if _, err := os.Stat("server.key"); os.IsNotExist(err) {
-		Logger.Fatal("server.key file not found")
+	if _, err := os.Stat(config.KeyFile); os.IsNotExist(err) {
+		Logger.Fatalf("%s file not found", config.KeyFile)
 	}
 
 	Logger.Printf("Starting server on port %d...", config.ListenPort)
-	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), "server.pem", "server.key", nil))
+	Logger.Fatal(http.ListenAndServeTLS(":" + strconv.Itoa(int(config.ListenPort)), config.CrtFile, config.KeyFile, nil))
 }
 
 func InitializeDatabase(username, password, dbname, server string, port uint) (*sqlx.DB, error) {
@@ -132,83 +152,202 @@ func InitializeDatabase(username, password, dbname, server string, port uint) (*
 	return db, nil
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func LegacyTOLogin(login Login, legacyLoginURL string, w http.ResponseWriter) (*http.Response, error) {
 
-	Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
+	// TODO(amiry) - Legacy token expiration should be longer than JWT expiration
 
-	if r.Method == "POST" {
-		var login Login
-		tmUserlist := []TmUser{}
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			Logger.Println("Error reading body: ", err.Error())
-			http.Error(w, "Error reading body: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		
-		err = json.Unmarshal(body, &login)
-		if err != nil {
-			Logger.Println("Invalid JSON: ", err.Error())
-			http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		
-		stmt, err := db.PrepareNamed("SELECT role,local_passwd FROM tm_user WHERE username=:username")
-		if err != nil {
-			Logger.Println("Database error: ", err.Error())
-			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
+	legacyLogin := LegacyLogin{ login.Username, login.Password }
 
-		err = stmt.Select(&tmUserlist, login)
-		if err != nil {
-			Logger.Println("Database error: ", err.Error())
-			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
+ 	body, err := json.Marshal(legacyLogin)
+    if err != nil {
+		Logger.Println("JSON marshal error: ", err.Error())
+        return nil, err
+    }
 
-    	hasher := sha1.New()
-    	hasher.Write([]byte(login.Password))
-    	hashedPassword := fmt.Sprintf("%x", hasher.Sum(nil))
-
-		if len(tmUserlist) == 0 || tmUserlist[0].Password != string(hashedPassword) {
-			Logger.Printf("Invalid username/password, username %s", login.Username)
-			http.Error(w, "Invalid username/password", http.StatusUnauthorized)
-			return
-		}
-
-		Logger.Printf("User %s authenticated", login.Username)
-
-		claims := Claims {
-	        []string{"read-ds", "write-ds", "read-cg"},	// TODO(amiry) - Adding hardcoded capabilities as a POC. 
-	        											// Need to read from TO role tables when tables are ready
-	        jwt.StandardClaims {
-	        	Subject: login.Username,
-	            ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),	// TODO(amiry) - We will need to use shorter expiration, 
-	            													// and use refresh tokens to extend access
-	        },
-	    }
-
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-		tokenString, err := token.SignedString([]byte(os.Args[2]))
-		if err != nil {
-			Logger.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		js, err := json.Marshal(TokenResponse{Token: tokenString})
-		if err != nil {
-			Logger.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
-		return
+	req, err := http.NewRequest("POST", legacyLoginURL,  bytes.NewBuffer(body))
+	client := &http.Client{}
+    resp, err := client.Do(req)
+	if err != nil {
+		Logger.Println("Legacy Login error: ", err.Error(), " Legacy URL: ", legacyLoginURL)
+		return nil, err;
 	}
 
-	http.Error(w, r.Method+" "+r.URL.Path+" not valid for this microservice", http.StatusNotFound)
+	return resp, err
+}
+
+func makeHandler(config *Config) (func(http.ResponseWriter, *http.Request), error) {
+
+	return func (w http.ResponseWriter, r *http.Request) {
+
+		Logger.Println(r.Method, r.URL.Scheme, r.Host, r.URL.RequestURI())
+
+		if r.Method == "POST" {
+
+			var login Login
+			tmUserList := []TmUser{}
+			userRoleList := []UserRole{}
+			capList := []Capability{}
+
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				Logger.Printf("Error reading request body: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+				return
+			}
+			
+			err = json.Unmarshal(body, &login)
+			if err != nil {
+				Logger.Printf("JSON error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+				return
+			}
+
+			// Get the user id and the password from tm_user, in order to validate the user's password
+			stmt, err := db.PrepareNamed("SELECT id,local_passwd FROM tm_user WHERE username=:username")
+			if err != nil {
+				Logger.Printf("DB error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			err = stmt.Select(&tmUserList, login)
+			if err != nil {
+				Logger.Printf("DB error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			/*
+	    	hasher := sha1.New()
+	    	hasher.Write([]byte(login.Password))
+	    	hashedPassword := fmt.Sprintf("%x", hasher.Sum(nil))
+
+			if len(tmUserList) == 0 || tmUserList[0].Password != string(hashedPassword) {
+				Logger.Printf("Invalid username/password. Username=%s]", login.Username)
+				http.Error(w, "Invalid username/password", http.StatusUnauthorized)
+				return
+			}
+			*/
+
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+			// LEGACY: Perform login against legacy TO. This is required until AAA is disabled in TO
+			legacyResp, err := LegacyTOLogin(login, config.LegacyLoginURL, w);
+			if err != nil {
+				Logger.Printf("Traffic Ops login error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return;
+			}
+
+			if legacyResp.StatusCode != http.StatusOK {
+				Logger.Printf("Invalid username/password. Username=%s]", login.Username)
+				http.Error(w, "Invalid username/password", http.StatusUnauthorized)
+				return
+			}
+
+			legacyCookies := legacyResp.Cookies()
+
+			if (legacyCookies == nil) || (len(legacyCookies) != 1) || (legacyCookies[0].Name != "mojolicious") {
+				Logger.Printf("Error parsing Traffic Ops response cookies. Cookies: %v ", legacyCookies)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			Logger.Printf("LEGACY LOGIN TOKEN: %s %s %s", legacyCookies[0].Name, legacyCookies[0].Value, legacyCookies[0].Expires)
+			
+			// LEGACY: End
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+			// We have validated the user's password, now lets get the user's roles
+			stmt, err = db.PrepareNamed("SELECT role_id FROM user_role WHERE user_id=:id")
+			if err != nil {
+				Logger.Printf("DB error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			err = stmt.Select(&userRoleList, tmUserList[0])
+			if err != nil {
+				Logger.Printf("DB error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			rolesIds := []int{}
+			for _, elem := range userRoleList {
+				rolesIds = append(rolesIds, elem.RoleId)
+			}
+
+			capabilities := []string{}
+
+			if len(rolesIds) > 0 {
+
+				// Get user's capabilities according to the user's roles
+				sql, args, err := sqlx.In("SELECT cap_name FROM role_capability WHERE role_id IN (?)", rolesIds)
+				if err != nil {
+					Logger.Printf("DB error: %s", err.Error())
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				// Replace the "?" bindvar syntax with DB specific syntax ($1, $2, ... for PostgreSQL)
+				sql = db.Rebind(sql)
+
+				stmt1, err := db.Preparex(sql)
+				if err != nil {
+					Logger.Printf("DB error: %s", err.Error())
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				err = stmt1.Select(&capList, args...)
+				if err != nil {
+					Logger.Printf("DB error: %s", err.Error())
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				for _, elem := range capList {
+					capabilities = append(capabilities, elem.CapName)
+				}
+			}
+
+			Logger.Printf("User %s authenticated. Role Ids %v. Capabilities %v", login.Username, rolesIds, capabilities)
+
+			claims := Claims {
+				
+				capabilities,											// Set capabilities
+				legacyCookies[0].String(),								// LEGACY: Set legacy cookie
+
+		        jwt.StandardClaims {
+		        	Subject: login.Username,
+		            ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),	// TODO(amiry) - We will need to use shorter expiration, 
+		            													// and use refresh tokens to extend access.
+		            													// Expiration time should be configurable.
+		        },
+		    }
+
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+			tokenSignedString, err := token.SignedString([]byte(os.Args[2]))
+			if err != nil {
+				Logger.Printf("JWT error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			js, err := json.Marshal(TokenResponse{Token: tokenSignedString})
+			if err != nil {
+				Logger.Printf("JWT error: %s", err.Error())
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(js)
+			return
+		}
+
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}, nil
 }
