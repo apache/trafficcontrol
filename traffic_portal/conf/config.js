@@ -17,7 +17,7 @@
  * under the License.
  */
 
-// this is the config that is consumed by server/server.js
+// this is the config that is consumed by /server.js on application startup
 module.exports = {
     timeout: '120s',
     useSSL: false, // set to true if you plan to use https (self-signed or trusted certs).
