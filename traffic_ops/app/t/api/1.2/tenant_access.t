@@ -115,6 +115,7 @@ my $fixture_num_of_users = $t->get_ok('/api/1.2/users')->status_is(200)->$respon
 my $fixture_num_of_dses = $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$responses_counter();
 my $fixture_num_of_dses_server_mapping = $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$responses_counter();
 my $fixture_num_of_ds_regexes = $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$responses_counter();
+my $fixture_num_of_ds_matches = $t->get_ok('/api/1.2/deliveryservice_matches')->status_is(200)->$responses_counter();
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
@@ -131,6 +132,7 @@ ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(2*$num_of_
 ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses);
 ok $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses_server_mapping);
 ok $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_ds_regexes);
+ok $t->get_ok('/api/1.2/deliveryservice_matches')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_ds_matches);
 
 #cannot change its tenancy
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
@@ -184,8 +186,8 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Cannot change my tenancy: tenant: A1?';
 ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test(0);
-ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test(0);
 ok $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$count_response_test(0);
+ok $t->get_ok('/api/1.2/deliveryservice_matches')->status_is(200)->$count_response_test(0);
 logout_from_tenant();
 #no access to anywhere
 test_tenants_block_access ("A3", "A3", $tenants_data);
@@ -329,7 +331,7 @@ sub prepare_tenant {
                 "typeId" => "36",
                 "multiSiteOrigin" => "0",
                 "regionalGeoBlocking" => "1",
-                "active" => "false",
+                "active" => "true",
                 "dscp" => 0,
                 "ipv6RoutingEnabled" => "true",
                 "logsEnabled" => "true",

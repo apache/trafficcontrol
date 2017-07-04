@@ -18,6 +18,7 @@ package API::DeliveryServiceMatches;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 use UI::DeliveryService;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -28,11 +29,19 @@ sub index {
 	my $format = $self->param("format") || "";
 
 	my $rs;
-	if ( &is_privileged($self) ) {
+	# TO the reviewer: Do we need to override the "is_priviledged" here byt the standard "ignore_ds_user_table" flag?
+	# What is the reason of the is_priv test - was someone just dussmissed the ds_tmuser table tests
+	if ( &is_privileged($self)) {
+
 		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', 'type', { 'deliveryservice_regexes' => 'regex' }  ], order_by => 'xml_id' } );
 
 		my @matches;
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		while ( my $row = $rs->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
 			my @match_patterns;
 			my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 			my $xml_id   = defined( $row->xml_id ) ? $row->xml_id    : "";
