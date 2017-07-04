@@ -342,6 +342,7 @@ sub prepare_tenant {
 
     my $ds_id = $schema->resultset('Deliveryservice')->find( { xml_id => $ds_xml_id } )->id;
 
+<<<<<<< HEAD
     # assign one ds to user with id=200
     ok $t->post_ok('/api/1.2/deliveryservice_user' => {Accept => 'application/json'} => json => {
                 "userId" => $portal_userid,
@@ -352,10 +353,19 @@ sub prepare_tenant {
             ->json_is( "/response/deliveryServices/0" => $ds_id )
         , 'Does the delivery services assign details return?';
 
-    add_tenant_record($tenants_data, $name, $tenant_id, 
+    my $server_name_to_use = 'atlanta-edge-01';
+    my $server_id_to_use = 100;
+    ok $t->post_ok('/api/1.2/deliveryservices/'.$ds_xml_id.'/servers' => {Accept => 'application/json'} => json => {
+                "serverNames" => [$server_name_to_use]
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Was the DS properly assigned to server?';
+
+    add_tenant_record($tenants_data, $name, $tenant_id,
         $admin_username, $admin_userid,
         $portal_username, $portal_userid,
-        $ds_id, $ds_xml_id);
+        $ds_id, $ds_xml_id,
+        $server_name_to_use, $server_id_to_use);
 }
 
 sub add_tenant_record {
@@ -369,6 +379,8 @@ sub add_tenant_record {
         'portal_uid' => shift,
         'ds_id' => shift,
         'ds_xml_id' => shift,
+        'server_name_to_use' => shift,
+        'server_id_to_use' => shift,
     };
 }
 
@@ -376,7 +388,8 @@ sub clear_tenant {
     my $name = shift;
     my $tenants_data = shift;
 
-
+    #Deleting the DS asginment to server
+    ok $t->delete_ok('/api/1.2/deliveryservice_server/'.$tenants_data->{$name}->{'ds_id'} ."/".$tenants_data->{$name}->{'server_id_to_use'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
     #deleting the DS
     ok $t->delete_ok('/api/1.2/deliveryservice_user/'.$tenants_data->{$name}->{'ds_id'}.'/'.$tenants_data->{$name}->{'portal_uid'} => {Accept => 'application/json'})
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
