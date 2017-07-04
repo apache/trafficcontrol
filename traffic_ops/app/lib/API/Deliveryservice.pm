@@ -872,7 +872,12 @@ sub get_deliveryservices_by_serverId {
 
 	my @data;
 	if ( defined($deliveryservices) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		while ( my $row = $deliveryservices->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
 			push(
 				@data, {
 					"active"               => \$row->active,

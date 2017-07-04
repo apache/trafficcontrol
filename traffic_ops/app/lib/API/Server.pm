@@ -16,6 +16,7 @@ package API::Server;
 #
 #
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use POSIX qw(strftime);
@@ -400,38 +401,42 @@ sub get_servers_by_status {
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 
-	my $servers;
-	if ( &is_privileged($self) ) {
-		my %criteria;
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
+	##get the data of all DSes, filtered for user if the feature is in use
+	my $all_dses;
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table()) {
+		$all_dses = $self->db->resultset("Deliveryservice")->search( undef )
 	}
 	else {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-
-		my @ds_servers =
-			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
-
-		my %criteria = ( 'me.id' => { -in => \@ds_servers } );
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
+		my @base_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id =>
+			$tm_user->id } )->get_column('deliveryservice')->all();
+		$all_dses = $self->db->resultset("Deliveryservice")->search( { id => { -in => \@base_ds_ids } } )
 	}
+
+	#filter by tenancy
+	my @ds_ids = ();
+	while ( my $row = $all_dses->next ) {
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
+		push( @ds_ids, $row->id );
+	}
+
+	my @ds_servers =
+		$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
+
+	my %criteria = ( 'me.id' => { -in => \@ds_servers } );
+	if ( defined $status ) {
+		$criteria{'status.name'} = $status;
+	}
+	my $servers = $self->db->resultset('Server')->search(
+		\%criteria, {
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+			order_by => 'me.' . $orderby_snakecase,
+		}
+	);
 
 	return $servers;
 }
@@ -445,9 +450,21 @@ sub get_servers_by_dsid {
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 	my $helper            = new Utils::Helper( { mojo => $self } );
 
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	my @ds_servers;
 	my $forbidden;
-	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		$forbidden = "Forbidden. Delivery service not available for user's tenant.";
+	}
+	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
 	else {
@@ -456,7 +473,6 @@ sub get_servers_by_dsid {
 
 	my $servers;
 	if ( scalar(@ds_servers) ) {
-		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
 		my %criteria = ( -or => [ 'me.id' => { -in => \@ds_servers } ] );
 
 		# currently these are the ds types that bypass the mids
@@ -489,11 +505,22 @@ sub get_edge_servers_by_dsid {
 	my $self    = shift;
 	my $ds_id   = $self->param('id');
 
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
 	my $ds_servers;
-	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden();
+	}
+	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
 		$ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
 	}
 	else {
+		#for the reviewer - I believe it should turn into forbidden as well
 		return $self->alert("Forbidden. Delivery service not assigned to user.");
 	}
 
@@ -569,10 +596,17 @@ sub get_unassigned_servers_by_dsid {
 	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
 
 	my @assigned_servers;
-	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden();
+	}
+	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
 		@assigned_servers = $self->db->resultset('DeliveryserviceServer')->search( \%ds_server_criteria, { prefetch => [ 'deliveryservice', 'server' ] } )->get_column('server')->all();
 	}
 	else {
+		#for the reviewer - I believe it should turn into forbidden as well
 		return $self->alert("Forbidden. Delivery service not assigned to user.");
 	}
 
@@ -651,7 +685,14 @@ sub get_eligible_servers_by_dsid {
 	my %ds_server_criteria;
 	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
 
-	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden();
+	}
+	elsif ( !&is_privileged($self) && !$tenant_utils->ignore_ds_users_table() && !$self->is_delivery_service_assigned($ds_id) ) {
+		#for the reviewer - I believe it should turn into forbidden as well
 		return $self->alert("Forbidden. Delivery service not assigned to user.");
 	}
 
@@ -726,39 +767,44 @@ sub get_servers_by_type {
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 
-	my $servers;
-	if ( &is_privileged($self) ) {
-		my %criteria = ( 'type.name' => $type );
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
+	##get the data of all DSes, filtered for user if the feature is in use
+	my $all_dses;
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table()) {
+		$all_dses = $self->db->resultset("Deliveryservice")->search( undef )
 	}
 	else {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-
-		my @ds_servers =
-			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
-
-		my %criteria = ( 'me.id' => { -in => \@ds_servers }, 'type.name' => $type );
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
+		my @base_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id =>
+			$tm_user->id } )->get_column('deliveryservice')->all();
+		$all_dses = $self->db->resultset("Deliveryservice")->search( { id => { -in => \@base_ds_ids } } )
 	}
+
+	#filter by tenancy
+	my @ds_ids = ();
+	while ( my $row = $all_dses->next ) {
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
+		push( @ds_ids, $row->id );
+	}
+
+	my @ds_servers =
+		$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice =>
+			{ -in => \@ds_ids } } )->get_column('server')->all();
+
+	my %criteria = ( 'me.id' => { -in => \@ds_servers }, 'type.name' => $type );
+	if (defined $status) {
+		$criteria{'status.name'} = $status;
+	}
+
+	my $servers = $self->db->resultset('Server')->search(
+		\%criteria, {
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+			order_by => 'me.' . $orderby_snakecase,
+		}
+	);
 
 	return $servers;
 }
