@@ -821,9 +821,16 @@ sub assign_servers {
 		return $self->alert("Parameter 'serverNames' is required.");
 	}
 
-	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();
-	if ( !defined($dsid) ) {
+	my $ds = $self->db->resultset('Deliveryservice')->find( { xml_id => $ds_xml_Id } );
+	if ( !defined($ds) ) {
 		return $self->alert( "DeliveryService[" . $ds_xml_Id . "] is not found." );
+	}
+	my $dsid = $ds->id;
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden();
 	}
 
 	my @server_ids;
@@ -1223,6 +1230,7 @@ sub request {
 		return $self->alert($result);
 	}
 }
+
 
 sub is_deliveryservice_request_valid {
 	my $self    = shift;
