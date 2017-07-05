@@ -491,7 +491,6 @@ sub api_routes {
 	$r->get("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#index', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Deliveryservice#show', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#create', namespace => $namespace );
-	$r->post("/api/$version/deliveryservices")->over( authenticated => 1 )->to( 'Deliveryservice#create', namespace => $namespace );
 	$r->put("/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Deliveryservice#update', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'Deliveryservice#delete', namespace => $namespace );
 
