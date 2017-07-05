@@ -103,7 +103,7 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
-=head2 deliveryservice_2
+=head2 target
 
 Type: belongs_to
 
@@ -112,9 +112,9 @@ Related object: L<Schema::Result::Deliveryservice>
 =cut
 
 __PACKAGE__->belongs_to(
-  "deliveryservice_2",
+  "target",
   "Schema::Result::Deliveryservice",
-  { id => "deliveryservice" },
+  { id => "target" },
   { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 

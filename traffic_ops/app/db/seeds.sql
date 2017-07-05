@@ -223,6 +223,11 @@ insert into api_capability (http_method, route, capability) values ('GET', '/int
 insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/steering/*', 'ds-steering-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 97
 insert into api_capability (http_method, route, capability) values ('POST', '/internal/api/*/steering', 'ds-steering-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 98
 insert into api_capability (http_method, route, capability) values ('PUT', '/internal/api/*/steering/*', 'ds-steering-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 99
+insert into api_capability (http_method, route, capability) values ('GET', '/api/*/steering/*/targets', 'ds-steering-target-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('GET', '/api/*/steering/*/targets/*', 'ds-steering-target-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/steering/*/targets', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/steering/*/targets/*', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/steering/*/targets/*', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryserviceserver', 'ds-cache-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 103
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/*/servers', 'ds-cache-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 106
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices_regexes', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 109

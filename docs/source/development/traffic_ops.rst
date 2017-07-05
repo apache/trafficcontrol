@@ -629,6 +629,7 @@ API 1.2 Reference
   traffic_ops_api/v12/server
   traffic_ops_api/v12/static_dns
   traffic_ops_api/v12/status
+  traffic_ops_api/v12/steering_target
   traffic_ops_api/v12/system
   traffic_ops_api/v12/tenant
   traffic_ops_api/v12/to_extension
