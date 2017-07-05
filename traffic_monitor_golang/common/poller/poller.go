@@ -110,11 +110,25 @@ type MonitorConfigPoller struct {
 // If tick is false, HttpPoller.TickChan() will return nil
 func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 	return MonitorConfigPoller{
-		Interval:         interval,
-		SessionChannel:   make(chan towrap.ITrafficOpsSession),
-		ConfigChannel:    make(chan MonitorCfg),
+		Interval:       interval,
+		SessionChannel: make(chan towrap.ITrafficOpsSession),
+		// ConfigChannel MUST have a buffer size 1, to make the nonblocking writeConfig work
+		ConfigChannel:    make(chan MonitorCfg, 1),
 		OpsConfigChannel: make(chan handler.OpsConfig),
 		IntervalChan:     make(chan time.Duration),
+	}
+}
+
+// writeConfig writes the given config to the Config chan. This is nonblocking, and immediately returns.
+// Because readers only ever want the latest config, if nobody has read the previous write, we remove it. Since the config chan is buffered size 1, this function is therefore asynchronous.
+func (p MonitorConfigPoller) writeConfig(cfg MonitorCfg) {
+	for {
+		select {
+		case p.ConfigChannel <- cfg:
+			return // return after successfully writing.
+		case <-p.ConfigChannel:
+			// if the channel buffer was full, read, then loop and try to write again
+		}
 	}
 }
 
@@ -130,6 +144,7 @@ func (p MonitorConfigPoller) Poll() {
 		os.Exit(1) // The Monitor can't run without a MonitorConfigPoller
 	}()
 	for {
+		// Every case MUST be asynchronous and non-blocking, to prevent livelocks. If a chan must be written to, it must either be buffered AND remove existing values, or be written to in a goroutine.
 		select {
 		case opsConfig := <-p.OpsConfigChannel:
 			log.Infof("MonitorConfigPoller: received new opsConfig: %v\n", opsConfig)
@@ -150,18 +165,16 @@ func (p MonitorConfigPoller) Poll() {
 			tick.Stop()
 			tick = time.NewTicker(p.Interval)
 		case <-tick.C:
-			if p.Session != nil && p.OpsConfig.CdnName != "" {
-				monitorConfig, err := p.Session.TrafficMonitorConfigMap(p.OpsConfig.CdnName)
-
-				if err != nil {
-					log.Errorf("MonitorConfigPoller: %s\n %v\n", err, monitorConfig)
-				} else {
-					log.Debugln("MonitorConfigPoller: fetched monitorConfig")
-					p.ConfigChannel <- MonitorCfg{CDN: p.OpsConfig.CdnName, Cfg: *monitorConfig}
-				}
-			} else {
+			if p.Session == nil || p.OpsConfig.CdnName == "" {
 				log.Warnln("MonitorConfigPoller: skipping this iteration, Session is nil")
+				continue
 			}
+			monitorConfig, err := p.Session.TrafficMonitorConfigMap(p.OpsConfig.CdnName)
+			if err != nil {
+				log.Errorf("MonitorConfigPoller: %s\n %v\n", err, monitorConfig)
+				continue
+			}
+			p.writeConfig(MonitorCfg{CDN: p.OpsConfig.CdnName, Cfg: *monitorConfig})
 		}
 	}
 }
