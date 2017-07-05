@@ -42,24 +42,30 @@ func Parse(secret, cookie string) (*Cookie, error) {
 	if dashPos == -1 {
 		return nil, fmt.Errorf("malformed cookie '%s' - no dashes", cookie)
 	}
-	if len(cookie) < dashPos+4 {
-		return nil, fmt.Errorf("malformed cookie '%s' - no signature", cookie)
+
+	lastDashPos := strings.LastIndex(cookie, "-")
+	if lastDashPos == -1 {
+		return nil, fmt.Errorf("malformed cookie '%s' - no dashes", cookie)
+	}
+
+	if len(cookie) < lastDashPos+1 {
+		return nil, fmt.Errorf("malformed cookie '%s' -- no signature", cookie)
 	}
 
 	base64Txt := cookie[:dashPos]
-
 	txtBytes, err := base64.RawURLEncoding.DecodeString(base64Txt)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding base64 data: %v", err)
 	}
+	base64TxtSig := cookie[:lastDashPos-1] // the signature signs the base64 including trailing hyphens, but the Go base64 decoder doesn't want the trailing hyphens.
 
-	base64Sig := cookie[dashPos+4:]
+	base64Sig := cookie[lastDashPos+1:]
 	sigBytes, err := hex.DecodeString(base64Sig)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding signature: %v", err)
 	}
 
-	if !checkHmac([]byte(base64Txt+"--"), sigBytes, []byte(secret)) {
+	if !checkHmac([]byte(base64TxtSig), sigBytes, []byte(secret)) {
 		return nil, fmt.Errorf("bad signature")
 	}
 
