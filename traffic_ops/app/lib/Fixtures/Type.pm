@@ -288,7 +288,34 @@ my %definition_for = (
 			description  => 'Steering Delivery Service',
 			use_in_table => 'deliveryservice',
 		}
-	}
+	},
+	CLIENT_STEERING => {
+		new   => 'Type',
+		using => {
+			id           => 38,
+			name         => 'CLIENT_STEERING',
+			description  => 'Client-Controlled Steering Delivery Service',
+			use_in_table => 'deliveryservice',
+		}
+	},
+	STEERING_WEIGHT => {
+		new   => 'Type',
+		using => {
+			id           => 39,
+			name         => 'STEERING_WEIGHT',
+			description  => 'Weighted steering target',
+			use_in_table => 'steering_target',
+		}
+	},
+	STEERING_ORDER => {
+		new   => 'Type',
+		using => {
+			id           => 40,
+			name         => 'STEERING_ORDER',
+			description  => 'Ordered steering target',
+			use_in_table => 'steering_target',
+		}
+	},
 );
 
 sub get_definition {
