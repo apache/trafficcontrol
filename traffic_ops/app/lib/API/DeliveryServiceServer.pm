@@ -28,6 +28,11 @@ sub index {
 	my @data;
 	my $orderby = $self->param('orderby') || "deliveryservice";
 
+	#FOR THE REVIEWER - Currently I do not check DS tenancy here.
+	#I assume the operation is of a CDN owner for debug and I would not like to hide data here.
+	# Additionally I assume the operation is protected by "roles"
+	#Also note that the ds/user table is note tested here originally
+
 	# defaulted pagination and limits because there are 38129 rows in this table and counting...
 	my $page  = $self->param('page')  || 1;
 	my $limit = $self->param('limit') || 20;
@@ -237,7 +242,7 @@ sub remove_server_from_ds {
 
 	my $tenant_utils = Utils::Tenant->new($self);
 	if ( !&is_privileged($self) && !$tenant_utils->ignore_ds_users_table() && !$self->is_delivery_service_assigned($ds_id) ) {
-		$self->forbidden("Forbidden. Delivery service not assigned to user.");
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.");
 	}
 
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
@@ -247,7 +252,7 @@ sub remove_server_from_ds {
 	}
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds_tenant)) {
-		$self->forbidden("Forbidden. Delivery service not available on user tenancy.");
+		return $self->forbidden("Forbidden. Delivery service not available on user tenancy.");
 	}
 
 	my $ds_server = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id, server => $server_id }, { prefetch => [ 'deliveryservice', 'server' ] } );
