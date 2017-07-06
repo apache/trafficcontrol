@@ -80,3 +80,18 @@ func Parse(secret, cookie string) (*Cookie, error) {
 
 	return &cookieData, nil
 }
+
+func NewRawMsg(msg, key []byte) string {
+	base64Msg := base64.RawURLEncoding.WithPadding('-').EncodeToString(msg)
+	mac := hmac.New(sha1.New, []byte(key))
+	mac.Write([]byte(base64Msg))
+	encMac := mac.Sum(nil)
+	base64Sig := hex.EncodeToString(encMac)
+	return base64Msg + "--" + base64Sig
+}
+
+func New(user string, expiration time.Time, key string) string {
+	cookieMsg := Cookie{AuthData: user, ExpiresUnix: expiration.Unix()}
+	msg, _ := json.Marshal(cookieMsg)
+	return NewRawMsg(msg, []byte(key))
+}
