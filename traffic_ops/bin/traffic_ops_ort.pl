@@ -302,7 +302,7 @@ sub revalidate_while_sleeping {
 
 sub os_version {
   my $release = "UNKNOWN";
-  if (`uname -r` =~ m/.+(el\d)(\.\w+)*\.x86_64/)  {
+  if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
     $release = uc $1;
   }
   exists $supported_el_release{$release} ? return $release
