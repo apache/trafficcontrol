@@ -37,6 +37,9 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
 ##### News
+* 06-July 2017: Apache Traffic Control (incubating) 2.0.0 is released. This changes the Traffic Ops database 
+	from MySQL to Postgres and requires some planning for the migration. 
+	See https://github.com/apache/incubator-trafficcontrol/releases/tag/RELEASE-2.0.0 for the full change list.
 * 07-March 2017: Apache Traffic Control (incubating) 1.8.0 is released.   This is the first release under the
 	Apache Incubator.
 	See https://github.com/Comcast/traffic_control/releases/tag/RELEASE-1.8.0 for the full change list.
