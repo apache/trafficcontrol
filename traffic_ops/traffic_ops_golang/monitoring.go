@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const MonitoringPrivLevel = 10
+
 const CacheMonitorConfigFile = "rascal.properties"
 const MonitorType = "RASCAL"
 const RouterType = "CCR"

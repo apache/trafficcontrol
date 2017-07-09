@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie"
 	"log" // TODO change to traffic_monitor_golang/common/log
@@ -8,7 +9,7 @@ import (
 	"time"
 )
 
-func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string) RegexHandlerFunc {
+func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
 	if noAuth {
 		return h
 	}
@@ -34,6 +35,12 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string) RegexHandlerFunc {
 		oldCookie, err := tocookie.Parse(secret, cookie.Value)
 		if err != nil {
 			handleUnauthorized("cookie error: " + err.Error())
+			return
+		}
+
+		username := oldCookie.AuthData
+		if !hasPrivLevel(privLevelStmt, username, privLevelRequired) {
+			handleUnauthorized("insufficient privileges")
 			return
 		}
 
