@@ -24,6 +24,7 @@ import (
 )
 
 const Name = "mojolicious"
+const DefaultDuration = time.Hour
 
 type Cookie struct {
 	AuthData    string `json:"auth_data"`
@@ -94,4 +95,9 @@ func New(user string, expiration time.Time, key string) string {
 	cookieMsg := Cookie{AuthData: user, ExpiresUnix: expiration.Unix()}
 	msg, _ := json.Marshal(cookieMsg)
 	return NewRawMsg(msg, []byte(key))
+}
+
+// Update takes an existing cookie and returns a new serialized cookie with an updated expiration
+func Refresh(c *Cookie, key string) string {
+	return New(c.AuthData, time.Now().Add(DefaultDuration), key)
 }
