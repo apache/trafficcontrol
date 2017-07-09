@@ -47,7 +47,11 @@ func main() {
 	}
 	defer db.Close()
 
-	RegisterRoutes(ServerData{DB: db, Config: cfg})
+	if err := RegisterRoutes(ServerData{DB: db, Config: cfg}); err != nil {
+		fmt.Printf("Error registering routes: %v\n", err)
+		return
+	}
+
 	fmt.Println("Listening on " + cfg.HTTPPort)
 	if err := http.ListenAndServeTLS(":"+cfg.HTTPPort, cfg.CertPath, cfg.KeyPath, nil); err != nil {
 		fmt.Printf("Error stopping server: %v\n", err)

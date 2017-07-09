@@ -55,6 +55,31 @@ Built: %(date) by %{getenv: USER}
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
 
+    export GOPATH=$(pwd)
+    # Create build area with proper gopath structure
+    mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
+
+    # build tocookie (dependencies within traffic_control will fail to `go get` unless prebuilt)
+    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/traffic_ops/experimental/tocookie/* . && \
+      echo "go getting tocookie at $(pwd)" && \
+      go get -v \
+    ) || { echo "Could not build go tocookie at $(pwd): $!"; exit 1; }
+
+    # build traffic_ops_golang binary
+    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+    oldpwd=$(pwd)
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
+      echo "go getting at $(pwd)" && \
+      go get -d -v && \
+      echo "go building at $(pwd)" && \
+      go build -ldflags "-B 0x`git rev-parse HEAD`" \
+    ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+
 %install
 
     if [ -d $RPM_BUILD_ROOT ]; then
@@ -66,6 +91,9 @@ Built: %(date) by %{getenv: USER}
     fi
 
     %__cp -R $RPM_BUILD_DIR/traffic_ops-%{version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+    echo "go rming $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}"
+    %__rm -rf $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}
+
     %__mkdir -p $RPM_BUILD_ROOT/var/www/files
     %__cp install/data/perl/osversions.cfg $RPM_BUILD_ROOT/var/www/files/.
 
@@ -73,6 +101,14 @@ Built: %(date) by %{getenv: USER}
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
     fi
 
+    # install traffic_ops_golang binary
+    if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin ]; then
+        %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin
+    fi
+
+    src=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+    %__cp -p  "$src"/traffic_ops_golang        "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/traffic_ops_golang
+    %__cp -p "$src"/traffic_ops_golang.config  "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/conf/traffic_ops_golang.config
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}

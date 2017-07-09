@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"regexp"
@@ -18,10 +19,6 @@ type ParamMap map[string]string
 
 type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params ParamMap)
 
-func getMonitoringRoute(d ServerData) RegexHandlerFunc {
-	return wrapLogTime(wrapAuth(monitoringHandler(d.DB), d.NoAuth, d.TOSecret))
-}
-
 // getRootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
 func getRootHandler(d ServerData) http.Handler {
 	// debug
@@ -33,11 +30,16 @@ func getRootHandler(d ServerData) http.Handler {
 	return rp
 }
 
-// GetRoutes returns the map of regex routes, and a catchall route if no regex matches.
-func GetRoutes(d ServerData) (map[string]RegexHandlerFunc, http.Handler) {
+// GetRoutes returns the map of regex routes, and a catchall route for when no regex matches.
+func GetRoutes(d ServerData) (map[string]RegexHandlerFunc, http.Handler, error) {
+	privLevelStmt, err := preparePrivLevelStmt(d.DB)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error preparing db priv level query: ", err)
+	}
+
 	return map[string]RegexHandlerFunc{
-		"api/1.2/cdns/{cdn}/configs/monitoring.json": getMonitoringRoute(d),
-	}, getRootHandler(d)
+		"api/1.2/cdns/{cdn}/configs/monitoring.json": wrapLogTime(wrapAuth(monitoringHandler(d.DB), d.NoAuth, d.TOSecret, privLevelStmt, MonitoringPrivLevel)),
+	}, getRootHandler(d), nil
 }
 
 type CompiledRoute struct {
@@ -86,10 +88,16 @@ func Handler(routes map[string]CompiledRoute, catchall http.Handler, w http.Resp
 	catchall.ServeHTTP(w, r)
 }
 
-func RegisterRoutes(d ServerData) {
-	routes, catchall := GetRoutes(d)
+func RegisterRoutes(d ServerData) error {
+	routes, catchall, err := GetRoutes(d)
+	if err != nil {
+		return err
+	}
+
 	compiledRoutes := CompileRoutes(&routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, catchall, w, r)
 	})
+
+	return nil
 }
