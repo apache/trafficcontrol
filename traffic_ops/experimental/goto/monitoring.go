@@ -1,23 +1,9 @@
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-// http://www.apache.org/licenses/LICENSE-2.0
-
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package main
 
 import (
 	"database/sql"
 	"encoding/json"
-	"flag"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie"
 	"github.com/lib/pq"
 	"net/http"
 	"strings"
@@ -29,61 +15,8 @@ const MonitorType = "RASCAL"
 const RouterType = "CCR"
 const MonitorProfilePrefix = "RASCAL"
 const MonitorConfigFile = "rascal-config.txt"
-
 const KilobitsPerMegabit = 1000
 const DeliveryServiceStatus = "REPORTED"
-
-// Args encapsulates the command line arguments
-type Args struct {
-	HTTPPort string
-	DBUser   string
-	DBPass   string
-	DBServer string
-	DBDB     string
-	DBSSL    bool
-	Auth     bool
-	TOSecret string
-}
-
-// getFlags parses and returns the command line arguments. The returned error
-// will be non-nil if any expected arg is missing.
-func getFlags() (Args, error) {
-	var args Args
-	flag.StringVar(&args.HTTPPort, "port", "", "the port to serve on")
-	flag.StringVar(&args.DBUser, "user", "", "the database user")
-	flag.StringVar(&args.DBPass, "pass", "", "the database password")
-	flag.StringVar(&args.DBServer, "server", "", "the database server IP or FQDN, without scheme")
-	flag.StringVar(&args.DBDB, "db", "", "the database name")
-	flag.BoolVar(&args.DBSSL, "ssl", true, "whether to require or disable SSL connecting to the database")
-	flag.StringVar(&args.TOSecret, "secret", "", "the Traffic Ops secret, used to authenticate mojolicious cookies")
-	flag.BoolVar(&args.Auth, "authenticate", true, "whether to authenticate requests, requiring valid Traffic Ops cookies")
-	flag.Parse()
-	if args.HTTPPort == "" {
-		return args, fmt.Errorf("missing port")
-	}
-	if args.DBUser == "" {
-		return args, fmt.Errorf("missing user")
-	}
-	if args.DBPass == "" {
-		return args, fmt.Errorf("missing password")
-	}
-	if args.DBServer == "" {
-		return args, fmt.Errorf("missing server")
-	}
-	if args.DBDB == "" {
-		return args, fmt.Errorf("missing database")
-	}
-	if args.Auth && args.TOSecret == "" {
-		return args, fmt.Errorf("missing secret")
-	}
-	return args, nil
-}
-
-func printUsage() {
-	fmt.Println("Usage:")
-	flag.PrintDefaults()
-	fmt.Println("Example: to-go-monitoring -port 80 -user bill -pass thelizard -server db.to.example.net -db to")
-}
 
 type BasicServer struct {
 	Profile    string `json:"profile"`
@@ -146,6 +79,34 @@ type DeliveryService struct {
 	TotalTPSThreshold  float64 `json:"totalTpsThreshold"`
 	Status             string  `json:"status"`
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
+}
+
+// TODO change to use the ParamMap, instead of parsing the URL
+func monitoringHandler(db *sql.DB) RegexHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+		handleErr := func(err error, status int) {
+			fmt.Printf("%v %v error %v\n", time.Now(), r.RemoteAddr, err)
+			w.WriteHeader(status)
+			fmt.Fprintf(w, http.StatusText(status))
+		}
+
+		cdnName := p["cdn"]
+
+		resp, err := getMonitoringJson(cdnName, db)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
+		respBts, err := json.Marshal(resp)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", respBts)
+	}
 }
 
 func getServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
@@ -434,95 +395,4 @@ func getMonitoringJson(cdnName string, db *sql.DB) (*MonitoringResponse, error) 
 		},
 	}
 	return &resp, nil
-}
-
-// authenticate attempts to authenticate the given request, looking for an auth cookie, using the auth settings in args. Returns nil if authentication succeeds, or a descriptive error if authentication fails (which should NOT be returned to clients, for security reasons).
-func authenticate(r *http.Request, args Args) error {
-	if !args.Auth {
-		return nil
-	}
-
-	cookie, err := r.Cookie(tocookie.Name)
-	if err != nil {
-		return fmt.Errorf("getting cookie: %v", err)
-	}
-	if cookie == nil {
-		return fmt.Errorf("no auth cookie")
-	}
-
-	if _, err := tocookie.Parse(args.TOSecret, cookie.Value); err != nil {
-		return fmt.Errorf("parsing cookie: %v", err)
-	}
-	return nil
-}
-
-func rootHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, args Args) {
-	start := time.Now()
-	defer func() {
-		now := time.Now()
-		fmt.Printf("%v %v served %v in %v\n", now, r.RemoteAddr, r.URL.Path, now.Sub(start))
-	}()
-
-	handleErr := func(err error, status int) {
-		fmt.Printf("%v %v error %v\n", time.Now(), r.RemoteAddr, err)
-		w.WriteHeader(status)
-		fmt.Fprintf(w, http.StatusText(status))
-	}
-
-	if err := authenticate(r, args); err != nil {
-		handleErr(err, http.StatusUnauthorized)
-		return
-	}
-
-	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 5 {
-		handleErr(fmt.Errorf("nonexistent path requested: '%v'", r.URL.Path), http.StatusNotFound)
-		return
-	}
-	cdnName := pathParts[4]
-
-	resp, err := getMonitoringJson(cdnName, db)
-	if err != nil {
-		handleErr(err, http.StatusInternalServerError)
-		return
-	}
-
-	respBts, err := json.Marshal(resp)
-	if err != nil {
-		handleErr(err, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, "%s", respBts)
-}
-
-func main() {
-	args, err := getFlags()
-	if err != nil {
-		fmt.Println(err)
-		printUsage()
-		return
-	}
-
-	sslStr := "require"
-	if !args.DBSSL {
-		sslStr = "disable"
-	}
-
-	db, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", args.DBUser, args.DBPass, args.DBServer, args.DBDB, sslStr))
-	if err != nil {
-		fmt.Printf("Error opening database: %v\n", err)
-		return
-	}
-	defer db.Close()
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		rootHandler(w, r, db, args)
-	})
-
-	if err := http.ListenAndServe(":"+args.HTTPPort, nil); err != nil {
-		fmt.Printf("Error stopping server: %v\n", err)
-		return
-	}
 }
