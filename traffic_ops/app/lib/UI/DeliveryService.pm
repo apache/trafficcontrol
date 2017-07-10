@@ -19,6 +19,7 @@ package UI::DeliveryService;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
@@ -1009,6 +1010,7 @@ sub create {
 	$self->stash_cdn_selector();
 	&stash_role($self);
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
+		my $tenantUtils = Utils::Tenant->new($self);
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
@@ -1054,7 +1056,7 @@ sub create {
 				remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
-				tenant_id => current_user_tenant($self),#Tenancy is not dealt by the UI for now. getting the tenancy from the user
+				tenant_id => $tenantUtils->current_user_tenant(),#Tenancy is not dealt by the UI for now. getting the tenancy from the user
 			}
 		);
 		$insert->insert();
