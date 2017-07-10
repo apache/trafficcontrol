@@ -21,6 +21,7 @@ package API::Deliveryservice;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -463,7 +464,8 @@ sub create {
 	}
 	
 	#setting tenant_id to the user id if tenant is not set. 
-	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
+	my $tenantUtils = Utils::Tenant->new($self);
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenantUtils->current_user_tenant();
 
 	my $values = {
 		active                 => $params->{active},
