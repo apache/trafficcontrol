@@ -133,6 +133,7 @@ sub index {
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
+				"tenantId"		   => $row->tenant_id,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
 				"type"                 => $row->type->name,
@@ -248,6 +249,7 @@ sub show {
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
+				"tenantId"             => $row->tenant_id,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
 				"type"                 => $row->type->name,
@@ -285,6 +287,9 @@ sub update {
 			return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
 		}
 	}
+	
+	#setting tenant_id to undef if tenant is not set. 
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef; 
 
 	my $values = {
 		active                 => $params->{active},
@@ -329,6 +334,7 @@ sub update {
 		remap_text             => $params->{remapText},
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
+		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
 		tr_response_headers    => $params->{trResponseHeaders},
 		type                   => $params->{typeId},
@@ -415,6 +421,7 @@ sub update {
 				"remapText"                => $rs->remap_text,
 				"signed"                   => $rs->signed,
 				"sslKeyVersion"            => $rs->ssl_key_version,
+				"tenantId"                 => $rs->tenant_id,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
 				"type"                     => $rs->type->name,
@@ -446,11 +453,15 @@ sub create {
 		return $self->alert($result);
 	}
 
+
 	my $xml_id = $params->{xmlId};
 	my $existing = $self->db->resultset('Deliveryservice')->find( { xml_id => $xml_id } );
 	if ($existing) {
 		return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
 	}
+	
+	#setting tenant_id to the user id if tenant is not set. 
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $self->current_user_tenant();
 
 	my $values = {
 		active                 => $params->{active},
@@ -495,6 +506,7 @@ sub create {
 		remap_text             => $params->{remapText},
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
+		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
 		tr_response_headers    => $params->{trResponseHeaders},
 		type                   => $params->{typeId},
@@ -594,6 +606,7 @@ sub create {
 				"remapText"                => $insert->remap_text,
 				"signed"                   => $insert->signed,
 				"sslKeyVersion"            => $insert->ssl_key_version,
+				"tenantId"                 => $insert->tenant_id,
 				"trRequestHeaders"         => $insert->tr_request_headers,
 				"trResponseHeaders"        => $insert->tr_response_headers,
 				"type"                     => $insert->type->name,
@@ -703,6 +716,7 @@ sub get_deliveryservices_by_serverId {
 					"remapText"            => $row->remap_text,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
+					"tenantId"             => $row->tenant_id,
 					"trRequestHeaders"     => $row->tr_request_headers,
 					"trResponseHeaders"    => $row->tr_response_headers,
 					"type"                 => $row->type->name,
@@ -777,6 +791,7 @@ sub get_deliveryservices_by_userId {
 					"remapText"            => $row->remap_text,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
+					"tenantId"             => $row->tenant_id,
 					"trRequestHeaders"     => $row->tr_request_headers,
 					"trResponseHeaders"    => $row->tr_response_headers,
 					"type"                 => $row->type->name,
@@ -1073,7 +1088,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# Validation checks to perform
