@@ -1,0 +1,66 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+FROM centos:7
+MAINTAINER Dan Kirkwood <dangogh@apache.org>
+
+RUN yum -y install \
+        https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+
+RUN yum -y install \
+        cpanminus \
+        expat-devel \
+        gcc-c++ \
+        libcurl \
+        libcurl-devel \
+        libidn-devel \
+        libpcap-devel \
+        mkisofs \
+        nmap-ncat \
+        openssl-devel \
+        perl \
+        perl-App-cpanminus \
+        perl-DBD-Pg \
+        perl-DBI \
+        perl-Digest-SHA1 \
+        perl-JSON \
+        perl-TermReadKey \
+        perl-Test-CPAN-Meta \
+        perl-WWW-Curl \
+        perl-core \
+        perl-libwww-perl \
+        postgresql96 \
+        postgresql96-devel && \
+        yum clean all
+
+RUN curl -o - https://www.kernel.org/pub/software/scm/git/git-2.12.2.tar.gz | tar xzvf - -C /tmp && \
+        cd /tmp/git-2.12.2/ && \
+        make -i prefix=/usr install && \
+        rm -rf /tmp/git-2.12.2
+
+RUN cpanm -n Carton
+
+ADD install/bin/install_goose.sh /
+RUN /install_goose.sh
+
+ADD app /opt/traffic_ops/app
+WORKDIR /opt/traffic_ops/app
+RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
+
+RUN rm -rf /root/.cpan*
+
+ADD app/bin/tests/runtests.sh /
+CMD [ "/runtests.sh", "/opt/traffic_ops/app/t", "test", "db", "5432" ]
+
+#
+# vi:syntax=Dockerfile
