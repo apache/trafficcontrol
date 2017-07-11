@@ -1,0 +1,75 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
+            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id + '/targets')">Targets</a></li>
+            <li class="active">{{targetName}}</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="dsTargetForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.deliveryServiceId), 'has-feedback': hasError(dsTargetForm.deliveryServiceId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Steering Delivery Service *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="deliveryServiceId" name="deliveryServiceId" class="form-control" ng-model="target.deliveryServiceId" ng-disabled="true" ng-options="ds.id as ds.xmlId for ds in deliveryServices">
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.targetId), 'has-feedback': hasError(dsTargetForm.targetId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Steering Target *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="targetId" name="targetId" class="form-control" ng-model="target.targetId" ng-options="ds.id as ds.xmlId for ds in deliveryServices" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(dsTargetForm.targetId, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.typeId), 'has-feedback': hasError(dsTargetForm.typeId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="typeId" name="typeId" class="form-control" ng-model="target.typeId" ng-options="type.id as type.name for type in types" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(dsTargetForm.typeId, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.value), 'has-feedback': hasError(dsTargetForm.value)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Value *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="value" name="value" type="text" class="form-control" ng-model="target.value" ng-required="true" ng-maxlength="3" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'pattern')">Number</small>
+                    <span ng-show="hasError(dsTargetForm.value)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(target)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsTargetForm.$pristine || dsTargetForm.$invalid" ng-click="save(deliveryService.id, targetId, target)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceService = function(Restangular, locationUtils, httpService, messageModel, ENV) {
+var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, httpService, messageModel, ENV) {
 
     this.getDeliveryServices = function(queryParams) {
         return Restangular.all('deliveryservices').getList(queryParams);
@@ -68,6 +68,57 @@ var DeliveryServiceService = function(Restangular, locationUtils, httpService, m
         return Restangular.one('servers', serverId).getList('deliveryservices');
     };
 
+    this.getDeliveryServiceTargets = function(dsId) {
+        return Restangular.one('steering', dsId).getList('targets');
+    };
+
+    this.getDeliveryServiceTarget = function(dsId, targetId) {
+        return Restangular.one('steering', dsId).one('targets', targetId).get();
+    };
+
+    this.updateDeliveryServiceTarget = function(dsId, targetId, target) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "steering/" + dsId + "/targets/" + targetId, target)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Steering target updated' } ], false);
+                    locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.createDeliveryServiceTarget = function(dsId, target) {
+        return Restangular.one('steering', dsId).all('targets').post(target)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Steering target created' } ], true);
+                    locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+    this.deleteDeliveryServiceTarget = function(dsId, targetId) {
+        return Restangular.one('steering', dsId).one('targets', targetId).remove()
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Steering target deleted' } ], true);
+                    locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/targets');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
+            );
+    };
+
     this.getUserDeliveryServices = function(userId) {
         return Restangular.one('users', userId).getList('deliveryservices');
     };
@@ -99,5 +150,5 @@ var DeliveryServiceService = function(Restangular, locationUtils, httpService, m
 
 };
 
-DeliveryServiceService.$inject = ['Restangular', 'locationUtils', 'httpService', 'messageModel', 'ENV'];
+DeliveryServiceService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'httpService', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceService;

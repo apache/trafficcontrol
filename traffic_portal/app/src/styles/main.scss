@@ -146,6 +146,13 @@ body.nav-sm .container.body .main-content {
 
 }
 
+td {
+  .table-btn {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
 @media(min-width:992px) {
   body.nav-md .container.body .main-content {
     margin-left: 230px;

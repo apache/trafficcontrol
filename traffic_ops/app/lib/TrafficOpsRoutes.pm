@@ -530,6 +530,12 @@ sub api_routes {
 	$r->post("/internal/api/$version/steering")->over( authenticated => 1 )->to( 'Steering#add', namespace => 'API::DeliveryService' );
 	$r->put("/internal/api/$version/steering/:xml_id")->over( authenticated => 1 )->to( 'Steering#update', namespace => 'API::DeliveryService' );
 
+	$r->get("/api/$version/steering/:id/targets" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'SteeringTarget#index', namespace => 'API::DeliveryService' );
+	$r->get("/api/$version/steering/:id/targets/:target_id" => [ id => qr/\d+/, target_id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'SteeringTarget#show', namespace => 'API::DeliveryService' );
+	$r->post("/api/$version/steering/:id/targets" => [ id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'SteeringTarget#create', namespace => 'API::DeliveryService' );
+	$r->put("/api/$version/steering/:id/targets/:target_id" => [ id => qr/\d+/, target_id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'SteeringTarget#update', namespace => 'API::DeliveryService' );
+	$r->delete("/api/$version/steering/:id/targets/:target_id" => [ id => qr/\d+/, target_id => qr/\d+/ ] )->over( authenticated => 1 )->to( 'SteeringTarget#delete', namespace => 'API::DeliveryService' );
+
 	# -- DELIVERYSERVICE: SSL KEYS
 	# Support for SSL private keys, certs, and csrs
 	# gets the latest key by default unless a version query param is provided with ?version=x

@@ -119,6 +119,10 @@ var FormDeliveryServiceController = function(deliveryService, types, $scope, $lo
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
+    $scope.viewTargets = function() {
+        $location.path($location.path() + '/targets');
+    };
+
     $scope.viewServers = function() {
         $location.path($location.path() + '/servers');
     };
