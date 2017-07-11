@@ -34,7 +34,7 @@ var FormEditDeliveryServiceTargetController = function(deliveryService, target, 
 		saveLabel: 'Update'
 	};
 
-	$scope.targetName = angular.copy(target.targetXmlId);
+	$scope.targetName = angular.copy(target.target);
 
 	$scope.save = function(dsId, targetId, target) {
 		deliveryServiceService.updateDeliveryServiceTarget(dsId, targetId, target);
