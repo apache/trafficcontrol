@@ -59,7 +59,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
                     size: 'sm',
                     resolve: {
                         params: function () {
-                            return result;
+                            return result.data;
                         }
                     }
                 });
