@@ -1924,6 +1924,19 @@ sub format_parent_info {
 	return $text;
 }
 
+sub ats_ver {
+	my $self       = shift;
+	my $server_obj = shift;
+
+	my $ats_ver =
+		$self->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	my $ats_major_version = substr( $ats_ver, 0, 1 );
+
+	return $ats_major_version;
+}
+
 sub parent_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -1931,11 +1944,7 @@ sub parent_dot_config {
 
 	my $server_type = $server_obj->type->name;
 
-	my $ats_ver =
-		$self->db->resultset('ProfileParameter')
-		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
-		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
-	my $ats_major_version = substr( $ats_ver, 0, 1 );
+	my $ats_major_version = $self->ats_ver( $server_obj );
 	my $parent_info;
 	my $text = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
@@ -2237,6 +2246,13 @@ sub build_remap_line {
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 		$text .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
+	}
+
+	if ( defined( $remap->{'param'}->{'cachekey.config'} ) ) {
+		$text .= " \@plugin=cachekey.so";
+		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {
+			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
+		}
 	}
 
 	# Note: should use full path here?
