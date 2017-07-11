@@ -817,6 +817,13 @@ my %definition_for = (
             parameter => 61,
         },
     },
+    'edge1_package_trafficserver' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 100,
+            parameter => 66,
+        },
+    },
 );
 
 sub get_definition {
