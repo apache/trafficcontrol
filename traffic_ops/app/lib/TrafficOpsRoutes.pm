@@ -497,11 +497,11 @@ sub api_routes {
 
 	# -- DELIVERYSERVICES
 	# -- DELIVERYSERVICES: CRUD
-
 	$r->get("/api/$version/deliveryservices")->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#index', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#show', namespace => $namespace );
 	$r->post("/api/$version/deliveryservices")->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#create', namespace => $namespace );
 	$r->put("/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#update', namespace => $namespace );
+	$r->put("/api/$version/deliveryservices/:id/safe" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#safe_update', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservices/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#delete', namespace => $namespace );
 
 	# get all delivery services associated with a server (from deliveryservice_server table)
