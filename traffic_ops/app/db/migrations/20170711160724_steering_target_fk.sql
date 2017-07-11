@@ -16,11 +16,11 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE public.steering_target
+ALTER TABLE steering_target
 DROP CONSTRAINT fk_steering_target_target,
 ADD CONSTRAINT fk_steering_target_target
   FOREIGN KEY (target)
-  REFERENCES public.deliveryservice (id)
+  REFERENCES deliveryservice (id)
   ON DELETE CASCADE
   ON UPDATE CASCADE;
 
