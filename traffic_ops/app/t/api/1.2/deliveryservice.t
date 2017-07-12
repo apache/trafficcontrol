@@ -30,16 +30,21 @@ use Test::TestHelper;
 
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
-my $schema = Schema->connect_to_database;
-my $dbh    = Schema->database_handle;
-my $t      = Test::Mojo->new('TrafficOps');
+sub run_ut {
+
+my $t = shift;
+my $schema = shift;
+my $login_user = shift;
+my $login_password = shift;
 
 Test::TestHelper->unload_core_data($schema);
 Test::TestHelper->load_core_data($schema);
 
-ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
+my $tenant_name = defined ($tenant_id) ? $schema->resultset('Tenant')->find( { id => $tenant_id } )->get_column('name') : "null";
 
+ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password } )->status_is(302)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 # Count the 'response number'
 my $count_response = sub {
 	my ( $t, $count ) = @_;
@@ -115,7 +120,6 @@ my $ds_id = &get_ds_id('ds_1');
 ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 			"active" => \1,
 			"cdnId" => 100,
-            "tenantId" => $tenant_id,
             "displayName" => "ds_displayname_11",
 			"dscp" => 1,
 			"geoLimit" => 1,
@@ -138,7 +142,6 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/0/active" => 1)
 		->json_is( "/response/0/cdnName" => "cdn1")
-        ->json_is( "/response/tenantId" => $tenant_id)
 		->json_is( "/response/0/displayName" => "ds_displayname_11")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
@@ -191,6 +194,15 @@ $t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+}
+
+my $schema = Schema->connect_to_database;
+my $dbh    = Schema->database_handle;
+my $t      = Test::Mojo->new('TrafficOps');
+run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD);
+
 $dbh->disconnect();
 done_testing();
 
