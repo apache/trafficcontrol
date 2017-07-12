@@ -848,7 +848,11 @@ sub login {
             $referer = '/';
         }
         if ( $referer =~ /\/login/ ) {
-            $referer = '/edge_health';
+            if ( &UI::Utils::is_ldap($self) ) {
+                $referer = '/dailysummary'; # LDAP-only users can't see edge_health
+            } else {
+                $referer = '/edge_health';
+            }
         }
         return $self->redirect_to($referer);
     }
