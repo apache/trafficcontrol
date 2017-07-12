@@ -23,6 +23,15 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 		return currentType.name.indexOf(type) != -1;
 	});
 
+	var setDNSTtl = function() {
+		if (type.indexOf('HTTP') != -1) {
+			deliveryService.ccrDnsTtl = 3600;
+		} else {
+			deliveryService.ccrDnsTtl = 30;
+		}
+	};
+	setDNSTtl();
+
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, types: filteredTypes, $scope: $scope }));
 
