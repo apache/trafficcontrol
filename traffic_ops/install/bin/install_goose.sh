@@ -26,6 +26,9 @@ INSTALL_DIR=/usr/local
 GOROOT=$INSTALL_DIR/go
 GO_BINARY=$GOROOT/bin/go
 
+# Make sure git is installed before proceeding
+yum -y install git
+
 cd /tmp
 rm $GO_TARBALL_VERSION
 rm $GO_TARBALL_VERSION_SHA_FILE
