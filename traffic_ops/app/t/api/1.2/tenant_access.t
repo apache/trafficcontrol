@@ -558,7 +558,7 @@ sub test_user_resource_write_block_access {
     $response2edit2->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
     ok $t->put_ok('/api/1.2/users/'.$new_userid2 => {Accept => 'application/json'} => json => $response2edit2)
             ->status_is($is_login_tenant_active ? 400 : 403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden")
+            ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden: User is not available for your tenant.")
         , 'Cannot change user tenant to the target resource tenant: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant_admin();

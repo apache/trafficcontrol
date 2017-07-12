@@ -125,7 +125,7 @@ sub show {
 
 	while ( my $row = $rs_data->next ) {
 		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
-			return $self->forbidden();
+			return $self->forbidden("Forbidden: User is not available for your tenant.");
 		}
 		push(
 			@data, {
@@ -178,7 +178,7 @@ sub update {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
 		#no access to resource tenant
-		return $self->forbidden();
+		return $self->forbidden("Forbidden: User is not available for your tenant.");
 	}
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
 		#no access to target tenancy
