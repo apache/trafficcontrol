@@ -564,6 +564,8 @@ sub update_current {
 		if ( defined( $user->{"country"} ) ) {
 			$db_user->{"country"} = $user->{"country"};
 		}
+		# token is intended for new user registrations and on current user update, it should be cleared from the db
+		$db_user->{"token"} = undef;
 		$dbh->update($db_user);
 		return $self->success_message("UserProfile was successfully updated.");
 	}
