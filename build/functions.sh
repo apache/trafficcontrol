@@ -76,7 +76,12 @@ function getVersion() {
 	local d="$1"
 	local vf="$d/VERSION"
 	[ -r $vf ] || { echo "Could not read $vf: $!"; exit 1; }
-	cat "$vf"
+	if [ "${TC_COMPILER}" == "go" ]; then
+		local version="$(cat ${vf})_go"
+		echo "${version}"
+	else
+		cat "$vf"
+	fi
 }
 
 # ---------------------------------------
@@ -118,6 +123,7 @@ function checkEnvironment {
 	echo "BUILD_NUMBER: $BUILD_NUMBER"
 	echo "RHEL_VERSION: $RHEL_VERSION"
 	echo "TC_VERSION: $TC_VERSION"
+	echo "TC_COMPILER: $TC_COMPILER"
 	echo "--------------------------------------------------"
 }
 
