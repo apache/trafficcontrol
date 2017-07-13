@@ -40,36 +40,41 @@ Test::TestHelper->load_core_data($schema);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/ONLINE", 16 )
+		->json_is( "/response/REPORTED", 1 )
+		->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cg2-mid-northwest",
         "shortName" => "cg2_mid",
-        "latitude" => "12",
-        "longitude" => "56",
-        "parentCachegroup" => "",
-        "secondaryParentCachegroup" => "",
-        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "latitude" => 12,
+        "longitude" => 56,
+        "typeId" => 6 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cg2-mid-northwest" )
     ->json_is( "/response/shortName" => "cg2_mid")
-    ->json_is( "/response/latitude" => "12")
-    ->json_is( "/response/longitude" => "56")
-    ->json_is( "/response/parentCachegroup" => "")
-    ->json_is( "/response/secondaryParentCachegroup" => "")
+    ->json_is( "/response/latitude" => 12)
+    ->json_is( "/response/longitude" => 56)
+    ->json_is( "/response/parentCachegroupId" => undef)
+    ->json_is( "/response/parentCachegroupName" => undef)
+    ->json_is( "/response/secondaryParentCachegroupId" => undef)
+    ->json_is( "/response/secondaryParentCachegroupName" => undef)
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cg-mid-northeast",
         "shortName" => "mneg",
-        "latitude" => "10",
-        "longitude" => "40",
-        "parentCachegroup" => "",
-        "secondaryParentCachegroup" => "",
-        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "latitude" => 10,
+        "longitude" => 40,
+        "typeId" => 6 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "cg-mid-northeast" )
     ->json_is( "/response/shortName" => "mneg")
-    ->json_is( "/response/latitude" => "10")
-    ->json_is( "/response/longitude" => "40")
-    ->json_is( "/response/parentCachegroup" => "")
-    ->json_is( "/response/secondaryParentCachegroup" => "")
+    ->json_is( "/response/latitude" => 10)
+    ->json_is( "/response/longitude" => 40)
+    ->json_is( "/response/parentCachegroupId" => undef)
+    ->json_is( "/response/parentCachegroupName" => undef)
+    ->json_is( "/response/secondaryParentCachegroupId" => undef)
+    ->json_is( "/response/secondaryParentCachegroupName" => undef)
             , 'Does the cache group details return?';
 
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -97,204 +102,226 @@ ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( su
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "edge_atl_group1",
         "shortName" => "eag1",
-        "latitude" => "22",
-        "longitude" => "55",
-        "parentCachegroup" => "",
-        "secondaryParentCachegroup" => "",
-        "typeName" => "MID_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "latitude" => 22,
+        "longitude" => 55,
+        "typeId" => 6 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "edge_atl_group1" )
     ->json_is( "/response/shortName" => "eag1")
-    ->json_is( "/response/latitude" => "22")
-    ->json_is( "/response/longitude" => "55")
-    ->json_is( "/response/parentCachegroup" => "")
-    ->json_is( "/response/secondaryParentCachegroup" => "")
+    ->json_is( "/response/latitude" => 22)
+    ->json_is( "/response/longitude" => 55)
+    ->json_is( "/response/parentCachegroupId" => undef)
+    ->json_is( "/response/parentCachegroupName" => undef)
+    ->json_is( "/response/secondaryParentCachegroupId" => undef)
+    ->json_is( "/response/secondaryParentCachegroupName" => undef)
             , 'Does the cache group details return?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-			"hostName" => "server1",
+my $cg2_mid_northwest = &get_cg_id('cg2-mid-northwest');
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $cg2_mid_northwest,
+			"cdnId" => 100,
 			"domainName" => "example-domain.com",
-			"cachegroup" => "cg2-mid-northwest",
-			"cdnName" => "cdn1",
-			"ipAddress" => "10.74.27.194",
+			"hostName" => "server1",
+			"interfaceMtu" => 1500,
 			"interfaceName" => "bond0",
+			"ipAddress" => "10.74.27.194",
 			"ipNetmask" => "255.255.255.252",
 			"ipGateway" => "10.74.27.194",
-			"interfaceMtu" => "1500",
-			"physLocation" => "Denver",
-			"type" => "EDGE",
-			"profile" => "EDGE1" })
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Is a server created when all required fields are provided?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-			"hostName" => "server2",
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $cg2_mid_northwest,
+			"cdnId" => 100,
 			"domainName" => "example-domain.com",
-			"cachegroup" => "cg2-mid-northwest",
-			"cdnName" => "cdn1",
-			"ipAddress" => "10.74.27.194",
+			"hostName" => "server2",
+			"interfaceMtu" => 1500,
 			"interfaceName" => "bond0",
+			"ipAddress" => "10.74.27.194",
 			"ipNetmask" => "255.255.255.252",
 			"ipGateway" => "10.74.27.194",
-			"interfaceMtu" => "1500",
-			"physLocation" => "Denver",
-			"type" => "EDGE",
-			"profile" => "EDGE1" })
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
 		->status_is(400)
 	, 'Does the server creation fail because ip address is already used for the profile?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-			"hostName" => "server3",
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $cg2_mid_northwest,
+			"cdnId" => 100,
 			"domainName" => "example-domain.com",
-			"cachegroup" => "cg2-mid-northwest",
-			"cdnName" => "cdn1",
-			"ipAddress" => "10.74.27.85",
+			"hostName" => "server2",
+			"interfaceMtu" => 1500,
 			"interfaceName" => "bond0",
+			"ipAddress" => "10.74.27.85",
 			"ipNetmask" => "255.255.255.252",
 			"ipGateway" => "10.74.27.85",
 			"ip6Address" => "2001:852:fe0f:27::2/64",
 			"ip6Gateway" => "2001:852:fe0f:27::1",
-			"interfaceMtu" => "1500",
-			"physLocation" => "Denver",
-			"type" => "EDGE",
-			"profile" => "EDGE1" })
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Is a server created when all required fields are provided plus an ip6 address?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-			"hostName" => "server3",
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $cg2_mid_northwest,
+			"cdnId" => 100,
 			"domainName" => "example-domain.com",
-			"cachegroup" => "cg2-mid-northwest",
-			"cdnName" => "cdn1",
-			"ipAddress" => "10.74.27.77",
+			"hostName" => "server3",
+			"interfaceMtu" => 1500,
 			"interfaceName" => "bond0",
+			"ipAddress" => "10.74.27.77",
 			"ipNetmask" => "255.255.255.252",
 			"ipGateway" => "10.74.27.77",
 			"ip6Address" => "2001:852:fe0f:27::2/64",
 			"ip6Gateway" => "2001:852:fe0f:27::1",
-			"interfaceMtu" => "1500",
-			"physLocation" => "Denver",
-			"type" => "EDGE",
-			"profile" => "EDGE1" })
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
 		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Does the server creation fail because ip6 address is already used for the profile?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-        "hostName" => "tc1_ats1",
-        "domainName" => "northbound.com",
-        "cachegroup" => "mid-northeast-group",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "10.74.27.184",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "10.74.27.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "HotAtlanta",
-        "type" => "MID",
-        "profile" => "MID1" })
+my $mid_northeast_group = &get_cg_id('mid-northeast-group');
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $mid_northeast_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc1_ats1",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ipAddress" => "10.74.27.184",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.74.27.1",
+			"ip6Address" => "2001:852:fe0f:27::2/64",
+			"ip6Gateway" => "2001:852:fe0f:27::1",
+			"physLocationId" => 300,
+			"profileId" => 200,
+			"statusId" => 1,
+			"typeId" => 2,
+			"updPending" => \0,
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/0/hostName" => "tc1_ats1")
+		->json_is( "/response/0/domainName" => "northbound.com")
+		->json_is( "/response/0/cachegroup" => "mid-northeast-group")
+		->json_is( "/response/0/ipNetmask" => "255.255.255.0")
+		->json_is( "/response/0/interfaceName" => "eth0")
+		->json_is( "/response/0/ipAddress" => "10.74.27.184")
+		->json_is( "/response/0/ipGateway" => "10.74.27.1")
+		->json_is( "/response/0/interfaceMtu" => "1500")
+		->json_is( "/response/0/physLocation" => "HotAtlanta")
+		->json_is( "/response/0/type" => "MID")
+		->json_is( "/response/0/profile" => "MID1")
+	, 'Does the server details return?';
+
+my $edge_atl_group = &get_cg_id('edge_atl_group');
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $edge_atl_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc1_ats1",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ipAddress" => "10.74.27.184",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.74.27.1",
+			"physLocationId" => 300,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "tc1_ats1")
-    ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "mid-northeast-group")
-    ->json_is( "/response/ipNetmask" => "255.255.255.0")
-    ->json_is( "/response/interfaceName" => "eth0")
-    ->json_is( "/response/ipAddress" => "10.74.27.184")
-    ->json_is( "/response/ipGateway" => "10.74.27.1")
-    ->json_is( "/response/interfaceMtu" => "1500")
-    ->json_is( "/response/physLocation" => "HotAtlanta")
-    ->json_is( "/response/type" => "MID")
-    ->json_is( "/response/profile" => "MID1")
+    ->json_is( "/response/0/hostName" => "tc1_ats1")
+    ->json_is( "/response/0/domainName" => "northbound.com")
+    ->json_is( "/response/0/cachegroup" => "edge_atl_group")
+    ->json_is( "/response/0/ipNetmask" => "255.255.255.0")
+    ->json_is( "/response/0/interfaceName" => "eth0")
+    ->json_is( "/response/0/ipAddress" => "10.74.27.184")
+    ->json_is( "/response/0/ipGateway" => "10.74.27.1")
+    ->json_is( "/response/0/interfaceMtu" => "1500")
+    ->json_is( "/response/0/physLocation" => "HotAtlanta")
+    ->json_is( "/response/0/type" => "EDGE")
+    ->json_is( "/response/0/profile" => "EDGE1")
             , 'Does the server details return?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-        "hostName" => "tc1_ats1",
-        "domainName" => "northbound.com",
-        "cachegroup" => "edge_atl_group",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "10.74.27.185",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "10.74.27.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "HotAtlanta",
-        "type" => "EDGE",
-        "profile" => "EDGE1" })
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $edge_atl_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc1_ats2",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ipAddress" => "10.74.27.187",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.74.27.1",
+			"physLocationId" => 300,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "tc1_ats1")
-    ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "edge_atl_group")
-    ->json_is( "/response/ipNetmask" => "255.255.255.0")
-    ->json_is( "/response/interfaceName" => "eth0")
-    ->json_is( "/response/ipAddress" => "10.74.27.185")
-    ->json_is( "/response/ipGateway" => "10.74.27.1")
-    ->json_is( "/response/interfaceMtu" => "1500")
-    ->json_is( "/response/physLocation" => "HotAtlanta")
-    ->json_is( "/response/type" => "EDGE")
-    ->json_is( "/response/profile" => "EDGE1")
+    ->json_is( "/response/0/hostName" => "tc1_ats2")
+    ->json_is( "/response/0/domainName" => "northbound.com")
+    ->json_is( "/response/0/cachegroup" => "edge_atl_group")
+    ->json_is( "/response/0/ipNetmask" => "255.255.255.0")
+    ->json_is( "/response/0/interfaceName" => "eth0")
+    ->json_is( "/response/0/ipAddress" => "10.74.27.187")
+    ->json_is( "/response/0/ipGateway" => "10.74.27.1")
+    ->json_is( "/response/0/interfaceMtu" => "1500")
+    ->json_is( "/response/0/physLocation" => "HotAtlanta")
+    ->json_is( "/response/0/type" => "EDGE")
+    ->json_is( "/response/0/profile" => "EDGE1")
             , 'Does the server details return?';
 
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-        "hostName" => "tc1_ats2",
-        "domainName" => "northbound.com",
-        "cachegroup" => "edge_atl_group",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "10.74.27.187",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "10.74.27.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "HotAtlanta",
-        "type" => "EDGE",
-        "profile" => "EDGE1" })
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $edge_atl_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc2_ats2",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ipAddress" => "10.73.27.187",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.73.27.1",
+			"physLocationId" => 300,
+			"profileId" => 200,
+			"statusId" => 1,
+			"typeId" => 2,
+			"updPending" => \0,
+		})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "tc1_ats2")
-    ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "edge_atl_group")
-    ->json_is( "/response/ipNetmask" => "255.255.255.0")
-    ->json_is( "/response/interfaceName" => "eth0")
-    ->json_is( "/response/ipAddress" => "10.74.27.187")
-    ->json_is( "/response/ipGateway" => "10.74.27.1")
-    ->json_is( "/response/interfaceMtu" => "1500")
-    ->json_is( "/response/physLocation" => "HotAtlanta")
-    ->json_is( "/response/type" => "EDGE")
-    ->json_is( "/response/profile" => "EDGE1")
+    ->json_is( "/response/0/hostName" => "tc2_ats2")
+    ->json_is( "/response/0/domainName" => "northbound.com")
+    ->json_is( "/response/0/cachegroup" => "edge_atl_group")
+    ->json_is( "/response/0/ipNetmask" => "255.255.255.0")
+    ->json_is( "/response/0/interfaceName" => "eth0")
+    ->json_is( "/response/0/ipAddress" => "10.73.27.187")
+    ->json_is( "/response/0/ipGateway" => "10.73.27.1")
+    ->json_is( "/response/0/interfaceMtu" => "1500")
+    ->json_is( "/response/0/physLocation" => "HotAtlanta")
+    ->json_is( "/response/0/type" => "MID")
+    ->json_is( "/response/0/profile" => "MID1")
             , 'Does the server details return?';
-
-ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
-        "hostName" => "tc2_ats2",
-        "domainName" => "northbound.com",
-        "cachegroup" => "edge_atl_group",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "10.73.27.187",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "10.73.27.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "HotAtlanta",
-        "type" => "MID",
-        "profile" => "MID1" })
-    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "tc2_ats2")
-    ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "edge_atl_group")
-    ->json_is( "/response/ipNetmask" => "255.255.255.0")
-    ->json_is( "/response/interfaceName" => "eth0")
-    ->json_is( "/response/ipAddress" => "10.73.27.187")
-    ->json_is( "/response/ipGateway" => "10.73.27.1")
-    ->json_is( "/response/interfaceMtu" => "1500")
-    ->json_is( "/response/physLocation" => "HotAtlanta")
-    ->json_is( "/response/type" => "MID")
-    ->json_is( "/response/profile" => "MID1")
-            , 'Does the server details return?';
-
-ok $t->post_ok('/api/1.2/deliveryservices/test-ds1/servers' => {Accept => 'application/json'} => json => { "serverNames" => [ 'server1', 'server3' ]})
-     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-     , 'Assign the server to the delivery service?';
-
-ok $t->get_ok('/api/1.2/servers/details.json?hostName=server1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	->json_is( "/response/0/ipGateway", "10.74.27.194" )->json_is( "/response/0/deliveryservices/0", "100" ), 'Does the hostname details return?';
 
 ok $t->get_ok('/api/1.2/servers/details')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the validation error occur?';
@@ -323,59 +350,45 @@ ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( su
   ->json_is( "/response/0/status", "ONLINE" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-# Count the 'response number'
-my $count_response = sub {
-	my ( $t, $count ) = @_;
-	my $json = decode_json( $t->tx->res->content->asset->slurp );
-	my $r    = $json->{response};
-	return $t->success( is( scalar(@$r), $count ) );
-};
-
-# this is a dns delivery service with 2 edges and 1 mid and since dns ds's DO employ mids, 3 servers return
-$t->get_ok('/api/1.2/servers?dsId=100')->status_is(200)->$count_response(2)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
-# this is a http_no_cache delivery service with 2 edges and 1 mid and since http_no_cache ds's DON'T employ mids, 2 servers return
-$t->get_ok('/api/1.2/servers?dsId=400')->status_is(200)->$count_response(2)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
 my $svr_id = &get_svr_id('tc1_ats1');
-
-ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'application/json'} => json => {
-        "hostName" => "tc1_ats3",
-        "domainName" => "northbound.com",
-        "cachegroup" => "edge_atl_group",
-        "cdnName" => "cdn1",
-        "interfaceName" => "eth0",
-        "ipAddress" => "10.74.27.186",
-        "ipNetmask" => "255.255.255.0",
-        "ipGateway" => "10.74.27.1",
-        "interfaceMtu" => "1500",
-        "physLocation" => "Denver",
-        "type" => "EDGE",
-        "profile" => "EDGE1" })
+ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $edge_atl_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc1_ats3",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ipAddress" => "10.74.27.186",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.74.27.1",
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/hostName" => "tc1_ats3")
-    ->json_is( "/response/domainName" => "northbound.com")
-    ->json_is( "/response/cachegroup" => "edge_atl_group")
-    ->json_is( "/response/ipNetmask" => "255.255.255.0")
-    ->json_is( "/response/interfaceName" => "eth0")
-    ->json_is( "/response/ipAddress" => "10.74.27.186")
-    ->json_is( "/response/ipGateway" => "10.74.27.1")
-    ->json_is( "/response/interfaceMtu" => "1500")
-    ->json_is( "/response/physLocation" => "Denver")
-    ->json_is( "/response/type" => "EDGE")
-    ->json_is( "/response/profile" => "EDGE1")
+    ->json_is( "/response/0/hostName" => "tc1_ats3")
+    ->json_is( "/response/0/domainName" => "northbound.com")
+    ->json_is( "/response/0/cachegroup" => "edge_atl_group")
+    ->json_is( "/response/0/ipNetmask" => "255.255.255.0")
+    ->json_is( "/response/0/interfaceName" => "eth0")
+    ->json_is( "/response/0/ipAddress" => "10.74.27.186")
+    ->json_is( "/response/0/ipGateway" => "10.74.27.1")
+    ->json_is( "/response/0/interfaceMtu" => "1500")
+    ->json_is( "/response/0/physLocation" => "Denver")
+    ->json_is( "/response/0/type" => "EDGE")
+    ->json_is( "/response/0/profile" => "EDGE1")
             , 'Does the server details return?';
 
-ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/servers/' . $svr_id => {Accept => 'application/json'} => json => {
         "ipAddress" => "10.10.10.220",
         "ipGateway" => "111.222.111.1",
         "ipNetmask" => "255.255.255.0" })
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             , 'Does the server details return?';
 
-ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'application/json'} => json => {
+ok $t->put_ok('/api/1.2/servers/' . $svr_id => {Accept => 'application/json'} => json => {
         "ip6Address" => "ee80::1",
         "ip6Gateway" => "fe80::1" })
     ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -403,11 +416,22 @@ ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
 ok $t->delete_ok('/api/1.2/servers/' . $svr_id)
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->put_ok('/api/1.2/servers/' . $svr_id . '/update'  => {Accept => 'application/json'} => json => {
-        "hostName" => "tc1_ats1",
-        "domainName" => "northbound.com",
-        "ipAddress" => "10.74.27.185",
-        "physLocation" => "HotAtlanta" })
+ok $t->put_ok('/api/1.2/servers/' . $svr_id => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $edge_atl_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc1_ats3",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ipAddress" => "10.74.27.186",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.74.27.1",
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
     ->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
@@ -562,8 +586,8 @@ ok $t->put_ok('/api/1.2/servers/' . $server_id . '/status' => {Accept => 'applic
 	, 'Does the server status update succeed and updates are queued when the status is changed on an Edge server?';
 
 ok $t->get_ok('/api/1.2/servers/status')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/response/ONLINE", 18 )
-		->json_is( "/response/REPORTED", 5 )
+		->json_is( "/response/ONLINE", 17 )
+		->json_is( "/response/REPORTED", 1 )
 		->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -580,3 +604,15 @@ sub get_svr_id {
 	my $id = $p->[0]->{id};
 	return $id;
 }
+
+sub get_cg_id {
+	my $cg_name = shift;
+	my $q      = "select id from cachegroup where name = \'$cg_name\'";
+	my $get_cg = $dbh->prepare($q);
+	$get_cg->execute();
+	my $p = $get_cg->fetchall_arrayref( {} );
+	$get_cg->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}
+

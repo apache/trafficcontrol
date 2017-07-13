@@ -446,7 +446,7 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``secondaryParentCachegroup``   | no       | Name of Secondary Parent Cache Group entry.                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``typeName``                    | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  | ``typeId``                      | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
@@ -457,7 +457,7 @@ Cache Group
         "latitude": 12,
         "longitude": 45,
         "parentCachegroup": "cache_group_mid",
-        "typeName": "EDGE_LOC"
+        "typeId": 6
     }
 
   **Response Properties**
