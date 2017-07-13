@@ -506,11 +506,10 @@ sub update_current {
 		return $self->alert( "Profile cannot be updated because '" . $user->{username} . "' is logged in as LDAP." );
 	}
 
-	if ( defined( $user->{"tenantId"} ) ) {
-		my $current_user_tenant_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('tenant_id')->single;
-		if (!defined($current_user_tenant_id) or $user->{"tenantId"} != $current_user_tenant_id){
-			return $self->alert("Cannot change user tenancy");
-		}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->{"tenantId"})) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my $db_user;

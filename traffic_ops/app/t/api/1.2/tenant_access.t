@@ -125,12 +125,23 @@ my $num_of_tenants_can_be_accessed = 3; #A1, A1a, A1b
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
 ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_users);
-#cannot change its tenancy
+#cannot change its tenancy to parent
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
-        json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
-        ->json_is( "/alerts/0/text" => "Cannot change user tenancy")
+        json => { user => { tenantId => $tenants_data->{"A"}->{'id'},
+                            localPasswd => "pass",
+                            confirmLocalPasswd => "pass2"} } )
+        ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment.")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Cannot change my tenancy: tenant: A1?';
+#can change its tenancy to child (fail on another reason, currently on missing email,
+# but if it will not be mandatory anymore it should fail on password mismatch)
+ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
+        json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'},
+                            localPasswd => "pass",
+                            confirmLocalPasswd => "pass2"} } )
+        ->json_is( "/alerts/0/text" => "email is required")
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Can change my tenancy: tenant: A1?';
 
 logout_from_tenant_admin();
 #access to himself
@@ -158,10 +169,10 @@ $num_of_tenants_can_be_accessed = 0;
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test(0);
 ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(0);
-#cannot change its tenancy
+#cannot change its tenancy to non related
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
-        ->json_is( "/alerts/0/text" => "Cannot change user tenancy")
+        ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment.")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Cannot change my tenancy: tenant: A1?';
 logout_from_tenant_admin();
@@ -186,7 +197,7 @@ ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_
 #cannot change its tenancy
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
-        ->json_is( "/alerts/0/text" => "Cannot change user tenancy")
+        ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment.")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Cannot change my tenancy: tenant: A1?';
 logout_from_tenant_admin();
