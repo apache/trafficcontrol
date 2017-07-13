@@ -56,16 +56,17 @@
 
       $('#copy-sig-keys-button').click(function (e) {
         $.get("/api/1.2/deliveryservices", function(data){
+                    $("#delivery-services").find('option').remove()
                     var response = data['response'];
                     $.each(response, function(idx, val) {
-                        if ( response[idx].signed ) {
-                            $("#delivery-services").append("<option value=" + response[idx].id + ">" + response[idx].displayName + "</option>");
+                        if ( response[idx].signed && response[idx].xmlId != <%= $ds->xml_id %>     ) {
+                            $("#delivery-services").append("<option value=" + response[idx].xmlId + ">" + response[idx].displayName + "</option>");
                         }
                     });
                 }, "json");
         $( "#dialog-copy-from" ).dialog({
           resizable: false,
-          height:160,
+          height:250,
           modal: true,
           buttons: {
             "Copy Keys": function() {

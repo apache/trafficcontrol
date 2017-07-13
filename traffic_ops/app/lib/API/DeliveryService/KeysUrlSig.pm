@@ -37,7 +37,7 @@ sub view_by_xmlid {
 		return $self->success($url_sig_values_json);
 	} else {
 		my $error_msg = $response_container->{"response"}->{_content};
-		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'")
+		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
 		return $self->alert("Unable to retrieve keys from Delivery Service '$xml_id'");
 	} 
 }
@@ -84,7 +84,7 @@ sub copy_url_sig_keys {
 			}
 			else {
 				my $error_msg = $response_container->{"response"}->{_content};
-				$self->app->log->debug("received error code '$rc' from riak: '$error_msg'")
+				$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
 			}
 		}
 		else {
@@ -108,7 +108,7 @@ sub copy_url_sig_keys {
 				}
 				else {
 					my $error_msg = $response->{_content};
-					$self->app->log->debug("received error code '$rc' from riak: '$error_msg'")
+					$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
 					return $self->alert( $response->{_content} );
 				}
 			}
