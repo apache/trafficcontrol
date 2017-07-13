@@ -20,8 +20,8 @@
 var UserController = function($scope, $state, $location, $uibModal, formUtils, locationUtils, userService, authService, roleService, tenantService, userModel) {
 
     var updateUser = function(user, options) {
-        userService.updateUser(user)
-            .then(function() {
+        userService.updateCurrentUser(user).
+            then(function() {
                 if (options.signout) {
                     authService.logout();
                 }

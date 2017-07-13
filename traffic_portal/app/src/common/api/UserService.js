@@ -86,6 +86,19 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
             );
     };
 
+    this.updateCurrentUser = function(user) {
+        return $http.post(ENV.api['root'] + "user/current/update", { user: user })
+            .then(
+                function() {
+                    userModel.setUser(user);
+                    messageModel.setMessages([ { level: 'success', text: 'Current user updated' } ], false);
+                },
+                function() {
+                    messageModel.setMessages([ { level: 'error', text: 'Current user updated failed' } ], false);
+                }
+            );
+    };
+
     this.deleteUser = function(id) {
         return Restangular.one("users", id).remove()
             .then(
