@@ -27,7 +27,26 @@ services:
   unit:
     build:
       context: ../../..
-      dockerfile: app/bin/tests/Dockerfile-unittest
+      dockerfile: app/bin/tests/Dockerfile-test
+      args:
+        TESTENV: test
+        TESTDIR: /opt/traffic_ops/app/t
+        DBHOST: db
+        DBPORT: 5432
+    links:
+      - db
+    volumes:
+      - traffic_ops:/opt/traffic_ops
+
+  integration:
+    build:
+      context: ../../..
+      dockerfile: app/bin/tests/Dockerfile-test
+      args:
+        TESTENV: integration
+        TESTDIR: /opt/traffic_ops/app/t_integration
+        DBHOST: db
+        DBPORT: 5432
     links:
       - db
     volumes:

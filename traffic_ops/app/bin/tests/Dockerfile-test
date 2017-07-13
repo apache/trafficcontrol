@@ -43,11 +43,6 @@ RUN yum -y install \
         postgresql96-devel && \
         yum clean all
 
-RUN curl -o - https://www.kernel.org/pub/software/scm/git/git-2.12.2.tar.gz | tar xzvf - -C /tmp && \
-        cd /tmp/git-2.12.2/ && \
-        make -i prefix=/usr install && \
-        rm -rf /tmp/git-2.12.2
-
 RUN cpanm -n Carton
 
 ADD install/bin/install_goose.sh /
@@ -60,7 +55,17 @@ RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
 RUN rm -rf /root/.cpan*
 
 ADD app/bin/tests/runtests.sh /
-CMD [ "/runtests.sh", "/opt/traffic_ops/app/t", "test", "db", "5432" ]
+ARG TESTDIR
+ARG TESTENV
+ENV TESTDIR=$TESTDIR
+ENV TESTENV=$TESTENV
+ARG DBHOST
+ARG DBPORT
+ENV DBHOST=$DBHOST
+ENV DBPORT=$DBPORT
+
+ENTRYPOINT /runtests.sh $DBHOST $DBPORT
+CMD $TESTENV $TESTDIR
 
 #
 # vi:syntax=Dockerfile
