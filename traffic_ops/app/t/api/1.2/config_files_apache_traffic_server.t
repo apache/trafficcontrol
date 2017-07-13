@@ -71,7 +71,7 @@ my $count_response = sub {
 	return $t->success( is( scalar(@$r), $count ) );
 };
 
-$t->get_ok('/api/1.2/deliveryservices/list?logsEnabled=true')->status_is(200)->$count_response(3)
+$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(3)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
