@@ -136,7 +136,7 @@ $t->get_ok('/api/1.2/profiles/100/unassigned_parameters')->status_is(200)->$coun
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 4 parameters not assigned to profile 200
-$t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$count_response(3)
+$t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$count_response(4)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 7 profiles not assigned to parameter 4

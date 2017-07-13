@@ -584,7 +584,7 @@ sub api_routes {
 	# -- DELIVERYSERVICES: SERVERS
 	# Supports ?orderby=key
 	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
-	$r->post("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#create', namespace => $namespace );
+	$r->post("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#assign_servers_to_ds', namespace => $namespace );
 
 	# -- DIVISIONS
 	$r->get("/api/$version/divisions")->over( authenticated => 1, not_ldap => 1 )->to( 'Division#index', namespace => $namespace );

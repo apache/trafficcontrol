@@ -48,10 +48,6 @@ my $count_response = sub {
 	return $t->success( is( scalar(@$r), $count ) );
 };
 
-# there are currently 3 servers of type EDGE or ORG where server.cdn == ds.cdn not assigned to ds 100
-$t->get_ok('/api/1.2/deliveryservices/100/servers/unassigned')->status_is(200)->$count_response(4)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
 # we will assign 2 more servers to ds 100
 ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'} => json => {
 			"dsId" => 100,
@@ -61,10 +57,6 @@ ok $t->post_ok('/api/1.2/deliveryserviceserver' => {Accept => 'application/json'
 		->json_is( "/alerts/0/level" => "success" )
 		->json_is( "/alerts/0/text" => "Server assignments complete." )
 	, 'Are the servers assigned to the delivery service?';
-
-# there are now 2 servers of type EDGE or ORG where server.cdn == ds.cdn not assigned to ds 100
-$t->get_ok('/api/1.2/deliveryservices/100/servers/unassigned')->status_is(200)->$count_response(2)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 6 servers of type EDGE or ORG that can be assigned to ds 100
 $t->get_ok('/api/1.2/deliveryservices/100/servers/eligible')->status_is(200)->$count_response(6)
@@ -81,7 +73,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 		->json_is( "/response/0/xmlId", "test-ds1" )
 		->json_is( "/response/0/logsEnabled", 1 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-		->json_is( "/response/1/xmlId", "test-ds4" );
+		->json_is( "/response/1/xmlId", "test-ds1-root" );
 
 ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 			"active" => \0,
@@ -190,7 +182,7 @@ ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->t
 	->json_is( "/response/0/xmlId", "steering-ds1" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 	->json_is( "/response/1/xmlId", "steering-ds2" );
 
-$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(2);
+$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(3);
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
