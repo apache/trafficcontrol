@@ -857,7 +857,7 @@ sub test_ds_resource_write_block_access {
                 "qstringIgnore" => 0,
             })
             ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment.")
+            ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for delivery-service assignment.")
         , 'Cannot add ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
 
@@ -959,7 +959,7 @@ sub test_ds_resource_write_block_access {
     $response2edit2->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
     ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id2 => {Accept => 'application/json'} => json => $response2edit2)
             ->status_is($is_login_tenant_active ? 400 : 403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden")
+            ->json_is( "/alerts/0/text" => $is_login_tenant_active ? "Invalid tenant. This tenant is not available to you for assignment." : "Forbidden. Delivery-service tenant is not available to the user.")
         , 'Cannot change ds tenant to the target resource tenant: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant();
