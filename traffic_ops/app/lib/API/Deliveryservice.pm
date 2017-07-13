@@ -167,7 +167,7 @@ sub show {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
 		my %map = map { $_ => 1 } @ds_ids;    # turn the array of dsIds into a hash with dsIds as the keys
-		return $self->forbidden() if ( !exists( $map{$id} ) );
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !exists( $map{$id} ) );
 	}
 
 	my $rs = $self->db->resultset("Deliveryservice")->search(
@@ -176,7 +176,7 @@ sub show {
 	);
 	while ( my $row = $rs->next ) {
 		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
-			return $self->forbidden();
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
 		# build the matchlist (the list of ds regexes and their type)
 		my @matchlist  = ();
@@ -291,7 +291,7 @@ sub update {
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
 
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
@@ -474,7 +474,7 @@ sub create {
 	#setting tenant_id to the user id if tenant is not set.
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenant_utils->current_user_tenant();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
-		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
+		return $self->alert("Invalid tenant. This tenant is not available to you for delivery-service assignment.");
 	}
 
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
@@ -667,7 +667,7 @@ sub delete {
 	#setting tenant_id to the user id if tenant is not set.
 	my $tenant_id = $ds->tenant_id;
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
 
 	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
@@ -910,7 +910,7 @@ sub routing {
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
-				return $self->forbidden();
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 			}
 			my $cdn_name = $result->cdn->name;
 
@@ -950,7 +950,7 @@ sub capacity {
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
-				return $self->forbidden();
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 			}
 			my $cdn_name = $result->cdn->name;
 
@@ -975,7 +975,7 @@ sub health {
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
-				return $self->forbidden();
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 			}
 			my $cdn_name = $result->cdn->name;
 
@@ -1001,7 +1001,7 @@ sub state {
 		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_admin($self) || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
-				return $self->forbidden();
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 			}
 			my $cdn_name    = $result->cdn->name;
 			my $ds_name     = $result->xml_id;
