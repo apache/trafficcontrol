@@ -36,6 +36,8 @@ sub view_by_xmlid {
 		my $url_sig_values_json = $response_container->{"response"}->{_content};
 		return $self->success($url_sig_values_json);
 	} else {
+		my $error_msg = $response_container->{"response"}->{_content};
+		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'")
 		return $self->alert("Unable to retrieve keys from Delivery Service '$xml_id'");
 	} 
 }
@@ -80,6 +82,10 @@ sub copy_url_sig_keys {
 			if ( $rc eq '200' ) {
 				$url_sig_key_values_json = $response_container->{"response"}->{_content};
 			}
+			else {
+				my $error_msg = $response_container->{"response"}->{_content};
+				$self->app->log->debug("received error code '$rc' from riak: '$error_msg'")
+			}
 		}
 		else {
 			return $self->forbidden("Forbidden. Delivery service to copy from not assigned to user.");
@@ -101,6 +107,8 @@ sub copy_url_sig_keys {
 					return $self->success_message("Successfully copied and stored keys");
 				}
 				else {
+					my $error_msg = $response->{_content};
+					$self->app->log->debug("received error code '$rc' from riak: '$error_msg'")
 					return $self->alert( $response->{_content} );
 				}
 			}
