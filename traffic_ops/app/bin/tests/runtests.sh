@@ -74,8 +74,8 @@ export USER=root
 echo "/opt/traffic_ops/app/db/dbconf.yml"
 cat /opt/traffic_ops/app/db/dbconf.yml
 
-echo "/opt/traffic_ops/app/conf/$dbenv/database.conf"
-cat "/opt/traffic_ops/app/conf/$dbenv/database.conf"
+echo "/opt/traffic_ops/app/conf/$TESTENV/database.conf"
+cat "/opt/traffic_ops/app/conf/$TESTENV/database.conf"
 
 export GOROOT=/usr/local/go
 export GOPATH=/opt/traffic_ops/go
