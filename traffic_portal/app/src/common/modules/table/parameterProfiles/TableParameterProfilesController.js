@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, $uibModal, locationUtils, profileParameterService) {
+var TableParameterProfilesController = function(parameter, parameterProfiles, $scope, $state, $uibModal, locationUtils, deliveryServiceService, profileParameterService, serverService) {
 
 	$scope.parameter = parameter;
 
@@ -27,7 +27,7 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 		alert('not hooked up yet: add profile to parameter');
 	};
 
-	$scope.removeProfile = function(profileId) {
+	var removeProfile = function(profileId) {
 		profileParameterService.unlinkProfileParameter(profileId, parameter.id)
 			.then(
 				function() {
@@ -35,6 +35,57 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 				}
 			);
 	};
+
+	$scope.confirmRemoveProfile = function(profile) {
+		if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
+			deliveryServiceService.getDeliveryServices({ profile: profile.id }).
+				then(function(result) {
+					var params = {
+						title: 'Remove Parameter from Profile?',
+						message: 'The ' + profile.name + ' profile is used by ' + result.length + ' delivery service(s). Are you sure you want to remove the ' + parameter.name + ' parameter from this profile?'
+					};
+					var modalInstance = $uibModal.open({
+						templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+						controller: 'DialogConfirmController',
+						size: 'md',
+						resolve: {
+							params: function () {
+								return params;
+							}
+						}
+					});
+					modalInstance.result.then(function() {
+						removeProfile(profile.id);
+					}, function () {
+						// do nothing
+					});
+				});
+		} else { // otherwise the profile is used by servers so we'll fetch the server count...
+			serverService.getServers({ profileId: profile.id }).
+				then(function(result) {
+					var params = {
+						title: 'Remove Parameter from Profile?',
+						message: 'The ' + profile.name + ' profile is used by ' + result.length + ' server(s). Are you sure you want to remove the ' + parameter.name + ' parameter from this profile?'
+					};
+					var modalInstance = $uibModal.open({
+						templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+						controller: 'DialogConfirmController',
+						size: 'md',
+						resolve: {
+							params: function () {
+								return params;
+							}
+						}
+					});
+					modalInstance.result.then(function() {
+						removeProfile(profile.id);
+					}, function () {
+						// do nothing
+					});
+				});
+		}
+	};
+
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -83,5 +134,5 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 
 };
 
-TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', '$uibModal', 'locationUtils', 'profileParameterService'];
+TableParameterProfilesController.$inject = ['parameter', 'parameterProfiles', '$scope', '$state', '$uibModal', 'locationUtils', 'deliveryServiceService', 'profileParameterService', 'serverService'];
 module.exports = TableParameterProfilesController;

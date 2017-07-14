@@ -44,7 +44,7 @@ under the License.
             <tr ng-repeat="parameterProfile in ::parameterProfiles">
                 <td>{{::parameterProfile.name}}</td>
                 <td>{{::parameterProfile.description}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Profile from Parameter" ng-click="removeProfile(parameterProfile.id)"><i class="fa fa-chain-broken"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Unlink Profile from Parameter" ng-click="confirmRemoveProfile(parameterProfile)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

@@ -44,6 +44,7 @@ under the License.
         <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
+                <th>tenant</th>
                 <th>xmlId</th>
                 <th>orgServerFqdn</th>
                 <th>active</th>
@@ -59,6 +60,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-repeat="deliveryService in ::serverDeliveryServices">
+                <td>{{::deliveryService.tenant}}</td>
                 <td>{{::deliveryService.xmlId}}</td>
                 <td>{{::deliveryService.orgServerFqdn}}</td>
                 <td>{{::deliveryService.active}}</td>

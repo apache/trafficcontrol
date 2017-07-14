@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditParameterController = function(parameter, $scope, $controller, $uibModal, $anchorScroll, locationUtils, parameterService) {
+var FormEditParameterController = function(parameter, $scope, $controller, $uibModal, $anchorScroll, locationUtils, parameterService, profileService) {
 
     // extends the FormParameterController to inherit common methods
     angular.extend(this, $controller('FormParameterController', { parameter: parameter, $scope: $scope }));
@@ -29,6 +29,14 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
             });
     };
 
+    var save = function(parameter) {
+        parameterService.updateParameter(parameter).
+            then(function() {
+                $scope.parameterName = angular.copy(parameter.name);
+                $anchorScroll(); // scrolls window to top
+            });
+    };
+
     $scope.parameterName = angular.copy(parameter.name);
 
     $scope.settings = {
@@ -36,12 +44,35 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
         saveLabel: 'Update'
     };
 
-    $scope.save = function(parameter) {
-        parameterService.updateParameter(parameter).
-            then(function() {
-                $scope.parameterName = angular.copy(parameter.name);
-                $anchorScroll(); // scrolls window to top
+    $scope.confirmSave = function(parameter) {
+        profileService.getParameterProfiles(parameter.id).
+            then(function(result) {
+                var params = {
+                    title: 'Update Parameter?',
+                    message: result.length + ' profiles use this parameter.<br><br>'
+                };
+                if (result.length > 0) {
+                    params.message += _.pluck(result, 'name').join('<br>') + '<br><br>';
+                }
+                params.message += 'Are you sure you want to update the parameter?';
+
+            var modalInstance = $uibModal.open({
+                templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+                controller: 'DialogConfirmController',
+                size: 'md',
+                resolve: {
+                    params: function () {
+                        return params;
+                    }
+                }
             });
+            modalInstance.result.then(function() {
+                save(parameter);
+            }, function () {
+                // do nothing
+            });
+        });
+
     };
 
     $scope.confirmDelete = function(parameter) {
@@ -68,5 +99,5 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
 
 };
 
-FormEditParameterController.$inject = ['parameter', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'parameterService'];
+FormEditParameterController.$inject = ['parameter', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'parameterService', 'profileService'];
 module.exports = FormEditParameterController;
