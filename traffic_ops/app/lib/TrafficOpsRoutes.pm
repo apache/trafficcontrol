@@ -567,7 +567,7 @@ sub api_routes {
 	# -- DELIVERY SERVICE: URL SIG KEYS
 	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys/generate")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#generate', namespace => 'API::DeliveryService' );
-	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/fromXmlId/:copyFromXmlId/urlkeys/copy")->over( authenticated => 1, not_ldap => 1 )
+	$r->post("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys/copyFromXmlId/:copyFromXmlId")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#copy_url_sig_keys', namespace => 'API::DeliveryService' );
 	$r->get("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );

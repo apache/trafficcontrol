@@ -112,7 +112,7 @@ my $jsonKeys = $tx->res->json;
 
 # Test copying of url_sig_keys
 # api/$version/deliveryservices/xmlId/:xmlId/fromXmlId/:copyFromXmlId/urlkeys/copy
-ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/fromXmlId/test-ds2/urlkeys/copy')->status_is(200)
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/copyFromXmlId/test-ds2')->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can an unassigned DeliveryService url keys be copied to an assigned DeliveryService url keys?';
 

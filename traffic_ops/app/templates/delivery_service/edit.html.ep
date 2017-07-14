@@ -73,7 +73,7 @@
               $("#copy-spinner-complete").show();
               $("#copy-sig-keys-button").hide();
               $( this ).dialog( "close" );
-              var jqxhr = $.post("/api/1.1/deliveryservices/xmlId/<%= $ds->xml_id %>/fromXmlId/" +  $("#delivery-services :selected").val() + "/urlkeys/copy", function(data, status){
+              var jqxhr = $.post("/api/1.1/deliveryservices/xmlId/<%= $ds->xml_id %>/urlkeys/copyFromXmlId/" +  $("#delivery-services :selected").val(), function(data, status){
                   $("#copy-sig-keys-button").show();
                   $("#copy-spinner-complete").hide();
                   $( "#generate_message" ).text( "Successfully copied URL Sig keys from: " +  $("#delivery-services :selected").val() + " to: <%= $ds->xml_id %>" );
