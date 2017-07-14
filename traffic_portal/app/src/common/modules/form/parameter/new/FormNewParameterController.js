@@ -29,7 +29,7 @@ var FormNewParameterController = function(parameter, $scope, $controller, parame
         saveLabel: 'Create'
     };
 
-    $scope.save = function(parameter) {
+    $scope.confirmSave = function(parameter) {
         parameterService.createParameter(parameter);
     };
 

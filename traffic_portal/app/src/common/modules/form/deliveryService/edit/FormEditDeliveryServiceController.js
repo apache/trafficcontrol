@@ -19,12 +19,8 @@
 
 var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
 
-	var filteredTypes = _.filter(types, function(currentType) {
-		return currentType.name.indexOf(type) != -1;
-	});
-
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, types: filteredTypes, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, type: type, types: types, $scope: $scope }));
 
 	var deleteDeliveryService = function(deliveryService) {
 		deliveryServiceService.deleteDeliveryService(deliveryService.id)

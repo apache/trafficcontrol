@@ -29,6 +29,11 @@ var FormParameterController = function(parameter, $scope, $location, formUtils, 
 
     $scope.labelize = stringUtils.labelize;
 
+    $scope.falseTrue = [
+        { value: false, label: 'false' },
+        { value: true, label: 'true' }
+    ];
+
     $scope.viewProfiles = function() {
         $location.path($location.path() + '/profiles');
     };

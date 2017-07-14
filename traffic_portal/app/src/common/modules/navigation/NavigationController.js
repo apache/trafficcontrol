@@ -21,7 +21,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.appName = propertiesModel.properties.name;
 
-    $scope.customMenuItems = propertiesModel.properties.customMenu.items;
+    $scope.customMenu = propertiesModel.properties.customMenu;
 
     $scope.userLoaded = userModel.loaded;
 

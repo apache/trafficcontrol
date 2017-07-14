@@ -38,6 +38,7 @@ under the License.
                 <th>name</th>
                 <th>configFile</th>
                 <th>value</th>
+                <th>secure</th>
                 <th></th>
             </tr>
             </thead>
@@ -46,6 +47,7 @@ under the License.
                 <td>{{::parameter.name}}</td>
                 <td>{{::parameter.configFile}}</td>
                 <td>{{::parameter.value}}</td>
+                <td>{{::parameter.secure}}</td>
                 <td><button type="button" class="btn btn-link" title="Unlink Parameter from Cache Group" ng-click="removeParameter(parameter.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>

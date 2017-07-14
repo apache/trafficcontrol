@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, types, $scope, $location, formUtils, locationUtils, cdnService, profileService, typeService) {
+var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, formUtils, locationUtils, cdnService, profileService, tenantService) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -35,9 +35,28 @@ var FormDeliveryServiceController = function(deliveryService, types, $scope, $lo
             });
     };
 
+    var getTenants = function() {
+        tenantService.getTenants()
+            .then(function(result) {
+                $scope.tenants = result;
+            });
+    };
+
     $scope.deliveryService = deliveryService;
 
-    $scope.types = types;
+    $scope.types = _.filter(types, function(currentType) {
+        var category;
+        if (type.indexOf('ANY_MAP') != -1) {
+            category = 'ANY_MAP';
+        } else if (type.indexOf('DNS') != -1) {
+            category = 'DNS';
+        } else if (type.indexOf('HTTP') != -1) {
+            category = 'HTTP';
+        } else if (type.indexOf('STEERING') != -1) {
+            category = 'STEERING';
+        }
+        return currentType.name.indexOf(category) != -1;
+    });
 
     $scope.falseTrue = [
         { value: false, label: 'false' },
@@ -156,10 +175,11 @@ var FormDeliveryServiceController = function(deliveryService, types, $scope, $lo
     var init = function () {
         getCDNs();
         getProfiles();
+        getTenants();
     };
     init();
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'typeService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'tenantService'];
 module.exports = FormDeliveryServiceController;
