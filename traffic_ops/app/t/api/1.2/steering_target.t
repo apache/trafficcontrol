@@ -40,7 +40,6 @@ ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_US
     'Log into the admin user?';
 
 ok $t->post_ok('/api/1.2/steering/900/targets' => {Accept => 'application/json'} => json => {
-            "deliveryServiceId" => 900,
             "targetId" => 1000,
             "value" => 852,
             "typeId" => 40
@@ -59,15 +58,11 @@ ok $t->get_ok("/api/1.2/steering/900/targets")->status_is(200)->or( sub { diag $
     , 'Are steering targets returned?';
 
 $t->get_ok("/api/1.2/steering/900/targets/1000")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/0/deliveryServiceId" => 900 )
-    ->json_is( "/response/0/targetId" => 1000 )
     ->json_is( "/response/0/value" => 852 )
     ->json_is( "/response/0/typeId" => 40 )
     , 'Is the steering target returned?';
 
 ok $t->put_ok('/api/1.2/steering/900/targets/1000' => {Accept => 'application/json'} => json => {
-            "deliveryServiceId" => 900,
-            "targetId" => 1000,
             "value" => 999,
             "typeId" => 40
         })

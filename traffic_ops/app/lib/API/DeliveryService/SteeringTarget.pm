@@ -102,8 +102,8 @@ sub update {
 	}
 
 	my $values = {
-		deliveryservice => $params->{deliveryServiceId},
-		target          => $params->{targetId},
+		deliveryservice => $steering_ds_id,
+		target          => $target_ds_id,
 		value           => $params->{value},
 		type            => $params->{typeId},
 	};
@@ -113,10 +113,10 @@ sub update {
 	if ($update) {
 
 		my $response;
-		$response->{deliveryServiceId} = $params->{deliveryServiceId};
-		$response->{targetId}          = $params->{targetId};
-		$response->{value}             = $params->{value};
-		$response->{typeId}            = $params->{typeId};
+		$response->{deliveryServiceId} = $update->deliveryservice->id;
+		$response->{targetId}          = $update->target->id;
+		$response->{value}             = $update->value;
+		$response->{typeId}            = $update->type->id;
 
 		&log( $self, "Updated steering target [ " . $target_ds_id . " ] for deliveryservice: " . $steering_ds_id, "APICHANGE" );
 
@@ -131,6 +131,8 @@ sub update {
 sub create {
 	my $self   = shift;
 	my $params = $self->req->json;
+	my $steering_ds_id = $self->param('id');
+	my $target_ds_id   = $params->{targetId};
 
 	if ( !&is_admin($self) ) {
 		return $self->forbidden();
@@ -143,8 +145,8 @@ sub create {
 	}
 
 	my %criteria;
-	$criteria{'deliveryservice'} = $params->{deliveryservice};
-	$criteria{'target'}          = $params->{target};
+	$criteria{'deliveryservice'} = $steering_ds_id;
+	$criteria{'target'}          = $target_ds_id;
 
 	my $existing = $self->db->resultset('SteeringTarget')->search( \%criteria )->single();
 	if ( defined($existing) ) {
@@ -152,8 +154,8 @@ sub create {
 	}
 
 	my $values = {
-		deliveryservice => $params->{deliveryServiceId},
-		target          => $params->{targetId},
+		deliveryservice => $steering_ds_id,
+		target          => $target_ds_id,
 		value           => $params->{value},
 		type            => $params->{typeId},
 	};
@@ -214,12 +216,10 @@ sub is_target_valid {
 	}
 
 	my $rules = {
-		fields => [qw/deliveryServiceId targetId value typeId/],
+		fields => [qw/value typeId/],
 
 		# Validation checks to perform
 		checks => [
-			deliveryServiceId => [ is_required("is required") ],
-			targetId          => [ is_required("is required") ],
 			value             => [ is_required("is required") ],
 			typeId            => [ is_required("is required") ],
 		]
