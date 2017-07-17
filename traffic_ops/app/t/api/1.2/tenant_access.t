@@ -89,6 +89,8 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_ROOT_USER, p
 ok $t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/name", "root" )->or( sub { diag $t->tx->res->content->asset->{content}; } );;
 
 my $tenants_data = {};
+my $no_tenant_fixture_ds = 100;
+my $root_tenant_fixture_ds = 2100;
 prepare_tenant("root", undef, $tenants_data);
 prepare_tenant("none", undef, $tenants_data);
 prepare_tenant("A", $root_tenant_id, $tenants_data);
@@ -129,9 +131,9 @@ my $num_of_tenants_can_be_accessed = 3; #A1, A1a, A1b
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
 ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(2*$num_of_tenants_can_be_accessed+$fixture_num_of_users);
-ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses);
+ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test(2*$num_of_tenants_can_be_accessed+$fixture_num_of_dses);
 ok $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses_server_mapping);
-ok $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_ds_regexes);
+ok $t->get_ok('/api/1.2/deliveryservices_regexes')->status_is(200)->$count_response_test(2*$num_of_tenants_can_be_accessed+$fixture_num_of_ds_regexes);
 ok $t->get_ok('/api/1.2/deliveryservice_matches')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_ds_matches);
 
 #cannot change its tenancy
@@ -151,7 +153,6 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         ->json_is( "/alerts/0/text" => "email is required")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     , 'Can change my tenancy: tenant: A1?';
-ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses);
 logout_from_tenant();
 #access to himself
 test_tenants_allow_access ("A1", "A1", $tenants_data);
@@ -379,6 +380,74 @@ sub prepare_tenant {
             ->json_is( "/response/deliveryServices/0" => $ds_id )
         , 'Does the delivery services assign details return?';
 
+    # It creates new steering delivery service
+    my $st_ds_name = $name."_st_ds1";
+    my $st_ds_xml_id = $name."_st_ds1";
+    ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+                "xmlId" => $st_ds_xml_id,
+                "displayName" => $st_ds_name,
+                "tenantId" => $tenant_id,
+                "profileId" => 300,
+                "typeId" => "37",
+                "protocol" => 1,
+                "multiSiteOrigin" => "0",
+                "regionalGeoBlocking" => "1",
+                "active" => "false",
+                "dscp" => 0,
+                "ipv6RoutingEnabled" => "true",
+                "logsEnabled" => "true",
+                "initialDispersion" => 0,
+                "cdnId" => 100,
+                "signed" => "false",
+                "rangeRequestHandling" => 0,
+                "geoLimit" => 0,
+                "geoProvider" => 0,
+                "qstringIgnore" => 0,
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/xmlId" => $st_ds_xml_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/displayName" => $st_ds_name)
+            ->json_is( "/response/0/tenantId" => $tenant_id)
+        , 'Was the ST DS properly added and reported?';
+
+    my $st_ds_id = $schema->resultset('Deliveryservice')->find( { xml_id => $st_ds_name } )->id;
+
+    ok $t->post_ok('/api/1.2/steering/'.$st_ds_id.'/targets' => {Accept => 'application/json'} => json => {
+                "deliveryServiceId" => $st_ds_id,
+                "targetId" => $no_tenant_fixture_ds,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryServiceId" => $st_ds_id )
+            ->json_is( "/response/0/targetId" => $no_tenant_fixture_ds )
+            ->json_is( "/response/0/value" => 1 )
+            ->json_is( "/response/0/typeId" => 40 )
+        , 'Is the steering target created?';
+
+    ok $t->post_ok('/api/1.2/steering/'.$st_ds_id.'/targets' => {Accept => 'application/json'} => json => {
+                "deliveryServiceId" => $st_ds_id,
+                "targetId" => $root_tenant_fixture_ds,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryServiceId" => $st_ds_id )
+            ->json_is( "/response/0/targetId" => $root_tenant_fixture_ds )
+            ->json_is( "/response/0/value" => 1 )
+            ->json_is( "/response/0/typeId" => 40 )
+        , 'Is the steering target created?';
+
+    ok $t->post_ok('/api/1.2/steering/'.$st_ds_id.'/targets' => {Accept => 'application/json'} => json => {
+                "deliveryServiceId" => $st_ds_id,
+                "targetId" => $ds_id,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryServiceId" => $st_ds_id )
+            ->json_is( "/response/0/targetId" => $ds_id )
+            ->json_is( "/response/0/value" => 1 )
+            ->json_is( "/response/0/typeId" => 40 )
+        , 'Is the steering target created?';
+
     my $cg_to_use_name = "cache_group_to_us_".$name;
     ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
                 "name" => $cg_to_use_name,
@@ -433,6 +502,7 @@ sub prepare_tenant {
         $portal_username, $portal_userid,
         $ds_id, $ds_xml_id,
         $ds_regex_id, $ds_regex_pattern,
+        $st_ds_id, $st_ds_xml_id,
         $cg_to_use_id, $cg_to_use_name,
         $server_id_to_use, $server_name_to_use);
 }
@@ -450,6 +520,8 @@ sub add_tenant_record {
         'ds_xml_id' => shift,
         'ds_regex_id' => shift,
         'ds_regex_pattern' => shift,
+        'st_ds_id' => shift,
+        'st_ds_xml_id' => shift,
         'cg_id_to_use' => shift,
         'cg_name_to_use' => shift,
         'server_id_to_use' => shift,
@@ -466,8 +538,19 @@ sub clear_tenant {
     ok $t->delete_ok('/api/1.2/servers/' . $tenants_data->{$name}->{'server_id_to_use'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
     ok $t->delete_ok('/api/1.2/cachegroups/' . $tenants_data->{$name}->{'cg_id_to_use'} )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , "Deleting CG";
+
+    #deleting the steering targets
+    ok $t->delete_ok('/api/1.2/steering/'.$tenants_data->{$name}->{'st_ds_id'}.'/targets/'.$tenants_data->{$name}->{'ds_id'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Did the steering target get deleted?';
+    ok $t->delete_ok('/api/1.2/steering/'.$tenants_data->{$name}->{'st_ds_id'}.'/targets/'.$root_tenant_fixture_ds)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Did the steering target get deleted?';
+    ok $t->delete_ok('/api/1.2/steering/'.$tenants_data->{$name}->{'st_ds_id'}.'/targets/'.$no_tenant_fixture_ds)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Did the steering target get deleted?';
+    ok $t->delete_ok('/api/1.2/deliveryservices/' . $tenants_data->{$name}->{'st_ds_id'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
     #deleting the DS regex
     ok $t->delete_ok('/api/1.2/deliveryservices/'. $tenants_data->{$name}->{'ds_id'}.'/regexes/'. $tenants_data->{$name}->{'ds_regex_id'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
     #deleting the DS
     ok $t->delete_ok('/api/1.2/deliveryservice_user/'.$tenants_data->{$name}->{'ds_id'}.'/'.$tenants_data->{$name}->{'portal_uid'} => {Accept => 'application/json'})
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -522,6 +605,8 @@ sub test_tenants_allow_access {
     test_ds_server_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_regex_resource_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_regex_resource_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_steering_read_allow_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_steering_write_allow_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 sub test_tenants_block_access {
     my $login_tenant = shift;
@@ -536,6 +621,8 @@ sub test_tenants_block_access {
     test_ds_server_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_regex_resource_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
     test_ds_regex_resource_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_steering_read_block_access ($login_tenant, $resource_tenant, $tenants_data);
+    test_ds_resource_steering_write_block_access ($login_tenant, $resource_tenant, $tenants_data);
 }
 
 sub login_to_tenant_admin {
@@ -1380,3 +1467,179 @@ sub test_ds_regex_resource_write_block_access {
     logout_from_tenant();
 
 }
+
+sub test_ds_resource_steering_read_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_portal($login_tenant, $tenants_data);
+
+    my $st_ds = $tenants_data->{$resource_tenant}->{'st_ds_id'};
+    my $target_ds = $tenants_data->{$resource_tenant}->{'ds_id'};
+
+    ok $t->get_ok('/api/1.2/steering/'.$st_ds.'/targets')
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->$count_response_test(3)
+        , 'Are steering targets returned:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$target_ds)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryServiceId" => $st_ds)
+            ->json_is( "/response/0/targetId" => $target_ds)
+            ->json_is( "/response/0/value" => 1 )
+            ->json_is( "/response/0/typeId" => 40 )
+        , 'Is the steering target returned:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$root_tenant_fixture_ds)
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryServiceId" => $st_ds)
+            ->json_is( "/response/0/targetId" => $root_tenant_fixture_ds)
+            ->json_is( "/response/0/value" => 1 )
+            ->json_is( "/response/0/typeId" => 40 )
+        , 'Is the steering target returned even if not in tenancy:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+}
+
+
+sub test_ds_resource_steering_read_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    my $st_ds = $tenants_data->{$resource_tenant}->{'st_ds_id'};
+    my $target_ds = $tenants_data->{$resource_tenant}->{'ds_id'};
+
+    ok $t->get_ok('/api/1.2/steering/'.$st_ds.'/targets')
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Are steering targets cannot return:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$target_ds)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Is the steering target cannot be returned:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+}
+
+sub test_ds_resource_steering_write_allow_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    my $st_ds = $tenants_data->{$resource_tenant}->{'st_ds_id'};
+    my $target_ds = $tenants_data->{$resource_tenant}->{'ds_id'};
+
+    #changing the steering target
+    ok $t->put_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$target_ds => {Accept => 'application/json'} => json => {
+                "value" => 2,
+                "typeId" => 40
+            })
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/deliveryServiceId" => $st_ds )
+            ->json_is( "/response/targetId" => $target_ds )
+            ->json_is( "/response/value" => 2 )
+            ->json_is( "/response/typeId" => 40 )
+            ->json_is( "/alerts/0/level" => "success" )
+        , 'Was the steering target updated:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #removing the steering target
+    ok $t->delete_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$target_ds)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Did the steering target get deleted:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #putting it back
+    ok $t->post_ok('/api/1.2/steering/'.$st_ds.'/targets' => {Accept => 'application/json'} => json => {
+                "targetId" => $target_ds,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryServiceId" => $st_ds)
+            ->json_is( "/response/0/targetId" => $target_ds)
+            ->json_is( "/response/0/value" => 1 )
+            ->json_is( "/response/0/typeId" => 40 )
+        , 'Is the steering target created:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    logout_from_tenant();
+}
+
+sub test_ds_resource_steering_write_block_access {
+    my $login_tenant = shift;
+    my $resource_tenant = shift;
+    my $tenants_data = shift;
+
+    my $is_login_tenant_active = is_tenant_active($login_tenant);
+    login_to_tenant_admin($login_tenant, $tenants_data);
+
+    my $st_ds = $tenants_data->{$resource_tenant}->{'st_ds_id'};
+    my $target_ds = $tenants_data->{$resource_tenant}->{'ds_id'};
+    my $is_login_tenant_active = is_tenant_active($login_tenant);
+
+    #cannot change the steering target
+    ok $t->put_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$target_ds => {Accept => 'application/json'} => json => {
+                "value" => 2,
+                "typeId" => 40
+            })
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'The steering cannot be updated:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #cannot change the steering target when we have no access to the target
+    ok $t->put_ok('/api/1.2/steering/'.$tenants_data->{$login_tenant}->{'st_ds_id'}.'/targets/'.$root_tenant_fixture_ds => {Accept => 'application/json'} => json => {
+                "value" => 2,
+                "typeId" => 40
+            })
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be updated due to target:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #cannot change the steering target when we have no access to the source
+    ok $t->put_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$no_tenant_fixture_ds => {Accept => 'application/json'} => json => {
+                "value" => 2,
+                "typeId" => 40
+            })
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be updated due to source:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+
+    #cannot delete the steering target
+    ok $t->delete_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$target_ds)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'The steering cannot be updated:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #cannot delete the steering target when we have no access to the target
+    ok $t->delete_ok('/api/1.2/steering/'.$tenants_data->{$login_tenant}->{'st_ds_id'}.'/targets/'.$root_tenant_fixture_ds)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be deleted due to target:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    #cannot delete the steering target when we have no access to the source
+    ok $t->delete_ok('/api/1.2/steering/'.$st_ds.'/targets/'.$no_tenant_fixture_ds)
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be deleted due to source:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+
+    #cannot add steering
+    ok $t->post_ok('/api/1.2/steering/'.$st_ds.'/targets' => {Accept => 'application/json'} => json => {
+                "targetId" => $target_ds,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be created:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #cannot add steering due to target
+    ok $t->post_ok('/api/1.2/steering/'.$tenants_data->{$login_tenant}->{'st_ds_id'}.'/targets' => {Accept => 'application/json'} => json => {
+                "targetId" => $root_tenant_fixture_ds,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is($is_login_tenant_active ? 400 : 403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be created due to target:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    #cannot add steering due to source
+    ok $t->post_ok('/api/1.2/steering/'.$st_ds.'/targets' => {Accept => 'application/json'} => json => {
+                "targetId" => $no_tenant_fixture_ds,
+                "value" => 1,
+                "typeId" => 40
+            })->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Steering cannot be created due to source:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    logout_from_tenant();
+}
+
+
+

@@ -17,6 +17,7 @@ package API::DeliveryService::SteeringTarget;
 #
 
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -28,6 +29,20 @@ sub index {
 	my $self        = shift;
 	my $steering_id = $self->param('id');
 	my @data;
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $steering_id } );
+	if ( defined($ds) ) {
+		#TO THE REVIEWER
+		# I'm a bit defensive here.
+		# I could have return "not_found" if the ds is not found - as in this case no steering record should be there.
+		# However, the steering record might exists due to bugs, while the DS is not.
+		# I would like the user to be able to view these records in order to be able to delete them
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Steering delivery-service tenant is not available to the user.");
+		}
+	}
 
 	my %criteria;
 	$criteria{'deliveryservice'} = $steering_id;
@@ -53,6 +68,20 @@ sub show {
 	my $self        = shift;
 	my $steering_id = $self->param('id');
 	my $target_id   = $self->param('target_id');
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $steering_id } );
+	if ( defined($ds) ) {
+		#TO THE REVIEWER
+		# I'm a bit defensive here.
+		# I could have return "not_found" if the ds is not found - as in this case no steering record should be there.
+		# However, the steering record might exists due to bugs, while the DS is not.
+		# I would like the user to be able to view these records in order to be able to delete them
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Steering delivery-service tenant is not available to the user.");
+		}
+	}
 
 	my %criteria;
 	$criteria{'deliveryservice'} = $steering_id;
@@ -86,8 +115,24 @@ sub update {
 		return $self->forbidden();
 	}
 
-	$params->{targetId} = $target_ds_id; # to ensure that is_valid passes
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $steering_ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Steering delivery-service tenant is not available to the user.");
+	}
+	my $target_ds = $self->db->resultset('Deliveryservice')->find( { id => $target_ds_id } );
+	if ( !defined($target_ds) ) {
+		return $self->not_found();
+	}
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $target_ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Steering target delivery-service tenant is not available to the user.");
+	}
 
+	$params->{targetId} = $target_ds_id; # to ensure that is_valid passes
 	my ( $is_valid, $result ) = $self->is_target_valid($params);
 
 	if ( !$is_valid ) {
@@ -136,6 +181,23 @@ sub create {
 
 	if ( !&is_admin($self) && !&is_steering($self) ) {
 		return $self->forbidden();
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $steering_ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Steering delivery-service tenant is not available to the user.");
+	}
+	my $target_ds = $self->db->resultset('Deliveryservice')->find( { id => $target_ds_id } );
+	if ( !defined($target_ds) ) {
+		return $self->alert("Target delivery-service not found");
+	}
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $target_ds->tenant_id)) {
+		return $self->alert("Steering target delivery-service tenant is not available to the user.");
 	}
 
 	my ( $is_valid, $result ) = $self->is_target_valid($params);
@@ -187,6 +249,23 @@ sub delete {
 
 	if ( !&is_admin($self) && !&is_steering($self) ) {
 		return $self->forbidden();
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $steering_ds_id } );
+	if ( defined($ds) ) {
+		#if the DS does not exists, maybe due to a bug, we do not block, allowing the record to be deleted
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Steering delivery-service tenant is not available to the user.");
+		}
+	}
+	my $target_ds = $self->db->resultset('Deliveryservice')->find( { id => $target_ds_id } );
+	if ( defined($target_ds) ) {
+		#if the DS does not exists, maybe due to a bug, we do not block, allowing the record to be deleted
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $target_ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Steering target delivery-service tenant is not available to the user.");
+		}
 	}
 
 	my $target = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $steering_ds_id, target => $target_ds_id } )->single();
