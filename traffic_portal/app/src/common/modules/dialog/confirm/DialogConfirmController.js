@@ -17,9 +17,11 @@
  * under the License.
  */
 
-var DialogConfirmController = function(params, $scope, $uibModalInstance) {
+var DialogConfirmController = function(params, $scope, $sce, $uibModalInstance) {
 
     $scope.params = params;
+
+    $scope.message = $sce.trustAsHtml(params.message);
 
     $scope.yes = function() {
         $uibModalInstance.close();
@@ -31,5 +33,5 @@ var DialogConfirmController = function(params, $scope, $uibModalInstance) {
 
 };
 
-DialogConfirmController.$inject = ['params', '$scope', '$uibModalInstance'];
+DialogConfirmController.$inject = ['params', '$scope', '$sce', '$uibModalInstance'];
 module.exports = DialogConfirmController;

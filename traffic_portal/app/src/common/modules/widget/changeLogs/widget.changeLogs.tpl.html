@@ -19,10 +19,6 @@ under the License.
 
 <div class="x_title">
     <h2>Change Logs</h2>
-    <ul class="nav navbar-right panel_toolbox">
-        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
-        <li><a class="close-link"><i class="fa fa-close"></i></a></li>
-    </ul>
     <div class="clearfix"></div>
 </div>
 <div class="x_content">
@@ -33,7 +29,7 @@ under the License.
                     <div class="block_content">
                         <h2 class="title">{{::changeLog.level}}</h2>
                         <div class="byline">
-                            <span>{{::getRelativeTime(changeLog.lastUpdated)}}</span> by <a>{{::changeLog.user}}</a>
+                            <span>{{::getRelativeTime(changeLog.lastUpdated)}}</span> by {{::changeLog.user}}
                         </div>
                         <p class="excerpt">{{::changeLog.message}}</p>
                     </div>

@@ -66,11 +66,20 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">XML ID *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="xmlId" name="xmlId" type="text" class="form-control" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
+                    <input id="xmlId" name="xmlId" type="text" class="form-control" placeholder="eg. xyz-video" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
                     <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.tenantId), 'has-feedback': hasError(deliveryServiceForm.tenantId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenant.name for tenant in tenants">
+                        <option value="">Select...</option>
+                    </select>
                 </div>
             </div>
 
@@ -121,7 +130,7 @@ under the License.
             </div>
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Profile</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service Profile</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="profile" name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
                         <option value="">Select...</option>
@@ -181,15 +190,6 @@ under the License.
                     <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" ng-maxlength="255" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.sslKeyVersion), 'has-feedback': hasError(deliveryServiceForm.sslKeyVersion)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">SSL Key Version</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="sslKeyVersion" name="sslKeyVersion" type="text" class="form-control" ng-model="deliveryService.sslKeyVersion" ng-maxlength="11" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.sslKeyVersion, 'maxlength')">Too Long</small>
-                    <span ng-show="hasError(deliveryServiceForm.sslKeyVersion)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
 
