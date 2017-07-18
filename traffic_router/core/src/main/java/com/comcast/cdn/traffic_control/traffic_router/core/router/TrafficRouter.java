@@ -65,6 +65,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
 
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
@@ -74,6 +76,7 @@ public class TrafficRouter {
 	private final ZoneManager zoneManager;
 	private final GeolocationService geolocationService;
 	private final GeolocationService geolocationService6;
+	private final AnonymousIpDatabaseService anonymousIpService;
 	private final FederationRegistry federationRegistry;
 	private final boolean consistentDNSRouting;
 
@@ -87,7 +90,8 @@ public class TrafficRouter {
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
-			final GeolocationService geolocationService6, 
+			final GeolocationService geolocationService6,
+			final AnonymousIpDatabaseService anonymousIpService,
 			final StatTracker statTracker,
 			final TrafficOpsUtils trafficOpsUtils,
 			final FederationRegistry federationRegistry,
@@ -95,6 +99,7 @@ public class TrafficRouter {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
+		this.anonymousIpService = anonymousIpService;
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = cr.getConfig().optBoolean("consistent.dns.routing", false); // previous/default behavior
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
@@ -180,6 +185,10 @@ public class TrafficRouter {
 
 	public GeolocationService getGeolocationService() {
 		return geolocationService;
+	}
+
+	public AnonymousIpDatabaseService getAnonymousIpDatabaseService() {
+		return anonymousIpService;
 	}
 
 	public Geolocation getLocation(final String clientIP) throws GeolocationException {
@@ -480,6 +489,7 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
+	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
@@ -521,6 +531,16 @@ public class TrafficRouter {
 		}
 
 		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
+
+		// Enforce anonymous IP blocking if a DS has anonymous blocking enabled
+		// and the feature is enabled
+		if (deliveryService.isAnonymousIpEnabled() && AnonymousIp.getCurrentConfig().enabled) {
+			AnonymousIp.enforce(this, request, deliveryService, cache, routeResult, track);
+
+			if (routeResult.getResponseCode() == AnonymousIp.BLOCK_CODE) {
+				return routeResult;
+			}
+		}
 
 		if (deliveryService.isRegionalGeoEnabled()) {
 			RegionalGeo.enforce(this, request, deliveryService, cache, routeResult, track);

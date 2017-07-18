@@ -79,6 +79,7 @@
 		<property name="federationRegistry" ref="federationsRegistry" />
 		<property name="geolocationService" ref="maxmindGeolocationService" />
 		<property name="geolocationService6" ref="maxmindGeolocationService" />
+		<property name="anonymousIpService" ref="anonymousIpDatabaseService" />
 		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
@@ -127,6 +128,8 @@
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
 		<property name="networkUpdater" ref="networkUpdater" />
 		<property name="regionalGeoUpdater" ref="regionalGeoUpdater" />
+		<property name="anonymousIpConfigUpdater" ref="anonymousIpConfigUpdater" />
+		<property name="anonymousIpDatabaseUpdater" ref="anonymousIpDatabaseUpdater" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="configDir" value="/opt/traffic_router/conf" />
 		<property name="federationsWatcher" ref="federationsWatcher" />
@@ -143,6 +146,7 @@
 	</bean>
 
 	<bean id="maxmindGeolocationService" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService"/>
+	<bean id="anonymousIpDatabaseService" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService"/>
 	
 	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
 		<property name="databasesDirectory" ref="databasesDir"/>
@@ -168,6 +172,25 @@
 		<property name="databaseName" value="$[cache.regionalgeo.database:regional_geoblock.json]" />
 		<property name="pollingInterval" value="$[cache.regionalgeo.database.refresh.period:10800000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+	</bean>
+
+	<bean id="anonymousIpConfigUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater"
+		init-method="init">
+		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.anonymousip.database:anonymous_ip.json]" />
+		<property name="pollingInterval" value="$[cache.anonymousip.database.refresh.period:10800000]" />
+		<property name="trafficRouterManager" ref="trafficRouterManager" />
+	</bean>
+
+	<bean id="anonymousIpDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater"
+		init-method="init">
+		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.anonymousip.database:GeoIP2-Anonymous-IP.mmdb]" />
+		<property name="pollingInterval" value="$[cache.anonymousip.database.refresh.period:10800000]" />
+		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="anonymousIpDatabaseService" ref="anonymousIpDatabaseService" />
 	</bean>
 
 	<bean id="ScheduledExecutorService" class="java.util.concurrent.Executors"
