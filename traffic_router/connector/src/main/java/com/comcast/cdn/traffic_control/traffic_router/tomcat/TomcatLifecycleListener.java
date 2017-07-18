@@ -39,7 +39,7 @@ public class TomcatLifecycleListener implements LifecycleListener {
 		}
 
 		try {
-			log.info("Registering delivery service certifcates mbean");
+			log.info("Registering delivery service certificates mbean");
 			final ObjectName objectName = new ObjectName(DeliveryServiceCertificatesMBean.OBJECT_NAME);
 
 			final MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
