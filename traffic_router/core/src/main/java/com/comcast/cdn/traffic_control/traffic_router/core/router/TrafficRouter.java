@@ -500,6 +500,7 @@ public class TrafficRouter {
 		}
 	}
 
+	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
 	public HTTPRouteResult singleRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService deliveryService = getDeliveryService(request, track);
 
