@@ -60,6 +60,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIp;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater;
 
 @SuppressWarnings("PMD.TooManyFields")
 public class ConfigHandler {
@@ -80,6 +83,8 @@ public class ConfigHandler {
 	private DeepNetworkUpdater deepNetworkUpdater;
 	private FederationsWatcher federationsWatcher;
 	private RegionalGeoUpdater regionalGeoUpdater;
+	private AnonymousIpConfigUpdater anonymousIpConfigUpdater;
+	private AnonymousIpDatabaseUpdater anonymousIpDatabaseUpdater;
 	private SteeringWatcher steeringWatcher;
 	private CertificatesPoller certificatesPoller;
 	private CertificatesPublisher certificatesPublisher;
@@ -110,6 +115,14 @@ public class ConfigHandler {
 
 	public RegionalGeoUpdater getRegionalGeoUpdater() {
 		return regionalGeoUpdater;
+	}
+
+	public AnonymousIpConfigUpdater getAnonymousIpConfigUpdater() {
+		return anonymousIpConfigUpdater;
+	}
+
+	public AnonymousIpDatabaseUpdater getAnonymousIpDatabaseUpdater() {
+		return anonymousIpDatabaseUpdater;
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.AvoidCatchingThrowable"})
@@ -148,6 +161,7 @@ public class ConfigHandler {
 				parseCoverageZoneNetworkConfig(config);
 				parseDeepCoverageZoneNetworkConfig(config);
 				parseRegionalGeoConfig(jo);
+				parseAnonymousIpConfig(jo);
 
 				final CacheRegister cacheRegister = new CacheRegister();
 				final JsonNode deliveryServicesJson = JsonUtils.getJsonNode(jo, "deliveryServices");
@@ -268,6 +282,14 @@ public class ConfigHandler {
 
 	public void setRegionalGeoUpdater(final RegionalGeoUpdater regionalGeoUpdater) {
 		this.regionalGeoUpdater = regionalGeoUpdater;
+	}
+
+	public void setAnonymousIpConfigUpdater(final AnonymousIpConfigUpdater anonymousIpConfigUpdater) {
+		this.anonymousIpConfigUpdater = anonymousIpConfigUpdater;
+	}
+	
+	public void setAnonymousIpDatabaseUpdater(final AnonymousIpDatabaseUpdater anonymousIpDatabaseUpdater) {
+		this.anonymousIpDatabaseUpdater = anonymousIpDatabaseUpdater;
 	}
 
 	/**
@@ -538,6 +560,50 @@ public class ConfigHandler {
 				LOGGER.warn("Failed to set system property " + pollingInterval + " from configuration object: " + e.getMessage());
 			}
 		}
+	}
+
+	private void parseAnonymousIpConfig(final JSONObject jo) throws JSONException {
+		final String anonymousPollingUrl = "anonymousip.polling.url";
+		final String anonymousPollingInterval = "anonymousip.polling.interval";
+		final String anonymousPolicyConfiguration = "anonymousip.policy.configuration";
+		
+		final JSONObject config = jo.getJSONObject("config");
+		final String configUrl = config.optString(anonymousPolicyConfiguration, null);
+		final String databaseUrl = config.optString(anonymousPollingUrl, null);
+
+		if (configUrl == null) {
+			LOGGER.info(anonymousPolicyConfiguration + " not configured; stopping service updater and disabling feature");
+			getAnonymousIpConfigUpdater().stopServiceUpdater();
+			AnonymousIp.getCurrentConfig().enabled = false;
+			return;
+		}
+		
+		if (databaseUrl == null) {
+			LOGGER.info(anonymousPollingUrl + " not configured; stopping service updater and disabling feature");
+			getAnonymousIpDatabaseUpdater().stopServiceUpdater();
+			AnonymousIp.getCurrentConfig().enabled = false;
+			return;
+		}
+
+		if (jo.has(deliveryServicesKey)) {
+			final JSONObject dss = jo.getJSONObject(deliveryServicesKey);
+			for (final String ds : JSONObject.getNames(dss)) {
+				if (dss.getJSONObject(ds).has("anonymousBlockingEnabled") &&
+						dss.getJSONObject(ds).getString("anonymousBlockingEnabled").equals("true")) {
+					final long interval = config.optLong(anonymousPollingInterval);
+					getAnonymousIpConfigUpdater().setDataBaseURL(configUrl, interval);
+					getAnonymousIpDatabaseUpdater().setDataBaseURL(databaseUrl, interval);
+					AnonymousIp.getCurrentConfig().enabled = true;
+					LOGGER.debug("Anonymous Blocking in use, scheduling service updaters and enabling feature");
+					return;
+				}
+			}
+		}
+
+		LOGGER.debug("No DS using anonymous ip blocking - disabling feature");
+		getAnonymousIpConfigUpdater().cancelServiceUpdater();
+		getAnonymousIpDatabaseUpdater().cancelServiceUpdater();
+		AnonymousIp.getCurrentConfig().enabled = false;
 	}
 
 	/**
