@@ -51,21 +51,21 @@ Delivery Service Regexes
     {
      "response": [
         {
-			"dsName": "foo-bar",
-			"regexes": [
-				{
-					"type": "HOST_REGEXP",
-					"pattern": ".*\.foo-bar\..*",
-					"setNumber": 0
-				},
-				{
-					"type": "HOST_REGEXP",
-					"pattern": "foo.bar.com",
-					"setNumber": 1
-				}
-			]
-		},
-		{ ... }
+          "dsName": "foo-bar",
+          "regexes": [
+            {
+              "type": "HOST_REGEXP",
+              "pattern": ".*\.foo-bar\..*",
+              "setNumber": 0
+            },
+            {
+              "type": "HOST_REGEXP",
+              "pattern": "foo.bar.com",
+              "setNumber": 1
+            }
+			    ]
+		    },
+		    { ... }
       ]
     }
 
@@ -106,21 +106,21 @@ Delivery Service Regexes
   **Response Example** ::
 
     {
-     "response": [
+      "response": [
         {
-			"id": 852,
-			"type": 18,
-			"typeName": "HOST_REGEXP",
-			"pattern": ".*\.foo-bar\..*",
-			"setNumber": 0
-		},
+          "id": 852,
+          "type": 18,
+          "typeName": "HOST_REGEXP",
+          "pattern": ".*\.foo-bar\..*",
+          "setNumber": 0
+        },
         {
-			"id": 853,
-			"type": 18,
-			"typeName": "HOST_REGEXP",
-			"pattern": "foo.bar.com",
-			"setNumber": 1
-		}
+          "id": 853,
+          "type": 18,
+          "typeName": "HOST_REGEXP",
+          "pattern": "foo.bar.com",
+          "setNumber": 1
+        }
       ]
     }
 
@@ -165,12 +165,12 @@ Delivery Service Regexes
     {
      "response": [
         {
-			"id": 852,
-			"type": 18,
-			"typeName": "HOST_REGEXP"
-			"pattern": ".*\.foo-bar\..*",
-			"setNumber": 0
-		}
+          "id": 852,
+          "type": 18,
+          "typeName": "HOST_REGEXP",
+          "pattern": ".*\.foo-bar\..*",
+          "setNumber": 0
+        }
       ]
     }
 
@@ -233,19 +233,19 @@ Delivery Service Regexes
   **Response Example** ::
 
     {
-        "response":{
-			"id": 852,
-			"type": 18,
-			"typeName": "HOST_REGEXP"
-			"pattern": ".*\.foo-bar\..*",
-			"setNumber": 0
-        },
-        "alerts":[
-            {
-                "level": "success",
-                "text": "Delivery service regex creation was successful."
-            }
-        ]
+      "response":{
+        "id": 852,
+        "type": 18,
+        "typeName": "HOST_REGEXP",
+        "pattern": ".*\.foo-bar\..*",
+        "setNumber": 0
+      },
+      "alerts":[
+        {
+          "level": "success",
+          "text": "Delivery service regex creation was successful."
+        }
+      ]
     }
 
 |
@@ -309,19 +309,19 @@ Delivery Service Regexes
   **Response Example** ::
 
     {
-        "response":{
-			"id": 852,
-			"type": 18,
-			"typeName": "HOST_REGEXP"
-			"pattern": ".*\.foo-bar\..*",
-			"setNumber": 0
-        },
-        "alerts":[
-            {
-                "level": "success",
-                "text": "Delivery service regex update was successful."
-            }
-        ]
+      "response":{
+        "id": 852,
+        "type": 18,
+        "typeName": "HOST_REGEXP",
+        "pattern": ".*\.foo-bar\..*",
+        "setNumber": 0
+      },
+      "alerts":[
+        {
+          "level": "success",
+          "text": "Delivery service regex update was successful."
+        }
+      ]
     }
 
 |
