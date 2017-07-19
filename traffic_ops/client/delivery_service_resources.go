@@ -87,7 +87,7 @@ type DeliveryService struct {
 	RegexRemap           string                 `json:"regexRemap"`
 	CacheURL             string                 `json:"cacheurl"`
 	RemapText            string                 `json:"remapText"`
-	MultiSiteOrigin      bool                   `json:"multiSiteOrigin"`
+	MultiSiteOrigin      int                    `json:"multiSiteOrigin"`
 	DisplayName          string                 `json:"displayName"`
 	InitialDispersion    int                    `json:"initialDispersion"`
 	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
