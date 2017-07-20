@@ -48,7 +48,7 @@ sub copy_url_sig_keys {
 	my $copy_from_xml_id    = $self->param('copyFromXmlId'); # copying from this service
 
 	my $current_user = $self->current_user()->{username};
-
+	my $is_admin = &is_admin($self);
 	#check ds and generate config file name
 	my $rs = $self->db->resultset("Deliveryservice")->find( { xml_id => $xml_id } ); 
 	my $ds_id;
@@ -76,7 +76,7 @@ sub copy_url_sig_keys {
 
 	#verify we can copy keys out
 	if ( $helper->is_valid_delivery_service($copy_ds_id) ) {
-		if ( &is_admin($self) || $helper->is_delivery_service_assigned($copy_ds_id) ) {
+		if ( $is_admin || $helper->is_delivery_service_assigned($copy_ds_id) ) {
 			my $response_container = $self->riak_get( URL_SIG_KEYS_BUCKET, $copy_config_file ); # verify this
 			my $rc                 = $response_container->{"response"}->{_rc};
 			if ( $rc eq '200' ) {
@@ -84,7 +84,7 @@ sub copy_url_sig_keys {
 			}
 			else {
 				my $error_msg = $response_container->{"response"}->{_content};
-				$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
+				$self->app->log->warn("received error code '$rc' from riak: '$error_msg'");
 			}
 		}
 		else {
@@ -98,7 +98,7 @@ sub copy_url_sig_keys {
 	if ( defined($url_sig_key_values_json) ) { # verify we got keys copied
 		# Admins can always do this, otherwise verify the user
 		if ( $helper->is_valid_delivery_service($ds_id) ) {
-			if ( &is_admin($self) || $helper->is_delivery_service_assigned($ds_id) ) {
+			if ( $is_admin || $helper->is_delivery_service_assigned($ds_id) ) {
 				$self->app->log->debug( "url_sig_key_values_json #-> " . $url_sig_key_values_json );
 				my $response_container = $self->riak_put( URL_SIG_KEYS_BUCKET, $config_file, $url_sig_key_values_json );
 				my $response           = $response_container->{"response"};
@@ -108,7 +108,7 @@ sub copy_url_sig_keys {
 				}
 				else {
 					my $error_msg = $response->{_content};
-					$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
+					$self->app->log->warn("received error code '$rc' from riak: '$error_msg'");
 					return $self->alert( $response->{_content} );
 				}
 			}
