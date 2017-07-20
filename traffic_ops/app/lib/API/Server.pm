@@ -785,20 +785,29 @@ sub totals {
 
 sub status_count {
 	my $self = shift;
+	my $response = {};
 
-	my $rs = $self->db->resultset('Server')->search(
-		undef,
-		{
-			join     => [qw/ status /],
-			select   => [ 'status.name', { count => 'me.id' } ],
-			as       => [qw/ status_name server_count /],
-			group_by => [qw/ status.id /]
+	my $server_count = $self->db->resultset('Server')->search()->count();
+	if ($server_count == 0) {
+		# if there are no servers, just return 0 for all statuses
+		my $statuses = $self->db->resultset('Status')->search();
+		while ( my $status = $statuses->next ) {
+			$response->{ $status->name } = 0;
 		}
-	);
+	} else {
+		my $rs = $self->db->resultset('Server')->search(
+			undef,
+			{
+				join     => [qw/ status /],
+				select   => [ 'status.name', { count => 'me.id' } ],
+				as       => [qw/ status_name server_count /],
+				group_by => [qw/ status.id /]
+			}
+		);
 
-	my $response;
-	while ( my $row = $rs->next ) {
-		$response->{ $row->{'_column_data'}->{'status_name'} } = $row->{'_column_data'}->{'server_count'};
+		while ( my $row = $rs->next ) {
+			$response->{ $row->{'_column_data'}->{'status_name'} } = $row->{'_column_data'}->{'server_count'};
+		}
 	}
 
 	return $self->success( $response );
