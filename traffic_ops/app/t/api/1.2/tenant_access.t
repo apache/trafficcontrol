@@ -352,14 +352,12 @@ sub prepare_tenant {
         , 'Does the delivery services assign details return?';
 
     my $cg_to_use_name = "cache_group_to_us_".$name;
-    ok $t->post_ok('/api/1.2/cachegroups/create' => {Accept => 'application/json'} => json => {
+    ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
                 "name" => $cg_to_use_name,
                 "shortName" => $cg_to_use_name,
                 "latitude" => "23",
                 "longitude" => "45",
-                "parentCachegroup" => "",
-                "secondaryParentCachegroup" => "",
-                "typeName" => "EDGE_LOC" })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+                "typeId" => 5})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/name" => $cg_to_use_name)
         , 'Created cache group?';
 
@@ -377,20 +375,21 @@ sub prepare_tenant {
     }
 
     my $server_name_to_use = 'edge_to_use_'.$name;
-    ok $t->post_ok('/api/1.2/servers/create' => {Accept => 'application/json'} => json => {
+    ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
                 "hostName" => $server_name_to_use,
                 "domainName" => "example-domain.com",
-                "cachegroup" => $cg_to_use_name,
-                "cdnName" => "cdn1",
+                "cachegroupId" => $cg_to_use_id,
+                "cdnId" => 100,
                 "ipAddress" => "10.74.27.".$tenant_id_for_ip ,
                 "interfaceName" => "bond0",
                 "ipNetmask" => "255.255.255.0",
                 "ipGateway" => "10.74.27.253",
                 "interfaceMtu" => "1500",
-                "physLocation" => "Denver",
+                "physLocationId" => 300,
+                "profileId" => 100,
                 "statusId" => 1,
-                "type" => "EDGE",
-                "profile" => "EDGE1" })
+                "typeId" => 1,
+                "updPending" => \0,})
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Creating server?';
 
@@ -405,7 +404,6 @@ sub prepare_tenant {
         $admin_username, $admin_userid,
         $portal_username, $portal_userid,
         $ds_id, $ds_xml_id,
-        $server_name_to_use, $server_id_to_use,
         $cg_to_use_id, $cg_to_use_name,
         $server_id_to_use, $server_name_to_use);
 }
@@ -435,7 +433,7 @@ sub clear_tenant {
     #Deleting the DS asginment to server
     ok $t->delete_ok('/api/1.2/deliveryservice_server/'.$tenants_data->{$name}->{'ds_id'} ."/".$tenants_data->{$name}->{'server_id_to_use'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
     ok $t->delete_ok('/api/1.2/servers/' . $tenants_data->{$name}->{'server_id_to_use'})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-    ok $t->delete_ok('/api/1.2/cachegroups/' . $tenants_data->{$name}->{'cg_id_to_use'} . '/delete')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ok $t->delete_ok('/api/1.2/cachegroups/' . $tenants_data->{$name}->{'cg_id_to_use'} )->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , "Deleting CG";
     #deleting the DS
     ok $t->delete_ok('/api/1.2/deliveryservice_user/'.$tenants_data->{$name}->{'ds_id'}.'/'.$tenants_data->{$name}->{'portal_uid'} => {Accept => 'application/json'})
@@ -1041,7 +1039,7 @@ sub test_ds_server_resource_read_allow_access {
     my $login_tenant = shift;
     my $resource_tenant = shift;
     my $tenants_data = shift;
-    login_to_tenant_admin($login_tenant, $tenants_data);
+    login_to_tenant_portal($login_tenant, $tenants_data);
 
 
     ok $t->get_ok('/api/1.2/servers/'.$tenants_data->{$resource_tenant}->{'server_id_to_use'}.'/deliveryservices')->status_is(200)->$count_response_test(1);
@@ -1055,7 +1053,7 @@ sub test_ds_server_resource_read_allow_access {
     my $num_of_available_servers = $t->get_ok('/api/1.2/deliveryservices/'.$ds_id."/servers/eligible")
             ->status_is(200)->$responses_counter();
 
-    ok $t->get_ok('/api/1.2/deliveryservices/'.$ds_id."/servers/unassigned")
+    ok $t->get_ok('/api/1.2/deliveryservices/'.$ds_id."/unassigned_servers")
             ->status_is(200)->$count_response_test($num_of_available_servers-1)
         , 'Success index ds unassigned servers: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
@@ -1063,21 +1061,21 @@ sub test_ds_server_resource_read_allow_access {
             ->status_is(200)->$count_response_test(1)
         , 'Success index servers by ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    logout_from_tenant_admin();
+    logout_from_tenant();
 }
 
 sub test_ds_server_resource_read_block_access {
     my $login_tenant = shift;
     my $resource_tenant = shift;
     my $tenants_data = shift;
-    login_to_tenant_admin($login_tenant, $tenants_data);
+    login_to_tenant_portal($login_tenant, $tenants_data);
 
     my $ds_id = $tenants_data->{$resource_tenant}->{'ds_id'};
     ok $t->get_ok('/api/1.2/deliveryservices/'.$ds_id."/servers")
             ->status_is(403)
         , 'Cannot index ds servers: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    $t->get_ok('/api/1.2/deliveryservices/'.$ds_id."/servers/unassigned")
+    $t->get_ok('/api/1.2/deliveryservices/'.$ds_id."/unassigned_servers")
             ->status_is(403)
         , 'Cannot index ds unassigned servers: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
@@ -1089,7 +1087,7 @@ sub test_ds_server_resource_read_block_access {
         ->status_is(403)
     , 'Cannot index servers by ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    logout_from_tenant_admin();
+    logout_from_tenant();
 }
 
 sub test_ds_server_resource_write_allow_access {
@@ -1140,7 +1138,7 @@ sub test_ds_server_resource_write_allow_access {
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Was the delivery services assigned to the server (DS/Server API)?:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    logout_from_tenant_admin();
+    logout_from_tenant();
 }
 
 sub test_ds_server_resource_write_block_access {
@@ -1180,6 +1178,6 @@ sub test_ds_server_resource_write_block_access {
             ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , 'Cannot the delivery services assigned to the server (DS/Server API)?:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    logout_from_tenant_admin();
+    logout_from_tenant();
 
 }

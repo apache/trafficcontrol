@@ -821,7 +821,7 @@ sub assign_servers {
 		return $self->alert("Parameter 'serverNames' is required.");
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->find( { xml_id => $ds_xml_Id } );
+	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->single();
 	if ( !defined($ds) ) {
 		return $self->alert( "DeliveryService[" . $ds_xml_Id . "] is not found." );
 	}
@@ -858,7 +858,6 @@ sub assign_servers {
 		$insert->insert();
 	}
 
-	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
 
 	my $response;
