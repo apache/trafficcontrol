@@ -19,7 +19,7 @@ const (
 )
 
 // validHttpCodes provides fast lookup whether a HTTP response code is valid per RFC7234§3
-var validHttpCodes = map[int]struct{}{
+var ValidHttpCodes = map[int]struct{}{
 	200: struct{}{},
 	201: struct{}{},
 	202: struct{}{},
@@ -99,7 +99,7 @@ var defaultCacheableResponseCodes = map[int]struct{}{
 
 // CodeUnderstood returns whether the given response code is understood by this cache. Required by RFC7234§3
 func CodeUnderstood(code int) bool {
-	_, ok := validHttpCodes[code]
+	_, ok := ValidHttpCodes[code]
 	return ok
 }
 

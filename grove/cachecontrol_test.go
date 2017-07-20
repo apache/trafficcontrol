@@ -1,7 +1,6 @@
 package grove
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 )
@@ -25,7 +24,8 @@ func TestParseCacheControl(t *testing.T) {
 
 	for _, ccStr := range testCacheControls {
 		cc := ParseCacheControl(makeHeader(ccStr))
+		cc = cc
 		// TODO actually test
-		fmt.Printf("parsed: %+v\n", cc)
+		// fmt.Printf("parsed: %+v\n", cc)
 	}
 }
