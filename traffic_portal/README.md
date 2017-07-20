@@ -19,4 +19,6 @@
 
 # Traffic Portal
 
-An AngularJS client served from a lightweight Node.js web server. Traffic Portal was designed to consume the Traffic Ops 2.0 RESTful API.
+An AngularJS client served from a lightweight Node.js web server. Traffic Portal was designed to consume the Traffic Ops API.
+
+Installation / configuration instructions are found at https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_portal/build
