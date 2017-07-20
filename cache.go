@@ -121,22 +121,68 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.TryServe(w, r)
 }
 
+const CodeConnectFailure = -1
+
+func isFailure(o *CacheObj, retryCodes map[int]struct{}) bool {
+	_, failureCode := retryCodes[o.code]
+	return failureCode || o.code == CodeConnectFailure
+}
+
+// RetryingGet takes a function, and retries failures up to the RemappingProducer RetryNum limit. On failure, it creates a new remapping. The func f should use `remapping` to make its request. If it hits failures up to the limit, it returns the last received CacheObj
+// TODO refactor to not close variables - it's awkward and confusing.
+func RetryingGet(getCacheObj func(remapping Remapping, retryFailures bool, obj *CacheObj) *CacheObj, request *http.Request, remappingProducer *RemappingProducer, cachedObj *CacheObj) (*CacheObj, error) {
+	obj := (*CacheObj)(nil)
+	for {
+		remapping, retryAllowed, err := remappingProducer.GetNext(request)
+		if err == ErrNoMoreRetries {
+			if obj == nil {
+				return nil, fmt.Errorf("remapping producer allows no requests") // should never happen
+			}
+			return obj, nil
+		} else if err != nil {
+			return nil, err
+		}
+		obj = getCacheObj(remapping, retryAllowed, cachedObj)
+		if !isFailure(obj, remapping.RetryCodes) {
+			return obj, nil
+		}
+	}
+}
+
 // GetAndCache makes a client request for the given `http.Request` and caches it if `CanCache`.
 // THe `ruleThrottler` may be nil, in which case the request will be unthrottled.
-func GetAndCache(req *http.Request, cacheKey string, remapName string, reqHeader http.Header, reqTime time.Time, strictRFC bool, cache Cache, ruleThrottler Throttler, revalidateObj *CacheObj) *CacheObj {
+func GetAndCache(
+	req *http.Request,
+	cacheKey string,
+	remapName string,
+	reqHeader http.Header,
+	reqTime time.Time,
+	strictRFC bool,
+	cache Cache,
+	ruleThrottler Throttler,
+	revalidateObj *CacheObj,
+	timeout time.Duration,
+	cacheFailure bool,
+	retryNum int,
+	retryCodes map[int]struct{},
+) *CacheObj {
 	// TODO this is awkward, with 'revalidateObj' indicating whether the request is a Revalidate. Should Getting and Caching be split up? How?
 	get := func() *CacheObj {
-		// TODO figure out why respReqTime isn't used
-		log.Errorf("DEBUGS GetAndCache calling request\n")
+		// TODO figure out why respReqTime isn't used by rules
+		log.Errorf("DEBUGS GetAndCache calling request %v %v %v %v %v\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header)
 		// TODO Verify overriding the passed reqTime is the right thing to do
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(req)
 		if err != nil {
 			log.Debugf("origin err for %v rule %v err %v\n", cacheKey, remapName, err)
-			code := http.StatusInternalServerError
+			code := CodeConnectFailure
 			body := []byte(http.StatusText(code))
 			return NewCacheObj(reqHeader, body, code, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
+		if _, ok := retryCodes[respCode]; ok && !cacheFailure {
+			return NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, reqRespTime)
+		}
 
+		log.Errorf("DEBUGS GetAndCache request returned %v headers %+v\n", respCode, respHeader)
 		respRespTime, ok := GetHTTPDate(respHeader, "Date")
 		if !ok {
 			log.Errorf("request %v returned no Date header - RFC Violation!\n", req.RequestURI)
@@ -144,32 +190,34 @@ func GetAndCache(req *http.Request, cacheKey string, remapName string, reqHeader
 		}
 
 		obj := (*CacheObj)(nil)
-		if CanCache(reqHeader, respCode, respHeader, strictRFC) {
-			log.Debugf("h.cache.AddSize %v\n", cacheKey)
-			log.Debugf("GetAndCache respCode %v\n", respCode)
-			if revalidateObj == nil || respCode < 300 || respCode > 399 {
-				log.Debugf("GetAndCache new %v\n", cacheKey)
-				obj = NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, respRespTime)
-			} else {
-				log.Debugf("GetAndCache revalidating %v\n", cacheKey)
-				// must copy, because this cache object may be concurrently read by other goroutines
-				newRespHeader := http.Header{}
-				copyHeader(revalidateObj.respHeaders, &newRespHeader)
-				newRespHeader.Set("Date", respHeader.Get("Date"))
-				obj = &CacheObj{
-					body:             revalidateObj.body,
-					reqHeaders:       revalidateObj.reqHeaders,
-					respHeaders:      newRespHeader,
-					respCacheControl: revalidateObj.respCacheControl,
-					code:             revalidateObj.code,
-					reqTime:          reqTime,
-					reqRespTime:      reqRespTime,
-					respRespTime:     respRespTime,
-					size:             revalidateObj.size,
-				}
-			}
-			cache.AddSize(cacheKey, obj, obj.size) // TODO store pointer?
+		// TODO This means if we can't cache the object, we return nil. Verify this is ok
+		if !CanCache(reqHeader, respCode, respHeader, strictRFC) {
+			return NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
+		log.Debugf("h.cache.AddSize %v\n", cacheKey)
+		log.Debugf("GetAndCache respCode %v\n", respCode)
+		if revalidateObj == nil || respCode < 300 || respCode > 399 {
+			log.Debugf("GetAndCache new %v\n", cacheKey)
+			obj = NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, respRespTime)
+		} else {
+			log.Debugf("GetAndCache revalidating %v\n", cacheKey)
+			// must copy, because this cache object may be concurrently read by other goroutines
+			newRespHeader := http.Header{}
+			copyHeader(revalidateObj.respHeaders, &newRespHeader)
+			newRespHeader.Set("Date", respHeader.Get("Date"))
+			obj = &CacheObj{
+				body:             revalidateObj.body,
+				reqHeaders:       revalidateObj.reqHeaders,
+				respHeaders:      newRespHeader,
+				respCacheControl: revalidateObj.respCacheControl,
+				code:             revalidateObj.code,
+				reqTime:          reqTime,
+				reqRespTime:      reqRespTime,
+				respRespTime:     respRespTime,
+				size:             revalidateObj.size,
+			}
+		}
+		cache.AddSize(cacheKey, obj, obj.size) // TODO store pointer?
 		return obj
 	}
 
@@ -197,42 +245,62 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	reqHeader := http.Header{}
 	copyHeader(r.Header, &reqHeader)
 
-	// TODO fix host header
-	remappedReq, remapName, cacheKey, allowed, ruleConnectionClose, ok, err := h.remapper.Remap(r, h.scheme)
+	// ok = 'rule found'
+	// remappedReq, remapName, cacheKey, allowed, ruleConnectionClose, ok, err := h.remapper.Remap(r, h.scheme, 0) // TODO handle failures
+
+	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
 	if err != nil {
-		log.Debugf("request error: %v\n", err)
-		h.serveReqErr(w)
+		if err == ErrRuleNotFound {
+			log.Debugf("rule not found for %v\n", r.RequestURI)
+			h.serveRuleNotFound(w)
+		} else if err == ErrIPNotAllowed {
+			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
+			h.serveNotAllowed(w)
+		} else {
+			log.Debugf("request error: %v\n", err)
+			h.serveReqErr(w)
+		}
 		return
-	}
-	if !ok {
-		log.Debugf("rule not found for %v\n", r.RequestURI)
-		h.serveRuleNotFound(w)
-		return
-	}
-	if !allowed {
-		log.Debugf("IP %v not allowed\n", r.RemoteAddr)
-		h.serveNotAllowed(w)
-		return
-	}
-
-	connectionClose := h.connectionClose || ruleConnectionClose
-
-	getAndCache := func() *CacheObj {
-		return GetAndCache(remappedReq, cacheKey, remapName, reqHeader, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapName], nil)
 	}
 
 	reqCacheControl := ParseCacheControl(reqHeader)
 	log.Debugf("TryServe got Cache-Control %+v\n", reqCacheControl)
 
-	// return true for Revalidate, and issue revalidate requests separately.
-	canReuse := func(cacheObj *CacheObj) bool {
-		return CanReuse(reqHeader, reqCacheControl, cacheObj, h.strictRFC, true)
+	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
+	cacheKey := remappingProducer.CacheKey()
+	remapName := remappingProducer.Name()
+
+	retryGetFunc := func(remapping Remapping, retryFailures bool, obj *CacheObj) *CacheObj {
+		// return true for Revalidate, and issue revalidate requests separately.
+		canReuse := func(cacheObj *CacheObj) bool {
+			return CanReuse(reqHeader, reqCacheControl, cacheObj, h.strictRFC, true)
+		}
+
+		getAndCache := func() *CacheObj {
+			return GetAndCache(remapping.Request, remapping.CacheKey, remapping.Name, remapping.Request.Header, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes)
+		}
+
+		return h.getter.Get(cacheKey, getAndCache, canReuse)
+	}
+
+	retryingGet := func(r *http.Request, obj *CacheObj) (*CacheObj, error) {
+		return RetryingGet(retryGetFunc, r, remappingProducer, obj)
 	}
 
 	iCacheObj, ok := h.cache.Get(cacheKey)
+
 	if !ok {
 		log.Debugf("cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
-		cacheObj := h.getter.Get(cacheKey, getAndCache, canReuse)
+
+		// func RetryingGet(getCacheObj func(remapping Remapping, retryFailures bool) *CacheObj, request *http.Request, remappingProducer *RemappingProducer) (*CacheObj, error) {
+
+		cacheObj, err := retryingGet(r, nil)
+		if err != nil {
+			log.Errorf("retrying get error (in uncached): %v\n", err)
+			h.serveReqErr(w)
+			return
+		}
+
 		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 		return
 	}
@@ -241,7 +309,13 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		// should never happen
 		log.Errorf("cache key '%v' value '%v' type '%T' expected *CacheObj\n", cacheKey, iCacheObj, iCacheObj)
-		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
+		cacheObj, err = retryingGet(r, nil)
+		if err != nil {
+			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
+			h.serveReqErr(w)
+			return
+		}
+
 		// TODO check for ReuseMustRevalidate
 		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 		return
@@ -256,16 +330,25 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		log.Debugf("cacheHandler.ServeHTTP: '%v' cache hit!\n", cacheKey)
 	case ReuseCannot:
 		log.Debugf("cacheHandler.ServeHTTP: '%v' can't reuse\n", cacheKey)
-		cacheObj = h.getter.Get(cacheKey, getAndCache, canReuse)
+		cacheObj, err = retryingGet(r, nil)
+		if err != nil {
+			log.Errorf("retrying get error (in reuse-cannot): %v\n", err)
+			h.serveReqErr(w)
+			return
+		}
 	case ReuseMustRevalidate:
 		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate\n", cacheKey)
-
-		ifModifiedSinceReq := remappedReq
-		ifModifiedSinceReq.Header.Add("If-Modified-Since", cacheObj.respRespTime.Format(time.RFC1123))
-		// Note this makes Revalidate obey the Rule/Origin limit, but not the per-URI-concurrent-request limit
-		// TODO ensure this is ok
-		cacheObj = GetAndCache(ifModifiedSinceReq, cacheKey, remapName, reqHeader, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapName], cacheObj)
+		// r := remapping.Request
+		// TODO verify setting the existing request header here works
+		r.Header.Set("If-Modified-Since", cacheObj.respRespTime.Format(time.RFC1123))
+		cacheObj, err = retryingGet(r, cacheObj)
+		if err != nil {
+			log.Errorf("retrying get error: %v\n", err)
+			h.serveReqErr(w)
+			return
+		}
 	}
+	log.Debugf("cacheHandler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.code)
 	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
 }
 
