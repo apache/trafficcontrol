@@ -32,7 +32,7 @@ my %definition_for = (
 		new   => 'Role',
 		using => {
 			id          => 2,
-			name        => 'read-only user',
+			name        => 'read-only',
 			description => 'block all access',
 			priv_level  => 10,
 		},
@@ -62,15 +62,6 @@ my %definition_for = (
 			name        => 'admin',
 			description => 'super-user',
 			priv_level  => 30,
-		},
-	},
-	migrations => {
-		new   => 'Role',
-		using => {
-			id          => 5,
-			name        => 'migrations',
-			description => 'database migrations user - DO NOT REMOVE',
-			priv_level  => 20,
 		},
 	},
 	portal => {
