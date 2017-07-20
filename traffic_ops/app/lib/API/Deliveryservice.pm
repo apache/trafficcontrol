@@ -458,14 +458,6 @@ sub safe_update {
 
 	if ( &is_portal($self) && $helper->is_delivery_service_assigned($id) ) {
 
-		my $xml_id = $params->{xmlId};
-		if ( $ds->xml_id ne $xml_id ) {
-			my $existing = $self->db->resultset('Deliveryservice')->find( { xml_id => $xml_id } );
-			if ($existing) {
-				return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
-			}
-		}
-
 		my $values = {
 			display_name           => $params->{displayName},
 			info_url               => $params->{infoUrl},
@@ -476,12 +468,6 @@ sub safe_update {
 
 		my $rs = $ds->update($values);
 		if ($rs) {
-
-			# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
-			&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
-			&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
-			&UI::DeliveryService::regex_remap( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
-			&UI::DeliveryService::cacheurl( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
 
 			# build example urls
 			my @example_urls  = ();
@@ -562,7 +548,7 @@ sub safe_update {
 				}
 			);
 
-			&log( $self, "Updated deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
+			&log( $self, " Safe update applied to deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
 
 			return $self->success( \@response, "Deliveryservice safe update was successful." );
 		}
