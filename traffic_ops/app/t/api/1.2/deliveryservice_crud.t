@@ -281,7 +281,7 @@ sub run_ut {
 	
 	my $ds_id_portal = &get_ds_id('test-ds1');
 
-	#attempt to change many fields, including the 5 allowed and verify only the 5 actually change
+	#attempt to change many fields, including the 4 allowed and verify only the 4 actually change
 	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id_portal.'/safe' => {Accept => 'application/json'} => json => {
         "xmlId" => "test-ds1",
         "displayName" => "ds_displayname_1_new",
@@ -306,7 +306,6 @@ sub run_ut {
         "infoUrl"    => "http://knutsel-update-new.com",
 		"longDesc"   => "long_update_new",
 		"longDesc1" => "cust_update_new",
-		"longDesc2" => "service_update_new",
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/0/xmlId" => "test-ds1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -322,7 +321,6 @@ sub run_ut {
     ->json_is("/response/0/infoUrl" => "http://knutsel-update-new.com")
     ->json_is("/response/0/longDesc" => "long_update_new")
     ->json_is("/response/0/longDesc1" => "cust_update_new")
-    ->json_is("/response/0/longDesc2" => "service_update_new")
             , 'A safe update only changes safe fields';
 
 
@@ -353,7 +351,6 @@ sub run_ut {
         "infoUrl"    => "http://knutsel-update-new.com",
 		"longDesc"   => "long_update_new",
 		"longDesc1" => "cust_update_new",
-		"longDesc2" => "service_update_new",
         })
 	->status_is(403)
 	->json_is( "/alerts/0/text/", "Forbidden. Delivery service not assigned to user." )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
