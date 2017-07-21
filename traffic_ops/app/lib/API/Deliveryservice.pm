@@ -463,7 +463,6 @@ sub safe_update {
 			info_url               => $params->{infoUrl},
 			long_desc              => $params->{longDesc},
 			long_desc_1            => $params->{longDesc1},
-			long_desc_2            => $params->{longDesc2},
 		};
 
 		my $rs = $ds->update($values);
