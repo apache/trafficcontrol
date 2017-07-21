@@ -164,10 +164,7 @@ sub show {
 	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
 
 		# check to see if deliveryservice is assigned to user, if not return forbidden
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-		my %map = map { $_ => 1 } @ds_ids;    # turn the array of dsIds into a hash with dsIds as the keys
-		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !exists( $map{$id} ) );
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !$self->is_delivery_service_assigned($id) );
 	}
 
 	my $rs = $self->db->resultset("Deliveryservice")->search(
