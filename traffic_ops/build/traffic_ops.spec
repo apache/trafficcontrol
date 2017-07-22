@@ -34,7 +34,7 @@ Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
 Requires:         cpanminus, expat-devel, gcc-c++, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
-Requires:         libidn-devel, libcurl-devel
+Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql96 >= 9.6.2 , postgresql96-devel >= 9.6.2
 Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
@@ -165,6 +165,7 @@ Built: %(date) by %{getenv: USER}
     fi
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
+    setcap cap_net_bind_service=+ep %{PACKAGEDIR}/app/bin/traffic_ops_golang
 
 %preun
 
