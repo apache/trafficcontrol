@@ -21,7 +21,8 @@ package main
 
 import (
 	"database/sql"
-	"log" // TODO change to traffic_monitor_golang/common/log
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 func preparePrivLevelStmt(db *sql.DB) (*sql.Stmt, error) {
@@ -33,10 +34,10 @@ func hasPrivLevel(privLevelStmt *sql.Stmt, user string, level int) bool {
 	err := privLevelStmt.QueryRow(user).Scan(&privLevel)
 	switch {
 	case err == sql.ErrNoRows:
-		log.Println("Error checking user " + user + " priv level: user not in database")
+		log.Errorf("checking user %v priv level: user not in database", user)
 		return false
 	case err != nil:
-		log.Println("Error checking user " + user + " priv level: " + err.Error())
+		log.Errorf("Error checking user %v priv level: %v", user, err.Error())
 		return false
 	default:
 		return privLevel >= level

@@ -22,8 +22,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie"
-	"log" // TODO change to traffic_monitor_golang/common/log
 	"net/http"
 	"time"
 )
@@ -33,8 +33,16 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 		return h
 	}
 	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+		// TODO remove, and make username available to wrapLogTime
+		start := time.Now()
+		iw := &Interceptor{w: w}
+		w = iw
+		username := "-"
+		defer func() {
+			log.Infof(`%s - %s [%s] "%v %v HTTP/1.1" %v 0 0 "%v"\n`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, time.Now().Sub(start)/time.Millisecond, iw.byteCount, r.UserAgent())
+		}()
+
 		handleUnauthorized := func(reason string) {
-			log.Printf("%v %v %v sent 401 - %v\n", time.Now(), r.RemoteAddr, r.URL.Path, reason)
 			status := http.StatusUnauthorized
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
@@ -57,7 +65,7 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 			return
 		}
 
-		username := oldCookie.AuthData
+		username = oldCookie.AuthData
 		if !hasPrivLevel(privLevelStmt, username, privLevelRequired) {
 			handleUnauthorized("insufficient privileges")
 			return
@@ -65,17 +73,42 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 
 		newCookieVal := tocookie.Refresh(oldCookie, secret)
 		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal})
+
 		h(w, r, p)
 	}
 }
 
+const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
+
 func wrapLogTime(h RegexHandlerFunc) RegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
 		start := time.Now()
+		iw := &Interceptor{w: w}
 		defer func() {
-			now := time.Now()
-			log.Printf("%v %v served %v in %v\n", now, r.RemoteAddr, r.URL.Path, now.Sub(start))
+			user := "-" // TODO fix
+			log.Infof(`%s - %s [%s] "%v %v HTTP/1.1" %v 0 0 "%v"\n`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, time.Now().Sub(start)/time.Millisecond, iw.byteCount, r.UserAgent())
 		}()
-		h(w, r, p)
+		h(iw, r, p)
 	}
+}
+
+type Interceptor struct {
+	w         http.ResponseWriter
+	code      int
+	byteCount int
+}
+
+func (i *Interceptor) WriteHeader(rc int) {
+	i.w.WriteHeader(rc)
+	i.code = rc
+}
+
+func (i *Interceptor) Write(b []byte) (int, error) {
+	wi, werr := i.w.Write(b)
+	i.byteCount += wi
+	return wi, werr
+}
+
+func (i *Interceptor) Header() http.Header {
+	return i.w.Header()
 }

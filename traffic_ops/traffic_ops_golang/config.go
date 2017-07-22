@@ -24,22 +24,35 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 type Config struct {
-	HTTPPort string   `json:"port"`
-	DBUser   string   `json:"db_user"`
-	DBPass   string   `json:"db_pass"`
-	DBServer string   `json:"db_server"`
-	DBDB     string   `json:"db_name"`
-	DBSSL    bool     `json:"db_ssl"`
-	TOSecret string   `json:"to_secret"`
-	TOURLStr string   `json:"to_url"`
-	TOURL    *url.URL `json:"-"`
-	NoAuth   bool     `json:"no_auth"`
-	CertPath string   `json:"cert_path"`
-	KeyPath  string   `json:"key_path"`
+	HTTPPort           string   `json:"port"`
+	DBUser             string   `json:"db_user"`
+	DBPass             string   `json:"db_pass"`
+	DBServer           string   `json:"db_server"`
+	DBDB               string   `json:"db_name"`
+	DBSSL              bool     `json:"db_ssl"`
+	TOSecret           string   `json:"to_secret"`
+	TOURLStr           string   `json:"to_url"`
+	TOURL              *url.URL `json:"-"`
+	NoAuth             bool     `json:"no_auth"`
+	CertPath           string   `json:"cert_path"`
+	KeyPath            string   `json:"key_path"`
+	LogLocationError   string   `json:"log_location_error"`
+	LogLocationWarning string   `json:"log_location_warning"`
+	LogLocationInfo    string   `json:"log_location_info"`
+	LogLocationDebug   string   `json:"log_location_debug"`
+	LogLocationEvent   string   `json:"log_location_event"`
 }
+
+func (c Config) Error() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
+func (c Config) Warning() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
+func (c Config) Info() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) Debug() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
+func (c Config) Event() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
 
 func LoadConfig(fileName string) (Config, error) {
 	if fileName == "" {
@@ -88,6 +101,21 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.KeyPath == "" {
 		return Config{}, fmt.Errorf("missing certificate key path")
+	}
+	if cfg.LogLocationError == "" {
+		cfg.LogLocationError = log.LogLocationNull
+	}
+	if cfg.LogLocationWarning == "" {
+		cfg.LogLocationWarning = log.LogLocationNull
+	}
+	if cfg.LogLocationInfo == "" {
+		cfg.LogLocationInfo = log.LogLocationNull
+	}
+	if cfg.LogLocationDebug == "" {
+		cfg.LogLocationDebug = log.LogLocationNull
+	}
+	if cfg.LogLocationEvent == "" {
+		cfg.LogLocationEvent = log.LogLocationNull
 	}
 
 	var err error
