@@ -30,7 +30,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const DefaultConfigPath = "/etc/goto/config.json"
+const Version = "0.1"
+
+const DefaultConfigPath = "/opt/traffic_ops/traffic_ops_golang.config"
 
 func main() {
 	configFileName := flag.String("cfg", "", "The config file path")

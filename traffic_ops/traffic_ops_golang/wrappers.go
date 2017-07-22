@@ -28,6 +28,16 @@ import (
 	"time"
 )
 
+const ServerName = "traffic_ops_golang" + "/" + Version
+
+func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("X-Server-Name", ServerName)
+		h(w, r, p)
+	}
+}
+
 func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
 	if noAuth {
 		return h
