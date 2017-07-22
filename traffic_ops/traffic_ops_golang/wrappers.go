@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
 	"net/http"
 	"time"
 )
