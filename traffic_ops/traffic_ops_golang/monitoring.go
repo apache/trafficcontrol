@@ -26,7 +26,8 @@ import (
 	"github.com/lib/pq"
 	"net/http"
 	"strings"
-	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 const MonitoringPrivLevel = 10
@@ -106,7 +107,7 @@ type DeliveryService struct {
 func monitoringHandler(db *sql.DB) RegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
 		handleErr := func(err error, status int) {
-			fmt.Printf("%v %v error %v\n", time.Now(), r.RemoteAddr, err)
+			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}

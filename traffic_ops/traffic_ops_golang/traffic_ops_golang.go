@@ -23,8 +23,11 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	_ "github.com/lib/pq"
 	"net/http"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+
+	_ "github.com/lib/pq"
 )
 
 const DefaultConfigPath = "/etc/goto/config.json"
@@ -42,6 +45,11 @@ func main() {
 		return
 	}
 
+	if err := log.InitCfg(cfg); err != nil {
+		fmt.Println("Error initializing loggers: %v", err)
+		return
+	}
+
 	sslStr := "require"
 	if !cfg.DBSSL {
 		sslStr = "disable"
@@ -49,19 +57,19 @@ func main() {
 
 	db, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DBUser, cfg.DBPass, cfg.DBServer, cfg.DBDB, sslStr))
 	if err != nil {
-		fmt.Printf("Error opening database: %v\n", err)
+		log.Errorf("opening database: %v\n", err)
 		return
 	}
 	defer db.Close()
 
 	if err := RegisterRoutes(ServerData{DB: db, Config: cfg}); err != nil {
-		fmt.Printf("Error registering routes: %v\n", err)
+		log.Errorf("registering routes: %v\n", err)
 		return
 	}
 
-	fmt.Println("Listening on " + cfg.HTTPPort)
+	log.Infof("Listening on " + cfg.HTTPPort)
 	if err := http.ListenAndServeTLS(":"+cfg.HTTPPort, cfg.CertPath, cfg.KeyPath, nil); err != nil {
-		fmt.Printf("Error stopping server: %v\n", err)
+		log.Errorf("stopping server: %v\n", err)
 		return
 	}
 }
