@@ -23,12 +23,14 @@ import (
 	"time"
 )
 
+const GeneratedByStr = "trafficcontrol-go-tocookie"
 const Name = "mojolicious"
 const DefaultDuration = time.Hour
 
 type Cookie struct {
 	AuthData    string `json:"auth_data"`
 	ExpiresUnix int64  `json:"expires"`
+	By          string `json:"by"`
 }
 
 func checkHmac(message, messageMAC, key []byte) bool {
@@ -92,7 +94,7 @@ func NewRawMsg(msg, key []byte) string {
 }
 
 func New(user string, expiration time.Time, key string) string {
-	cookieMsg := Cookie{AuthData: user, ExpiresUnix: expiration.Unix()}
+	cookieMsg := Cookie{By: GeneratedByStr, AuthData: user, ExpiresUnix: expiration.Unix()}
 	msg, _ := json.Marshal(cookieMsg)
 	return NewRawMsg(msg, []byte(key))
 }
