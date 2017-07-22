@@ -183,6 +183,18 @@ sub generateDbConf {
     return \%todbconf;
 }
 
+sub setCdnConfGoPort {
+    my $cdnConf = shift;
+    if ( exists $cdnConf->{"traffic_ops_golang_port"} ) {
+        return $cdnConf;
+    }
+    my ($port) = $cdnConf->{hypnotoad}->{listen}[0] =~ m/\:(\d+)/;
+    $cdnConf->{hypnotoad}->{listen}[0] =~ s/\:\d+/\:60443/;
+    $cdnConf->{hypnotoad}->{listen}[0] =~ s/https\:\/\/[\:\:]/https\:\/\/127\.0\.0\.1/;
+    $cdnConf->{"traffic_ops_golang_port"} = $port;
+    return $cdnConf;
+}
+
 # userInput: The entire input config file which is either user input or the defaults
 # fileName: The filename of the output config file
 #
@@ -218,6 +230,7 @@ sub generateCdnConf {
             $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
+    $cdnConf = setCdnConfGoPort($cdnConf);
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     InstallUtils::writePerl( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );
