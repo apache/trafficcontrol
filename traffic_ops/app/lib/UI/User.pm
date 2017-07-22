@@ -291,7 +291,7 @@ sub create_user {
 		{
 			full_name            => $self->param('tm_user.full_name'),
 			username             => $self->param('tm_user.username'),
-			tenant_id            => $tenantUtils->current_user_tenant(), #Tenancy is not dealt by the UI for now. getting the tenancy from the user			
+			tenant_id            => undef, #Tenancy is not dealt by the UI for now. settin to no tenant - minimal priviledge to the user
 			public_ssh_key       => $self->param('tm_user.public_ssh_key'),
 			phone_number         => $self->param('tm_user.phone_number'),
 			email                => $self->param('tm_user.email'),
