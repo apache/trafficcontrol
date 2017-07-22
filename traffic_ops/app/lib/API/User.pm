@@ -261,7 +261,7 @@ sub create {
 
 	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
 	my $tenant_utils = Utils::Tenant->new($self);
-	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $tenant_utils->current_user_tenant();
+	my $tenant_id = $params->{tenantId};
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
 		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
