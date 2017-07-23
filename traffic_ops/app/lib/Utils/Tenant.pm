@@ -60,13 +60,20 @@ sub new {
         $dbh = $context->db;
     }
 
-    my $ignore_tenancy_value = $dbh->resultset("Parameter")->search( { config_file => 'global', name => 'ignore-tenancy' } )
-        ->get_column('value')->single();
-    my $ignore_tenancy = defined($ignore_tenancy_value) ? $ignore_tenancy_value : 0;
+    #For the reviewer - this is should probably do + lock the "GLOBAL" profile to the root tenant only.
+    #Otherwise, anyone can disable tenancy
+    #However, As UTs does not have a "GLOBAL" prfile currently, and I'm not sure it is wise to add one, I'm
+    #leaving this code out
+    #
+    #my $global_profile_id = $dbh->resultset("Parameter")->search( { name => 'GLOBAL'} )->get_column('id')->single();
+    #my $global_profile_parameters = $dbh->resultset('ProfileParameter')->search( { profile => $global_profile_id } );
+    #my $use_tenancy_value = $dbh->resultset("Parameter")->search( { id => { -in => $global_profile_parameters->get_column('parameter')->as_query },
+    #                                                                config_file => 'global', name => 'use_tenancy' } )
+    #    ->get_column('value')->single();
 
-    my $ignore_ds_tmuser_assignment_value = $dbh->resultset("Parameter")->search( { config_file => 'global', name => 'ignore-ds-tmuser-assignment' } )
+    my $use_tenancy_value = $dbh->resultset("Parameter")->search( { config_file => 'global', name => 'use_tenancy' } )
         ->get_column('value')->single();
-    my $ignore_ds_tmuser_assignment = defined($ignore_ds_tmuser_assignment_value) ? $ignore_ds_tmuser_assignment_value : 0;
+    my $use_tenancy = defined($use_tenancy_value) ? $use_tenancy_value != '0' : 0;
 
     my $self = {
         dbh     => $dbh,
@@ -75,8 +82,7 @@ sub new {
 # In order to reduce the number of calls from the DB, the current user tenant is taken in the class creation.
 # the below parameters are held temporarily until the info is taken from the jwt
         current_user_tenant => $current_user_tenant,
-        ignore_tenancy => $ignore_tenancy,
-        ignore_ds_tmuser_assignment => $ignore_ds_tmuser_assignment,
+        use_tenancy => $use_tenancy,
     };
     bless $self, $class;
     return $self;
@@ -236,11 +242,11 @@ sub is_ds_resource_accessible {
     return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
 }
 
-sub ignore_ds_users_table {
+sub use_tenancy {
     # With tenancy, the DS/User mapping is no longer required for isolation.
     # So we need a knob to turn of this mechanisem if/as-long it is not depraceted.
     my $self = shift;
-    if ($self->{ignore_ds_tmuser_assignment}) {
+    if ($self->{use_tenancy}) {
         #mechanisem disabled
         return 1;
     }
@@ -398,7 +404,7 @@ sub _is_resource_accessable_to_tenant {
     my $resource_tenant = shift;
     my $user_tenant     = shift;
 
-    if ($self->{ignore_tenancy}) {
+    if (!$self->{use_tenancy}) {
         #mechanisem disabled
         return 1;
     }

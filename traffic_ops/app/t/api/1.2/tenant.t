@@ -267,15 +267,15 @@ ok $tenant_utils_of_e->is_tenant_resource_accessible($tenants_data_of_e, $tenant
 
 
 #Test disable capabilities
-ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json =>
-        {
-            'name'  => 'ignore-tenancy',
-            'configFile' => 'global',
-            'value'      => '1',
-            'secure'     => '0'
-        }
-    )->status_is(200)
-    , 'Was the disabling paramter created?';
+my $useTenancyParamId = &get_param_id('use_tenancy');
+ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+			'value'      => '0',
+		})->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "use_tenancy" )
+		->json_is( "/response/configFile" => "global" )
+		->json_is( "/response/value" => "0" )
+    , 'Was the disabling paramter set?';
 
 my $tenant_utils_of_d_disabled = Utils::Tenant->new(undef, $tenantD_id, $schema);
 my $tenants_data_of_d_disabled = $tenant_utils_of_d_disabled->create_tenants_data_from_db();
@@ -290,11 +290,14 @@ ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d
 # uncle - now can access
 ok $tenant_utils_of_d_disabled->is_tenant_resource_accessible($tenants_data_of_d_disabled, $tenantB_id) == 1;
 
-ok $t->delete_ok('/api/1.2/parameters/' . &get_param_id('ignore-tenancy') )->status_is(200)
-        ->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    , 'Was the disabling paramter deleted?';
-
-
+ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+			'value'      => '1',
+		})->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "use_tenancy" )
+		->json_is( "/response/configFile" => "global" )
+		->json_is( "/response/value" => "1" )
+    , 'Was the disabling paramter unset?';
 
 
 #################

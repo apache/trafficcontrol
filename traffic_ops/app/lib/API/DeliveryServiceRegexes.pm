@@ -32,7 +32,7 @@ sub all {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
 	my $rs;
-	if ( &is_privileged($self) or $tenant_utils->ignore_ds_users_table()) {
+	if ( &is_privileged($self) or $tenant_utils->use_tenancy()) {
 		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } } ], order_by => 'xml_id' } );
 
 		my @regexes;

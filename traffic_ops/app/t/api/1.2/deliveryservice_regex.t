@@ -28,6 +28,7 @@ use JSON;
 BEGIN { $ENV{MOJO_MODE} = "test" }
 
 my $schema = Schema->connect_to_database;
+my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 #unload data for a clean test
@@ -107,6 +108,17 @@ ok $t->post_ok('/api/1.2/deliveryservices/100/regexes' => {Accept => 'applicatio
 		->json_is( "/alerts/0/text" => "Invalid regex type" )
 	, 'Does the delivery service regex create fail due to bad regex type?';
 
+#prepare for negative test - enable the ds-user tablet
+my $useTenancyParamId = &get_param_id('use_tenancy');
+ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+			'value'      => '0',
+		})->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "use_tenancy" )
+		->json_is( "/response/configFile" => "global" )
+		->json_is( "/response/value" => "0" )
+	, 'Was the disabling paramter set?';
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #NEGATIVE TESTING -- No Privs
@@ -119,3 +131,14 @@ ok $t->get_ok("/api/1.2/deliveryservices_regexes")->status_is(403)->or( sub { di
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 done_testing();
+
+sub get_param_id {
+	my $name = shift;
+	my $q      = "select id from parameter where name = \'$name\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}

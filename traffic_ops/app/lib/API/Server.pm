@@ -443,7 +443,7 @@ sub get_servers_by_dsid {
 		$forbidden = "Forbidden. Delivery service not available for user's tenant.";
 		return ($forbidden, $servers);
 	}
-	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
+	elsif ( &is_privileged($self) || $tenant_utils->use_tenancy() || $self->is_delivery_service_assigned($ds_id) ) {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
 	else {
@@ -495,7 +495,7 @@ sub get_edge_servers_by_dsid {
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
-	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
+	elsif ( &is_privileged($self) || $tenant_utils->use_tenancy() || $self->is_delivery_service_assigned($ds_id) ) {
 		$ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
 	}
 	else {
@@ -581,7 +581,7 @@ sub get_unassigned_servers_by_dsid {
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
-	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
+	elsif ( &is_privileged($self) || $tenant_utils->use_tenancy() || $self->is_delivery_service_assigned($ds_id) ) {
 		@assigned_servers = $self->db->resultset('DeliveryserviceServer')->search( \%ds_server_criteria, { prefetch => [ 'deliveryservice', 'server' ] } )->get_column('server')->all();
 	}
 	else {
@@ -670,7 +670,7 @@ sub get_eligible_servers_by_dsid {
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
-	elsif ( !&is_privileged($self) && !$tenant_utils->ignore_ds_users_table() && !$self->is_delivery_service_assigned($ds_id) ) {
+	elsif ( !&is_privileged($self) && !$tenant_utils->use_tenancy() && !$self->is_delivery_service_assigned($ds_id) ) {
 		#for the reviewer - I believe it should turn into forbidden as well
 		return $self->Forbidden("Forbidden. Delivery service not assigned to user.");
 	}
