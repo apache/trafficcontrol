@@ -60,13 +60,22 @@ Built: %(date) by %{getenv: USER}
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
     # build tocookie (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/tocookie
+    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie
     ( mkdir -p "$godir" && \
       cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/experimental/tocookie/* . && \
+      cp -r "$TC_DIR"/traffic_ops/tocookie/* . && \
       echo "go getting tocookie at $(pwd)" && \
       go get -v \
     ) || { echo "Could not build go tocookie at $(pwd): $!"; exit 1; }
+
+    # build log (dependencies within traffic_control will fail to `go get` unless prebuilt)
+    godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/traffic_monitor_golang/common/log/* . && \
+      echo "go getting log at $(pwd)" && \
+      go get -v \
+    ) || { echo "Could not build go log at $(pwd): $!"; exit 1; }
 
     # build traffic_ops_golang binary
     godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
