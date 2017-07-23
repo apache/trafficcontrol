@@ -4467,6 +4467,15 @@ use namespace::autoclean;
 			last_updated => '2015-12-10 15:43:46',
 		},
 	},
+	## id => 446
+	'445' => {
+		new   => 'Parameter',
+		using => {
+			name        => 'use_tenancy',
+			config_file => 'global',
+			value       => '1',
+		},
+	},
 );
 
 sub name {
