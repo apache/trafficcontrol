@@ -34,17 +34,30 @@ const Version = "0.1"
 
 const DefaultConfigPath = "/opt/traffic_ops/traffic_ops_golang.config"
 
+const OldConfig = true
+const OldConfigCDNConfPath = "/opt/traffic_ops/app/conf/cdn.conf"
+const OldConfigDBConfPath = "/opt/traffic_ops/app/conf/production/database.conf"
+
 func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
+	oldConfig := flag.Bool("oldcfg", true, "Whether to look for old Perl Traffic Ops config files")
 	flag.Parse()
 	if *configFileName == "" {
 		*configFileName = DefaultConfigPath
 	}
 
-	cfg, err := LoadConfig(*configFileName)
-	if err != nil {
-		fmt.Println("Error loading config '" + *configFileName + "': " + err.Error())
-		return
+	cfg := Config{}
+	err := error(nil)
+	if !*oldConfig {
+		if cfg, err = LoadConfig(*configFileName); err != nil {
+			fmt.Println("Error loading config '" + *configFileName + "': " + err.Error())
+			return
+		}
+	} else {
+		if cfg, err = GetPerlConfigs(OldConfigCDNConfPath, OldConfigDBConfPath); err != nil {
+			fmt.Println("Error loading old configs '" + OldConfigCDNConfPath + "' and '" + OldConfigDBConfPath + "': " + err.Error())
+			return
+		}
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
