@@ -17,7 +17,29 @@
  * under the License.
  */
 
-var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, locationUtils) {
+var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, $interval, cacheGroupService, locationUtils, propertiesModel) {
+
+	var interval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
+
+	var getCacheGroupHealth = function() {
+		cacheGroupService.getCacheGroupHealth()
+			.then(function(result) {
+				$scope.cacheGroupHealth = result;
+			});
+	};
+
+	var createInterval = function() {
+		killInterval();
+		interval = $interval(function() { getCacheGroupHealth() }, propertiesModel.properties.dashboard.cacheGroupHealth.refreshRateInMS );
+	};
+
+	var killInterval = function() {
+		if (angular.isDefined(interval)) {
+			$interval.cancel(interval);
+			interval = undefined;
+		}
+	};
 
 	// pagination
 	$scope.currentCacheGroupsPage = 1;
@@ -29,15 +51,22 @@ var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, locationUti
 		return (location.online / (location.online + location.offline)) * 100;
 	};
 
+	$scope.$on("$destroy", function() {
+		killInterval();
+	});
+
 	var init = function() {
 		if (cacheGroupHealth) {
 			// only set this if it's passed in
 			$scope.cacheGroupHealth = cacheGroupHealth;
+		}
+		if (autoRefresh) {
+			createInterval();
 		}
 	};
 	init();
 
 };
 
-WidgetCacheGroupsController.$inject = ['cacheGroupHealth', '$scope', 'locationUtils'];
+WidgetCacheGroupsController.$inject = ['cacheGroupHealth', '$scope', '$interval', 'cacheGroupService', 'locationUtils', 'propertiesModel'];
 module.exports = WidgetCacheGroupsController;

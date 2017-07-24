@@ -17,7 +17,10 @@
  * under the License.
  */
 
-var WidgetRoutingController = function($scope, cdnService) {
+var WidgetRoutingController = function($scope, $interval, cdnService, propertiesModel) {
+
+	var interval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
 
 	var getRoutingMethods = function() {
 		cdnService.getRoutingMethods()
@@ -34,12 +37,31 @@ var WidgetRoutingController = function($scope, cdnService) {
 			});
 	};
 
+	var createInterval = function() {
+		killInterval();
+		interval = $interval(function() { getRoutingMethods() }, propertiesModel.properties.dashboard.routing.refreshRateInMS );
+	};
+
+	var killInterval = function() {
+		if (angular.isDefined(interval)) {
+			$interval.cancel(interval);
+			interval = undefined;
+		}
+	};
+
+	$scope.$on("$destroy", function() {
+		killInterval();
+	});
+
 	var init = function() {
 		getRoutingMethods();
+		if (autoRefresh) {
+			createInterval();
+		}
 	};
 	init();
 
 };
 
-WidgetRoutingController.$inject = ['$scope', 'cdnService'];
+WidgetRoutingController.$inject = ['$scope', '$interval', 'cdnService', 'propertiesModel'];
 module.exports = WidgetRoutingController;

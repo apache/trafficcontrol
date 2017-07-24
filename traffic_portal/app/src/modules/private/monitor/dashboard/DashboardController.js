@@ -17,7 +17,58 @@
  * under the License.
  */
 
-var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope) {
+var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope, $interval, cacheGroupService, cdnService, serverService, propertiesModel) {
+
+	var cacheGroupHealthInterval,
+		currentStatsInterval,
+		serverCountInterval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
+
+	var getCacheGroupHealth = function() {
+		cacheGroupService.getCacheGroupHealth()
+			.then(function(result) {
+				$scope.cacheGroupHealth = result;
+			});
+	};
+
+	var getCurrentStats = function() {
+		cdnService.getCurrentStats()
+			.then(function(result) {
+				$scope.totalStats = _.find(result.currentStats, function(item) {
+					// total stats are buried in a hash where cdn = total
+					return item.cdn == 'total';
+				});
+			});
+	};
+
+	var getServerCount = function() {
+		serverService.getStatusCount()
+			.then(function(result) {
+				$scope.serverCount = result;
+			});
+	};
+
+	var createIntervals = function() {
+		killIntervals();
+		cacheGroupHealthInterval = $interval(function() { getCacheGroupHealth() }, propertiesModel.properties.dashboard.healthyCacheCount.refreshRateInMS );
+		currentStatsInterval = $interval(function() { getCurrentStats() }, propertiesModel.properties.dashboard.currentStats.refreshRateInMS );
+		serverCountInterval = $interval(function() { getServerCount() }, propertiesModel.properties.dashboard.cacheStatusCount.refreshRateInMS );
+	};
+
+	var killIntervals = function() {
+		if (angular.isDefined(cacheGroupHealthInterval)) {
+			$interval.cancel(cacheGroupHealthInterval);
+			cacheGroupHealthInterval = undefined;
+		}
+		if (angular.isDefined(currentStatsInterval)) {
+			$interval.cancel(currentStatsInterval);
+			currentStatsInterval = undefined;
+		}
+		if (angular.isDefined(serverCountInterval)) {
+			$interval.cancel(serverCountInterval);
+			serverCountInterval = undefined;
+		}
+	};
 
 	$scope.cacheGroupHealth = cacheGroupHealth;
 
@@ -30,7 +81,18 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 
 	$scope.serverCount = serverCount;
 
+	$scope.$on("$destroy", function() {
+		killIntervals();
+	});
+
+	var init = function () {
+		if (autoRefresh) {
+			createIntervals();
+		}
+	};
+	init();
+
 };
 
-DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope'];
+DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope', '$interval', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
 module.exports = DashboardController;

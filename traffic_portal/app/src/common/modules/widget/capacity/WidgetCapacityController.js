@@ -17,7 +17,10 @@
  * under the License.
  */
 
-var WidgetCapacityController = function($scope, cdnService) {
+var WidgetCapacityController = function($scope, $interval, cdnService, propertiesModel) {
+
+	var interval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
 
 	var getCapacity = function() {
 		cdnService.getCapacity()
@@ -85,17 +88,36 @@ var WidgetCapacityController = function($scope, cdnService) {
 		$.plot($("#capacityChart"), graphData, options);
 	};
 
+	var createInterval = function() {
+		killInterval();
+		interval = $interval(function() { getCapacity() }, propertiesModel.properties.dashboard.capacity.refreshRateInMS );
+	};
+
+	var killInterval = function() {
+		if (angular.isDefined(interval)) {
+			$interval.cancel(interval);
+			interval = undefined;
+		}
+	};
+
 	$scope.availablePercent = 0;
 	$scope.utilizedPercent = 0;
 	$scope.maintenancePercent = 0;
 	$scope.unavailablePercent = 0;
 
+	$scope.$on("$destroy", function() {
+		killInterval();
+	});
+
 	var init = function() {
 		getCapacity();
+		if (autoRefresh) {
+			createInterval();
+		}
 	};
 	init();
 
 };
 
-WidgetCapacityController.$inject = ['$scope', 'cdnService'];
+WidgetCapacityController.$inject = ['$scope', '$interval', 'cdnService', 'propertiesModel'];
 module.exports = WidgetCapacityController;

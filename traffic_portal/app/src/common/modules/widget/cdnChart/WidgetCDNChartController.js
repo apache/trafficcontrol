@@ -17,10 +17,14 @@
  * under the License.
  */
 
-var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils) {
+var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $interval, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
 
 	var chartSeries,
 		chartOptions;
+
+	var chartInterval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
+
 
 	var getCDN = function(id) {
 		cdnService.getCDN(id)
@@ -151,6 +155,18 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 
 	};
 
+	var createIntervals = function(cdnId) {
+		killIntervals();
+		chartInterval = $interval(function() { getCDN(cdnId) }, propertiesModel.properties.dashboard.cdnChart.refreshRateInMS );
+	};
+
+	var killIntervals = function() {
+		if (angular.isDefined(chartInterval)) {
+			$interval.cancel(chartInterval);
+			chartInterval = undefined;
+		}
+	};
+
 	var registerResizeListener = function() {
 		$(window).resize(plotChart);
 	};
@@ -169,6 +185,10 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
+	$scope.$on("$destroy", function() {
+		killIntervals();
+	});
+
 	angular.element(document).ready(function () {
 		var cdnId;
 		if (cdn) {
@@ -178,9 +198,12 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 			cdnId = $('#' + $scope.randomId).closest('.chartContainer').data('cdnid');
 		}
 		getCDN(cdnId);
+		if (autoRefresh) {
+			createIntervals(cdnId);
+		}
 	});
 
 };
 
-WidgetCDNChartController.$inject = ['cdn', '$scope', '$timeout', '$filter', '$q', 'cdnService', 'cacheStatsService', 'dateUtils', 'locationUtils', 'numberUtils'];
+WidgetCDNChartController.$inject = ['cdn', '$scope', '$timeout', '$filter', '$q', '$interval', 'cdnService', 'cacheStatsService', 'dateUtils', 'locationUtils', 'numberUtils', 'propertiesModel'];
 module.exports = WidgetCDNChartController;
