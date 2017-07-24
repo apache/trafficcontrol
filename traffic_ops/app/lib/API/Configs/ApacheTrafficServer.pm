@@ -1225,12 +1225,22 @@ sub take_and_bake_server {
 	my $filename   = shift;
 
 	my $data = $self->param_data( $server_obj, $filename );
-	my $text = $self->header_comment( $server_obj->host_name );
+	my $header = $self->header_comment( $server_obj->host_name );
+	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
-		$text .= $data->{$parameter} . "\n";
+		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
+			$header = "";
+		}
+		elsif ( $parameter eq "header" ) {
+			$header = $data->{$parameter} . "\n";
+		}
+		else {
+			$text .= $data->{$parameter} . "\n";
+		}
 	}
 	$text =~ s/\s*__RETURN__\s*/\n/g;
-	return $text;
+	my $response = $header . $text;
+	return $response;
 }
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
@@ -1240,12 +1250,22 @@ sub take_and_bake_profile {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, $filename );
-	my $text = $self->header_comment( $profile_obj->name );
+	my $header = $self->header_comment( $profile_obj->name );
+	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
-		$text .= $data->{$parameter} . "\n";
+		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
+			$header = "";
+		}
+		elsif ( $parameter eq "header" ) {
+			$header = $data->{$parameter} . "\n";
+		}
+		else {
+			$text .= $data->{$parameter} . "\n";
+		}
 	}
 	$text =~ s/\s*__RETURN__\s*/\n/g;
-	return $text;
+	my $response = $header . $text;
+	return $response;
 }
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
@@ -2490,6 +2510,13 @@ sub build_remap_line {
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 		$text .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
+	}
+
+	if ( defined( $remap->{'param'}->{'cachekey.config'} ) ) {		
+		$text .= " \@plugin=cachekey.so";		
+		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {		
+			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};		
+		}		
 	}
 
 	# Note: should use full path here?
