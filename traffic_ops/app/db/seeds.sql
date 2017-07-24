@@ -201,6 +201,7 @@ insert into api_capability (http_method, route, capability) values ('GET', '/api
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 73
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/*/deliveryservices/create', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 74
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 75
+insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*/safe', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 75
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/*/deliveryservices/*/update', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 76
 insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/deliveryservices/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 77
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/health', 'ds-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 78

@@ -274,6 +274,88 @@ sub run_ut {
 
 	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+
+	# test safe update route with a portal user
+	ok $t->post_ok( '/api/1.2/user/login', json => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(200),
+	'Log into the portal user?';
+	
+	my $ds_id_portal = &get_ds_id('test-ds1');
+
+	#attempt to change many fields, including the 4 allowed and verify only the 4 actually change
+	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id_portal.'/safe' => {Accept => 'application/json'} => json => {
+        "xmlId" => "test-ds1",
+        "displayName" => "ds_displayname_1_new",
+        "orgServerFqdn" => "http://10.75.168.91",
+        "cdnName" => "cdn1_bad",
+        "tenantId" => $tenant_id,
+        "profileId" => 300,
+        "typeId" => "36",
+        "multiSiteOrigin" => "0",
+        "regionalGeoBlocking" => "1",
+        "active" => "false",
+        "dscp" => 0,
+        "ipv6RoutingEnabled" => "true",
+        "logsEnabled" => "true",
+        "initialDispersion" => 0,
+        "cdnId" => 100,
+        "signed" => "false",
+        "rangeRequestHandling" => 0,
+        "geoLimit" => 0,
+        "geoProvider" => 0,
+        "qstringIgnore" => 0,
+        "infoUrl"    => "http://knutsel-update-new.com",
+		"longDesc"   => "long_update_new",
+		"longDesc1" => "cust_update_new",
+        })
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/0/xmlId" => "test-ds1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/0/displayName" => "ds_displayname_1_new")
+    ->json_is( "/response/0/orgServerFqdn" => "http://test-ds1.edge")
+    ->json_is( "/response/0/cdnId" => 100)
+    ->json_is( "/response/0/profileId" => 100)
+    ->json_is( "/response/0/protocol" => "1")
+    ->json_is( "/response/0/typeId" => 21)
+    ->json_is( "/response/0/multiSiteOrigin" => "0")
+    ->json_is( "/response/0/regionalGeoBlocking" => "1")
+    ->json_is( "/response/0/active" => "1")
+    ->json_is("/response/0/infoUrl" => "http://knutsel-update-new.com")
+    ->json_is("/response/0/longDesc" => "long_update_new")
+    ->json_is("/response/0/longDesc1" => "cust_update_new")
+            , 'A safe update only changes safe fields';
+
+
+
+	my $ds_id_portal_unassigned = &get_ds_id('test-ds2');
+
+	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id_portal_unassigned.'/safe' => {Accept => 'application/json'} => json => {
+        "xmlId" => "test-ds1",
+        "displayName" => "ds_displayname_1_new",
+        "orgServerFqdn" => "http://10.75.168.91",
+        "cdnName" => "cdn1_bad",
+        "tenantId" => $tenant_id,
+        "profileId" => 300,
+        "typeId" => "36",
+        "multiSiteOrigin" => "0",
+        "regionalGeoBlocking" => "1",
+        "active" => "false",
+        "dscp" => 0,
+        "ipv6RoutingEnabled" => "true",
+        "logsEnabled" => "true",
+        "initialDispersion" => 0,
+        "cdnId" => 100,
+        "signed" => "false",
+        "rangeRequestHandling" => 0,
+        "geoLimit" => 0,
+        "geoProvider" => 0,
+        "qstringIgnore" => 0,
+        "infoUrl"    => "http://knutsel-update-new.com",
+		"longDesc"   => "long_update_new",
+		"longDesc1" => "cust_update_new",
+        })
+	->status_is(403)
+	->json_is( "/alerts/0/text/", "Forbidden. Delivery service not assigned to user." )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can a portal user update an unassigned delivery service?';
+
 }
 
 my $schema = Schema->connect_to_database;

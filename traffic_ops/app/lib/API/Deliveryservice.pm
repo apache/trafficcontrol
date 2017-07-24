@@ -442,6 +442,124 @@ sub update {
 	}
 }
 
+sub safe_update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+
+	my $helper = new Utils::Helper( { mojo => $self } );
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+
+	if ( &is_oper($self) || $helper->is_delivery_service_assigned($id) ) {
+
+		my $values = {
+			display_name           => $params->{displayName},
+			info_url               => $params->{infoUrl},
+			long_desc              => $params->{longDesc},
+			long_desc_1            => $params->{longDesc1},
+		};
+
+		my $rs = $ds->update($values);
+		if ($rs) {
+
+			# build example urls
+			my @example_urls  = ();
+			my $cdn_domain    = $rs->cdn->domain_name;
+			my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
+			@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
+
+			# build the matchlist (the list of ds regexes and their type)
+			my @matchlist  = ();
+			my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $rs->id }, { prefetch => [ { 'regex' => 'type' } ] } );
+			while ( my $ds_regex = $ds_regexes->next ) {
+				push(
+					@matchlist, {
+						type      => $ds_regex->regex->type->name,
+						pattern   => $ds_regex->regex->pattern,
+						setNumber => $ds_regex->set_number
+					}
+				);
+			}
+
+			my @response;
+			push(
+				@response, {
+					"active"                   => $rs->active,
+					"cacheurl"                 => $rs->cacheurl,
+					"ccrDnsTtl"                => $rs->ccr_dns_ttl,
+					"cdnId"                    => $rs->cdn->id,
+					"cdnName"                  => $rs->cdn->name,
+					"checkPath"                => $rs->check_path,
+					"displayName"              => $rs->display_name,
+					"dnsBypassCname"           => $rs->dns_bypass_cname,
+					"dnsBypassIp"              => $rs->dns_bypass_ip,
+					"dnsBypassIp6"             => $rs->dns_bypass_ip6,
+					"dnsBypassTtl"             => $rs->dns_bypass_ttl,
+					"dscp"                     => $rs->dscp,
+					"edgeHeaderRewrite"        => $rs->edge_header_rewrite,
+					"exampleURLs"              => \@example_urls,
+					"geoLimitRedirectURL"      => $rs->geolimit_redirect_url,
+					"geoLimit"                 => $rs->geo_limit,
+					"geoLimitCountries"        => $rs->geo_limit_countries,
+					"geoProvider"              => $rs->geo_provider,
+					"globalMaxMbps"            => $rs->global_max_mbps,
+					"globalMaxTps"             => $rs->global_max_tps,
+					"httpBypassFqdn"           => $rs->http_bypass_fqdn,
+					"id"                       => $rs->id,
+					"infoUrl"                  => $rs->info_url,
+					"initialDispersion"        => $rs->initial_dispersion,
+					"ipv6RoutingEnabled"       => $rs->ipv6_routing_enabled,
+					"lastUpdated"              => $rs->last_updated,
+					"logsEnabled"              => $rs->logs_enabled,
+					"longDesc"                 => $rs->long_desc,
+					"longDesc1"                => $rs->long_desc_1,
+					"longDesc2"                => $rs->long_desc_2,
+					"matchList"                => \@matchlist,
+					"maxDnsAnswers"            => $rs->max_dns_answers,
+					"midHeaderRewrite"         => $rs->mid_header_rewrite,
+					"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
+					"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
+					"multiSiteOrigin"          => $rs->multi_site_origin,
+					"orgServerFqdn"            => $rs->org_server_fqdn,
+					"originShield"             => $rs->origin_shield,
+					"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
+					"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
+					"profileDescription"       => defined($rs->profile) ? $rs->profile->description : undef,
+					"protocol"                 => $rs->protocol,
+					"qstringIgnore"            => $rs->qstring_ignore,
+					"rangeRequestHandling"     => $rs->range_request_handling,
+					"regexRemap"               => $rs->regex_remap,
+					"regionalGeoBlocking"      => $rs->regional_geo_blocking,
+					"remapText"                => $rs->remap_text,
+					"signed"                   => $rs->signed,
+					"sslKeyVersion"            => $rs->ssl_key_version,
+					"trRequestHeaders"         => $rs->tr_request_headers,
+					"trResponseHeaders"        => $rs->tr_response_headers,
+					"type"                     => $rs->type->name,
+					"typeId"                   => $rs->type->id,
+					"xmlId"                    => $rs->xml_id
+				}
+			);
+
+			&log( $self, " Safe update applied to deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
+
+			return $self->success( \@response, "Deliveryservice safe update was successful." );
+		}
+		else {
+			return $self->alert("Deliveryservice safe update failed.");
+		}
+	}
+	else {
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+}
+
 sub create {
 	my $self   = shift;
 	my $params = $self->req->json;
