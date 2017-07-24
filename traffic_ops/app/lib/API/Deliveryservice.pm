@@ -456,7 +456,7 @@ sub safe_update {
 	}
 
 
-	if ( &is_portal($self) && $helper->is_delivery_service_assigned($id) ) {
+	if ( &is_oper($self) || $helper->is_delivery_service_assigned($id) ) {
 
 		my $values = {
 			display_name           => $params->{displayName},
