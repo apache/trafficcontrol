@@ -2650,11 +2650,11 @@ SSL Keys
 |
 **PUT /api/1.2/deliveryservices/{:id}/safe**
 
-  Allows a portal user to edit limited fields of an assigned delivery service.
+  Allows a user to edit limited fields of an assigned delivery service.
 
   Authentication Required: Yes
 
-  Role(s) Required:  portal or above
+  Role(s) Required:  users with the delivery service assigned or ops and above 
 
   **Request Route Parameters**
 
