@@ -830,7 +830,7 @@ sub assign_servers {
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
 
 	my @server_ids;

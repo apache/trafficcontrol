@@ -37,7 +37,12 @@ sub index {
 	my $page  = $self->param('page')  || 1;
 	my $limit = $self->param('limit') || 20;
 	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { prefetch => [ 'deliveryservice', 'server' ], page => $page, rows => $limit, order_by => $orderby } );
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	while ( my $row = $rs_data->next ) {
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->deliveryservice->tenant_id)) {
+			next;
+		}
 		push(
 			@data, {
 				"deliveryService" => $row->deliveryservice->id,

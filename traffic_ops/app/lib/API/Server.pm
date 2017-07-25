@@ -493,7 +493,7 @@ sub get_edge_servers_by_dsid {
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
 	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
 		$ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
@@ -579,14 +579,14 @@ sub get_unassigned_servers_by_dsid {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
 	elsif ( &is_privileged($self) || $tenant_utils->ignore_ds_users_table() || $self->is_delivery_service_assigned($ds_id) ) {
 		@assigned_servers = $self->db->resultset('DeliveryserviceServer')->search( \%ds_server_criteria, { prefetch => [ 'deliveryservice', 'server' ] } )->get_column('server')->all();
 	}
 	else {
 		#for the reviewer - I believe it should turn into forbidden as well
-		return $self->alert("Forbidden. Delivery service not assigned to user.");
+		return $self->Forbidden("Forbidden. Delivery service not assigned to user.");
 	}
 
 	my %server_criteria; # please fetch the following...
@@ -668,11 +668,11 @@ sub get_eligible_servers_by_dsid {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}
 	elsif ( !&is_privileged($self) && !$tenant_utils->ignore_ds_users_table() && !$self->is_delivery_service_assigned($ds_id) ) {
 		#for the reviewer - I believe it should turn into forbidden as well
-		return $self->alert("Forbidden. Delivery service not assigned to user.");
+		return $self->Forbidden("Forbidden. Delivery service not assigned to user.");
 	}
 
 	my %server_criteria; # please fetch the following...
@@ -952,11 +952,12 @@ sub details_v11 {
 		}
 
 		my $rs_ds_data = $row->deliveryservice_servers;
-		#FOR THE REVIEWER - Currently I do not check DS tenancy here.
-		#I assume the operation is of a CDN owner for debug and I would not like to hide data here.
-		# Additionally I assume the operation is protected by "roles"
-		#Also note that the ds/user table is note tested here originally
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		while ( my $dsrow = $rs_ds_data->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $dsrow->deliveryservice->tenant_id)) {
+				next;
+			}
 			push( @{ $serv->{deliveryservices} }, $dsrow->deliveryservice->id );
 		}
 
@@ -1030,11 +1031,12 @@ sub details {
 			}
 
 			my $rs_ds_data = $row->deliveryservice_servers;
-			#FOR THE REVIEWER - Currently I do not check DS tenancy here.
-			#I assume the operation is of a CDN owner for debug and I would not like to hide data here.
-			# Additionally I assume the operation is protected by "roles"
-			#Also note that the ds/user table is note tested here originally
-			while ( my $dsrow = $rs_ds_data->next ) {
+			my $tenant_utils = Utils::Tenant->new($self);
+			my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+            while ( my $dsrow = $rs_ds_data->next ) {
+				if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $dsrow->deliveryservice->tenant_id)) {
+					next;
+				}
 				push( @{ $serv->{deliveryservices} }, $dsrow->deliveryservice->id );
 			}
 

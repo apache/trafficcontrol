@@ -113,6 +113,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 my $fixture_num_of_tenants = $t->get_ok('/api/1.2/tenants')->status_is(200)->$responses_counter();
 my $fixture_num_of_users = $t->get_ok('/api/1.2/users')->status_is(200)->$responses_counter();
 my $fixture_num_of_dses = $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$responses_counter();
+my $fixture_num_of_dses_server_mapping = $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$responses_counter();
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 
@@ -126,7 +127,7 @@ my $num_of_tenants_can_be_accessed = 3; #A1, A1a, A1b
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_tenants);
 ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(2*$num_of_tenants_can_be_accessed+$fixture_num_of_users);
 ok $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses);
-
+ok $t->get_ok('/api/1.2/deliveryserviceserver')->status_is(200)->$count_response_test($num_of_tenants_can_be_accessed+$fixture_num_of_dses_server_mapping);
 #cannot change its tenancy
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A"}->{'id'},
@@ -171,6 +172,7 @@ $num_of_tenants_can_be_accessed = 0;
 #sanity check on tenants - testing of tenant as a resource is taken care of in tenants.t
 ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test(0);
 ok $t->get_ok('/api/1.2/users')->status_is(200)->$count_response_test(0);
+ok $t->get_ok('/api/1.2/deliveryserviceserver')->$count_response_test(0);
 #cannot change its tenancy to non related
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
         json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'}} } )
@@ -1061,6 +1063,20 @@ sub test_ds_server_resource_read_allow_access {
             ->status_is(200)->$count_response_test(1)
         , 'Success index servers by ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
+
+    ok $t->get_ok('/api/1.2/servers/hostname/'.$tenants_data->{$resource_tenant}->{'server_name_to_use'}.'/details')
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/deliveryservices/0" =>  $ds_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/deliveryservices/1" =>  undef)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success index serverss\'s: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/servers/details?hostName='.$tenants_data->{$resource_tenant}->{'server_name_to_use'})
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryservices/0" =>  $ds_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryservices/1" =>  undef)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'Success index serverss\'s: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+
     logout_from_tenant();
 }
 
@@ -1086,6 +1102,12 @@ sub test_ds_server_resource_read_block_access {
     ok $t->get_ok('/api/1.2/servers?dsId='.$ds_id)
         ->status_is(403)
     , 'Cannot index servers by ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/servers/details?hostName='.$tenants_data->{$resource_tenant}->{'server_name_to_use'})
+            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/0/deliveryservices/0" =>  undef)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        , 'empty list when index serverss\'s: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
 
     logout_from_tenant();
 }
