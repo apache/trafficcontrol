@@ -57,7 +57,7 @@ func GetRoutes(d ServerData) (map[string]RegexHandlerFunc, http.Handler, error) 
 	}
 
 	return map[string]RegexHandlerFunc{
-		"api/1.2/cdns/{cdn}/configs/monitoring.json": wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.NoAuth, d.TOSecret, privLevelStmt, MonitoringPrivLevel)),
+		"api/1.2/cdns/{cdn}/configs/monitoring.json": wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, privLevelStmt, MonitoringPrivLevel)),
 	}, getRootHandler(d), nil
 }
 

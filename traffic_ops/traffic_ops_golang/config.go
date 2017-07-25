@@ -38,7 +38,7 @@ type Config struct {
 	TOSecret           string   `json:"to_secret"`
 	TOURLStr           string   `json:"to_url"`
 	TOURL              *url.URL `json:"-"`
-	NoAuth             bool     `json:"no_auth"`
+	Insecure           bool     `json:"insecure"`
 	CertPath           string   `json:"cert_path"`
 	KeyPath            string   `json:"key_path"`
 	LogLocationError   string   `json:"log_location_error"`
