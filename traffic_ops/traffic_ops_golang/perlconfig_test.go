@@ -146,8 +146,8 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 		KeyPath:            "/etc/pki/tls/private/localhost.key",
 		LogLocationError:   NewLogPath,
 		LogLocationWarning: NewLogPath,
-		LogLocationInfo:    OldAccessLogPath,
-		LogLocationEvent:   NewLogPath,
+		LogLocationInfo:    NewLogPath,
+		LogLocationEvent:   OldAccessLogPath,
 		LogLocationDebug:   log.LogLocationNull,
 	}
 	err := error(nil)
