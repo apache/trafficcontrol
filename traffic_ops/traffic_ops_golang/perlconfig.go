@@ -65,10 +65,10 @@ func getPerlConfigsFromStrs(cdnConfBytes string, dbConfBytes string) (Config, er
 		cfg.DBServer += ":" + dbconf.Port
 	}
 
-	cfg.LogLocationInfo = OldAccessLogPath
+	cfg.LogLocationInfo = NewLogPath
 	cfg.LogLocationError = NewLogPath
 	cfg.LogLocationWarning = NewLogPath
-	cfg.LogLocationEvent = NewLogPath
+	cfg.LogLocationEvent = OldAccessLogPath
 	cfg.LogLocationDebug = log.LogLocationNull
 
 	return cfg, nil

@@ -49,7 +49,7 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 		w = iw
 		username := "-"
 		defer func() {
-			log.Infof(`%s - %s [%s] "%v %v HTTP/1.1" %v 0 0 "%v"\n`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, time.Now().Sub(start)/time.Millisecond, iw.byteCount, r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, int(time.Now().Sub(start)/time.Millisecond), iw.byteCount, r.UserAgent())
 		}()
 
 		handleUnauthorized := func(reason string) {
@@ -96,7 +96,7 @@ func wrapLogTime(h RegexHandlerFunc) RegexHandlerFunc {
 		iw := &Interceptor{w: w}
 		defer func() {
 			user := "-" // TODO fix
-			log.Infof(`%s - %s [%s] "%v %v HTTP/1.1" %v 0 0 "%v"\n`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, time.Now().Sub(start)/time.Millisecond, iw.byteCount, r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v 0 0 "%v"\n`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, time.Now().Sub(start)/time.Millisecond, iw.byteCount, r.UserAgent())
 		}()
 		h(iw, r, p)
 	}
@@ -116,6 +116,9 @@ func (i *Interceptor) WriteHeader(rc int) {
 func (i *Interceptor) Write(b []byte) (int, error) {
 	wi, werr := i.w.Write(b)
 	i.byteCount += wi
+	if i.code == 0 {
+		i.code = 200
+	}
 	return wi, werr
 }
 

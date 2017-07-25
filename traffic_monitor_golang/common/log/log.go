@@ -134,6 +134,11 @@ func Eventf(t time.Time, format string, v ...interface{}) {
 	Event.Printf("%.3f %s", float64(t.Unix())+(float64(t.Nanosecond())/1e9), fmt.Sprintf(format, v...))
 }
 
+// EventfRaw writes to the event log with no prefix.
+func EventfRaw(format string, v ...interface{}) {
+	Event.Printf(format, v...)
+}
+
 // Close calls `Close()` on the given Closer, and logs any error. On error, the context is logged, followed by a colon, the error message, and a newline. This is primarily designed to be used in `defer`, for example, `defer log.Close(resp.Body, "readData fetching /foo/bar")`.
 func Close(c io.Closer, context string) {
 	err := c.Close()
