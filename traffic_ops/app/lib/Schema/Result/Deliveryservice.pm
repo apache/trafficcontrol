@@ -294,6 +294,17 @@ __PACKAGE__->table("deliveryservice");
   is_foreign_key: 1
   is_nullable: 1
 
+=head2 session_tracking_enabled
+
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 1
+
+=head2 session_tracking_query_key_list
+
+  data_type: 'text'
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -407,6 +418,10 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "tenant_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  "session_tracking_enabled",
+  { data_type => "boolean", default_value => \"false", is_nullable => 1 },
+  "session_tracking_query_key_list",
+  { data_type => "text", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY

@@ -23,6 +23,7 @@ use Data::Dumper;
 use Date::Manip;
 use NetAddr::IP;
 use UI::DeliveryService;
+use UI::Topology;
 use JSON;
 use API::DeliveryService::KeysUrlSig qw(URL_SIG_KEYS_BUCKET);
 use URI;
@@ -184,6 +185,7 @@ sub ds_data {
 	my @server_ids = ();
 	my $rs;
 	if ( $server->type->name =~ m/^MID/ ) {
+
 		# the mids will do all deliveryservices in this CDN
 		$rs = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server->cdn->name ] } );
 	}
@@ -193,24 +195,26 @@ sub ds_data {
 
 	my $j = 0;
 	while ( my $row = $rs->next ) {
-		my $org_server                  = $row->org_server_fqdn;
-		my $dscp                        = $row->dscp;
-		my $re_type                     = $row->re_type;
-		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
-		my $qstring_ignore              = $row->qstring_ignore;
-		my $ds_xml_id                   = $row->xml_id;
-		my $ds_domain                   = $row->domain_name;
-		my $edge_header_rewrite         = $row->edge_header_rewrite;
-		my $mid_header_rewrite          = $row->mid_header_rewrite;
-		my $regex_remap                 = $row->regex_remap;
-		my $protocol                    = $row->protocol;
-		my $range_request_handling      = $row->range_request_handling;
-		my $origin_shield               = $row->origin_shield;
-		my $cacheurl                    = $row->cacheurl;
-		my $remap_text                  = $row->remap_text;
-		my $multi_site_origin           = $row->multi_site_origin;
-		my $multi_site_origin_algorithm = 0;
+		my $org_server                      = $row->org_server_fqdn;
+		my $dscp                            = $row->dscp;
+		my $re_type                         = $row->re_type;
+		my $ds_type                         = $row->ds_type;
+		my $signed                          = $row->signed;
+		my $qstring_ignore                  = $row->qstring_ignore;
+		my $ds_xml_id                       = $row->xml_id;
+		my $ds_domain                       = $row->domain_name;
+		my $edge_header_rewrite             = $row->edge_header_rewrite;
+		my $mid_header_rewrite              = $row->mid_header_rewrite;
+		my $regex_remap                     = $row->regex_remap;
+		my $protocol                        = $row->protocol;
+		my $range_request_handling          = $row->range_request_handling;
+		my $origin_shield                   = $row->origin_shield;
+		my $cacheurl                        = $row->cacheurl;
+		my $remap_text                      = $row->remap_text;
+		my $multi_site_origin               = $row->multi_site_origin;
+		my $multi_site_origin_algorithm     = 0;
+		my $session_tracking_enabled        = $row->session_tracking_enabled;
+		my $session_tracking_query_key_list = $row->session_tracking_query_key_list;
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -262,22 +266,24 @@ sub ds_data {
 				}
 			}
 		}
-		$dsinfo->{dslist}->[$j]->{"dscp"}                        = $dscp;
-		$dsinfo->{dslist}->[$j]->{"org"}                         = $org_server;
-		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
-		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
-		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
-		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
-		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
-		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}          = $mid_header_rewrite;
-		$dsinfo->{dslist}->[$j]->{"regex_remap"}                 = $regex_remap;
-		$dsinfo->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
-		$dsinfo->{dslist}->[$j]->{"origin_shield"}               = $origin_shield;
-		$dsinfo->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
-		$dsinfo->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
-		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"} = $multi_site_origin_algorithm;
+		$dsinfo->{dslist}->[$j]->{"dscp"}                            = $dscp;
+		$dsinfo->{dslist}->[$j]->{"org"}                             = $org_server;
+		$dsinfo->{dslist}->[$j]->{"type"}                            = $ds_type;
+		$dsinfo->{dslist}->[$j]->{"domain"}                          = $ds_domain;
+		$dsinfo->{dslist}->[$j]->{"signed"}                          = $signed;
+		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}                  = $qstring_ignore;
+		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                       = $ds_xml_id;
+		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}             = $edge_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"mid_header_rewrite"}              = $mid_header_rewrite;
+		$dsinfo->{dslist}->[$j]->{"regex_remap"}                     = $regex_remap;
+		$dsinfo->{dslist}->[$j]->{"range_request_handling"}          = $range_request_handling;
+		$dsinfo->{dslist}->[$j]->{"origin_shield"}                   = $origin_shield;
+		$dsinfo->{dslist}->[$j]->{"cacheurl"}                        = $cacheurl;
+		$dsinfo->{dslist}->[$j]->{"remap_text"}                      = $remap_text;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}               = $multi_site_origin;
+		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"}     = $multi_site_origin_algorithm;
+		$dsinfo->{dslist}->[$j]->{"session_tracking_enabled"}        = $session_tracking_enabled;
+		$dsinfo->{dslist}->[$j]->{"session_tracking_query_key_list"} = $session_tracking_query_key_list;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -1018,12 +1024,27 @@ sub build_remap_line {
 	my $dscp      = $remap->{dscp};
 
 	$map_from =~ s/ccr/$host_name/;
+	$text .= "map	" . $map_from . "     " . $map_to;
+
+	$self->app->log->debug( "session tracking: " . $remap->{session_tracking_enabled} . ", " . $remap->{session_tracking_query_key_list} . "\n" );
+	if ( defined( $remap->{session_tracking_enabled} ) && $remap->{session_tracking_enabled} == 1 ) {
+		$text .= " \@plugin=tslua.so \@pparam=/opt/trafficserver/script/sst.lua";
+
+		if ( defined( $remap->{session_tracking_query_key_list} ) ) {
+			my @keys = split( ',', $remap->{session_tracking_query_key_list} );
+
+			foreach my $key (@keys) {
+				$key = &UI::Topology::trim_spaces($key);
+				$text .= " \@pparam=" . "$key";
+			}
+		}
+	}
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
-		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
+		$text .= " \@plugin=dscp_remap.so \@pparam=" . $dscp;
 	}
 	else {
-		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=header_rewrite.so \@pparam=dscp/set_dscp_" . $dscp . ".config";
+		$text .= " \@plugin=header_rewrite.so \@pparam=dscp/set_dscp_" . $dscp . ".config";
 	}
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
@@ -1213,11 +1234,12 @@ sub parent_dot_config {
 			else {
 				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
 				# then edges will use the qstring handling value specified in the parameter for all profiles.
-				my $qsh = $self->profile_param_value( $server->profile->id, 'parent.config', 'psel.qstring_handling');
+				my $qsh = $self->profile_param_value( $server->profile->id, 'parent.config', 'psel.qstring_handling' );
+
 				# If there is no defined parameter in the profile, then check the delivery service profile.
 				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
 				# This is used only if not overridden by a server profile qstring handling parameter.
-				if (!defined($qsh)) {
+				if ( !defined($qsh) ) {
 					$qsh = $remap->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 				}
 				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
@@ -1236,8 +1258,8 @@ sub parent_dot_config {
 						push @secondary_parent_info, $ptxt;
 					}
 				}
-				if ( scalar @parent_info == 0  ) {
-					@parent_info = @secondary_parent_info;
+				if ( scalar @parent_info == 0 ) {
+					@parent_info           = @secondary_parent_info;
 					@secondary_parent_info = ();
 				}
 				my %seen;

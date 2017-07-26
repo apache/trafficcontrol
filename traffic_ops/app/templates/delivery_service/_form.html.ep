@@ -366,6 +366,32 @@
 			<% } %>
 		<% } %>
 	</div><br>
+	<div class="block form-row" id='session_tracking_enabled_row'>
+		<% unless (field('ds.session_tracking_enabled')->valid) { %>
+			<span class="field-with-error"><%= field('ds.session_tracking_enabled')->error %></span>
+		<% } %>
+		%= label_for 'session_tracking_enabled' => 'Session Tracking Enabled? (If enabled, including request Cookie field in ATS logs_xml.config is recommended)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			%= field('ds.session_tracking_enabled')->select([ [No => 0], [Yes => 1]]);
+		<% } else { %>
+			<% if ($ds->session_tracking_enabled == 0) { %>
+				%= field('ds.session_tracking_enabled')->text(class => 'field', value =>  'No', readonly => 'readonly');
+			<% } else { %>
+				%= field('ds.session_tracking_enabled')->text(class => 'field', value =>  'Yes', readonly => 'readonly');
+			<% } %>
+		<% } %>
+    </div>
+	<div class="block form-row" id='session_tracking_query_key_list_row'>
+		<% unless (field('ds.session_tracking_query_key_list')->valid) { %>
+			<span class="field-with-error"><%= field('ds.session_tracking_query_key_list')->error %></span>
+		<% } %>
+		%= label_for 'session_tracking_query_key_list' => 'Session Tracking Query Key List (Keys separated by comma)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.session_tracking_query_key_list')->text(class => 'field', id => 'session_tracking_query_key_list', name => 'ds.session_tracking_query_key_list');
+		<% } else { %>
+		%= field('ds.session_tracking_query_key_list')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div>
 	<div class="block form-row" id="profile_row">
 		<% unless (field('ds.profile')->valid) { %>
 			<span class="field-with-error"><%= field('ds.profile')->error %></span>

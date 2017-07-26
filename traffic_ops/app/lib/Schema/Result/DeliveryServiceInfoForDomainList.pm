@@ -59,7 +59,9 @@ SELECT
     deliveryservice.cacheurl,
     deliveryservice.remap_text,
     deliveryservice.protocol,
-    deliveryservice.profile
+    deliveryservice.profile,
+    deliveryservice.session_tracking_enabled,
+    deliveryservice.session_tracking_query_key_list
 FROM
     deliveryservice
     JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
@@ -83,25 +85,27 @@ ORDER BY
 __PACKAGE__->add_columns(
 	"xml_id",          { data_type => "varchar", is_nullable => 0, size => 45 },
 	"org_server_fqdn", { data_type => "varchar", is_nullable => 0, size => 45 },
-	"multi_site_origin",           { data_type => "integer", is_nullable => 0 },
-	"ds_id",                       { data_type => "integer", is_nullable => 0 },
-	"dscp",                        { data_type => "integer", is_nullable => 0 },
-	"signed",                      { data_type => "integer", is_nullable => 0 },
-	"qstring_ignore",              { data_type => "integer", is_nullable => 0 },
-	"pattern",                     { data_type => "varchar", is_nullable => 0, size => 45 },
-	"re_type",                     { data_type => "varchar", is_nullable => 0, size => 45 },
-	"ds_type",                     { data_type => "varchar", is_nullable => 0, size => 45 },
-	"set_number",                  { data_type => "integer", is_nullable => 0 },
-	"domain_name",                 { data_type => "varchar", is_nullable => 0, size => 45 },
-	"edge_header_rewrite",         { data_type => "varchar", is_nullable => 0, size => 1024 },
-	"mid_header_rewrite",          { data_type => "varchar", is_nullable => 0, size => 1024 },
-	"regex_remap",                 { data_type => "varchar", is_nullable => 0, size => 1024 },
-	"cacheurl",                    { data_type => "varchar", is_nullable => 0, size => 1024 },
-	"remap_text",                  { data_type => "varchar", is_nullable => 0, size => 2048 },
-	"protocol",                    { data_type => "tinyint", is_nullable => 0, size => 4 },
-	"range_request_handling",      { data_type => "tinyint", is_nullable => 0, size => 4 },
-	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
-	"profile",                     { data_type => "integer", is_nullable => 1},
+	"multi_site_origin",               { data_type => "integer", is_nullable => 0 },
+	"ds_id",                           { data_type => "integer", is_nullable => 0 },
+	"dscp",                            { data_type => "integer", is_nullable => 0 },
+	"signed",                          { data_type => "integer", is_nullable => 0 },
+	"qstring_ignore",                  { data_type => "integer", is_nullable => 0 },
+	"pattern",                         { data_type => "varchar", is_nullable => 0, size => 45 },
+	"re_type",                         { data_type => "varchar", is_nullable => 0, size => 45 },
+	"ds_type",                         { data_type => "varchar", is_nullable => 0, size => 45 },
+	"set_number",                      { data_type => "integer", is_nullable => 0 },
+	"domain_name",                     { data_type => "varchar", is_nullable => 0, size => 45 },
+	"edge_header_rewrite",             { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"mid_header_rewrite",              { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"regex_remap",                     { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"cacheurl",                        { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"remap_text",                      { data_type => "varchar", is_nullable => 0, size => 2048 },
+	"protocol",                        { data_type => "tinyint", is_nullable => 0, size => 4 },
+	"range_request_handling",          { data_type => "tinyint", is_nullable => 0, size => 4 },
+	"origin_shield",                   { data_type => "varchar", is_nullable => 0, size => 1024 },
+	"profile",                         { data_type => "integer", is_nullable => 1 },
+	"session_tracking_enabled",        { data_type => "tinyint", is_nullable => 1, size => 1 },
+	"session_tracking_query_key_list", { data_type => "varchar", is_nullable => 1, size => 255 },
 );
 
 1;

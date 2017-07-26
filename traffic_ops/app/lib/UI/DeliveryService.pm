@@ -42,7 +42,6 @@ sub index {
 	&navbarpage($self);
 }
 
-
 sub edit {
 	my $self = shift;
 	my $id   = $self->param('id');
@@ -51,14 +50,14 @@ sub edit {
 	my $data = $rs_ds->single;
 
 	my $regexp_set   = &get_regexp_set( $self, $id );
-	my $cdn_domain = $data->cdn->domain_name;
+	my $cdn_domain   = $data->cdn->domain_name;
 	my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 	my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 
-	$self->stash_profile_selector('DS_PROFILE', defined($data->profile) ? $data->profile->id : undef);
-	$self->stash_cdn_selector($data->cdn->id);
+	$self->stash_profile_selector( 'DS_PROFILE', defined( $data->profile ) ? $data->profile->id : undef );
+	$self->stash_cdn_selector( $data->cdn->id );
 	&stash_role($self);
 	$self->stash(
 		ds           => $data,
@@ -124,7 +123,7 @@ sub get_example_urls {
 			}
 		}
 	}
-	else { # TODO:  Is this necessary? Could this be consolidated?
+	else {    # TODO:  Is this necessary? Could this be consolidated?
 		foreach my $re ( @{$regexp_set} ) {
 			if ( $re->{type} eq 'HOST_REGEXP' ) {
 				my $host = $re->{pattern};
@@ -135,7 +134,7 @@ sub get_example_urls {
 				$host =~ s/\.//g;
 
 				if ( $re->{set_number} == 0 ) {
-					$http_url =  $scheme . '://ccr.' . $host . "." . $cdn_domain;
+					$http_url = $scheme . '://ccr.' . $host . "." . $cdn_domain;
 					push( @example_urls, $http_url );
 					if ($scheme2) {
 						$https_url = $scheme2 . '://ccr.' . $host . "." . $cdn_domain;
@@ -143,8 +142,8 @@ sub get_example_urls {
 					}
 				}
 				else {
-					 $http_url = $scheme . '://' . $re->{pattern};
-					 push( @example_urls, $http_url );
+					$http_url = $scheme . '://' . $re->{pattern};
+					push( @example_urls, $http_url );
 					if ($scheme2) {
 						$https_url = $scheme2 . '://' . $re->{pattern};
 						push( @example_urls, $https_url );
@@ -210,53 +209,55 @@ sub read {
 		}
 		push(
 			@data, {
-				"id"                          => $row->id,
-				"xml_id"                      => $row->xml_id,
-				"display_name"                => $row->display_name,
-				"dscp"                        => $row->dscp,
-				"signed"                      => \$row->signed,
-				"qstring_ignore"              => $row->qstring_ignore,
-				"geo_limit"                   => $row->geo_limit,
-				"geo_limit_countries"         => $row->geo_limit_countries,
-				"geolimit_redirect_url"       => $row->geolimit_redirect_url,
-				"geo_provider"                => $row->geo_provider,
-				"http_bypass_fqdn"            => $row->http_bypass_fqdn,
-				"dns_bypass_ip"               => $row->dns_bypass_ip,
-				"dns_bypass_ip6"              => $row->dns_bypass_ip6,
-				"dns_bypass_cname"            => $row->dns_bypass_cname,
-				"dns_bypass_ttl"              => $row->dns_bypass_ttl,
-				"org_server_fqdn"             => $row->org_server_fqdn,
-				"multi_site_origin"           => \$row->multi_site_origin,
-				"ccr_dns_ttl"                 => $row->ccr_dns_ttl,
-				"type"                        => $row->type->id,
-				"cdn_name"                    => $cdn_name,
-				"profile_name"                => $row->profile->name,
-				"profile_description"         => $row->profile->description,
-				"global_max_mbps"             => $row->global_max_mbps,
-				"global_max_tps"              => $row->global_max_tps,
-				"edge_header_rewrite"         => $row->edge_header_rewrite,
-				"mid_header_rewrite"          => $row->mid_header_rewrite,
-				"tr_response_headers"         => $row->tr_response_headers,
-				"tr_request_headers"          => $row->tr_request_headers,
-				"regex_remap"                 => $row->regex_remap,
-				"long_desc"                   => $row->long_desc,
-				"long_desc_1"                 => $row->long_desc_1,
-				"long_desc_2"                 => $row->long_desc_2,
-				"max_dns_answers"             => $row->max_dns_answers,
-				"info_url"                    => $row->info_url,
-				"miss_lat"                    => $row->miss_lat,
-				"miss_long"                   => $row->miss_long,
-				"check_path"                  => $row->check_path,
-				"matchlist"                   => \@matchlist,
-				"active"                      => \$row->active,
-				"protocol"                    => $row->protocol,
-				"ipv6_routing_enabled"        => \$row->ipv6_routing_enabled,
-				"range_request_handling"      => $row->range_request_handling,
-				"cacheurl"                    => $row->cacheurl,
-				"remap_text"                  => $row->remap_text,
-				"initial_dispersion"          => $row->initial_dispersion,
-				"regional_geo_blocking"       => $row->regional_geo_blocking,
-				"logs_enabled"                => \$row->logs_enabled,
+				"id"                              => $row->id,
+				"xml_id"                          => $row->xml_id,
+				"display_name"                    => $row->display_name,
+				"dscp"                            => $row->dscp,
+				"signed"                          => \$row->signed,
+				"qstring_ignore"                  => $row->qstring_ignore,
+				"geo_limit"                       => $row->geo_limit,
+				"geo_limit_countries"             => $row->geo_limit_countries,
+				"geolimit_redirect_url"           => $row->geolimit_redirect_url,
+				"geo_provider"                    => $row->geo_provider,
+				"http_bypass_fqdn"                => $row->http_bypass_fqdn,
+				"dns_bypass_ip"                   => $row->dns_bypass_ip,
+				"dns_bypass_ip6"                  => $row->dns_bypass_ip6,
+				"dns_bypass_cname"                => $row->dns_bypass_cname,
+				"dns_bypass_ttl"                  => $row->dns_bypass_ttl,
+				"org_server_fqdn"                 => $row->org_server_fqdn,
+				"multi_site_origin"               => \$row->multi_site_origin,
+				"ccr_dns_ttl"                     => $row->ccr_dns_ttl,
+				"type"                            => $row->type->id,
+				"cdn_name"                        => $cdn_name,
+				"profile_name"                    => $row->profile->name,
+				"profile_description"             => $row->profile->description,
+				"global_max_mbps"                 => $row->global_max_mbps,
+				"global_max_tps"                  => $row->global_max_tps,
+				"edge_header_rewrite"             => $row->edge_header_rewrite,
+				"mid_header_rewrite"              => $row->mid_header_rewrite,
+				"tr_response_headers"             => $row->tr_response_headers,
+				"tr_request_headers"              => $row->tr_request_headers,
+				"regex_remap"                     => $row->regex_remap,
+				"long_desc"                       => $row->long_desc,
+				"long_desc_1"                     => $row->long_desc_1,
+				"long_desc_2"                     => $row->long_desc_2,
+				"max_dns_answers"                 => $row->max_dns_answers,
+				"info_url"                        => $row->info_url,
+				"miss_lat"                        => $row->miss_lat,
+				"miss_long"                       => $row->miss_long,
+				"check_path"                      => $row->check_path,
+				"matchlist"                       => \@matchlist,
+				"active"                          => \$row->active,
+				"protocol"                        => $row->protocol,
+				"ipv6_routing_enabled"            => \$row->ipv6_routing_enabled,
+				"range_request_handling"          => $row->range_request_handling,
+				"cacheurl"                        => $row->cacheurl,
+				"remap_text"                      => $row->remap_text,
+				"initial_dispersion"              => $row->initial_dispersion,
+				"regional_geo_blocking"           => $row->regional_geo_blocking,
+				"logs_enabled"                    => \$row->logs_enabled,
+				"session_tracking_enabled"        => $row->session_tracking_enabled,
+				"session_tracking_query_key_list" => $row->session_tracking_query_key_list,
 			}
 		);
 	}
@@ -278,8 +279,8 @@ sub delete {
 }
 
 sub delete_ds {
-	my $self = shift;
-	my $id = shift;
+	my $self           = shift;
+	my $id             = shift;
 	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
 
 	my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
@@ -588,7 +589,8 @@ sub header_rewrite {
 		my @servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 		if ( $tier eq "mid" ) {
 			my @mtype_ids = &type_ids( $self, 'MID%', 'server' );
-			$cdn_name = $self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } )->get_column('cdn.name')->single();
+			$cdn_name =
+				$self->db->resultset('Deliveryservice')->search( { 'me.profile' => $ds_profile }, { prefetch => 'cdn' } )->get_column('cdn.name')->single();
 			@servers = $self->db->resultset('Server')->search( { type => { -in => \@mtype_ids } } )->get_column('id')->all();
 		}
 
@@ -719,7 +721,7 @@ sub url_sig {
 	my $ds_id      = shift;
 	my $ds_profile = shift;
 	my $ds_name    = shift;
-	my $signed    = shift;
+	my $signed     = shift;
 
 	if ( defined($signed) && $signed == 1 ) {
 		my $fname = "url_sig_" . $ds_name . ".config";
@@ -755,7 +757,7 @@ sub url_sig {
 		}
 	}
 	else {
-		&delete_cfg_file( $self, "url_sig_" . $ds_name . ".config" );   # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
+		&delete_cfg_file( $self, "url_sig_" . $ds_name . ".config" );    # don't change it to $self->delete_header_rewrite(), calling from other pm is wonky
 	}
 }
 
@@ -781,54 +783,57 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
-#	foreach my $f ($self->param) {
-#		print $f . " => " . $self->param($f) . "\n";
-#	}
+
+	#	foreach my $f ($self->param) {
+	#		print $f . " => " . $self->param($f) . "\n";
+	#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
 
 		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
-			xml_id                      => $self->paramAsScalar('ds.xml_id'),
-			display_name                => $self->paramAsScalar('ds.display_name'),
-			dscp                        => $self->paramAsScalar('ds.dscp'),
-			signed                      => $self->paramAsScalar('ds.signed'),
-			qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
-			geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
-			geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
-			geolimit_redirect_url       => $self->param('ds.geolimit_redirect_url'),
-			geo_provider                => $self->paramAsScalar('ds.geo_provider'),
-			org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
-			multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
-			ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
-			type                        => $self->typeid(),
-			cdn_id                      => $self->paramAsScalar('ds.cdn_id'),
-			profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
-			global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
-			global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
-			miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
-			miss_long                   => $self->paramAsScalar('ds.miss_long'),
-			long_desc                   => $self->paramAsScalar('ds.long_desc'),
-			long_desc_1                 => $self->paramAsScalar('ds.long_desc_1'),
-			long_desc_2                 => $self->paramAsScalar('ds.long_desc_2'),
-			info_url                    => $self->paramAsScalar('ds.info_url'),
-			check_path                  => $self->paramAsScalar('ds.check_path'),
-			active                      => $self->paramAsScalar('ds.active'),
-			protocol                    => $self->paramAsScalar('ds.protocol'),
-			ipv6_routing_enabled        => $self->paramAsScalar('ds.ipv6_routing_enabled'),
-			regional_geo_blocking       => $self->paramAsScalar('ds.regional_geo_blocking'),
-			range_request_handling      => $self->paramAsScalar('ds.range_request_handling'),
-			edge_header_rewrite         => $self->paramAsScalar( 'ds.edge_header_rewrite', undef ),
-			mid_header_rewrite          => $self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
-			tr_response_headers         => $self->paramAsScalar( 'ds.tr_response_headers', undef ),
-			tr_request_headers          => $self->paramAsScalar( 'ds.tr_request_headers', undef ),
-			regex_remap        => $self->paramAsScalar( 'ds.regex_remap',        undef ),
-			origin_shield      => $self->paramAsScalar( 'ds.origin_shield',      undef ),
-			cacheurl           => $self->paramAsScalar( 'ds.cacheurl',           undef ),
-			remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
-			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
-			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
+			xml_id                => $self->paramAsScalar('ds.xml_id'),
+			display_name          => $self->paramAsScalar('ds.display_name'),
+			dscp                  => $self->paramAsScalar('ds.dscp'),
+			signed                => $self->paramAsScalar('ds.signed'),
+			qstring_ignore        => $self->paramAsScalar('ds.qstring_ignore'),
+			geo_limit             => $self->paramAsScalar('ds.geo_limit'),
+			geo_limit_countries   => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
+			geolimit_redirect_url => $self->param('ds.geolimit_redirect_url'),
+			geo_provider          => $self->paramAsScalar('ds.geo_provider'),
+			org_server_fqdn       => $self->paramAsScalar('ds.org_server_fqdn'),
+			multi_site_origin     => $self->paramAsScalar('ds.multi_site_origin'),
+			ccr_dns_ttl           => $self->paramAsScalar('ds.ccr_dns_ttl'),
+			type                  => $self->typeid(),
+			cdn_id                => $self->paramAsScalar('ds.cdn_id'),
+			profile               => ( $self->paramAsScalar('ds.profile') == -1 ) ? undef : $self->paramAsScalar('ds.profile'),
+			global_max_mbps                 => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
+			global_max_tps                  => $self->paramAsScalar( 'ds.global_max_tps',                            0 ),
+			miss_lat                        => $self->paramAsScalar('ds.miss_lat'),
+			miss_long                       => $self->paramAsScalar('ds.miss_long'),
+			long_desc                       => $self->paramAsScalar('ds.long_desc'),
+			long_desc_1                     => $self->paramAsScalar('ds.long_desc_1'),
+			long_desc_2                     => $self->paramAsScalar('ds.long_desc_2'),
+			info_url                        => $self->paramAsScalar('ds.info_url'),
+			check_path                      => $self->paramAsScalar('ds.check_path'),
+			active                          => $self->paramAsScalar('ds.active'),
+			protocol                        => $self->paramAsScalar('ds.protocol'),
+			ipv6_routing_enabled            => $self->paramAsScalar('ds.ipv6_routing_enabled'),
+			regional_geo_blocking           => $self->paramAsScalar('ds.regional_geo_blocking'),
+			range_request_handling          => $self->paramAsScalar('ds.range_request_handling'),
+			edge_header_rewrite             => $self->paramAsScalar( 'ds.edge_header_rewrite',                       undef ),
+			mid_header_rewrite              => $self->paramAsScalar( 'ds.mid_header_rewrite',                        undef ),
+			tr_response_headers             => $self->paramAsScalar( 'ds.tr_response_headers',                       undef ),
+			tr_request_headers              => $self->paramAsScalar( 'ds.tr_request_headers',                        undef ),
+			regex_remap                     => $self->paramAsScalar( 'ds.regex_remap',                               undef ),
+			origin_shield                   => $self->paramAsScalar( 'ds.origin_shield',                             undef ),
+			cacheurl                        => $self->paramAsScalar( 'ds.cacheurl',                                  undef ),
+			remap_text                      => $self->paramAsScalar( 'ds.remap_text',                                undef ),
+			initial_dispersion              => $self->paramAsScalar( 'ds.initial_dispersion',                        1 ),
+			logs_enabled                    => $self->paramAsScalar('ds.logs_enabled'),
+			session_tracking_enabled        => $self->paramAsScalar('ds.session_tracking_enabled'),
+			session_tracking_query_key_list => $self->paramAsScalar('ds.session_tracking_query_key_list'),
 		);
 
 		my $typename = $self->typename();
@@ -945,9 +950,10 @@ sub update {
 	}
 	else {
 		&stash_role($self);
-		my $rs_ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
-		my $data = $rs_ds->single;
-		my $cdn_domain = $data->cdn->domain_name;
+		my $rs_ds = $self->db->resultset('Deliveryservice')
+			->search( { 'me.id' => $id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
+		my $data         = $rs_ds->single;
+		my $cdn_domain   = $data->cdn->domain_name;
 		my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 		my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 		my $regexp_set   = &get_regexp_set( $self, $id );
@@ -1058,6 +1064,8 @@ sub create {
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
+				session_tracking_enabled        => $self->paramAsScalar('ds.session_tracking_enabled'),
+				session_tracking_query_key_list => $self->paramAsScalar('ds.session_tracking_query_key_list'),
 			}
 		);
 		$insert->insert();
@@ -1113,7 +1121,7 @@ sub create {
 				}
 			);
 			$insert->insert();
-			my $new_re_id = $insert->id;
+			my $new_re_id    = $insert->id;
 			my $de_re_insert = $self->db->resultset('DeliveryserviceRegex')->create(
 				{
 					regex           => $new_re_id,
@@ -1137,8 +1145,9 @@ sub create {
 		if ( $dnssec_enabled == 1 ) {
 			$self->app->log->debug("dnssec is enabled, creating dnssec keys");
 			my $err = $self->create_dnssec_keys( $cdn_rs->name, $xml_id, $new_id );
-			if ($err ne "") {
+			if ( $err ne "" ) {
 				push( @msgs, "Delivery service $xml_id could not be created because DNSSEC key creation was not successful.  Error was $err" );
+
 				# #delete DS since DNSSEC key creation was unsuccessful
 				$self->delete_ds($new_id);
 
@@ -1163,7 +1172,7 @@ sub create {
 		$self->flash( message => "Delivery service successfully created!" );
 		return $self->redirect_to( '/ds/' . $new_id );
 	}
-	else {  #validation failed
+	else {                                                   #validation failed
 		my $selected_type    = $self->param('ds.type');
 		my $selected_profile = $self->param('ds.profile');
 		my $selected_cdn     = $self->param('ds.cdn_id');
@@ -1174,7 +1183,7 @@ sub create {
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
 			selected_cdn     => $selected_cdn,
-			hidden           => {},                  # for form validation purposes
+			hidden           => {},                          # for form validation purposes
 			mode             => "add",
 			msgs             => \@msgs
 		);
@@ -1205,12 +1214,14 @@ sub create_dnssec_keys {
 		my $dnskey_ttl = get_key_ttl( $cdn_ksk, "60" );
 
 		#create the ds domain name for dnssec keys
-		my $deliveryservice_regexes = get_regexp_set($self, $ds_id);
+		my $deliveryservice_regexes = get_regexp_set( $self, $ds_id );
 		my $rs_ds =
-			$self->db->resultset('Deliveryservice')->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
-		my $data = $rs_ds->single;
-		my $domain_name = $data->cdn->domain_name;
+			$self->db->resultset('Deliveryservice')
+			->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef }, { 'cdn' => undef } ] } );
+		my $data         = $rs_ds->single;
+		my $domain_name  = $data->cdn->domain_name;
 		my @example_urls = get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
+
 		#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
 		my $ds_name = $example_urls[0] . ".";
 		my $length = length($ds_name) - CORE::index( $ds_name, "." );
@@ -1232,7 +1243,8 @@ sub create_dnssec_keys {
 		#put keys back in Riak
 		my $json_data = encode_json($keys);
 		$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
-	} else {
+	}
+	else {
 		my $err = "Could not create DNSSEC keys for $xml_id.  Reponse was " . $get_keys->{_content};
 		$self->app->log->error($err);
 		return $err;
@@ -1281,7 +1293,7 @@ sub add {
 		selected_type    => "",
 		selected_profile => "",
 		selected_cdn     => "",
-		hidden           => {},      # for form validation purposes
+		hidden           => {},       # for form validation purposes
 		mode             => 'add',    # for form generation
 		msgs             => \@msgs
 	);

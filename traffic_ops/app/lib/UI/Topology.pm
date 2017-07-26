@@ -524,7 +524,9 @@ sub gen_crconfig_json {
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'refresh'} = $cdn_soa_refresh;
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = $cdn_soa_admin;
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
-
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sessionTrackingEnabled'} = $row->session_tracking_enabled ? 'true' : 'false';
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sessionTrackingQueryKeyList'} =
+            defined( $row->session_tracking_query_key_list ) ? $row->session_tracking_query_key_list : "";
     }
 
     my $rs_dns = $self->db->resultset('Staticdnsentry')->search(

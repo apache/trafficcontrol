@@ -141,6 +141,8 @@
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(1, speed);
+            $('#session_tracking_enabled_row').show(speed);
+            $('#session_tracking_query_key_list_row').show(speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
@@ -182,6 +184,8 @@
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(0, speed);
+            $('#session_tracking_enabled_row').show(speed);
+            $('#session_tracking_query_key_list_row').show(speed);
 		}
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
@@ -220,6 +224,8 @@
             $('#remap_text_row').show(speed);
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
+            $('#session_tracking_enabled_row').hide(speed);
+            $('#session_tracking_query_key_list_row').hide(speed);
 		}
 		else if (type_selected.match(/STEERING$/)) {
             $('#protocoli_row').show(speed);
@@ -260,6 +266,8 @@
             $('#regexp_add').hide(speed);
             $('#geo_limit_countries_row').hide(speed);
             check_geolimit_redirect_url_row_showhide(0, speed);
+            $('#session_tracking_enabled_row').hide(speed);
+            $('#session_tracking_query_key_list_row').hide(speed);
 		}
 		//
 	}

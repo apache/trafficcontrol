@@ -103,6 +103,8 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 			"typeId" => 7,
             "tenantId" => $tenant_id,
             "xmlId" => "ds_1",
+			"sessionTrackingEnabled" => 1,
+			"sessionTrackingQueryKeyList" => "key1,key2,key3",
 		})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/0/active" => 0)
         ->json_is( "/response/0/tenantId" => $tenant_id)
@@ -114,6 +116,8 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 		->json_is( "/response/0/protocol" => 1)
 		->json_is( "/response/0/regionalGeoBlocking" => 0)
 		->json_is( "/response/0/type" => "DNS")
+		->json_is( "/response/0/sessionTrackingEnabled" => 1)
+		->json_is( "/response/0/sessionTrackingQueryKeyList" => "key1,key2,key3")
             , 'Does the deliveryservice details return?';
 
 my $ds_id = &get_ds_id('ds_1');
