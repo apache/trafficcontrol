@@ -78,30 +78,32 @@ func LoadConfig(fileName string) (Config, error) {
 
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
+	missings := ""
 	if cfg.HTTPPort == "" {
-		return Config{}, fmt.Errorf("missing port")
+		missings += "port, "
 	}
 	if cfg.DBUser == "" {
-		return Config{}, fmt.Errorf("missing database user")
+		missings += "db_user, "
 	}
 	if cfg.DBPass == "" {
-		return Config{}, fmt.Errorf("missing database password")
+		missings += "db_pass, "
 	}
 	if cfg.DBServer == "" {
-		return Config{}, fmt.Errorf("missing database server")
+		missings += "db_server, "
 	}
 	if cfg.DBDB == "" {
-		return Config{}, fmt.Errorf("missing database name")
+		missings += "db_name, "
 	}
 	if cfg.TOSecret == "" {
-		return Config{}, fmt.Errorf("missing secret")
+		missings += "to_secret, "
 	}
 	if cfg.CertPath == "" {
-		return Config{}, fmt.Errorf("missing certificate path")
+		missings += "cert_path, "
 	}
 	if cfg.KeyPath == "" {
-		return Config{}, fmt.Errorf("missing certificate key path")
+		missings += "key_path, "
 	}
+
 	if cfg.LogLocationError == "" {
 		cfg.LogLocationError = log.LogLocationNull
 	}
@@ -118,9 +120,23 @@ func ParseConfig(cfg Config) (Config, error) {
 		cfg.LogLocationEvent = log.LogLocationNull
 	}
 
+	invalidTOURLStr := ""
 	var err error
 	if cfg.TOURL, err = url.Parse(cfg.TOURLStr); err != nil {
-		return Config{}, fmt.Errorf("Invalid Traffic Ops URL '%v': err", cfg.TOURL, err)
+		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%v': %v", cfg.TOURLStr, err)
+	}
+
+	if len(missings) > 0 {
+		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `
+	}
+
+	errStr := missings
+	if errStr != "" && invalidTOURLStr != "" {
+		errStr += "; "
+	}
+	errStr += invalidTOURLStr
+	if errStr != "" {
+		return Config{}, fmt.Errorf(errStr)
 	}
 
 	return cfg, nil
