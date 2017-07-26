@@ -90,15 +90,22 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 
 const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
 
-func wrapLogTime(h RegexHandlerFunc) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
-		start := time.Now()
+func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		iw := &Interceptor{w: w}
+		user := "-"
+		cookie, err := r.Cookie(tocookie.Name)
+		if err == nil && cookie != nil {
+			cookie, err := tocookie.Parse(secret, cookie.Value)
+			if err == nil {
+				user = cookie.AuthData
+			}
+		}
+		start := time.Now()
 		defer func() {
-			user := "-" // TODO fix
-			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v 0 0 "%v"\n`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, time.Now().Sub(start)/time.Millisecond, iw.byteCount, r.UserAgent())
+			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, user, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
 		}()
-		h(iw, r, p)
+		h.ServeHTTP(iw, r)
 	}
 }
 
