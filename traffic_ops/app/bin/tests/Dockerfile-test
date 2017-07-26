@@ -52,7 +52,8 @@ ADD app /opt/traffic_ops/app
 WORKDIR /opt/traffic_ops/app
 RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
 
-RUN rm -rf /root/.cpan*
+# ignore this if it fails
+RUN rm -rf /root/.cpan* 2>/dev/null || true
 
 ADD app/bin/tests/runtests.sh /
 ARG TESTDIR
