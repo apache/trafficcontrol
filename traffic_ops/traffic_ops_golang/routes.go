@@ -46,7 +46,9 @@ func getRootHandler(d ServerData) http.Handler {
 	}
 	rp := httputil.NewSingleHostReverseProxy(d.TOURL)
 	rp.Transport = tr
-	return rp
+
+	loggingProxyHandler := wrapAccessLog(d.TOSecret, rp)
+	return loggingProxyHandler
 }
 
 // GetRoutes returns the map of regex routes, and a catchall route for when no regex matches.
