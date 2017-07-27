@@ -164,7 +164,7 @@ my $YUM_OPTS = "";
 my $TS_HOME      = "/opt/trafficserver";
 my $TRAFFIC_LINE = $TS_HOME . "/bin/traffic_line";
 
-my $out          = `/usr/bin/yum $YUM_OPTS clean metadata 2>&1`;
+my $out          = `/usr/bin/yum $YUM_OPTS clean expire-cache 2>&1`;
 my $return       = &check_output($out);
 my @config_files = ();
 
