@@ -201,6 +201,24 @@ type DeliveryServiceServer struct {
 	DeliveryService int    `json:"deliveryService"`
 }
 
+// DeliveryServiceRegexResponse ...
+type DeliveryServiceRegexResponse struct {
+	Response []DeliveryServiceRegexes `json:"response"`
+}
+
+// DeliveryServiceRegexes ...
+type DeliveryServiceRegexes struct {
+	Regexes []DeliveryServiceRegex `json:"regexes"`
+	DSName  string                 `json:"dsName"`
+}
+
+// DeliveryServiceRegex ...
+type DeliveryServiceRegex struct {
+	Type      string `json:"type"`
+	SetNumber int    `json:"setNumber"`
+	Pattern   string `json:"pattern"`
+}
+
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`

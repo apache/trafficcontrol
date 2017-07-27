@@ -22,6 +22,10 @@ func deliveryServicesEp() string {
 	return apiBase + dsPath + ".json"
 }
 
+func deliveryServicesByServerEp(id string) string {
+	return apiBase + "/servers/" + id + dsPath + ".json"
+}
+
 func deliveryServiceBaseEp(id string) string {
 	return apiBase + dsPath + "/" + id
 }
@@ -48,6 +52,10 @@ func deliveryServiceRoutingEp(id string) string {
 
 func deliveryServiceServerEp(page, limit string) string {
 	return apiBase + "/deliveryserviceserver.json?page=" + page + "&limit=" + limit
+}
+
+func deliveryServiceRegexesEp() string {
+	return apiBase + "/deliveryservices_regexes.json"
 }
 
 func deliveryServiceSSLKeysByIDEp(id string) string {

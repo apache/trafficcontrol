@@ -15,12 +15,26 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+)
 
 // DeliveryServices gets an array of DeliveryServices
 func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	var data GetDeliveryServiceResponse
 	err := get(to, deliveryServicesEp(), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
+}
+
+// DeliveryServices gets an array of DeliveryServices
+func (to *Session) DeliveryServicesByServer(id int) ([]DeliveryService, error) {
+	var data GetDeliveryServiceResponse
+	err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
 	if err != nil {
 		return nil, err
 	}
@@ -129,6 +143,17 @@ func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, e
 func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceServer, error) {
 	var data DeliveryServiceServerResponse
 	err := get(to, deliveryServiceServerEp(page, limit), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
+}
+
+// DeliveryServiceServer gets the DeliveryServiceServer
+func (to *Session) DeliveryServiceRegexes() ([]DeliveryServiceRegexes, error) {
+	var data DeliveryServiceRegexResponse
+	err := get(to, deliveryServiceRegexesEp(), &data)
 	if err != nil {
 		return nil, err
 	}

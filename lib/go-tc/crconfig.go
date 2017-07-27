@@ -215,8 +215,9 @@ type LatitudeLongitude struct {
 }
 
 type DeliveryServiceProtocol struct {
-	AcceptHTTPS     *string `json:"acceptHttps,omitempty"`
-	RedirectOnHTTPS *string `json:"redirectOnHttps,omitempty"`
+	AcceptHTTP      bool `json:"acceptHttp,string,omitempty"`
+	AcceptHTTPS     bool `json:"acceptHttps,string,omitempty"`
+	RedirectOnHTTPS bool `json:"redirectOnHttps,string,omitempty"`
 }
 
 type Monitor struct {
