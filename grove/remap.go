@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -80,6 +81,7 @@ func getFQDN(rule string) string {
 
 type Remapping struct {
 	Request         *http.Request
+	ProxyURL        *url.URL
 	Name            string
 	CacheKey        string
 	ConnectionClose bool
@@ -143,7 +145,7 @@ func (hr simpleHttpRequestRemapper) RemappingProducer(r *http.Request, scheme st
 
 // GetNext returns the remapping to use to request, whether retries are allowed (i.e. if this is the last retry), or any error
 func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
-	newUri := p.rule.URI(p.oldURI, p.failures)
+	newUri, proxyURL := p.rule.URI(p.oldURI, p.failures)
 	p.failures++
 	newReq, err := http.NewRequest(r.Method, newUri, nil)
 	if err != nil {
@@ -165,6 +167,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	retryAllowed := p.failures >= *p.rule.RetryNum
 	return Remapping{
 		Request:         newReq,
+		ProxyURL:        proxyURL,
 		Name:            p.rule.Name,
 		CacheKey:        p.cacheKey,
 		ConnectionClose: p.rule.ConnectionClose,
@@ -281,19 +284,20 @@ func NewLiteralPrefixRemapper(remap []RemapRule) Remapper {
 }
 
 type RemapRulesBase struct {
-	Rules    []RemapRuleJSON `json:"rules"`
-	RetryNum *int            `json:"retry_num"`
+	RetryNum *int `json:"retry_num"`
 }
 
 type RemapRulesJSON struct {
 	RemapRulesBase
-	RetryCodes      *[]int  `json:"retry_codes"`
-	TimeoutMS       *int    `json:"timeout_ms"`
-	ParentSelection *string `json:"parent_selection"`
+	Rules           []RemapRuleJSON `json:"rules"`
+	RetryCodes      *[]int          `json:"retry_codes"`
+	TimeoutMS       *int            `json:"timeout_ms"`
+	ParentSelection *string         `json:"parent_selection"`
 }
 
 type RemapRules struct {
 	RemapRulesBase
+	Rules           []RemapRule
 	RetryCodes      map[int]struct{}
 	Timeout         *time.Duration
 	ParentSelection *ParentSelectionType
@@ -307,6 +311,7 @@ type RemapRuleToBase struct {
 
 type RemapRuleToJSON struct {
 	RemapRuleToBase
+	ProxyURL        *string `json:"proxy_url"`
 	ParentSelection *string `json:"parent_selection"`
 	TimeoutMS       *int    `json:"timeout_ms"`
 	RetryCodes      *[]int  `json:"retry_codes"`
@@ -314,6 +319,7 @@ type RemapRuleToJSON struct {
 
 type RemapRuleTo struct {
 	RemapRuleToBase
+	ProxyURL        *url.URL
 	ParentSelection *ParentSelectionType
 	Timeout         *time.Duration
 	RetryCodes      map[int]struct{}
@@ -387,35 +393,35 @@ type QueryStringRule struct {
 	Cache bool `json:"cache"`
 }
 
-// URI takes a request URI and maps it to the real URI to proxy-and-cache. The `failures` parameter indicates how many parents have tried and failed, indicating to skip to the nth hashed parent
-func (r RemapRule) URI(fromURI string, failures int) string {
-	to := r.uriGetTo(fromURI, failures)
+// URI takes a request URI and maps it to the real URI to proxy-and-cache. The `failures` parameter indicates how many parents have tried and failed, indicating to skip to the nth hashed parent. Returns the URI to request, and the proxy URL (if any)
+func (r RemapRule) URI(fromURI string, failures int) (string, *url.URL) {
+	to, proxyURI := r.uriGetTo(fromURI, failures)
 	uri := to + fromURI[len(r.From):]
 	if !r.QueryString.Remap {
 		if i := strings.Index(uri, "?"); i != -1 {
 			uri = uri[:i]
 		}
 	}
-	return uri
+	return uri, proxyURI
 }
 
-// uriGetTo is a helper func for URI. It returns the To URL, based on the Parent Selection type. In the event of failure, it logs the error and returns the first parent.
-func (r RemapRule) uriGetTo(fromURI string, failures int) string {
+// uriGetTo is a helper func for URI. It returns the To URL, based on the Parent Selection type. In the event of failure, it logs the error and returns the first parent. Also returns the URL's Proxy URI (if any).
+func (r RemapRule) uriGetTo(fromURI string, failures int) (string, *url.URL) {
 	switch *r.ParentSelection {
 	case ParentSelectionTypeConsistentHash:
 		return r.uriGetToConsistentHash(fromURI, failures)
 	default:
 		log.Errorf("RemapRule.URI: Rule '%v': Unknown Parent Selection type %v - using first URI in rule\n", r.Name, r.ParentSelection)
-		return r.To[0].URL
+		return r.To[0].URL, r.To[0].ProxyURL
 	}
 }
 
-// uriGetToConsistentHash is a helper func for URI, uriGetTo. It returns the To URL using Consistent Hashing. In the event of failure, it logs the error and returns the first parent.
-func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) string {
+// uriGetToConsistentHash is a helper func for URI, uriGetTo. It returns the To URL using Consistent Hashing. In the event of failure, it logs the error and returns the first parent. Also returns the Proxy URI (if any).
+func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string, *url.URL) {
 	fmt.Printf("DEBUGL uriGetToConsistentHash RemapRule %+v\n", r)
 	if r.ConsistentHash == nil {
 		log.Errorf("RemapRule.URI: Rule '%v': Parent Selection Type ConsistentHash, but rule.ConsistentHash is nil! Using first parent\n", r.Name)
-		return r.To[0].URL
+		return r.To[0].URL, r.To[0].ProxyURL
 	}
 
 	fmt.Printf("DEBUGL uriGetToConsistentHash\n")
@@ -426,14 +432,14 @@ func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) string {
 		}
 		fmt.Printf("DEBUGL uriGetToConsistentHash fromURI '%v' err %v returning '%v'\n", fromURI, err, r.To[0].URL)
 		log.Errorf("RemapRule.URI: Rule '%v': Error looking up Consistent Hash! Using first parent\n", r.Name)
-		return r.To[0].URL
+		return r.To[0].URL, r.To[0].ProxyURL
 	}
 
 	for i := 0; i < failures; i++ {
 		iter = iter.NextWrap()
 	}
 	fmt.Printf("DEBUGL uriGetToConsistentHash returning iter.Val().Name %v\n", iter.Val().Name)
-	return iter.Val().Name
+	return iter.Val().Name, iter.Val().ProxyURL
 }
 
 func (r RemapRule) CacheKey(method string, fromURI string) string {
@@ -486,12 +492,12 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 	}
 
 	rules := make([]RemapRule, len(remapRules.Rules))
-	for i, jsonRule := range remapRules.Rules {
+	for i, jsonRule := range remapRulesJSON.Rules {
 		rule := RemapRule{RemapRuleBase: jsonRule.RemapRuleBase}
 
 		if jsonRule.RetryCodes != nil {
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
-			for _, code := range *jsonRule.RetryCodes {
+			for code, _ := range *jsonRule.RetryCodes {
 				if _, ok := ValidHttpCodes[code]; !ok {
 					return nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
 				}
@@ -575,6 +581,13 @@ func makeTo(tosJSON []RemapRuleToJSON, rule RemapRule) ([]RemapRuleTo, error) {
 			toJSON.Weight = &w
 		}
 		to := RemapRuleTo{RemapRuleToBase: toJSON.RemapRuleToBase}
+		if toJSON.ProxyURL != nil {
+			proxyURL, err := url.Parse(*toJSON.ProxyURL)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing to %v proxy_url: %v", to.URL, toJSON.ProxyURL)
+			}
+			to.ProxyURL = proxyURL
+		}
 		if toJSON.TimeoutMS != nil {
 			t := time.Duration(*toJSON.TimeoutMS) * time.Millisecond
 			if to.Timeout = &t; *to.Timeout < 0 {
@@ -645,4 +658,88 @@ func LoadRemapper(path string) (HTTPRequestRemapper, error) {
 		return nil, err
 	}
 	return NewHTTPRequestRemapper(rules), nil
+}
+
+func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
+	j := RemapRulesJSON{RemapRulesBase: r.RemapRulesBase}
+	if r.Timeout != nil {
+		i := int(0)
+		j.TimeoutMS = &i
+		*j.TimeoutMS = int(*r.Timeout / time.Millisecond)
+	}
+	if len(r.RetryCodes) > 0 {
+		rcs := []int{}
+		j.RetryCodes = &rcs
+		for code, _ := range r.RetryCodes {
+			*j.RetryCodes = append(*j.RetryCodes, code)
+		}
+	}
+	if r.ParentSelection != nil {
+		s := ""
+		j.ParentSelection = &s
+		*j.ParentSelection = string(*r.ParentSelection)
+	}
+
+	for _, rule := range r.Rules {
+		j.Rules = append(j.Rules, buildRemapRuleToJSON(rule))
+	}
+	return j
+}
+
+func buildRemapRuleToJSON(r RemapRule) RemapRuleJSON {
+	j := RemapRuleJSON{RemapRuleBase: r.RemapRuleBase}
+	if r.Timeout != nil {
+		t := int(0)
+		j.TimeoutMS = &t
+		*j.TimeoutMS = int(*r.Timeout / time.Millisecond)
+	}
+	if r.ParentSelection != nil {
+		ps := ""
+		j.ParentSelection = &ps
+		*j.ParentSelection = string(*r.ParentSelection)
+	}
+	for _, to := range r.To {
+		j.To = append(j.To, RemapRuleToToJSON(to))
+	}
+	for _, deny := range r.Deny {
+		j.Deny = append(j.Deny, deny.String())
+	}
+	for _, allow := range r.Allow {
+		j.Allow = append(j.Allow, allow.String())
+	}
+	if r.RetryCodes != nil {
+		rc := []int{}
+		j.RetryCodes = &rc
+		for retryCode, _ := range r.RetryCodes {
+			*j.RetryCodes = append(*j.RetryCodes, retryCode)
+		}
+	}
+	return j
+}
+
+func RemapRuleToToJSON(r RemapRuleTo) RemapRuleToJSON {
+	j := RemapRuleToJSON{RemapRuleToBase: r.RemapRuleToBase}
+	if r.ProxyURL != nil {
+		s := ""
+		j.ProxyURL = &s
+		*j.ProxyURL = r.ProxyURL.String()
+	}
+	if r.ParentSelection != nil {
+		ps := ""
+		j.ParentSelection = &ps
+		*j.ParentSelection = string(*r.ParentSelection)
+	}
+	if r.Timeout != nil {
+		t := int(0)
+		j.TimeoutMS = &t
+		*j.TimeoutMS = int(*r.Timeout / time.Millisecond)
+	}
+	if r.RetryCodes != nil {
+		rc := []int{}
+		j.RetryCodes = &rc
+		for retryCode, _ := range r.RetryCodes {
+			*j.RetryCodes = append(*j.RetryCodes, retryCode)
+		}
+	}
+	return j
 }

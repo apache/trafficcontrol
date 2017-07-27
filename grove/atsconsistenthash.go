@@ -98,7 +98,6 @@ func (h *SimpleATSConsistentHash) LookupIter(i OrderedMapUint64NodeIterator) (Or
 }
 
 func (h *SimpleATSConsistentHash) LookupHash(hashVal uint64) (OrderedMapUint64NodeIterator, bool) {
-	// return ATSConsistentHashNode{}, nil, false // TODO implement
 	wrapped := false
 	iter := h.NodeMap.LowerBound(hashVal)
 	if iter == nil {
