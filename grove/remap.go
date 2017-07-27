@@ -145,6 +145,10 @@ func (hr simpleHttpRequestRemapper) RemappingProducer(r *http.Request, scheme st
 
 // GetNext returns the remapping to use to request, whether retries are allowed (i.e. if this is the last retry), or any error
 func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
+	if *p.rule.RetryNum < p.failures {
+		return Remapping{}, false, ErrNoMoreRetries
+	}
+
 	newUri, proxyURL := p.rule.URI(p.oldURI, p.failures)
 	p.failures++
 	newReq, err := http.NewRequest(r.Method, newUri, nil)
@@ -164,7 +168,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	// 	fmt.Printf("DEBUGL leaving Host header: %v\n", newReq.Header.Get("Host"))
 	// }
 
-	retryAllowed := p.failures >= *p.rule.RetryNum
+	retryAllowed := *p.rule.RetryNum < p.failures
 	return Remapping{
 		Request:         newReq,
 		ProxyURL:        proxyURL,
@@ -565,7 +569,7 @@ func makeRuleHash(rule RemapRule) ATSConsistentHash {
 	replicas := 100 // TODO put in config?
 	h := NewSimpleATSConsistentHash(replicas)
 	for _, to := range rule.To {
-		h.Insert(&ATSConsistentHashNode{Name: to.URL}, *to.Weight)
+		h.Insert(&ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL}, *to.Weight)
 	}
 	if h.First() == nil {
 		fmt.Printf("DEBUGLL makeRuleHash %v NodeMap empty!\n", rule.Name)
