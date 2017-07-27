@@ -428,6 +428,96 @@ func TestDeliveryServiceRoutingUnauthorized(t *testing.T) {
 	}
 }
 
+func TestDeliveryServicesByServers(t *testing.T) {
+	resp := fixtures.DeliveryServicesByServer()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for DeliveryServices")
+
+	ds, err := to.DeliveryServicesByServer(42)
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if len(ds) != 1 {
+		testHelper.Error(t, "Should get back \"1\" DeliveryService, got: %d", len(ds))
+	} else {
+		testHelper.Success(t, "Should get back \"1\" DeliveryService")
+	}
+
+	for _, s := range ds {
+		if s.XMLID != "ds-test" {
+			testHelper.Error(t, "Should get back \"ds-test\" for \"XMLID\", got: %s", s.XMLID)
+		} else {
+			testHelper.Success(t, "Should get back \"ds-test\" for \"XMLID\"")
+		}
+
+		if s.MissLong != -99.123456 {
+			testHelper.Error(t, "Should get back \"-99.123456\" for \"MissLong\", got: %s", s.MissLong)
+		} else {
+			testHelper.Success(t, "Should get back \"-99.123456\" for \"MissLong\"")
+		}
+	}
+}
+
+func TestDeliveryServiceRegexes(t *testing.T) {
+	resp := fixtures.DeliveryServiceRegexes()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for a DeliveryServiceServer")
+
+	s, err := to.DeliveryServiceRegexes()
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if len(s) != 1 {
+		testHelper.Error(t, "Should get back \"1\" Regexes, got: %d", len(s))
+	} else {
+		testHelper.Success(t, "Should get back \"1\" Regexes")
+	}
+
+	if s[0].DSName != "dsname" {
+		testHelper.Error(t, "Should get back \"dsname\" for \"DSName\", got: %s", s[0].DSName)
+	} else {
+		testHelper.Success(t, "Should get back \"lastUpdated\" for \"LastUpdated\"")
+	}
+
+	if len(s[0].Regexes) != 1 {
+		testHelper.Error(t, "Should get back \"1\" Regex, got: %d", len(s[0].Regexes))
+	} else {
+		testHelper.Success(t, "Should get back \"1\" Regex")
+	}
+
+	if s[0].Regexes[0].Type != "type" {
+		testHelper.Error(t, "Should get back \"type\" for \"Type\", got: %s", s[0].Regexes[0].Type)
+	} else {
+		testHelper.Success(t, "Should get back \"type\" for \"Type\"")
+	}
+
+	if s[0].Regexes[0].SetNumber != 42 {
+		testHelper.Error(t, "Should get back 42 for \"SetNumber\", got: %s", s[0].Regexes[0].SetNumber)
+	} else {
+		testHelper.Success(t, "Should get back 42 for \"SetNumber\"")
+	}
+
+	if s[0].Regexes[0].Pattern != "pattern" {
+		testHelper.Error(t, "Should get back \"pattern\" for \"Pattern\", got: %s", s[0].Regexes[0].Pattern)
+	} else {
+		testHelper.Success(t, "Should get back \"pattern\" for \"Pattern\"")
+	}
+}
+
 func TestDeliveryServiceServer(t *testing.T) {
 	resp := fixtures.DeliveryServiceServer()
 	server := testHelper.ValidHTTPServer(resp)

@@ -69,6 +69,13 @@ func DeliveryService() *client.DeliveryServiceResponse {
 	}
 }
 
+// DeliveryService returns a default DeliveryServiceResponse to be used for testing.
+func DeliveryServicesByServer() *client.GetDeliveryServiceResponse {
+	return &client.GetDeliveryServiceResponse{
+		Response: DeliveryServices().Response,
+	}
+}
+
 // CreateDeliveryService returns a default CreateDeliveryServiceResponse to be used for testing.
 func CreateDeliveryService() *client.CreateDeliveryServiceResponse {
 	return &client.CreateDeliveryServiceResponse{
@@ -181,6 +188,24 @@ func DeliveryServiceServer() *client.DeliveryServiceServerResponse {
 		Size:     1,
 		OrderBy:  "foo",
 		Limit:    1,
+	}
+}
+
+// DeliveryServiceServer returns a default DeliveryServiceServerResponse to be used for testing.
+func DeliveryServiceRegexes() *client.DeliveryServiceRegexResponse {
+	dss := client.DeliveryServiceRegexes{
+		Regexes: []client.DeliveryServiceRegex{
+			client.DeliveryServiceRegex{
+				Type:      "type",
+				SetNumber: 42,
+				Pattern:   "pattern",
+			},
+		},
+		DSName: "dsname",
+	}
+
+	return &client.DeliveryServiceRegexResponse{
+		Response: []client.DeliveryServiceRegexes{dss},
 	}
 }
 
