@@ -59,6 +59,7 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 			status := http.StatusUnauthorized
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
+			log.Infof("%v %v %v %v returned unauthorized: %v\n", r.RemoteAddr, r.Method, r.URL.Path, username, reason)
 		}
 
 		cookie, err := r.Cookie(tocookie.Name)
