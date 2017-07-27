@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -291,7 +292,7 @@ func dsTypeSkipsMid(ttype string) bool {
 	if ttype == "http_no_cache" || ttype == "http_live" || ttype == "dns_live" {
 		return true
 	}
-	if strings.Contains(ttype, "live") && strings.Contains(ttype, "natnl") {
+	if strings.Contains(ttype, "live") && !strings.Contains(ttype, "natnl") {
 		return true
 	}
 	return false
@@ -303,7 +304,7 @@ func buildTo(parentServer to.Server, protocol string, originURI string, dsType s
 	to := originURI
 	proxy := ""
 	if !dsTypeSkipsMid(dsType) {
-		proxy = parentServer.HostName + "." + parentServer.DomainName
+		proxy = "http://" + parentServer.HostName + "." + parentServer.DomainName + ":" + strconv.Itoa(parentServer.TCPPort)
 	}
 	return to, proxy
 }
