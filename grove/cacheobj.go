@@ -26,14 +26,13 @@ func (c CacheObj) ComputeSize() uint64 {
 func NewCacheObj(reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, reqRespTime time.Time, respRespTime time.Time) *CacheObj {
 	obj := &CacheObj{
 		body:             bytes,
-		reqHeaders:       http.Header{},
-		respHeaders:      http.Header{},
+		reqHeaders:       reqHeader,
+		respHeaders:      respHeader,
 		respCacheControl: ParseCacheControl(respHeader),
 		code:             code,
 		reqTime:          reqTime,
 		reqRespTime:      reqRespTime,
 		respRespTime:     respRespTime,
-		size:             0,
 	}
 	// copyHeader(reqHeader, &obj.reqHeaders)
 	// copyHeader(respHeader, &obj.respHeaders)
