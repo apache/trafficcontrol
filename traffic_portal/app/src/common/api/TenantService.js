@@ -34,7 +34,7 @@ var TenantService = function(Restangular, messageModel) {
                     messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                    messageModel.setMessages(fault.data.alerts, true);
                 }
         );
     };
