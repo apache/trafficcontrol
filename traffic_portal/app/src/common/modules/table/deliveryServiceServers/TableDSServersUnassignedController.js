@@ -90,7 +90,7 @@ var TableDSServersUnassignedController = function(deliveryService, eligibleServe
 	};
 
 	angular.element(document).ready(function () {
-		$('#dsServersUnassignedTable').dataTable({
+		var dsServersUnassignedTable = $('#dsServersUnassignedTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"order": [[ 1, 'asc' ]],
@@ -99,6 +99,14 @@ var TableDSServersUnassignedController = function(deliveryService, eligibleServe
 				{ "width": "5%", "targets": 0 }
 			]
 		});
+		dsServersUnassignedTable.on( 'search.dt', function () {
+			var search = $('#dsServersUnassignedTable_filter input').val();
+			if (search.length > 0) {
+				$("#selectAllCB").attr("disabled", true);
+			} else {
+				$("#selectAllCB").removeAttr("disabled");
+			}
+		} );
 	});
 
 };
