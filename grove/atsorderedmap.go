@@ -1,6 +1,7 @@
 package grove
 
 import (
+	"net/url"
 	"sort"
 	"time"
 )
@@ -26,7 +27,7 @@ import (
 type ATSConsistentHashNode struct {
 	Available bool
 	Name      string
-
+	ProxyURL  *url.URL
 	// pRecord fields (ParentSelection.h)
 	Hostname  string
 	Port      int

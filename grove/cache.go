@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -153,6 +154,7 @@ func RetryingGet(getCacheObj func(remapping Remapping, retryFailures bool, obj *
 // THe `ruleThrottler` may be nil, in which case the request will be unthrottled.
 func GetAndCache(
 	req *http.Request,
+	proxyURL *url.URL,
 	cacheKey string,
 	remapName string,
 	reqHeader http.Header,
@@ -171,7 +173,7 @@ func GetAndCache(
 		// TODO figure out why respReqTime isn't used by rules
 		log.Errorf("DEBUGS GetAndCache calling request %v %v %v %v %v\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header)
 		// TODO Verify overriding the passed reqTime is the right thing to do
-		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(req)
+		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(req, proxyURL)
 		if err != nil {
 			log.Debugf("origin err for %v rule %v err %v\n", cacheKey, remapName, err)
 			code := CodeConnectFailure
@@ -277,7 +279,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 
 		getAndCache := func() *CacheObj {
-			return GetAndCache(remapping.Request, remapping.CacheKey, remapping.Name, remapping.Request.Header, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes)
+			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes)
 		}
 
 		return h.getter.Get(cacheKey, getAndCache, canReuse)
@@ -417,11 +419,14 @@ func (h *CacheHandler) serveReqErr(w http.ResponseWriter) {
 // }
 
 // request makes the given request and returns its response code, headers, body, the request time, response time, and any error.
-func request(r *http.Request) (int, http.Header, []byte, time.Time, time.Time, error) {
+func request(r *http.Request, proxyURL *url.URL) (int, http.Header, []byte, time.Time, time.Time, error) {
 	log.Errorf("DEBUGP requesting %v headers %v\n", r.RequestURI, r.Header)
 	rr := r
 	// Create a client and query the target
 	var transport http.Transport
+	if proxyURL != nil {
+		transport.Proxy = http.ProxyURL(proxyURL)
+	}
 	reqTime := time.Now()
 	resp, err := transport.RoundTrip(rr)
 	respTime := time.Now()
