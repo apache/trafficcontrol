@@ -457,6 +457,10 @@ func (r RemapRule) CacheKey(method string, fromURI string) string {
 }
 
 func LoadRemapRules(path string) ([]RemapRule, error) {
+	fmt.Printf("Loading Remap Rules\n")
+	defer func() {
+		fmt.Printf("Loaded Remap Rules\n")
+	}()
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -491,13 +495,14 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 		}
 	}
 
-	rules := make([]RemapRule, len(remapRules.Rules))
+	rules := make([]RemapRule, len(remapRulesJSON.Rules))
 	for i, jsonRule := range remapRulesJSON.Rules {
+		fmt.Printf("Creating Remap Rule %v\n", jsonRule.Name)
 		rule := RemapRule{RemapRuleBase: jsonRule.RemapRuleBase}
 
 		if jsonRule.RetryCodes != nil {
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
-			for code, _ := range *jsonRule.RetryCodes {
+			for _, code := range *jsonRule.RetryCodes {
 				if _, ok := ValidHttpCodes[code]; !ok {
 					return nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
 				}
@@ -547,10 +552,8 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 		}
 
 		if *rule.ParentSelection == ParentSelectionTypeConsistentHash {
-			fmt.Printf("DEBUGLL making rule hash %v\n", rule.Name)
 			rule.ConsistentHash = makeRuleHash(rule)
 		} else {
-			fmt.Printf("DEBUGLL NOT making rule hash %v\n", rule.Name)
 		}
 		rules[i] = rule
 	}
@@ -561,12 +564,9 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 func makeRuleHash(rule RemapRule) ATSConsistentHash {
 	replicas := 100 // TODO put in config?
 	h := NewSimpleATSConsistentHash(replicas)
-	fmt.Printf("DEBUGLL makeRuleHash %v len(rule.To) %v\n", rule.Name, len(rule.To))
 	for _, to := range rule.To {
-		fmt.Printf("DEBUGLL makeRuleHash %v inserting %v\n", rule.Name, to.URL)
 		h.Insert(&ATSConsistentHashNode{Name: to.URL}, *to.Weight)
 	}
-
 	if h.First() == nil {
 		fmt.Printf("DEBUGLL makeRuleHash %v NodeMap empty!\n", rule.Name)
 	}
