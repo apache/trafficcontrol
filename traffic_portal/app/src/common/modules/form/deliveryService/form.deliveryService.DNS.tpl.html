@@ -442,6 +442,13 @@ under the License.
                 </div>
             </div>
 
+            <div class="form-group" ng-if="deliveryService.exampleURLs.length > 0">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Edge FQDNs</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="edgeFQDNs" name="edgeFQDNs" rows="4" cols="17" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
+                </div>
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(deliveryService)">Delete</button>
                 <button type="button" class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
