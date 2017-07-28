@@ -44,6 +44,16 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
     $scope.deliveryService = deliveryService;
 
+    $scope.edgeFQDNs = function(ds) {
+        var urlString = '';
+        if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
+            for (var i = 0; i < ds.exampleURLs.length; i++) {
+                urlString += ds.exampleURLs[i] + '\n';
+            }
+        }
+        return urlString;
+    };
+
     $scope.types = _.filter(types, function(currentType) {
         var category;
         if (type.indexOf('ANY_MAP') != -1) {
