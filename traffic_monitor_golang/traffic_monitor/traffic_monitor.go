@@ -63,12 +63,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	eventW, errW, warnW, infoW, debugW, err := config.GetLogWriters(cfg)
-	if err != nil {
+	if err := log.InitCfg(cfg); err != nil {
 		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
 		os.Exit(1)
 	}
-	log.Init(eventW, errW, warnW, infoW, debugW)
 
 	log.Infof("Starting with config %+v\n", cfg)
 
