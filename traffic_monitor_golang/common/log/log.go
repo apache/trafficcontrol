@@ -23,7 +23,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -199,7 +198,9 @@ func GetLogWriter(location LogLocation) (io.WriteCloser, error) {
 	case LogLocationStderr:
 		return NopCloser(os.Stderr), nil
 	case LogLocationNull:
-		return NopCloser(ioutil.Discard), nil
+		fallthrough
+	case "":
+		return nil, nil
 	default:
 		return os.OpenFile(string(location), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	}
