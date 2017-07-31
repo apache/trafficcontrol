@@ -52,7 +52,8 @@ public class ZoneManagerUnitTest {
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
 
         PowerMockito.spy(ZoneManager.class);
-        PowerMockito.doReturn("edge").when(ZoneManager.class, "getDnsRoutingName");
+        PowerMockito.doNothing().when(ZoneManager.class, "initDnsRoutingNames", cacheRegister);
+        PowerMockito.doReturn(true).when(ZoneManager.class, "isDnsRoutingName", anyString());
         PowerMockito.doNothing().when(ZoneManager.class, "initTopLevelDomain", cacheRegister);
         PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", trafficRouter);
 

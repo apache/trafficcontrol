@@ -99,6 +99,7 @@ type Coordinates struct {
 type TRDeliveryService struct {
 	XMLID             string            `json:"xmlId"`
 	Domains           []string          `json:"domains"`
+	RoutingName       string            `json:"routingName"`
 	MissLocation      MissLocation      `json:"missCoordinates"`
 	CoverageZoneOnly  bool              `json:"coverageZoneOnly"`
 	MatchSets         []MatchSet        `json:"matchSets"`

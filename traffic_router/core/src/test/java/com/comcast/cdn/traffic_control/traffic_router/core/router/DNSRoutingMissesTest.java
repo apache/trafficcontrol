@@ -83,6 +83,7 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         when(deliveryService.isAvailable()).thenReturn(false);
         when(deliveryService.getFailureDnsResponse(request, track)).thenCallRealMethod();
+        when(deliveryService.getRoutingName()).thenReturn("edge");
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
 
@@ -97,6 +98,7 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         when(deliveryService.isAvailable()).thenReturn(false);
         when(deliveryService.getFailureDnsResponse(request, track)).thenCallRealMethod();
+        when(deliveryService.getRoutingName()).thenReturn("edge");
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
 
@@ -118,6 +120,7 @@ public class DNSRoutingMissesTest {
     public void itSetsDetailsAboutMissesWhenOnlyCoverageZoneSupported() throws Exception {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
+        when(deliveryService.getRoutingName()).thenReturn("edge");
 
         when(deliveryService.isCoverageZoneOnly()).thenReturn(true);
 
@@ -135,6 +138,7 @@ public class DNSRoutingMissesTest {
     public void itSetsDetailsWhenClientGeolocationNotSupported() throws Exception {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
+        when(deliveryService.getRoutingName()).thenReturn("edge");
 
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
 
@@ -157,6 +161,7 @@ public class DNSRoutingMissesTest {
         doReturn(true).when(deliveryService).isAvailable();
         when(deliveryService.isLocationAvailable(cacheLocation)).thenReturn(false);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(false);
+        when(deliveryService.getRoutingName()).thenReturn("edge");
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
         doReturn(cacheLocation).when(trafficRouter).getCoverageZoneCacheLocation("192.168.34.56", deliveryService);

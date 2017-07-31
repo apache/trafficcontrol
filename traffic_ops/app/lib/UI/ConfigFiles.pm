@@ -219,7 +219,7 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
 				my $portstr = "";
 				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
 					$portstr = ":" . $server->tcp_port;

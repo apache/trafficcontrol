@@ -68,6 +68,17 @@
 			%= field('ds.type')->select(class => 'field', required => 'required', id => 'type', name => 'ds.type');
 		<% } %>
 	</div>
+	<div class="block form-row" id="routing_name_row">
+		<% unless (field('ds.routing_name')->valid) { %>
+			<span class="field-with-error"><%= field('ds.routing_name')->error %></span>
+		<% } %>
+		%= label_for 'routing_name' => 'Routing Name', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			%= field('ds.routing_name')->text(class => 'field', name => 'ds.routing_name', id => 'ds.routing_name' );
+		<% } else { %>
+			%= field('ds.routing_name')->text(class => 'field', readonly => 'readonly' );
+		<% } %>
+	</div>
 	<div class="block form-row" id="protocoli_row">
 		<% unless (field('ds.protocol')->valid) { %>
 			<span class="field-with-error"><%= field('ds.protocol')->error %></span>

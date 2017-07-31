@@ -514,6 +514,8 @@ Users
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -553,7 +555,7 @@ Users
             "dscp": "40",
             "edgeHeaderRewrite": null,
             "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -595,6 +597,7 @@ Users
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenant": "root",

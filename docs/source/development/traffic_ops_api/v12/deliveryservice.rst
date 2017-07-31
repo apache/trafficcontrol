@@ -171,6 +171,8 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -208,7 +210,7 @@ Delivery Service
             "dscp": "40",
             "edgeHeaderRewrite": null,
       		"exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -242,6 +244,7 @@ Delivery Service
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenant": "root",
@@ -406,6 +409,8 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -443,7 +448,7 @@ Delivery Service
             "dscp": "40",
             "edgeHeaderRewrite": null,
             "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -484,6 +489,7 @@ Delivery Service
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenant": "root",
@@ -1421,7 +1427,7 @@ Delivery Service User
 .. _to-api-v12-ds-sslkeys:
 
 SSL Keys
-+++++++++
+++++++++
 
 **GET /api/1.2/deliveryservices/xmlId/:xmlid/sslkeys**
 
@@ -1744,7 +1750,7 @@ SSL Keys
     }
 
 URL Sig Keys
-+++++++++
+++++++++++++
 
 **GET /api/1.2/deliveryservices/:id/urlkeys**
 
@@ -1947,6 +1953,8 @@ URL Sig Keys
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>routingType``                       | string | yes      | Eg. DNS or HTTP Redirect                                                                    |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>routingName``                       | string | no       | The routing name for the delivery service, e.g. <routingName>.myds.cdn.com                  |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>serviceDesc``                       | string | yes      | A description of the delivery service.                                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>peakBPSEstimate``                   | string | yes      | Used to manage cache efficiency and plan for capacity.                                      |
@@ -2003,6 +2011,7 @@ URL Sig Keys
           "contentType": "video-on-demand",
           "deliveryProtocol": "http",
           "routingType": "dns",
+          "routingName": "foo",
           "serviceDesc": "service description goes here",
           "peakBPSEstimate": "less-than-5-Gbps",
           "peakTPSEstimate": "less-than-1000-TPS",
@@ -2185,6 +2194,8 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | routingName            | no       | The routing name of this deliveryservice.                                                               |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2357,6 +2368,8 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2390,7 +2403,7 @@ URL Sig Keys
             "dscp": "40",
             "edgeHeaderRewrite": null,
             "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -2431,6 +2444,7 @@ URL Sig Keys
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenantId": 1,
@@ -2575,6 +2589,8 @@ URL Sig Keys
   | regionalGeoBlocking    | no       | Is the Regional Geo Blocking feature enabled for this delivery service.                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | routingName            | no       | The routing name of this deliveryservice.                                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
@@ -2748,6 +2764,8 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2781,7 +2799,7 @@ URL Sig Keys
             "dscp": "40",
             "edgeHeaderRewrite": null,
             "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -2822,6 +2840,7 @@ URL Sig Keys
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenantId": 1,
@@ -2835,6 +2854,7 @@ URL Sig Keys
     }
 
 |
+
 **PUT /api/1.2/deliveryservices/{:id}/safe**
 
   Allows a user to edit limited fields of an assigned delivery service.
@@ -3008,6 +3028,8 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -3041,7 +3063,7 @@ URL Sig Keys
             "dscp": "40",
             "edgeHeaderRewrite": null,
             "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -3082,6 +3104,7 @@ URL Sig Keys
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenantId": 1,
@@ -3095,6 +3118,7 @@ URL Sig Keys
     }
 
 |
+
 **DELETE /api/1.2/deliveryservices/{:id}**
 
   Allows user to delete a delivery service.
