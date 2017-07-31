@@ -23,7 +23,9 @@ package log
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"os"
 	"time"
 )
 
@@ -174,4 +176,78 @@ func (nopCloser) Close() error { return nil }
 
 func NopCloser(w io.Writer) io.WriteCloser {
 	return nopCloser{w}
+}
+
+// LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
+type LogLocation string
+
+const (
+	// LogLocationStdout indicates the stdout IO stream
+	LogLocationStdout = "stdout"
+	// LogLocationStderr indicates the stderr IO stream
+	LogLocationStderr = "stderr"
+	// LogLocationNull indicates the null IO stream (/dev/null)
+	LogLocationNull = "null"
+	//StaticFileDir is the directory that contains static html and js files.
+	StaticFileDir = "/opt/traffic_monitor/static/"
+)
+
+func GetLogWriter(location LogLocation) (io.WriteCloser, error) {
+	switch location {
+	case LogLocationStdout:
+		return NopCloser(os.Stdout), nil
+	case LogLocationStderr:
+		return NopCloser(os.Stderr), nil
+	case LogLocationNull:
+		return NopCloser(ioutil.Discard), nil
+	default:
+		return os.OpenFile(string(location), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	}
+}
+
+type Config interface {
+	ErrorLog() LogLocation
+	WarningLog() LogLocation
+	InfoLog() LogLocation
+	DebugLog() LogLocation
+	EventLog() LogLocation
+}
+
+func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
+	eventLoc := cfg.EventLog()
+	errLoc := cfg.ErrorLog()
+	warnLoc := cfg.WarningLog()
+	infoLoc := cfg.InfoLog()
+	debugLoc := cfg.DebugLog()
+
+	eventW, err := GetLogWriter(eventLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
+	}
+	errW, err := GetLogWriter(errLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
+	}
+	warnW, err := GetLogWriter(warnLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
+	}
+	infoW, err := GetLogWriter(infoLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
+	}
+	debugW, err := GetLogWriter(debugLoc)
+	if err != nil {
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
+	}
+	return eventW, errW, warnW, infoW, debugW, nil
+}
+
+func InitCfg(cfg Config) error {
+	eventW, errW, warnW, infoW, debugW, err := GetLogWriters(cfg)
+	if err != nil {
+		return err
+	}
+	Init(eventW, errW, warnW, infoW, debugW)
+	return nil
 }
