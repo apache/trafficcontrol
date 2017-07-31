@@ -86,6 +86,8 @@ sub update {
 		return $self->forbidden();
 	}
 
+	$params->{targetId} = $target_ds_id; # to ensure that is_valid passes
+
 	my ( $is_valid, $result ) = $self->is_target_valid($params);
 
 	if ( !$is_valid ) {
@@ -102,8 +104,6 @@ sub update {
 	}
 
 	my $values = {
-		deliveryservice => $steering_ds_id,
-		target          => $target_ds_id,
 		value           => $params->{value},
 		type            => $params->{typeId},
 	};
@@ -164,13 +164,13 @@ sub create {
 	if ($insert) {
 		my @response;
 		push( @response, {
-				deliveryServiceId => $insert->deliveryservice->id,
-				targetId          => $insert->target->id,
-				value           => $insert->value,
-				typeId            => $insert->type->id,
+				deliveryServiceId 	=> $insert->deliveryservice->id,
+				targetId          	=> $insert->target->id,
+				value           	=> $insert->value,
+				typeId            	=> $insert->type->id,
 			} );
 
-		&log( $self, "Created steering target [ '" . $params->{targetId} . "' ] for delivery service: " . $params->{deliveryServiceId}, "APICHANGE" );
+		&log( $self, "Created steering target [ '" . $target_ds_id . "' ] for delivery service: " . $steering_ds_id, "APICHANGE" );
 
 		return $self->success( \@response, "Delivery service target creation was successful." );
 	}
