@@ -180,7 +180,9 @@ func processStatResults(
 			}
 		}
 		statInfoHistory.Add(result, maxStats)
-		statResultHistory.Add(result, maxStats)
+		if err := statResultHistory.Add(result, maxStats); err != nil {
+			log.Errorf("Adding result from %v: %v\n", result.ID, err)
+		}
 		// Don't add errored maxes or precomputed DSStats
 		if result.Error == nil {
 			// max and precomputed always contain the latest result from each cache
