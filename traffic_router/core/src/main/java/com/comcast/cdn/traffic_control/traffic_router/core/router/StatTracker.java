@@ -29,8 +29,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 
 @SuppressWarnings("PMD.ExcessivePublicCount")
 public class StatTracker {
-	private String dnsRoutingName;
-	private String httpRoutingName;
 
 	public static class Tallies {
 
@@ -318,13 +316,13 @@ public class StatTracker {
 						rt = RouteType.DNS;
 
 						if (i == 0) {
-							dsName.insert(0, getDnsRoutingName() + ".");
+							dsName.insert(0, ds.getRoutingName() + ".");
 						} else {
 							continue;
 						}
 					} else {
 						rt = RouteType.HTTP;
-						dsName.insert(0, getHttpRoutingName() + ".");
+						dsName.insert(0, ds.getRoutingName() + ".");
 					}
 
 					t.setRouteType(rt, dsName.toString());
@@ -335,17 +333,5 @@ public class StatTracker {
 				}
 			}
 		}
-	}
-	private String getDnsRoutingName() {
-		return dnsRoutingName;
-	}
-	public void setDnsRoutingName(final String dnsRoutingName) {
-		this.dnsRoutingName = dnsRoutingName;
-	}
-	private String getHttpRoutingName() {
-		return httpRoutingName;
-	}
-	public void setHttpRoutingName(final String httpRoutingName) {
-		this.httpRoutingName = httpRoutingName;
 	}
 }
