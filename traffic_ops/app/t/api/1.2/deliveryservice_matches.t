@@ -54,9 +54,6 @@ ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->a
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(200),
 	'Log into the portal user?';
 
-# Verify Permissions
-ok $t->get_ok("/api/1.2/deliveryservice_matches.json")->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 done_testing();
