@@ -49,6 +49,7 @@ type DeliveryService struct {
 	XMLID                string                 `json:"xmlId"`
 	Active               bool                   `json:"active"`
 	DSCP                 int                    `json:"dscp"`
+	RoutingName          string                 `json:"routingName"`
 	Signed               bool                   `json:"signed"`
 	QStringIgnore        int                    `json:"qstringIgnore"`
 	GeoLimit             int                    `json:"geoLimit"`

@@ -488,6 +488,7 @@ sub delivery_service_data_by_profile {
 		deliveryservice.id,
 		deliveryservice.xml_id,
 		deliveryservice.dscp,
+		deliveryservice.routing_name,
 		deliveryservice.signed,
 		deliveryservice.qstring_ignore,
 		deliveryservice.org_server_fqdn,
@@ -532,6 +533,7 @@ sub delivery_service_data_by_profile {
 	my $deliveryservice_id;
 	my $deliveryservice_xml_id;
 	my $deliveryservice_dscp;
+	my $deliveryservice_routing_name;
 	my $deliveryservice_signed;
 	my $deliveryservice_qstring_ignore;
 	my $deliveryservice_org_server_fqdn;
@@ -556,6 +558,7 @@ sub delivery_service_data_by_profile {
 		\$deliveryservice_id,
 		\$deliveryservice_xml_id,
 		\$deliveryservice_dscp,
+		\$deliveryservice_routing_name,
 		\$deliveryservice_signed,
 		\$deliveryservice_qstring_ignore,
 		\$deliveryservice_org_server_fqdn,
@@ -583,6 +586,7 @@ sub delivery_service_data_by_profile {
 					"id" => $deliveryservice_id,
 					"xml_id" => $deliveryservice_xml_id,
 					"dscp" => $deliveryservice_dscp,
+					"routing_name" => $deliveryservice_routing_name,
 					"signed" => $deliveryservice_signed,
 					"qstring_ignore" => $deliveryservice_qstring_ignore,
 					"org_server_fqdn" => $deliveryservice_org_server_fqdn,
@@ -650,7 +654,7 @@ sub profile_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "ccr";
 				my $portstr  = ":" . "__SERVER_TCP_PORT__";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -772,7 +776,7 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -901,7 +905,7 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
 				my $portstr = "";
 				if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
@@ -1063,7 +1067,6 @@ sub remap_ds_data {
 	$response_obj->{host_name}   = $server_obj->host_name;
 	$response_obj->{domain_name} = $server_obj->domain_name;
 
-
 	if ( $server_obj->type->name =~ m/^MID/ ) {
 		# the mids will do all deliveryservices in this CDN
 		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server_obj->cdn->name ] } );
@@ -1133,7 +1136,7 @@ sub remap_ds_data {
 					my $re = $host_re;
 					$re =~ s/\\//g;
 					$re =~ s/\.\*//g;
-					my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
 					my $portstr = "";
 					if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 						$portstr = ":" . $server_obj->tcp_port;

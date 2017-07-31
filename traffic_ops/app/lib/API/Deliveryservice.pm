@@ -73,7 +73,7 @@ sub index {
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search(
 		\%criteria,
-		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ], order_by => 'me.' . $orderby }
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ], order_by => [ 'me.' . $orderby, 'deliveryservice_regexes.set_number' ]}
 	);
 
 	while ( my $row = $rs_data->next ) {
@@ -145,6 +145,7 @@ sub index {
 				"regexRemap"           => $row->regex_remap,
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 				"remapText"            => $row->remap_text,
+				"routingName"          => $row->routing_name,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"		       => $row->tenant_id,
@@ -263,6 +264,7 @@ sub show {
 				"rangeRequestHandling" => $row->range_request_handling,
 				"regexRemap"           => $row->regex_remap,
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
+				"routingName"          => $row->routing_name,
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
@@ -359,6 +361,7 @@ sub update {
 		regex_remap            => $params->{regexRemap},
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
+		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName}, $ds ),
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
@@ -446,6 +449,7 @@ sub update {
 				"regexRemap"               => $rs->regex_remap,
 				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 				"remapText"                => $rs->remap_text,
+				"routingName"              => $rs->routing_name,
 				"signed"                   => $rs->signed,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"tenantId"                 => $rs->tenant_id,
@@ -571,6 +575,7 @@ sub safe_update {
 					"regexRemap"               => $rs->regex_remap,
 					"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 					"remapText"                => $rs->remap_text,
+					"routingName"              => $rs->routing_name,
 					"signed"                   => $rs->signed,
 					"sslKeyVersion"            => $rs->ssl_key_version,
 					"trRequestHeaders"         => $rs->tr_request_headers,
@@ -664,6 +669,7 @@ sub create {
 		regex_remap            => $params->{regexRemap},
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
+		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName} ),
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
@@ -691,7 +697,7 @@ sub create {
 		my $cdn = $self->db->resultset('Cdn')->search( { id => $params->{cdnId} } )->single();
 		my $dnssec_enabled = $cdn->dnssec_enabled;
 		if ($dnssec_enabled) {
-			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id );
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id, $cdn->domain_name );
 			&log( $self, "Created delivery service dnssec keys for [ '" . $insert->xml_id . "' ]", "APICHANGE" );
 		}
 
@@ -764,6 +770,7 @@ sub create {
 				"regexRemap"               => $insert->regex_remap,
 				"regionalGeoBlocking"      => $insert->regional_geo_blocking,
 				"remapText"                => $insert->remap_text,
+				"routingName"              => $insert->routing_name,
 				"signed"                   => $insert->signed,
 				"sslKeyVersion"            => $insert->ssl_key_version,
 				"tenantId"                 => $insert->tenant_id,
@@ -949,6 +956,7 @@ sub get_deliveryservices_by_serverId {
 					"regexRemap"           => $row->regex_remap,
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
+					"routingName"          => $row->routing_name,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
@@ -1038,6 +1046,7 @@ sub get_deliveryservices_by_userId {
 					"regexRemap"           => $row->regex_remap,
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
+					"routingName"          => $row->routing_name,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
@@ -1268,7 +1277,7 @@ sub is_deliveryservice_request_valid {
 
 	my $rules = {
 		fields => [
-			qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+			qw/customer contentType deliveryProtocol routingType routingName serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
 		],
 
 		# Validation checks to perform
@@ -1303,7 +1312,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# Validation checks to perform
@@ -1327,6 +1336,7 @@ sub is_deliveryservice_valid {
 			qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			regionalGeoBlocking  => [ is_required("is required") ],
+			routingName          => [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
 			signed               => [ is_required("is required") ],
 		]
 	};
@@ -1340,6 +1350,24 @@ sub is_deliveryservice_valid {
 	else {
 		return ( 0, $result->{error} );
 	}
+}
+
+sub is_valid_routing_name {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value or $value eq '' ) {
+		return undef;
+	}
+
+	if ( !&UI::Utils::is_hostname($value) ) {
+		return "invalid. Must be a valid hostname.";
+	}
+
+	if ( $value =~ /\./ ) {
+		return "invalid. Periods not allowed.";
+	}
+
+	return undef;
 }
 
 sub is_valid_deliveryservice_type {

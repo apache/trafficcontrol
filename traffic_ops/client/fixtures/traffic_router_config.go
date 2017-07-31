@@ -114,6 +114,7 @@ func TrafficRouterConfig() *client.TRConfigResponse {
 					Domains: []string{
 						"ga.atlanta.kabletown.net",
 					},
+					RoutingName: "edge",
 					MissLocation: client.MissLocation{
 						Latitude:  75,
 						Longitude: 65,

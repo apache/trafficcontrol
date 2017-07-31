@@ -201,6 +201,7 @@ function setup_form(speed) {
 			$('#ccr_dns_ttl').show(speed);
 			$('#protocoli_row').show(speed);
 			$('#dscp_row').show(speed);
+			$('#routing_name_row').show(speed);
             $('#signed_row').show(speed);
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
@@ -241,6 +242,7 @@ function setup_form(speed) {
 			$('#ccr_dns_ttl').show(speed);
 			$('#protocoli_row').show(speed);
             $('#dscp_row').show(speed);
+            $('#routing_name_row').show(speed);
             $('#signed_row').show(speed);
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
@@ -278,6 +280,7 @@ function setup_form(speed) {
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
+            $('#routing_name_row').hide(speed);
             $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
             $('#geo_limit_row').hide(speed);
@@ -316,6 +319,7 @@ function setup_form(speed) {
 		else if (type_selected.match(/STEERING$/)) {
             $('#protocoli_row').show(speed);
             $('#dscp_row').hide(speed);
+            $('#routing_name_row').show(speed);
             $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
             $('#geo_limit_row').hide(speed);

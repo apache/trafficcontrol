@@ -287,6 +287,8 @@ sub gen_crconfig_json {
             $protocol = 'HTTP';
         }
 
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'routingName'} = $row->routing_name;
+
         my @server_subrows = $row->deliveryservice_servers->all;
         my @regex_subrows  = $row->deliveryservice_regexes->all;
 
@@ -357,7 +359,7 @@ sub gen_crconfig_json {
                         my $host_copy = $host;
                         $host_copy =~ s/$host_regex1//g;
                         if ( $protocol eq 'DNS' ) {
-                            $remap = 'edge' . $host_copy . $ccr_domain_name;
+                            $remap = $row->routing_name . $host_copy . $ccr_domain_name;
                         }
                         else {
                             $remap = $cache_tracker{$server} . $host_copy . $ccr_domain_name;
@@ -721,6 +723,9 @@ sub stringify_ds {
     }
     if ( defined( $ds->{'ip6RoutingEnabled'} ) ) {
         $string .= "|ip6RoutingEnabled: " . $ds->{'ip6RoutingEnabled'};
+    }
+    if ( defined( $ds->{'routingName'} ) ) {
+        $string .= "|routingName: " . $ds->{'routingName'};
     }
     if ( defined( $ds->{'maxDnsIpsForLocation'} ) ) {
         $string .= "|maxDnsIpsForLocation:" . $ds->{'maxDnsIpsForLocation'};

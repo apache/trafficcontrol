@@ -89,14 +89,10 @@ Configuration files
 |                            | dns.max-threads                           | Maximum number of threads used to process incoming DNS requests                                     | 1000                                              |
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | dns.zones.dir                             | Path to auto generated zone files for reference                                                     | /opt/traffic_router/var/auto-zones                |
-|                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
-|                            | dns.routing.name                          | The label (A/AAAA) Traffic Router will use for the entry point for a DNS delivery service           | edge (e.g.: edge.mydeliveryservice.kabletown.net) |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 | traffic_ops.properties     | traffic_ops.username                      | Username to access the APIs in Traffic Ops (must be in the admin role)                              | admin                                             |
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | traffic_ops.password                      | Password for the user specified in traffic_ops.username                                             | N/A                                               |
-+----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
-| http.properties            | http.routing.name                         | The label (A/AAAA) Traffic Router will use for the entry point for an HTTP delivery service         | tr (e.g.: tr.mydeliveryservice.kabletown.net)     |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 | cache.properties           | cache.geolocation.database                | Full path to the local copy of the MaxMind geolocation binary database file                         | /opt/traffic_router/db/GeoIP2-City.mmdb           |
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
@@ -253,7 +249,7 @@ HTTP Specifics
 Sample Message
 ::
 
-  1452197640.936 qtype=HTTP chi=69.241.53.218 url="http://ccr.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
+  1452197640.936 qtype=HTTP chi=69.241.53.218 url="http://foo.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
 
 **Request Fields**
 

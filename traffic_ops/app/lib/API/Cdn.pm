@@ -1223,18 +1223,7 @@ sub refresh_keys {
 					my $ds_id = $ds->id;
 
 					#create the ds domain name for dnssec keys
-					my $domain_name = $cdn_domain_name;
-					my $deliveryservice_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-					my $rs_ds = $self->db->resultset('Deliveryservice')
-						->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
-					my $data = $rs_ds->single;
-					my @example_urls =
-						UI::DeliveryService::get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
-
-					#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
-					my $ds_name = $example_urls[0] . ".";
-					my $length = length($ds_name) - CORE::index( $ds_name, "." );
-					$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+					my $ds_name = UI::DeliveryService::get_ds_domain_name($self, $ds_id, $xml_id, $cdn_domain_name);
 
 					my $inception    = time();
 					my $z_expiration = $inception + ( 86400 * $default_z_exp_days );
