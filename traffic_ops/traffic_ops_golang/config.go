@@ -48,11 +48,11 @@ type Config struct {
 	LogLocationEvent   string   `json:"log_location_event"`
 }
 
-func (c Config) Error() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
-func (c Config) Warning() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
-func (c Config) Info() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
-func (c Config) Debug() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
-func (c Config) Event() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
+func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
+func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
+func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
+func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
 
 func LoadConfig(fileName string) (Config, error) {
 	if fileName == "" {

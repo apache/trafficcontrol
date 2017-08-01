@@ -23,7 +23,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
