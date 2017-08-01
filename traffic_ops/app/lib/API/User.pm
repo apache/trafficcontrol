@@ -387,6 +387,10 @@ sub get_available_deliveryservices_not_assigned_to_user {
 
 	my $rs_links = $self->db->resultset("Deliveryservice")->search( undef, { order_by => "xml_id" } );
 	while ( my $row = $rs_links->next ) {
+        if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+            #the current user cannot access this DS
+            next;
+        }
 		if (!$tenant_utils->is_ds_resource_accessible_to_tenant($tenants_data, $row->tenant_id, $user->tenant_id)) {
 			#the user under inspection cannot access this DS
 			next;
