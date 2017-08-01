@@ -82,7 +82,7 @@ sub update {
 	my $target_ds_id   = $self->param('target_id');
 	my $params         = $self->req->json;
 
-	if ( !&is_admin($self) ) {
+	if ( !&is_admin($self) && !&is_steering($self) ) {
 		return $self->forbidden();
 	}
 
@@ -134,7 +134,7 @@ sub create {
 	my $steering_ds_id = $self->param('id');
 	my $target_ds_id   = $params->{targetId};
 
-	if ( !&is_admin($self) ) {
+	if ( !&is_admin($self) && !&is_steering($self) ) {
 		return $self->forbidden();
 	}
 
@@ -185,7 +185,7 @@ sub delete {
 	my $steering_ds_id = $self->param('id');
 	my $target_ds_id   = $self->param('target_id');
 
-	if ( !&is_admin($self) ) {
+	if ( !&is_admin($self) && !&is_steering($self) ) {
 		return $self->forbidden();
 	}
 
