@@ -33,7 +33,7 @@ sub view_by_xmlid {
 	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $config_file );
 	my $rc                  = $response_container->{"response"}->{_rc};
 	if ( $rc eq '200' ) {
-		my $url_sig_values_json = $response_container->{"response"}->{_content};
+		my $url_sig_values_json = decode_json( $response_container->{"response"}->{_content} );
 		return $self->success($url_sig_values_json);
 	} else {
 		my $error_msg = $response_container->{"response"}->{_content};
