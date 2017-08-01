@@ -264,7 +264,7 @@ sub delete {
 
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
 	if ( !defined($ds) ) {
-		#allow deletion if the ds is not valid
+        return $self->not_found();
 	}
 	else{
 		my $tenant_utils = Utils::Tenant->new($self);
