@@ -16,7 +16,7 @@
 <script type="text/javascript" src="/js/application.js"></script>
 <script type="text/javascript">
   $(document).ready(function () {
-      show_url_sigs_buttons('fast');
+      show_gen_url_sigs_button('fast');
 	  show_mng_ssl_button('fast');
 	  $('#generate-sig-keys-button').click(function (e) {
 		$( "#dialog-confirm" ).dialog({
@@ -53,50 +53,6 @@
 		  }
 		});
 	  });
-
-      $('#copy-sig-keys-button').click(function (e) {
-        $.get("/api/1.2/deliveryservices", function(data){
-                    $("#delivery-services").find('option').remove()
-                    var response = data['response'];
-                    $.each(response, function(idx, val) {
-                        if ( response[idx].signed && response[idx].xmlId != <%= $ds->xml_id %>     ) {
-                            $("#delivery-services").append("<option value=" + response[idx].xmlId + ">" + response[idx].displayName + "</option>");
-                        }
-                    });
-                }, "json");
-        $( "#dialog-copy-from" ).dialog({
-          resizable: false,
-          height:250,
-          modal: true,
-          buttons: {
-            "Copy Keys": function() {
-              $("#copy-spinner-complete").show();
-              $("#copy-sig-keys-button").hide();
-              $( this ).dialog( "close" );
-              var jqxhr = $.post("/api/1.1/deliveryservices/xmlId/<%= $ds->xml_id %>/urlkeys/copyFromXmlId/" +  $("#delivery-services :selected").val(), function(data, status){
-                  $("#copy-sig-keys-button").show();
-                  $("#copy-spinner-complete").hide();
-                  $( "#generate_message" ).text( "Successfully copied URL Sig keys from: " +  $("#delivery-services :selected").val() + " to: <%= $ds->xml_id %>" );
-                  $("#generate_message").attr("class", "flash-section");
-                  $("#generate_message").show();
-                  $.fancybox.update();
-              })
-              jqxhr.fail(function() {
-                  $("#copy-sig-keys-button").show();
-                  $("#copy-spinner-complete").hide();
-                  var response = jqxhr.responseJSON;
-                  $( "#generate_message" ).text( "Error:  " + response['alerts'][0]['text'] );
-                  $("#generate_message").attr("class", "error-section");
-                  $("#generate_message").show();
-                  $.fancybox.update();
-              });
-            },
-            Cancel: function() {
-              $( this ).dialog( "close" );
-            }
-          }
-        });
-      });
     });
 </script>
 
@@ -456,24 +412,20 @@ function setup_form(speed) {
         }
     }
 
-	// hide/show 'URL Sig Key buttons'
-	 function show_url_sigs_buttons(speed) {
+	// hide/show 'Generate URL Sig Keys'
+	 function show_gen_url_sigs_button(speed) {
       var signed_selected = $('#ds-signed :selected').text();
       if (signed_selected.match(/^Yes/)) {
         $('#generate-sig-keys-button').show();
-        $('#copy-sig-keys-button').show();
       }
       else if (signed_selected.match(/^No/)) {
         $('#generate-sig-keys-button').hide();
-        $('#copy-sig-keys-button').hide();
-
       }
     }
 
 	$(function(){
       $('#ds-signed').change(function() {
-        show_url_sigs_buttons('fast');
-
+        show_gen_url_sigs_button('fast');
       });
     });
 
@@ -576,15 +528,6 @@ function setup_form(speed) {
 				<div id="dialog-confirm" title="Generate Keys?" style="display:none;height: 50px;">
 				  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span><div>This will generate URL signature keys for delivery service '<%= $ds->xml_id %>'. Are you sure?</p></div></div>
 				</div>
-                <div id="dialog-copy-from" title="Copy Keys?" style="display:none;height: 50px;">
-                  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span><div>This will copy URL signature keys for delivery service '<%= $ds->xml_id %>' from the selected delivery service. Are you sure?</p></div>
-                  
-                  Delivery service to copy:<br>
-                  <select id="delivery-services" name="delivery-services">
-                </select>
-                  
-                  </div>
-                </div>
 				<div id="buttons-section" style="margin-top:5px;">
 					<button class="button" id="delete-button" style="float:left;margin-left:5px; " onclick="deleteFunction()">Delete</button>
 					<button class="button" style="float:left;margin-left:5px; " onclick="openAssignment()" id="server_assignment_button">Server Assignments</button>
@@ -600,13 +543,6 @@ function setup_form(speed) {
 						  <div class="button" id="spinner-complete" style="display:none;float:left;">
                                 <div style="float:left;"><img id="throbber" src="/images/spinner-small.gif" /></div>
                                 <div style="float:left;margin-left: 5px; font-size: 13px;">Generating URL Sig Keys</div>
-                          </div>
-                          <div>
-                             <button class="button" style="float:left;margin-left:5px; " id="copy-sig-keys-button">Copy URL Sig Keys</button>
-                          </div>
-                          <div class="button" id="copy-spinner-complete" style="display:none;float:left;">
-                                <div style="float:left;"><img id="throbber" src="/images/spinner-small.gif" /></div>
-                                <div style="float:left;margin-left: 5px; font-size: 13px;">Copying URL Sig Keys</div>
                           </div>
 					<% } %>
 <% } %>
