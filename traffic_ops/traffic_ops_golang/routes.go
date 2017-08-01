@@ -56,6 +56,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, "divisions-wip.json$", wrapHeaders(wrapAuthWithData(divisionsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, DivisionsPrivLevel))},
 		{1.2, http.MethodGet, "hwinfo-wip$", wrapHeaders(wrapAuthWithData(hwInfoHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, HWInfoPrivLevel))},
 		{1.2, http.MethodGet, "hwinfo-wip.json$", wrapHeaders(wrapAuthWithData(hwInfoHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, HWInfoPrivLevel))},
+		{1.3, http.MethodGet, "configs/cache/{cache}", wrapHeaders(wrapAuth(cacheconfigHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CacheConfigPrivLevel))},
 	}, rootHandler(d), nil
 }
 
