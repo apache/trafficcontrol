@@ -39,6 +39,9 @@ insert into profile_parameter (profile, parameter) values ( (select id from prof
 insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
 
+insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0') ON CONFLICT (name, config_file, value) DO NOTHING;
+insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') )         ON CONFLICT (profile, parameter) DO NOTHING;
+
 
 
 
