@@ -146,7 +146,7 @@ Steering Targets
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Admin or Steering
 
   **Request Route Parameters**
 
@@ -217,7 +217,7 @@ Steering Targets
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Admin or Steering
 
   **Request Route Parameters**
 
@@ -288,7 +288,7 @@ gi
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin
+  Role(s) Required: Admin or Steering
 
   **Request Route Parameters**
 
