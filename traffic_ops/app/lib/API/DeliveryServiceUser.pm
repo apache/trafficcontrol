@@ -40,8 +40,17 @@ sub delete {
     my $tenants_data = $tenant_utils->create_tenants_data_from_db();
     if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
         #no access to resource tenant
-        return $self->forbidden();
+        return $self->forbidden("Forbidden. User tenant is not available to the working user.");
     }
+
+    my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+    if ( !defined($ds) ) {
+        return $self->not_found();
+    }
+    if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+        return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+    }
+
     #not checking DS tenancy on deletion - we manage the user here - we remove permissions to touch a DS
 
     my $ds_user = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $user_id }, { prefetch => [ 'deliveryservice', 'tm_user' ] } );

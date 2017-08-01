@@ -440,7 +440,6 @@ sub assign_deliveryservices {
 	my @values = ( [ qw( deliveryservice tm_user_id ) ]); # column names are required for 'populate' function
 
 	foreach my $ds_id (@{ $delivery_services }) {
-		#not checking ds tenancy - this is a user operation, setting his premissions, not a "DS" operation
 		push(@values, [ $ds_id, $user_id ]);
 		$count++;
 	}

@@ -960,7 +960,7 @@ sub get_deliveryservices_by_userId {
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
 		#no access to resource tenant
-		return $self->forbidden();
+		return $self->forbidden("Forbidden. User tenant is not available to the working user.");
 	}
 	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
@@ -970,8 +970,9 @@ sub get_deliveryservices_by_userId {
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
-			### we do not check here if we have access to the DS.i
-			#This is not a DS operation, but a user operation viewing his capabilities.
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
 			push(
 				@data, {
 					"active"               => \$row->active,
