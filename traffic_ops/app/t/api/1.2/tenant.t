@@ -17,6 +17,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use DBI;
+use JSON;
 use strict;
 use warnings;
 no warnings 'once';
@@ -38,6 +39,24 @@ Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_ROOT_USER, p => Test::TestHelper::ADMIN_ROOT_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+
+
+# Count the 'response number'
+my $responses_counter = sub {
+	my $t = shift;
+	my $json = decode_json( $t->tx->res->content->asset->slurp );
+	my $r    = $json->{response};
+	if ($r) {
+		return scalar(@$r);
+	}
+	return 0;
+};
+
+# Count the 'response number', and compare to the give value
+my $count_response_test = sub {
+	my ( $t, $count ) = @_;
+	return $t->success( is( $t->$responses_counter(), $count ) )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+};
 
 #verifying the basic cfg
 ok $t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/name", "root" )->or( sub { diag $t->tx->res->content->asset->{content}; } );;
@@ -319,10 +338,19 @@ ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(400)
 	->json_is( "/alerts/0/text" => "Tenant 'tenantA2' has children tenant(s): e.g 'tenantD'. Please update these tenants and retry." )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantE_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantD_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-ok $t->delete_ok('/api/1.2/tenants/' . $tenantB_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#testing the tenant cascade delete
+ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
+			"name" => "tenant-b1", "parentId" => $tenantB_id })->status_is(200);
+my $num_of_tenants_before_cascade_delete = $t->get_ok('/api/1.2/tenants')->status_is(200)->$responses_counter();
+my $tenant_utils_of_root_for_cascade_delete = Utils::Tenant->new(undef, $root_tenant_id, $schema);
+my $tenants_data_for_cascade_delete = $tenant_utils_of_root_for_cascade_delete->create_tenants_data_from_db();
+$tenant_utils_of_root_for_cascade_delete->cascade_delete_tenants_tree($tenants_data_for_cascade_delete, $tenantB_id);
+ok $t->get_ok('/api/1.2/tenants')->status_is(200)->$count_response_test($num_of_tenants_before_cascade_delete-2);
 
 #cannot delete a tenant that have a delivery-service
 ok $t->delete_ok('/api/1.2/tenants/' . 10**9)->status_is(400)
