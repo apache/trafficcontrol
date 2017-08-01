@@ -185,13 +185,17 @@ sub generateDbConf {
 
 sub setCdnConfGoPort {
     my $cdnConf = shift;
-    if ( exists $cdnConf->{"traffic_ops_golang_port"} ) {
+    if ( exists $cdnConf->{traffic_ops_golang_port} ) {
         return $cdnConf;
     }
-    my ($port) = $cdnConf->{hypnotoad}->{listen}[0] =~ m/\:(\d+)/;
-    $cdnConf->{hypnotoad}->{listen}[0] =~ s/\:\d+/\:60443/;
-    $cdnConf->{hypnotoad}->{listen}[0] =~ s/https\:\/\/[\:\:]/https\:\/\/127\.0\.0\.1/;
-    $cdnConf->{"traffic_ops_golang_port"} = $port;
+
+    my $listen = $cdnConf->{hypnotoad}{listen}[0];
+    my ($port) = $listen =~ /:(\d+)/;
+    $listen =~ s/:$port/:60443/;
+    $listen =~ s{'https://\[::\]}{'https://127.0.0.1};
+
+    $cdnConf->{traffic_ops_golang_port} = $port;
+    $cdnConf->{hypnotoad}{listen} = [ $listen ];
     return $cdnConf;
 }
 
@@ -232,6 +236,7 @@ sub generateCdnConf {
     }
     $cdnConf = setCdnConfGoPort($cdnConf);
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
+    #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
     InstallUtils::writePerl( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );
 }
@@ -868,7 +873,6 @@ sub main {
     # The generator functions handle checking input/default/automatic mode
     # todbconf will be used later when setting up the database
     my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
-    generateCdnConf( $userInput, $cdnConfFile );
     generateLdapConf( $userInput, $ldapConfFile );
     my $adminconf = generateUsersConf( $userInput, $usersConfFile );
     my $custom_profile = generateProfilesDir( $userInput, $profilesConfFile );
@@ -881,6 +885,7 @@ sub main {
 
     setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
+    generateCdnConf( $userInput, $cdnConfFile );
 
     my $dbh = Database::connect($databaseConfFile, $todbconf);
     if (!$dbh) {
