@@ -77,6 +77,8 @@ func main() {
 	}
 	defer db.Close()
 
+	db.SetMaxOpenConns(cfg.MaxDBConnections)
+
 	if err := RegisterRoutes(ServerData{DB: db, Config: cfg}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		return
