@@ -317,7 +317,7 @@ sub update {
 
     my $name = $params->{name} || $find->name;
     my $configFile = $params->{configFile} || $find->config_file;
-    my $value = $params->{value} || $find->value;
+    my $value = exists($params->{value}) ?  $params->{value} : $find->value;
     my $secure = $find->secure;
     if ( defined($params->{secure}) ) {
          $secure = $params->{secure};
