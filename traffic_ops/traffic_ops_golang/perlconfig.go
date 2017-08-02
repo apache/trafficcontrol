@@ -33,6 +33,7 @@ import (
 
 const OldAccessLogPath = "/var/log/traffic_ops/access.log"
 const NewLogPath = "/var/log/traffic_ops/traffic_ops_golang.log"
+const DefaultMaxDBConnections = 50
 
 func GetPerlConfigs(cdnConfPath string, dbConfPath string) (Config, error) {
 	configBytes, err := ioutil.ReadFile(cdnConfPath)
@@ -70,6 +71,12 @@ func getPerlConfigsFromStrs(cdnConfBytes string, dbConfBytes string) (Config, er
 	cfg.LogLocationWarning = NewLogPath
 	cfg.LogLocationEvent = OldAccessLogPath
 	cfg.LogLocationDebug = log.LogLocationNull
+
+	if dbconf.MaxConnections != nil {
+		cfg.MaxDBConnections = *dbconf.MaxConnections
+	} else {
+		cfg.MaxDBConnections = DefaultMaxDBConnections
+	}
 
 	return cfg, nil
 }
@@ -272,13 +279,14 @@ func getSecret(obj map[string]interface{}) (string, error) {
 }
 
 type DatabaseConf struct {
-	Description string `json:"description"`
-	DBName      string `json:"dbname"`
-	Hostname    string `json:"hostname"`
-	User        string `json:"user"`
-	Password    string `json:"password"`
-	Port        string `json:"port"`
-	Type        string `json:"type"`
+	Description    string `json:"description"`
+	DBName         string `json:"dbname"`
+	Hostname       string `json:"hostname"`
+	User           string `json:"user"`
+	Password       string `json:"password"`
+	Port           string `json:"port"`
+	Type           string `json:"type"`
+	MaxConnections *int   `json:"max_connections"`
 }
 
 func getDbConf(s string) (DatabaseConf, error) {

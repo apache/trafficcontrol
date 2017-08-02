@@ -41,6 +41,7 @@ type Config struct {
 	Insecure           bool     `json:"insecure"`
 	CertPath           string   `json:"cert_path"`
 	KeyPath            string   `json:"key_path"`
+	MaxDBConnections   int      `json:"max_db_connections"`
 	LogLocationError   string   `json:"log_location_error"`
 	LogLocationWarning string   `json:"log_location_warning"`
 	LogLocationInfo    string   `json:"log_location_info"`
