@@ -17,11 +17,6 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="messageContainer">
-    <div ng-show="messageData.messages.loaded">
-        <div class="alert alert-dismissable alert-{{(message.level === 'error') ? 'danger' : message.level}}" ng-repeat="message in messageData.messages.content">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="dismissMessage(message)">&times;</button>
-            <div ng-bind-html="message.text | linky:'_blank'"></div>
-        </div>
-    </div>
+<div id="toolsCntr">
+	<div ui-view="toolsContent"></div>
 </div>

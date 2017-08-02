@@ -451,7 +451,6 @@ sub api_routes {
 	->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 	$r->put("/api/$version/snapshot/:cdn_name")->over( authenticated => 1, not_ldap => 1 )->to( 'Topology#SnapshotCRConfig', namespace => $namespace );
 
-
 	# -- CDNS: METRICS
 	#WARNING: this is an intentionally "unauthenticated" route.
 	$r->get("/api/$version/cdns/metric_types/:metric_type/start_date/:start_date/end_date/:end_date")->to( 'Cdn#metrics', namespace => $namespace );
@@ -608,6 +607,10 @@ sub api_routes {
 	# Supports: ?orderby=key
 	$r->get("/api/$version/hwinfo/dtdata")->over( authenticated => 1, not_ldap => 1 )->to( 'HwInfo#data', namespace => $namespace );
 	$r->get("/api/$version/hwinfo")->over( authenticated => 1, not_ldap => 1 )->to( 'HwInfo#index', namespace => $namespace );
+
+	# -- ISO
+	$r->get("/api/$version/osversions")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#osversions', namespace => $namespace );
+	$r->post("/api/$version/isos")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#generate', namespace => $namespace );
 
 	# -- JOBS (CURRENTLY LIMITED TO INVALIDATE CONTENT (PURGE) JOBS)
 	$r->get("/api/$version/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#index', namespace => $namespace );
