@@ -33,6 +33,7 @@ func main() {
 	toPass := flag.String("topass", "", "The Traffic Ops password")
 	pretty := flag.Bool("pretty", false, "Whether to pretty-print output")
 	host := flag.String("host", "", "The hostname of the server whose config to generate")
+	api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
 	toInsecure := flag.Bool("insecure", false, "Whether to allow invalid certificates with Traffic Ops")
 	flag.Parse()
 
@@ -43,6 +44,34 @@ func main() {
 		os.Exit(1)
 	}
 
+	rules := grove.RemapRules{}
+	if *api == "1.3" {
+		rules, err = createRulesNewAPI(toc, *host)
+	} else {
+		rules, err = createRulesOldAPI(toc, *host) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
+	}
+	if err != nil {
+		fmt.Printf("Error creating rules: %v\n", err)
+		os.Exit(1)
+	}
+
+	jsonRules := grove.RemapRulesToJSON(rules)
+	bts := []byte{}
+	if *pretty {
+		bts, err = json.MarshalIndent(jsonRules, "", "  ")
+	} else {
+		bts, err = json.Marshal(jsonRules)
+	}
+
+	if err != nil {
+		fmt.Printf("Error marshalling rules JSON: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("%s", string(bts))
+	os.Exit(0)
+}
+
+func createRulesOldAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 	cachegroupsArr, err := toc.CacheGroups()
 	if err != nil {
 		fmt.Printf("Error getting Traffic Ops Cachegroups: %v\n", err)
@@ -57,9 +86,9 @@ func main() {
 	}
 	servers := makeServersHostnameMap(serversArr)
 
-	hostServer, ok := servers[*host]
+	hostServer, ok := servers[host]
 	if !ok {
-		fmt.Printf("Error: host '%v' not in Servers\n", *host)
+		fmt.Printf("Error: host '%v' not in Servers\n", host)
 		os.Exit(1)
 	}
 
@@ -92,7 +121,7 @@ func main() {
 
 	serverParameters, err := toc.Parameters(hostServer.Profile)
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Parameters for host '%v' profile '%v': %v\n", *host, hostServer.Profile, err)
+		fmt.Printf("Error getting Traffic Ops Parameters for host '%v' profile '%v': %v\n", host, hostServer.Profile, err)
 		os.Exit(1)
 	}
 
@@ -108,7 +137,7 @@ func main() {
 	//	os.Exit(1)
 	// }
 
-	parents, err := getParents(*host, servers, cachegroups)
+	parents, err := getParents(host, servers, cachegroups)
 	if err != nil {
 		fmt.Printf("Error getting '%v' parents: %v\n", err)
 		os.Exit(1)
@@ -133,26 +162,110 @@ func main() {
 	// 	fmt.Println(parent.HostName)
 	// }
 
-	rules, err := createRules(*host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters)
+	return createRulesOld(host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters)
+}
+
+func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
+	cacheCfg, err := toc.CacheConfig(host)
 	if err != nil {
-		fmt.Printf("Error creating rules: %v\n", err)
+		fmt.Printf("Error getting Traffic Ops Cache Config: %v\n", err)
 		os.Exit(1)
 	}
 
-	jsonRules := grove.RemapRulesToJSON(rules)
-	bts := []byte{}
-	if *pretty {
-		bts, err = json.MarshalIndent(jsonRules, "", "  ")
-	} else {
-		bts, err = json.Marshal(jsonRules)
+	rules := []grove.RemapRule{}
+
+	allowedIPs, err := makeAllowIP(cacheCfg.AllowIP)
+	if err != nil {
+		return grove.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
 	}
 
-	if err != nil {
-		fmt.Printf("Error marshalling rules JSON: %v\n", err)
-		os.Exit(1)
+	weight := DefaultRuleWeight
+	retryNum := DefaultRetryNum
+	timeout := DefaultTimeout
+	parentSelection := DefaultRuleParentSelection
+
+	for _, ds := range cacheCfg.DeliveryServices {
+		protocol := ds.Protocol
+		queryStringRule, err := getQueryStringRule(ds.QueryStringIgnore)
+		if err != nil {
+			return grove.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
+		}
+
+		protocolStrs := []ProtocolStr{}
+		switch protocol {
+		case ProtocolHTTP:
+			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "http"})
+		case ProtocolHTTPS:
+			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
+		case ProtocolHTTPAndHTTPS:
+			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "http"})
+			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
+		case ProtocolHTTPToHTTPS:
+			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "https"})
+			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
+		}
+
+		dsType := strings.ToLower(ds.Type)
+		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
+			fmt.Printf("createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
+			continue
+		}
+
+		for _, protocolStr := range protocolStrs {
+			// regexes, ok := dsRegexes[ds.XMLID]
+			// if !ok {
+			// 	return grove.RemapRules{}, fmt.Errorf("deliveryservice '%v' has no regexes", ds.XMLID)
+			// }
+
+			for _, dsRegex := range ds.Regexes {
+				rule := grove.RemapRule{}
+				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
+				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
+				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, host, dsType, cacheCfg.Domain)
+				for _, parent := range cacheCfg.Parents {
+					to, proxyURLStr := buildToNew(parent, protocolStr.To, ds.OriginFQDN, dsType)
+					proxyURL, err := url.Parse(proxyURLStr)
+					if err != nil {
+						return grove.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.Host, proxyURLStr)
+					}
+
+					ruleTo := grove.RemapRuleTo{
+						RemapRuleToBase: grove.RemapRuleToBase{
+							URL:      to,
+							Weight:   &weight,
+							RetryNum: &retryNum,
+						},
+						ProxyURL:        proxyURL,
+						RetryCodes:      DefaultRetryCodes(),
+						Timeout:         &timeout,
+						ParentSelection: &parentSelection,
+					}
+					rule.To = append(rule.To, ruleTo)
+					// TODO get from TO?
+					rule.RetryNum = &retryNum
+					rule.Timeout = &timeout
+					rule.RetryCodes = DefaultRetryCodes()
+					rule.QueryString = queryStringRule
+					if err != nil {
+						return grove.RemapRules{}, err
+					}
+					rule.ConnectionClose = DefaultRuleConnectionClose
+					rule.ParentSelection = &parentSelection
+					rule.Allow = allowedIPs
+				}
+				rules = append(rules, rule)
+			}
+		}
 	}
-	fmt.Printf("%s", string(bts))
-	os.Exit(0)
+
+	remapRules := grove.RemapRules{
+		Rules:           rules,
+		RetryCodes:      DefaultRetryCodes(),
+		Timeout:         &timeout,
+		ParentSelection: &parentSelection,
+	}
+
+	return remapRules, nil
 }
 
 func makeServersHostnameMap(servers []to.Server) map[string]to.Server {
@@ -309,6 +422,17 @@ func buildTo(parentServer to.Server, protocol string, originURI string, dsType s
 	return to, proxy
 }
 
+// buildToNew returns the to URL, and the Proxy URL (if any)
+func buildToNew(parent to.CacheConfigParent, protocol string, originURI string, dsType string) (string, string) {
+	// TODO add port?
+	to := originURI
+	proxy := ""
+	if !dsTypeSkipsMid(dsType) {
+		proxy = "http://" + parent.Host + "." + parent.Domain + ":" + strconv.FormatUint(uint64(parent.Port), 10)
+	}
+	return to, proxy
+}
+
 const DeliveryServiceQueryStringCacheAndRemap = 0
 const DeliveryServiceQueryStringNoCacheRemap = 1
 const DeliveryServiceQueryStringNoCacheNoRemap = 2
@@ -348,7 +472,10 @@ func getAllowIP(params []to.Parameter) ([]*net.IPNet, error) {
 			ips = append(ips, strings.Split(param.Value, ",")...)
 		}
 	}
+	return makeAllowIP(ips)
+}
 
+func makeAllowIP(ips []string) ([]*net.IPNet, error) {
 	cidrs := make([]*net.IPNet, len(ips))
 	for i, ip := range ips {
 		ip = strings.TrimSpace(ip)
@@ -368,7 +495,7 @@ func getAllowIP(params []to.Parameter) ([]*net.IPNet, error) {
 	return cidrs, nil
 }
 
-func createRules(hostname string, dses []to.DeliveryService, parents []to.Server, dsRegexes map[string][]to.DeliveryServiceRegex, cdns map[string]to.CDN, hostParams []to.Parameter) (grove.RemapRules, error) {
+func createRulesOld(hostname string, dses []to.DeliveryService, parents []to.Server, dsRegexes map[string][]to.DeliveryServiceRegex, cdns map[string]to.CDN, hostParams []to.Parameter) (grove.RemapRules, error) {
 	rules := []grove.RemapRule{}
 	allowedIPs, err := getAllowIP(hostParams)
 	if err != nil {
