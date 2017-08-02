@@ -144,6 +144,7 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 		TOURLStr:           "https://127.0.0.1:60443",
 		CertPath:           "/etc/pki/tls/certs/localhost.crt",
 		KeyPath:            "/etc/pki/tls/private/localhost.key",
+		MaxDBConnections:   DefaultMaxDBConnections,
 		LogLocationError:   NewLogPath,
 		LogLocationWarning: NewLogPath,
 		LogLocationInfo:    NewLogPath,
