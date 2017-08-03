@@ -793,7 +793,7 @@ sub api_routes {
 	# -- USERS: DELIVERY SERVICE ASSIGNMENTS
 	$r->get( "/api/$version/users/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );
 	$r->get("/api/$version/user/:id/deliveryservices/available" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )
-		->to( 'User#get_deliveryservices_not_assigned_to_user', namespace => $namespace );
+		->to( 'User#get_available_deliveryservices_not_assigned_to_user', namespace => $namespace );
 	$r->post("/api/$version/deliveryservice_user")->over( authenticated => 1, not_ldap => 1 )->to( 'User#assign_deliveryservices', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservice_user/:dsId/:userId" => [ dsId => qr/\d+/, userId => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceUser#delete', namespace => $namespace );
 

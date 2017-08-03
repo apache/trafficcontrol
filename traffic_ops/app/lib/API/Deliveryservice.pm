@@ -952,6 +952,16 @@ sub get_deliveryservices_by_userId {
 	my $self    = shift;
 	my $user_id = $self->param('id');
 
+	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden("Forbidden. User tenant is not available to the working user.");
+	}
 	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
@@ -960,6 +970,9 @@ sub get_deliveryservices_by_userId {
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
 			push(
 				@data, {
 					"active"               => \$row->active,

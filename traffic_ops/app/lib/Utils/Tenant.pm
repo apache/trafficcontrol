@@ -242,6 +242,15 @@ sub is_ds_resource_accessible {
     return $self->_is_resource_accessable( $tenants_data, $resource_tenancy);
 }
 
+sub is_ds_resource_accessible_to_tenant {
+    my $self             = shift;
+    my $tenants_data     = shift;
+    my $resource_tenancy = shift;
+    my $user_tenancy = shift;
+
+    return $self->_is_resource_accessable_to_tenant( $tenants_data, $resource_tenancy, $user_tenancy);
+}
+
 sub use_tenancy {
     # With tenancy, the DS/User mapping is no longer required for isolation.
     # So we need a knob to turn of this mechanisem if/as-long it is not depraceted.
