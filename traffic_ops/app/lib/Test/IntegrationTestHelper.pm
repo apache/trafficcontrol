@@ -107,7 +107,7 @@ sub teardown {
 	if ($table_name eq 'Tenant') {
 		my $tenant_utils = Utils::Tenant->new(undef, 10**9, $schema);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		$tenant_utils->cascade_delete_tenants_tree($tenants_data, 10**9);
+		$tenant_utils->cascade_delete_tenants_tree($tenants_data);
 	}
 	else {
 		$schema->resultset($table_name)->delete_all;
