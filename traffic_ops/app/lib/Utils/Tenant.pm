@@ -200,6 +200,18 @@ sub is_root_tenant {
     return !( defined( $tenants_data->{tenants_dict}{$tenant_id}{parent} ) );
 }
 
+sub cascade_delete_tenants_tree {
+    #assuming all relevant tenants are not in use
+    my $self = shift;
+    my $tenants_data = shift;
+    my $tree_root = shift;
+
+    my @tenants = reverse $self->get_hierarchic_tenants_list($tenants_data, $tree_root);
+    foreach my $tenant (@tenants) {
+        $tenant->delete();
+    }
+}
+
 sub is_tenant_resource_accessible {
     my $self             = shift;
     my $tenants_data     = shift;
