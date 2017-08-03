@@ -77,6 +77,15 @@ Built: %(date) by %{getenv: USER}
       go get -v \
     ) || { echo "Could not build go log at $(pwd): $!"; exit 1; }
 
+    # build TO client (dependencies within traffic_control will fail to `go get` unless prebuilt)
+    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/traffic_ops/client/* . && \
+      echo "go getting log at $(pwd)" && \
+      go get -v \
+    ) || { echo "Could not build go Traffic Ops client at $(pwd): $!"; exit 1; }
+
     # build traffic_ops_golang binary
     godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
     oldpwd=$(pwd)
