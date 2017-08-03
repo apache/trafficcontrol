@@ -57,7 +57,7 @@ sub index {
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
-	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
+	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
 		$criteria{'me.id'} = { -in => \@ds_ids },;
@@ -161,7 +161,7 @@ sub show {
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
-	if ( !&is_privileged($self) and !$tenant_utils->ignore_ds_users_table()) {
+	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
 
 		# check to see if deliveryservice is assigned to user, if not return forbidden
 		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !$self->is_delivery_service_assigned($id) );
@@ -1033,7 +1033,7 @@ sub routing {
 	if ( $self->is_valid_delivery_service($id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_oper($self) ) {
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
 				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
@@ -1073,7 +1073,7 @@ sub capacity {
 	if ( $self->is_valid_delivery_service($id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_oper($self) ) {
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
 				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
@@ -1098,7 +1098,7 @@ sub health {
 	if ( $self->is_valid_delivery_service($id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_oper($self) ) {
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
 				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
@@ -1124,7 +1124,7 @@ sub state {
 	if ( $self->is_valid_delivery_service($id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->ignore_ds_users_table() || &is_oper($self) ) {
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
 				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");

@@ -246,7 +246,7 @@ sub remove_server_from_ds {
 	my $server_id	= $self->param('serverId');
 
 	my $tenant_utils = Utils::Tenant->new($self);
-	if ( !&is_privileged($self) && !$tenant_utils->ignore_ds_users_table() && !$self->is_delivery_service_assigned($ds_id) ) {
+	if ( !&is_privileged($self) && !$tenant_utils->use_tenancy() && !$self->is_delivery_service_assigned($ds_id) ) {
 		return $self->forbidden("Forbidden. Delivery service not assigned to user.");
 	}
 
