@@ -166,7 +166,9 @@ sub get_hierarchic_tenants_list {
 #First - adding to the stack the root nodes under which we want to get the tenats
     my @stack = ();
     if ( defined($tree_root) ) {
-        push( @stack, $tree_root );
+        if (exists($tenants_data->{tenants_dict}->{$tree_root})){
+            push( @stack, $tree_root );
+        }
     }
     else {
 # root is not set, putting all roots, using "reverse" as we push it into a stack
