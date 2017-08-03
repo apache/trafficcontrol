@@ -21,6 +21,7 @@ package threadsafe
 
 import (
 	"sync"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
@@ -32,6 +33,7 @@ import (
 // This could be made lock-free, if the performance was necessary
 type UnpolledCaches struct {
 	unpolledCaches *map[enum.CacheName]struct{}
+	seenCaches     *map[enum.CacheName]time.Time
 	allCaches      *map[enum.CacheName]struct{}
 	initialized    *bool
 	m              *sync.RWMutex
@@ -44,6 +46,7 @@ func NewUnpolledCaches() UnpolledCaches {
 		m:              &sync.RWMutex{},
 		unpolledCaches: &map[enum.CacheName]struct{}{},
 		allCaches:      &map[enum.CacheName]struct{}{},
+		seenCaches:     &map[enum.CacheName]time.Time{},
 		initialized:    &b,
 	}
 }
@@ -63,13 +66,22 @@ func (t *UnpolledCaches) setUnpolledCaches(v map[enum.CacheName]struct{}) {
 	t.m.Unlock()
 }
 
+// setUnpolledCaches sets the internal unpolled caches map. This is only safe for one thread of execution. This MUST NOT be called from multiple threads.
+func (t *UnpolledCaches) setSeenCaches(v map[enum.CacheName]time.Time) {
+	t.m.Lock()
+	*t.seenCaches = v
+	t.m.Unlock()
+}
+
 // SetNewCaches takes a list of new caches, which may overlap with the existing caches, diffs them, removes any `unpolledCaches` which aren't in the new list, and sets the list of `polledCaches` (which is only used by this func) to the `newCaches`. This is threadsafe with one writer, along with `setUnpolledCaches`.
 func (t *UnpolledCaches) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
 	allCaches := copyCaches(*t.allCaches) // not necessary to lock `allCaches`, as the single-writer is the only thing that accesses it.
+	seenCaches := copyCachesTime(*t.seenCaches)
 	for cache := range unpolledCaches {
 		if _, ok := newCaches[cache]; !ok {
 			delete(unpolledCaches, cache)
+			delete(seenCaches, cache)
 		}
 	}
 	for cache := range allCaches {
@@ -85,6 +97,7 @@ func (t *UnpolledCaches) SetNewCaches(newCaches map[enum.CacheName]struct{}) {
 	}
 	*t.allCaches = allCaches
 	t.setUnpolledCaches(unpolledCaches)
+	t.setSeenCaches(seenCaches)
 }
 
 // Any returns whether there are any caches marked as not polled. Also returns true if SetNewCaches() has never been called (assuming there exist caches, if this hasn't been initialized, we couldn't have polled any of them).
@@ -103,11 +116,22 @@ func copyCaches(a map[enum.CacheName]struct{}) map[enum.CacheName]struct{} {
 	return b
 }
 
+func copyCachesTime(a map[enum.CacheName]time.Time) map[enum.CacheName]time.Time {
+	b := map[enum.CacheName]time.Time{}
+	for k, v := range a {
+		b[k] = v
+	}
+	return b
+}
+
+const PolledBytesPerSecTimeout = time.Second * 10
+
 // SetPolled sets cache which have been polled. This is used to determine when the app has fully started up, and we can start serving. Serving Traffic Router with caches as 'down' which simply haven't been polled yet would be bad. Therefore, a cache is set as 'polled' if it has received different bandwidths from two different ATS ticks, OR if the cache is marked as down (and thus we won't get a bandwidth).
 // This is threadsafe for one writer, along with `Set`.
 // This is fast if there are no unpolled caches. Moreover, its speed is a function of the number of unpolled caches, not the number of caches total.
 func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.LastStats) {
 	unpolledCaches := copyCaches(t.UnpolledCaches())
+	seenCaches := copyCachesTime(*t.seenCaches)
 	numUnpolledCaches := len(unpolledCaches)
 	if numUnpolledCaches == 0 {
 		return
@@ -123,6 +147,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 			if !result.Available || result.Error != nil || result.Astats.System.NotAvailable {
 				log.Debugf("polled %v\n", cache)
 				delete(unpolledCaches, cache)
+				delete(seenCaches, cache)
 				break innerLoop
 			}
 		}
@@ -130,9 +155,21 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 		if !ok {
 			continue
 		}
+
 		if lastStat.Bytes.PerSec != 0 {
 			log.Debugf("polled %v\n", cache)
 			delete(unpolledCaches, cache)
+			delete(seenCaches, cache)
+		} else {
+			if _, ok := seenCaches[cache]; !ok {
+				seenCaches[cache] = lastStat.Bytes.Time
+			}
+		}
+
+		if seenTime, ok := seenCaches[cache]; ok && time.Since(seenTime) > PolledBytesPerSecTimeout {
+			log.Debugf("polled %v (byte change timed out)\n", cache)
+			delete(unpolledCaches, cache)
+			delete(seenCaches, cache)
 		}
 	}
 
@@ -140,6 +177,7 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 		return
 	}
 	t.setUnpolledCaches(unpolledCaches)
+	t.setSeenCaches(seenCaches)
 	if len(unpolledCaches) != 0 {
 		log.Infof("remaining unpolled %v\n", unpolledCaches)
 	} else {
