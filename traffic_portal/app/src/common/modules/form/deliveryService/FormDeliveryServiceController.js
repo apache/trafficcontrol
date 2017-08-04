@@ -169,9 +169,9 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     };
 
     $scope.manageUrlSigKeys = function() {
-        alert('not hooked up yet: manageUrlSigKeys for DS');
+        $location.path($location.path() + '/urlSigKeys');
     };
-
+    
     $scope.viewStaticDnsEntries = function() {
         $location.path($location.path() + '/static-dns-entries');
     };

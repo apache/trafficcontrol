@@ -38,7 +38,7 @@ sub index {
 	my $type_id      = $self->param('type');
 	my $logs_enabled = $self->param('logsEnabled');
 	my $tenant_id	 = $self->param('tenant');
-
+	my $signed       = $self->param('signed');
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
@@ -57,6 +57,9 @@ sub index {
 	}
 	if ( defined $tenant_id ) {
 		$criteria{'me.tenant_id'} = $tenant_id;
+	}
+	if ( defined $signed ) {
+		$criteria{'me.signed'} = $signed ? 1 : 0;    # converts bool to 0|1
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);

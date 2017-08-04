@@ -151,6 +151,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/configure/deliveryServices/targets/list').name,
         require('./modules/private/configure/deliveryServices/targets/new').name,
         require('./modules/private/configure/deliveryServices/users').name,
+        require('./modules/private/configure/deliveryServices/urlSigKeys').name,
         require('./modules/private/configure/servers').name,
         require('./modules/private/configure/servers/deliveryServices').name,
         require('./modules/private/configure/servers/edit').name,
