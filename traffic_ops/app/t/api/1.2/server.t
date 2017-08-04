@@ -78,28 +78,28 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
             , 'Does the cache group details return?';
 
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/type", "MID" )
+  ->content_like( "/atlanta\-mid\-01/" )
+  ->content_like("/ga\.atlanta\.kabletown\.net/" )
+  ->content_like("/MID/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?cdn=100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-edge-01" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/cdnId", 100 )
+  ->content_like( "/atlanta\-edge\-01/" )
+  ->content_like( "/ga\.atlanta\.kabletown\.net/" )
+  ->content_like( "/100/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?cachegroup=200')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-mid-02" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/cachegroupId", 200 )
+  ->content_like( "/atlanta\-mid\-02/" )
+  ->content_like( "/ga\.atlanta\.kabletown\.net/" )
+  ->content_like( "/200/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/type", "MID" )
-  ->json_is( "/response/0/status", "ONLINE" )
+  ->content_like(  "/atlanta\-mid\-01/" )
+  ->content_like(  "/ga\.atlanta\.kabletown\.net/" )
+  ->content_like(  "/MID/" )
+  ->content_like(  "/ONLINE/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
