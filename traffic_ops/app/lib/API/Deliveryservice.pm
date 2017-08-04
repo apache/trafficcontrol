@@ -296,13 +296,10 @@ sub update {
 		return $self->alert($result);
 	}
 
-	my $xml_id = $params->{xmlId};
-	if ( $ds->xml_id ne $xml_id ) {
-		my $existing = $self->db->resultset('Deliveryservice')->find( { xml_id => $xml_id } );
-		if ($existing) {
-			return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
-		}
-	}
+    my $new_xml_id = $params->{xmlId};
+    if ( $new_xml_id ne $ds->xml_id ) {
+        return $self->alert( "A deliveryservice xmlId is immutable." );
+    }
 	
 	#setting tenant_id to undef if tenant is not set. 
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
@@ -604,7 +601,7 @@ sub create {
 	if ($existing) {
 		return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
 	}
-	
+
 	my $values = {
 		active                 => $params->{active},
 		cacheurl               => $params->{cacheurl},
