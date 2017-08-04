@@ -147,12 +147,18 @@ ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
 #can change its tenancy to child (fail on another reason, currently on missing email,
 # but if it will not be mandatory anymore it should fail on password mismatch)
 ok $t->put_ok('/api/1.2/user/current' => {Accept => 'application/json'} =>
-        json => { user => { tenantId => $tenants_data->{"A1a"}->{'id'},
-                            localPasswd => "pass",
-                            confirmLocalPasswd => "pass2"} } )
-        ->json_is( "/alerts/0/text" => "email is required")
+        json => { user => {
+                    fullName => 'taco bell',
+                    role => 3,
+                    username => 'taco',
+                    email => 'taco@foo.com',
+                    tenantId => $tenants_data->{"A1a"}->{'id'},
+                    localPasswd => "pass",
+                    confirmLocalPasswd => "pass2"
+            } } )
+        ->json_is( "/alerts/0/text" => "localPasswd Your 'New Password' must match the 'Confirm New Password'.")
         ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    , 'Can change my tenancy: tenant: A1?';
+    , 'Does current user update fail when localPasswd != confirmLocalPasswd?';
 logout_from_tenant();
 #access to himself
 test_tenants_allow_access ("A1", "A1", $tenants_data);
