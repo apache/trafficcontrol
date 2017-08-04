@@ -557,6 +557,11 @@ sub api_routes {
 		->to( 'KeysUrlSig#copy_url_sig_keys', namespace => 'API::DeliveryService' );
 	$r->get("/api/$version/deliveryservices/xmlId/:xmlId/urlkeys")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'KeysUrlSig#view_by_xmlid', namespace => 'API::DeliveryService' );
+	# -- DELIVERY SERVICE: VIEW URL SIG KEYS BY ID
+	$r->get("/api/$version/deliveryservices/:id/urlkeys")->over( authenticated => 1, not_ldap => 1 )
+		->to( 'KeysUrlSig#view_by_id', namespace => 'API::DeliveryService' );
+
+
 
 	# -- DELIVERY SERVICE: REGEXES
 	$r->get("/api/$version/deliveryservices_regexes")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceRegexes#all', namespace => $namespace );

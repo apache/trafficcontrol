@@ -27,6 +27,32 @@ use constant URL_SIG_KEYS_BUCKET => "url_sig_keys";
 use Exporter qw(import);
 our @EXPORT_OK = qw(URL_SIG_KEYS_BUCKET);
 
+
+sub view_by_id {
+	my $self                = shift;
+	my $id              = $self->param('id');
+	my $rs = $self->db->resultset("Deliveryservice")->find( { id => $id } ); 
+	my $xml_id;
+	if ( defined($rs) ) {
+		$xml_id = $rs->xml_id;
+	}
+	else {
+		return $self->alert("Delivery Service '$id' does not exist.");
+	}
+
+	my $config_file = $self->url_sig_config_file_name($xml_id);
+	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $config_file );
+	my $rc                  = $response_container->{"response"}->{_rc};
+	if ( $rc eq '200' ) {
+		my $url_sig_values_json = decode_json( $response_container->{"response"}->{_content} );
+		return $self->success($url_sig_values_json);
+	} else {
+		my $error_msg = $response_container->{"response"}->{_content};
+		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
+		return $self->alert("Unable to retrieve keys from Delivery Service '$xml_id'");
+	} 
+}
+
 sub view_by_xmlid {
 	my $self                = shift;
 	my $xml_id              = $self->param('xmlId');
@@ -124,6 +150,7 @@ sub copy_url_sig_keys {
 				my $response           = $response_container->{"response"};
 				my $rc                 = $response->{_rc};
 				if ( $rc eq '204' ) {
+					&log( $self, "copied url_sig_keys from " . $copy_from_xml_id . " to " . $xml_id, "APICHANGE" );
 					return $self->success_message("Successfully copied and stored keys");
 				}
 				else {
@@ -152,7 +179,6 @@ sub generate {
 	$self->app->log->info( "Generating New keys for config_file:  " . $config_file );
 
 	my $current_user = $self->current_user()->{username};
-	&log( $self, "Generated new url_sig_keys for " . $xml_id, "APICHANGE" );
 
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
@@ -180,6 +206,7 @@ sub generate {
 				my $response           = $response_container->{"response"};
 				my $rc                 = $response->{_rc};
 				if ( $rc eq '204' ) {
+					&log( $self, "Generated new url_sig_keys for " . $xml_id, "APICHANGE" );
 					return $self->success_message("Successfully generated and stored keys");
 				}
 				else {
