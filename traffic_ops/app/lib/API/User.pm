@@ -650,7 +650,7 @@ sub is_valid {
 		checks => [
 
 			# All of these are required
-			[qw/full_name username email role/] => is_required("is required"),
+			[qw/fullName username email role/] => is_required("is required"),
 
 			# pass2 must be equal to pass
 			localPasswd => sub {
