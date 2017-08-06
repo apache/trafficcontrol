@@ -72,12 +72,6 @@ func getPerlConfigsFromStrs(cdnConfBytes string, dbConfBytes string) (Config, er
 	cfg.LogLocationEvent = OldAccessLogPath
 	cfg.LogLocationDebug = log.LogLocationNull
 
-	if dbconf.MaxConnections != nil {
-		cfg.MaxDBConnections = *dbconf.MaxConnections
-	} else {
-		cfg.MaxDBConnections = DefaultMaxDBConnections
-	}
-
 	return cfg, nil
 }
 
@@ -115,6 +109,13 @@ func getCDNConf(s string) (Config, error) {
 		return Config{}, err
 	}
 
+	if dbMaxConns, err := getDBMaxConns(obj); err != nil {
+		log.Warnf("failed to get Max DB Connections from cdn.conf (%v), using default %v\n", err, DefaultMaxDBConnections)
+		cfg.MaxDBConnections = DefaultMaxDBConnections
+	} else {
+		cfg.MaxDBConnections = dbMaxConns
+	}
+
 	return cfg, nil
 }
 
@@ -133,6 +134,18 @@ func getPort(obj map[string]interface{}) (string, error) {
 		return "", fmt.Errorf("invalid port '%s'", portStr)
 	}
 	return strconv.Itoa(port), nil
+}
+
+func getDBMaxConns(obj map[string]interface{}) (int, error) {
+	inum, ok := obj["traffic_ops_golang_max_db_connections"]
+	if !ok {
+		return 0, fmt.Errorf("missing traffic_ops_golang_max_db_connections key")
+	}
+	num, ok := inum.(float64)
+	if !ok {
+		return 0, fmt.Errorf("traffic_ops_golang_max_db_connections key '%v' type %T not a number", inum, inum)
+	}
+	return int(num), nil
 }
 
 func getOldPort(obj map[string]interface{}) (string, error) {
@@ -279,14 +292,13 @@ func getSecret(obj map[string]interface{}) (string, error) {
 }
 
 type DatabaseConf struct {
-	Description    string `json:"description"`
-	DBName         string `json:"dbname"`
-	Hostname       string `json:"hostname"`
-	User           string `json:"user"`
-	Password       string `json:"password"`
-	Port           string `json:"port"`
-	Type           string `json:"type"`
-	MaxConnections *int   `json:"max_connections"`
+	Description string `json:"description"`
+	DBName      string `json:"dbname"`
+	Hostname    string `json:"hostname"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	Port        string `json:"port"`
+	Type        string `json:"type"`
 }
 
 func getDbConf(s string) (DatabaseConf, error) {
