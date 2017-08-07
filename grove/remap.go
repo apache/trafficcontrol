@@ -442,7 +442,8 @@ func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string,
 	for i := 0; i < failures; i++ {
 		iter = iter.NextWrap()
 	}
-	fmt.Printf("DEBUGL uriGetToConsistentHash returning iter.Val().Name %v\n", iter.Val().Name)
+
+	fmt.Printf("DEBUGL uriGetToConsistentHash fromURI %v returning iter.Val().Name %v iter.Val().ProxyURL %v iter.Index() %v\n", fromURI, iter.Val().Name, iter.Val().ProxyURL, iter.Index())
 	return iter.Val().Name, iter.Val().ProxyURL
 }
 
@@ -565,9 +566,10 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 	return rules, nil
 }
 
+const DefaultReplicas = 1024
+
 func makeRuleHash(rule RemapRule) ATSConsistentHash {
-	replicas := 100 // TODO put in config?
-	h := NewSimpleATSConsistentHash(replicas)
+	h := NewSimpleATSConsistentHash(DefaultReplicas)
 	for _, to := range rule.To {
 		h.Insert(&ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL}, *to.Weight)
 	}

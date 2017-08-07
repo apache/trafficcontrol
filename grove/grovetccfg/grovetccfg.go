@@ -143,6 +143,10 @@ func createRulesOldAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 		os.Exit(1)
 	}
 
+	sameCDN := func(s to.Server) bool {
+		return s.CDNName == hostServer.CDNName
+	}
+
 	serverAvailable := func(s to.Server) bool {
 		status := strings.ToLower(s.Status)
 		statuses := AvailableStatuses()
@@ -156,7 +160,9 @@ func createRulesOldAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 	// 	os.Exit(1)
 	// }
 
+	parents = filterParents(parents, sameCDN)
 	parents = filterParents(parents, serverAvailable)
+
 	// fmt.Println("Parents:")
 	// for _, parent := range parents {
 	// 	fmt.Println(parent.HostName)

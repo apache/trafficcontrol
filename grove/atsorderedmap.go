@@ -1,6 +1,7 @@
 package grove
 
 import (
+	"fmt"
 	"net/url"
 	"sort"
 	"time"
@@ -53,6 +54,7 @@ type OrderedMapUint64NodeIterator interface {
 
 type OrderedMapUint64Node interface {
 	Insert(key uint64, val *ATSConsistentHashNode)
+	InsertBulk(keys []uint64, vals []*ATSConsistentHashNode) error
 	First() OrderedMapUint64NodeIterator
 	Last() OrderedMapUint64NodeIterator
 	At(index int) (uint64, *ATSConsistentHashNode)
@@ -78,6 +80,18 @@ func (m *SimpleOrderedMapUInt64Node) Insert(key uint64, val *ATSConsistentHashNo
 	m.M[key] = val
 	m.O = append(m.O, key)
 	sort.Sort(SortableUint64(m.O))
+}
+
+func (m *SimpleOrderedMapUInt64Node) InsertBulk(keys []uint64, vals []*ATSConsistentHashNode) error {
+	if len(keys) != len(vals) {
+		return fmt.Errorf("SimpleOrderedMapUInt64Node InsertBulk failed - len(keys) != len(vals)")
+	}
+	for i := 0; i < len(keys); i++ {
+		m.M[keys[i]] = vals[i]
+		m.O = append(m.O, keys[i])
+	}
+	sort.Sort(SortableUint64(m.O))
+	return nil
 }
 
 func (m *SimpleOrderedMapUInt64Node) LowerBound(key uint64) OrderedMapUint64NodeIterator {

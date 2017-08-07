@@ -2,6 +2,8 @@ package grove
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 )
 
 // This is specifically designed to match the Apache Traffic Server Parent Selection Consistent Hash, so that Grove deployed alongside ATS will hash to the same parent (mid-tier) caches, and thus result in the same mids caching the same content
@@ -40,16 +42,24 @@ func NewSimpleATSConsistentHash(replicas int) ATSConsistentHash {
 }
 
 func round(f float64) int {
-	return int(f + 0.5)
+	if math.Abs(f) < 0.5 {
+		return 0
+	}
+	return int(f + math.Copysign(0.5, f))
 }
 
 func (h *SimpleATSConsistentHash) Insert(node *ATSConsistentHashNode, weight float64) error {
-	for i := 0; i < round(float64(h.Replicas)*weight); i++ {
-		hashStr := fmt.Sprintf("%d-%s", i, node)
+	numInserts := round(float64(h.Replicas) * weight)
+	keys := make([]uint64, numInserts)
+	vals := make([]*ATSConsistentHashNode, numInserts)
+	for i := 0; i < numInserts; i++ {
+		hashStr := strconv.Itoa(i) + "-" + node.String()
 		hashKey := ConsistentHash(hashStr)
-		h.NodeMap.Insert(hashKey, node)
+		keys[i] = hashKey
+		vals[i] = node
 	}
-	return nil
+	err := h.NodeMap.InsertBulk(keys, vals)
+	return err
 }
 
 func (h *SimpleATSConsistentHash) First() OrderedMapUint64NodeIterator {
