@@ -30,6 +30,9 @@ module.exports = function (grunt) {
     // load grunt task configurations
     require('load-grunt-config')(grunt);
 
+    // load string replacement functionality. used to add query params to index.html to bust cache on upgrade
+    require('grunt-string-replace')(grunt);
+
     // default task - when you type 'grunt' it really runs as 'grunt dev'
     grunt.registerTask('default', ['dev']);
 
@@ -50,6 +53,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build', [
         'clean',
         'copy:dist',
+        'string-replace',
         'build-css',
         'build-js',
         'build-shared-libs'
@@ -58,6 +62,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build-dev', [
         'clean',
         'copy:dev',
+        'string-replace',
         'build-css-dev',
         'build-js-dev',
         'build-shared-libs-dev'
