@@ -47,7 +47,7 @@ type BasicServer struct {
 	IP6        string `json:"ip6"`
 	Port       int    `json:"port"`
 	Cachegroup string `json:"cachegroup"`
-	HostName   string `json:"hostName"`
+	HostName   string `json:"hostname"`
 	FQDN       string `json:"fqdn"`
 }
 
@@ -57,9 +57,9 @@ type Monitor struct {
 
 type Cache struct {
 	BasicServer
-	InterfaceName string `json:"interfaceName"`
+	InterfaceName string `json:"interfacename"`
 	Type          string `json:"type"`
-	HashID        string `json:"hashId"`
+	HashID        string `json:"hashid"`
 }
 
 type Cachegroup struct {
