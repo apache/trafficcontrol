@@ -64,11 +64,12 @@ func TestGetCDNConf(t *testing.T) {
 `
 
 	expected := Config{
-		HTTPPort: "443",
-		TOSecret: "walrus",
-		TOURLStr: "https://127.0.0.1:60443",
-		CertPath: "/etc/pki/tls/certs/localhost.crt",
-		KeyPath:  "/etc/pki/tls/private/localhost.key",
+		HTTPPort:         "443",
+		TOSecret:         "walrus",
+		TOURLStr:         "https://127.0.0.1:60443",
+		CertPath:         "/etc/pki/tls/certs/localhost.crt",
+		KeyPath:          "/etc/pki/tls/private/localhost.key",
+		MaxDBConnections: 50,
 	}
 	err := error(nil)
 	if expected.TOURL, err = url.Parse(expected.TOURLStr); err != nil {
