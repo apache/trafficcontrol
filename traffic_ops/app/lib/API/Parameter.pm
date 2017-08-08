@@ -290,8 +290,12 @@ sub create {
             })
     }
     $self->db->txn_commit();
+
+    my $msg = scalar(@new_parameters) . " parameters created";
+    &log( $self, $msg, "APICHANGE" );
+
     my $response  = \@new_parameters;
-    return $self->success($response, "Create ". scalar(@new_parameters) . " parameters successfully.");
+    return $self->success($response, $msg);
 }
 
 sub update {
@@ -332,6 +336,9 @@ sub update {
         }
     );
 
+    my $msg = "Parameter [ $name ] updated";
+    &log( $self, $msg, "APICHANGE" );
+
     my $response;
     $response->{id}     = $find->id;
     $response->{name}   = $find->name;
@@ -339,7 +346,7 @@ sub update {
     $response->{value}  = $find->value;
     $response->{secure} = $find->secure;
 
-    return $self->success($response, "Parameter was successfully edited.");
+    return $self->success($response, $msg);
 }
 
 sub delete {
@@ -366,7 +373,11 @@ sub delete {
     }
  
     $find->delete();
-    return $self->success_message("Parameter was successfully deleted.");
+
+    my $msg = "Parameter [ " . $find->name . " ] deleted";
+    &log( $self, $msg, "APICHANGE" );
+
+    return $self->success_message($msg);
 }
 
 sub validate {
