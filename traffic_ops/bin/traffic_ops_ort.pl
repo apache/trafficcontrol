@@ -1633,9 +1633,7 @@ sub check_lwp_response_content_length {
 	my $url           = $lwp_response->request->uri;
 
 	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n";
-		exit;
-		return 1;
+		return 0; # Content-Length MAY be omitted per HTTP/1.1 RFC 7230, and in fact MUST NOT be included with a 'Transfer-Encoding: Chunked' header, which MUST be accepted by clients.
 	}
 	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
 		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
