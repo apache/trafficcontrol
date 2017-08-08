@@ -23,6 +23,7 @@ import (
 
 type ATSConsistentHash interface {
 	Insert(node *ATSConsistentHashNode, weight float64) error
+	String() string
 	// Lookup returns the found node, its map iterator, and whether the lookup wrapped
 	Lookup(name string) (OrderedMapUint64NodeIterator, bool, error)
 	LookupHash(hashVal uint64) (OrderedMapUint64NodeIterator, bool)
@@ -48,12 +49,16 @@ func round(f float64) int {
 	return int(f + math.Copysign(0.5, f))
 }
 
+func (h *SimpleATSConsistentHash) String() string {
+	return h.NodeMap.String()
+}
+
 func (h *SimpleATSConsistentHash) Insert(node *ATSConsistentHashNode, weight float64) error {
 	numInserts := round(float64(h.Replicas) * weight)
 	keys := make([]uint64, numInserts)
 	vals := make([]*ATSConsistentHashNode, numInserts)
 	for i := 0; i < numInserts; i++ {
-		hashStr := strconv.Itoa(i) + "-" + node.String()
+		hashStr := strconv.Itoa(i) + "-" + node.ProxyURL.Hostname()
 		hashKey := ConsistentHash(hashStr)
 		keys[i] = hashKey
 		vals[i] = node
