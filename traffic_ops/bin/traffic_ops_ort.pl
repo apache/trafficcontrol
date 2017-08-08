@@ -1267,12 +1267,19 @@ sub check_plugins {
 			foreach my $i ( 1..$#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
 				if (defined( $plugin_config_file ) ) {
-					($plugin_config_file) = split( /\s+/, $plugin_config_file);
-					( my @parts ) = split( /\//, $plugin_config_file );
-					$plugin_config_file = $parts[$#parts];
-					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
-						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
+					# Subblock for lasting out of.
+					{
+						($plugin_config_file) = split( /\s+/, $plugin_config_file);
+
+						# Skip parameters that start with '-', since those are probabably parameters, not config files.
+						last if $plugin_config_file =~ m/^-/; # Exit subblock.
+
+						( my @parts ) = split( /\//, $plugin_config_file );
+						$plugin_config_file = $parts[$#parts];
+						$plugin_config_file =~ s/\s+//g;
+						if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
+							$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
+						}
 					}
 				}
 				else {
