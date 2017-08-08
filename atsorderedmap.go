@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -54,6 +55,7 @@ type OrderedMapUint64NodeIterator interface {
 
 type OrderedMapUint64Node interface {
 	Insert(key uint64, val *ATSConsistentHashNode)
+	String() string
 	InsertBulk(keys []uint64, vals []*ATSConsistentHashNode) error
 	First() OrderedMapUint64NodeIterator
 	Last() OrderedMapUint64NodeIterator
@@ -86,9 +88,15 @@ func (m *SimpleOrderedMapUInt64Node) InsertBulk(keys []uint64, vals []*ATSConsis
 	if len(keys) != len(vals) {
 		return fmt.Errorf("SimpleOrderedMapUInt64Node InsertBulk failed - len(keys) != len(vals)")
 	}
+
 	for i := 0; i < len(keys); i++ {
+		// fmt.Println("InsertBulk " + strconv.FormatUint(keys[i], 10) + ": " + vals[i].String() + " " + vals[i].ProxyURL.String())
 		m.M[keys[i]] = vals[i]
-		m.O = append(m.O, keys[i])
+	}
+
+	m.O = nil // clear, in case there were previous inserts
+	for k, _ := range m.M {
+		m.O = append(m.O, k)
 	}
 	sort.Sort(SortableUint64(m.O))
 	return nil
@@ -102,6 +110,18 @@ func (m *SimpleOrderedMapUInt64Node) LowerBound(key uint64) OrderedMapUint64Node
 		}
 	}
 	return nil
+}
+
+func (m *SimpleOrderedMapUInt64Node) String() string {
+	s := ""
+	i := m.First()
+	for {
+		if i == nil {
+			return s
+		}
+		s += strconv.FormatUint(i.Key(), 10) + ": " + i.Val().String() + " " + i.Val().ProxyURL.String() + "\n"
+		i = i.Next()
+	}
 }
 
 // First returns the iterator to the first element in the map. Returns nil if the map is empty

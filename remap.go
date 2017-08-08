@@ -149,7 +149,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 		return Remapping{}, false, ErrNoMoreRetries
 	}
 
-	newUri, proxyURL := p.rule.URI(p.oldURI, p.failures)
+	newUri, proxyURL := p.rule.URI(p.oldURI, r.URL.Path, r.URL.RawQuery, p.failures)
 	p.failures++
 	newReq, err := http.NewRequest(r.Method, newUri, nil)
 	if err != nil {
@@ -398,8 +398,14 @@ type QueryStringRule struct {
 }
 
 // URI takes a request URI and maps it to the real URI to proxy-and-cache. The `failures` parameter indicates how many parents have tried and failed, indicating to skip to the nth hashed parent. Returns the URI to request, and the proxy URL (if any)
-func (r RemapRule) URI(fromURI string, failures int) (string, *url.URL) {
-	to, proxyURI := r.uriGetTo(fromURI, failures)
+func (r RemapRule) URI(fromURI string, path string, query string, failures int) (string, *url.URL) {
+	fromHash := path
+	if r.QueryString.Remap && query != "" {
+		fromHash += "?" + query
+	}
+
+	// fmt.Println("RemapRule.URI fromURI " + fromHash)
+	to, proxyURI := r.uriGetTo(fromHash, failures)
 	uri := to + fromURI[len(r.From):]
 	if !r.QueryString.Remap {
 		if i := strings.Index(uri, "?"); i != -1 {
@@ -422,7 +428,7 @@ func (r RemapRule) uriGetTo(fromURI string, failures int) (string, *url.URL) {
 
 // uriGetToConsistentHash is a helper func for URI, uriGetTo. It returns the To URL using Consistent Hashing. In the event of failure, it logs the error and returns the first parent. Also returns the Proxy URI (if any).
 func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string, *url.URL) {
-	fmt.Printf("DEBUGL uriGetToConsistentHash RemapRule %+v\n", r)
+	// fmt.Printf("DEBUGL uriGetToConsistentHash RemapRule %+v\n", r)
 	if r.ConsistentHash == nil {
 		log.Errorf("RemapRule.URI: Rule '%v': Parent Selection Type ConsistentHash, but rule.ConsistentHash is nil! Using first parent\n", r.Name)
 		return r.To[0].URL, r.To[0].ProxyURL
@@ -576,6 +582,9 @@ func makeRuleHash(rule RemapRule) ATSConsistentHash {
 	if h.First() == nil {
 		fmt.Printf("DEBUGLL makeRuleHash %v NodeMap empty!\n", rule.Name)
 	}
+
+	// fmt.Println("makeRuleHash " + rule.Name + ":\n" + h.String())
+
 	return h
 }
 
