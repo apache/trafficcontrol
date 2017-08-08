@@ -228,7 +228,7 @@ sub copy {
 	my $self = shift;
 
 	if ( !&is_oper($self) ) {
-		return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+		return $self->forbidden();
 	}
 
 	my $name                   = $self->param('profile_name');
@@ -251,7 +251,7 @@ sub copy {
 		return $self->alert("profile_copy_from $profile_copy_from_name doesn't exist.");
 	}
 	my $profile_copy_from_id = $row1->id;
-	my $description          = $row1->description;
+	my $description          = "";
 
 	my $cdn = $row1->cdn;
 	my $type = $row1->type;
@@ -280,8 +280,9 @@ sub copy {
 			$insert->insert();
 		}
 	}
+	my $msg = "Created new profile [ $name ] from existing profile [ $profile_copy_from_name ]";
 
-	&log( $self, "Created profile from copy with id: " . $new_id . " and name: " . $name, "APICHANGE" );
+	&log( $self, $msg, "APICHANGE" );
 
 	my $response;
 	$response->{id}              = $new_id;
@@ -289,7 +290,7 @@ sub copy {
 	$response->{description}     = $description;
 	$response->{profileCopyFrom} = $profile_copy_from_name;
 	$response->{idCopyFrom}      = $profile_copy_from_id;
-	return $self->success($response);
+	return $self->success($response, $msg);
 }
 
 sub update {

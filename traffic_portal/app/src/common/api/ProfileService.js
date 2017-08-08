@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ProfileService = function(Restangular, locationUtils, messageModel) {
+var ProfileService = function(Restangular, $http, locationUtils, messageModel, ENV) {
 
     this.getProfiles = function(queryParams) {
         return Restangular.all('profiles').getList(queryParams);
@@ -72,8 +72,20 @@ var ProfileService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one('parameters', paramId).getList('unassigned_profiles');
     };
 
+    this.cloneProfile = function(sourceName, cloneName) {
+        return $http.post(ENV.api['root'] + "profiles/name/" + cloneName + "/copy/" + sourceName)
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, true);
+                    locationUtils.navigateToPath('/admin/profiles/' + result.data.response.id);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
 
 };
 
-ProfileService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+ProfileService.$inject = ['Restangular', '$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ProfileService;
