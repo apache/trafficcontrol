@@ -982,9 +982,13 @@ sub catch_all {
 			my $self = shift;
 
 			if ( defined( $self->current_user() ) ) {
-				$self->render( template => "not_found", status => 404 );
-			}
-			else {
+				if ( &UI::Utils::is_ldap( $self ) ) {
+					my $config = $self->app->config;
+					$self->render( template => "no_account", no_account_found_msg => $config->{'to'}{'no_account_found_msg'}, status => 403 );
+				} else {
+					$self->render( template => "not_found", status => 404 );
+				}
+			} else {
 				$self->flash( login_msg => "Unauthorized . Please log in ." );
 				$self->render( controller => 'cdn', action => 'loginpage', layout => undef, status => 401 );
 			}
