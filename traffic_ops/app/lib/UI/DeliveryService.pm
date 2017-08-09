@@ -845,7 +845,6 @@ sub update {
 		my $upd_ssl = 0;
 		#print Dumper( \%hash );
 		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
-		$upd_ssl = 1 if $update->xml_id ne $hash{xml_id};
 		my $old_hostname = UI::SslKeys::get_hostname($self, $id, $update);
 		$update->update( \%hash );
 		$update->update();
