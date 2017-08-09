@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+
+	"github.com/dchest/siphash"
 )
 
 // This is specifically designed to match the Apache Traffic Server Parent Selection Consistent Hash, so that Grove deployed alongside ATS will hash to the same parent (mid-tier) caches, and thus result in the same mids caching the same content
@@ -58,8 +60,13 @@ func (h *SimpleATSConsistentHash) Insert(node *ATSConsistentHashNode, weight flo
 	keys := make([]uint64, numInserts)
 	vals := make([]*ATSConsistentHashNode, numInserts)
 	for i := 0; i < numInserts; i++ {
-		hashStr := strconv.Itoa(i) + "-" + node.ProxyURL.Hostname()
-		hashKey := ConsistentHash(hashStr)
+		hashStr := ""
+		if node.ProxyURL != nil {
+			hashStr = strconv.Itoa(i) + "-" + node.ProxyURL.Hostname()
+		} else {
+			hashStr = strconv.Itoa(i) + "-" + node.Name
+		}
+		hashKey := siphash.Hash(0, 0, []byte(hashStr))
 		keys[i] = hashKey
 		vals[i] = node
 	}
@@ -80,7 +87,7 @@ func (h *SimpleATSConsistentHash) Lookup(name string) (OrderedMapUint64NodeItera
 		return nil, false, fmt.Errorf("lookup name is empty")
 	}
 
-	hashVal := ConsistentHash(name)
+	hashVal := siphash.Hash(0, 0, []byte(name))
 	iter = h.NodeMap.LowerBound(hashVal)
 
 	wrapped := false
