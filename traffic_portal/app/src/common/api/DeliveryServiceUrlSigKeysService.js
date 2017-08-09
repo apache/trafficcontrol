@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceUrlSigKeysService = function(Restangular, locationUtils, messageModel, $http, $q, ENV) {
+var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $http, $q, ENV) {
 
 	this.generateUrlSigKeys = function(dsXmlId) {
 		var request = $q.defer();
@@ -66,5 +66,5 @@ var DeliveryServiceUrlSigKeysService = function(Restangular, locationUtils, mess
 	};
 };
 
-DeliveryServiceUrlSigKeysService.$inject = ['Restangular', 'locationUtils', 'messageModel', '$http', '$q', 'ENV'];
+DeliveryServiceUrlSigKeysService.$inject = ['locationUtils', 'messageModel', '$http', '$q', 'ENV'];
 module.exports = DeliveryServiceUrlSigKeysService;
