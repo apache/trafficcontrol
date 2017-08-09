@@ -281,9 +281,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxMbps), 'has-feedback': hasError(deliveryServiceForm.globalMaxMbps)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Global Max Mbps</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="globalMaxMbps" name="globalMaxMbps" type="text" class="form-control" placeholder="Max bits per second allowed globally (4T or 500M)" ng-model="deliveryService.globalMaxMbps" ng-maxlength="11" ng-pattern="/(^4T$|^500M$)/" autofocus>
+                    <input id="globalMaxMbps" name="globalMaxMbps" type="text" class="form-control" placeholder="Max bits per second allowed globally" ng-model="deliveryService.globalMaxMbps" ng-maxlength="11" ng-pattern="/^\d+$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxMbps, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxMbps, 'pattern')">4T or 500M</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxMbps, 'pattern')">Number</small>
                     <span ng-show="hasError(deliveryServiceForm.globalMaxMbps)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -291,8 +291,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxTps), 'has-feedback': hasError(deliveryServiceForm.globalMaxTps)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Global Max TPS</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="globalMaxTps" name="globalMaxTps" type="text" class="form-control" placeholder="Max transactions per second allowed globally" ng-model="deliveryService.globalMaxTps" ng-maxlength="11" autofocus>
+                    <input id="globalMaxTps" name="globalMaxTps" type="text" class="form-control" placeholder="Max transactions per second allowed globally" ng-model="deliveryService.globalMaxTps" ng-maxlength="11" ng-pattern="/^\d+$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxTps, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.globalMaxTps, 'pattern')">Number</small>
                     <span ng-show="hasError(deliveryServiceForm.globalMaxTps)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
