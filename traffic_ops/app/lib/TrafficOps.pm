@@ -349,7 +349,7 @@ sub setup_mojo_plugins {
 
 	$self->plugin(
 		AccessLog => {
-			log    => "$logging_root_dir/access.log",
+			log    => "$logging_root_dir/perl_access.log",
 			uname_helper => 'set_username',
 			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
 		}

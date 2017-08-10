@@ -225,7 +225,7 @@ sub writePerl {
     my $dumper = Data::Dumper->new( [$data] );
 
     # print without var names and with simple indentation
-    print $fh $dumper->Terse(1)->Dump();
+    print $fh $dumper->Quotekeys(0)->Terse(1)->Dump();
     close $fh;
 }
 
