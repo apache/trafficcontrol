@@ -171,6 +171,7 @@ var trafficPortal = angular.module('trafficPortal', [
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/delete').name,
+        require('./common/modules/dialog/input').name,
         require('./common/modules/dialog/reset').name,
         require('./common/modules/dialog/select').name,
         require('./common/modules/dialog/select/status').name,
