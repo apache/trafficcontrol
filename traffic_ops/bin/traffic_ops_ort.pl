@@ -1414,7 +1414,10 @@ sub lwp_get {
 			$request = $uri;
 			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
 		}
-
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/) && $rev_proxy_in_use == 1 ) {
+			$request = $to_url . $uri;
+			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
+		}
 
 		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
@@ -2952,3 +2955,4 @@ sub log_level_to_string {
 		}
 	}
 }
+
