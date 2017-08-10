@@ -165,7 +165,7 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     };
 
     $scope.manageSslKeys = function() {
-        alert('not hooked up yet: manageSslKeys for DS');
+        $location.path($location.path() + '/ssl-keys');
     };
 
     $scope.manageUrlSigKeys = function() {
