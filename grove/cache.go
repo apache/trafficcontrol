@@ -184,7 +184,7 @@ func GetAndCache(
 			return NewCacheObj(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
 
-		log.Errorf("DEBUGS GetAndCache request returned %v headers %+v\n", respCode, respHeader)
+		log.Debugf("GetAndCache request returned %v headers %+v\n", respCode, respHeader)
 		respRespTime, ok := GetHTTPDate(respHeader, "Date")
 		if !ok {
 			log.Errorf("request %v returned no Date header - RFC Violation!\n", req.RequestURI)
