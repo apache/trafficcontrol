@@ -24,10 +24,28 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
 	});
 
 	$scope.generateUrlSigKeys = function() {
-		deliveryServiceUrlSigKeysService.generateUrlSigKeys(deliveryService.xmlId).then(
-			function() {
-			$state.reload();
-		});
+        var params = {
+            title: 'Confirmation required',
+            message: 'Are you sure you want to generate new URL signature keys for ' + deliveryService.displayName + '?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result
+            .then(
+            function() {
+                deliveryServiceUrlSigKeysService.generateUrlSigKeys(deliveryService.xmlId).then(
+                function() {
+                    $scope.refresh();
+                });
+            });
 	};
 
 	$scope.refresh = function() {
