@@ -1,10 +1,9 @@
 package grove
 
 import (
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"net"
 	"sync"
-
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 type ConnMap struct {
