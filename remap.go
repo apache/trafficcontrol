@@ -434,13 +434,13 @@ func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string,
 		return r.To[0].URL, r.To[0].ProxyURL
 	}
 
-	fmt.Printf("DEBUGL uriGetToConsistentHash\n")
+	// fmt.Printf("DEBUGL uriGetToConsistentHash\n")
 	iter, _, err := r.ConsistentHash.Lookup(fromURI)
 	if err != nil {
-		if r.ConsistentHash.First() == nil {
-			fmt.Printf("DEBUGL uriGetToConsistentHash NodeMap empty!\n")
-		}
-		fmt.Printf("DEBUGL uriGetToConsistentHash fromURI '%v' err %v returning '%v'\n", fromURI, err, r.To[0].URL)
+		// if r.ConsistentHash.First() == nil {
+		// 	fmt.Printf("DEBUGL uriGetToConsistentHash NodeMap empty!\n")
+		// }
+		// fmt.Printf("DEBUGL uriGetToConsistentHash fromURI '%v' err %v returning '%v'\n", fromURI, err, r.To[0].URL)
 		log.Errorf("RemapRule.URI: Rule '%v': Error looking up Consistent Hash! Using first parent\n", r.Name)
 		return r.To[0].URL, r.To[0].ProxyURL
 	}
@@ -449,7 +449,7 @@ func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string,
 		iter = iter.NextWrap()
 	}
 
-	fmt.Printf("DEBUGL uriGetToConsistentHash fromURI %v returning iter.Val().Name %v iter.Val().ProxyURL %v iter.Index() %v\n", fromURI, iter.Val().Name, iter.Val().ProxyURL, iter.Index())
+	// fmt.Printf("DEBUGL uriGetToConsistentHash fromURI %v returning iter.Val().Name %v iter.Val().ProxyURL %v iter.Index() %v\n", fromURI, iter.Val().Name, iter.Val().ProxyURL, iter.Index())
 	return iter.Val().Name, iter.Val().ProxyURL
 }
 
