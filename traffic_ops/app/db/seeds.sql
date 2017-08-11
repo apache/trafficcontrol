@@ -112,6 +112,7 @@ insert into capability (name, description) values ('ds-steering-read', 'View del
 insert into capability (name, description) values ('ds-steering-write', 'Create, edit or delete delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-read', 'View federation routing') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-write', 'Create, edit or delete federation routing') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('iso-generate', 'Generate ISOs') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('job-read', 'View jobs') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('job-write', 'Create, edit or delete jobs') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('params-read', 'View parameters') ON CONFLICT (name) DO NOTHING;
@@ -257,6 +258,8 @@ insert into api_capability (http_method, route, capability) values ('POST', '/ap
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 142
 insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 143
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/hwinfo', 'all-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
+insert into api_capability (http_method, route, capability) values ('GET', '/api/*/osversions', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/isos', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 164
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters/*', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 168
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/parameters', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 169

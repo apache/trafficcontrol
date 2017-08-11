@@ -160,13 +160,13 @@ var trafficPortal = angular.module('trafficPortal', [
 
         // monitor
         require('./modules/private/monitor').name,
-
-        // dashboard
         require('./modules/private/monitor/dashboard').name,
         require('./modules/private/monitor/dashboard/view').name,
-
-        // map
         require('./modules/private/monitor/map').name,
+
+        // tools
+        require('./modules/private/tools').name,
+        require('./modules/private/tools/iso').name,
 
         // common modules
         require('./common/modules/dialog/confirm').name,
@@ -204,6 +204,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/division').name,
         require('./common/modules/form/division/edit').name,
         require('./common/modules/form/division/new').name,
+        require('./common/modules/form/iso').name,
         require('./common/modules/form/job').name,
         require('./common/modules/form/job/new').name,
         require('./common/modules/form/physLocation').name,
