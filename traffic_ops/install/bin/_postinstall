@@ -183,6 +183,22 @@ sub generateDbConf {
     return \%todbconf;
 }
 
+sub setCdnConfGoPort {
+    my $cdnConf = shift;
+    if ( exists $cdnConf->{traffic_ops_golang_port} ) {
+        return $cdnConf;
+    }
+
+    my $listen = $cdnConf->{hypnotoad}{listen}[0];
+    my ($port) = $listen =~ /:(\d+)/;
+    $listen =~ s/:$port/:60443/;
+    $listen =~ s{'https://\[::\]}{'https://127.0.0.1};
+
+    $cdnConf->{traffic_ops_golang_port} = $port;
+    $cdnConf->{hypnotoad}{listen} = [ $listen ];
+    return $cdnConf;
+}
+
 # userInput: The entire input config file which is either user input or the defaults
 # fileName: The filename of the output config file
 #
@@ -218,7 +234,9 @@ sub generateCdnConf {
             $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
+    $cdnConf = setCdnConfGoPort($cdnConf);
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
+    #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
     InstallUtils::writePerl( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );
 }
@@ -729,7 +747,7 @@ sub insert_profiles {
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$tm_url/doc') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
-    insert into profile_parameter (profile, parameter) 
+    insert into profile_parameter (profile, parameter)
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLite2-City.mmdb.gz') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
@@ -855,7 +873,6 @@ sub main {
     # The generator functions handle checking input/default/automatic mode
     # todbconf will be used later when setting up the database
     my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
-    generateCdnConf( $userInput, $cdnConfFile );
     generateLdapConf( $userInput, $ldapConfFile );
     my $adminconf = generateUsersConf( $userInput, $usersConfFile );
     my $custom_profile = generateProfilesDir( $userInput, $profilesConfFile );
@@ -868,6 +885,7 @@ sub main {
 
     setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
+    generateCdnConf( $userInput, $cdnConfFile );
 
     my $dbh = Database::connect($databaseConfFile, $todbconf);
     if (!$dbh) {

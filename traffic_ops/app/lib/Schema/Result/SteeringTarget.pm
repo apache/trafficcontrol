@@ -32,6 +32,7 @@ __PACKAGE__->table("steering_target");
 =head2 target
 
   data_type: 'bigint'
+  is_foreign_key: 1
   is_nullable: 0
 
 =head2 value
@@ -58,7 +59,7 @@ __PACKAGE__->add_columns(
   "deliveryservice",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "target",
-  { data_type => "bigint", is_nullable => 0 },
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "value",
   { data_type => "bigint", is_nullable => 0 },
   "last_updated",
@@ -103,7 +104,7 @@ __PACKAGE__->belongs_to(
   { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
-=head2 deliveryservice_2
+=head2 target
 
 Type: belongs_to
 
@@ -112,9 +113,9 @@ Related object: L<Schema::Result::Deliveryservice>
 =cut
 
 __PACKAGE__->belongs_to(
-  "deliveryservice_2",
+  "target",
   "Schema::Result::Deliveryservice",
-  { id => "deliveryservice" },
+  { id => "target" },
   { is_deferrable => 0, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
@@ -134,8 +135,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-05-31 20:31:43
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:DYSNby1kQgL/sEtaCwOgbw
+# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-07-11 15:57:49
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:/Nt3CxNNilJAFKYzC0WjcQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

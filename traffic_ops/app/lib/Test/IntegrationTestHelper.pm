@@ -25,6 +25,7 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 
+use Utils::Tenant;
 use Fixtures::Integration::Asn;
 use Fixtures::Integration::CachegroupParameter;
 use Fixtures::Integration::Cachegroup;
@@ -102,7 +103,15 @@ sub teardown {
 	my $self       = shift;
 	my $schema     = shift;
 	my $table_name = shift;
-	$schema->resultset($table_name)->delete_all;
+
+	if ($table_name eq 'Tenant') {
+		my $tenant_utils = Utils::Tenant->new(undef, 10**9, $schema);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		$tenant_utils->cascade_delete_tenants_tree($tenants_data);
+	}
+	else {
+		$schema->resultset($table_name)->delete_all;
+	}
 }
 
 ## For PSQL sequence to work correctly we cannot hard code

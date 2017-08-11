@@ -21,6 +21,7 @@ package API::Deliveryservice;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -53,7 +54,10 @@ sub index {
 		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
 	}
 
-	if ( !&is_privileged($self) ) {
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
 		$criteria{'me.id'} = { -in => \@ds_ids },;
@@ -61,11 +65,13 @@ sub index {
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search(
 		\%criteria,
-		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ], order_by => 'me.' . $orderby }
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ], order_by => 'me.' . $orderby }
 	);
 
 	while ( my $row = $rs_data->next ) {
-
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
 		# build example urls for each delivery service
 		my @example_urls = ();
 		my $cdn_domain   = $row->cdn->domain_name;
@@ -133,6 +139,8 @@ sub index {
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
+				"tenantId"		       => $row->tenant_id,
+				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
 				"type"                 => $row->type->name,
@@ -150,21 +158,23 @@ sub show {
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
-	if ( !&is_privileged($self) ) {
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
 
 		# check to see if deliveryservice is assigned to user, if not return forbidden
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-		my %map = map { $_ => 1 } @ds_ids;    # turn the array of dsIds into a hash with dsIds as the keys
-		return $self->forbidden() if ( !exists( $map{$id} ) );
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !$self->is_delivery_service_assigned($id) );
 	}
 
 	my $rs = $self->db->resultset("Deliveryservice")->search(
 		{ 'me.id' => $id },
-		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type' ] }
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ] }
 	);
 	while ( my $row = $rs->next ) {
-
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
 		# build the matchlist (the list of ds regexes and their type)
 		my @matchlist  = ();
 		my $ds_regexes = $row->deliveryservice_regexes;
@@ -248,6 +258,8 @@ sub show {
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
+				"tenantId"             => $row->tenant_id,
+				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
 				"type"                 => $row->type->name,
@@ -268,22 +280,31 @@ sub update {
 		return $self->forbidden();
 	}
 
-	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
-	if ( !$is_valid ) {
-		return $self->alert($result);
-	}
-
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
 	if ( !defined($ds) ) {
 		return $self->not_found();
 	}
 
-	my $xml_id = $params->{xmlId};
-	if ( $ds->xml_id ne $xml_id ) {
-		my $existing = $self->db->resultset('Deliveryservice')->find( { xml_id => $xml_id } );
-		if ($existing) {
-			return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
-		}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+
+	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+    my $new_xml_id = $params->{xmlId};
+    if ( $new_xml_id ne $ds->xml_id ) {
+        return $self->alert( "A deliveryservice xmlId is immutable." );
+    }
+	
+	#setting tenant_id to undef if tenant is not set. 
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my $values = {
@@ -329,6 +350,7 @@ sub update {
 		remap_text             => $params->{remapText},
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
+		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
 		tr_response_headers    => $params->{trResponseHeaders},
 		type                   => $params->{typeId},
@@ -415,6 +437,7 @@ sub update {
 				"remapText"                => $rs->remap_text,
 				"signed"                   => $rs->signed,
 				"sslKeyVersion"            => $rs->ssl_key_version,
+				"tenantId"                 => $rs->tenant_id,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
 				"type"                     => $rs->type->name,
@@ -432,6 +455,124 @@ sub update {
 	}
 }
 
+sub safe_update {
+	my $self   = shift;
+	my $id     = $self->param('id');
+	my $params = $self->req->json;
+
+
+	my $helper = new Utils::Helper( { mojo => $self } );
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+
+	if ( &is_oper($self) || $helper->is_delivery_service_assigned($id) ) {
+
+		my $values = {
+			display_name           => $params->{displayName},
+			info_url               => $params->{infoUrl},
+			long_desc              => $params->{longDesc},
+			long_desc_1            => $params->{longDesc1},
+		};
+
+		my $rs = $ds->update($values);
+		if ($rs) {
+
+			# build example urls
+			my @example_urls  = ();
+			my $cdn_domain    = $rs->cdn->domain_name;
+			my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
+			@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
+
+			# build the matchlist (the list of ds regexes and their type)
+			my @matchlist  = ();
+			my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $rs->id }, { prefetch => [ { 'regex' => 'type' } ] } );
+			while ( my $ds_regex = $ds_regexes->next ) {
+				push(
+					@matchlist, {
+						type      => $ds_regex->regex->type->name,
+						pattern   => $ds_regex->regex->pattern,
+						setNumber => $ds_regex->set_number
+					}
+				);
+			}
+
+			my @response;
+			push(
+				@response, {
+					"active"                   => $rs->active,
+					"cacheurl"                 => $rs->cacheurl,
+					"ccrDnsTtl"                => $rs->ccr_dns_ttl,
+					"cdnId"                    => $rs->cdn->id,
+					"cdnName"                  => $rs->cdn->name,
+					"checkPath"                => $rs->check_path,
+					"displayName"              => $rs->display_name,
+					"dnsBypassCname"           => $rs->dns_bypass_cname,
+					"dnsBypassIp"              => $rs->dns_bypass_ip,
+					"dnsBypassIp6"             => $rs->dns_bypass_ip6,
+					"dnsBypassTtl"             => $rs->dns_bypass_ttl,
+					"dscp"                     => $rs->dscp,
+					"edgeHeaderRewrite"        => $rs->edge_header_rewrite,
+					"exampleURLs"              => \@example_urls,
+					"geoLimitRedirectURL"      => $rs->geolimit_redirect_url,
+					"geoLimit"                 => $rs->geo_limit,
+					"geoLimitCountries"        => $rs->geo_limit_countries,
+					"geoProvider"              => $rs->geo_provider,
+					"globalMaxMbps"            => $rs->global_max_mbps,
+					"globalMaxTps"             => $rs->global_max_tps,
+					"httpBypassFqdn"           => $rs->http_bypass_fqdn,
+					"id"                       => $rs->id,
+					"infoUrl"                  => $rs->info_url,
+					"initialDispersion"        => $rs->initial_dispersion,
+					"ipv6RoutingEnabled"       => $rs->ipv6_routing_enabled,
+					"lastUpdated"              => $rs->last_updated,
+					"logsEnabled"              => $rs->logs_enabled,
+					"longDesc"                 => $rs->long_desc,
+					"longDesc1"                => $rs->long_desc_1,
+					"longDesc2"                => $rs->long_desc_2,
+					"matchList"                => \@matchlist,
+					"maxDnsAnswers"            => $rs->max_dns_answers,
+					"midHeaderRewrite"         => $rs->mid_header_rewrite,
+					"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
+					"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
+					"multiSiteOrigin"          => $rs->multi_site_origin,
+					"orgServerFqdn"            => $rs->org_server_fqdn,
+					"originShield"             => $rs->origin_shield,
+					"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
+					"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
+					"profileDescription"       => defined($rs->profile) ? $rs->profile->description : undef,
+					"protocol"                 => $rs->protocol,
+					"qstringIgnore"            => $rs->qstring_ignore,
+					"rangeRequestHandling"     => $rs->range_request_handling,
+					"regexRemap"               => $rs->regex_remap,
+					"regionalGeoBlocking"      => $rs->regional_geo_blocking,
+					"remapText"                => $rs->remap_text,
+					"signed"                   => $rs->signed,
+					"sslKeyVersion"            => $rs->ssl_key_version,
+					"trRequestHeaders"         => $rs->tr_request_headers,
+					"trResponseHeaders"        => $rs->tr_response_headers,
+					"type"                     => $rs->type->name,
+					"typeId"                   => $rs->type->id,
+					"xmlId"                    => $rs->xml_id
+				}
+			);
+
+			&log( $self, " Safe update applied to deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
+
+			return $self->success( \@response, "Deliveryservice safe update was successful." );
+		}
+		else {
+			return $self->alert("Deliveryservice safe update failed.");
+		}
+	}
+	else {
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+}
+
 sub create {
 	my $self   = shift;
 	my $params = $self->req->json;
@@ -440,11 +581,20 @@ sub create {
 		return $self->forbidden();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	#setting tenant_id to the user id if tenant is not set.
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenant_utils->current_user_tenant();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for delivery-service assignment.");
+	}
+
 	my ( $is_valid, $result ) = $self->is_deliveryservice_valid($params);
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
 	}
+
 
 	my $xml_id = $params->{xmlId};
 	my $existing = $self->db->resultset('Deliveryservice')->find( { xml_id => $xml_id } );
@@ -495,6 +645,7 @@ sub create {
 		remap_text             => $params->{remapText},
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
+		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
 		tr_response_headers    => $params->{trResponseHeaders},
 		type                   => $params->{typeId},
@@ -594,6 +745,7 @@ sub create {
 				"remapText"                => $insert->remap_text,
 				"signed"                   => $insert->signed,
 				"sslKeyVersion"            => $insert->ssl_key_version,
+				"tenantId"                 => $insert->tenant_id,
 				"trRequestHeaders"         => $insert->tr_request_headers,
 				"trResponseHeaders"        => $insert->tr_response_headers,
 				"type"                     => $insert->type->name,
@@ -622,6 +774,14 @@ sub delete {
 		return $self->not_found();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	#setting tenant_id to the user id if tenant is not set.
+	my $tenant_id = $ds->tenant_id;
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+
 	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
 
 	my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
@@ -642,6 +802,68 @@ sub delete {
 	return $self->success_message("Delivery service was deleted.");
 }
 
+sub assign_servers {
+	my $self      = shift;
+	my $ds_xml_Id = $self->param('xml_id');
+	my $params    = $self->req->json;
+
+	if ( !defined($params) ) {
+		return $self->alert("parameters are JSON format, please check!");
+	}
+	if ( !&is_oper($self) ) {
+		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
+	}
+
+	if ( !exists( $params->{serverNames} ) ) {
+		return $self->alert("Parameter 'serverNames' is required.");
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->single();
+	if ( !defined($ds) ) {
+		return $self->alert( "DeliveryService[" . $ds_xml_Id . "] is not found." );
+	}
+	my $dsid = $ds->id;
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+
+	my @server_ids;
+	my $svrs = $params->{serverNames};
+	foreach my $svr (@$svrs) {
+		my $svr_id = $self->db->resultset('Server')->search( { host_name => $svr } )->get_column('id')->single();
+		if ( !defined($svr_id) ) {
+			return $self->alert( "Server[" . $svr . "] is not found in database." );
+		}
+		push( @server_ids, $svr_id );
+	}
+
+	# clean up
+	my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsid } );
+	$delete->delete();
+
+	# assign servers
+	foreach my $s_id (@server_ids) {
+		my $insert = $self->db->resultset('DeliveryserviceServer')->create(
+			{
+				deliveryservice => $dsid,
+				server          => $s_id,
+			}
+		);
+		$insert->insert();
+	}
+
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+
+	my $response;
+	$response->{xmlId} = $ds->xml_id;
+	$response->{'serverNames'} = \@$svrs;
+
+	return $self->success($response);
+}
+
 sub get_deliveryservices_by_serverId {
 	my $self      = shift;
 	my $server_id = $self->param('id');
@@ -649,11 +871,16 @@ sub get_deliveryservices_by_serverId {
 	my $server_ds_ids = $self->db->resultset('DeliveryserviceServer')->search( { server => $server_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ] } );
+		->search( { 'me.id' => { -in => $server_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
 
 	my @data;
 	if ( defined($deliveryservices) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		while ( my $row = $deliveryservices->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
 			push(
 				@data, {
 					"active"               => \$row->active,
@@ -703,6 +930,8 @@ sub get_deliveryservices_by_serverId {
 					"remapText"            => $row->remap_text,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
+					"tenantId"             => $row->tenant_id,
+					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 					"trRequestHeaders"     => $row->tr_request_headers,
 					"trResponseHeaders"    => $row->tr_response_headers,
 					"type"                 => $row->type->name,
@@ -720,14 +949,27 @@ sub get_deliveryservices_by_userId {
 	my $self    = shift;
 	my $user_id = $self->param('id');
 
+	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden("Forbidden. User tenant is not available to the working user.");
+	}
 	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type' ] } );
+		->search( { 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
 
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
 			push(
 				@data, {
 					"active"               => \$row->active,
@@ -777,6 +1019,8 @@ sub get_deliveryservices_by_userId {
 					"remapText"            => $row->remap_text,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
+					"tenantId"             => $row->tenant_id,
+					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 					"trRequestHeaders"     => $row->tr_request_headers,
 					"trResponseHeaders"    => $row->tr_response_headers,
 					"type"                 => $row->type->name,
@@ -797,8 +1041,13 @@ sub routing {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => [ 'cdn', 'type' ] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+			}
 			my $cdn_name = $result->cdn->name;
 
 			# we expect type to be a dns or http type, but strip off any trailing bit
@@ -832,8 +1081,13 @@ sub capacity {
 	my $id = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+			}
 			my $cdn_name = $result->cdn->name;
 
 			$self->get_cache_capacity( { delivery_service => $result->xml_id, cdn_name => $cdn_name } );
@@ -852,8 +1106,13 @@ sub health {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+			}
 			my $cdn_name = $result->cdn->name;
 
 			return ( $self->get_cache_health( { server_type => "caches", delivery_service => $result->xml_id, cdn_name => $cdn_name } ) );
@@ -873,8 +1132,13 @@ sub state {
 	my $id   = $self->param('id');
 
 	if ( $self->is_valid_delivery_service($id) ) {
-		if ( $self->is_delivery_service_assigned($id) || &is_admin($self) || &is_oper($self) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if ( $self->is_delivery_service_assigned($id) || $tenant_utils->use_tenancy() || &is_oper($self) ) {
 			my $result      = $self->db->resultset("Deliveryservice")->search( { 'me.id' => $id }, { prefetch => ['cdn'] } )->single();
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $result->tenant_id)) {
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+			}
 			my $cdn_name    = $result->cdn->name;
 			my $ds_name     = $result->xml_id;
 			my $rascal_data = $self->get_rascal_state_data( { type => "RASCAL", state_type => "deliveryServices", cdn_name => $cdn_name } );
@@ -976,61 +1240,6 @@ sub request {
 	}
 }
 
-sub assign_servers {
-	my $self      = shift;
-	my $ds_xml_Id = $self->param('xml_id');
-	my $params    = $self->req->json;
-
-	if ( !defined($params) ) {
-		return $self->alert("parameters are JSON format, please check!");
-	}
-	if ( !&is_oper($self) ) {
-		return $self->alert("You must be an ADMIN or OPER to perform this operation!");
-	}
-
-	if ( !exists( $params->{serverNames} ) ) {
-		return $self->alert("Parameter 'serverNames' is required.");
-	}
-
-	my $dsid = $self->db->resultset('Deliveryservice')->search( { xml_id => $ds_xml_Id } )->get_column('id')->single();
-	if ( !defined($dsid) ) {
-		return $self->alert( "DeliveryService[" . $ds_xml_Id . "] is not found." );
-	}
-
-	my @server_ids;
-	my $svrs = $params->{serverNames};
-	foreach my $svr (@$svrs) {
-		my $svr_id = $self->db->resultset('Server')->search( { host_name => $svr } )->get_column('id')->single();
-		if ( !defined($svr_id) ) {
-			return $self->alert( "Server[" . $svr . "] is not found in database." );
-		}
-		push( @server_ids, $svr_id );
-	}
-
-	# clean up
-	my $delete = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $dsid } );
-	$delete->delete();
-
-	# assign servers
-	foreach my $s_id (@server_ids) {
-		my $insert = $self->db->resultset('DeliveryserviceServer')->create(
-			{
-				deliveryservice => $dsid,
-				server          => $s_id,
-			}
-		);
-		$insert->insert();
-	}
-
-	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $dsid } )->single();
-	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
-
-	my $response;
-	$response->{xmlId} = $ds->xml_id;
-	$response->{'serverNames'} = \@$svrs;
-
-	return $self->success($response);
-}
 
 sub is_deliveryservice_request_valid {
 	my $self    = shift;
@@ -1073,7 +1282,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# Validation checks to perform

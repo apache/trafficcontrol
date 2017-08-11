@@ -1096,6 +1096,10 @@ sub parent_dot_config {
 		$self->db->resultset('ProfileParameter')
 		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
 		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	if (!defined $ats_ver) {
+	        $ats_ver = "5";
+                $self->app->log->error("Parameter package.trafficserver missing for profile ".$server->profile->name . ". Assuming version $ats_ver");
+        }
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
 
 	my $pinfo;

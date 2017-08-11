@@ -197,7 +197,7 @@ sub update {
 		$response->{typeId}   = $rs->type->id;
 		$response->{typeName} = $rs->type->name;
 
-		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		&log( $self, "Updated Cachegroup named '" . $rs->name . "' with id: " . $rs->id, "APICHANGE" );
 
 		return $self->success( $response, "Cachegroup update was successful." );
 	}
@@ -273,7 +273,7 @@ sub create {
 		$response->{typeId}   = $rs->type->id;
 		$response->{typeName} = $rs->type->name;
 
-		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		&log( $self, "Created Cachegroup named '" . $rs->name . "' with id: " . $rs->id, "APICHANGE" );
 
 		return $self->success( $response, "Cachegroup creation was successful." );
 	}
@@ -318,6 +318,7 @@ sub delete {
 
 	my $rs = $cg->delete();
 	if ($rs) {
+		&log( $self, "Deleted Cachegroup named '" . $cg->name . "' with id: " . $cg->id, "APICHANGE" );
 		return $self->success_message("Cachegroup deleted.");
 	} else {
 		return $self->alert( "Cachegroup delete failed." );
@@ -433,6 +434,10 @@ sub postupdatequeue {
 	$response->{cdn}            = $cdn;
 	$response->{cachegroupName} = $name;
 	$response->{cachegroupId}   = $id;
+
+	my $msg = "Server updates $params->{action}d for $name cache group";
+	&log( $self, $msg, "APICHANGE" );
+
 	return $self->success($response);
 }
 

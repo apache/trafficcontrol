@@ -16,8 +16,8 @@
  */
 
 module.exports = {
-    options: {
-        cwd: '<%= globalConfig.distdir %>',
-        isDevelopment: false
-    }
+	options: {
+		cwd: '<%= globalConfig.distdir %>',
+		isDevelopment: false
+	}
 };

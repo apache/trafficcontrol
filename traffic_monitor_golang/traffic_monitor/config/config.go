@@ -21,10 +21,7 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
@@ -68,6 +65,12 @@ type Config struct {
 	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
 	StaticFileDir                string        `json:"static_file_dir"`
 }
+
+func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
+func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
+func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
@@ -195,47 +198,4 @@ func LoadBytes(bytes []byte) (Config, error) {
 	cfg := DefaultConfig
 	err := json.Unmarshal(bytes, &cfg)
 	return cfg, err
-}
-
-func getLogWriter(location string) (io.WriteCloser, error) {
-	switch location {
-	case LogLocationStdout:
-		return log.NopCloser(os.Stdout), nil
-	case LogLocationStderr:
-		return log.NopCloser(os.Stderr), nil
-	case LogLocationNull:
-		return log.NopCloser(ioutil.Discard), nil
-	default:
-		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	}
-}
-
-func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
-	eventLoc := cfg.LogLocationEvent
-	errLoc := cfg.LogLocationError
-	warnLoc := cfg.LogLocationWarning
-	infoLoc := cfg.LogLocationInfo
-	debugLoc := cfg.LogLocationDebug
-
-	eventW, err := getLogWriter(eventLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
-	}
-	errW, err := getLogWriter(errLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
-	}
-	warnW, err := getLogWriter(warnLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
-	}
-	infoW, err := getLogWriter(infoLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
-	}
-	debugW, err := getLogWriter(debugLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
-	}
-	return eventW, errW, warnW, infoW, debugW, nil
 }

@@ -39,6 +39,9 @@ insert into profile_parameter (profile, parameter) values ( (select id from prof
 insert into parameter (name, config_file, value) values ('tm.toolname', 'global', 'Traffic Ops') ON CONFLICT (name, config_file, value) DO NOTHING;
 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = 'Traffic Ops') ) ON CONFLICT (profile, parameter) DO NOTHING;
 
+insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0') ON CONFLICT (name, config_file, value) DO NOTHING;
+insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') )         ON CONFLICT (profile, parameter) DO NOTHING;
+
 
 
 
@@ -63,13 +66,12 @@ insert into status (name, description) values ('PRE_PROD', 'Pre Production. Not 
 -- roles
 insert into role (name, description, priv_level) values ('admin', 'super-user', 30) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('migrations', 'database migrations user - DO NOT REMOVE', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('read-only user', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('ort', 'ORT User', 11) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('read-only', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('ort', 'ORT User', 11) ON CONFLICT (name) DO NOTHING;
 
 -- tenants
 insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
@@ -110,6 +112,7 @@ insert into capability (name, description) values ('ds-steering-read', 'View del
 insert into capability (name, description) values ('ds-steering-write', 'Create, edit or delete delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-read', 'View federation routing') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-write', 'Create, edit or delete federation routing') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('iso-generate', 'Generate ISOs') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('job-read', 'View jobs') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('job-write', 'Create, edit or delete jobs') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('params-read', 'View parameters') ON CONFLICT (name) DO NOTHING;
@@ -202,6 +205,7 @@ insert into api_capability (http_method, route, capability) values ('GET', '/api
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 73
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/*/deliveryservices/create', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 74
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 75
+insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/deliveryservices/*/safe', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 75
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/*/deliveryservices/*/update', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 76
 insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/deliveryservices/*', 'ds-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 77
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices/*/health', 'ds-health-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 78
@@ -223,6 +227,11 @@ insert into api_capability (http_method, route, capability) values ('GET', '/int
 insert into api_capability (http_method, route, capability) values ('GET', '/internal/api/*/steering/*', 'ds-steering-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 97
 insert into api_capability (http_method, route, capability) values ('POST', '/internal/api/*/steering', 'ds-steering-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 98
 insert into api_capability (http_method, route, capability) values ('PUT', '/internal/api/*/steering/*', 'ds-steering-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 99
+insert into api_capability (http_method, route, capability) values ('GET', '/api/*/steering/*/targets', 'ds-steering-target-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('GET', '/api/*/steering/*/targets/*', 'ds-steering-target-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/steering/*/targets', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/steering/*/targets/*', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
+insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/steering/*/targets/*', 'ds-steering-target-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 96
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryserviceserver', 'ds-cache-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 103
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/deliveryservices/*/servers', 'ds-cache-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 106
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/deliveryservices_regexes', 'ds-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 109
@@ -249,6 +258,8 @@ insert into api_capability (http_method, route, capability) values ('POST', '/ap
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 142
 insert into api_capability (http_method, route, capability) values ('DELETE', '/api/*/federations', 'federation-routing-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 143
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/hwinfo', 'all-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
+insert into api_capability (http_method, route, capability) values ('GET', '/api/*/osversions', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/isos', 'iso-generate') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 148
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 164
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/parameters/*', 'params-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 168
 insert into api_capability (http_method, route, capability) values ('POST', '/api/*/parameters', 'params-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 169

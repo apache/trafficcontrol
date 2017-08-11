@@ -1,0 +1,64 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_title">
+    <h2>Cache Groups <small>{{cacheGroupHealth.totalOnline/(cacheGroupHealth.totalOnline + cacheGroupHealth.totalOffline) | percentFilter}} online</small></h2>
+    <div class="clearfix"></div>
+</div>
+<div class="x_content">
+    <div id="cache-groups-outer-container">
+        <div id="cacheGroupsContainer">
+            <div class="alert alert-info" ng-show="(cacheGroupHealth.cachegroups | filter:search:strict).length == 0">
+                No matching cache groups
+            </div>
+            <div class="list-group">
+                <a class="cache-group-health list-group-item" ng-repeat="cg in cacheGroupHealth.cachegroups | orderBy:[onlinePercent, 'name'] | filter:search:strict | offsetFilter:(currentCacheGroupsPage-1)*cacheGroupsPerPage | limitTo:cacheGroupsPerPage">
+                    <div class="row">
+                        <table class="cache-groups-table table">
+                            <tbody>
+                            <tr>
+                                <td class="col-lg-4 col-md-4 col-sm-4">{{cg.name}}</td>
+                                <td class="col-lg-4 col-md-4 col-sm-4">{{cg.online/(cg.online + cg.offline) | percentFilter}} Online [ {{cg.online}} Online | {{cg.offline}} Offline ]</td>
+                                <td class="col-lg-4 col-md-4 col-sm-4">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-green" role="progressbar" ng-style="{'width': onlinePercent(cg) + '%'}">
+                                            <span class="sr-only">{{cg.online}} Servers Online | {{cg.offline}} Servers Offline</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div>
+            <div ng-show="(cacheGroupHealth.cachegroups | filter:search:strict).length > 0">
+                <uib-pagination class="cache-groups-pagination pagination-md" boundary-links="true" max-size="2" total-items="(cacheGroupHealth.cachegroups | filter:search:strict).length" items-per-page="cacheGroupsPerPage" ng-model="currentCacheGroupsPage" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>
+            </div>
+            <div class="input-group cache-group-search-form">
+                <input type="text" class="filter-input form-control" placeholder="Filter cache groups..." ng-model="search.name">
+                <span class="filter-input-group-btn input-group-btn">
+                    <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

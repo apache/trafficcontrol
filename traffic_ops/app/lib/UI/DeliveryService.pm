@@ -19,9 +19,11 @@ package UI::DeliveryService;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
+use UI::SslKeys;
 
 sub index {
 	my $self = shift;
@@ -151,12 +153,7 @@ sub get_example_urls {
 				}
 			}
 			elsif ( $re->{type} eq 'PATH_REGEXP' ) {
-				if ( defined( $example_urls[ $re->{set_number} ] ) ) {
-					$example_urls[ $re->{set_number} ] .= $re->{pattern};
-				}
-				else {
-					$example_urls[ $re->{set_number} ] = $re->{pattern};
-				}
+				push(@example_urls, $re->{pattern});
 			}
 		}
 	}
@@ -288,7 +285,7 @@ sub delete_ds {
 	my $delete_re = $self->db->resultset('Regex')->search( { id => { -in => \@regexp_id_list } } );
 	$delete_re->delete();
 
-	# Delete config file parameter
+	# Delete config file parameters,       should we also delete url_sig_keys from riak at this step?
 	my @cfg_prefixes = ( "hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_" );
 	foreach my $cfg_prefix (@cfg_prefixes) {
 		my $cfg_file = $cfg_prefix . $dsname . ".config";
@@ -845,8 +842,10 @@ sub update {
 			$hash{http_bypass_fqdn} = $self->param('ds.http_bypass_fqdn');
 		}
 
+		my $upd_ssl = 0;
 		#print Dumper( \%hash );
 		my $update = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+		my $old_hostname = UI::SslKeys::get_hostname($self, $id, $update);
 		$update->update( \%hash );
 		$update->update();
 		&log( $self, "Update deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
@@ -919,6 +918,10 @@ sub update {
 				$delete_re->delete();
 			}
 		}
+
+		my $new_hostname = UI::SslKeys::get_hostname($self, $id, $update);
+		$upd_ssl = 1 if $old_hostname ne $new_hostname;
+		UI::SslKeys::update_sslkey($self, $id, $hash{xml_id}, $new_hostname) if $upd_ssl;
 
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
 		$self->header_rewrite(
@@ -1009,6 +1012,8 @@ sub create {
 	$self->stash_cdn_selector();
 	&stash_role($self);
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenant_id = $tenant_utils->current_user_tenant();
 		my $insert = $self->db->resultset('Deliveryservice')->create(
 			{
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
@@ -1054,6 +1059,7 @@ sub create {
 				remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
+				tenant_id => $tenant_id,
 			}
 		);
 		$insert->insert();

@@ -18,6 +18,7 @@ package UI::User;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Utils::Helper;
@@ -285,11 +286,12 @@ sub is_send_register_valid {
 sub create_user {
 	my $self   = shift;
 	my $new_id = -1;
+	my $tenantUtils = Utils::Tenant->new($self);
 	my $dbh    = $self->db->resultset('TmUser')->create(
 		{
 			full_name            => $self->param('tm_user.full_name'),
 			username             => $self->param('tm_user.username'),
-			tenant_id            => current_user_tenant($self), #Tenancy is not dealt by the UI for now. getting the tenancy from the user			
+			tenant_id            => undef, #Tenancy is not dealt by the UI for now. settin to no tenant - minimal priviledge to the user
 			public_ssh_key       => $self->param('tm_user.public_ssh_key'),
 			phone_number         => $self->param('tm_user.phone_number'),
 			email                => $self->param('tm_user.email'),

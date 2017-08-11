@@ -25,6 +25,7 @@
 # description: My Application
 ### END CHKCONFIG INFO
 #
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -58,7 +59,7 @@ NAME="Traffic Portal Application"
 NODE_BIN_DIR="/usr/bin"
 NODE_PATH="/opt/traffic_portal/node_modules"
 FOREVER_BIN_DIR="/opt/traffic_portal/node_modules/forever/bin"
-APPLICATION_PATH="/opt/traffic_portal/server/server.js"
+APPLICATION_PATH="/opt/traffic_portal/server.js"
 PIDFILE="/var/run/traffic_portal.pid"
 LOGFILE="/var/log/traffic_portal/traffic_portal.log"
 MIN_UPTIME="5000"

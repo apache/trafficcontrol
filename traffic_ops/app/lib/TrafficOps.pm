@@ -239,6 +239,9 @@ sub setup_mojo_plugins {
 	$self->helper( db => sub { $self->schema } );
 	$config = $self->plugin('Config');
 
+	# setting a default message if no user account is found in tm_user. this default can be overriden in cdn.conf
+	$config->{'to'}{'no_account_found_msg'} //= "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator.";
+
 	if ( !defined $ENV{MOJO_INACTIVITY_TIMEOUT} ) {
 		$ENV{MOJO_INACTIVITY_TIMEOUT} = $config->{inactivity_timeout} // 60;
 		print( "Setting mojo inactivity timeout to " . $ENV{MOJO_INACTIVITY_TIMEOUT} . "\n" );
@@ -349,7 +352,7 @@ sub setup_mojo_plugins {
 
 	$self->plugin(
 		AccessLog => {
-			log    => "$logging_root_dir/access.log",
+			log    => "$logging_root_dir/perl_access.log",
 			uname_helper => 'set_username',
 			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
 		}

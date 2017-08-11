@@ -174,6 +174,10 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``tenant``               | string | Owning tenant name                                                                                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``tenantId``             | int    | Owning tenant ID                                                                                                                     |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``trRequestHeaders``     | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``trResponseHeaders``    | string |                                                                                                                                      |
@@ -238,6 +242,8 @@ Delivery Service
             "remapText": null,
             "signed": false,
             "sslKeyVersion": "0",
+            "tenant": "root",
+            "tenantId": 1,
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
             "type": "HTTP",
@@ -403,6 +409,10 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``tenant``               | string | Owning tenant name                                                                                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``tenantId``             | int    | Owning tenant ID                                                                                                                     |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``trRequestHeaders``     | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``trResponseHeaders``    | string |                                                                                                                                      |
@@ -474,6 +484,8 @@ Delivery Service
             "remapText": null,
             "signed": false,
             "sslKeyVersion": "0",
+            "tenant": "root",
+            "tenantId": 1,
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
             "type": "HTTP",
@@ -1616,7 +1628,7 @@ SSL Keys
   +--------------+---------+-------------------------------------------------+
   |  Parameter   |   Type  |                   Description                   |
   +==============+=========+=================================================+
-  | ``key``      | string  | xml_id of the delivery service                  |
+  | ``key``      | string  | "ds_" add id of the delivery service            |
   +--------------+---------+-------------------------------------------------+
   | ``version``  | string  | version of the keys being generated             |
   +--------------+---------+-------------------------------------------------+
@@ -1636,7 +1648,7 @@ SSL Keys
   **Request Example** ::
 
     {
-      "key": "ds-01",
+      "key": "ds_1",
       "businessUnit": "CDN Engineering",
       "version": "3",
       "hostname": "tr.ds-01.ott.kabletown.com",
@@ -1681,24 +1693,24 @@ SSL Keys
 
   **Request Properties**
 
-  +-------------+--------+-------------------------------------+
-  |  Parameter  |  Type  |             Description             |
-  +=============+========+=====================================+
-  | ``key``     | string | xml_id of the delivery service      |
-  +-------------+--------+-------------------------------------+
-  | ``version`` | string | version of the keys being generated |
-  +-------------+--------+-------------------------------------+
-  | ``csr``     | string |                                     |
-  +-------------+--------+-------------------------------------+
-  | ``crt``     | string |                                     |
-  +-------------+--------+-------------------------------------+
-  | ``key``     | string |                                     |
-  +-------------+--------+-------------------------------------+
+  +-------------+--------+---------------------------------------+
+  |  Parameter  |  Type  |             Description               |
+  +=============+========+=======================================+
+  | ``key``     | string | "ds_" add id of the delivery service  |
+  +-------------+--------+---------------------------------------+
+  | ``version`` | string | version of the keys being generated   |
+  +-------------+--------+---------------------------------------+
+  | ``csr``     | string |                                       |
+  +-------------+--------+---------------------------------------+
+  | ``crt``     | string |                                       |
+  +-------------+--------+---------------------------------------+
+  | ``key``     | string |                                       |
+  +-------------+--------+---------------------------------------+
 
   **Request Example** ::
 
     {
-      "key": "ds-01",
+      "key": "ds_1",
       "version": "1",
       "certificate": {
         "key": "some_key",
@@ -1723,6 +1735,134 @@ SSL Keys
 
     {  
       "response": "Successfully added ssl keys for ds-01"
+    }
+
+URL Sig Keys
++++++++++
+
+**GET /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys**
+
+  Retrieves URL sig keys for a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``xmlId`` | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Response Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``key0``            | string | base64 encoded key for delivery service                                                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``key2``            | string | base64 encoded key for delivery service                                                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keyn...``         | string | base64 encoded key for delivery service -- repeats to 15 (16 total) and is currently unsorted.                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {  
+      "response": {
+        key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
+        "key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
+        "key8":"ySXdp1T8IeDEE1OCMftzZb9EIw_20wwq",
+        "key0":"D4AYzJ1AE2nYisA9MxMtY03TPDCHji9C",
+        "key3":"W90YHlGc_kYlYw5_I0LrkpV9JOzSIneI",
+        "key12":"ZbtMb3mrKqfS8hnx9_xWBIP_OPWlUpzc",
+        "key2":"0qgEoDO7sUsugIQemZbwmMt0tNCwB1sf",
+        "key4":"aFJ2Gb7atmxVB8uv7T9S6OaDml3ycpGf",
+        "key1":"wnWNR1mCz1O4C7EFPtcqHd0xUMQyNFhA",
+        "key11":"k6HMzlBH1x6htKkypRFfWQhAndQqe50e",
+        "key10":"zYONfdD7fGYKj4kLvIj4U0918csuZO0d",
+        "key15":"3360cGaIip_layZMc_0hI2teJbazxTQh",
+        "key5":"SIwv3GOhWN7EE9wSwPFj18qE4M07sFxN",
+        "key13":"SqQKBR6LqEOzp8AewZUCVtBcW_8YFc1g",
+        "key14":"DtXsu8nsw04YhT0kNoKBhu2G3P9WRpQJ",
+        "key7":"cmKoIIxXGAxUMdCsWvnGLoIMGmNiuT5I"
+      }
+    }
+
+|
+  
+**POST /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys/generate**
+
+  Generates Url sig keys for a delivery service
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin OR assigned DS
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``xmlId`` | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+|
+
+  **Response Properties**
+
+  +--------------+--------+-----------------+
+  |  Parameter   |  Type  |   Description   |
+  +==============+========+=================+
+  | ``response`` | string | response string |
+  +--------------+--------+-----------------+
+  | ``version``  | string | API version     |
+  +--------------+--------+-----------------+
+
+  **Response Example** ::
+
+    {  
+      "response": "Successfully generated and stored keys"
+    }
+
+|
+  
+**POST /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys/copyFromXmlId/:copyFromXmlId**
+
+  Allows user to copy url sig keys from a specified delivery service to a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required:  Admin or assigned DS
+
+**Request Route Parameters**
+
+  +-------------------+----------+-----------------------------------------------------------+
+  |    Name           | Required |              Description                                  |
+  +===================+==========+===========================================================+
+  | ``xmlId``         | yes      | xml_id of the desired delivery service                    |
+  +-------------------+----------+-----------------------------------------------------------+
+  | ``copyFromXmlId`` | yes      | xml_id of the delivery service to copy url sig keys from  |
+  +-------------------+----------+-----------------------------------------------------------+
+
+|
+
+  **Response Properties**
+
+  +--------------+--------+-----------------+
+  |  Parameter   |  Type  |   Description   |
+  +==============+========+=================+
+  | ``response`` | string | response string |
+  +--------------+--------+-----------------+
+  | ``version``  | string | API version     |
+  +--------------+--------+-----------------+
+
+  **Response Example** ::
+
+    {  
+      "response": "Successfully copied and stored keys"
     }
 
 **POST /api/1.2/deliveryservices/request**
@@ -1877,6 +2017,8 @@ SSL Keys
   +========================+==========+=========================================================================================================+
   | active                 | yes      | true if active, false if inactive.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | tenantId               | No       | Owning tenant ID                                                                                        |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | cacheurl               | no       | Cache URL rule to apply to this delivery service.                                                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | ccrDnsTtl              | no       | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr.host.             |
@@ -2004,6 +2146,7 @@ SSL Keys
     {
         "xmlId": "my_ds_1",
         "displayName": "my_ds_displayname_1",
+        "tenantId": 1,
         "protocol": 1,
         "orgServerFqdn": "http://10.75.168.91",
         "cdnId": 2,
@@ -2231,6 +2374,7 @@ SSL Keys
             "remapText": null,
             "signed": false,
             "sslKeyVersion": "0",
+            "tenantId": 1,
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
             "type": "HTTP",
@@ -2264,6 +2408,8 @@ SSL Keys
   | Parameter              | Required | Description                                                                                             |
   +========================+==========+=========================================================================================================+
   | active                 | yes      | true if active, false if inactive.                                                                      |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | tenantId               | no       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | cacheurl               | no       | Cache URL rule to apply to this delivery service.                                                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2382,7 +2528,7 @@ SSL Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | typeId                 | yes      | The type of this deliveryservice (one of :ref:to-api-v12-types use_in_table='deliveryservice').         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | xmlId                  | yes      | Unique string that describes this deliveryservice.                                                      |
+  | xmlId                  | yes      | Unique string that describes this deliveryservice. This value cannot be changed on update.              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
 
 
@@ -2391,6 +2537,7 @@ SSL Keys
     {
         "xmlId": "my_ds_1",
         "displayName": "my_ds_displayname_1",
+	"tenantId": 1,
         "protocol": 1,
         "orgServerFqdn": "http://10.75.168.91",
         "cdnId": 2,
@@ -2618,6 +2765,7 @@ SSL Keys
             "remapText": null,
             "signed": false,
             "sslKeyVersion": "0",
+            "tenantId": 1,
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
             "type": "HTTP",
@@ -2628,7 +2776,266 @@ SSL Keys
     }
 
 |
+**PUT /api/1.2/deliveryservices/{:id}/safe**
 
+  Allows a user to edit limited fields of an assigned delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required:  users with the delivery service assigned or ops and above 
+
+  **Request Route Parameters**
+
+  +-----------------+----------+---------------------------------------------------+
+  | Name            | Required | Description                                       |
+  +=================+==========+===================================================+
+  |id               | yes      | delivery service id.                              |
+  +-----------------+----------+---------------------------------------------------+
+
+  **Request Properties**
+
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | Parameter              | Required | Description                                                                                             |
+  +========================+==========+=========================================================================================================+
+  | displayName            | no       | Display name                                                                                            |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | infoUrl                | no       | Use this to add a URL that points to more information about that deliveryservice.                       |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | longDesc               | no       | Description field.                                                                                      |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | longDesc1              | no       | Description field 1.                                                                                    |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | all other fields       | n/a      | All other fields will be silently ignored                                                               |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+
+
+  **Request Example** ::
+
+    {
+        "displayName": "My Cool Delivery Service",
+        "infoUrl": "www.info.com",
+        "longDesc": "some info about the service",
+        "longDesc1": "the customer label"
+    }
+
+
+  **Response Properties**
+
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  |        Parameter         |  Type  |                                                             Description                                                              |
+  +==========================+========+======================================================================================================================================+
+  | ``active``               |  bool  | true if active, false if inactive.                                                                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cacheurl``             | string | Cache URL rule to apply to this delivery service.                                                                                    |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``ccrDnsTtl``            |  int   | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr. host.                                         |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdnId``                |  int   | Id of the CDN to which the delivery service belongs to.                                                                              |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``displayName``          | string | The display name of the delivery service.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``dnsBypassCname``       | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``dnsBypassIp``          | string | The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the                                   |
+  |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``dnsBypassIp6``         | string | The IPv6 IP to use for bypass on a DNS deliveryservice - bypass starts when serving more than the                                    |
+  |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``dnsBypassTtl``         |  int   | The TTL of the DNS bypass response.                                                                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``dscp``                 |  int   | The Differentiated Services Code Point (DSCP) with which to mark downstream (EDGE ->  customer) traffic.                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``edgeHeaderRewrite``    | string | The EDGE header rewrite actions to perform.                                                                                          |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``exampleURLs``          | array  | Entry points into the CDN for this deliveryservice.                                                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitRedirectUrl``  | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimit``             |  int   | - 0: None - no limitations                                                                                                           |
+  |                          |        | - 1: Only route on CZF file hit                                                                                                      |
+  |                          |        | - 2: Only route on CZF hit or when from USA                                                                                          |
+  |                          |        |                                                                                                                                      |
+  |                          |        | Note that this does not prevent access to content or makes content secure; it just prevents                                          |
+  |                          |        | routing to the content by Traffic Router.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoLimitCountries``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``geoProvider``          |  int   |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``globalMaxMbps``        |  int   | The maximum global bandwidth allowed on this deliveryservice. If exceeded, the traffic routes to the                                 |
+  |                          |        | dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for HTTP deliveryservices.                                           |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``globalMaxTps``         |  int   | The maximum global transactions per second allowed on this deliveryservice. When this is exceeded                                    |
+  |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
+  |                          |        | HTTP deliveryservices                                                                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
+  |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``id``                   |  int   | The deliveryservice id (database row number).                                                                                        |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``infoUrl``              | string | Use this to add a URL that points to more information about that deliveryservice.                                                    |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``initialDispersion``    |  int   |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``ipv6RoutingEnabled``   |  bool  | false: send IPv4 address of Traffic Router to client on HTTP type del.                                                               |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``lastUpdated``          | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``logsEnabled``          |  bool  |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``longDesc``             | string | Description field.                                                                                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``longDesc1``            | string | Description field 1.                                                                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``longDesc2``            | string | Description field 2.                                                                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``matchList``            | array  | Array of matchList hashes.                                                                                                           |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``>>type``               | string | The type of MatchList (one of :ref:to-api-v11-types use_in_table='regex').                                                           |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``>>setNumber``          | string | The set Number of the matchList.                                                                                                     |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``>>pattern``            | string | The regexp for the matchList.                                                                                                        |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``maxDnsAnswers``        |  int   | The maximum number of IPs to put in a A/AAAA response for a DNS deliveryservice (0 means all                                         |
+  |                          |        | available).                                                                                                                          |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``midHeaderRewrite``     | string | The MID header rewrite actions to perform.                                                                                           |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``missLat``              | float  | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                 |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - e.g. 39.7391500 or null                                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``missLong``             | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - e.g. -104.9847000 or null                                                                                                          |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
+  |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``originShield``         | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``profileDescription``   | string | The description of the Traffic Router Profile with which this deliveryservice is associated.                                         |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``profileId``            |  int   | The id of the Traffic Router Profile with which this deliveryservice is associated.                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``profileName``          | string | The name of the Traffic Router Profile with which this deliveryservice is associated.                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``protocol``             |  int   | - 0: serve with http:// at EDGE                                                                                                      |
+  |                          |        | - 1: serve with https:// at EDGE                                                                                                     |
+  |                          |        | - 2: serve with both http:// and https:// at EDGE                                                                                    |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``qstringIgnore``        |  int   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.                                         |
+  |                          |        | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                                                       |
+  |                          |        | - 2: drop query string at edge, and do not use it in the cache-key.                                                                  |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``rangeRequestHandling`` |  int   | How to treat range requests:                                                                                                         |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                      |
+  |                          |        | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/reference/plugins/background_fetch.en.html>`_ plugin. |
+  |                          |        | - 2 Use the cache_range_requests plugin.                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regexRemap``           | string | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``regionalGeoBlocking``  |  bool  | Regex Remap rule to apply to this delivery service at the Edge tier.                                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
+  |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``sslKeyVersion``        |  int   |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``xmlId``                | string | Unique string that describes this deliveryservice.                                                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "response": [
+        {
+            "active": true,
+            "cacheurl": null,
+            "ccrDnsTtl": "3600",
+            "cdnId": "2",
+            "cdnName": "over-the-top",
+            "checkPath": "",
+            "displayName": "My Cool Delivery Service",
+            "dnsBypassCname": "",
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": "30",
+            "dscp": "40",
+            "edgeHeaderRewrite": null,
+            "exampleURLs": [
+                "http://edge.foo-ds.foo.bar.net"
+            ],
+            "geoLimit": "0",
+            "geoLimitCountries": null,
+            "geoLimitRedirectURL": null,
+            "geoProvider": "0",
+            "globalMaxMbps": null,
+            "globalMaxTps": "0",
+            "httpBypassFqdn": "",
+            "id": "442",
+            "infoUrl": "www.info.com",
+            "initialDispersion": "1",
+            "ipv6RoutingEnabled": true,
+            "lastUpdated": "2016-01-26 08:49:35",
+            "logsEnabled": false,
+            "longDesc": "some info about the service",
+            "longDesc1": "the customer label",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.foo-ds\\..*",
+                    "setNumber": "0",
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": "0",
+            "midHeaderRewrite": null,
+            "missLat": "39.7391500",
+            "missLong": "-104.9847000",
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://baz.boo.net",
+            "originShield": null,
+            "profileDescription": "Content Router for over-the-top",
+            "profileId": "5",
+            "profileName": "ROUTER_TOP",
+            "protocol": "0",
+            "qstringIgnore": "1",
+            "rangeRequestHandling": "0",
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "signed": false,
+            "sslKeyVersion": "0",
+            "tenantId": 1,
+            "trRequestHeaders": null,
+            "trResponseHeaders": "Access-Control-Allow-Origin: *",
+            "type": "HTTP",
+            "typeId": "8",
+            "xmlId": "foo-ds"
+        }
+      ]
+    }
+
+|
 **DELETE /api/1.2/deliveryservices/{:id}**
 
   Allows user to delete a delivery service.

@@ -61,7 +61,7 @@ sub find_steering {
         }
 
         my $target_id = $row->target_id;
-        
+
 
         if (! exists($steering{$row->steering_xml_id})) {
             my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $row->steering_xml_id } )->single();
@@ -69,7 +69,7 @@ sub find_steering {
             if ($ds->type->name =~ /CLIENT_STEERING/) {
                 $client_steering = '1';
             }
-            else { 
+            else {
                 $client_steering = '0';
             }
             $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id, "clientSteering" => \$client_steering};

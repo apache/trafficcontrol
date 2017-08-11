@@ -184,19 +184,15 @@ func startMonitorConfigFilePoller(filename string) error {
 			log.Errorf("monitor config file poll, polling file '%v': %v", filename, err)
 			return
 		}
-
 		cfg, err := config.LoadBytes(bytes)
 		if err != nil {
 			log.Errorf("monitor config file poll, loading bytes '%v' from '%v': %v", string(bytes), filename, err)
 			return
 		}
-
-		eventW, errW, warnW, infoW, debugW, err := config.GetLogWriters(cfg)
-		if err != nil {
+		if err := log.InitCfg(cfg); err != nil {
 			log.Errorf("monitor config file poll, getting log writers '%v': %v", filename, err)
 			return
 		}
-		log.Init(eventW, errW, warnW, infoW, debugW)
 	}
 
 	bytes, err := ioutil.ReadFile(filename)

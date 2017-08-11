@@ -618,6 +618,7 @@ API 1.2 Reference
   traffic_ops_api/v12/division
   traffic_ops_api/v12/federation
   traffic_ops_api/v12/hwinfo
+  traffic_ops_api/v12/iso
   traffic_ops_api/v12/job
   traffic_ops_api/v12/parameter
   traffic_ops_api/v12/phys_location
@@ -629,6 +630,7 @@ API 1.2 Reference
   traffic_ops_api/v12/server
   traffic_ops_api/v12/static_dns
   traffic_ops_api/v12/status
+  traffic_ops_api/v12/steering_target
   traffic_ops_api/v12/system
   traffic_ops_api/v12/tenant
   traffic_ops_api/v12/to_extension

@@ -164,7 +164,7 @@ my $YUM_OPTS = "";
 my $TS_HOME      = "/opt/trafficserver";
 my $TRAFFIC_LINE = $TS_HOME . "/bin/traffic_line";
 
-my $out          = `/usr/bin/yum $YUM_OPTS clean metadata 2>&1`;
+my $out          = `/usr/bin/yum $YUM_OPTS clean expire-cache 2>&1`;
 my $return       = &check_output($out);
 my @config_files = ();
 
@@ -302,7 +302,7 @@ sub revalidate_while_sleeping {
 
 sub os_version {
   my $release = "UNKNOWN";
-  if (`uname -r` =~ m/.+(el\d)\.x86_64/)  {
+  if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
     $release = uc $1;
   }
   exists $supported_el_release{$release} ? return $release
@@ -1267,12 +1267,19 @@ sub check_plugins {
 			foreach my $i ( 1..$#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
 				if (defined( $plugin_config_file ) ) {
-					($plugin_config_file) = split( /\s+/, $plugin_config_file);
-					( my @parts ) = split( /\//, $plugin_config_file );
-					$plugin_config_file = $parts[$#parts];
-					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
-						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
+					# Subblock for lasting out of.
+					{
+						($plugin_config_file) = split( /\s+/, $plugin_config_file);
+
+						# Skip parameters that start with '-', since those are probabably parameters, not config files.
+						last if $plugin_config_file =~ m/^-/; # Exit subblock.
+
+						( my @parts ) = split( /\//, $plugin_config_file );
+						$plugin_config_file = $parts[$#parts];
+						$plugin_config_file =~ s/\s+//g;
+						if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
+							$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
+						}
 					}
 				}
 				else {

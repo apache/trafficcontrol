@@ -1460,7 +1460,12 @@ sub catch_all {
 	my $mimetype = $self->req->headers->content_type;
 
 	if ( defined( $self->current_user() ) ) {
-		return $self->not_found();
+		if ( &UI::Utils::is_ldap( $self ) ) {
+			my $config = $self->app->config;
+			return $self->forbidden( $config->{'to'}{'no_account_found_msg'} );
+		} else {
+			return $self->not_found();
+		}
 	}
 	else {
 		return $self->unauthorized();
