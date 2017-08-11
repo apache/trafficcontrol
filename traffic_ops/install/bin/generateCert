@@ -17,7 +17,7 @@
 
 use strict;
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_ops/app/lib);
+use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/local/lib/perl5 /opt/traffic_ops/app/lib);
 
 use JSON;
 use InstallUtils;
@@ -46,11 +46,19 @@ EOF
 sub writeCdn_conf {
 	my $cdn_conf = shift;
 
-	# listen param to be inserted
-	my $listen_str = "https://[::]:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED";
 
 	# load as perl hash to find string to be replaced
 	my $cdnh = do $cdn_conf;
+
+	# get existing port, if any
+	my $listen = $cdnh->{hypnotoad}{listen}[0];
+	my ($port) = $listen =~ /:(\d+)/;
+	if (!defined($port)) {
+			$port = 60443;
+	}
+	# listen param to be inserted
+	my $listen_str = "https://[::]:${port}?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED";
+
 	if ( exists $cdnh->{hypnotoad} ) {
 		$cdnh->{hypnotoad}{listen} = [$listen_str];
 	}

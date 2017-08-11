@@ -22,6 +22,11 @@ import (
 	"strings"
 )
 
+// ServerDetailResponse is the JSON object returned for a single server
+type ServerDetailResponse struct {
+	Response Server `json:"response"`
+}
+
 // ServerResponse ...
 type ServerResponse struct {
 	Response []Server `json:"response"`
@@ -79,6 +84,23 @@ func (to *Session) Servers() ([]Server, error) {
 	}
 
 	return data.Response, nil
+}
+
+// Server gets a server by hostname
+func (to *Session) Server(name string) (*Server, error) {
+	url := fmt.Sprintf("/api/1.2/servers/hostname/%s/details", name)
+	resp, err := to.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	data := ServerDetailResponse{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return &data.Response, nil
 }
 
 // ServersByType gets an array of serves of a specified type.

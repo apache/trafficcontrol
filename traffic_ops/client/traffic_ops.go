@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/juju/persistent-cookiejar"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -110,37 +110,6 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 	return js, nil
 }
 
-func ResumeSession(toURL string, insecure bool) (*Session, error) {
-	options := cookiejar.Options{
-		PublicSuffixList: publicsuffix.List,
-	}
-
-	jar, err := cookiejar.New(&options)
-
-	if err != nil {
-		return nil, err
-	}
-
-	to := NewSession("", "", toURL, "", &http.Client{
-		Timeout: DefaultTimeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-		},
-		Jar: jar,
-	}, false)
-
-	resp, err := to.request("GET", "/api/1.2/user/current.json", nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	jar.Save()
-	fmt.Printf("Traffic Ops Session Resumed (%s)\n", resp.Status)
-
-	return to, nil
-}
-
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
 	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout) // TODO add UserAgent version
@@ -197,8 +166,6 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 		err := fmt.Errorf("Login failed, result string: %+v", result)
 		return nil, err
 	}
-
-	jar.Save()
 
 	return to, nil
 }

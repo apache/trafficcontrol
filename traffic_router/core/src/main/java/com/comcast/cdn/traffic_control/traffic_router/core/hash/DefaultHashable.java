@@ -19,8 +19,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
-public class DefaultHashable implements Hashable {
+public class DefaultHashable implements Hashable<DefaultHashable>, Comparable<DefaultHashable> {
 	private Double[] hashes;
+	private int order = 0;
+
+	@Override
+	public void setOrder(final int order) {
+		this.order = order;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	@Override
+	public boolean hasHashes() {
+		return hashes.length > 0 ? true : false;
+	}
 
 	@Override
 	public double getClosestHash(final double hash) {
@@ -44,5 +60,14 @@ public class DefaultHashable implements Hashable {
 	@Override
 	public List<Double> getHashValues() {
 		return Arrays.asList(hashes);
+	}
+
+	@Override
+	public int compareTo(final DefaultHashable o) {
+		if (this.getOrder() < 0 && o.getOrder() < 0) {
+			return getOrder() < o.getOrder() ? 1 : getOrder() > o.getOrder() ? -1 : 0;
+		} else {
+			return getOrder() < o.getOrder() ? -1 : getOrder() > o.getOrder() ? 1 : 0;
+		}
 	}
 }

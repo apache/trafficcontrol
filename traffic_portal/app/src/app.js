@@ -1,18 +1,20 @@
 /*
-
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 'use strict';
@@ -30,89 +32,293 @@ var trafficPortal = angular.module('trafficPortal', [
         'ngResource',
         'ngSanitize',
         'ngRoute',
+        'ngMap',
         'ui.router',
         'ui.bootstrap',
-        'ui.bootstrap.datetimepicker',
+        'restangular',
         'app.templates',
+        'angular-jwt',
         'angular-loading-bar',
 
         // public modules
         require('./modules/public').name,
-        require('./modules/public/home').name,
-        require('./modules/public/home/landing').name,
-        require('./modules/public/about').name,
+        require('./modules/public/login').name,
 
         // private modules
         require('./modules/private').name,
 
-        // collateral
-        require('./modules/private/collateral').name,
-
-        // dashboard
-        require('./modules/private/dashboard').name,
-        require('./modules/private/dashboard/overview').name,
-
-        // delivery service
-        require('./modules/private/deliveryService').name,
-        require('./modules/private/deliveryService/new').name,
-        require('./modules/private/deliveryService/view').name,
-        require('./modules/private/deliveryService/view/overview').name,
-        require('./modules/private/deliveryService/view/overview/detail').name,
-
-        // delivery service charts
-        require('./modules/private/deliveryService/view/charts').name,
-        require('./modules/private/deliveryService/view/charts/bandwidthPerSecond').name,
-        require('./modules/private/deliveryService/view/charts/httpStatus').name,
-        require('./modules/private/deliveryService/view/charts/transactionsPerSecond').name,
-
-        // user
+        // current user
         require('./modules/private/user').name,
         require('./modules/private/user/edit').name,
-        require('./modules/private/user/register').name,
-        require('./modules/private/user/reset').name,
+
+        // admin
+        require('./modules/private/admin').name,
+        require('./modules/private/admin/asns').name,
+        require('./modules/private/admin/asns/edit').name,
+        require('./modules/private/admin/asns/list').name,
+        require('./modules/private/admin/asns/new').name,
+        require('./modules/private/admin/cdns').name,
+        require('./modules/private/admin/cdns/config').name,
+        require('./modules/private/admin/cdns/deliveryServices').name,
+        require('./modules/private/admin/cdns/edit').name,
+        require('./modules/private/admin/cdns/list').name,
+        require('./modules/private/admin/cdns/new').name,
+        require('./modules/private/admin/cdns/profiles').name,
+        require('./modules/private/admin/cdns/servers').name,
+        require('./modules/private/admin/changeLogs').name,
+        require('./modules/private/admin/changeLogs/list').name,
+        require('./modules/private/admin/divisions').name,
+        require('./modules/private/admin/divisions/edit').name,
+        require('./modules/private/admin/divisions/list').name,
+        require('./modules/private/admin/divisions/new').name,
+        require('./modules/private/admin/divisions/regions').name,
+        require('./modules/private/admin/jobs').name,
+        require('./modules/private/admin/jobs/list').name,
+        require('./modules/private/admin/jobs/new').name,
+        require('./modules/private/admin/physLocations').name,
+        require('./modules/private/admin/physLocations/edit').name,
+        require('./modules/private/admin/physLocations/list').name,
+        require('./modules/private/admin/physLocations/new').name,
+        require('./modules/private/admin/physLocations/servers').name,
+        require('./modules/private/admin/parameters').name,
+        require('./modules/private/admin/parameters/cacheGroups').name,
+        require('./modules/private/admin/parameters/edit').name,
+        require('./modules/private/admin/parameters/list').name,
+        require('./modules/private/admin/parameters/new').name,
+        require('./modules/private/admin/parameters/profiles').name,
+        require('./modules/private/admin/profiles').name,
+        require('./modules/private/admin/profiles/deliveryServices').name,
+        require('./modules/private/admin/profiles/edit').name,
+        require('./modules/private/admin/profiles/list').name,
+        require('./modules/private/admin/profiles/new').name,
+        require('./modules/private/admin/profiles/parameters').name,
+        require('./modules/private/admin/profiles/servers').name,
+        require('./modules/private/admin/regions').name,
+        require('./modules/private/admin/regions/edit').name,
+        require('./modules/private/admin/regions/list').name,
+        require('./modules/private/admin/regions/physLocations').name,
+        require('./modules/private/admin/regions/new').name,
+        require('./modules/private/admin/statuses').name,
+        require('./modules/private/admin/statuses/edit').name,
+        require('./modules/private/admin/statuses/list').name,
+        require('./modules/private/admin/statuses/new').name,
+        require('./modules/private/admin/statuses/servers').name,
+        require('./modules/private/admin/tenants').name,
+        require('./modules/private/admin/tenants/edit').name,
+        require('./modules/private/admin/tenants/list').name,
+        require('./modules/private/admin/tenants/new').name,
+        require('./modules/private/admin/types').name,
+        require('./modules/private/admin/types/edit').name,
+        require('./modules/private/admin/types/list').name,
+        require('./modules/private/admin/types/new').name,
+        require('./modules/private/admin/types/servers').name,
+        require('./modules/private/admin/types/cacheGroups').name,
+        require('./modules/private/admin/types/deliveryServices').name,
+        require('./modules/private/admin/types/staticDnsEntries').name,
+        require('./modules/private/admin/users').name,
+        require('./modules/private/admin/users/deliveryServices').name,
+        require('./modules/private/admin/users/edit').name,
+        require('./modules/private/admin/users/list').name,
+        require('./modules/private/admin/users/new').name,
+
+        // configure
+        require('./modules/private/configure').name,
+        require('./modules/private/configure/cacheGroups').name,
+        require('./modules/private/configure/cacheGroups/edit').name,
+        require('./modules/private/configure/cacheGroups/list').name,
+        require('./modules/private/configure/cacheGroups/new').name,
+        require('./modules/private/configure/cacheGroups/asns').name,
+        require('./modules/private/configure/cacheGroups/parameters').name,
+        require('./modules/private/configure/cacheGroups/servers').name,
+        require('./modules/private/configure/cacheGroups/staticDnsEntries').name,
+        require('./modules/private/configure/deliveryServices').name,
+        require('./modules/private/configure/deliveryServices/edit').name,
+        require('./modules/private/configure/deliveryServices/list').name,
+        require('./modules/private/configure/deliveryServices/new').name,
+        require('./modules/private/configure/deliveryServices/jobs').name,
+        require('./modules/private/configure/deliveryServices/jobs/list').name,
+        require('./modules/private/configure/deliveryServices/jobs/new').name,
+        require('./modules/private/configure/deliveryServices/regexes').name,
+        require('./modules/private/configure/deliveryServices/regexes/edit').name,
+        require('./modules/private/configure/deliveryServices/regexes/list').name,
+        require('./modules/private/configure/deliveryServices/regexes/new').name,
+        require('./modules/private/configure/deliveryServices/servers').name,
+        require('./modules/private/configure/deliveryServices/staticDnsEntries').name,
+        require('./modules/private/configure/deliveryServices/targets').name,
+        require('./modules/private/configure/deliveryServices/targets/edit').name,
+        require('./modules/private/configure/deliveryServices/targets/list').name,
+        require('./modules/private/configure/deliveryServices/targets/new').name,
+        require('./modules/private/configure/deliveryServices/users').name,
+        require('./modules/private/configure/servers').name,
+        require('./modules/private/configure/servers/deliveryServices').name,
+        require('./modules/private/configure/servers/edit').name,
+        require('./modules/private/configure/servers/new').name,
+        require('./modules/private/configure/servers/list').name,
+
+        // custom
+        require('./modules/private/custom').name,
+
+        // monitor
+        require('./modules/private/monitor').name,
+
+        // dashboard
+        require('./modules/private/monitor/dashboard').name,
+        require('./modules/private/monitor/dashboard/view').name,
+
+        // map
+        require('./modules/private/monitor/map').name,
 
         // common modules
-        require('./common/modules/cacheGroups').name,
-        require('./common/modules/chart/bandwidthPerSecond').name,
-        require('./common/modules/chart/capacity').name,
-        require('./common/modules/chart/dates').name,
-        require('./common/modules/chart/httpStatus').name,
-        require('./common/modules/chart/routing').name,
-        require('./common/modules/chart/transactionsPerSecond').name,
-        require('./common/modules/dates').name,
-        require('./common/modules/deliveryService/config/edit').name,
         require('./common/modules/dialog/confirm').name,
+        require('./common/modules/dialog/delete').name,
+        require('./common/modules/dialog/input').name,
         require('./common/modules/dialog/reset').name,
-        require('./common/modules/footer').name,
+        require('./common/modules/dialog/select').name,
+        require('./common/modules/dialog/select/status').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
-        require('./common/modules/release/version').name,
-        require('./common/modules/tools/purge').name,
+        require('./common/modules/navigation').name,
+        require('./common/modules/release').name,
 
+        // forms
+        require('./common/modules/form/cacheGroup').name,
+        require('./common/modules/form/cacheGroup/edit').name,
+        require('./common/modules/form/cacheGroup/new').name,
+        require('./common/modules/form/asn').name,
+        require('./common/modules/form/asn/edit').name,
+        require('./common/modules/form/asn/new').name,
+        require('./common/modules/form/cdn').name,
+        require('./common/modules/form/cdn/edit').name,
+        require('./common/modules/form/cdn/new').name,
+        require('./common/modules/form/deliveryService').name,
+        require('./common/modules/form/deliveryService/edit').name,
+        require('./common/modules/form/deliveryService/new').name,
+        require('./common/modules/form/deliveryServiceRegex').name,
+        require('./common/modules/form/deliveryServiceRegex/edit').name,
+        require('./common/modules/form/deliveryServiceRegex/new').name,
+        require('./common/modules/form/deliveryServiceTarget').name,
+        require('./common/modules/form/deliveryServiceTarget/edit').name,
+        require('./common/modules/form/deliveryServiceTarget/new').name,
+        require('./common/modules/form/deliveryServiceJob').name,
+        require('./common/modules/form/deliveryServiceJob/new').name,
+        require('./common/modules/form/division').name,
+        require('./common/modules/form/division/edit').name,
+        require('./common/modules/form/division/new').name,
+        require('./common/modules/form/job').name,
+        require('./common/modules/form/job/new').name,
+        require('./common/modules/form/physLocation').name,
+        require('./common/modules/form/physLocation/edit').name,
+        require('./common/modules/form/physLocation/new').name,
+        require('./common/modules/form/parameter').name,
+        require('./common/modules/form/parameter/edit').name,
+        require('./common/modules/form/parameter/new').name,
+        require('./common/modules/form/profile').name,
+        require('./common/modules/form/profile/edit').name,
+        require('./common/modules/form/profile/new').name,
+        require('./common/modules/form/region').name,
+        require('./common/modules/form/region/edit').name,
+        require('./common/modules/form/region/new').name,
+        require('./common/modules/form/server').name,
+        require('./common/modules/form/server/edit').name,
+        require('./common/modules/form/server/new').name,
+        require('./common/modules/form/status').name,
+        require('./common/modules/form/status/edit').name,
+        require('./common/modules/form/status/new').name,
+        require('./common/modules/form/tenant').name,
+        require('./common/modules/form/tenant/edit').name,
+        require('./common/modules/form/tenant/new').name,
+        require('./common/modules/form/type').name,
+        require('./common/modules/form/type/edit').name,
+        require('./common/modules/form/type/new').name,
+        require('./common/modules/form/user').name,
+        require('./common/modules/form/user/edit').name,
+        require('./common/modules/form/user/new').name,
+
+        // tables
+        require('./common/modules/table/cacheGroups').name,
+        require('./common/modules/table/cacheGroupAsns').name,
+        require('./common/modules/table/cacheGroupParameters').name,
+        require('./common/modules/table/cacheGroupServers').name,
+        require('./common/modules/table/cacheGroupStaticDnsEntries').name,
+        require('./common/modules/table/changeLogs').name,
+        require('./common/modules/table/asns').name,
+        require('./common/modules/table/cdns').name,
+        require('./common/modules/table/cdnDeliveryServices').name,
+        require('./common/modules/table/cdnProfiles').name,
+        require('./common/modules/table/cdnServers').name,
+        require('./common/modules/table/deliveryServices').name,
+        require('./common/modules/table/deliveryServiceJobs').name,
+        require('./common/modules/table/deliveryServiceRegexes').name,
+        require('./common/modules/table/deliveryServiceServers').name,
+        require('./common/modules/table/deliveryServiceStaticDnsEntries').name,
+        require('./common/modules/table/deliveryServiceTargets').name,
+        require('./common/modules/table/deliveryServiceUsers').name,
+        require('./common/modules/table/divisions').name,
+        require('./common/modules/table/divisionRegions').name,
+        require('./common/modules/table/jobs').name,
+        require('./common/modules/table/physLocations').name,
+        require('./common/modules/table/physLocationServers').name,
+        require('./common/modules/table/parameters').name,
+        require('./common/modules/table/parameterCacheGroups').name,
+        require('./common/modules/table/parameterProfiles').name,
+        require('./common/modules/table/profileDeliveryServices').name,
+        require('./common/modules/table/profileParameters').name,
+        require('./common/modules/table/profileServers').name,
+        require('./common/modules/table/profiles').name,
+        require('./common/modules/table/regions').name,
+        require('./common/modules/table/regionPhysLocations').name,
+        require('./common/modules/table/servers').name,
+        require('./common/modules/table/serverDeliveryServices').name,
+        require('./common/modules/table/statuses').name,
+        require('./common/modules/table/statusServers').name,
+        require('./common/modules/table/tenants').name,
+        require('./common/modules/table/types').name,
+        require('./common/modules/table/typeCacheGroups').name,
+        require('./common/modules/table/typeDeliveryServices').name,
+        require('./common/modules/table/typeServers').name,
+        require('./common/modules/table/typeStaticDnsEntries').name,
+        require('./common/modules/table/users').name,
+        require('./common/modules/table/userDeliveryServices').name,
+
+        // widgets
+        require('./common/modules/widget/cacheGroups').name,
+        require('./common/modules/widget/capacity').name,
+        require('./common/modules/widget/cdnChart').name,
+        require('./common/modules/widget/changeLogs').name,
+        require('./common/modules/widget/routing').name,
+
+        // models
         require('./common/models').name,
         require('./common/api').name,
 
-        //directives
-        require('./common/directives/enter').name,
-        require('./common/directives/formattedDate').name,
+        // directives
         require('./common/directives/match').name,
-        require('./common/directives/rcSubmit').name,
-        require('./common/directives/rcVerifySet').name,
-        require('./common/directives/selectOnClick').name,
 
         // services
         require('./common/service/application').name,
         require('./common/service/utils').name,
-        require('./common/service/utils/date').name,
 
-        //filters
+        // filters
         require('./common/filters').name
 
     ], App)
 
-        .controller('AppController', require('./AppController'))
+        .config(function($stateProvider, $logProvider, $controllerProvider, RestangularProvider, ENV) {
 
-        .config(function($stateProvider, $logProvider, $controllerProvider) {
+            RestangularProvider.setBaseUrl(ENV.api['root']);
+
+            RestangularProvider.setResponseInterceptor(function(data, operation, what) {
+
+                if (angular.isDefined(data.response)) { // todo: this should not be needed. need better solution.
+                    if (operation == 'getList') {
+                        return data.response;
+                    }
+                    return data.response[0];
+                } else {
+                    return data;
+                }
+            });
+
             $controllerProvider.allowGlobals();
             $logProvider.debugEnabled(true);
             $stateProvider
@@ -120,24 +326,25 @@ var trafficPortal = angular.module('trafficPortal', [
                     url: '/',
                     abstract: true,
                     templateUrl: 'common/templates/master.tpl.html',
-                    controller: 'AppController',
-                    resolve: {
-                        properties: function(portalService, propertiesModel) {
-                            return portalService.getProperties()
-                                .then(function(result) {
-                                    propertiesModel.setProperties(result);
-                                });
+                        resolve: {
+                                properties: function(trafficPortalService, propertiesModel) {
+                                        return trafficPortalService.getProperties()
+                                            .then(function(result) {
+                                                    propertiesModel.setProperties(result);
+                                            });
+                                }
                         }
-                    }
+
                 });
         })
 
-        .run(function(applicationService) {
+        .run(function($log, applicationService) {
+            $log.debug("Application run...");
             applicationService.startup();
         })
     ;
 
-trafficPortal.factory('authInterceptor', function ($q, $location, $timeout, dateUtils, messageModel, userModel) {
+trafficPortal.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
     return {
         responseError: function (rejection) {
             var url = $location.url(),
@@ -154,7 +361,7 @@ trafficPortal.factory('authInterceptor', function ($q, $location, $timeout, date
                 } else {
                     $timeout(function () {
                         messageModel.setMessages(alerts, true);
-                        // forward the to the home page with ?redirect=page/they/were/trying/to/reach
+                        // forward the to the login page with ?redirect=page/they/were/trying/to/reach
                         $location.url('/').search({ redirect: encodeURIComponent(url) });
                     }, 200);
                 }
@@ -165,7 +372,7 @@ trafficPortal.factory('authInterceptor', function ($q, $location, $timeout, date
             } else if (rejection.status.toString().match(/^5\d[01356789]$/)) {
                 // matches 5xx EXCEPT for 502's and 504's which indicate a timeout and will be handled by each service call accordingly
                 $timeout(function () {
-                    messageModel.setMessages([ { level: 'error', text: rejection.status.toString() + ': ' + rejection.statusText + ' (' + dateUtils.dateFormat(new Date(), "UTC:dd/mmm/yyyy:HH:MM:ss o") + ')'  } ], false);
+                    messageModel.setMessages([ { level: 'error', text: rejection.status.toString() + ': ' + rejection.statusText } ], false);
                 }, 200);
             }
 

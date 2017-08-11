@@ -80,7 +80,7 @@ sub get_hostname {
 	my $ds_id = shift;
 	my $data = shift;
 
-	my $domain_name     = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+	my $domain_name = $data->cdn->domain_name;
 	my $ds_regexes      = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 	my @example_urls    = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
 

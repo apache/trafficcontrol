@@ -173,55 +173,46 @@ sub register {
 
 	$app->renderer->add_helper(
 		find_existing_host_regex => sub {
-			my $self = shift || confess($no_instance_message);
-			my $regex_type = shift || confess("Please supply a regex type");
-			my $host_regex = shift || confess("Please supply a host regular expression");
-			my $cdn_domain = shift || confess("Please supply a cdn domain");
-			my $cdn_id = shift || confess("Please supply a cdn_name");
-			my $ds_id = shift;
+                        my $self = shift || confess($no_instance_message);
+                        my $regex_type = shift || confess("Please supply a regex type");
+                        my $host_regex = shift || confess("Please supply a host regular expression");
+                        my $cdn_domain = shift || confess("Please supply a cdn domain");
+                        my $cdn_id = shift || confess("Please supply a cdn_name");
+                        my $ds_id = shift;
 
-			if ($regex_type ne 'HOST_REGEXP') {
-				return undef;
-			}
+                        if ($regex_type ne 'HOST_REGEXP') {
+                                return undef;
+                        }
 
-			my $new_regex = $host_regex . $cdn_domain;
-			my $rs = $self->db->resultset('DeliveryserviceRegex')->search(undef, {prefetch => [{regex => undef}, {deliveryservice => undef}]} );
+                        my $new_regex = $host_regex . $cdn_domain;
+                        my %criteria;
+                        $criteria{'pattern'} = $host_regex;
+                        my $rs_regex = $self->db->resultset('Regex')->search( \%criteria );
+                        while ( my $row = $rs_regex->next ) {
+                                my $rs_ds_regex = $self->db->resultset('DeliveryserviceRegex')->search( {  regex => $row->id } );
+                                while (my $ds_regex_row = $rs_ds_regex->next) {
+                                        if (defined($ds_id) && $ds_id == $ds_regex_row->deliveryservice->id ) { # do not compare if it is the same delivery service
+                                                next;
+                                        }
+                                        my $other_cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_regex_row->deliveryservice->id })->single->cdn_id;
 
-			while (my $row = $rs->next) {
-				my $other_cdn_id = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $row->deliveryservice->id })->single->cdn_id;
-
-				if (defined($cdn_id) && $other_cdn_id != $cdn_id) {
-					next;
-				}
-
-				if (defined($ds_id) && $ds_id == $row->deliveryservice->id) {
-					next;
-				}
-
-				my $existing_regex = $row->regex->pattern . $cdn_domain;
-
-				if ($existing_regex eq $new_regex) {
-					return $existing_regex;
-				}
-			}
-
-			return undef;
-		}
-	);
+                                        if (defined($cdn_id) && $other_cdn_id ne $cdn_id) { # do not compare if not the same cdn.
+                                                next;
+                                        }
+                                        return $new_regex; # at this point we know they are the same and are conflicting.
+                                }
+                        }
+                        return undef;
+                }
+        );
 
 	$app->renderer->add_helper(
 		get_cdn_domain_by_ds_id => sub {
 			my $self = shift || confess($no_instance_message);
 			my $ds_id = shift || confess("Please supply a delivery service id!");
 
-			my $cdn_domain = $self->db->resultset('Parameter')->search(
-				{ -and => [ 'me.name' => 'domain_name', 'deliveryservices.id' => $ds_id ] },
-				{
-					join     => { profile_parameters => { profile => { deliveryservices => undef } } },
-					distinct => 1
-				}
-			)->get_column('value')->single();
-
+			my $cdn_id = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->get_column('cdn_id')->single();
+			my $cdn_domain = $self->db->resultset('Cdn')->search( { id =>  $cdn_id } )->get_column('domain_name')->single();
 			return $cdn_domain;
 		}
 	);
@@ -231,14 +222,9 @@ sub register {
 			my $self = shift || confess($no_instance_message);
 			my $profile_id = shift || confess("Please Supply a profile id");
 
-			return $self->db->resultset('Parameter')->search(
-				{
-					'Name'                       => 'domain_name',
-					'Config_file'                => 'CRConfig.json',
-					'profile_parameters.profile' => $profile_id,
-				},
-				{ join => 'profile_parameters', }
-			)->get_column('value')->single();
+			my $cdn_id = $self->db->resultset('Profile')->search( { id => $profile_id } )->get_column('cdn')->single();
+			my $cdn_domain = $self->db->resultset('Cdn')->search( { id =>  $cdn_id } )->get_column('domain_name')->single();
+			return $cdn_domain;
 		}
 	);
 

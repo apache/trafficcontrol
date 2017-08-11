@@ -63,6 +63,14 @@ function deletefunction() {
 							<td>Description</td>
 							<td class="editable" id="description"><%= $profile->description %></td>
 						</tr>
+						<tr>
+							<td>CDN</td>
+							<td class="editable" id="cdn"><%= defined($profile->cdn) ? $profile->cdn->name : "-" %></td>
+						</tr>
+						<tr>
+							<td>Type</td>
+							<td class="editable" id="type"><%= $profile->type %></td>
+						</tr>
 					</table>
 					<div id="parameter_link">
 					<br>

@@ -1,5 +1,4 @@
 /*
-   Copyright 2015 Comcast Cable Communications Management, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -62,7 +61,7 @@ type DeliveryService struct {
 	OrgServerFQDN        string                 `json:"orgServerFqdn"`
 	TypeID               int                    `json:"typeId"`
 	Type                 string                 `json:"type"`
-	ProfileID            int                    `json:"profileId"`
+	ProfileID            int                    `json:"profileId,omitempty"`
 	ProfileName          string                 `json:"profileName"`
 	ProfileDesc          string                 `json:"profileDescription"`
 	CDNName              string                 `json:"cdnName"`
@@ -100,7 +99,7 @@ type DeliveryService struct {
 // DeliveryServiceMatch ...
 type DeliveryServiceMatch struct {
 	Type      string `json:"type"`
-	SetNumber string `json:"setNumber"`
+	SetNumber int    `json:"setNumber"`
 	Pattern   string `json:"pattern"`
 }
 

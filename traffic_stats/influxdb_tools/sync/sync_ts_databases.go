@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb"
@@ -127,8 +128,8 @@ func syncCsDb(ch chan string, sourceClient influx.Client, targetClient influx.Cl
 		//these take a long time so do them last
 		"bandwidth.1min",
 		"connections.1min",
-		//
 	}
+
 	for _, statName := range stats {
 		fmt.Printf("Syncing %s database with %s \n", db, statName)
 		syncCacheStat(sourceClient, targetClient, statName, days)
@@ -176,16 +177,19 @@ func syncDailyDb(ch chan string, sourceClient influx.Client, targetClient influx
 func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 	//get records from source DB
 	db := cache
+
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
 		RetentionPolicy: "monthly",
 	})
 
-	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"monthly\".\"%s\"", statName)
+	queryString := fmt.Sprintf("select time, cdn, hostname, type, value from \"%s\".\"%s\"", "monthly", statName)
+
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
+
 	fmt.Println("queryString ", queryString)
 	res, err := queryDB(sourceClient, queryString, db)
 	if err != nil {
@@ -205,7 +209,8 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 	for ssKey := range sourceStats {
 		ts := targetStats[ssKey]
 		ss := sourceStats[ssKey]
-		if ts.value > ss.value {
+
+		if ts.value >= ss.value {
 			//fmt.Printf("target value %v is at least equal to source value %v\n", ts.value, ss.value)
 			continue //target value is bigger so leave it
 		}
@@ -232,19 +237,28 @@ func syncCacheStat(sourceClient influx.Client, targetClient influx.Client, statN
 		}
 		bps.AddPoint(pt)
 	}
-	targetClient.Write(bps)
+	err = targetClient.Write(bps)
+	if err != nil {
+		fmt.Println("Error writing stat - ", err)
+	}
 }
 
 func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 
 	db := deliveryService
+	rp := "monthly"
+
+	if strings.Contains(statName, "1day") {
+		rp = "indefinite"
+	}
+
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database:        db,
 		Precision:       "ms",
-		RetentionPolicy: "monthly",
+		RetentionPolicy: rp,
 	})
 
-	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"monthly\".\"%s\"", statName)
+	queryString := fmt.Sprintf("select time, cachegroup, cdn, deliveryservice, value from \"%s\".\"%s\"", rp, statName)
 	if days > 0 {
 		queryString = fmt.Sprintf("%s where time > now() - %dd", queryString, days)
 	}
@@ -291,15 +305,19 @@ func syncDeliveryServiceStat(sourceClient influx.Client, targetClient influx.Cli
 		}
 		bps.AddPoint(pt)
 	}
-	targetClient.Write(bps)
+	err = targetClient.Write(bps)
+	if err != nil {
+		fmt.Println("Error writing stat - ", err)
+	}
 }
 
 func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statName string, days int) {
 
 	db := daily
 	bps, _ := influx.NewBatchPoints(influx.BatchPointsConfig{
-		Database:  db,
-		Precision: "s",
+		Database:        db,
+		Precision:       "s",
+		RetentionPolicy: "indefinite",
 	})
 	//get records from source DB
 	queryString := fmt.Sprintf("select time, cdn, deliveryservice, value from \"%s\"", statName)
@@ -347,7 +365,10 @@ func syncDailyStat(sourceClient influx.Client, targetClient influx.Client, statN
 		}
 		bps.AddPoint(pt)
 	}
-	targetClient.Write(bps)
+	err = targetClient.Write(bps)
+	if err != nil {
+		fmt.Println("Error writing stat - ", err)
+	}
 }
 
 func getCacheStats(res []influx.Result) map[string]cacheStats {
@@ -374,7 +395,7 @@ func getCacheStats(res []influx.Result) map[string]cacheStats {
 					fmt.Printf("Couldn't parse value from record %v\n", record)
 					continue
 				}
-				key := data.t + data.cdn + data.hostname
+				key := data.t + data.cdn + data.cacheType + data.hostname
 				response[key] = *data
 			}
 		}

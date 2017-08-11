@@ -15,12 +15,16 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -375,5 +379,177 @@ public class SteeringTest {
 		}
 
 		return stringBuilder.toString();
+	}
+
+	@Test
+	public void itUsesMultiLocationFormatResponse() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=true");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=TRUE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=TruE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=T");
+
+		for (final String path : paths) {
+			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+			httpGet.addHeader("Host", "tr.client-steering-test-1.thecdn.example.com");
+
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpGet);
+				String location1 = ".client-steering-target-2.thecdn.example.com:8090" + path;
+				String location2 = ".client-steering-target-1.thecdn.example.com:8090" + path;
+
+				assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+				assertThat(response.getFirstHeader("Location").getValue(), endsWith(location1));
+
+				HttpEntity entity = response.getEntity();
+				ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+				assertThat(entity.getContent(), not(nullValue()));
+
+				JsonNode json = objectMapper.readTree(entity.getContent());
+
+				assertThat(json.has("locations"), equalTo(true));
+				assertThat(json.get("locations").size(), equalTo(2));
+				assertThat(json.get("locations").get(0).asText(), equalTo(response.getFirstHeader("Location").getValue()));
+				assertThat(json.get("locations").get(1).asText(), endsWith(location2));
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+	}
+
+	@Test
+	public void itUsesMultiLocationFormatResponseWithout302() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=false");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=FALSE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=FalsE");
+
+		for (final String path : paths) {
+			HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+			httpGet.addHeader("Host", "tr.client-steering-test-1.thecdn.example.com");
+
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpGet);
+				String location1 = ".client-steering-target-2.thecdn.example.com:8090" + path;
+				String location2 = ".client-steering-target-1.thecdn.example.com:8090" + path;
+
+				assertThat("Failed getting 200 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(200));
+
+				HttpEntity entity = response.getEntity();
+				ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+				assertThat(entity.getContent(), not(nullValue()));
+
+				JsonNode json = objectMapper.readTree(entity.getContent());
+
+				assertThat(json.has("locations"), equalTo(true));
+				assertThat(json.get("locations").size(), equalTo(2));
+				assertThat(json.get("locations").get(0).asText(), endsWith(location1));
+				assertThat(json.get("locations").get(1).asText(), endsWith(location2));
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+	}
+
+	@Test
+	public void itUsesNoMultiLocationFormatResponseWithout302WithHead() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=false");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=FALSE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=FalsE");
+
+		for (final String path : paths) {
+			HttpHead httpHead = new HttpHead("http://localhost:" + routerHttpPort + path);
+			httpHead.addHeader("Host", "tr.client-steering-test-1.thecdn.example.com");
+
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpHead);
+				assertThat("Failed getting 200 for request " + httpHead.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(200));
+				assertThat("Failed getting null body for HEAD request", response.getEntity(), nullValue());
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+	}
+
+	@Test
+	public void itUsesNoMultiLocationFormatResponseWithHead() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=true");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=TRUE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=TruE");
+		paths.add("/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78&" + RouterFilter.REDIRECT_QUERY_PARAM + "=T");
+
+		for (final String path : paths) {
+			HttpHead httpHead = new HttpHead("http://localhost:" + routerHttpPort + path);
+			httpHead.addHeader("Host", "tr.client-steering-test-1.thecdn.example.com");
+
+			CloseableHttpResponse response = null;
+
+			try {
+				response = httpClient.execute(httpHead);
+				String location = ".client-steering-target-2.thecdn.example.com:8090" + path;
+
+				assertThat("Failed getting 302 for request " + httpHead.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+				assertThat(response.getFirstHeader("Location").getValue(), endsWith(location));
+				assertThat("Failed getting null body for HEAD request", response.getEntity(), nullValue());
+			} finally {
+				if (response != null) { response.close(); }
+			}
+		}
+	}
+
+	@Test
+	public void itUsesMultiLocationFormatWithMoreThanTwoEntries() throws Exception {
+		final String path = "/qwerytuiop/asdfghjkl?fakeClientIpAddress=12.34.56.78";
+		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + path);
+		httpGet.addHeader("Host", "tr.client-steering-test-2.thecdn.example.com");
+
+		CloseableHttpResponse response = null;
+
+		try {
+			response = httpClient.execute(httpGet);
+			String location1 = ".steering-target-2.thecdn.example.com:8090" + path;
+			String location2 = ".steering-target-1.thecdn.example.com:8090" + path;
+			String location3 = ".client-steering-target-2.thecdn.example.com:8090" + path;
+			String location4 = ".client-steering-target-4.thecdn.example.com:8090" + path;
+			String location5 = ".client-steering-target-3.thecdn.example.com:8090" + path;
+			String location6 = ".client-steering-target-1.thecdn.example.com:8090" + path;
+			String location7 = ".steering-target-4.thecdn.example.com:8090" + path;
+			String location8 = ".steering-target-3.thecdn.example.com:8090" + path;
+
+			HttpEntity entity = response.getEntity();
+			assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
+			assertThat(response.getFirstHeader("Location").getValue(), endsWith(location1));
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+			assertThat(entity.getContent(), not(nullValue()));
+
+			JsonNode json = objectMapper.readTree(entity.getContent());
+
+			assertThat(json.has("locations"), equalTo(true));
+			assertThat(json.get("locations").size(), equalTo(8));
+			assertThat(json.get("locations").get(0).asText(), equalTo(response.getFirstHeader("Location").getValue()));
+			assertThat(json.get("locations").get(1).asText(), endsWith(location2));
+			assertThat(json.get("locations").get(2).asText(), endsWith(location3));
+			assertThat(json.get("locations").get(3).asText(), endsWith(location4));
+			assertThat(json.get("locations").get(4).asText(), endsWith(location5));
+			assertThat(json.get("locations").get(5).asText(), endsWith(location6));
+			assertThat(json.get("locations").get(6).asText(), endsWith(location7));
+			assertThat(json.get("locations").get(7).asText(), endsWith(location8));
+		} finally {
+			if (response != null) { response.close(); }
+		}
 	}
 }

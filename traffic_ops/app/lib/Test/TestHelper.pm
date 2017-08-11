@@ -25,18 +25,25 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 use Schema;
+
+use Utils::Tenant;
 use Fixtures::Cdn;
 use Fixtures::Deliveryservice;
 use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
 use Fixtures::Cachegroup;
 use Fixtures::EdgeCachegroup;
+use Fixtures::Log;
+use Fixtures::Job;
+use Fixtures::JobAgent;
+use Fixtures::JobStatus;
 use Fixtures::Profile;
 use Fixtures::Parameter;
 use Fixtures::ProfileParameter;
 use Fixtures::Role;
 use Fixtures::Server;
 use Fixtures::Status;
+use Fixtures::Tenant;
 use Fixtures::TmUser;
 use Fixtures::Type;
 use Fixtures::Division;
@@ -63,6 +70,12 @@ use constant STEERING_PASSWORD_1 => 'password';
 
 use constant STEERING_USER_2 => 'steering2';
 use constant STEERING_PASSWORD_2 => 'password';
+
+use constant ADMIN_ROOT_USER          => 'admin-root';
+use constant ADMIN_ROOT_USER_PASSWORD => 'password';
+
+use constant PORTAL_ROOT_USER          => 'portal-root';
+use constant PORTAL_ROOT_USER_PASSWORD => 'password';
 
 sub load_all_fixtures {
 	my $self    = shift;
@@ -103,6 +116,7 @@ sub load_core_data {
 
 	$self->reset_sequence_id();
 
+	$self->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Role->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -123,6 +137,9 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::DeliveryserviceRegex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceServer->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::JobStatus->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::JobAgent->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Job->new($schema_values) );
 }
 
 sub unload_core_data {
@@ -132,6 +149,8 @@ sub unload_core_data {
 	$self->teardown($schema, 'ToExtension');
 	$self->teardown($schema, 'Staticdnsentry');
 	$self->teardown($schema, 'Job');
+	$self->teardown($schema, 'JobAgent');
+	$self->teardown($schema, 'JobStatus');
 	$self->teardown($schema, 'Log');
 	$self->teardown($schema, 'Asn');
 	$self->teardown($schema, 'DeliveryserviceTmuser');
@@ -151,8 +170,9 @@ sub unload_core_data {
 	$self->teardown($schema, 'ProfileParameter');
 	$self->teardown($schema, 'Type');
 	$self->teardown($schema, 'Status');
-	$self->teardown( $schema, 'Snapshot' );
+	$self->teardown($schema, 'Snapshot');
 	$self->teardown($schema, 'Cdn');
+	$self->teardown($schema, 'Tenant');
 }
 
 sub teardown {
@@ -160,7 +180,14 @@ sub teardown {
 	my $schema     = shift;
 	my $table_name = shift;
 
-	$schema->resultset($table_name)->delete_all;
+	if ($table_name eq 'Tenant') {
+		my $tenant_utils = Utils::Tenant->new(undef, 10**9, $schema);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		$tenant_utils->cascade_delete_tenants_tree($tenants_data);
+	}
+	else {
+		$schema->resultset($table_name)->delete_all;
+	}
 }
 
 # Tearing down the Cachegroup table requires deleting them in a specific order, because

@@ -242,7 +242,12 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
-	<bean id="RequestHandlerExecutorService" class="java.util.concurrent.Executors"
+	<bean id="UDPRequestHandlerExecutorService" class="java.util.concurrent.Executors"
+		factory-method="newFixedThreadPool">
+		<constructor-arg index="0" value="$[dns.max-threads:1000]" />
+	</bean>
+
+	<bean id="TCPRequestHandlerExecutorService" class="java.util.concurrent.Executors"
 		factory-method="newFixedThreadPool">
 		<constructor-arg index="0" value="$[dns.max-threads:1000]" />
 	</bean>
@@ -254,8 +259,10 @@
 
 	<bean id="TCP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP">
 		<property name="serverSocket" ref="ServerSocket" />
-		<property name="executorService" ref="RequestHandlerExecutorService" />
+		<property name="executorService" ref="TCPRequestHandlerExecutorService" />
 		<property name="nameServer" ref="NameServer" />
+		<property name="readTimeout" value="$[dns.tcp.timeout.read:3000]" />
+		<property name="taskTimeout" value="$[dns.tcp.timeout.task:5000]" />
 	</bean>
 
 	<bean id="DatagramSocket" class="java.net.DatagramSocket">
@@ -264,8 +271,9 @@
 
 	<bean id="UDP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP">
 		<property name="datagramSocket" ref="DatagramSocket" />
-		<property name="executorService" ref="RequestHandlerExecutorService" />
+		<property name="executorService" ref="UDPRequestHandlerExecutorService" />
 		<property name="nameServer" ref="NameServer" />
+		<property name="taskTimeout" value="$[dns.udp.timeout.task:5000]" />
 	</bean>
 
 	<bean id="ProtocolExecutorService" class="java.util.concurrent.Executors"
@@ -286,7 +294,6 @@
 	<util:list id="staticContentWhiteList" value-type="java.lang.String">
 		<value>/crossdomain.xml</value>
 		<value>/clientaccesspolicy.xml</value>
-		<value>/index.html</value>
 	</util:list>
 
 	<bean name="routerFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter">

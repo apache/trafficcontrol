@@ -223,11 +223,12 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 
 	// TODO in 1.0, stats are divided into 'location', 'cache', and 'type'. 'cache' are hidden by default.
 
-	for id, history := range statResultHistory {
+	for id, combinedStatesCache := range combinedStates.Caches {
 		if !filter.UseCache(id) {
 			continue
 		}
-		for stat, vals := range history {
+
+		for stat, vals := range statResultHistory[id] {
 			stat = "ats." + stat // TM1 prefixes ATS stats with 'ats.'
 			if !filter.UseStat(stat) {
 				continue
@@ -244,12 +245,6 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 				historyCount += int(val.Span)
 			}
 		}
-	}
-
-	for id, infos := range statInfo {
-		if !filter.UseCache(id) {
-			continue
-		}
 
 		serverInfo, ok := monitorConfig.TrafficServer[string(id)]
 		if !ok {
@@ -261,7 +256,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 			log.Warnf("cache.StatsMarshall server %s missing profile in monitorConfig\n", id)
 		}
 
-		for i, resultInfo := range infos {
+		for i, resultInfo := range statInfo[id] {
 			if !filter.WithinStatHistoryMax(i + 1) {
 				break
 			}
@@ -275,10 +270,11 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 				if !filter.UseStat(stat) {
 					continue
 				}
-				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStates.Caches[id]), Time: t, Span: 1}) // combinedState will default to unavailable
+				stats.Caches[id][stat] = append(stats.Caches[id][stat], ResultStatVal{Val: statValF(resultInfo, serverInfo, serverProfile, combinedStatesCache), Time: t, Span: 1}) // combinedState will default to unavailable
 			}
 		}
 	}
+
 	return json.Marshal(stats)
 }
 

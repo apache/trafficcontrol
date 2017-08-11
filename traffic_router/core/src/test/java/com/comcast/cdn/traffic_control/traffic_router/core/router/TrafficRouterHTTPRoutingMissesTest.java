@@ -43,6 +43,7 @@ public class TrafficRouterHTTPRoutingMissesTest {
         track = spy(StatTracker.getTrack());
         setInternalState(trafficRouter, "cacheRegister", cacheRegister);
         doCallRealMethod().when(trafficRouter).route(request, track);
+        doCallRealMethod().when(trafficRouter).singleRoute(request, track);
     }
 
     @Test

@@ -18,9 +18,10 @@ package API::User;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
-use Digest::SHA1 qw(sha1_hex);
+use Utils::Helper;
 use Mojolicious::Validator;
 use Mojolicious::Validator::Validation;
 use Data::Dumper;
@@ -32,8 +33,8 @@ use UI::ConfigFiles;
 use UI::Tools;
 
 sub login {
-	my $self     = shift;
-	my $options  = shift;
+	my $self    = shift;
+	my $options = shift;
 
 	my $u     = $self->req->json->{u};
 	my $p     = $self->req->json->{p};
@@ -69,35 +70,43 @@ sub index {
 
 	my $dbh;
 	if ( defined $username ) {
-		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 	else {
-		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ { 'role' => undef } ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	while ( my $row = $dbh->next ) {
+		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
 		push(
 			@data, {
-				"addressLine1"    => $row->address_line1,
-				"addressLine2"    => $row->address_line2,
-				"city"            => $row->city,
-				"company"         => $row->company,
-				"country"         => $row->country,
-				"email"           => $row->email,
-				"fullName"        => $row->full_name,
-				"gid"             => $row->gid,
-				"id"              => $row->id,
-				"lastUpdated"     => $row->last_updated,
-				"newUser"         => \$row->new_user,
-				"phoneNumber"     => $row->phone_number,
-				"postalCode"      => $row->postal_code,
-				"publicSshKey"    => $row->public_ssh_key,
-				"registrationSent"=> \$row->registration_sent,
-				"role"            => $row->role->id,
-				"rolename"        => $row->role->name,
-				"stateOrProvince" => $row->state_or_province,
-				"uid"             => $row->uid,
-				"username"        => $row->username
+				"addressLine1"     => $row->address_line1,
+				"addressLine2"     => $row->address_line2,
+				"city"             => $row->city,
+				"company"          => $row->company,
+				"country"          => $row->country,
+				"email"            => $row->email,
+				"fullName"         => $row->full_name,
+				"gid"              => $row->gid,
+				"id"               => $row->id,
+				"lastUpdated"      => $row->last_updated,
+				"newUser"          => \$row->new_user,
+				"phoneNumber"      => $row->phone_number,
+				"postalCode"       => $row->postal_code,
+				"publicSshKey"     => $row->public_ssh_key,
+				"registrationSent" => $row->registration_sent,
+				"role"             => $row->role->id,
+				"rolename"         => $row->role->name,
+				"stateOrProvince"  => $row->state_or_province,
+				"uid"              => $row->uid,
+				"username"         => $row->username,
+				"tenant"           => defined( $row->tenant ) ? $row->tenant->name : undef,
+				"tenantId"         => $row->tenant_id
 			}
 		);
 	}
@@ -108,31 +117,40 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role' ] } );
+	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role', 'tenant' ] } );
 	my @data = ();
+
+	my $tenant_utils = Utils::Tenant->new($self);
+   	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	while ( my $row = $rs_data->next ) {
+		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+			return $self->forbidden("Forbidden: User is not available for your tenant.");
+		}
 		push(
 			@data, {
-				"addressLine1"    => $row->address_line1,
-				"addressLine2"    => $row->address_line2,
-				"city"            => $row->city,
-				"company"         => $row->company,
-				"country"         => $row->country,
-				"email"           => $row->email,
-				"fullName"        => $row->full_name,
-				"gid"             => $row->gid,
-				"id"              => $row->id,
-				"lastUpdated"     => $row->last_updated,
-				"newUser"         => \$row->new_user,
-				"phoneNumber"     => $row->phone_number,
-				"postalCode"      => $row->postal_code,
-				"publicSshKey"    => $row->public_ssh_key,
-				"registrationSent"=> \$row->registration_sent,
-				"role"            => $row->role->id,
-				"rolename"        => $row->role->name,
-				"stateOrProvince" => $row->state_or_province,
-				"uid"             => $row->uid,
-				"username"        => $row->username
+				"addressLine1"     => $row->address_line1,
+				"addressLine2"     => $row->address_line2,
+				"city"             => $row->city,
+				"company"          => $row->company,
+				"country"          => $row->country,
+				"email"            => $row->email,
+				"fullName"         => $row->full_name,
+				"gid"              => $row->gid,
+				"id"               => $row->id,
+				"lastUpdated"      => $row->last_updated,
+				"newUser"          => \$row->new_user,
+				"phoneNumber"      => $row->phone_number,
+				"postalCode"       => $row->postal_code,
+				"publicSshKey"     => $row->public_ssh_key,
+				"registrationSent" => $row->registration_sent,
+				"role"             => $row->role->id,
+				"rolename"         => $row->role->name,
+				"stateOrProvince"  => $row->state_or_province,
+				"uid"              => $row->uid,
+				"username"         => $row->username,
+				"tenant"           => defined( $row->tenant ) ? $row->tenant->name : undef,
+				"tenantId"         => $row->tenant_id
 			}
 		);
 	}
@@ -140,73 +158,88 @@ sub show {
 }
 
 sub update {
-	my $self   = shift;
-	my $id     = $self->param('id');
-	my $params = $self->req->json;
+	my $self    = shift;
+	my $user_id = $self->param('id');
+	my $params  = $self->req->json;
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
 
-	my ( $is_valid, $result ) = $self->is_valid($params);
+	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+
+	#setting tenant_id to undef if tenant is not set.
+	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : undef;
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden("Forbidden: User is not available for your tenant.");
+	}
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
+		#no access to target tenancy
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
+	}
+
+	my ( $is_valid, $result ) = $self->is_valid( $params, $user_id );
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
 	}
 
-	my $user = $self->db->resultset('TmUser')->find( { id => $id } );
-	if ( !defined($user) ) {
-		return $self->not_found();
-	}
-
 	my $values = {
-		address_line1 			=> $params->{addressLine1},
-		address_line2 			=> $params->{addressLine2},
-		city 					=> $params->{city},
-		company 				=> $params->{company},
-		country 				=> $params->{country},
-		email 					=> $params->{email},
-		full_name 				=> $params->{fullName},
-		new_user 				=> ( $params->{newUser} ) ? 1 : 0,
-		phone_number 			=> $params->{phoneNumber},
-		postal_code 			=> $params->{postalCode},
-		public_ssh_key 			=> $params->{publicSshKey},
-		registration_sent 		=> ( $params->{registrationSent} ) ? 1 : 0,
-		role 					=> $params->{role},
-		state_or_province 		=> $params->{stateOrProvince},
-		username 				=> $params->{username}
+		address_line1     => $params->{addressLine1},
+		address_line2     => $params->{addressLine2},
+		city              => $params->{city},
+		company           => $params->{company},
+		country           => $params->{country},
+		email             => $params->{email},
+		full_name         => $params->{fullName},
+		phone_number      => $params->{phoneNumber},
+		postal_code       => $params->{postalCode},
+		public_ssh_key    => $params->{publicSshKey},
+		role              => $params->{role},
+		state_or_province => $params->{stateOrProvince},
+		username          => $params->{username},
+		tenant_id         => $tenant_id
 	};
 
-	if ( defined($params->{localPasswd}) && $params->{localPasswd} ne '' ) {
-		$values->{"local_passwd"} = sha1_hex($params->{localPasswd});
+	if ( defined( $params->{localPasswd} ) && $params->{localPasswd} ne '' ) {
+		$values->{"local_passwd"} = Utils::Helper::hash_pass($params->{localPasswd});
 	}
-	if ( defined($params->{confirmLocalPasswd}) && $params->{confirmLocalPasswd} ne '' ) {
-		$values->{"confirm_local_passwd"} = sha1_hex($params->{confirmLocalPasswd});
+	if ( defined( $params->{confirmLocalPasswd} ) && $params->{confirmLocalPasswd} ne '' ) {
+		$values->{"confirm_local_passwd"} = Utils::Helper::hash_pass( $params->{confirmLocalPasswd} );
 	}
 
 	my $rs = $user->update($values);
 	if ($rs) {
 		my $response;
-		$response->{addressLine1}        	= $rs->address_line1;
-		$response->{addressLine2} 			= $rs->address_line2;
-		$response->{city} 					= $rs->city;
-		$response->{company} 				= $rs->company;
-		$response->{country} 				= $rs->country;
-		$response->{email} 					= $rs->email;
-		$response->{fullName} 				= $rs->full_name;
-		$response->{gid}          			= $rs->gid;
-		$response->{id}          			= $rs->id;
-		$response->{lastUpdated} 			= $rs->last_updated;
-		$response->{newUser} 				= \$rs->new_user;
-		$response->{phoneNumber} 			= $rs->phone_number;
-		$response->{postalCode} 			= $rs->postal_code;
-		$response->{publicSshKey} 			= $rs->public_ssh_key;
-		$response->{registrationSent} 		= \$rs->registration_sent;
-		$response->{role} 					= $rs->role->id;
-		$response->{roleName} 				= $rs->role->name;
-		$response->{stateOrProvince} 		= $rs->state_or_province;
-		$response->{uid} 					= $rs->uid;
-		$response->{username} 				= $rs->username;
+		$response->{addressLine1}     = $rs->address_line1;
+		$response->{addressLine2}     = $rs->address_line2;
+		$response->{city}             = $rs->city;
+		$response->{company}          = $rs->company;
+		$response->{country}          = $rs->country;
+		$response->{email}            = $rs->email;
+		$response->{fullName}         = $rs->full_name;
+		$response->{gid}              = $rs->gid;
+		$response->{id}               = $rs->id;
+		$response->{lastUpdated}      = $rs->last_updated;
+		$response->{newUser}          = \$rs->new_user;
+		$response->{phoneNumber}      = $rs->phone_number;
+		$response->{postalCode}       = $rs->postal_code;
+		$response->{publicSshKey}     = $rs->public_ssh_key;
+		$response->{registrationSent} = $rs->registration_sent;
+		$response->{role}             = $rs->role->id;
+		$response->{roleName}         = $rs->role->name;
+		$response->{stateOrProvince}  = $rs->state_or_province;
+		$response->{uid}              = $rs->uid;
+		$response->{username}         = $rs->username;
+		$response->{tenantId}         = $rs->tenant_id;
+		$response->{tenant}           = defined( $rs->tenant ) ? $rs->tenant->name : undef;
 
 		&log( $self, "Updated User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
 
@@ -216,6 +249,93 @@ sub update {
 		return $self->alert("User update failed.");
 	}
 
+}
+
+sub create {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenant_id = $params->{tenantId};
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
+	}
+
+	my ( $is_valid, $result ) = $self->is_valid( $params, 0 );
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	if ( !defined( $params->{localPasswd} ) ) {
+		return $self->alert("localPasswd is required.");
+	}
+
+	if ( !defined( $params->{confirmLocalPasswd} ) ) {
+		return $self->alert("confirmLocalPasswd is required.");
+	}
+
+
+	my $values = {
+		address_line1        => $params->{addressLine1},
+		address_line2        => $params->{addressLine2},
+		city                 => $params->{city},
+		company              => $params->{company},
+		country              => $params->{country},
+		email                => $params->{email},
+		full_name            => $params->{fullName},
+		phone_number         => $params->{phoneNumber},
+		postal_code          => $params->{postalCode},
+		public_ssh_key       => $params->{publicSshKey},
+		role                 => $params->{role},
+		state_or_province    => $params->{stateOrProvince},
+		username             => $params->{username},
+		local_passwd         => Utils::Helper::hash_pass( $params->{localPasswd} ),
+		confirm_local_passwd => Utils::Helper::hash_pass( $params->{confirmLocalPasswd} ),
+		tenant_id            => $tenant_id,
+	};
+
+	my $insert = $self->db->resultset('TmUser')->create($values);
+	my $rs     = $insert->insert();
+
+	if ($rs) {
+		my $response;
+		$response->{addressLine1}     = $rs->address_line1;
+		$response->{addressLine2}     = $rs->address_line2;
+		$response->{city}             = $rs->city;
+		$response->{company}          = $rs->company;
+		$response->{country}          = $rs->country;
+		$response->{email}            = $rs->email;
+		$response->{fullName}         = $rs->full_name;
+		$response->{gid}              = $rs->gid;
+		$response->{id}               = $rs->id;
+		$response->{lastUpdated}      = $rs->last_updated;
+		$response->{newUser}          = \$rs->new_user;
+		$response->{phoneNumber}      = $rs->phone_number;
+		$response->{postalCode}       = $rs->postal_code;
+		$response->{publicSshKey}     = $rs->public_ssh_key;
+		$response->{registrationSent} = $rs->registration_sent;
+		$response->{role}             = $rs->role->id;
+		$response->{roleName}         = $rs->role->name;
+		$response->{stateOrProvince}  = $rs->state_or_province;
+		$response->{uid}              = $rs->uid;
+		$response->{username}         = $rs->username;
+		$response->{tenantId}         = $rs->tenant_id;
+		$response->{tenant}           = defined( $rs->tenant ) ? $rs->tenant->name : undef;
+
+		&log( $self, "Adding User with username '" . $rs->username . "' for id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( $response, "User creation was successful." );
+	}
+	else {
+		return $self->alert("User creation failed.");
+	}
 }
 
 # Reset the User Profile password
@@ -241,12 +361,22 @@ sub reset_password {
 
 }
 
-sub get_available_deliveryservices {
+sub get_available_deliveryservices_not_assigned_to_user {
 	my $self = shift;
 	my @data;
 	my $id = $self->param('id');
-	my %dsids;
 	my %takendsids;
+
+	my $user = $self->db->resultset('TmUser')->find( { id => $id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden();
+	}
 
 	my $rs_takendsids = undef;
 	$rs_takendsids = $self->db->resultset("DeliveryserviceTmuser")->search( { 'tm_user_id' => $id } );
@@ -257,12 +387,73 @@ sub get_available_deliveryservices {
 
 	my $rs_links = $self->db->resultset("Deliveryservice")->search( undef, { order_by => "xml_id" } );
 	while ( my $row = $rs_links->next ) {
+        if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+            #the current user cannot access this DS
+            next;
+        }
+		if (!$tenant_utils->is_ds_resource_accessible_to_tenant($tenants_data, $row->tenant_id, $user->tenant_id)) {
+			#the user under inspection cannot access this DS
+			next;
+		}
 		if ( !exists( $takendsids{ $row->id } ) ) {
-			push( @data, { "id" => $row->id, "xmlId" => $row->xml_id } );
+			push( @data, {
+				"id" 			=> $row->id,
+				"xmlId" 		=> $row->xml_id,
+				"displayName" 	=> $row->display_name,
+			} );
 		}
 	}
 
 	$self->success( \@data );
+}
+
+sub assign_deliveryservices {
+	my $self				= shift;
+	my $params				= $self->req->json;
+	my $user_id				= $params->{userId};
+	my $delivery_services	= $params->{deliveryServices};
+	my $replace				= $params->{replace};
+	my $count				= 0;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if ( ref($delivery_services) ne 'ARRAY' ) {
+		return $self->alert("Delivery services must be an array");
+	}
+
+	my $user = $self->db->resultset('TmUser')->find( { id => $user_id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->alert("Invalid user. This user is not available to you for assignment.");
+	}
+
+	if ( $replace ) {
+		# start fresh and delete existing user/deliveryservice associations
+		# We are not checking DS tenancy on deletion - we manage the user here - we remove permissions to touch a DS
+		my $delete = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
+		$delete->delete();
+	}
+
+	my @values = ( [ qw( deliveryservice tm_user_id ) ]); # column names are required for 'populate' function
+
+	foreach my $ds_id (@{ $delivery_services }) {
+		push(@values, [ $ds_id, $user_id ]);
+		$count++;
+	}
+
+	$self->db->resultset("DeliveryserviceTmuser")->populate(\@values);
+
+	&log( $self, $count . " delivery services were assigned to " . $user->username, "APICHANGE" );
+
+	my $response = $params;
+	return $self->success($response, "Delivery service assignments complete.");
 }
 
 # Read the current user profile and produce the result
@@ -270,14 +461,16 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
-
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
+
 		push(
 			@data, {
 				"id"              => "0",
 				"username"        => $current_username,
-				"publicSshKey"  => "",
+				"tenantId"        => undef,
+				"tenant"          => undef,
+				"publicSshKey"    => "",
 				"role"            => $role,
 				"uid"             => "0",
 				"gid"             => "0",
@@ -296,10 +489,10 @@ sub current {
 			}
 		);
 
-		return $self->success( @data );
+		return $self->success(@data);
 	}
 	else {
-		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username } );
+		my $dbh = $self->db->resultset('TmUser')->search( { username => $current_username }, { prefetch => [ 'role', 'tenant' ] } );
 		while ( my $row = $dbh->next ) {
 			push(
 				@data, {
@@ -321,6 +514,8 @@ sub current {
 					"phoneNumber"     => $row->phone_number,
 					"postalCode"      => $row->postal_code,
 					"country"         => $row->country,
+					"tenant"          => defined( $row->tenant ) ? $row->tenant->name : undef,
+					"tenantId"        => $row->tenant_id,
 				}
 			);
 		}
@@ -334,7 +529,13 @@ sub update_current {
 
 	my $user = $self->req->json->{user};
 	if ( &is_ldap($self) ) {
-		return $self->alert("Profile cannot be updated because '" . $user->{username} ."' is logged in as LDAP.");
+		return $self->alert( "Profile cannot be updated because '" . $user->{username} . "' is logged in as LDAP." );
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->{"tenantId"})) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my $db_user;
@@ -352,7 +553,9 @@ sub update_current {
 		delete( $user->{"confirmLocalPasswd"} );
 	}
 
-	my ( $is_valid, $result ) = $self->is_valid($user);
+	my $current_user_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single;
+
+	my ( $is_valid, $result ) = $self->is_valid( $user, $current_user_id );
 
 	if ($is_valid) {
 		my $username = $self->current_user()->{username};
@@ -364,16 +567,19 @@ sub update_current {
 		# These if "defined" checks allow for partial user updates, otherwise the entire
 		# user would need to be passed through.
 		if ( defined($local_passwd) && $local_passwd ne '' ) {
-			$db_user->{"local_passwd"} = sha1_hex($local_passwd);
+			$db_user->{"local_passwd"} = Utils::Helper::hash_pass( $local_passwd );
 		}
 		if ( defined($confirm_local_passwd) && $confirm_local_passwd ne '' ) {
-			$db_user->{"confirm_local_passwd"} = sha1_hex($confirm_local_passwd);
+			$db_user->{"confirm_local_passwd"} = Utils::Helper::hash_pass( $confirm_local_passwd );
 		}
 		if ( defined( $user->{"id"} ) ) {
 			$db_user->{"id"} = $user->{"id"};
 		}
 		if ( defined( $user->{"username"} ) ) {
 			$db_user->{"username"} = $user->{"username"};
+		}
+		if ( defined( $user->{"tenantId"} ) ) {
+			$db_user->{"tenant_id"} = $user->{"tenantId"};
 		}
 		if ( defined( $user->{"public_ssh_key"} ) ) {
 			$db_user->{"public_ssh_key"} = $user->{"public_ssh_key"};
@@ -420,6 +626,8 @@ sub update_current {
 		if ( defined( $user->{"country"} ) ) {
 			$db_user->{"country"} = $user->{"country"};
 		}
+		# token is intended for new user registrations and on current user update, it should be cleared from the db
+		$db_user->{"token"} = undef;
 		$dbh->update($db_user);
 		return $self->success_message("UserProfile was successfully updated.");
 	}
@@ -429,8 +637,9 @@ sub update_current {
 }
 
 sub is_valid {
-	my $self = shift;
-	my $user = shift;
+	my $self        = shift;
+	my $user_params = shift;
+	my $user_id     = shift;
 
 	my $rules = {
 		fields => [
@@ -441,7 +650,7 @@ sub is_valid {
 		checks => [
 
 			# All of these are required
-			[qw/full_name username email/] => is_required("is required"),
+			[qw/fullName username email role/] => is_required("is required"),
 
 			# pass2 must be equal to pass
 			localPasswd => sub {
@@ -457,13 +666,13 @@ sub is_valid {
 				my $value  = shift;
 				my $params = shift;
 				if ( defined( $params->{'email'} ) ) {
-					return $self->is_email_taken( $value, $params );
+					return $self->is_email_taken( $value, $user_id );
 				}
 			},
 
 			# custom sub validates an email address
 			email => sub {
-				my ( $value, $params ) = @_;
+				my ($value) = @_;
 				Email::Valid->address($value) ? undef : 'email is not a valid format';
 			},
 
@@ -472,7 +681,7 @@ sub is_valid {
 				my $value  = shift;
 				my $params = shift;
 				if ( defined( $params->{'username'} ) ) {
-					return $self->is_username_taken( $value, $params );
+					return $self->is_username_taken( $value, $user_id );
 				}
 			},
 
@@ -480,7 +689,7 @@ sub is_valid {
 	};
 
 	# Validate the input against the rules
-	my $result = validate( $user, $rules );
+	my $result = validate( $user_params, $rules );
 
 	if ( $result->{success} ) {
 
@@ -497,18 +706,11 @@ sub is_valid {
 sub is_username_taken {
 	my $self     = shift;
 	my $username = shift;
-	my $params   = shift;
+	my $user_id  = shift;
 
-	my $dbh = $self->db->resultset('TmUser')->search( { username => $username } );
-	my $user_data = $dbh->single;
-	if ( defined($user_data) ) {
-		my $user_id = $user_data->id;
-
-		# Allow the current user to be modified
-		my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single;
-		my $current_userid = $current_user->id;
-
-		my %condition = ( -and => [ { username => $username }, { id => { '!=' => $current_userid } } ] );
+	my $user_with_username = $self->db->resultset('TmUser')->search( { username => $username } )->single;
+	if ( defined($user_with_username) ) {
+		my %condition = ( -and => [ { username => $username }, { id => { '!=' => $user_id } } ] );
 		my $count = $self->db->resultset('TmUser')->search( \%condition )->count();
 
 		if ( $count > 0 ) {
@@ -520,20 +722,13 @@ sub is_username_taken {
 }
 
 sub is_email_taken {
-	my $self   = shift;
-	my $email  = shift;
-	my $params = shift;
+	my $self    = shift;
+	my $email   = shift;
+	my $user_id = shift;
 
-	my $dbh = $self->db->resultset('TmUser')->search( { email => $email } );
-	my $user_data = $dbh->single;
-	if ( defined($user_data) ) {
-		my $user_id = $user_data->id;
-
-		# Allow the current user to be modified
-		my $current_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single;
-		my $current_userid = $current_user->id;
-
-		my %condition = ( -and => [ { email => $email }, { id => { '!=' => $current_userid } } ] );
+	my $user_with_email = $self->db->resultset('TmUser')->search( { email => $email } )->single;
+	if ( defined($user_with_email) ) {
+		my %condition = ( -and => [ { email => $email }, { id => { '!=' => $user_id } } ] );
 		my $count = $self->db->resultset('TmUser')->search( \%condition )->count();
 
 		if ( $count > 0 ) {
@@ -560,8 +755,12 @@ sub is_good_password {
 		return "Your password cannot be the same as your username.";
 	}
 
-	if ( ( $value ne '' ) && $value !~ qr/^.{8,100}$/ ) {
+	if ( length($value) < 8 ) {
 		return "Password must be greater than 7 chars.";
+	}
+
+	if ( defined( $self->app->{invalid_passwords}->{$value} ) ) {
+		return "Password is too common.";
 	}
 
 	# At this point we're happy with the password

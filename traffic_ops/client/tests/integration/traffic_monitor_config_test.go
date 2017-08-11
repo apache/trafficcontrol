@@ -88,8 +88,23 @@ func TestTrafficMonitorConfig(t *testing.T) {
 	for _, apiProfile := range apiTMConfig.Profiles {
 		match := false
 		for _, clientProfile := range clientTMConfig.Profiles {
-			if apiProfile == clientProfile {
+			if apiProfile.Name == clientProfile.Name {
 				match = true
+				if apiProfile.Parameters.HealthConnectionTimeout != clientProfile.Parameters.HealthConnectionTimeout {
+					t.Errorf("Prof.Param.HealthConnTimeout -- Expected %v got %v", apiProfile.Parameters.HealthConnectionTimeout, clientProfile.Parameters.HealthConnectionTimeout)
+				}
+				if apiProfile.Parameters.HealthPollingURL != clientProfile.Parameters.HealthPollingURL {
+					t.Errorf("Prof.Param.HealthPollURL -- Expected %v got %v", apiProfile.Parameters.HealthPollingURL, clientProfile.Parameters.HealthPollingURL)
+				}
+				if apiProfile.Parameters.HistoryCount != clientProfile.Parameters.HistoryCount {
+					t.Errorf("Prof.Param.HistCount -- Expected %v got %v", apiProfile.Parameters.HistoryCount, clientProfile.Parameters.HistoryCount)
+				}
+				if apiProfile.Parameters.MinFreeKbps != clientProfile.Parameters.MinFreeKbps {
+					t.Errorf("Prof.Param.MinFreeKbps -- Expected %v got %v", apiProfile.Parameters.MinFreeKbps, clientProfile.Parameters.MinFreeKbps)
+				}
+				if len(apiProfile.Parameters.Thresholds) != len(clientProfile.Parameters.Thresholds) {
+					t.Errorf("Len Prof.Param.Thresholds -- Expected %v got %v", len(apiProfile.Parameters.Thresholds), len(clientProfile.Parameters.Thresholds))
+				}
 			}
 		}
 		if !match {

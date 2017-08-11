@@ -106,6 +106,19 @@ ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_i
 
 ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds2/urlkeys.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can unassigned DeliveryService url keys can be viewed?';
+#extract content of previous transaction's response for use verifying copy:
+my $tx = $t->tx;
+my $jsonKeys = $tx->res->json;
+
+# Test copying of url_sig_keys
+# api/$version/deliveryservices/xmlId/:xmlId/fromXmlId/:copyFromXmlId/urlkeys/copy
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/copyFromXmlId/test-ds2')->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can an unassigned DeliveryService url keys be copied to an assigned DeliveryService url keys?';
+
+#compare contents of call below to stored response body from other ds.
+ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_is(200)->json_is($jsonKeys)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Are the url sig keys equal after the copy?';
 
 # Negative Testing
 # With error content

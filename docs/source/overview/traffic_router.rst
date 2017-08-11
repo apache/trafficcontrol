@@ -48,6 +48,7 @@ Traffic routing options are often configured at the Delivery Service level.
   * Token based authentication settings. 
   * Header rewrite rules.
 
+  Since Traffic Control version 2.1 deliveryservices can optionally be linked to a :ref:`rl-profile`, and have parameters associated with them. The first feature that uses deliveryservice parameters is the :ref:`rl-multi-site-origin` configuration.
   Delivery Services are also for use in allowing multi-tenants to coexist in the Traffic Control CDN without interfering with each other, and to keep information about their content separated. 
 
 |

@@ -8,9 +8,9 @@ package fixtures
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package fixtures
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
@@ -101,13 +100,24 @@ func TrafficMonitorConfig() *client.TMConfigResponse {
 					Name: "tm-123",
 					Type: "TR",
 					Parameters: client.TMParameters{
-						HealthConnectionTimeout:                 2000,
-						HealthPollingURL:                        "http://${hostname}/_astats?application=&inf.name=${interface_name}",
-						HealthThresholdQueryTime:                1000,
-						HistoryCount:                            30,
-						HealthThresholdAvailableBandwidthInKbps: ">1750000",
-						HealthThresholdLoadAvg:                  25.0,
-						MinFreeKbps:                             11500000,
+						HealthConnectionTimeout: 2000,
+						HealthPollingURL:        "http://${hostname}/_astats?application=&inf.name=${interface_name}",
+						HistoryCount:            30,
+						MinFreeKbps:             11500000,
+						Thresholds: map[string]client.HealthThreshold{
+							"queryTime": client.HealthThreshold{
+								Val:        1000,
+								Comparator: "<",
+							},
+							"availableBandwidthInKbps": client.HealthThreshold{
+								Val:        1750000,
+								Comparator: "<",
+							},
+							"loadavg": client.HealthThreshold{
+								Val:        25.0,
+								Comparator: "<",
+							},
+						},
 					},
 				},
 			},

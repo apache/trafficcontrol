@@ -20,29 +20,31 @@ Traffic Control is distributed in source form for the developer, but also as a b
 
 When installing a complete CDN from scratch, a sample recommended order is:
 
-1. Traffic Ops
-2. Traffic Vault (Riak)
-3. Apache Traffic Server Mid-Tier Caches
-4. Apache Traffic Server Edge Caches
-5. Traffic Monitor
-6. Traffic Router
-7. Traffic Stats
-8. Traffic Portal
+#. Traffic Ops
+#. Traffic Vault (Riak)
+#. Traffic Monitor
+#. Apache Traffic Server Mid-Tier Caches
+#. Apache Traffic Server Edge Caches
+#. Traffic Router
+#. Traffic Stats
+#. Traffic Portal
 
 Once everything is installed, you will need to configure the servers to talk to each other. You will also need Origin server(s), which the Mid-Tier Cache(s) get content from. An Origin server is simply an HTTP(S) server which serves the content you wish to cache on the CDN.
 
 .. toctree::
   :maxdepth: 3
 
-  traffic_ops_install.rst
-  traffic_ops_config.rst
-  traffic_ops_using.rst
-  traffic_ops_extensions.rst
+  traffic_ops/installation.rst
+  traffic_ops/default_profiles.rst
+  traffic_ops/migration_from_10_to_20.rst
+  traffic_ops/configuration.rst
+  traffic_ops/using.rst
+  traffic_ops/extensions.rst
   traffic_portal.rst
   traffic_monitor.rst
+  traffic_monitor_golang.rst
   traffic_router.rst
   traffic_stats.rst
   traffic_server.rst
   traffic_vault.rst
   quick_howto/index.rst
-

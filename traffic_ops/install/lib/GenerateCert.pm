@@ -18,8 +18,6 @@ package GenerateCert;
 
 use strict;
 
-use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/lib/perl5 /opt/traffic_ops/app/lib);
-
 use base qw{ Exporter };
 our @EXPORT_OK = qw{ createCert };
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
@@ -45,11 +43,19 @@ EOF
 sub writeCdn_conf {
     my $cdn_conf = shift;
 
-    # listen param to be inserted
-    my $listen_str = "https://[::]:443?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED";
 
     # load as perl hash to find string to be replaced
     my $cdnh = do $cdn_conf;
+
+    # get existing port, if any
+    my $listen = $cdnh->{hypnotoad}{listen}[0];
+    my ($port) = $listen =~ /:(\d+)/;
+    if (!defined($port)) {
+        $port = 60443;
+    }
+    # listen param to be inserted
+    my $listen_str = "https://[::]:${port}?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED";
+
     if ( exists $cdnh->{hypnotoad} ) {
         $cdnh->{hypnotoad}{listen} = [$listen_str];
     }
@@ -114,14 +120,12 @@ sub execOpenssl {
     return $result;
 }
 
+
+# creates a certificate with parameters used from postinstall passed into $config
 sub createCert {
 
     # the file used for ssl configuration
-    my $opensslconf = shift;
-
-    if ( !defined $opensslconf ) {
-        InstallUtils::logger( "No input file - running openssl configuration in interactive mode", "info" );
-    }
+    my $config = shift;
 
     InstallUtils::logger( $msg, "info" );
 
@@ -130,50 +134,26 @@ sub createCert {
     my $params;
     my $passphrase;
 
-    # load the parameters for the certificate
-    if ( defined $opensslconf ) {
-        my $config = InstallUtils::readJson($opensslconf);
-        if ( defined $config->{country} ) {
+    # create the string of parameters
+    $params = "/C=$config->{country}/ST=$config->{state}/L=$config->{locality}/O=$config->{company}/OU=$config->{org_unit}/CN=$config->{common_name}/";
 
-            # the parameters to auto generate the certificate
-            $params = "/C=$config->{country}/ST=$config->{state}/L=$config->{locality}/O=$config->{company}/OU=$config->{org_unit}/CN=$config->{common_name}/";
-
-            $passphrase = $config->{rsaPassword};
-        }
-    }
+    $passphrase = $config->{rsaPassword};
 
     InstallUtils::logger( "The server key has been generated", "info" );
 
-    if ($params) {
-        if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", "pass:$passphrase", "1024" ) != 0 ) {
-            exit 1;
-        }
-        if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", "pass:$passphrase", "-subj", $params ) != 0 ) {
-            exit 1;
-        }
+    if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "-passout", "pass:$passphrase", "1024" ) != 0 ) {
+        exit 1;
     }
-    else {
-        if ( execOpenssl( "Generating an RSA Private Server Key", "genrsa", "-des3", "-out", "server.key", "1024" ) != 0 ) {
-            exit 1;
-        }
-        if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr") != 0 ) {
-            exit 1;
-        }
+    if ( execOpenssl( "Creating a Certificate Signing Request (CSR)", "req", "-new", "-key", "server.key", "-out", "server.csr", "-passin", "pass:$passphrase", "-subj", $params ) != 0 ) {
+        exit 1;
     }
 
     InstallUtils::logger( "The Certificate Signing Request has been generated", "info" );
 
     InstallUtils::execCommand( "/bin/mv", "server.key", "server.key.orig" );
 
-    if ($params) {
-        if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", "pass:$passphrase" ) != 0 ) {
-            exit 1;
-        }
-    }
-    else {
-        if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key") != 0 ) {
-            exit 1;
-        }
+    if ( execOpenssl( "Removing the pass phrase from the server key", "rsa", "-in", "server.key.orig", "-out", "server.key", "-passin", "pass:$passphrase" ) != 0 ) {
+        exit 1;
     }
 
     InstallUtils::logger( "The pass phrase has been removed from the server key", "info" );

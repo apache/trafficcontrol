@@ -252,10 +252,11 @@ under the License.
 			 ajax("/api/cache-statuses", function(r) {
 				 var jdata = JSON.parse(r);
 				 var servers = Object.keys(jdata); //debug
+				 var table = document.getElementById("cache-states");
 				 for (i = 0; i < servers.length; i++) {
 					 var server = servers[i];
 					 if (!document.getElementById("cache-states-" + server)) {
-						 var row = document.getElementById("cache-states").insertRow(1); //document.createElement("tr");
+						 var row = table.insertRow(1); //document.createElement("tr");
 						 row.classList.add("stripes");
 						 row.id = "cache-states-" + server
 						 row.insertCell(0).id = row.id + "-server";
@@ -288,11 +289,11 @@ under the License.
 					 if (jdata[server].hasOwnProperty("status")) {
 						 document.getElementById("cache-states-" + server + "-status").textContent = jdata[server].status;
 						 var row = document.getElementById("cache-states-" + server);
-						 if (jdata[server].status.indexOf("ADMIN_DOWN") != -1) {
+						 if (jdata[server].status.indexOf("ADMIN_DOWN") != -1 || jdata[server].status.indexOf("OFFLINE") != -1) {
 							 row.classList.add("warning");
 							 row.classList.remove("error");
 							 row.classList.remove("stripes");
-						 } else if (jdata[server].status.indexOf(" available") == -1) {
+						 } else if (jdata[server].status.indexOf(" available") == -1 && jdata[server].status.indexOf("ONLINE") != 0) {
 							 row.classList.add("error");
 							 row.classList.remove("warning");
 							 row.classList.remove("stripes");
@@ -333,6 +334,14 @@ under the License.
 						 document.getElementById("cache-states-" + server + "-connection-count").textContent = "N/A";
 					 }
 				 }
+
+				 for (var i = 1, row; row = table.rows[i]; i++) { // start at 1, because row[0] is the header
+					 var server = row.id.replace(/^cache-states-/, '');
+					 if(!(server in jdata)) {
+						 table.deleteRow(i);
+					 }
+				 }
+
 			 })
 		 }
 

@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
@@ -31,85 +30,120 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
+	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
-// CopyTrafficMonitorConfigMap returns a deep copy of the given TrafficMonitorConfigMap
-func CopyTrafficMonitorConfigMap(a *to.TrafficMonitorConfigMap) to.TrafficMonitorConfigMap {
-	b := to.TrafficMonitorConfigMap{}
-	b.TrafficServer = map[string]to.TrafficServer{}
-	b.CacheGroup = map[string]to.TMCacheGroup{}
-	b.Config = map[string]interface{}{}
-	b.TrafficMonitor = map[string]to.TrafficMonitor{}
-	b.DeliveryService = map[string]to.TMDeliveryService{}
-	b.Profile = map[string]to.TMProfile{}
-	for k, v := range a.TrafficServer {
-		b.TrafficServer[k] = v
-	}
-	for k, v := range a.CacheGroup {
-		b.CacheGroup[k] = v
-	}
-	for k, v := range a.Config {
-		b.Config[k] = v
-	}
-	for k, v := range a.TrafficMonitor {
-		b.TrafficMonitor[k] = v
-	}
-	for k, v := range a.DeliveryService {
-		b.DeliveryService[k] = v
-	}
-	for k, v := range a.Profile {
-		b.Profile[k] = v
-	}
-	return b
+type PollIntervals struct {
+	Health            time.Duration
+	HealthNoKeepAlive bool
+	Peer              time.Duration
+	PeerNoKeepAlive   bool
+	Stat              time.Duration
+	StatNoKeepAlive   bool
+	TO                time.Duration
 }
 
-// TrafficMonitorConfigMapThreadsafe encapsulates a TrafficMonitorConfigMap safe for multiple readers and a single writer.
-type TrafficMonitorConfigMapThreadsafe struct {
-	monitorConfig *to.TrafficMonitorConfigMap
-	m             *sync.RWMutex
-}
+// getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, stat, and TrafficOps poll intervals
+func getIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config, logMissingParams bool) (PollIntervals, error) {
+	intervals := PollIntervals{}
+	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
+	if !peerPollIntervalExists {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config missing 'peers.polling.interval', not setting config changes.\n")
+	}
+	peerPollIntervalInt, peerPollIntervalIsInt := peerPollIntervalI.(float64)
+	if !peerPollIntervalIsInt {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config 'peers.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", peerPollIntervalI, peerPollIntervalI)
+	}
+	intervals.Peer = trafficOpsPeerPollIntervalToDuration(int(peerPollIntervalInt))
 
-// NewTrafficMonitorConfigMapThreadsafe returns an encapsulated TrafficMonitorConfigMap safe for multiple readers and a single writer.
-func NewTrafficMonitorConfigMapThreadsafe() TrafficMonitorConfigMapThreadsafe {
-	return TrafficMonitorConfigMapThreadsafe{monitorConfig: &to.TrafficMonitorConfigMap{}, m: &sync.RWMutex{}}
-}
+	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["health.polling.interval"]
+	if !statPollIntervalExists {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
+	}
+	statPollIntervalInt, statPollIntervalIsInt := statPollIntervalI.(float64)
+	if !statPollIntervalIsInt {
+		return PollIntervals{}, fmt.Errorf("Traffic Ops Monitor config 'health.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", statPollIntervalI, statPollIntervalI)
+	}
+	intervals.Stat = trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
 
-// Get returns the TrafficMonitorConfigMap. Callers MUST NOT modify, it is not threadsafe for mutation. If mutation is necessary, call CopyTrafficMonitorConfigMap().
-func (t *TrafficMonitorConfigMapThreadsafe) Get() to.TrafficMonitorConfigMap {
-	t.m.RLock()
-	defer t.m.RUnlock()
-	return *t.monitorConfig
-}
+	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
+	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
+	if !healthPollIntervalExists {
+		if logMissingParams {
+			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
+		}
+		healthPollIntervalInt = statPollIntervalInt
+	} else if !healthPollIntervalIsInt {
+		log.Warnf("Traffic Ops Monitor config 'heartbeat.polling.interval' value '%v' type %T is not an integer, using health for heartbeat\n", statPollIntervalI, statPollIntervalI)
+		healthPollIntervalInt = statPollIntervalInt
+	}
+	intervals.Health = trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
 
-// Set sets the TrafficMonitorConfigMap. This is only safe for one writer. This MUST NOT be called by multiple threads.
-func (t *TrafficMonitorConfigMapThreadsafe) Set(c to.TrafficMonitorConfigMap) {
-	t.m.Lock()
-	*t.monitorConfig = c
-	t.m.Unlock()
+	toPollIntervalI, toPollIntervalExists := monitorConfig.Config["tm.polling.interval"]
+	toPollIntervalInt, toPollIntervalIsInt := toPollIntervalI.(float64)
+	intervals.TO = cfg.MonitorConfigPollingInterval
+	if !toPollIntervalExists {
+		if logMissingParams {
+			log.Warnf("Traffic Ops Monitor config missing 'tm.polling.interval', using config value '%v'\n", cfg.MonitorConfigPollingInterval)
+		}
+	} else if !toPollIntervalIsInt {
+		log.Warnf("Traffic Ops Monitor config 'tm.polling.interval' value '%v' type %T is not an integer, using config value '%v'\n", toPollIntervalI, toPollIntervalI, cfg.MonitorConfigPollingInterval)
+	} else {
+		intervals.TO = trafficOpsTOPollIntervalToDuration(int(toPollIntervalInt))
+	}
+
+	getNoKeepAlive := func(param string) bool {
+		keepAliveI, keepAliveExists := monitorConfig.Config[param]
+		keepAliveStr, keepAliveIsStr := keepAliveI.(string)
+		return keepAliveExists && keepAliveIsStr && !strings.HasPrefix(strings.ToLower(keepAliveStr), "t")
+	}
+	intervals.PeerNoKeepAlive = getNoKeepAlive("peer.polling.keepalive")
+	intervals.HealthNoKeepAlive = getNoKeepAlive("health.polling.keepalive")
+	intervals.StatNoKeepAlive = getNoKeepAlive("stat.polling.keepalive")
+
+	multiplyByRatio := func(i time.Duration) time.Duration {
+		return time.Duration(float64(i) * PollIntervalRatio)
+	}
+
+	intervals.TO = multiplyByRatio(intervals.TO)
+	intervals.Health = multiplyByRatio(intervals.Health)
+	intervals.Peer = multiplyByRatio(intervals.Peer)
+	intervals.Stat = multiplyByRatio(intervals.Stat)
+	return intervals, nil
 }
 
 // StartMonitorConfigManager runs the monitor config manager goroutine, and returns the threadsafe data which it sets.
 func StartMonitorConfigManager(
-	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
+	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
+	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
-	staticAppData StaticAppData,
-) TrafficMonitorConfigMapThreadsafe {
-	monitorConfig := NewTrafficMonitorConfigMapThreadsafe()
+	staticAppData config.StaticAppData,
+	toSession towrap.ITrafficOpsSession,
+	toData todata.TODataThreadsafe,
+) threadsafe.TrafficMonitorConfigMap {
+	monitorConfig := threadsafe.NewTrafficMonitorConfigMap()
 	go monitorConfigListen(monitorConfig,
 		monitorConfigPollChan,
 		localStates,
+		peerStates,
 		statURLSubscriber,
 		healthURLSubscriber,
 		peerURLSubscriber,
+		toIntervalSubscriber,
 		cachesChangeSubscriber,
 		cfg,
 		staticAppData,
+		toSession,
+		toData,
 	)
 	return monitorConfig
 }
@@ -138,59 +172,31 @@ func trafficOpsHealthPollIntervalToDuration(t int) time.Duration {
 	return time.Duration(t) * time.Millisecond
 }
 
-var healthPollCount int
-
-// getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, and stat poll intervals
-func getHealthPeerStatPollIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config) (time.Duration, time.Duration, time.Duration, error) {
-	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
-	if !peerPollIntervalExists {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'peers.polling.interval', not setting config changes.\n")
-	}
-	peerPollIntervalInt, peerPollIntervalIsInt := peerPollIntervalI.(float64)
-	if !peerPollIntervalIsInt {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'peers.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", peerPollIntervalI, peerPollIntervalI)
-	}
-	peerPollInterval := trafficOpsPeerPollIntervalToDuration(int(peerPollIntervalInt))
-
-	statPollIntervalI, statPollIntervalExists := monitorConfig.Config["health.polling.interval"]
-	if !statPollIntervalExists {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config missing 'health.polling.interval', not setting config changes.\n")
-	}
-	statPollIntervalInt, statPollIntervalIsInt := statPollIntervalI.(float64)
-	if !statPollIntervalIsInt {
-		return 0, 0, 0, fmt.Errorf("Traffic Ops Monitor config 'health.polling.interval' value '%v' type %T is not an integer, not setting config changes.\n", statPollIntervalI, statPollIntervalI)
-	}
-	statPollInterval := trafficOpsStatPollIntervalToDuration(int(statPollIntervalInt))
-
-	healthPollIntervalI, healthPollIntervalExists := monitorConfig.Config["heartbeat.polling.interval"]
-	healthPollIntervalInt, healthPollIntervalIsInt := healthPollIntervalI.(float64)
-	if !healthPollIntervalExists {
-		if healthPollCount == 0 { //only log this once
-			log.Warnln("Traffic Ops Monitor config missing 'heartbeat.polling.interval', using health for heartbeat.")
-			healthPollCount++
-		}
-		healthPollIntervalInt = statPollIntervalInt
-	} else if !healthPollIntervalIsInt {
-		log.Warnf("Traffic Ops Monitor config 'heartbeat.polling.interval' value '%v' type %T is not an integer, using health for heartbeat\n", statPollIntervalI, statPollIntervalI)
-		healthPollIntervalInt = statPollIntervalInt
-	}
-	healthPollInterval := trafficOpsHealthPollIntervalToDuration(int(healthPollIntervalInt))
-
-	return healthPollInterval, peerPollInterval, statPollInterval, nil
+// trafficOpsTOPollIntervalToDuration takes the int from Traffic Ops, which is in milliseconds, and returns a time.Duration
+// TODO change Traffic Ops Client API to a time.Duration
+func trafficOpsTOPollIntervalToDuration(t int) time.Duration {
+	return time.Duration(t) * time.Millisecond
 }
+
+// PollIntervalRatio is the ratio of the configuration interval to poll. The configured intervals are 'target' times, so we actually poll at some small fraction less, in attempt to make the actual poll marginally less than the target.
+const PollIntervalRatio = float64(0.97) // TODO make config?
 
 // TODO timing, and determine if the case, or its internal `for`, should be put in a goroutine
 // TODO determine if subscribers take action on change, and change to mutexed objects if not.
 func monitorConfigListen(
-	monitorConfigTS TrafficMonitorConfigMapThreadsafe,
-	monitorConfigPollChan <-chan to.TrafficMonitorConfigMap,
+	monitorConfigTS threadsafe.TrafficMonitorConfigMap,
+	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
+	peerStates peer.CRStatesPeersThreadsafe,
 	statURLSubscriber chan<- poller.HttpPollerConfig,
 	healthURLSubscriber chan<- poller.HttpPollerConfig,
 	peerURLSubscriber chan<- poller.HttpPollerConfig,
+	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
-	staticAppData StaticAppData,
+	staticAppData config.StaticAppData,
+	toSession towrap.ITrafficOpsSession,
+	toData todata.TODataThreadsafe,
 ) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -200,14 +206,22 @@ func monitorConfigListen(
 		}
 		os.Exit(1) // The Monitor can't run without a MonitorConfigManager
 	}()
-	for monitorConfig := range monitorConfigPollChan {
+
+	logMissingIntervalParams := true
+
+	for pollerMonitorCfg := range monitorConfigPollChan {
+		monitorConfig := pollerMonitorCfg.Cfg
+		cdn := pollerMonitorCfg.CDN
 		monitorConfigTS.Set(monitorConfig)
+		toData.Update(toSession, cdn)
+
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
 		peerURLs := map[string]poller.PollConfig{}
 		caches := map[string]string{}
 
-		healthPollInterval, peerPollInterval, statPollInterval, err := getHealthPeerStatPollIntervals(monitorConfig, cfg)
+		intervals, err := getIntervals(monitorConfig, cfg, logMissingIntervalParams)
+		logMissingIntervalParams = false // only log missing parameters once
 		if err != nil {
 			log.Errorf("monitor config error getting polling intervals, can't poll: %v", err)
 			continue
@@ -251,6 +265,7 @@ func monitorConfigListen(
 			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout}
 		}
 
+		peerSet := map[enum.TrafficMonitorName]struct{}{}
 		for _, srv := range monitorConfig.TrafficMonitor {
 			if srv.HostName == staticAppData.Hostname {
 				continue
@@ -261,11 +276,15 @@ func monitorConfigListen(
 			// TODO: the URL should be config driven. -jse
 			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
 			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
+			peerSet[enum.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: statPollInterval}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: healthPollInterval}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: peerPollInterval}
+		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
+		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
+		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		toIntervalSubscriber <- intervals.TO
+		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
+		peerStates.SetPeers(peerSet)
 
 		for cacheName := range localStates.GetCaches() {
 			if _, exists := monitorConfig.TrafficServer[string(cacheName)]; !exists {

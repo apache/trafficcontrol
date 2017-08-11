@@ -1,5 +1,24 @@
 package crconfig
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import (
 	"time"
 )
@@ -108,7 +127,7 @@ type Router struct {
 	APIPortTime   time.Time
 	FQDN          *string `json:"fqdn,omitempty"`
 	FQDNTime      time.Time
-	HTTPSPort     *int `json:"httpsPort,string,omitempty"`
+	HTTPSPort     *int `json:"httpsPort,omitempty"`
 	HTTPSPortTime time.Time
 	IP            *string `json:"ip,omitempty"`
 	IPTime        time.Time
@@ -116,7 +135,7 @@ type Router struct {
 	IP6Time       time.Time
 	Location      *string `json:"location,omitempty"`
 	LocationTime  time.Time
-	Port          *int `json:"port,string,omitempty"`
+	Port          *int `json:"port,omitempty"`
 	PortTime      time.Time
 	Profile       *string `json:"profile,omitempty"`
 	ProfileTime   time.Time
@@ -137,7 +156,7 @@ type Server struct {
 	HashCountTime        time.Time           `json:"-"`
 	HashId               *string             `json:"hashId,omitempty"`
 	HashIdTime           time.Time           `json:"-"`
-	HttpsPort            *int                `json:"httpsPort,string,omitempty"`
+	HttpsPort            *int                `json:"httpsPort,omitempty"`
 	HttpsPortTime        time.Time           `json:"-"`
 	InterfaceName        *string             `json:"interfaceName,omitempty"`
 	InterfaceNameTime    time.Time           `json:"-"`
@@ -147,7 +166,7 @@ type Server struct {
 	Ip6Time              time.Time           `json:"-"`
 	LocationId           *string             `json:"locationId,omitempty"`
 	LocationIdTime       time.Time           `json:"-"`
-	Port                 *int                `json:"port,string,omitempty"`
+	Port                 *int                `json:"port,omitempty"`
 	PortTime             time.Time           `json:"-"`
 	Profile              *string             `json:"profile,omitempty"`
 	ProfileTime          time.Time           `json:"-"`
@@ -168,7 +187,7 @@ type DeliveryService struct {
 	GeoLocationProviderTime time.Time                `json:"-"`
 	MatchSets               []MatchSet               `json:"matchSets,omitempty"`
 	MatchSetsTime           time.Time                `json:"-"`
-	MissLocation            *LatLon                  `json:"missLocation,omitempty"`
+	MissLocation            *LatitudeLongitude       `json:"missLocation,omitempty"`
 	MissLocationTime        time.Time                `json:"-"`
 	Protocol                *DeliveryServiceProtocol `json:"protocol,omitempty"`
 	ProtocolTime            time.Time                `json:"-"`
@@ -180,7 +199,7 @@ type DeliveryService struct {
 	SoaTime                 time.Time                `json:"-"`
 	SSLEnabled              *bool                    `json:"sslEnabled,string,omitempty"`
 	SSLEnabledTime          time.Time                `json:"-"`
-	TTL                     *int                     `json:"ttl,string,omitempty"`
+	TTL                     *int                     `json:"ttl,omitempty"`
 	TTLTime                 time.Time                `json:"-"`
 	TTLs                    *TTL                     `json:"ttls,omitempty"`
 	TTLsTime                time.Time                `json:"-"`
@@ -188,10 +207,6 @@ type DeliveryService struct {
 type Dispersion struct {
 	Limit    int  `json:"limit,omitempty"`
 	Shuffled bool `json:"shuffled,string,omitempty"`
-}
-type LatLon struct {
-	Lat float64 `json:"lat,string"`
-	Lon float64 `json:"lon,string"`
 }
 
 type LatitudeLongitude struct {
@@ -207,7 +222,7 @@ type DeliveryServiceProtocol struct {
 type Monitor struct {
 	FQDN          *string   `json:"fqdn,omitempty"`
 	FQDNTime      time.Time `json:"-"`
-	HTTPSPort     *int      `json:"httpsPort,string,omitempty"`
+	HTTPSPort     *int      `json:"httpsPort,omitempty"`
 	HTTPSPortTime time.Time `json:"-"`
 	IP            *string   `json:"ip,omitempty"`
 	IPTime        time.Time `json:"-"`
@@ -215,7 +230,7 @@ type Monitor struct {
 	IP6Time       time.Time `json:"-"`
 	Location      *string   `json:"location,omitempty"`
 	LocationTime  time.Time `json:"-"`
-	Port          *int      `json:"port,string,omitempty"`
+	Port          *int      `json:"port,omitempty"`
 	PortTime      time.Time `json:"-"`
 	Profile       *string   `json:"profile,omitempty"`
 	ProfileTime   time.Time `json:"-"`

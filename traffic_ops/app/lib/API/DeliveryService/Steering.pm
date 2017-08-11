@@ -20,6 +20,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use UI::Utils;
 use Data::Dumper;
 
+
 sub index {
     my $self = shift;
 
@@ -61,8 +62,17 @@ sub find_steering {
 
         my $target_id = $row->target_id;
 
+
         if (! exists($steering{$row->steering_xml_id})) {
-            $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id};
+            my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $row->steering_xml_id } )->single();
+            my $client_steering;
+            if ($ds->type->name =~ /CLIENT_STEERING/) {
+                $client_steering = '1';
+            }
+            else {
+                $client_steering = '0';
+            }
+            $steering{$row->steering_xml_id} = {"deliveryService" => $row->steering_xml_id, "clientSteering" => \$client_steering};
         }
 
         my $steering_entry = $steering{$row->steering_xml_id};
@@ -82,10 +92,22 @@ sub find_steering {
 
         my $targets = $steering_entry->{"targets"};
 
-        push(@{$targets},{
+        my $type = $self->get_type($row->type);
+
+        if ( $row->type eq "STEERING_ORDER" ) {
+            push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
-            'weight' => $row->weight,
-        });
+            'order' => $row->value,
+            'weight'  => 0
+            });
+        }
+        else {
+            push(@{$targets},{
+            'deliveryService' => $row->target_xml_id,
+            'order' => 0,
+            'weight'  => $row->value
+            });
+        }
 
     }
 
@@ -169,6 +191,20 @@ sub get_ds_id {
     return $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id } )->get_column('id')->single();
 }
 
+sub get_type {
+    my $self = shift;
+    my $id = shift;
+    my $type;
+    
+    if ( $id =~ /^\d+$/ ) {
+        $type = $self->db->resultset('Type')->search( { id => $id } )->get_column('name')->single();
+    }
+    else {
+        $type = $self->db->resultset('Type')->search( { name => $id } )->get_column('id')->single();
+    }
+    return $type;
+}
+
 sub update() {
     my $self = shift;
 
@@ -195,7 +231,7 @@ sub update() {
     my $dsu_row = $self->db->resultset('DeliveryserviceTmuser')->search(
         {tm_user_id => $user_id, deliveryservice => $row->steering_id})->single;
 
-    if (!$dsu_row) {
+    if (!$dsu_row && !&is_admin($self) ) {
         return $self->render(json => {"message" => "unauthorized"}, status => 401);
     }
 
@@ -212,7 +248,7 @@ sub update() {
     my $req_targets = $self->req->json->{'targets'};
 
     foreach my $req_target (@{$req_targets}) {
-        if (!$req_target->{'deliveryService'} || !$req_target->{'weight'}) {
+        if (!$req_target->{'deliveryService'} && ( !$req_target->{'weight'} || !$req_target->{'order'} ) || ( $req_target->{'weight'} && $req_target->{'order'} ) ) {
            return $self->render(json => {"message" => "please provide a valid json for targets"}, status => 400);
         }
         if (!exists($valid_targets->{$req_target->{'deliveryService'}})) {
@@ -241,7 +277,14 @@ sub update() {
 
         if ($req_target->{'weight'}) {
             my $steering_target_row = $self->db->resultset('SteeringTarget')->find({ deliveryservice => $steering_id, target => $target_id});
-            $steering_target_row->weight($req_target->{weight});
+            $steering_target_row->value($req_target->{weight});
+            $steering_target_row->type($self->get_type("STEERING_WEIGHT"));
+            $steering_target_row->update;
+        }
+        elsif ($req_target->{'order'}) {
+            my $steering_target_row = $self->db->resultset('SteeringTarget')->find({ deliveryservice => $steering_id, target => $target_id});
+            $steering_target_row->value($req_target->{order});
+            $steering_target_row->type($self->get_type("STEERING_ORDER"));
             $steering_target_row->update;
         }
 

@@ -21,6 +21,7 @@ package cache
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -128,11 +129,36 @@ func pruneStats(history []ResultStatVal, limit uint64) []ResultStatVal {
 	return history
 }
 
-func (a ResultStatHistory) Add(r Result, limit uint64) {
+// newStatEqual Returns whether the given stat is equal to the latest stat in history. If len(history)==0, this returns false without error. If the given stat is not a JSON primitive (string, number, bool), this returns an error. We explicitly refuse to compare arrays and objects, for performance.
+func newStatEqual(history []ResultStatVal, stat interface{}) (bool, error) {
+	if len(history) == 0 {
+		return false, nil // if there's no history, it's "not equal", i.e. store this new history
+	}
+	switch stat.(type) {
+	case string:
+	case float64:
+	case bool:
+	default:
+		return false, fmt.Errorf("incomparable stat type %T", stat)
+	}
+	switch history[0].Val.(type) {
+	case string:
+	case float64:
+	case bool:
+	default:
+		return false, fmt.Errorf("incomparable history stat type %T", stat)
+	}
+	return stat == history[0].Val, nil
+}
+
+func (a ResultStatHistory) Add(r Result, limit uint64) error {
+	errStrs := ""
 	for statName, statVal := range r.Astats.Ats {
 		statHistory := a[r.ID][statName]
 		// If the new stat value is the same as the last, update the time and increment the span. Span is the number of polls the latest value has been the same, and hence the length of time it's been the same is span*pollInterval.
-		if len(statHistory) > 0 && statHistory[0].Val == statVal {
+		if ok, err := newStatEqual(statHistory, statVal); err != nil {
+			errStrs += "cannot add stat " + statName + ": " + err.Error() + "; "
+		} else if ok {
 			statHistory[0].Time = r.Time
 			statHistory[0].Span++
 		} else {
@@ -148,6 +174,11 @@ func (a ResultStatHistory) Add(r Result, limit uint64) {
 		}
 		a[r.ID][statName] = statHistory // TODO determine if necessary for the first conditional
 	}
+
+	if errStrs != "" {
+		return errors.New("some stats could not be added: " + errStrs[:len(errStrs)-2])
+	}
+	return nil
 }
 
 // TODO determine if anything ever needs more than the latest, and if not, change ResultInfo to not be a slice.

@@ -35,9 +35,10 @@ type Fetcher interface {
 }
 
 type HttpFetcher struct {
-	Client  *http.Client
-	Headers map[string]string
-	Handler handler.Handler
+	Client    *http.Client
+	UserAgent string
+	Headers   map[string]string
+	Handler   handler.Handler
 	Counters
 }
 
@@ -57,7 +58,7 @@ func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, po
 	log.Debugf("poll %v %v fetch start\n", pollId, time.Now())
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
-	req.Header.Set("User-Agent", "traffic_monitor/1.0") // TODO change to 2.0?
+	req.Header.Set("User-Agent", f.UserAgent)
 	req.Header.Set("Connection", "keep-alive")
 	req.Host = host
 	if f.Pending != nil {

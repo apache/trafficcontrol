@@ -20,7 +20,6 @@ package manager
  */
 
 import (
-	"sync"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
@@ -33,44 +32,6 @@ import (
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 )
 
-// DurationMap represents a map of cache names to durations
-type DurationMap map[enum.CacheName]time.Duration
-
-// DurationMapThreadsafe wraps a DurationMap in an object safe for a single writer and multiple readers
-type DurationMapThreadsafe struct {
-	durationMap *DurationMap
-	m           *sync.RWMutex
-}
-
-// Copy copies this duration map.
-func (a DurationMap) Copy() DurationMap {
-	b := DurationMap{}
-	for k, v := range a {
-		b[k] = v
-	}
-	return b
-}
-
-// NewDurationMapThreadsafe returns a new DurationMapThreadsafe safe for multiple readers and a single writer goroutine.
-func NewDurationMapThreadsafe() DurationMapThreadsafe {
-	m := DurationMap{}
-	return DurationMapThreadsafe{m: &sync.RWMutex{}, durationMap: &m}
-}
-
-// Get returns the duration map. Callers MUST NOT mutate. If mutation is necessary, call DurationMap.Copy().
-func (o *DurationMapThreadsafe) Get() DurationMap {
-	o.m.RLock()
-	defer o.m.RUnlock()
-	return *o.durationMap
-}
-
-// Set sets the internal duration map. This MUST NOT be called by multiple goroutines.
-func (o *DurationMapThreadsafe) Set(d DurationMap) {
-	o.m.Lock()
-	*o.durationMap = d
-	o.m.Unlock()
-}
-
 // StartHealthResultManager starts the goroutine which listens for health results.
 // Note this polls the brief stat endpoint from ATS Astats, not the full stats.
 // This poll should be quicker and less computationally expensive for ATS, but
@@ -80,15 +41,15 @@ func StartHealthResultManager(
 	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
-	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	cfg config.Config,
 	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
-) (DurationMapThreadsafe, threadsafe.ResultHistory) {
-	lastHealthDurations := NewDurationMapThreadsafe()
+) (threadsafe.DurationMap, threadsafe.ResultHistory) {
+	lastHealthDurations := threadsafe.NewDurationMap()
 	healthHistory := threadsafe.NewResultHistory()
 	go healthResultManagerListen(
 		cacheHealthChan,
@@ -111,9 +72,9 @@ func healthResultManagerListen(
 	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
-	lastHealthDurations DurationMapThreadsafe,
+	lastHealthDurations threadsafe.DurationMap,
 	healthHistory threadsafe.ResultHistory,
-	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
@@ -176,8 +137,8 @@ func processHealthResult(
 	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
-	lastHealthDurationsThreadsafe DurationMapThreadsafe,
-	monitorConfig TrafficMonitorConfigMapThreadsafe,
+	lastHealthDurationsThreadsafe threadsafe.DurationMap,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
 	errorCount threadsafe.Uint,
@@ -228,7 +189,7 @@ func processHealthResult(
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here
 
-	lastHealthDurations := lastHealthDurationsThreadsafe.Get().Copy()
+	lastHealthDurations := threadsafe.CopyDurationMap(lastHealthDurationsThreadsafe.Get())
 	for _, healthResult := range results {
 		if lastHealthStart, ok := lastHealthEndTimes[healthResult.ID]; ok {
 			d := time.Since(lastHealthStart)

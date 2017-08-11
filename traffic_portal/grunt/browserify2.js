@@ -1,18 +1,20 @@
 /*
-
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 module.exports = {
@@ -30,6 +32,7 @@ module.exports = {
                                 'angular-animate/angular-animate.min.js',
                                 'angular-bootstrap/ui-bootstrap.min.js',
                                 'angular-bootstrap/ui-bootstrap-tpls.min.js',
+                                'angular-jwt/dist/angular-jwt.min.js',
                                 'angular-loading-bar/build/loading-bar.min.js',
                                 'angular-resource/angular-resource.min.js',
                                 'angular-route/angular-route.min.js',
@@ -38,13 +41,19 @@ module.exports = {
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.min.js',
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
-                                'json3/lib/json3.min.js'
+                                'json3/lib/json3.min.js',
+                                'restangular/dist/restangular.min.js'
                             ]
                     },
                     {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src: [ 'flot/jquery.flot.js' ],
                         rename: function () { return 'jquery-flot.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.pie.js' ],
+                        rename: function () { return 'jquery-flot-pie.js'; }
                     },
                     {
                         cwd: '<%= globalConfig.app %>/bower_components/',
@@ -84,6 +93,7 @@ module.exports = {
                                 'angular-animate/angular-animate.js',
                                 'angular-bootstrap/ui-bootstrap.js',
                                 'angular-bootstrap/ui-bootstrap-tpls.js',
+                                'angular-jwt/dist/angular-jwt.js',
                                 'angular-loading-bar/build/loading-bar.js',
                                 'angular-resource/angular-resource.js',
                                 'angular-route/angular-route.js',
@@ -92,13 +102,19 @@ module.exports = {
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.js',
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
-                                'json3/lib/json3.js'
+                                'json3/lib/json3.js',
+                                'restangular/dist/restangular.js'
                             ]
                     },
                     {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src: [ 'flot/jquery.flot.js' ],
                         rename: function () { return 'jquery-flot.js'; }
+                    },
+                    {
+                        cwd: '<%= globalConfig.app %>/bower_components/',
+                        src: [ 'flot/jquery.flot.pie.js' ],
+                        rename: function () { return 'jquery-flot-pie.js'; }
                     },
                     {
                         cwd: '<%= globalConfig.app %>/bower_components/',

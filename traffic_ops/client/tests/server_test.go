@@ -25,16 +25,12 @@ import (
 	"github.com/jheitz200/test_helper"
 )
 
-func TestServer(t *testing.T) {
+func TestServers(t *testing.T) {
 	resp := fixtures.Servers()
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for Servers")
 
@@ -74,11 +70,7 @@ func TestServersUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for Servers")
 
@@ -95,11 +87,7 @@ func TestServerFQDN(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	shortName := "edge-alb-01"
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
@@ -123,11 +111,7 @@ func TestServerFQDNError(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	shortName := "edge-alb-01"
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
@@ -144,11 +128,7 @@ func TestServerFQDNUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	shortName := "edge-alb-01"
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for the FQDN of Server: \"%s\"", shortName)
@@ -166,11 +146,7 @@ func TestServerShortName(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	pattern := "edge"
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
@@ -200,11 +176,7 @@ func TestServerShortNameError(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	pattern := "edge"
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
@@ -221,11 +193,7 @@ func TestServerShortNameUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	pattern := "edge"
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for servers that match Short Name: \"%s\"", pattern)
@@ -243,11 +211,7 @@ func TestServerByType(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for \"Logstash\" Servers")
 
@@ -290,11 +254,7 @@ func TestServerByTypeUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for \"Logstash\" servers")
 
@@ -306,5 +266,46 @@ func TestServerByTypeUnauthorized(t *testing.T) {
 		testHelper.Error(t, "Should not be able to make a request to Traffic Ops")
 	} else {
 		testHelper.Success(t, "Should not be able to make a request to Traffic Ops")
+	}
+}
+
+func TestServer(t *testing.T) {
+	resp := fixtures.Server()
+	server := testHelper.ValidHTTPServer(resp)
+	defer server.Close()
+
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
+
+	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for Servers")
+
+	toserver, err := to.Server(resp.Response.HostName)
+	if err != nil {
+		testHelper.Error(t, "Should be able to make a request to Traffic Ops")
+	} else {
+		testHelper.Success(t, "Should be able to make a request to Traffic Ops")
+	}
+
+	if toserver.HostName != "edge-alb-01" {
+		testHelper.Error(t, "Should get \"edge-alb-01\" for \"HostName\", got: %s", toserver.HostName)
+	} else {
+		testHelper.Success(t, "Should get \"edge-alb-01\" for \"HostName\"")
+	}
+
+	if toserver.DomainName != "albuquerque.nm.albuq.kabletown.com" {
+		testHelper.Error(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\", got: %s", toserver.DomainName)
+	} else {
+		testHelper.Success(t, "Should get \"albuquerque.nm.albuq.kabletown.com\" for \"DomainName\"")
+	}
+
+	if toserver.Type != "EDGE" {
+		testHelper.Error(t, "Should get \"EDGE\" for \"Type\", got: %s", toserver.Type)
+	} else {
+		testHelper.Success(t, "Should get \"EDGE\" for \"Type\"")
+	}
+
+	if toserver.CDNName != "CDN-1" {
+		testHelper.Error(t, "Should get \"CDN-1\" for \"CDNName\", got: %s", toserver.CDNName)
+	} else {
+		testHelper.Success(t, "Should get \"CDN-1\" for \"CDNName\"")
 	}
 }

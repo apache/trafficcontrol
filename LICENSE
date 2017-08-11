@@ -243,6 +243,11 @@ For the Inconsolata and Lato fonts:
 @docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Regular.ttf
 ./licenses/SIL-1.1
 
+For the RobotoSlab fonts
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/RobotoSlab-Bold.ttf
+@docs/source/_themes/sphinx_rtd_theme/static/fonts/RobotoSlab-Regular.ttf
+./licenses/AL2-RobotoSlab
+
 For the bootstrap component:
 @misc/traffic-control-cdn/*/bootstrap*
 ./licenses/MIT-bootstrap
@@ -373,3 +378,11 @@ Several subsections of main.css are under the MIT license, as noted in the file:
 For the seelog component:
 @traffic_stats/vendor/github.com/cihub/seelog/*
 ./licenses/BSD-seelog
+
+The invalid_passwords.txt file is from the Projects/OWASP SecLists Project provided under a CC-A-SA license:
+@traffic_ops/app/conf/invalid_passwords.txt
+./licenses/CC_A_SA_3
+
+For the go-sqlmock component:
+@traffic_ops/traffic_ops_golang/vendor/gopkg.in/DATA-DOG/go-sqlmock/*
+./traffic_ops/traffic_ops_golang/vendor/gopkg.in/DATA-DOG/go-sqlmock/LICENSE

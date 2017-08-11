@@ -113,7 +113,11 @@ func (s *Server) Run(endpoints map[string]http.HandlerFunc, addr string, readTim
 		defer s.stoppableListenerWaitGroup.Done()
 		err := server.Serve(s.stoppableListener)
 		if err != nil {
-			log.Warnf("HTTP server stopped with error: %v\n", err)
+			if err != stoppableListener.StoppedError {
+				log.Warnf("HTTP server stopped with error: %v\n", err)
+			} else {
+				log.Infof("Web server stopped on %s", addr)
+			}
 		}
 	}()
 

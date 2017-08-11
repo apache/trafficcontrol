@@ -103,7 +103,7 @@ function checkEnvironment {
 
 	# verify required tools available in path -- extra tools required by subsystem are passed in
 	for pgm in git rpmbuild "$@"; do
-		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; exit 1; }
+		type $pgm 2>/dev/null || { echo "$pgm not found in PATH"; }
 	done
 	# verify git version
 	requiredGitVersion=1.7.12
@@ -159,16 +159,17 @@ function buildRpm () {
 # ---------------------------------------
 function createTarball() {
 	local projDir=$(cd "$1"; pwd)
-	local projName=trafficcontrol-incubating
+	local projName=trafficcontrol
 	local version=$(getVersion "$TC_DIR")
-	local tarball="dist/$projName-$version.tar.gz"
+	local tarball="dist/apache-$projName-$version-incubating.tar.gz"
+	local tardir=$(basename $tarball .tar.gz)
 
 	# Create a BULDNUMBER file and add to tarball
 	local bndir=$(mktemp -d)
         getBuildNumber >"$bndir/BUILD_NUMBER"
 
         # create the tarball only from files in repo and BUILD_NUMBER
-        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$projName-$version/@" $(git ls-files)
+        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$projDir" --exclude-vcs --transform "s@^@$tardir/@S" $(git ls-files)
         rm -r "$bndir"
         echo "$tarball"
 }

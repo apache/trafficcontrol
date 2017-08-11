@@ -102,8 +102,8 @@ public class CacheRegister implements CacheLocationManager {
 	 * @return the DeliveryService that matches the request
 	 */
 	public DeliveryService getDeliveryService(final Request request, final boolean isHttp) {
-
 		TreeSet<DeliveryServiceMatcher> matchers = dnsServiceMatchers;
+
 		if (isHttp) {
 			matchers = httpServiceMatchers;
 		}

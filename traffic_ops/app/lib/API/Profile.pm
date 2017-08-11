@@ -25,30 +25,42 @@ use JSON;
 
 sub index {
 	my $self = shift;
-	my @data;
-	my $orderby = $self->param('orderby') || "me.name";
+	my $orderby = $self->param('orderby');
 	my $parameter_id = $self->param('param');
+	my $cdn_id = $self->param('cdn');
+
+	my @data;
+	my %criteria;
 
 	if ( defined $parameter_id ) {
 		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ], order_by => $orderby }  );
 		while ( my $row = $rs->next ) {
 			push(
 				@data, {
-					"id" => $row->profile->id,
-					"name" => $row->profile->name,
-					"description" => $row->profile->description,
-					"lastUpdated" => $row->profile->last_updated
+					"id" 			=> $row->profile->id,
+					"name" 			=> $row->profile->name,
+					"description" 	=> $row->profile->description,
+					"cdn" 			=> defined($row->profile->cdn) ? $row->profile->cdn->id : undef,
+					"cdnName" 		=> defined($row->profile->cdn) ? $row->profile->cdn->name : undef,
+					"type" 			=> $row->profile->type,
+					"lastUpdated" 	=> $row->profile->last_updated
 				}
 			);
 		}
 	} else {
-		my $rs_data = $self->db->resultset("Profile")->search( undef, { order_by => $orderby } );
+		if ( defined $cdn_id ) {
+			$criteria{'cdn'} = $cdn_id;
+		}
+		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => $orderby } );
 		while ( my $row = $rs_data->next ) {
 			push(
 				@data, {
 					"id"          => $row->id,
 					"name"        => $row->name,
 					"description" => $row->description,
+					"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+					"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
+					"type"        => $row->type,
 					"lastUpdated" => $row->last_updated
 				}
 			);
@@ -99,11 +111,21 @@ sub get_profiles_by_paramId {
 	return $self->success( \@data );
 }
 
-sub show {
-	my $self = shift;
-	my $id   = $self->param('id');
+sub get_unassigned_profiles_by_paramId {
+	my $self    	= shift;
+	my $param_id	= $self->param('id');
 
-	my $rs_data = $self->db->resultset("Profile")->search( { id => $id } );
+	my %criteria;
+	if ( defined $param_id ) {
+		$criteria{'parameter.id'} = $param_id;
+	} else {
+		return $self->alert("Parameter ID is required");
+	}
+
+	my @assigned_profiles =
+		$self->db->resultset('ProfileParameter')->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } )->get_column('profile')->all();
+
+	my $rs_data = $self->db->resultset("Profile")->search( { 'me.id' => { 'not in' => \@assigned_profiles } }, { prefetch => [ 'cdn' ] } );
 	my @data = ();
 	while ( my $row = $rs_data->next ) {
 		push(
@@ -111,6 +133,31 @@ sub show {
 				"id"          => $row->id,
 				"name"        => $row->name,
 				"description" => $row->description,
+				"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+				"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
+				"type"        => $row->type,
+				"lastUpdated" => $row->last_updated
+			}
+		);
+	}
+	$self->success( \@data );
+}
+
+sub show {
+	my $self = shift;
+	my $id   = $self->param('id');
+
+	my $rs_data = $self->db->resultset("Profile")->search( { 'me.id' => $id }, { prefetch => [ 'cdn' ] } );
+	my @data = ();
+	while ( my $row = $rs_data->next ) {
+		push(
+			@data, {
+				"id"          => $row->id,
+				"name"        => $row->name,
+				"description" => $row->description,
+				"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+				"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
+				"type"        => $row->type,
 				"lastUpdated" => $row->last_updated
 			}
 		);
@@ -139,6 +186,10 @@ sub create {
 		return $self->alert("profile 'description' is required.");
 	}
 
+	if ( !defined( $params->{type} ) ) {
+		return $self->alert("Profile type is required.");
+	}
+
 	my $existing_profile = $self->db->resultset('Profile')->search( { name => $name } )->get_column('name')->single();
 	if ( $existing_profile && $name eq $existing_profile ) {
 		return $self->alert("profile with name $name already exists.");
@@ -149,10 +200,14 @@ sub create {
 		return $self->alert("a profile with the exact same description already exists.");
 	}
 
+	my $cdn = $params->{cdn};
+	my $type = $params->{type};
 	my $insert = $self->db->resultset('Profile')->create(
 		{
 			name        => $name,
 			description => $description,
+			cdn         => $cdn,
+			type        => $type,
 		}
 	);
 	$insert->insert();
@@ -164,6 +219,8 @@ sub create {
 	$response->{id}          = $new_id;
 	$response->{name}        = $name;
 	$response->{description} = $description;
+	$response->{cdn}         = $cdn;
+	$response->{type}        = $type;
 	return $self->success($response);
 }
 
@@ -171,7 +228,7 @@ sub copy {
 	my $self = shift;
 
 	if ( !&is_oper($self) ) {
-		return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
+		return $self->forbidden();
 	}
 
 	my $name                   = $self->param('profile_name');
@@ -194,12 +251,16 @@ sub copy {
 		return $self->alert("profile_copy_from $profile_copy_from_name doesn't exist.");
 	}
 	my $profile_copy_from_id = $row1->id;
-	my $description          = $row1->description;
+	my $description          = "";
 
+	my $cdn = $row1->cdn;
+	my $type = $row1->type;
 	my $insert = $self->db->resultset('Profile')->create(
 		{
 			name        => $name,
 			description => $description,
+			cdn         => $cdn,
+			type        => $type,
 		}
 	);
 	$insert->insert();
@@ -219,8 +280,9 @@ sub copy {
 			$insert->insert();
 		}
 	}
+	my $msg = "Created new profile [ $name ] from existing profile [ $profile_copy_from_name ]";
 
-	&log( $self, "Created profile from copy with id: " . $new_id . " and name: " . $name, "APICHANGE" );
+	&log( $self, $msg, "APICHANGE" );
 
 	my $response;
 	$response->{id}              = $new_id;
@@ -228,7 +290,7 @@ sub copy {
 	$response->{description}     = $description;
 	$response->{profileCopyFrom} = $profile_copy_from_name;
 	$response->{idCopyFrom}      = $profile_copy_from_id;
-	return $self->success($response);
+	return $self->success($response, $msg);
 }
 
 sub update {
@@ -271,9 +333,26 @@ sub update {
 		}
 	}
 
+	if ( !defined( $params->{type} ) ) {
+		return $self->alert("Profile type is required.");
+	}
+
+	my $cdn = $params->{cdn};
+
+	my $ex_server = $profile->servers->first;
+	if ( defined $ex_server ) {
+		if ( $cdn != $ex_server->cdn_id ) {
+			return $self->alert("the assigned CDN does not match the CDN assigned to servers with this profile.");
+		}
+	}
+
+
+	my $type = $params->{type};
 	my $values = {
 		name        => $name,
-		description => $description
+		description => $description,
+		cdn         => $cdn,
+		type        => $type,
 	};
 
 	my $rs = $profile->update($values);
@@ -282,6 +361,8 @@ sub update {
 		$response->{id}          = $id;
 		$response->{name}        = $name;
 		$response->{description} = $description;
+		$response->{cdn}         = $cdn;
+		$response->{type}        = $type;
 		&log( $self, "Update profile with id: " . $id . " and name: " . $name, "APICHANGE" );
 		return $self->success( $response, "Profile was updated: " . $id );
 	}

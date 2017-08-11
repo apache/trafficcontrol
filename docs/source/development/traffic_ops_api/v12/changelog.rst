@@ -24,11 +24,21 @@ Change Logs
 /api/1.2/logs
 +++++++++++++
 
-**GET /api/1.2/logs.json**
+**GET /api/1.2/logs**
 
   Authentication Required: Yes
 
   Role(s) Required: None
+
+  **Request Query Parameters**
+
+  +-----------------+----------+---------------------------------------------------+
+  | Name            | Required | Description                                       |
+  +=================+==========+===================================================+
+  | ``days``        | no       | The number of days of change logs to return.      |
+  +-----------------+----------+---------------------------------------------------+
+  | ``limit``       | no       | The number of rows to limit the response to.      |
+  +-----------------+----------+---------------------------------------------------+
 
   **Response Properties**
 
@@ -73,7 +83,7 @@ Change Logs
 
 |
 
-**GET /api/1.2/logs/:days/days.json**
+**GET /api/1.2/logs/:days/days**
 
   Authentication Required: Yes
 
@@ -130,7 +140,7 @@ Change Logs
 
 |
 
-**GET /api/1.2/logs/newcount.json**
+**GET /api/1.2/logs/newcount**
 
   Authentication Required: Yes
 

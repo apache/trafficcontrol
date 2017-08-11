@@ -23,7 +23,7 @@ Traffic Control is an Open Source implementation of a Content Delivery Network.
 
 The following documentation sections are available:
 
-CDN Basics 
+CDN Basics
 ==========
 A review of the basic functionality of a Content Delivery Network. 
 
@@ -53,7 +53,7 @@ How to deploy and manage a Traffic Control CDN.
 
 Developer's Guide
 ==================
-A guide to the various internal and external APIs, and a introduction for the Traffic Control developer.
+A guide to the various internal and external APIs, and an introduction for the Traffic Control developer.
 
 .. toctree::
    :maxdepth: 3

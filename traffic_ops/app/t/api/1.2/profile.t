@@ -17,6 +17,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use DBI;
+use JSON;
 use strict;
 use warnings;
 no warnings 'once';
@@ -39,7 +40,7 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
-	"name" => "CCR_CREATE", "description" => "CCR_CREATE description" })->status_is(200)
+	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => 100, "type" => 'TR_PROFILE' })->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "CCR_CREATE" )
 	->json_is( "/response/description" => "CCR_CREATE description" )
@@ -72,7 +73,9 @@ my $profile_id = &get_profile_id('CCR_CREATE');
 
 ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
         "name" => "CCR_UPDATE",
-        "description" => "CCR_UPDATE description"
+        "description" => "CCR_UPDATE description",
+        "cdn" => 100,
+        "type" => "TR_PROFILE"
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/id" => "$profile_id")
@@ -119,6 +122,34 @@ $t->get_ok("/api/1.2/profiles/8")->status_is(200)->json_is( "/response/0/id", 8 
 ok $t->delete_ok('/api/1.2/profiles/8')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/profiles/parameter/1' => {Accept => 'application/json'})->status_is(404);
+
+# Count the 'response number'
+my $count_response = sub {
+	my ( $t, $count ) = @_;
+	my $json = decode_json( $t->tx->res->content->asset->slurp );
+	my $r    = $json->{response};
+	return $t->success( is( scalar(@$r), $count ) );
+};
+
+# there are currently 6 parameters not assigned to profile 100
+$t->get_ok('/api/1.2/profiles/100/unassigned_parameters')->status_is(200)->$count_response(7)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 4 parameters not assigned to profile 200
+$t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$count_response(5)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 7 profiles not assigned to parameter 4
+$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(8)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 7 profiles not assigned to parameter 4
+$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(8)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 6 profiles not assigned to parameter 6
+$t->get_ok('/api/1.2/parameters/6/unassigned_profiles')->status_is(200)->$count_response(7)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

@@ -26,30 +26,6 @@ my %definition_for = (
 			description => 'Job is queued, but has not been picked up by any agents yet'
 		},
 	},
-	in_progress => {
-		new   => 'JobStatus',
-		using => {
-			id          => 2,
-			name        => 'IN_PROGRESS',
-			description => 'Job is being processed by agents'
-		},
-	},
-	completed => {
-		new   => 'JobStatus',
-		using => {
-			id          => 3,
-			name        => 'COMPLETED',
-			description => 'Job has finished'
-		},
-	},
-	cancelled => {
-		new   => 'JobStatus',
-		using => {
-			id          => 4,
-			name        => 'CANCELLED',
-			description => 'Job was cancelled'
-		},
-	},
 );
 
 sub get_definition {
@@ -58,8 +34,7 @@ sub get_definition {
 }
 
 sub all_fixture_names {
-	# sort by db name to guarantee insertion order
-	return (sort { $definition_for{$a}{using}{id} cmp $definition_for{$b}{using}{id} } keys %definition_for);
+	return keys %definition_for;
 }
 
 __PACKAGE__->meta->make_immutable;

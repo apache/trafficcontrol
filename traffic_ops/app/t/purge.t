@@ -48,8 +48,8 @@ $t->post_ok( '/login', => form => { u => 'admin', p => 'password' } )->status_is
 
 my $q = "SELECT deliveryservice.id, 
            deliveryservice.xml_id, 
-           org_server_fqdn, 
-           type, 
+           deliveryservice.org_server_fqdn,
+           deliveryservice.type,
            profile.id AS profile_id, 
            cdn.name AS cdn_name 
      FROM deliveryservice 
@@ -69,14 +69,14 @@ my $cdn_name = $ds->{cdn_name};
 my $ds_name  = $ds->{xml_id};
 
 diag "Testing " . $ds_name . " (" . $host . ") in " . $cdn_name;
-$q = 'SELECT DISTINCT host_name, 
+$q = 'SELECT DISTINCT server.host_name,
                       cdn.name as cdn_name 
 					  FROM server 
 	  JOIN profile ON profile.id = server.profile
 	  JOIN cdn ON cdn.id = server.cdn_id
       WHERE cdn.name!=\'' . $cdn_name . '\' 
-            and type in (select id from type where name =\'EDGE\' or name =\'MID\')
-            and status in (select id from status where name =\'REPORTED\' or name =\'ONLINE\')';
+            and server.type in (select id from type where name =\'EDGE\' or name =\'MID\')
+            and server.status in (select id from status where name =\'REPORTED\' or name =\'ONLINE\')';
 
 my $get_servers = $dbh->prepare($q);
 $get_servers->execute();
@@ -93,11 +93,11 @@ while ( defined( $p->[$j] ) ) {
 diag "Other servers " . $j;
 
 # get all edges assicated with this cdn name
-$q = 'SELECT DISTINCT host_name FROM server 
+$q = 'SELECT DISTINCT server.host_name FROM server
 JOIN profile ON profile.id = server.profile
 JOIN cdn ON cdn.id = server.cdn_id
-WHERE cdn.name=\'' . $cdn_name . '\' and type in (select id from type where name =\'EDGE\' or name =\'MID\')
-and status in (select id from status where name =\'REPORTED\' or name =\'ONLINE\')';
+WHERE cdn.name=\'' . $cdn_name . '\' and server.type in (select id from type where name =\'EDGE\' or name =\'MID\')
+and server.status in (select id from status where name =\'REPORTED\' or name =\'ONLINE\')';
 
 # diag $q ;
 $get_servers = $dbh->prepare($q);
@@ -246,3 +246,5 @@ foreach my $cache ( keys %{$slist} ) {
 }
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();
+done_testing();
+

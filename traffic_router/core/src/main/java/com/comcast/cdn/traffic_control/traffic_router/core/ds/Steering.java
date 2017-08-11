@@ -24,6 +24,8 @@ public class Steering {
 	@JsonProperty
 	private String deliveryService;
 	@JsonProperty
+	private boolean clientSteering;
+	@JsonProperty
 	private List<SteeringTarget> targets = new ArrayList<SteeringTarget>();
 	@JsonProperty
 	private List<SteeringFilter> filters = new ArrayList<SteeringFilter>();
@@ -42,6 +44,14 @@ public class Steering {
 
 	public void setDeliveryService(final String id) {
 		this.deliveryService = id;
+	}
+
+	public boolean isClientSteering() {
+		return clientSteering;
+	}
+
+	public void setClientSteering(final boolean clientSteering) {
+		this.clientSteering = clientSteering;
 	}
 
 	public List<SteeringFilter> getFilters() {

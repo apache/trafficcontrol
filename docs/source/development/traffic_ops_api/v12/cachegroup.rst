@@ -234,6 +234,61 @@ Cache Group
 
 |
 
+**GET /api/1.2/cachegroups/:id/unassigned_parameters**
+
+  Retrieves all parameters NOT assigned to the cache group.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +------------------+----------+-----------------------+
+  |       Name       | Required | Description           |
+  +==================+==========+=======================+
+  | ``id``           | yes      | Cache group id        |
+  +------------------+----------+-----------------------+
+
+  **Response Properties**
+
+  +------------------+---------+--------------------------------------------------------------------------------+
+  |    Parameter     |  Type   |                    Description                                                 |
+  +==================+=========+================================================================================+
+  | ``last_updated`` | string  | The Time / Date this server entry was last updated                             |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``secure``       | boolean | When true, the parameter is accessible only by admin users. Defaults to false. |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``value``        | string  | The parameter value, only visible to admin if secure is true                   |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``name``         | string  | The parameter name                                                             |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``config_file``  | string  | The parameter config_file                                                      |
+  +------------------+---------+--------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+           "last_updated": "2012-09-17 21:41:22",
+           "secure": false,
+           "value": "0,1,2,3,4,5,6",
+           "name": "Drive_Letters",
+           "config_file": "storage.config"
+        },
+        {
+           "last_updated": "2012-09-17 21:41:22",
+           "secure": true,
+           "value": "STRING __HOSTNAME__",
+           "name": "CONFIG proxy.config.proxy_name",
+           "config_file": "records.config"
+        }
+     ],
+    }
+
+|
+
 **GET /api/1.2/cachegroup/:parameter_id/parameter**
 
   Authentication Required: Yes
@@ -391,7 +446,7 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``secondaryParentCachegroup``   | no       | Name of Secondary Parent Cache Group entry.                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``typeName``                    | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  | ``typeId``                      | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
@@ -402,7 +457,7 @@ Cache Group
         "latitude": 12,
         "longitude": 45,
         "parentCachegroup": "cache_group_mid",
-        "typeName": "EDGE_LOC"
+        "typeId": 6
     }
 
   **Response Properties**

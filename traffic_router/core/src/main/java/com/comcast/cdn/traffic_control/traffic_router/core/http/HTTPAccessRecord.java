@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 // Using Josh Bloch Builder pattern so suppress these warnings.
@@ -37,6 +38,7 @@ public class HTTPAccessRecord {
     private final long requestNanoTime;
     private final HttpServletRequest request;
     private final URL responseURL;
+    private final List<URL> responseURLs;
     private final int responseCode;
     private final ResultType resultType;
     private final String rerr;
@@ -59,6 +61,10 @@ public class HTTPAccessRecord {
 
     public URL getResponseURL() {
         return responseURL;
+    }
+
+    public List<URL> getResponseURLs() {
+        return responseURLs;
     }
 
     public ResultType getResultType() {
@@ -94,6 +100,7 @@ public class HTTPAccessRecord {
         private final HttpServletRequest request;
         private int responseCode = -1;
         private URL responseURL;
+        private List<URL> responseURLs;
         private ResultType resultType;
         private String rerr;
         private ResultDetails resultDetails;
@@ -118,6 +125,7 @@ public class HTTPAccessRecord {
             this.requestDate = httpAccessRecord.requestDate;
             this.request = httpAccessRecord.request;
             this.responseURL = httpAccessRecord.responseURL;
+            this.responseURLs = httpAccessRecord.responseURLs;
             this.responseCode = httpAccessRecord.responseCode;
             this.requestNanoTime = httpAccessRecord.requestNanoTime;
         }
@@ -129,6 +137,11 @@ public class HTTPAccessRecord {
 
         public Builder responseURL(final URL responseURL) {
             this.responseURL = responseURL;
+            return this;
+        }
+
+        public Builder responseURLs(final List<URL> responseURLs) {
+            this.responseURLs = responseURLs;
             return this;
         }
 
@@ -172,6 +185,7 @@ public class HTTPAccessRecord {
         request = builder.request;
         responseCode = builder.responseCode;
         responseURL = builder.responseURL;
+        responseURLs = builder.responseURLs;
         resultType = builder.resultType;
         rerr = builder.rerr;
         resultDetails = builder.resultDetails;
@@ -193,6 +207,7 @@ public class HTTPAccessRecord {
         if (requestDate != null ? !requestDate.equals(that.requestDate) : that.requestDate != null) return false;
         if (request != null ? !request.equals(that.request) : that.request != null) return false;
         if (responseURL != null ? !responseURL.equals(that.responseURL) : that.responseURL != null) return false;
+        if (responseURLs != null ? !responseURLs.equals(that.responseURLs) : that.responseURLs != null) return false;
         if (resultType != that.resultType) return false;
         if (rerr != null ? !rerr.equals(that.rerr) : that.rerr != null) return false;
         if (resultDetails != that.resultDetails) return false;
@@ -210,6 +225,7 @@ public class HTTPAccessRecord {
         result = 31 * result + (int) (requestNanoTime ^ (requestNanoTime >>> 32));
         result = 31 * result + (request != null ? request.hashCode() : 0);
         result = 31 * result + (responseURL != null ? responseURL.hashCode() : 0);
+        result = 31 * result + (responseURLs != null ? responseURLs.hashCode() : 0);
         result = 31 * result + responseCode;
         result = 31 * result + (resultType != null ? resultType.hashCode() : 0);
         result = 31 * result + (rerr != null ? rerr.hashCode() : 0);
@@ -226,6 +242,7 @@ public class HTTPAccessRecord {
                 "requestDate=" + requestDate +
                 ", request=" + request +
                 ", responseURL=" + responseURL +
+                ", responseURLs=" + responseURLs +
                 ", responseCode=" + responseCode +
                 ", resultType=" + resultType +
                 ", rerr='" + rerr + '\'' +

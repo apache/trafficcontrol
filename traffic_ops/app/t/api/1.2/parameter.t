@@ -38,6 +38,7 @@ Test::TestHelper->unload_core_data($schema);
 
 # Load the test data up until 'cachegroup', because this test case creates
 # them.
+Test::TestHelper->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -247,6 +248,48 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->json_like( "/alerts/0/text" => qr/does not exist.$/ )
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		, 'Does the paramters validate return?';
+
+
+#checking if a parameter vaule can be changed to "0"
+ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
+			{
+				'name'  => 'default1',
+				'configFile' => 'configFile3',
+				'value'      => '1',
+				'secure'     => '0'
+			}]
+	)->status_is(200)
+	, 'Adding the parameter with default 1';
+
+$para_id = &get_param_id('default1');
+ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/0/name" => "default1" )
+		->json_is( "/response/0/value" => "1" )
+		->json_is( "/response/0/configFile" => "configFile3" )
+	, 'Does the paramter get return?';
+
+ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'} => json => {
+			'value'      => '0',
+		})->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "default1" )
+		->json_is( "/response/configFile" => "configFile3" )
+		->json_is( "/response/value" => "0" )
+	, 'Was the paramters modification return?';
+
+ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/0/name" => "default1" )
+		->json_is( "/response/0/value" => "0" )
+		->json_is( "/response/0/configFile" => "configFile3" )
+	, 'Was the parameter really changed?';
+
+ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(200)
+	, 'Does the paramter deleted?';
+
+
+
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

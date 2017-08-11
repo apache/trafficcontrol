@@ -29,11 +29,7 @@ func TestCDNs(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for CDNs")
 
@@ -68,11 +64,7 @@ func TestCDNsUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for CDNs")
 
@@ -89,11 +81,7 @@ func TestCDNName(t *testing.T) {
 	server := testHelper.ValidHTTPServer(resp)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	cdn := "CDN-1"
 	testHelper.Context(t, "Given the need to test a successful Traffic Ops request for CDN: \"%s\"", cdn)
@@ -124,11 +112,7 @@ func TestCDNNameUnauthorized(t *testing.T) {
 	server := testHelper.InvalidHTTPServer(http.StatusUnauthorized)
 	defer server.Close()
 
-	var httpClient http.Client
-	to := client.Session{
-		URL:       server.URL,
-		UserAgent: &httpClient,
-	}
+	to := client.NewSession("", "", server.URL, "", &http.Client{}, false)
 
 	cdn := "CDN-1"
 	testHelper.Context(t, "Given the need to test a failed Traffic Ops request for CDN: \"%s\"", cdn)

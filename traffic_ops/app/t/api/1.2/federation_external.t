@@ -39,6 +39,7 @@ my $schema_values = { schema => $schema, no_transactions => 1 };
 
 #unload data for a clean test
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );

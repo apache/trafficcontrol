@@ -44,6 +44,16 @@ $t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 100 )
 $t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 )
     ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+ok $t->put_ok('/api/1.2/cdns/100/snapshot')
+        ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Is the cdn snapshotted?';
+
+$t->get_ok("/api/1.2/cdns/cdn1/snapshot")->status_is(200)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/cdns/cdn1/snapshot/new")->status_is(200)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->post_ok('/api/1.2/cdns/100/queue_update' => {Accept => 'application/json'} => json => {
             "action" => "queue" })
         ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -69,7 +79,7 @@ $t->get_ok("/api/1.2/servers?cdnId=100")->status_is(200)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
-        "name" => "cdn_test", "dnssecEnabled" => "true" })
+        "name" => "cdn_test", "dnssecEnabled" => \1, "domainName" => "testcdn.kabletown.net" })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test" )
     ->json_is( "/alerts/0/level" => "success" )
@@ -79,7 +89,7 @@ ok $t->post_ok('/api/1.2/cdns' => {Accept => 'application/json'} => json => {
 my $cdn_id = &get_cdn_id('cdn_test');
 
 ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => json => {
-        "name" => "cdn_test2", "dnssecEnabled" => "true"
+        "name" => "cdn_test2", "domainName" => "testcdn2.kabletown.net", "dnssecEnabled" => \1
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/name" => "cdn_test2" )

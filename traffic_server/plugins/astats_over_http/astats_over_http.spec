@@ -19,7 +19,7 @@
 %global install_prefix "/opt"
 
 Name:		astats_over_http
-Version:	1.2
+Version:	1.3
 Release:	1%{?dist}
 Summary:	Apache Traffic Server %{name} plugin
 Vendor:		Comcast

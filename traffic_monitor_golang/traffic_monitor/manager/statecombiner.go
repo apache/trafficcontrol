@@ -117,7 +117,17 @@ func combineCacheState(cacheName enum.CacheName, localCacheState peer.IsAvailabl
 	combinedStates.AddCache(cacheName, peer.IsAvailable{IsAvailable: available})
 }
 
-func combineDSState(deliveryServiceName enum.DeliveryServiceName, localDeliveryService peer.Deliveryservice, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
+func combineDSState(
+	deliveryServiceName enum.DeliveryServiceName,
+	localDeliveryService peer.Deliveryservice,
+	events health.ThreadsafeEvents,
+	peerOptimistic bool,
+	peerStates peer.CRStatesPeersThreadsafe,
+	localStates peer.Crstates,
+	combinedStates peer.CRStatesThreadsafe,
+	overrideMap map[enum.CacheName]bool,
+	toData todata.TOData,
+) {
 	deliveryService := peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
 	if localDeliveryService.IsAvailable {
 		deliveryService.IsAvailable = true
@@ -127,7 +137,7 @@ func combineDSState(deliveryServiceName enum.DeliveryServiceName, localDeliveryS
 	for peerName, iPeerStates := range peerStates.GetCrstates() {
 		peerDeliveryService, ok := iPeerStates.Deliveryservice[deliveryServiceName]
 		if !ok {
-			log.Warnf("local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)
+			log.Infof("local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)
 			continue
 		}
 		if peerDeliveryService.IsAvailable {

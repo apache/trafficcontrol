@@ -24,7 +24,7 @@ use Mojo::Base 'Mojolicious::Plugin::Config';
 use base 'DBIx::Class::Core';
 use Schema;
 use Data::Dumper;
-use Digest::SHA1 qw(sha1_hex);
+use Utils::Helper;
 use JSON;
 use Cwd;
 
@@ -94,6 +94,7 @@ sub startup {
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
 	$self->set_secrets();
+	$self->load_password_blacklist();
 
 	$self->log->info("-------------------------------------------------------------");
 	$self->log->info( "TrafficOps version: " . Utils::Helper::Version->current() . " is starting." );
@@ -109,6 +110,15 @@ sub startup {
 	#Static Files
 	my $static = Mojolicious::Static->new;
 	push @{ $static->paths }, 'public';
+
+	# Make sure static files are cached
+	$self->hook(
+		after_static => sub {
+			my $self = shift;
+			$self->res->headers->cache_control('max-age=3600, must-revalidate')
+				if $self->res->code;
+		}
+	);
 
 	if ( $mode ne 'test' ) {
 		$access_control_allow_origin = $config->{'cors'}{'access_control_allow_origin'};
@@ -172,6 +182,17 @@ sub startup {
 		}
 	);
 
+	$self->hook(around_action => sub {
+		my ($next, $c, $action, $last) = @_;
+		my $user = $c->current_user();
+		my $username = '';
+		if ( defined($user) ) {
+			$username = $user->{username};
+		}
+		$c->set_username($username);
+		return $next->();
+	});
+
 	my $r = $self->routes;
 
 	# Look in the PERL5LIB for any TrafficOpsRoutes.pm files and load them as well
@@ -217,6 +238,9 @@ sub setup_mojo_plugins {
 
 	$self->helper( db => sub { $self->schema } );
 	$config = $self->plugin('Config');
+
+	# setting a default message if no user account is found in tm_user. this default can be overriden in cdn.conf
+	$config->{'to'}{'no_account_found_msg'} //= "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator.";
 
 	if ( !defined $ENV{MOJO_INACTIVITY_TIMEOUT} ) {
 		$ENV{MOJO_INACTIVITY_TIMEOUT} = $config->{inactivity_timeout} // 60;
@@ -328,7 +352,8 @@ sub setup_mojo_plugins {
 
 	$self->plugin(
 		AccessLog => {
-			log    => "$logging_root_dir/access.log",
+			log    => "$logging_root_dir/perl_access.log",
+			uname_helper => 'set_username',
 			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
 		}
 	);
@@ -338,6 +363,19 @@ sub setup_mojo_plugins {
 	#FormFields
 	$self->plugin('FormFields');
 
+}
+
+sub load_password_blacklist {
+	my $self = shift;
+	my $path = find_conf_path("invalid_passwords.txt");
+	open( my $fn, '<', $path ) || die("invalid_passwords.txt $!\n");
+	my $invalid_passwords = {};
+	while ( my $line = <$fn> ) {
+		chomp($line);
+		$invalid_passwords->{$line} = 1;
+	}
+	close($fn);
+	$self->{invalid_passwords} = $invalid_passwords;
 }
 
 sub check_token {
@@ -416,10 +454,7 @@ sub check_local_user {
 	my $db_user = $self->db->resultset('TmUser')->find( { username => $username } );
 	if ( defined($db_user) && defined( $db_user->local_passwd ) ) {
 		$self->app->log->info( $username . " was found in the database. " );
-		my $db_local_passwd         = $db_user->local_passwd;
-		my $db_confirm_local_passwd = $db_user->confirm_local_passwd;
-		my $hex_pw_string           = sha1_hex($pass);
-		if ( $db_local_passwd eq $hex_pw_string ) {
+		if ( Utils::Helper::verify_pass($pass, $db_user->local_passwd) ) {
 			$local_user = $username;
 			$self->app->log->debug("Password matched.");
 			$is_authenticated = 1;

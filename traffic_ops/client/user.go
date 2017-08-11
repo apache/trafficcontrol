@@ -45,7 +45,7 @@ func (to *Session) Users() ([]User, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 
 	var data UserResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {

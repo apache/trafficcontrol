@@ -31,13 +31,18 @@
 
 . /etc/rc.d/init.d/functions
 
-export NAME=tomcat
-export TOMCAT_HOME=/opt/$NAME
-export CATALINA_PID=/var/run/tomcat/$NAME.pid
-export CATALINA_OPTS="-Xms512m -Xmx8192m -Dlog4j.configuration=file:///opt/traffic_router/conf/log4j.properties"
-export TOMCAT_LOCK=/var/lock/subsys/$NAME
+NAME=tomcat
+TOMCAT_HOME=/opt/$NAME
+CATALINA_PID=/var/run/tomcat/$NAME.pid
+TOMCAT_LOCK=/var/lock/subsys/$NAME
+CATALINA_OPTS="-Xms512m -Xmx8192m -Dlog4j.configuration=file:///opt/traffic_router/conf/log4j.properties"
+SHUTDOWN_TIMEOUT=10
+SHUTDOWN_FORCE=true
+
+export NAME TOMCAT_HOME CATALINA_PID TOMCAT_LOCK
 
 start() {
+    export CATALINA_OPTS
     runuser -s /bin/bash root -c "$TOMCAT_HOME/bin/startup.sh"
 	RETVAL=$?
 	echo -n "Starting $NAME"
@@ -52,7 +57,9 @@ start() {
 
 
 stop() {
-	$TOMCAT_HOME/bin/shutdown.sh
+	SHUTDOWN_OPTS="$SHUTDOWN_TIMEOUT"
+	[[ $SHUTDOWN_FORCE == "true" ]] && SHUTDOWN_OPTS="$SHUTDOWN_TIMEOUT -force"
+	$TOMCAT_HOME/bin/shutdown.sh $SHUTDOWN_OPTS
 	RETVAL=$?
 	echo -n "Stopping $NAME"
 	if [ $RETVAL = 0 ]; then
@@ -80,6 +87,7 @@ case "$1" in
 		fi 
 		;; 
 	force-stop)
+		# this is useless on el7, and of dubious usefulness on el6
 		stop
 		;; 
 	restart)

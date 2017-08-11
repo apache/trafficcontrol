@@ -65,7 +65,7 @@ oldpwd=$(pwd)
   cp -r "$TC_DIR"/traffic_monitor_golang/* . && \
   cd traffic_monitor && \
   go get -d -v && \
-  go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'`" \
+  go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=%{traffic_control_version}" \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install

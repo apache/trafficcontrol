@@ -23,6 +23,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -63,6 +65,12 @@ type Config struct {
 	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
 	StaticFileDir                string        `json:"static_file_dir"`
 }
+
+func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
+func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
+func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
@@ -179,8 +187,15 @@ func Load(fileName string) (Config, error) {
 		return cfg, nil
 	}
 	configBytes, err := ioutil.ReadFile(fileName)
-	if err == nil {
-		err = json.Unmarshal(configBytes, &cfg)
+	if err != nil {
+		return DefaultConfig, err
 	}
+	return LoadBytes(configBytes)
+}
+
+// LoadBytes loads the given file bytes.
+func LoadBytes(bytes []byte) (Config, error) {
+	cfg := DefaultConfig
+	err := json.Unmarshal(bytes, &cfg)
 	return cfg, err
 }

@@ -145,6 +145,30 @@
     "test-dns": {
       "disabledLocations": [],
       "isAvailable": true
+    },
+    "client-steering-test-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-test-2": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-2": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-3": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-4": {
+      "disabledLocations": [],
+      "isAvailable": true
     }
   }
 }

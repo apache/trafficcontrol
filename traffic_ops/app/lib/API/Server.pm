@@ -16,6 +16,7 @@ package API::Server;
 #
 #
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use POSIX qw(strftime);
@@ -46,7 +47,7 @@ sub index {
 		( $forbidden, $servers ) = $self->get_servers_by_dsid( $current_user, $ds_id, $status );
 	}
 	elsif ( defined $type ) {
-		$servers = $self->get_servers_by_type( $current_user, $type, $status );
+		( $forbidden, $servers ) = $self->get_servers_by_type( $current_user, $type, $status );
 	}
 	elsif ( defined $profile_id ) {
 		( $forbidden, $servers ) = $self->get_servers_by_profile_id($profile_id);
@@ -61,7 +62,7 @@ sub index {
 		( $forbidden, $servers ) = $self->get_servers_by_phys_loc($phys_loc_id);
 	}
 	else {
-		$servers = $self->get_servers_by_status( $current_user, $status );
+		( $forbidden, $servers ) = $self->get_servers_by_status( $current_user, $status );
 	}
 
 	if ( defined($forbidden) ) {
@@ -157,7 +158,7 @@ sub show {
 				"mgmtIpAddress"  => $row->mgmt_ip_address,
 				"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
 				"mgmtIpGateway"  => $row->mgmt_ip_gateway,
-				"offline_reason" => $row->offline_reason,
+				"offlineReason"  => $row->offline_reason,
 				"physLocation"   => $row->phys_location->name,
 				"physLocationId" => $row->phys_location->id,
 				"profile"        => $row->profile->name,
@@ -400,40 +401,25 @@ sub get_servers_by_status {
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 
+	my $forbidden;
 	my $servers;
-	if ( &is_privileged($self) ) {
-		my %criteria;
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
-	}
-	else {
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-
-		my @ds_servers =
-			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
-
-		my %criteria = ( 'me.id' => { -in => \@ds_servers } );
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
+	if ( !&is_oper($self) ) {
+		$forbidden = "Forbidden. You must have the operations role to perform this operation.";
+		return ( $forbidden, $servers );
 	}
 
-	return $servers;
+	my %criteria;
+	if ( defined $status ) {
+		$criteria{'status.name'} = $status;
+	}
+	$servers = $self->db->resultset('Server')->search(
+		\%criteria, {
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+			order_by => 'me.' . $orderby_snakecase,
+		}
+	);
+
+	return ($forbidden, $servers);
 }
 
 sub get_servers_by_dsid {
@@ -445,18 +431,27 @@ sub get_servers_by_dsid {
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 	my $helper            = new Utils::Helper( { mojo => $self } );
 
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	my @ds_servers;
 	my $forbidden;
-	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+	my $servers;
+
+	if (defined($ds) && !$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		$forbidden = "Forbidden. Delivery service not available for user's tenant.";
+		return ($forbidden, $servers);
+	}
+	elsif ( &is_privileged($self) || $tenant_utils->use_tenancy() || $self->is_delivery_service_assigned($ds_id) ) {
 		@ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } )->get_column('server')->all();
 	}
 	else {
 		$forbidden = "Forbidden. Delivery service not assigned to user.";
+		return ($forbidden, $servers);
 	}
 
-	my $servers;
 	if ( scalar(@ds_servers) ) {
-		my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } )->single();
 		my %criteria = ( -or => [ 'me.id' => { -in => \@ds_servers } ] );
 
 		# currently these are the ds types that bypass the mids
@@ -489,16 +484,203 @@ sub get_edge_servers_by_dsid {
 	my $self    = shift;
 	my $ds_id   = $self->param('id');
 
+	my $ds = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
 	my $ds_servers;
-	if ( &is_privileged($self) || $self->is_delivery_service_assigned($ds_id) ) {
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+	elsif ( &is_privileged($self) || $tenant_utils->use_tenancy() || $self->is_delivery_service_assigned($ds_id) ) {
 		$ds_servers = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id } );
 	}
 	else {
+		#for the reviewer - I believe it should turn into forbidden as well
 		return $self->alert("Forbidden. Delivery service not assigned to user.");
 	}
 
 	my $servers = $self->db->resultset('Server')->search(
 		{ 'me.id' => { -in => $ds_servers->get_column('server')->as_query } },
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
+	);
+
+	my @data;
+	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
+		while ( my $row = $servers->next ) {
+			push(
+				@data, {
+					"cachegroup"     => $row->cachegroup->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
+					"guid"           => $row->guid,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => \$row->upd_pending
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
+
+sub get_unassigned_servers_by_dsid {
+	my $self    = shift;
+	my $ds_id   = $self->param('id');
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my %ds_server_criteria;
+	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
+
+	my @assigned_servers;
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+	elsif ( &is_privileged($self) || $tenant_utils->use_tenancy() || $self->is_delivery_service_assigned($ds_id) ) {
+		@assigned_servers = $self->db->resultset('DeliveryserviceServer')->search( \%ds_server_criteria, { prefetch => [ 'deliveryservice', 'server' ] } )->get_column('server')->all();
+	}
+	else {
+		#for the reviewer - I believe it should turn into forbidden as well
+		return $self->Forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my %server_criteria; # please fetch the following...
+	$server_criteria{'me.id'} = { 'not in' => \@assigned_servers }; # ...unassigned servers...
+	$server_criteria{'type.name'} = [ { -like => 'EDGE%' }, { -like => 'ORG' } ]; # ...of type EDGE% or ORG...
+	$server_criteria{'cdn.id'} = $ds->cdn_id; # ...that belongs to the same cdn as the ds...
+
+	my $servers = $self->db->resultset('Server')->search(
+		\%server_criteria,
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
+	);
+
+	my @data;
+	if ( defined($servers) ) {
+		my $is_admin = &is_admin($self);
+		while ( my $row = $servers->next ) {
+			push(
+				@data, {
+					"cachegroup"     => $row->cachegroup->name,
+					"cachegroupId"   => $row->cachegroup->id,
+					"cdnId"          => $row->cdn->id,
+					"cdnName"        => $row->cdn->name,
+					"domainName"     => $row->domain_name,
+					"guid"           => $row->guid,
+					"hostName"       => $row->host_name,
+					"httpsPort"      => $row->https_port,
+					"id"             => $row->id,
+					"iloIpAddress"   => $row->ilo_ip_address,
+					"iloIpNetmask"   => $row->ilo_ip_netmask,
+					"iloIpGateway"   => $row->ilo_ip_gateway,
+					"iloUsername"    => $row->ilo_username,
+					"iloPassword"    => $is_admin ? $row->ilo_password : "",
+					"interfaceMtu"   => $row->interface_mtu,
+					"interfaceName"  => $row->interface_name,
+					"ip6Address"     => $row->ip6_address,
+					"ip6Gateway"     => $row->ip6_gateway,
+					"ipAddress"      => $row->ip_address,
+					"ipNetmask"      => $row->ip_netmask,
+					"ipGateway"      => $row->ip_gateway,
+					"lastUpdated"    => $row->last_updated,
+					"mgmtIpAddress"  => $row->mgmt_ip_address,
+					"mgmtIpNetmask"  => $row->mgmt_ip_netmask,
+					"mgmtIpGateway"  => $row->mgmt_ip_gateway,
+					"offlineReason"  => $row->offline_reason,
+					"physLocation"   => $row->phys_location->name,
+					"physLocationId" => $row->phys_location->id,
+					"profile"        => $row->profile->name,
+					"profileId"      => $row->profile->id,
+					"profileDesc"    => $row->profile->description,
+					"rack"           => $row->rack,
+					"routerHostName" => $row->router_host_name,
+					"routerPortName" => $row->router_port_name,
+					"status"         => $row->status->name,
+					"statusId"       => $row->status->id,
+					"tcpPort"        => $row->tcp_port,
+					"type"           => $row->type->name,
+					"typeId"         => $row->type->id,
+					"updPending"     => \$row->upd_pending
+				}
+			);
+		}
+	}
+
+	return $self->success( \@data );
+}
+sub get_eligible_servers_by_dsid {
+	my $self    = shift;
+	my $ds_id   = $self->param('id');
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { id => $ds_id } )->single();
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my %ds_server_criteria;
+	$ds_server_criteria{'deliveryservice.id'} = $ds_id;
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+	elsif ( !&is_privileged($self) && !$tenant_utils->use_tenancy() && !$self->is_delivery_service_assigned($ds_id) ) {
+		#for the reviewer - I believe it should turn into forbidden as well
+		return $self->Forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my %server_criteria; # please fetch the following...
+	$server_criteria{'type.name'} = [ { -like => 'EDGE%' }, { -like => 'ORG' } ]; # ...of type EDGE% or ORG...
+	$server_criteria{'cdn.id'} = $ds->cdn_id; # ...that belongs to the same cdn as the ds...
+
+	my $servers = $self->db->resultset('Server')->search(
+		\%server_criteria,
 		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] }
 	);
 
@@ -564,41 +746,26 @@ sub get_servers_by_type {
 	my $orderby           = $self->param('orderby') || "hostName";
 	my $orderby_snakecase = lcfirst( decamelize($orderby) );
 
+	my $forbidden;
 	my $servers;
-	if ( &is_privileged($self) ) {
-		my %criteria = ( 'type.name' => $type );
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
-	}
-	else {
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
-		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-
-		my @ds_servers =
-			$self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => { -in => \@ds_ids } } )->get_column('server')->all();
-
-		my %criteria = ( 'me.id' => { -in => \@ds_servers }, 'type.name' => $type );
-		if ( defined $status ) {
-			$criteria{'status.name'} = $status;
-		}
-
-		$servers = $self->db->resultset('Server')->search(
-			\%criteria, {
-				prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
-				order_by => 'me.' . $orderby_snakecase,
-			}
-		);
+	if ( !&is_oper($self) ) {
+		$forbidden = "Forbidden. You must have the operations role to perform this operation.";
+		return ( $forbidden, $servers );
 	}
 
-	return $servers;
+	my %criteria = ( 'type.name' => $type );
+	if (defined $status) {
+		$criteria{'status.name'} = $status;
+	}
+
+	$servers = $self->db->resultset('Server')->search(
+		\%criteria, {
+			prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ],
+			order_by => 'me.' . $orderby_snakecase,
+		}
+	);
+
+	return ($forbidden, $servers);
 }
 
 sub totals {
@@ -621,6 +788,114 @@ sub totals {
 
 }
 
+sub status_count {
+	my $self = shift;
+	my $response = {};
+
+	my $server_count = $self->db->resultset('Server')->search()->count();
+	if ($server_count == 0) {
+		# if there are no servers, just return 0 for all statuses
+		my $statuses = $self->db->resultset('Status')->search();
+		while ( my $status = $statuses->next ) {
+			$response->{ $status->name } = 0;
+		}
+	} else {
+		my $rs = $self->db->resultset('Server')->search(
+			undef,
+			{
+				join     => [qw/ status /],
+				select   => [ 'status.name', { count => 'me.id' } ],
+				as       => [qw/ status_name server_count /],
+				group_by => [qw/ status.id /]
+			}
+		);
+
+		while ( my $row = $rs->next ) {
+			$response->{ $row->{'_column_data'}->{'status_name'} } = $row->{'_column_data'}->{'server_count'};
+		}
+	}
+
+	return $self->success( $response );
+}
+
+sub update_status {
+	my $self 	= shift;
+	my $id     	= $self->param('id');
+	my $params 	= $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $server = $self->db->resultset('Server')->find( { id => $id }, { prefetch => [ 'type' ] } );
+	if ( !defined($server) ) {
+		return $self->not_found();
+	}
+
+	if ( !defined( $params->{status} ) ) {
+		return $self->alert("Status is required.");
+	}
+
+	my $server_status;
+	if  ( $params->{status} =~ /\d+/ ) {
+		$server_status = $self->db->resultset('Status')->search( { id => $params->{status} }, { columns => [qw/id name/] } )->single();
+	} else {
+		$server_status = $self->db->resultset('Status')->search( { name => $params->{status} }, { columns => [qw/id name/] } )->single();
+	}
+
+	if ( !defined($server_status) ) {
+		return $self->alert("Invalid status.");
+	}
+
+	my $offline_reason = $params->{offlineReason};
+	if ( $server_status->name eq 'ADMIN_DOWN' || $server_status->name eq 'OFFLINE' ) {
+		if ( !defined( $offline_reason ) ) {
+			return $self->alert("Offline reason is required for ADMIN_DOWN or OFFLINE status.");
+		} else {
+			# prepend current user to offline message
+			my $current_username = $self->current_user()->{username};
+			$offline_reason = "$current_username: $offline_reason";
+
+		}
+	} else {
+		$offline_reason = undef;
+	}
+
+	my $values = {
+		status           => $server_status->id,
+		offline_reason   => $offline_reason,
+	};
+
+	my $update = $server->update($values);
+	if ($update) {
+		my $fqdn = $update->host_name . "." . $update->domain_name;
+		my $msg = "Updated status [ " . $server_status->name . " ] for $fqdn [ $offline_reason ]";
+
+		# queue updates on child servers if server is ^EDGE or ^MID
+		if ( $server->type->name =~ m/^EDGE/ || $server->type->name =~ m/^MID/ ) {
+			my @cg_ids = $self->get_child_cachegroup_ids($server);
+			my $servers = $self->db->resultset('Server')->search( undef, { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
+			$servers->update( { upd_pending => 1 } );
+			$msg .= " and queued updates on all child caches";
+		}
+
+        &log( $self, $msg, "APICHANGE" );
+		return $self->success_message( $msg );
+	}
+	else {
+		return $self->alert( "Server status update failed." );
+	}
+
+}
+
+sub get_child_cachegroup_ids {
+    my $self    = shift;
+    my $server    = shift;
+
+    my @edge_cache_groups = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server->cachegroup->id } )->all();
+    return map { $_->id } @edge_cache_groups;
+}
+
 sub get_count_by_type {
 	my $self      = shift;
 	my $type_name = shift;
@@ -633,9 +908,8 @@ sub details_v11 {
 	my $isadmin   = &is_admin($self);
 	my $host_name = $self->param('name');
 	my $rs_data   = $self->db->resultset('Server')->search( { host_name => $host_name },
-		{ prefetch => [ 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', { 'deliveryservice_servers' => 'deliveryservice' } ], } );
+		{ prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location', 'hwinfos', { 'deliveryservice_servers' => 'deliveryservice' } ], } );
 	while ( my $row = $rs_data->next ) {
-
 		my $serv = {
 			"id"             => $row->id,
 			"hostName"       => $row->host_name,
@@ -657,7 +931,7 @@ sub details_v11 {
 			"rack"           => $row->rack,
 			"type"           => $row->type->name,
 			"status"         => $row->status->name,
-			"offline_reason" => $row->offline_reason,
+			"offlineReason"  => $row->offline_reason,
 			"profile"        => $row->profile->name,
 			"profileDesc"    => $row->profile->description,
 			"mgmtIpAddress"  => $row->mgmt_ip_address,
@@ -670,6 +944,7 @@ sub details_v11 {
 			"iloPassword"    => $isadmin ? $row->ilo_password : "********",
 			"routerHostName" => $row->router_host_name,
 			"routerPortName" => $row->router_port_name,
+			"cdnName"        => $row->cdn->name,
 		};
 		my $hw_rs = $row->hwinfos;
 		while ( my $hwinfo_row = $hw_rs->next ) {
@@ -677,7 +952,12 @@ sub details_v11 {
 		}
 
 		my $rs_ds_data = $row->deliveryservice_servers;
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 		while ( my $dsrow = $rs_ds_data->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $dsrow->deliveryservice->tenant_id)) {
+				next;
+			}
 			push( @{ $serv->{deliveryservices} }, $dsrow->deliveryservice->id );
 		}
 
@@ -732,7 +1012,7 @@ sub details {
 				"rack"           => $row->rack,
 				"type"           => $row->type->name,
 				"status"         => $row->status->name,
-				"offline_reason" => $row->offline_reason,
+				"offlineReason"  => $row->offline_reason,
 				"profile"        => $row->profile->name,
 				"profileDesc"    => $row->profile->description,
 				"mgmtIpAddress"  => $row->mgmt_ip_address,
@@ -751,7 +1031,12 @@ sub details {
 			}
 
 			my $rs_ds_data = $row->deliveryservice_servers;
-			while ( my $dsrow = $rs_ds_data->next ) {
+			my $tenant_utils = Utils::Tenant->new($self);
+			my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+            while ( my $dsrow = $rs_ds_data->next ) {
+				if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $dsrow->deliveryservice->tenant_id)) {
+					next;
+				}
 				push( @{ $serv->{deliveryservices} }, $dsrow->deliveryservice->id );
 			}
 
@@ -862,7 +1147,7 @@ sub get_servers_by_phys_loc {
 		return ( $forbidden, $servers );
 	}
 
-	my $servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
+	$servers = $self->db->resultset('Server')->search( { phys_location => $phys_loc_id }, { prefetch => [ 'cdn', 'cachegroup', 'type', 'profile', 'status', 'phys_location' ] } );
 	return ( $forbidden, $servers );
 }
 
@@ -888,6 +1173,21 @@ sub is_server_valid {
 
 	if ( !$self->is_valid_server_type( $params->{typeId} ) ) {
 		return ( 0, "Invalid server type" );
+	}
+
+	my $cdn_mismatch;
+	if ($id) {
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $params->{profileId}}, { prefetch => ['cdn'] } )->single();
+		if ( !defined($profile->cdn) ) {
+			$cdn_mismatch = 1;
+		} 
+		elsif ( $params->{cdnId} != $profile->cdn->id ) {
+			$cdn_mismatch = 1;
+		}
+	}
+
+	if ($cdn_mismatch) {
+		return ( 0, "CDN of profile does not match Server CDN" );
 	}
 
 	my $ip_used_for_profile;

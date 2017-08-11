@@ -169,14 +169,22 @@ func TestCreateDs(t *testing.T) {
 	res, err := to.CreateDeliveryService(&testDs)
 	if err != nil {
 		t.Error("Failed to create deliveryservice!  Error is: ", err)
-	} else {
-		testDs.ID = res.Response[0].ID
-		testDsID = strconv.Itoa(testDs.ID)
-		compareDs(testDs, res.Response[0], t)
+		t.FailNow()
 	}
+	if res.Response[0].ID < 1 {
+		t.Error("A DS ID was not returned after DS creation!")
+		t.FailNow()
+	}
+	testDs.ID = res.Response[0].ID
+	testDsID = strconv.Itoa(testDs.ID)
+	compareDs(testDs, res.Response[0], t)
 }
 
 func TestUpdateDs(t *testing.T) {
+	if testDsID == "" {
+		t.Error("testDsID is not defined")
+		t.FailNow()
+	}
 	testDs.DisplayName = "New Display Name"
 	testDs.LongDesc += "-- Update"
 	testDs.LongDesc1 += "-- Update"
@@ -191,6 +199,10 @@ func TestUpdateDs(t *testing.T) {
 }
 
 func TestDeliveryService(t *testing.T) {
+	if testDsID == "" {
+		t.Error("testDsID is not defined")
+		t.FailNow()
+	}
 	uri := fmt.Sprintf("/api/1.2/deliveryservices/%s.json", testDsID)
 	resp, err := Request(*to, "GET", uri, nil)
 	if err != nil {
@@ -213,6 +225,10 @@ func TestDeliveryService(t *testing.T) {
 
 //Put this Test after anything using the testDS or testDsID variables
 func TestDeleteDeliveryService(t *testing.T) {
+	if testDsID == "" {
+		t.Error("testDsID is not defined")
+		t.FailNow()
+	}
 	res, err := to.DeleteDeliveryService(testDsID)
 	if err != nil {
 		t.Errorf("Could not delete Deliveryserivce %s reponse was: %v\n", testDsID, err)
@@ -337,22 +353,30 @@ func TestDeliveryServiceCapacity(t *testing.T) {
 		t.Errorf("Could not ge Deliveryserivce Capacity for %s reponse was: %v\n", existingTestDSID, err)
 	}
 
-	if fmt.Sprintf("%6.5f", apiDsCapacity.AvailablePercent) != fmt.Sprintf("%6.5f", clientDsCapacity.AvailablePercent) {
+	if !compareCapacity(apiDsCapacity.AvailablePercent, clientDsCapacity.AvailablePercent) {
 		t.Errorf("AvailablePercent -- Expected %v got %v", apiDsCapacity.AvailablePercent, clientDsCapacity.AvailablePercent)
 	}
 
-	if fmt.Sprintf("%6.5f", apiDsCapacity.MaintenancePercent) != fmt.Sprintf("%6.5f", clientDsCapacity.MaintenancePercent) {
+	if !compareCapacity(apiDsCapacity.MaintenancePercent, clientDsCapacity.MaintenancePercent) {
 		t.Errorf("MaintenenancePercent -- Expected %v got %v", apiDsCapacity.MaintenancePercent, clientDsCapacity.MaintenancePercent)
 	}
 
-	if fmt.Sprintf("%6.5f", apiDsCapacity.UnavailablePercent) != fmt.Sprintf("%6.5f", clientDsCapacity.UnavailablePercent) {
+	if !compareCapacity(apiDsCapacity.UnavailablePercent, clientDsCapacity.UnavailablePercent) {
 		t.Errorf("UnavailablePercent -- Expected %v got %v", apiDsCapacity.UnavailablePercent, clientDsCapacity.UnavailablePercent)
 	}
 
-	if fmt.Sprintf("%6.5f", apiDsCapacity.UtilizedPercent) != fmt.Sprintf("%6.5f", clientDsCapacity.UtilizedPercent) {
+	if !compareCapacity(apiDsCapacity.UtilizedPercent, clientDsCapacity.UtilizedPercent) {
 		t.Errorf("UtilizedPercent -- Expected %v got %v", apiDsCapacity.UtilizedPercent, clientDsCapacity.UtilizedPercent)
 	}
 
+}
+
+func compareCapacity(val1 float64, val2 float64) bool {
+	// make sure val 2 is within 1% of val1
+	if val2 > val1*1.01 || val2 < val1*.99 {
+		return false
+	}
+	return true
 }
 
 func TestDeliveryServiceRouting(t *testing.T) {

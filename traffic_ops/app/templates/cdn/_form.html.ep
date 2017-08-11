@@ -18,7 +18,24 @@
 			<span class="field-with-error"><%= field('cdn_data.name')->error %></span>
 		<% } %>
 		%= label_for 'name' => '* Name', class => 'label'
-		%= field('cdn_data.name')->text(class => 'field', required => 'required', size => 10, name => 'cdn_data.name', id => 'cdn_data.name')
+          %= field('cdn_data.name')->text(class => 'field', required => 'required', size => 10, name => 'cdn_data.name', id => 'cdn_data.name')
 	</div>
-	<br>
+     <div class="block">
+          <% unless (field('cdn_data.domain_name')->valid) { %>
+               <span class="field-with-error"><%= field('cdn_data.domain_name')->error %></span>
+          <% } %>
+          %= label_for 'domain_name' => '* Domain Name', class => 'label'
+          %= field('cdn_data.domain_name')->text(class => 'field', required => 'required', size => 10, name => 'cdn_data.domain_name', id => 'cdn_data.domain_name')
+    </div>
+    <div class="block">
+    <% unless(field('cdn_data.dnssec_enabled')->valid) { %>
+     <span class="field-with-error"><%= field('cdn_data.dnssec_enabled')->error %></span>
+    <% } %>
+    %= label_for 'dnssec_enabled' => '* DNSSEC Enabled', class => 'label'
+    <% if (field('cdn_data.dnssec_enabled') == 0) { %>
+        %= check_box 'cdn_data.dnssec_enabled' => 1
+    <% } else { %>
+        %= check_box 'cdn_data.dnssec_enabled' => 1, checked => 1
+    <% } %>
+</div><br>
 </div>

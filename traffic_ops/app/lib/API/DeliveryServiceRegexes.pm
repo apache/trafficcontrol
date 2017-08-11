@@ -18,6 +18,7 @@ package API::DeliveryServiceRegexes;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 use UI::DeliveryService;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -27,12 +28,18 @@ use Validate::Tiny ':all';
 sub all {
 	my $self = shift;
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	my $rs;
-	if ( &is_privileged($self) ) {
+	if ( &is_privileged($self) or $tenant_utils->use_tenancy()) {
 		$rs = $self->db->resultset('Deliveryservice')->search( undef, { prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } } ], order_by => 'xml_id' } );
 
 		my @regexes;
 		while ( my $ds = $rs->next ) {
+			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+				next;
+			}
 			my $re_rs = $ds->deliveryservice_regexes;
 			my @matchlist;
 			while ( my $re_row = $re_rs->next ) {
@@ -66,6 +73,12 @@ sub index {
 		return $self->not_found();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. The delivery-service is not available to the user's tenant");
+	}
+
 	my %criteria;
 	$criteria{'deliveryservice'} = $ds_id;
 
@@ -93,6 +106,17 @@ sub show {
 	my $ds_regex = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $ds_id, regex => $regex_id } );
 	if ( !defined($ds_regex) ) {
 		return $self->not_found();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. The delivery-service is not available to the user's tenant");
 	}
 
 	my %criteria;
@@ -124,15 +148,21 @@ sub create {
 		return $self->forbidden();
 	}
 
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+        #unlike other places, here we return 403 and not 400, as the path itself (including the DS) is forbidden
+		return $self->forbidden("Forbidden. The delivery-service is not available to the user's tenant");
+	}
+
 	my ( $is_valid, $result ) = $self->is_regex_valid($params);
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
-	}
-
-	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
-	if ( !defined($ds) ) {
-		return $self->not_found();
 	}
 
 	my $values = {
@@ -172,6 +202,16 @@ sub update {
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. The delivery-service is not available to the user's tenant");
 	}
 
 	my ( $is_valid, $result ) = $self->is_regex_valid($params);
@@ -220,6 +260,18 @@ sub delete {
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+        return $self->not_found();
+	}
+	else{
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. The delivery-service is not available to the user's tenant");
+		}
 	}
 
 	my $ds_regex = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $ds_id, regex => $regex_id } );

@@ -35,6 +35,7 @@ my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
 Test::TestHelper->unload_core_data($schema);
+Test::TestHelper->load_all_fixtures( Fixtures::Tenant->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Cdn->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::Role->new($schema_values) );
 Test::TestHelper->load_all_fixtures( Fixtures::TmUser->new($schema_values) );
@@ -45,7 +46,7 @@ Test::TestHelper->load_all_fixtures( Fixtures::Profile->new($schema_values) );
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "name"          => "param1",
@@ -70,7 +71,7 @@ ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'applicati
 	->json_is( "/response/parameters/1/secure" => "0" )
 		, 'Does the profile_parameters create details return?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "name"          => "param1",
@@ -133,7 +134,7 @@ ok $t->post_ok('/api/1.2/profiles/'. $prof_id . '/parameters' => {Accept => 'app
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		, 'Does the profile_parameters create details return?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "configFile"    => "configFile1",

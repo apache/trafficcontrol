@@ -159,8 +159,117 @@ Parameter
 
 |
 
+**GET /api/1.2/parameters/:id/unassigned_profiles**
+
+    Retrieves all profiles NOT assigned to the parameter.
+
+	Authentication Required: Yes
+
+	Role(s) Required: None
+
+	**Request Route Parameters**
+
+	+---------------+----------+----------------------------------------------------+
+	|    Name       | Required |                    Description                     |
+	+===============+==========+====================================================+
+	| ``id``        |   yes    | Parameter ID.                                      |
+	+---------------+----------+----------------------------------------------------+
+
+	**Response Properties**
+
+	+-----------------+--------+----------------------------------------------------+
+	|    Parameter    |  Type  |                    Description                     |
+	+=================+========+====================================================+
+	| ``lastUpdated`` | array  | The Time / Date this server entry was last updated |
+	+-----------------+--------+----------------------------------------------------+
+	| ``name``        | string | The name for the profile                           |
+	+-----------------+--------+----------------------------------------------------+
+	| ``id``          | string | Primary key                                        |
+	+-----------------+--------+----------------------------------------------------+
+	| ``description`` | string | The description for the profile                    |
+	+-----------------+--------+----------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+            "lastUpdated": "2012-10-08 19:34:45",
+            "name": "CCR_TOP",
+            "id": "8",
+            "description": "Content Router for top.foobar.net"
+        }
+     ]
+    }
+
+|
+
 
 **GET /api/1.2/profiles/:id/parameters**
+
+  Retrieves all parameters assigned to the profile.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +------------------+----------+-----------------------+
+  |       Name       | Required | Description           |
+  +==================+==========+=======================+
+  | ``id``           | yes      | Profile id            |
+  +------------------+----------+-----------------------+
+
+  **Response Properties**
+
+  +------------------+---------+--------------------------------------------------------------------------------+
+  |    Parameter     |  Type   |                    Description                                                 |
+  +==================+=========+================================================================================+
+  | ``last_updated`` | string  | The Time / Date this server entry was last updated                             |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``secure``       | boolean | When true, the parameter is accessible only by admin users. Defaults to false. |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``value``        | string  | The parameter value, only visible to admin if secure is true                   |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``name``         | string  | The parameter name                                                             |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``config_file``  | string  | The parameter config_file                                                      |
+  +------------------+---------+--------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+     "response": [
+        {
+           "last_updated": "2012-09-17 21:41:22",
+           "secure": false,
+           "value": "foo.bar.net",
+           "name": "domain_name",
+           "config_file": "FooConfig.xml"
+        },
+        {
+           "last_updated": "2012-09-17 21:41:22",
+           "secure": false,
+           "value": "0,1,2,3,4,5,6",
+           "name": "Drive_Letters",
+           "config_file": "storage.config"
+        },
+        {
+           "last_updated": "2012-09-17 21:41:22",
+           "secure": true,
+           "value": "STRING __HOSTNAME__",
+           "name": "CONFIG proxy.config.proxy_name",
+           "config_file": "records.config"
+        }
+     ],
+    }
+
+|
+
+**GET /api/1.2/profiles/:id/unassigned_parameters**
+
+  Retrieves all parameters NOT assigned to the profile.
 
   Authentication Required: Yes
 

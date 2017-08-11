@@ -27,30 +27,36 @@ export TC_DIR=$(dirname $(dirname "$topscript"))
 
 checkEnvironment
 
-# Create tarball first
-if isInGitTree; then
-	echo "-----  Building tarball ..."
-	tarball=$(createTarball "$TC_DIR")
-	ls -l $tarball
-else
-	echo "---- Skipping tarball creation"
-fi
 
 if [[ $# -gt 0 ]]; then
 	projects=( "$*" )
 else
 	# get all subdirs containing build/build_rpm.sh
 	projects_to_build=( */build/build_rpm.sh )
-	projects=()
+	# Always build tarball when building everything..
+	projects=(tarball)
 	for p in "${projects_to_build[@]}"; do
 	  p=${p%%/*}
-	  projects+=($p)
+		if [[ $p != "traffic_monitor_golang" ]]; then
+			projects+=($p)
+		fi
 	done
 fi
+
 
 declare -a badproj
 declare -a goodproj
 for p in "${projects[@]}"; do
+	if [[ $p == tarball ]]; then
+		if isInGitTree; then
+			echo "-----  Building tarball ..."
+			tarball=$(createTarball "$TC_DIR")
+			ls -l $tarball
+		else
+			echo "---- Skipping tarball creation"
+		fi
+		continue
+	fi
 	# strip trailing /
 	p=${p%/}
 	bldscript="$p/build/build_rpm.sh"

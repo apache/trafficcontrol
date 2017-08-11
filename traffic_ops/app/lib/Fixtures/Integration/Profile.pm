@@ -32,6 +32,8 @@ use namespace::autoclean;
 		using => {
 			name => 'CCR_CDN1',
 			description => 'Comcast Content Router for cdn1.cdn.net',
+			cdn => 1,
+			type => 'TR_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -41,6 +43,8 @@ use namespace::autoclean;
 		using => {
 			name => 'CCR_CDN2',
 			description => 'Comcast Content Router for cdn2.comcast.net',
+			cdn => 2,
+			type => 'TR_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -50,6 +54,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE1_CDN1_402',
 			description => 'Dell R720xd, Edge, CDN1 CDN, ATS v4.0.2',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -59,6 +65,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE1_CDN1_421',
 			description => 'Dell R720xd, Edge, CDN1 CDN, ATS v4.2.1, Consistent Parent',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -68,6 +76,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE1_CDN1_421_SSL',
 			description => 'Dell r720xd, Edge, CDN1 CDN, ATS v4.2.1, SSL enabled',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -77,6 +87,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE1_CDN2_402',
 			last_updated => '2015-12-10 15:43:48',
+			cdn => 2,
+			type => 'ATS_PROFILE',
 			description => 'Dell R720xd, Edge, CDN2 CDN, ATS v4.0.2',
 		},
 	},
@@ -85,7 +97,9 @@ use namespace::autoclean;
 		new => 'Profile',
 		using => {
 			name => 'EDGE1_CDN2_421',
+			type => 'ATS_PROFILE',
 			description => 'Dell R720xd, Edge, CDN2 CDN, ATS v4.2.1, Consistent Parent',
+			cdn => 2,
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -95,6 +109,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE2_CDN1',
 			description => 'HP DL380 Edge',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -104,6 +120,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE2_CDN1_402',
 			description => 'HP DL380, Edge, CDN1 CDN, ATS v4.0.x',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -113,6 +131,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE2_CDN2_402',
 			description => 'HP DL380, Edge, CDN2 CDN, ATS v4.0.x',
+			cdn => 2,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -122,6 +142,8 @@ use namespace::autoclean;
 		using => {
 			name => 'EDGE2_CDN2_421',
 			description => 'HP DL380, Edge, CDN2 CDN, ATS v4.2.1, Consistent Parent',
+			cdn => 2,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -131,6 +153,7 @@ use namespace::autoclean;
 		using => {
 			name => 'GLOBAL',
 			description => 'GLOBAL Traffic Ops Profile -- DO NOT DELETE',
+			type => 'UNK_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -140,6 +163,8 @@ use namespace::autoclean;
 		using => {
 			name => 'MID1_CDN1_421',
 			description => 'Dell R720xd, Mid, CDN1 CDN, ATS v4.2.1',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -149,6 +174,8 @@ use namespace::autoclean;
 		using => {
 			name => 'MID1_CDN2_402',
 			description => 'Dell R720xd, Mid, CDN2 CDN, new vol config, ATS v4.0.x',
+			cdn => 2,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -158,6 +185,8 @@ use namespace::autoclean;
 		using => {
 			name => 'MID1_CDN2_421',
 			description => 'Dell R720xd, Mid, CDN2 CDN, ATS v4.2.1',
+			cdn => 2,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -167,6 +196,8 @@ use namespace::autoclean;
 		using => {
 			name => 'MID2_CDN1',
 			description => 'HP DL380 Mid',
+			cdn => 1,
+			type => 'ATS_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -176,6 +207,8 @@ use namespace::autoclean;
 		using => {
 			name => 'ORG1_CDN1',
 			last_updated => '2015-12-10 15:43:48',
+			cdn => 1,
+			type => 'ORG_PROFILE',
 			description => 'Multi site origin profile 1',
 		},
 	},
@@ -185,6 +218,8 @@ use namespace::autoclean;
 		using => {
 			name => 'ORG2_CDN1',
 			description => 'Multi site origin profile 2',
+			cdn => 1,
+			type => 'ORG_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -194,6 +229,8 @@ use namespace::autoclean;
 		using => {
 			name => 'RASCAL_CDN1',
 			description => 'TrafficMonitor for CDN1',
+			cdn => 1,
+			type => 'TM_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -202,6 +239,8 @@ use namespace::autoclean;
 		new => 'Profile',
 		using => {
 			name => 'RASCAL_CDN2',
+			cdn => 2,
+			type => 'TM_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 			description => 'TrafficMonitor for CDN2 ',
 		},
@@ -212,6 +251,7 @@ use namespace::autoclean;
 		using => {
 			name => 'RIAK_ALL',
 			description => 'Riak profile for all CDNs',
+			type => 'RIAK_PROFILE',
 			last_updated => '2015-12-10 15:43:48',
 		},
 	},
@@ -222,6 +262,7 @@ use namespace::autoclean;
 			name => 'TRAFFIC_STATS',
 			last_updated => '2015-12-10 15:43:48',
 			description => 'Traffic Stats profile for all CDNs',
+			type => 'TS_PROFILE',
 		},
 	},
 );

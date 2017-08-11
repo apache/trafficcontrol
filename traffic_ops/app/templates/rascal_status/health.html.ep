@@ -130,12 +130,31 @@ $(function () {
                 "sAjaxSource": "/api/1.1/traffic_monitor/stats.json"
 		});
 
-		setInterval(
-			function() { 
-				edgeHealthTable.fnReloadAjax();
-			}, 
-			10000
-		);
+            var reloadHealth = function() {
+                edgeHealthTable.fnReloadAjax();
+            };
+
+            var activeEvent,
+                intervalMilliseconds = 15000,
+                intervalId = setInterval(reloadHealth, intervalMilliseconds);
+
+            $(window).on("blur focus", function(e) {
+                activeEvent = $(this).data("activeEvent");
+                if (activeEvent != e.type) {
+                    switch (e.type) {
+                        case "blur":
+                            clearInterval(intervalId);
+                            intervalId = 0;
+                            break;
+                        case "focus":
+                            if (!intervalId) {
+                                intervalId = setInterval(reloadHealth, intervalMilliseconds);
+                            }
+                        break;
+                    }
+                }
+                $(this).data("activeEvent", e.type);
+            });
 
 		// Set the mouseover descriptions of the table headers - prolly should do this smarter, but this works for now.
 		// use _wrapper here, because of the sCrollY stuff
