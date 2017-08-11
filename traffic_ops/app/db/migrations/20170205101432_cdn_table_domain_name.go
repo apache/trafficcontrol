@@ -54,7 +54,7 @@ func Up_20170205101432(txn *sql.Tx) {
 		4: "latched",
 	}
 
-	fmt.Println("  Starting migration 20170205101432.go...")
+	fmt.Println("  Starting migration 20170205101432...")
 	doExec("CREATE TYPE profile_type AS ENUM ("+
 		"'ATS_PROFILE', 'TR_PROFILE', 'TM_PROFILE', 'TS_PROFILE', 'TP_PROFILE', 'INFLUXDB_PROFILE',"+
 		"'RIAK_PROFILE', 'SPLUNK_PROFILE', 'DS_PROFILE', 'ORG_PROFILE', 'KAFKA_PROFILE', 'LOGSTASH_PROFILE',"+
