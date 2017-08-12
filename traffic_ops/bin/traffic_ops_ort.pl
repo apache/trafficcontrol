@@ -24,7 +24,7 @@ use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
-
+use Digest::SHA qw(sha512_base64);
 
 $| = 1;
 my $date           = `/bin/date`;
@@ -1412,7 +1412,7 @@ sub lwp_get {
 		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
 			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
 					return $response->code;
@@ -1437,7 +1437,7 @@ sub lwp_get {
 
 	}
 
-	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
 
 	&eval_json($response) if ( $uri =~ m/\.json$/ );
 
@@ -1616,22 +1616,25 @@ sub check_lwp_response_code {
 	}
 }
 
-sub check_lwp_response_content_length {
+sub check_lwp_response_message_integrity {
 	my $lwp_response  = shift;
 	my $panic_level   = shift;
 	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
-	if ( !defined($lwp_response->header('Content-Length')) ) {
-		return 0; # Content-Length MAY be omitted per HTTP/1.1 RFC 7230, and in fact MUST NOT be included with a 'Transfer-Encoding: Chunked' header, which MUST be accepted by clients.
+	my $mic_header = 'Whole-Content-SHA512';
+
+	if ( !defined($lwp_response->header($mic_header)) ) {
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a $mic_header header! Cannot Message Integrity Check! (Are you running an older version of Traffic Ops?)\n";
+		return 1;
 	}
-	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
+	elsif ( $lwp_response->header($mic_header) ne sha512_base64($lwp_response->content()) . '==') {
+		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", however actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "!\n";
 		exit 1 if ($log_level_str eq 'FATAL');
 		return 1;
 	}
 	else {
-		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
+		( $log_level >> $DEBUG ) && print "DEBUG $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", and actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "\n";
 		return 0;
 	}
 
