@@ -48,6 +48,7 @@ use Utils::Helper::TrafficOpsRoutesLoader;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
 use IO::Socket::SSL;
+use Digest::SHA qw(sha512_base64);
 
 use Utils::Helper::Version;
 
@@ -170,6 +171,8 @@ sub startup {
 	$self->hook(
 		after_render => sub {
 			my ( $c, $output, $format ) = @_;
+
+			$c->res->headers->header('Whole-Content-SHA512' => sha512_base64($$output) . '==');
 
 			# Check if user agent accepts gzip compression
 			return unless ( $c->req->headers->accept_encoding // '' ) =~ /gzip/i;
