@@ -26,8 +26,8 @@ Source0:	traffic_ops_ort-%{version}.tgz
 URL:		https://github.com/apache/incubator-trafficcontrol/
 Vendor:		Apache Software Foundation
 Packager:	daniel_kirkwood at Cable dot Comcast dot com
-%{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay}
-%{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https}
+%{?el6:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-Digest-SHA}
+%{?el7:Requires: perl-JSON, perl-libwww-perl, perl-Crypt-SSLeay, perl-LWP-Protocol-https, perl-Digest-SHA}
 
 
 %description
