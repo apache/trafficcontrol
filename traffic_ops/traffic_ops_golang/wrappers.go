@@ -20,7 +20,9 @@ package main
  */
 
 import (
+	"crypto/sha512"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
@@ -37,7 +39,11 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
+		iw := &BodyInterceptor{w: w}
+		w = iw
 		h(w, r, p)
+		sha := sha512.Sum512(iw.body)
+		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 	}
 }
 
@@ -134,5 +140,24 @@ func (i *Interceptor) Write(b []byte) (int, error) {
 }
 
 func (i *Interceptor) Header() http.Header {
+	return i.w.Header()
+}
+
+type BodyInterceptor struct {
+	w    http.ResponseWriter
+	body []byte
+}
+
+func (i *BodyInterceptor) WriteHeader(rc int) {
+	i.w.WriteHeader(rc)
+}
+
+func (i *BodyInterceptor) Write(b []byte) (int, error) {
+	i.body = append(i.body, b...)
+	wi, werr := i.w.Write(b)
+	return wi, werr
+}
+
+func (i *BodyInterceptor) Header() http.Header {
 	return i.w.Header()
 }
