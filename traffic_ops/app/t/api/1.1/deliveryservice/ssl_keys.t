@@ -153,6 +153,16 @@ ok $t->get_ok("/api/1.1/deliveryservices/hostname/$gen_hostname/sslkeys.json")->
 	->json_is( "/response/version" => $version )->json_is( "/response/country" => $country )->json_is( "/response/hostname" => $hostname )->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+
+#tenancy checks
+#get_object
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/test-ds1-root/sslkeys.json")->status_is(403)
+		->json_has("Forbidden. Delivery-service tenant is not available to the user.!")->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#delete
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/test-ds1-root/sslkeys/delete.json")->status_is(403)
+		->json_has("Forbidden. Delivery-service tenant is not available to the user.!")->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 # #delete ssl key
 # #delete version
 ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json?version=$version")

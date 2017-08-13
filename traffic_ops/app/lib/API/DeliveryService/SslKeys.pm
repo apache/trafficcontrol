@@ -18,6 +18,7 @@ package API::DeliveryService::SslKeys;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use MojoPlugins::Response;
 use JSON;
@@ -40,6 +41,17 @@ sub add {
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $deliveryservice })->single();
+	if (!$ds) {
+		return $self->not_found("Could not found delivery service with xml_id=$deliveryservice" );
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+
 	my $record = {
 		key => $key,
 		version => $version,
@@ -83,6 +95,17 @@ sub generate {
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
+	if (defined($deliveryservice)) {
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $deliveryservice })->single();
+		if (!$ds) {
+			return $self->not_found("Could not found delivery service with xml_id=$deliveryservice" );
+		}
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+	}
 
 	#generate the cert:
 	my $record = {
@@ -123,6 +146,11 @@ sub view_by_xml_id {
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
 		if (!$ds) {
 			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+		}
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
 		my $ds_id = $ds->id;
 		my $key = "ds_$ds_id-$version";
@@ -171,7 +199,11 @@ sub view_by_hostname {
 		if (!$ds) {
 			return $self->alert( { Error => " - A delivery service does not exist for a host with hostanme of $key" } );
 		}
-
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
 		my $ds_id = $ds->id;
 
 		if ( !$version ) {
@@ -205,6 +237,11 @@ sub delete {
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
 		if (!$ds) {
 			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+		}
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
 		my $ds_id = $ds->id;
 		my $key = "ds_$ds_id";
