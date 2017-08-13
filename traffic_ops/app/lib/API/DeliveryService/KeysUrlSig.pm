@@ -20,6 +20,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use API::Keys;
 use Utils::Helper;
+use Utils::Tenant;
 use JSON;
 use UI::Utils;
 use constant URL_SIG_KEYS_BUCKET => "url_sig_keys";
@@ -29,6 +30,17 @@ our @EXPORT_OK = qw(URL_SIG_KEYS_BUCKET);
 sub view_by_xmlid {
 	my $self                = shift;
 	my $xml_id              = $self->param('xmlId');
+
+	my $rs = $self->db->resultset("Deliveryservice")->find( { xml_id => $xml_id } );
+	if ( !defined($rs) ) {
+		return $self->not_found("Delivery Service '$xml_id' does not exist.");
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $rs->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+
 	my $config_file = $self->url_sig_config_file_name($xml_id);
 	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $config_file );
 	my $rc                  = $response_container->{"response"}->{_rc};
@@ -58,6 +70,11 @@ sub copy_url_sig_keys {
 	else {
 		return $self->alert("Delivery Service '$xml_id' does not exist.");
 	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $rs->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
 	my $config_file = $self->url_sig_config_file_name($xml_id);
 
 	#check ds to copy from and generate config file name
@@ -69,6 +86,9 @@ sub copy_url_sig_keys {
 	else {
 		return $self->alert("Delivery Service to copy from '$copy_from_xml_id' does not exist.");
 	}
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $copy_rs->tenant_id)) {
+		return $self->forbidden("Forbidden. Source delivery-service tenant is not available to the user.");
+	}
 	my $copy_config_file = $self->url_sig_config_file_name($copy_from_xml_id);
 
 	my $helper = new Utils::Helper( { mojo => $self } );
@@ -76,7 +96,7 @@ sub copy_url_sig_keys {
 
 	#verify we can copy keys out
 	if ( $helper->is_valid_delivery_service($copy_ds_id) ) {
-		if ( $is_admin || $helper->is_delivery_service_assigned($copy_ds_id) ) {
+		if ( $is_admin || $helper->is_delivery_service_assigned($copy_ds_id) || $tenant_utils->use_tenancy()) {
 			my $response_container = $self->riak_get( URL_SIG_KEYS_BUCKET, $copy_config_file ); # verify this
 			my $rc                 = $response_container->{"response"}->{_rc};
 			if ( $rc eq '200' ) {
@@ -98,7 +118,7 @@ sub copy_url_sig_keys {
 	if ( defined($url_sig_key_values_json) ) { # verify we got keys copied
 		# Admins can always do this, otherwise verify the user
 		if ( $helper->is_valid_delivery_service($ds_id) ) {
-			if ( $is_admin || $helper->is_delivery_service_assigned($ds_id) ) {
+			if ( $is_admin || $helper->is_delivery_service_assigned($ds_id) || $tenant_utils->use_tenancy()) {
 				$self->app->log->debug( "url_sig_key_values_json #-> " . $url_sig_key_values_json );
 				my $response_container = $self->riak_put( URL_SIG_KEYS_BUCKET, $config_file, $url_sig_key_values_json );
 				my $response           = $response_container->{"response"};
@@ -134,17 +154,22 @@ sub generate {
 	my $current_user = $self->current_user()->{username};
 	&log( $self, "Generated new url_sig_keys for " . $xml_id, "APICHANGE" );
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	my $rs = $self->db->resultset("Deliveryservice")->find( { xml_id => $xml_id } );
 	my $ds_id;
 	if ( defined($rs) ) {
 		$ds_id = $rs->id;
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $rs->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
 	}
 
 	my $helper = new Utils::Helper( { mojo => $self } );
 
 	# Admins can always do this, otherwise verify the user
 	if ( ( defined($rs) && $helper->is_valid_delivery_service($ds_id) ) ) {
-		if ( &is_admin($self) || $helper->is_delivery_service_assigned($ds_id) ) {
+		if ( &is_admin($self) || $helper->is_delivery_service_assigned($ds_id) || $tenant_utils->use_tenancy()) {
 			my $url_sig_key_values_json = $self->generate_random_sigs_for_ds();
 			if ( defined($rs) ) {
 
