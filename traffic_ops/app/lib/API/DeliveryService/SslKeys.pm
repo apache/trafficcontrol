@@ -18,6 +18,7 @@ package API::DeliveryService::SslKeys;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use MojoPlugins::Response;
 use JSON;
@@ -40,6 +41,17 @@ sub add {
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $deliveryservice })->single();
+	if (!$ds) {
+		return $self->not_found("Could not found delivery service with xml_id=$deliveryservice" );
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+
 	my $record = {
 		key => $key,
 		version => $version,
@@ -83,6 +95,17 @@ sub generate {
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
+	if (defined($deliveryservice)) {
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $deliveryservice })->single();
+		if (!$ds) {
+			return $self->not_found("Could not found delivery service with xml_id=$deliveryservice" );
+		}
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+	}
 
 	#generate the cert:
 	my $record = {
@@ -111,7 +134,7 @@ sub generate {
 
 sub view_by_xml_id {
 	my $self    = shift;
-	my $key     = $self->param('xmlid');
+	my $xml_id     = $self->param('xmlid');
 	my $version = $self->param('version');
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
@@ -120,12 +143,28 @@ sub view_by_xml_id {
 		if ( !$version ) {
 			$version = 'latest';
 		}
-		$key = "$key-$version";
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
+		if (!$ds) {
+			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+		}
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+		my $ds_id = $ds->id;
+		my $key = "ds_$ds_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
-			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		if ($response->is_success()) {
+			my $ssl_keys = decode_json( $response->content );
+			$ssl_keys->{certificate}->{csr} = decode_base64($ssl_keys->{certificate}->{csr}),
+			$ssl_keys->{certificate}->{crt} = decode_base64($ssl_keys->{certificate}->{crt}),
+			$ssl_keys->{certificate}->{key} = decode_base64($ssl_keys->{certificate}->{key}),
+			$self->success( $ssl_keys )
+		} else {
+			$self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		}
 	}
 }
 
@@ -160,24 +199,34 @@ sub view_by_hostname {
 		if (!$ds) {
 			return $self->alert( { Error => " - A delivery service does not exist for a host with hostanme of $key" } );
 		}
-
-		my $xml_id = $ds->xml_id;
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+		my $ds_id = $ds->id;
 
 		if ( !$version ) {
 			$version = 'latest';
 		}
-		$key = "$xml_id-$version";
+		$key = "ds_$ds_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
-			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		if ($response->is_success()) {
+			my $ssl_keys = decode_json( $response->content );
+			$ssl_keys->{certificate}->{csr} = decode_base64($ssl_keys->{certificate}->{csr}),
+			$ssl_keys->{certificate}->{crt} = decode_base64($ssl_keys->{certificate}->{crt}),
+			$ssl_keys->{certificate}->{key} = decode_base64($ssl_keys->{certificate}->{key}),
+			$self->success( $ssl_keys )
+		} else {
+			$self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+		}
 	}
 }
 
 sub delete {
 	my $self    = shift;
-	my $key     = $self->param('xmlid');
+	my $xml_id     = $self->param('xmlid');
 	my $version = $self->param('version');
 	my $response_container;
 	my $response;
@@ -185,6 +234,17 @@ sub delete {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
 	else {
+		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
+		if (!$ds) {
+			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+		}
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+		my $ds_id = $ds->id;
+		my $key = "ds_$ds_id";
 		if ($version) {
 			$key = $key . "-" . $version;
 			$self->app->log->info("deleting key_type = ssl, key = $key");
@@ -201,8 +261,8 @@ sub delete {
 
 		# $self->app->log->info("delete rc = $rc");
 		if ( $response->is_success() ) {
-			&log( $self, "Deleted ssl keys for Delivery Service $key", "APICHANGE" );
-			return $self->success("Successfully deleted ssl keys for $key");
+			&log( $self, "Deleted ssl keys for Delivery Service $xml_id", "APICHANGE" );
+			return $self->success("Successfully deleted ssl keys for $xml_id");
 		}
 		else {
 			return $self->alert( $response->content );
