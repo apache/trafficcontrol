@@ -30,7 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
-const MonitoringPrivLevel = 10
+const MonitoringPrivLevel = PrivLevelReadOnly
 
 const CacheMonitorConfigFile = "rascal.properties"
 const MonitorType = "RASCAL"
