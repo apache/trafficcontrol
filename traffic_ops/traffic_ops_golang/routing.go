@@ -23,8 +23,22 @@ import (
 	"database/sql"
 	"net/http"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
+
+const RoutePrefix = "api" // TODO config?
+
+type Route struct {
+	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
+	Version float64
+	Method  string
+	Path    string
+	Handler RegexHandlerFunc
+}
 
 type ServerData struct {
 	Config
@@ -41,31 +55,80 @@ type CompiledRoute struct {
 	Params  []string
 }
 
-func CompileRoutes(routes *map[string]RegexHandlerFunc) map[string]CompiledRoute {
-	compiledRoutes := map[string]CompiledRoute{}
-	for route, handler := range *routes {
-		originalRoute := route
-		var params []string
-		for open := strings.Index(route, "{"); open > 0; open = strings.Index(route, "{") {
-			close := strings.Index(route, "}")
-			if close < 0 {
-				panic("malformed route")
-			}
-			param := route[open+1 : close]
+func getSortedRouteVersions(rs []Route) []float64 {
+	m := map[float64]struct{}{}
+	for _, r := range rs {
+		m[r.Version] = struct{}{}
+	}
+	versions := []float64{}
+	for v, _ := range m {
+		versions = append(versions, v)
+	}
+	sort.Float64s(versions)
+	return versions
+}
 
-			params = append(params, param)
-			route = route[:open] + `(.+)` + route[close+1:]
+type PathHandler struct {
+	Path    string
+	Handler RegexHandlerFunc
+}
+
+// CreateRouteMap returns a map of methods to a slice of paths and handlers. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
+func CreateRouteMap(rs []Route) map[string][]PathHandler {
+	// TODO strong types for method, path
+	versions := getSortedRouteVersions(rs)
+	m := map[string][]PathHandler{}
+	for _, r := range rs {
+		versionI := sort.SearchFloat64s(versions, r.Version)
+		nextMajorVer := float64(int(r.Version) + 1)
+		for _, version := range versions[versionI:] {
+			if version >= nextMajorVer {
+				break
+			}
+			vstr := strconv.FormatFloat(version, 'f', -1, 64)
+			path := RoutePrefix + "/" + vstr + "/" + r.Path
+			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: r.Handler})
+			log.Infof("adding route %v %v\n", r.Method, path)
 		}
-		regex := regexp.MustCompile(route)
-		compiledRoutes[originalRoute] = CompiledRoute{Handler: handler, Regex: regex, Params: params}
+	}
+	return m
+}
+
+// CompiledRoutes takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes.
+func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
+	compiledRoutes := map[string][]CompiledRoute{}
+	for method, mRoutes := range routes {
+		for _, pathHandler := range mRoutes {
+			route := pathHandler.Path
+			handler := pathHandler.Handler
+			var params []string
+			for open := strings.Index(route, "{"); open > 0; open = strings.Index(route, "{") {
+				close := strings.Index(route, "}")
+				if close < 0 {
+					panic("malformed route")
+				}
+				param := route[open+1 : close]
+
+				params = append(params, param)
+				route = route[:open] + `(.+)` + route[close+1:]
+			}
+			regex := regexp.MustCompile(route)
+			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
+		}
 	}
 	return compiledRoutes
 }
 
-func Handler(routes map[string]CompiledRoute, catchall http.Handler, w http.ResponseWriter, r *http.Request) {
+func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.ResponseWriter, r *http.Request) {
 	requested := r.URL.Path[1:]
 
-	for _, compiledRoute := range routes {
+	mRoutes, ok := routes[r.Method]
+	if !ok {
+		catchall.ServeHTTP(w, r)
+		return
+	}
+
+	for _, compiledRoute := range mRoutes {
 		match := compiledRoute.Regex.FindStringSubmatch(requested)
 		if len(match) == 0 {
 			continue
@@ -82,15 +145,14 @@ func Handler(routes map[string]CompiledRoute, catchall http.Handler, w http.Resp
 }
 
 func RegisterRoutes(d ServerData) error {
-	routes, catchall, err := GetRoutes(d)
+	routeSlice, catchall, err := Routes(d)
 	if err != nil {
 		return err
 	}
-
-	compiledRoutes := CompileRoutes(&routes)
+	routes := CreateRouteMap(routeSlice)
+	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, catchall, w, r)
 	})
-
 	return nil
 }
