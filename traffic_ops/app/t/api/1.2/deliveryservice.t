@@ -214,7 +214,7 @@ ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->t
 	->json_is( "/response/0/xmlId", "steering-ds1" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 	->json_is( "/response/1/xmlId", "steering-ds2" );
 
-$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 3 : 2);
+$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 4 : 3);
 
 ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

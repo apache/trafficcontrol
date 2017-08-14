@@ -139,7 +139,7 @@ ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")->json_has("/r
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # #get key with period
-ok $t->get_ok("/api/1.1/deliveryservices/xmlId/foo.bar/sslkeys.json")->json_has("/response")->json_has("/response/certificate/csr")
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/xxfoo.bar/sslkeys.json")->json_has("/response")->json_has("/response/certificate/csr")
 	->json_has("/response/certificate/key")->json_has("/response/certificate/crt")->json_is( "/response/organization" => $org )
 	->json_is( "/response/state" => $state )->json_is( "/response/city" => $city )->json_is( "/response/businessUnit" => $unit )
 	->json_is( "/response/version" => $version )->json_is( "/response/country" => $country )->json_is( "/response/hostname" => $hostname )->status_is(200)
