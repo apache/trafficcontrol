@@ -23,9 +23,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/lib/pq"
 	"net/http"
 	"strings"
+
+	"github.com/lib/pq"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
@@ -131,7 +132,7 @@ func monitoringHandler(db *sql.DB) RegexHandlerFunc {
 	}
 }
 
-func getServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
+func getMonitoringServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
 	query := `SELECT
 me.host_name as hostName,
 CONCAT(me.host_name, '.', me.domain_name) as fqdn,
@@ -381,7 +382,7 @@ WHERE pr.config_file = '%s'
 }
 
 func getMonitoringJson(cdnName string, db *sql.DB) (*MonitoringResponse, error) {
-	monitors, caches, routers, err := getServers(db, cdnName)
+	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
 	}

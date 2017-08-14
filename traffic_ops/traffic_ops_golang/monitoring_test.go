@@ -28,7 +28,7 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func TestGetServers(t *testing.T) {
+func TestGetMonitoringServers(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -78,33 +78,33 @@ func TestGetServers(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
-	monitors, caches, routers, err := getServers(db, cdn)
+	monitors, caches, routers, err := getMonitoringServers(db, cdn)
 	if err != nil {
-		t.Errorf("getServers expected: nil error, actual: %v", err)
+		t.Errorf("getMonitoringServers expected: nil error, actual: %v", err)
 	}
 
 	if len(monitors) != 1 {
-		t.Errorf("getServers expected: len(monitors) == 1, actual: %v", len(monitors))
+		t.Errorf("getMonitoringServers expected: len(monitors) == 1, actual: %v", len(monitors))
 	}
 	sqlMonitor := monitors[0]
 	if sqlMonitor != monitor {
-		t.Errorf("getServers expected: monitor == %+v, actual: %+v", monitor, sqlMonitor)
+		t.Errorf("getMonitoringServers expected: monitor == %+v, actual: %+v", monitor, sqlMonitor)
 	}
 
 	if len(caches) != 1 {
-		t.Errorf("getServers expected: len(caches) == 1, actual: %v", len(caches))
+		t.Errorf("getMonitoringServers expected: len(caches) == 1, actual: %v", len(caches))
 	}
 	sqlCache := caches[0]
 	if sqlCache != cache {
-		t.Errorf("getServers expected: cache == %+v, actual: %+v", cache, sqlCache)
+		t.Errorf("getMonitoringServers expected: cache == %+v, actual: %+v", cache, sqlCache)
 	}
 
 	if len(routers) != 1 {
-		t.Errorf("getServers expected: len(routers) == 1, actual: %v", len(routers))
+		t.Errorf("getMonitoringServers expected: len(routers) == 1, actual: %v", len(routers))
 	}
 	sqlRouter := routers[0]
 	if sqlRouter != router {
-		t.Errorf("getServers expected: router == %+v, actual: %+v", router, sqlRouter)
+		t.Errorf("getMonitoringServers expected: router == %+v, actual: %+v", router, sqlRouter)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -144,7 +144,7 @@ func TestGetCachegroups(t *testing.T) {
 	}
 	sqlCachegroup := sqlCachegroups[0]
 	if sqlCachegroup != cachegroup {
-		t.Errorf("getServers expected: cachegroup == %+v, actual: %+v", cachegroup, sqlCachegroup)
+		t.Errorf("getMonitoringServers expected: cachegroup == %+v, actual: %+v", cachegroup, sqlCachegroup)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -427,7 +427,7 @@ func TestGetMonitoringJson(t *testing.T) {
 
 	{
 		//
-		// getServers
+		// getMonitoringServers
 		//
 		monitor := Monitor{
 			BasicServer: BasicServer{Profile: "monitorProfile",
