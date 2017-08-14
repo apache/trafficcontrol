@@ -76,3 +76,9 @@ services:
       context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
+
+  weasel:
+    image: licenseweasel/weasel:0.1
+    volumes:
+      - ../../..:/trafficcontrol:z
+    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
