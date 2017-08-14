@@ -552,10 +552,10 @@ my %definition_for = (
 		},
 	},
 	ds_period1 => {
-	new   => 'Deliveryservice',
+		new   => 'Deliveryservice',
 		using => {
 			id                    => 2200,
-			xml_id                => 'foo.bar',
+			xml_id                => 'xxfoo.bar',
 			active                => 1,
 			tenant_id             => undef,
 			dscp                  => 40,
