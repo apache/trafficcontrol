@@ -36,7 +36,7 @@ traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
 CrStates$, Apache # JSON with a specific format.
 ^docs/.*\.(png|jpe?g|ico|gif)$, Apache
 ^traffic_ops/app/public/.*\.(png|jpe?g|ico|gif)$, Apache
-^traffic_monitor/src/main/webapp/.*\.(png|jpe?g|ico|gif)$, Apache
+^traffic_monitor_java/src/main/webapp/.*\.(png|jpe?g|ico|gif)$, Apache
 /images/.*\.(png|jpe?g|ico|gif)$, Apache
 favicon.ico$, Apache
 ^traffic_ops/goto/testFiles/, Apache
@@ -74,6 +74,7 @@ datatables\.min, MIT
 GeoLite2-City.mmdb.gz, CC-A-SA
 jquery\.tree\.min\.css$, MIT
 jquery\.dataTables\.min\.(css|js)$, MIT
+^traffic_ops/traffic_ops_golang/vendor/github.com/basho/backoff/.*, MIT
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
