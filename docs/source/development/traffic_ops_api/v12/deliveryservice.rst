@@ -1628,7 +1628,7 @@ SSL Keys
   +--------------+---------+-------------------------------------------------+
   |  Parameter   |   Type  |                   Description                   |
   +==============+=========+=================================================+
-  | ``key``      | string  | "ds_" add id of the delivery service            |
+  | ``key``      | string  | ds_<id> where <id> is integer id of ds          |
   +--------------+---------+-------------------------------------------------+
   | ``version``  | string  | version of the keys being generated             |
   +--------------+---------+-------------------------------------------------+
@@ -1696,7 +1696,7 @@ SSL Keys
   +-------------+--------+---------------------------------------+
   |  Parameter  |  Type  |             Description               |
   +=============+========+=======================================+
-  | ``key``     | string | "ds_" add id of the delivery service  |
+  | ``key``     | string | ds_<id> where <id> is integer id of ds|
   +-------------+--------+---------------------------------------+
   | ``version`` | string | version of the keys being generated   |
   +-------------+--------+---------------------------------------+
