@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormTenantController = function(tenant, $scope, formUtils, locationUtils, tenantService) {
+var FormTenantController = function(tenant, $scope, $location, formUtils, locationUtils, tenantService) {
 
     var getTenants = function() {
         tenantService.getTenants()
@@ -33,6 +33,10 @@ var FormTenantController = function(tenant, $scope, formUtils, locationUtils, te
         { value: true, label: 'true' }
     ];
 
+    $scope.viewUsers = function() {
+        $location.path($location.path() + '/users');
+    };
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -46,5 +50,5 @@ var FormTenantController = function(tenant, $scope, formUtils, locationUtils, te
 
 };
 
-FormTenantController.$inject = ['tenant', '$scope', 'formUtils', 'locationUtils', 'tenantService'];
+FormTenantController.$inject = ['tenant', '$scope', '$location', 'formUtils', 'locationUtils', 'tenantService'];
 module.exports = FormTenantController;
