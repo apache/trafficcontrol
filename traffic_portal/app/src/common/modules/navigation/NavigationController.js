@@ -50,6 +50,13 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
         authService.logout();
     };
 
+    $scope.popout = function() {
+        $window.open(
+            $location.absUrl(),
+            '_blank'
+        );
+    };
+
     $scope.releaseVersion = function() {
         trafficPortalService.getReleaseVersionInfo()
             .then(function(result) {
