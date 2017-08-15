@@ -3,7 +3,7 @@
   "db_user": "traffic_ops",
   "db_pass": "twelve",
   "db_server": "localhost",
-  "db_name": "to_development",
+  "db_name": "traffic_ops",
   "db_ssl": false,
   "to_secret": "mONKEYDOmONKEYSEE.",
   "to_url": "https://localhost:60443",
