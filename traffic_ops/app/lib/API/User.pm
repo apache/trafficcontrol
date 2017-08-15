@@ -63,17 +63,23 @@ sub token_login {
 sub index {
 	my $self = shift;
 	my @data;
-	my $username = $self->param('username');
+	my $username 	= $self->param('username');
+	my $tenant_id	= $self->param('tenant');
 
 	my $orderby = "username";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+
+	my %criteria;
+	if ( defined $tenant_id ) {
+		$criteria{'me.tenant_id'} = $tenant_id;
+	}
 
 	my $dbh;
 	if ( defined $username ) {
 		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 	else {
-		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( \%criteria, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
