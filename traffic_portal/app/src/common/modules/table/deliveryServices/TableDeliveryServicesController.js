@@ -26,6 +26,12 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
         3: "HTTP TO HTTPS"
     };
 
+    var qstrings = {
+        0: "USE",
+        1: "IGNORE",
+        2: "DROP"
+    };
+
     var createDeliveryService = function(typeName) {
         var path = '/configure/delivery-services/new?type=' + typeName;
         locationUtils.navigateToPath(path);
@@ -44,6 +50,10 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
 
     $scope.protocol = function(ds) {
         return protocols[ds.protocol];
+    };
+
+    $scope.qstring = function(ds) {
+        return qstrings[ds.qstringIgnore];
     };
 
     $scope.selectDSType = function() {
