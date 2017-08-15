@@ -1,0 +1,109 @@
+# Documentation - These files are never code.
+README(\..*)?$, Docs
+NOTICE$, Docs
+VERSION$, Docs
+BUILD$, Docs
+DISCLAIMER, Docs
+\.md$, Docs
+\.txt$, Docs
+\.placeholder$, Empty
+
+# Uncommentable files
+#
+# These files cannot contain comments, so no header can be added.
+# They are nevertheless covered by the Apache license.
+\.gitignore$, Apache
+\.gitattributes$, Apache
+\.classpath$, Apache
+\.pmd$, Apache
+\.project$, Apache
+^\.rat-excludes$, Apache
+RobotoSlab-Bold\.ttf$, Apache
+RobotoSlab-Regular\.ttf$, Apache
+\.cfg$, Apache
+\.json$, Apache
+\.csv$, Apache
+\.conf$, Apache
+\.prop$, Apache
+\.test$, Apache
+\.config\.example$, Apache
+/\.bowerrc$, Apache
+/\.jshintrc$, Apache
+\.traffic_ops$, Apache # JSON with a specific format.
+\.dist$, Apache # JSON with a specific format.
+traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
+CrStates$, Apache # JSON with a specific format.
+^docs/.*\.(png|jpe?g|ico|gif)$, Apache
+^traffic_ops/app/public/.*\.(png|jpe?g|ico|gif)$, Apache
+^traffic_monitor/src/main/webapp/.*\.(png|jpe?g|ico|gif)$, Apache
+/images/.*\.(png|jpe?g|ico|gif)$, Apache
+favicon.ico$, Apache
+^traffic_ops/goto/testFiles/, Apache
+cron\.d/[^/]*$, Apache
+
+# Demo certificates
+ssl\.(crt|key)$, Apache
+/keystore, Apache
+COMODO.*\.crt$, Apache
+
+# Uncommentable files
+#
+# These files cannot contain comments, but are covered by separate
+# licenses. These licenses must be documented in the root LICENSE file.
+Inconsolata\.ttf$, SIL OFL 1.1
+Inconsolata-Bold\.ttf$, SIL OFL 1.1
+[Ff]ont[Aa]wesome[^\.]*\.([ot]tf|eot|woff2?)$, SIL OFL 1.1
+Lato-Bold\.ttf$, SIL OFL 1.1
+Lato-Regular\.ttf$, SIL OFL 1.1
+ssl-bundle\.crt$, MPL
+
+# Code dependencies
+#
+# These files could bear headers, but are part of dependent code and
+# so we present them for the most part unmodified. These licenses must
+# be documented in the root LICENSE file.
+[Ff]ont[Aa]wesome[^\.]*\.css, MIT
+select2.css, Apache
+select2.css, GPL/LGPL
+j[Mm]enu.*\.(css|js), MIT
+sphinx_rtd_theme/.*\.(html|css|css\.map|js|py)$, MIT
+bootstrap-theme\.css\.map, MIT
+datatables\.min, MIT
+GeoLite2-City.mmdb.gz, CC-A-SA
+jquery\.tree\.min\.css$, MIT
+jquery\.dataTables\.min\.(css|js)$, MIT
+
+# Ignored - Do not report.
+\.DS_Store, Ignore # Created automatically OSX.
+^\.rat-excludes$, Ignore # False positives for basically everything.
+^\.dependency_license, Ignore # False positives in this file.
+
+# This file is created dynamically by the testing script itself, it is
+# not distributed, but if it were, it would be Apache, and the source
+# would be right with it.
+^infrastructure/test/license/license, Apache
+
+# Don't object to licenses in the license file itself.
+^LICENSE$, !GoBSD
+^LICENSE$, !MIT
+^LICENSE$, !BSD
+^LICENSE$, !X11
+^LICENSE$, !ISC
+
+# ... or in the documentation about the licenses.
+^infrastructure/test/license/README.md$, !BSD
+^infrastructure/test/license/README.md$, !GPL/LGPL
+^infrastructure/test/license/README.md$, !MIT
+^infrastructure/test/license/README.md$, !WTFPL
+^infrastructure/test/license/README.md$, !X11
+
+# License files are licensed under their own terms, don't attempt to detect them.
+^licenses/.*, Ignore
+
+# False positives
+licenseList\.go$, !GoBSD
+licenseList\.go$, !MIT
+licenseList\.go$, !BSD
+licenseList\.go$, !X11
+^traffic_ops/app/t_integration/extensions\.t$, !X11
+GeoLite2-City.mmdb.gz, !MIT
