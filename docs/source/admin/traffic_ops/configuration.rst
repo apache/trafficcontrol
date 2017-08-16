@@ -297,7 +297,7 @@ This is a standard kickstart formatted file that the generate ISO process uses t
 
 
 Configuring the Go Application
-=======================
+==============================
 Traffic Ops is in the process of migrating from Perl to Go, and currently runs as two applications. The Go application serves all endpoints which have been rewritten in the Go language, and transparently proxies all other requests to the old Perl application. Both applications are installed by the RPM, and both run as a single service. When the project has fully migrated to Go, the Perl application will be removed, and the RPM and service will consist solely of the Go application.
 
 By default, the postinstall script configures the Go application to behave and transparently serve as the old Perl Traffic Ops did in previous versions. This includes reading the old ``cdn.conf`` and ``database.conf`` config files, and logging to the old ``access.log`` location. However, if you wish to customize the Go Traffic Ops application, you can do so by running it with the ``-oldcfg=false`` argument. By default, it will then look for a config file in ``/opt/traffic_ops/conf/traffic_ops_golang.config``. The new config file location may also be customized via the ``-cfg`` flag. A sample config file is installed by the RPM at ``/opt/traffic_ops/conf/traffic_ops_golang.config``. If you wish to run the new Go Traffic Ops application as a service with a new config file, the ``-oldcfg=false`` and  ``-cfg`` flags may be added to the ``start`` function in the service file, located by default at ``etc/init.d/traffic_ops``.
