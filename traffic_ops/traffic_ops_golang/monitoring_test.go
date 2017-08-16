@@ -269,7 +269,7 @@ func TestGetProfiles(t *testing.T) {
 		Profile{
 			Name: router.Profile,
 			Type: RouterType,
-			Parameters: map[string]string{
+			Parameters: map[string]interface{}{
 				"param0": "param0Val",
 				"param1": "param1Val",
 			},
@@ -277,7 +277,7 @@ func TestGetProfiles(t *testing.T) {
 		Profile{
 			Name: cache.Profile,
 			Type: "myType2",
-			Parameters: map[string]string{
+			Parameters: map[string]interface{}{
 				"2param0": "2param0Val",
 				"2param1": "2param1Val",
 			},
@@ -389,7 +389,7 @@ func TestGetConfig(t *testing.T) {
 	}
 	defer db.Close()
 
-	config := map[string]string{
+	config := map[string]interface{}{
 		"name0": "val0",
 		"name1": "val1",
 	}
@@ -519,7 +519,7 @@ func TestGetMonitoringJson(t *testing.T) {
 			Profile{
 				Name: router.Profile,
 				Type: RouterType,
-				Parameters: map[string]string{
+				Parameters: map[string]interface{}{
 					"param0": "param0Val",
 					"param1": "param1Val",
 				},
@@ -527,7 +527,7 @@ func TestGetMonitoringJson(t *testing.T) {
 			Profile{
 				Name: cache.Profile,
 				Type: "EDGE",
-				Parameters: map[string]string{
+				Parameters: map[string]interface{}{
 					"2param0": "2param0Val",
 					"2param1": "2param1Val",
 				},
@@ -582,7 +582,7 @@ func TestGetMonitoringJson(t *testing.T) {
 		//
 		// getConfig
 		//
-		config := map[string]string{
+		config := map[string]interface{}{
 			"name0": "val0",
 			"name1": "val1",
 		}
