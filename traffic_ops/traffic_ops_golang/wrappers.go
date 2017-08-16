@@ -92,7 +92,7 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 		}
 
 		newCookieVal := tocookie.Refresh(oldCookie, secret)
-		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal})
+		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
 
 		h(w, r, p)
 	}
