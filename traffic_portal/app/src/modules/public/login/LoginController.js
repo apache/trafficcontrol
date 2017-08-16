@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var LoginController = function($scope, $log, $uibModal, authService) {
+var LoginController = function($scope, $log, $uibModal, authService, userService) {
 
     $scope.credentials = {
         username: '',
@@ -36,7 +36,7 @@ var LoginController = function($scope, $log, $uibModal, authService) {
         });
 
         modalInstance.result.then(function(email) {
-            authService.resetPassword(email);
+            userService.resetPassword(email);
         }, function () {
         });
     };
@@ -45,5 +45,5 @@ var LoginController = function($scope, $log, $uibModal, authService) {
     init();
 };
 
-LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService'];
+LoginController.$inject = ['$scope', '$log', '$uibModal', 'authService', 'userService'];
 module.exports = LoginController;

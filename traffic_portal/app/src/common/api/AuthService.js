@@ -61,10 +61,6 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
         );
     };
 
-    this.resetPassword = function(email) {
-        // Todo: api endpoint not implemented yet
-    };
-
 };
 
 AuthService.$inject = ['$rootScope', '$http', '$state', '$location', '$q', '$state', 'httpService', 'userModel', 'messageModel', 'ENV'];
