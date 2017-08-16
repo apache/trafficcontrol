@@ -179,46 +179,49 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 
 	ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
-			"active" => \1,
-			"cdnId" => 100,
-			"displayName" => "ds_displayname_11",
-			"dscp" => 1,
-			"geoLimit" => 1,
-			"geoProvider" => 1,
-			"initialDispersion" => 2,
-			"ipv6RoutingEnabled" => 1,
-			"logsEnabled" => 1,
-			"missLat" => 45,
-			"missLong" => 45,
-			"multiSiteOrigin" => 0,
-			"orgServerFqdn" => "http://10.75.168.91",
-			"protocol" => 2,
-			"qstringIgnore" => 1,
-			"rangeRequestHandling" => 1,
-			"regionalGeoBlocking" => 1,
-			"signed" => 1,
-			"typeId" => 7,
-			"xmlId" => "ds_1",
-})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
+				"active" => \1,
+				"cdnId" => 100,
+				"displayName" => "ds_displayname_11",
+				"dscp" => 1,
+				"geoLimit" => 1,
+				"geoProvider" => 1,
+				"initialDispersion" => 2,
+				"ipv6RoutingEnabled" => 1,
+				"logsEnabled" => 1,
+				"missLat" => 45,
+				"missLong" => 45,
+				"multiSiteOrigin" => 0,
+				"orgServerFqdn" => "http://10.75.168.91",
+				"protocol" => 2,
+				"qstringIgnore" => 1,
+				"rangeRequestHandling" => 1,
+				"regionalGeoBlocking" => 1,
+				"signed" => 1,
+				"typeId" => 7,
+				"xmlId" => "ds_1",
+	})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->post_ok(
-	'/api/1.2/deliveryservices/test-ds1/servers' => { Accept => 'application/json' } => json => {
-		"serverNames" => [ "atlanta-edge-01", "atlanta-edge-02" ]
-	}
-	)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "test-ds1" )
-	->json_is( "/response/serverNames/0" => "atlanta-edge-01" )->json_is( "/response/serverNames/1" => "atlanta-edge-02" ),
-	'Does the assigned servers return?';
+	ok $t->post_ok(
+		'/api/1.2/deliveryservices/test-ds1/servers' => { Accept => 'application/json' } => json => {
+			"serverNames" => [ "atlanta-edge-01", "atlanta-edge-02" ]
+		}
+		)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/response/xmlId" => "test-ds1" )
+		->json_is( "/response/serverNames/0" => "atlanta-edge-01" )->json_is( "/response/serverNames/1" => "atlanta-edge-02" ),
+		'Does the assigned servers return?';
 
-ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
-	->json_is( "/response/0/xmlId", "steering-ds1" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
-	->json_is( "/response/1/xmlId", "steering-ds2" );
+	ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
+		->json_is( "/response/0/xmlId", "steering-ds1" )->json_is( "/response/0/logsEnabled", 0 )->json_is( "/response/0/ipv6RoutingEnabled", 1 )
+		->json_is( "/response/1/xmlId", "steering-ds2" );
 
-$t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 4 : 3);
+	ok $t->get_ok('/api/1.2/deliveryservices?logsEnabled=true')->status_is(200)->$count_response(defined($tenant_id) ? 4 : 3);
 
-ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	ok $t->put_ok('/api/1.2/snapshot/cdn1')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+	# try deleting a deliveryservice that has a job and a staticdnsentry
+	ok $t->delete_ok('/api/1.2/deliveryservices/100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 }
 
