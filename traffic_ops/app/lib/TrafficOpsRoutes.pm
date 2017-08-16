@@ -409,12 +409,6 @@ sub api_routes {
 	$r->put("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#update', namespace => $namespace );
 	$r->delete("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 
-	# alternate cachegroup routes
-	$r->get("/api/$version/cachegroups/list")->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup2#index', namespace => $namespace );
-	$r->post("/api/$version/cachegroups/create")->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup2#create', namespace => $namespace );
-	$r->put("/api/$version/cachegroups/:id/update")->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup2#update', namespace => $namespace );
-	$r->delete("/api/$version/cachegroups/:id/delete")->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup2#delete', namespace => $namespace );
-
 	# -- CACHEGROUPS: ASSIGN DELIVERYSERVICES
 	$r->post("/api/$version/cachegroups/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )
 		->to( 'DeliveryServiceServer#assign_ds_to_cachegroup', namespace => $namespace );
@@ -510,13 +504,6 @@ sub api_routes {
 	$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'Deliveryservice#assign_servers', namespace => $namespace );
 	$r->delete("/api/$version/deliveryservice_server/:dsId/:serverId" => [ dsId => qr/\d+/, serverId => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#remove_server_from_ds', namespace => $namespace );
-
-	# alternate deliveryservice routes
-	$r->get("/api/$version/deliveryservices/list")->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
-	$r->get( "/api/$version/deliveryservices/:id/get" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )
-		->to( 'Deliveryservice2#delivery_services', namespace => $namespace );
-	$r->post("/api/$version/deliveryservices/create")->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice2#create', namespace => $namespace );
-	$r->put("/api/$version/deliveryservices/:id/update")->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice2#update', namespace => $namespace );
 
 	# -- DELIVERYSERVICES: HEALTH
 	$r->get("/api/$version/deliveryservices/:id/health" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#health', namespace => $namespace );
@@ -727,10 +714,6 @@ sub api_routes {
 	$r->get( "/api/$version/deliveryservices/:id/servers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Server#get_edge_servers_by_dsid', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id/unassigned_servers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Server#get_unassigned_servers_by_dsid', namespace => $namespace );
 	$r->get( "/api/$version/deliveryservices/:id/servers/eligible" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Server#get_eligible_servers_by_dsid', namespace => $namespace );
-
-	# alternate server routes
-	$r->post("/api/$version/servers/create")->over( authenticated => 1, not_ldap => 1 )->to( 'Server2#create', namespace => $namespace );
-	$r->put("/api/$version/servers/:id/update")->over( authenticated => 1, not_ldap => 1 )->to( 'Server2#update', namespace => $namespace );
 
 	# -- SERVERS: DETAILS
 	$r->get("/api/$version/servers/details")->over( authenticated => 1, not_ldap => 1 )->to( 'Server#details', namespace => $namespace );
