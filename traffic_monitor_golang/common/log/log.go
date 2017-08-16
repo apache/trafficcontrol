@@ -135,6 +135,9 @@ func Eventf(t time.Time, format string, v ...interface{}) {
 
 // EventfRaw writes to the event log with no prefix.
 func EventfRaw(format string, v ...interface{}) {
+	if Event == nil {
+		return
+	}
 	Event.Printf(format, v...)
 }
 
