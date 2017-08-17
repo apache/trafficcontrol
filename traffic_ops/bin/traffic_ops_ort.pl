@@ -76,6 +76,8 @@ if ( defined( $ARGV[2] ) ) {
 	else {
 		$traffic_ops_host = $ARGV[2];
 		$traffic_ops_host =~ s/\/*$//g;
+                # Stash to_url for later use...
+                $to_url = $traffic_ops_host;
 	}
 }
 else {
@@ -1734,16 +1736,16 @@ sub get_cfg_file_list {
 	my $ort_ref = decode_json($result);
 	
 	if ($api_in_use == 1) {
-		$to_url = $ort_ref->{'info'}->{'toUrl'};
-		$to_url =~ s/\/*$//g;
-		$traffic_ops_host = $to_url;
-		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $to_url\n");
 		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
 		if ( $to_rev_proxy_url ) {
 			$to_rev_proxy_url =~ s/\/*$//g;
+                        # Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
+                        #       Secrets might not be the same on all Traffic Ops instance.
 			$traffic_ops_host = $to_rev_proxy_url;
 			$rev_proxy_in_use = 1;
 			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
+		} else {
+			$traffic_ops_host = $to_url;
 		}
 		$profile_name = $ort_ref->{'info'}->{'profileName'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
