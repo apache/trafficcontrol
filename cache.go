@@ -3,6 +3,7 @@ package grove
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"sync/atomic"
@@ -51,6 +52,7 @@ type CacheHandler struct {
 	stats           Stats
 	conns           *ConnMap
 	connectionClose bool
+	transport       *http.Transport
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -81,7 +83,37 @@ type CacheHandler struct {
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
 //
 // The connectionClose parameter determines whether to send a `Connection: close` header. This is primarily designed for maintenance, to drain the cache of incoming requestors. This overrides rule-specific `connection-close: false` configuration, under the assumption that draining a cache is a temporary maintenance operation, and if connectionClose is true on the service and false on some rules, those rules' configuration is probably a permament setting whereas the operator probably wants to drain all connections if the global setting is true. If it's necessary to leave connection close false on some rules, set all other rules' connectionClose to true and leave the global connectionClose unset.
-func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, conns *ConnMap, strictRFC bool, connectionClose bool) *CacheHandler {
+func NewCacheHandler(
+	cache Cache,
+	remapper HTTPRequestRemapper,
+	ruleLimit uint64,
+	stats Stats,
+	scheme string,
+	conns *ConnMap,
+	strictRFC bool,
+	connectionClose bool,
+	reqTimeout time.Duration,
+	reqKeepAlive time.Duration,
+	reqMaxIdleConns int,
+	reqIdleConnTimeout time.Duration,
+) *CacheHandler {
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   reqTimeout,
+			KeepAlive: reqKeepAlive,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          reqMaxIdleConns,
+		IdleConnTimeout:       reqIdleConnTimeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	transport.Dial = func(network, address string) (net.Conn, error) {
+		d := net.Dialer{DualStack: true, FallbackDelay: time.Millisecond * 50}
+		return d.Dial(network, address)
+	}
+
 	return &CacheHandler{
 		cache:           cache,
 		remapper:        remapper,
@@ -92,6 +124,7 @@ func NewCacheHandler(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64
 		stats:           stats,
 		conns:           conns,
 		connectionClose: connectionClose,
+		transport:       transport,
 		// keyThrottlers:     NewThrottlers(keyLimit),
 		// nocacheThrottlers: NewThrottlers(nocacheLimit),
 	}
@@ -111,8 +144,34 @@ func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]T
 }
 
 // NewCacheHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use `NewCacheHandler`.
-func NewCacheHandlerFunc(cache Cache, remapper HTTPRequestRemapper, ruleLimit uint64, stats Stats, scheme string, conns *ConnMap, strictRFC bool, connectionClose bool) http.HandlerFunc {
-	handler := NewCacheHandler(cache, remapper, ruleLimit, stats, scheme, conns, strictRFC, connectionClose)
+func NewCacheHandlerFunc(
+	cache Cache,
+	remapper HTTPRequestRemapper,
+	ruleLimit uint64,
+	stats Stats,
+	scheme string,
+	conns *ConnMap,
+	strictRFC bool,
+	connectionClose bool,
+	reqTimeout time.Duration,
+	reqKeepAlive time.Duration,
+	reqMaxIdleConns int,
+	reqIdleConnTimeout time.Duration,
+) http.HandlerFunc {
+	handler := NewCacheHandler(
+		cache,
+		remapper,
+		ruleLimit,
+		stats,
+		scheme,
+		conns,
+		strictRFC,
+		connectionClose,
+		reqTimeout,
+		reqKeepAlive,
+		reqMaxIdleConns,
+		reqIdleConnTimeout,
+	)
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
@@ -122,7 +181,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.TryServe(w, r)
 }
 
-const CodeConnectFailure = -1
+const CodeConnectFailure = http.StatusBadGateway
 
 func isFailure(o *CacheObj, retryCodes map[int]struct{}) bool {
 	_, failureCode := retryCodes[o.code]
@@ -167,13 +226,14 @@ func GetAndCache(
 	cacheFailure bool,
 	retryNum int,
 	retryCodes map[int]struct{},
+	transport *http.Transport,
 ) *CacheObj {
 	// TODO this is awkward, with 'revalidateObj' indicating whether the request is a Revalidate. Should Getting and Caching be split up? How?
 	get := func() *CacheObj {
 		// TODO figure out why respReqTime isn't used by rules
-		log.Errorf("DEBUGS GetAndCache calling request %v %v %v %v %v\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header)
+		log.Debugf("GetAndCache calling request %v %v %v %v %v\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header)
 		// TODO Verify overriding the passed reqTime is the right thing to do
-		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(req, proxyURL)
+		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(transport, req, proxyURL)
 		if err != nil {
 			log.Debugf("origin err for %v rule %v err %v\n", cacheKey, remapName, err)
 			code := CodeConnectFailure
@@ -240,6 +300,7 @@ func CanReuse(reqHeader http.Header, reqCacheControl CacheControl, cacheObj *Cac
 // TryServe attempts to serve the given request, as a caching reverse proxy.
 // Serving acts as a state machine.
 func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
+	log.EventfRaw("%v %v %v %v\n", time.Now().Format(time.RFC3339Nano), r.RemoteAddr, r.Method, r.RequestURI)
 	// inBytes := getBytes(r)
 	reqTime := time.Now()
 
@@ -279,7 +340,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 
 		getAndCache := func() *CacheObj {
-			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes)
+			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, reqTime, h.strictRFC, h.cache, h.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, h.transport)
 		}
 
 		return h.getter.Get(cacheKey, getAndCache, canReuse)
@@ -419,11 +480,10 @@ func (h *CacheHandler) serveReqErr(w http.ResponseWriter) {
 // }
 
 // request makes the given request and returns its response code, headers, body, the request time, response time, and any error.
-func request(r *http.Request, proxyURL *url.URL) (int, http.Header, []byte, time.Time, time.Time, error) {
-	log.Errorf("DEBUGP requesting %v headers %v\n", r.RequestURI, r.Header)
+func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int, http.Header, []byte, time.Time, time.Time, error) {
+	log.Debugf("request requesting %v headers %v\n", r.RequestURI, r.Header)
 	rr := r
-	// Create a client and query the target
-	var transport http.Transport
+
 	if proxyURL != nil {
 		transport.Proxy = http.ProxyURL(proxyURL)
 	}
@@ -436,6 +496,8 @@ func request(r *http.Request, proxyURL *url.URL) (int, http.Header, []byte, time
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
+	// TODO determine if respTime should go here
+
 	if err != nil {
 		return 0, nil, nil, reqTime, respTime, fmt.Errorf("reading response body: %v", err)
 	}
