@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -20,15 +19,6 @@ import (
 
 	"github.com/hashicorp/golang-lru"
 	"github.com/apache/incubator-trafficcontrol/grove"
-)
-
-const (
-	// LogLocationStdout indicates the stdout IO stream
-	LogLocationStdout = "stdout"
-	// LogLocationStderr indicates the stderr IO stream
-	LogLocationStderr = "stderr"
-	// LogLocationNull indicates the null IO stream (/dev/null)
-	LogLocationNull = "null"
 )
 
 type Config struct {
@@ -53,7 +43,30 @@ type Config struct {
 	LogLocationInfo    string `json:"log_location_info"`
 	LogLocationDebug   string `json:"log_location_debug"`
 	LogLocationEvent   string `json:"log_location_event"`
+
+	ReqTimeoutMS         int `json:"req_timeout_ms"`
+	ReqKeepAliveMS       int `json:"req_keep_alive_ms"`
+	ReqMaxIdleConns      int `json:"req_max_idle_connections"`
+	ReqIdleConnTimeoutMS int `json:"req_idle_connection_timeout_ms"`
 }
+
+func (c Config) ErrorLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationError)
+}
+func (c Config) WarningLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationWarning)
+}
+func (c Config) InfoLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationInfo)
+}
+func (c Config) DebugLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationDebug)
+}
+func (c Config) EventLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationEvent)
+}
+
+const MSPerSec = 1000
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
@@ -64,11 +77,15 @@ var DefaultConfig = Config{
 	RemapRulesFile:         "remap.config",
 	ConcurrentRuleRequests: 100000,
 	ConnectionClose:        false,
-	LogLocationError:       LogLocationStderr,
-	LogLocationWarning:     LogLocationStdout,
-	LogLocationInfo:        LogLocationNull,
-	LogLocationDebug:       LogLocationNull,
-	LogLocationEvent:       LogLocationStdout,
+	LogLocationError:       log.LogLocationStderr,
+	LogLocationWarning:     log.LogLocationStdout,
+	LogLocationInfo:        log.LogLocationNull,
+	LogLocationDebug:       log.LogLocationNull,
+	LogLocationEvent:       log.LogLocationStdout,
+	ReqTimeoutMS:           30 * MSPerSec,
+	ReqKeepAliveMS:         30 * MSPerSec,
+	ReqMaxIdleConns:        100,
+	ReqIdleConnTimeoutMS:   90 * MSPerSec,
 }
 
 // Load loads the given config file. If an empty string is passed, the default config is returned.
@@ -86,51 +103,6 @@ func LoadConfig(fileName string) (Config, error) {
 
 const bytesPerGibibyte = 1024 * 1024 * 1024
 
-func getLogWriter(location string) (io.WriteCloser, error) {
-	// TODO move to common/log
-	switch location {
-	case LogLocationStdout:
-		return log.NopCloser(os.Stdout), nil
-	case LogLocationStderr:
-		return log.NopCloser(os.Stderr), nil
-	case LogLocationNull:
-		return nil, nil
-	default:
-		return os.OpenFile(location, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	}
-}
-
-func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, io.WriteCloser, error) {
-	// TODO move to common/log
-	eventLoc := cfg.LogLocationEvent
-	errLoc := cfg.LogLocationError
-	warnLoc := cfg.LogLocationWarning
-	infoLoc := cfg.LogLocationInfo
-	debugLoc := cfg.LogLocationDebug
-
-	eventW, err := getLogWriter(eventLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
-	}
-	errW, err := getLogWriter(errLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
-	}
-	warnW, err := getLogWriter(warnLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
-	}
-	infoW, err := getLogWriter(infoLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
-	}
-	debugW, err := getLogWriter(debugLoc)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
-	}
-	return eventW, errW, warnW, infoW, debugW, nil
-}
-
 func main() {
 	runtime.GOMAXPROCS(16) // DEBUG
 	configFileName := flag.String("config", "", "The config file path")
@@ -147,7 +119,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	eventW, errW, warnW, infoW, debugW, err := GetLogWriters(cfg)
+	eventW, errW, warnW, infoW, debugW, err := log.GetLogWriters(cfg)
 	if err != nil {
 		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
 		os.Exit(1)
@@ -181,7 +153,20 @@ func main() {
 
 	buildHandler := func(scheme string, conns *grove.ConnMap) (http.Handler, *grove.CacheHandlerPointer) {
 		statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
-		cacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, scheme, conns, cfg.RFCCompliant, cfg.ConnectionClose)
+		cacheHandler := grove.NewCacheHandler(
+			cache,
+			remapper,
+			uint64(cfg.ConcurrentRuleRequests),
+			stats,
+			scheme,
+			conns,
+			cfg.RFCCompliant,
+			cfg.ConnectionClose,
+			time.Duration(cfg.ReqTimeoutMS)*time.Millisecond,
+			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
+			cfg.ReqMaxIdleConns,
+			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
+		)
 		cacheHandlerPointer := grove.NewCacheHandlerPointer(cacheHandler)
 
 		handler := http.NewServeMux()
@@ -210,7 +195,7 @@ func main() {
 			return
 		}
 
-		eventW, errW, warnW, infoW, debugW, err := GetLogWriters(cfg)
+		eventW, errW, warnW, infoW, debugW, err := log.GetLogWriters(cfg)
 		if err != nil {
 			log.Errorf("relaoding config: getting log writers '%v': %v", *configFileName, err)
 		}
@@ -250,10 +235,36 @@ func main() {
 
 		stats = grove.NewStats(remapper.Rules()) // TODO copy stats from old stats object?
 
-		httpCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "http", httpConns, cfg.RFCCompliant, cfg.ConnectionClose)
+		httpCacheHandler := grove.NewCacheHandler(
+			cache,
+			remapper,
+			uint64(cfg.ConcurrentRuleRequests),
+			stats,
+			"http",
+			httpConns,
+			cfg.RFCCompliant,
+			cfg.ConnectionClose,
+			time.Duration(cfg.ReqTimeoutMS)*time.Millisecond,
+			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
+			cfg.ReqMaxIdleConns,
+			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
+		)
 		httpHandlerPointer.Set(httpCacheHandler)
 
-		httpsCacheHandler := grove.NewCacheHandler(cache, remapper, uint64(cfg.ConcurrentRuleRequests), stats, "https", httpsConns, cfg.RFCCompliant, cfg.ConnectionClose)
+		httpsCacheHandler := grove.NewCacheHandler(
+			cache,
+			remapper,
+			uint64(cfg.ConcurrentRuleRequests),
+			stats,
+			"https",
+			httpsConns,
+			cfg.RFCCompliant,
+			cfg.ConnectionClose,
+			time.Duration(cfg.ReqTimeoutMS)*time.Millisecond,
+			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
+			cfg.ReqMaxIdleConns,
+			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
+		)
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
@@ -281,6 +292,7 @@ func main() {
 		}
 	}
 
+	profile()
 	signalReloader(unix.SIGHUP, reloadConfig)
 }
 
@@ -311,9 +323,16 @@ func signalReloader(sig os.Signal, f func()) {
 	}
 }
 
+const IdleTimeout = time.Second * 10 // TODO config
+
 // startHTTPServer starts an HTTP server on the given port, and returns it
 func startHTTPServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), port int) *http.Server {
-	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port), ConnState: connState}
+	server := &http.Server{
+		Handler:     handler,
+		Addr:        fmt.Sprintf(":%d", port),
+		ConnState:   connState,
+		IdleTimeout: IdleTimeout,
+	}
 	go func() {
 		log.Infof("listening on http://%d\n", port)
 		if err := server.Serve(listener); err != nil {
@@ -324,7 +343,12 @@ func startHTTPServer(handler http.Handler, listener net.Listener, connState func
 }
 
 func startHTTPSServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), port int, certFile string, keyFile string) *http.Server {
-	server := &http.Server{Handler: handler, Addr: fmt.Sprintf(":%d", port), ConnState: connState}
+	server := &http.Server{
+		Handler:     handler,
+		Addr:        fmt.Sprintf(":%d", port),
+		ConnState:   connState,
+		IdleTimeout: IdleTimeout,
+	}
 	go func() {
 		log.Infof("listening on https://%d\n", port)
 		if err := server.Serve(listener); err != nil {

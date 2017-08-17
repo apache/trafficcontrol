@@ -157,9 +157,9 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	}
 	copyHeader(r.Header, &newReq.Header)
 
-	log.Errorf("DEBUGQ oldUri: %v, Host: %v\n", p.oldURI, newReq.Header.Get("Host"))
-	log.Errorf("DEBUGQ newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
-	log.Errorf("DEBUGQ rule name: %v\n", p.rule.Name)
+	log.Debugf("GetNext oldUri: %v, Host: %v\n", p.oldURI, newReq.Header.Get("Host"))
+	log.Debugf("GetNext newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
+	log.Debugf("GetNext rule name: %v\n", p.rule.Name)
 
 	// if newReq.Header.Get("Host") == p.oldURI {
 	// 	log.Errorf("DEBUGQ setting Host header\n")
