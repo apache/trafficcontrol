@@ -49,6 +49,18 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
         }
     };
 
+    this.resetPassword = function(email) {
+        return $http.post(ENV.api['root'] + "user/reset_password", { email: email })
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
     this.getUsers = function(queryParams) {
         return Restangular.all('users').getList(queryParams);
     };
