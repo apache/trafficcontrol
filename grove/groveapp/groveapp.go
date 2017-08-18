@@ -104,8 +104,9 @@ func LoadConfig(fileName string) (Config, error) {
 const bytesPerGibibyte = 1024 * 1024 * 1024
 
 func main() {
-	runtime.GOMAXPROCS(16) // DEBUG
+	runtime.GOMAXPROCS(32) // DEBUG
 	configFileName := flag.String("config", "", "The config file path")
+	pprof := flag.Bool("pprof", false, "Whether to profile")
 	flag.Parse()
 
 	if *configFileName == "" {
@@ -292,7 +293,9 @@ func main() {
 		}
 	}
 
-	profile()
+	if *pprof {
+		profile()
+	}
 	signalReloader(unix.SIGHUP, reloadConfig)
 }
 
