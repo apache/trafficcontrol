@@ -263,6 +263,25 @@ sub generateLdapConf {
     }
 
     my %ldapConf = getConfig( $userInput, $fileName );
+    # convert any deprecated keys to the correct key name
+    my %keys_converted = ( password => 'admin_pw', hostname => 'host' );
+    for my $key (keys %ldapConf) {
+        if ( exists $keys_converted{$key} ) {
+            $ldapConf{ $keys_converted{$key} } = delete $ldapConf{$key};
+        }
+    }
+
+    my @requiredKeys = qw{ host admin_dn admin_pw search_base };
+    for my $k (@requiredKeys) {
+        if (! exists $ldapConf{$k} ) {
+            errorOut("$k is a required key in $fileName");
+        }
+    }
+
+    # do a very loose check of form -- 'host' must be hostname:port
+    if ( $ldapConf{ host } !~ /^\S+:\d+$/ ) {
+        errorOut("host in $fileName must be of form 'hostname:port'");
+    }
 
     make_path( dirname($fileName), { mode => 0755 } );
     InstallUtils::writeJson( $fileName, \%ldapConf );
@@ -450,7 +469,11 @@ sub getDefaults {
             {
                 "Number of workers?" => "96",
                 "config_var"         => "workers"
-            }
+            },
+            {
+                "Traffic Ops url?"   => "http://localhost:3000",
+                "config_var"         => "base_url"
+            },
         ],
         $ldapConfFile => [
             {
@@ -459,7 +482,7 @@ sub getDefaults {
             },
             {
                 "LDAP server hostname" => "",
-                "config_var"           => "hostname"
+                "config_var"           => "host"
             },
             {
                 "LDAP Admin DN" => "",
@@ -467,7 +490,7 @@ sub getDefaults {
             },
             {
                 "LDAP Admin Password" => "",
-                "config_var"          => "password",
+                "config_var"          => "admin_pw",
                 "hidden"              => "true"
             },
             {
