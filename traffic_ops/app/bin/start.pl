@@ -25,7 +25,6 @@ mkdir("log");
 my @watch_dirs;
 
 GetOptions('secure' => \$secure);
-print("secure #-> " , secure);
 
 # Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 foreach my $dir (@INC) {
