@@ -29,6 +29,11 @@ var ApplicationService = function($rootScope, $anchorScroll, $http) {
 
     var init = function() {
         $http.defaults.withCredentials = true;
+
+        // jquery DataTables default overrides
+        $.extend(true, $.fn.dataTable.defaults, {
+            "stateSave": true
+        });
     };
     init();
 
