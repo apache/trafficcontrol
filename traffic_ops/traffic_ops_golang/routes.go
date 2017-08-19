@@ -34,29 +34,30 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		return nil, nil, err
 	}
 	return []Route{
-		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring", wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
-		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring.json", wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
+		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring", wrapHeaders(wrapAuth(monitoringHandler(rd.Monitoring), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
+		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring.json", wrapHeaders(wrapAuth(monitoringHandler(rd.Monitoring), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
 	}, rootHandler(d), nil
 }
 
 type RouteData struct {
 	PrivLevelStmt *sql.Stmt
+	Monitoring    *MonitoringData
 }
 
 func routeData(d ServerData) (RouteData, error) {
 	rd := RouteData{}
 	err := error(nil)
-
 	if rd.PrivLevelStmt, err = preparePrivLevelStmt(d.DB); err != nil {
-		return rd, fmt.Errorf("Error preparing db priv level query: ", err)
+		return rd, fmt.Errorf("preparing db priv level query: %v", err)
 	}
-
+	if rd.Monitoring, err = monitoringData(d.DB); err != nil {
+		return rd, fmt.Errorf("getting monitoring route data: %v", err)
+	}
 	return rd, nil
 }
 
 // getRootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
 func rootHandler(d ServerData) http.Handler {
-	// debug
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}

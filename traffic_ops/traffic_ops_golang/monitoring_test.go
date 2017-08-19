@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"database/sql"
 	"reflect"
 	"sort"
 	"testing"
@@ -28,12 +29,26 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
+func testMonitoringData(t *testing.T, db *sql.DB, mock sqlmock.Sqlmock) (*MonitoringData, error) {
+	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT")
+	mock.ExpectPrepare("SELECT")
+	return monitoringData(db)
+}
+
 func TestGetMonitoringServers(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+
+	stmts, err := testMonitoringData(t, db, mock)
+	if err != nil {
+		t.Fatalf("monitoringData expected err: nil, actual: %v", err)
+	}
 
 	cdn := "mycdn"
 
@@ -78,7 +93,7 @@ func TestGetMonitoringServers(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
-	monitors, caches, routers, err := getMonitoringServers(db, cdn)
+	monitors, caches, routers, err := getMonitoringServers(stmts.Servers, cdn)
 	if err != nil {
 		t.Errorf("getMonitoringServers expected: nil error, actual: %v", err)
 	}
@@ -119,6 +134,11 @@ func TestGetCachegroups(t *testing.T) {
 	}
 	defer db.Close()
 
+	stmts, err := testMonitoringData(t, db, mock)
+	if err != nil {
+		t.Fatalf("monitoringData expected err: nil, actual: %v", err)
+	}
+
 	cdn := "mycdn"
 
 	cachegroup := Cachegroup{
@@ -134,7 +154,7 @@ func TestGetCachegroups(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
-	sqlCachegroups, err := getCachegroups(db, cdn)
+	sqlCachegroups, err := getCachegroups(stmts.Cachegroups, cdn)
 	if err != nil {
 		t.Errorf("getCachegroups expected: nil error, actual: %v", err)
 	}
@@ -244,6 +264,11 @@ func TestGetProfiles(t *testing.T) {
 	}
 	defer db.Close()
 
+	stmts, err := testMonitoringData(t, db, mock)
+	if err != nil {
+		t.Fatalf("monitoringData expected err: nil, actual: %v", err)
+	}
+
 	cache := Cache{
 		BasicServer: BasicServer{
 			Profile:    "cacheProfile",
@@ -298,7 +323,7 @@ func TestGetProfiles(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
 
-	sqlProfiles, err := getProfiles(db, caches, routers)
+	sqlProfiles, err := getProfiles(stmts.Profiles, caches, routers)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -337,6 +362,11 @@ func TestGetDeliveryServices(t *testing.T) {
 	}
 	defer db.Close()
 
+	stmts, err := testMonitoringData(t, db, mock)
+	if err != nil {
+		t.Fatalf("monitoringData expected err: nil, actual: %v", err)
+	}
+
 	router := Router{
 		Type:    RouterType,
 		Profile: "routerProfile",
@@ -361,7 +391,7 @@ func TestGetDeliveryServices(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames)).WillReturnRows(rows)
 
-	sqlDeliveryservices, err := getDeliveryServices(db, routers)
+	sqlDeliveryservices, err := getDeliveryServices(stmts.DeliveryServices, routers)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -389,6 +419,11 @@ func TestGetConfig(t *testing.T) {
 	}
 	defer db.Close()
 
+	stmts, err := testMonitoringData(t, db, mock)
+	if err != nil {
+		t.Fatalf("monitoringData expected err: nil, actual: %v", err)
+	}
+
 	config := map[string]interface{}{
 		"name0": "val0",
 		"name1": "val1",
@@ -401,7 +436,7 @@ func TestGetConfig(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
-	sqlConfig, err := getConfig(db)
+	sqlConfig, err := getConfig(stmts.Config)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -422,6 +457,11 @@ func TestGetMonitoringJson(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+
+	stmts, err := testMonitoringData(t, db, mock)
+	if err != nil {
+		t.Fatalf("monitoringData expected err: nil, actual: %v", err)
+	}
 
 	cdn := "mycdn"
 
@@ -596,7 +636,7 @@ func TestGetMonitoringJson(t *testing.T) {
 		resp.Response.Config = config
 	}
 
-	sqlResp, err := getMonitoringJson(cdn, db)
+	sqlResp, err := getMonitoringJson(cdn, stmts)
 	if err != nil {
 		t.Errorf("getMonitoringJson expected: nil error, actual: %v", err)
 	}
