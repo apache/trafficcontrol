@@ -300,7 +300,7 @@ func CanReuse(reqHeader http.Header, reqCacheControl CacheControl, cacheObj *Cac
 // TryServe attempts to serve the given request, as a caching reverse proxy.
 // Serving acts as a state machine.
 func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
-	log.EventfRaw("%v %v %v %v\n", time.Now().Format(time.RFC3339Nano), r.RemoteAddr, r.Method, r.RequestURI)
+	log.EventRaw(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + "\n")
 	// inBytes := getBytes(r)
 	reqTime := time.Now()
 
