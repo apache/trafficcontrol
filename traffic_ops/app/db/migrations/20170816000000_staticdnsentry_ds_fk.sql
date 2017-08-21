@@ -31,6 +31,6 @@ DROP CONSTRAINT fk_staticdnsentry_ds,
 ADD CONSTRAINT fk_staticdnsentry_ds
   FOREIGN KEY (deliveryservice)
   REFERENCES deliveryservice (id)
-  ON DELETE NO_ACTION
-  ON UPDATE NO_ACTION;
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
 
