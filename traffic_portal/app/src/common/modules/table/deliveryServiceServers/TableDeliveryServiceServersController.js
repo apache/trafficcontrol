@@ -65,6 +65,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
+	$scope.ssh = serverUtils.ssh;
 
 	$scope.isOffline = serverUtils.isOffline;
 

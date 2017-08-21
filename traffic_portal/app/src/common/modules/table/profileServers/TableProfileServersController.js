@@ -31,6 +31,8 @@ var TableProfileServersController = function(profile, servers, $scope, $state, l
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.ssh = serverUtils.ssh;
+
 	$scope.isOffline = serverUtils.isOffline;
 
 	$scope.offlineReason = serverUtils.offlineReason;
