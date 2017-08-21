@@ -484,19 +484,19 @@ sub delivery_service_data_by_profile {
 	my @data;
 
 	my $dbh = $self->db->storage->dbh;
-	my $qry = 'select 
-		deliveryservice.id, 
-		deliveryservice.xml_id, 
-		deliveryservice.dscp, 
-		deliveryservice.signed, 
-		deliveryservice.qstring_ignore, 
-		deliveryservice.org_server_fqdn, 
+	my $qry = 'select
+		deliveryservice.id,
+		deliveryservice.xml_id,
+		deliveryservice.dscp,
+		deliveryservice.signed,
+		deliveryservice.qstring_ignore,
+		deliveryservice.org_server_fqdn,
 		deliveryservice.origin_shield,
 		regex.pattern AS pattern,
     	retype.name AS re_type,
     	dstype.name AS ds_type,
     	cdn.domain_name AS domain_name,
-		deliveryservice.profile, 
+		deliveryservice.profile,
 		deliveryservice.protocol,
 		deliveryservice.ssl_key_version,
 		deliveryservice.range_request_handling,
@@ -506,21 +506,21 @@ sub delivery_service_data_by_profile {
 		deliveryservice.cacheurl,
 		deliveryservice.remap_text,
 		deliveryservice.multi_site_origin,
-		deliveryservice.multi_site_origin_algorithm 
-		from deliveryservice 
+		deliveryservice.multi_site_origin_algorithm
+		from deliveryservice
 		JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
         JOIN regex ON deliveryservice_regex.regex = regex.id
         JOIN type as retype ON regex.type = retype.id
         JOIN type as dstype ON deliveryservice.type = dstype.id
         JOIN cdn ON cdn.id = deliveryservice.cdn_id
-		where deliveryservice.id = ANY ( 
-			select DISTINCT 
-			deliveryservice 
-			from deliveryservice_server 
+		where deliveryservice.id = ANY (
+			select DISTINCT
+			deliveryservice
+			from deliveryservice_server
 			where server = ANY (
-				select 
-				id 
-				from server 
+				select
+				id
+				from server
 				where profile = $1
 			)
 		);
@@ -551,7 +551,7 @@ sub delivery_service_data_by_profile {
 	my $deliveryservice_remap_text;
 	my $deliveryservice_multi_site_origin;
 	my $deliveryservice_multi_site_origin_algorithm;
-	
+
 	$stmt->bind_columns(
 		\$deliveryservice_id,
 		\$deliveryservice_xml_id,
@@ -872,7 +872,7 @@ sub ds_data {
 	else {
 		$rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
 	}
-	
+
 	my $j = 0;
 	while ( my $dsinfo = $rs_dsinfo->next ) {
 		my $org_fqdn                  	= $dsinfo->org_server_fqdn;
@@ -982,7 +982,7 @@ sub ds_data {
 
 		$j++;
 	}
-	
+
 	return $response_obj;
 }
 
@@ -1006,14 +1006,14 @@ sub parent_ds_data {
 			my $ds_xml_id                   = $dsinfo->xml_id;
 			my $origin_shield               = $dsinfo->origin_shield;
 			my $multi_site_origin           = $dsinfo->multi_site_origin;
-			
+
 			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
 			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 			$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 			$response_obj->{dslist}->[$j]->{"origin_shield"}               = $origin_shield;
 			$response_obj->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
-			
-	
+
+
 			if ( defined( $dsinfo->profile ) ) {
 				my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
 				while ( my $prow = $dsparamrs->next ) {
@@ -1027,7 +1027,7 @@ sub parent_ds_data {
 	}
 	else {
 		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
-		
+
 		my $j = 0;
 		while ( my $dsinfo = $rs_dsinfo->next ) {
 			my $org_fqdn                  	= $dsinfo->org_server_fqdn;
@@ -1036,7 +1036,7 @@ sub parent_ds_data {
 			my $ds_xml_id                   = $dsinfo->xml_id;
 			my $origin_shield               = $dsinfo->origin_shield;
 			my $multi_site_origin           = $dsinfo->multi_site_origin;
-			
+
 			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
 			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
@@ -1077,7 +1077,7 @@ sub remap_ds_data {
 			my $mid_header_rewrite          = $dsinfo->mid_header_rewrite;
 			my $range_request_handling      = $dsinfo->range_request_handling;
 			my $cacheurl                    = $dsinfo->cacheurl;
-			
+
 
 
 			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
@@ -1086,7 +1086,7 @@ sub remap_ds_data {
 			$response_obj->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
 			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 			$response_obj->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
-		
+
 			if ( defined($mid_header_rewrite) ) {
 				my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
 				$response_obj->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
@@ -1101,14 +1101,14 @@ sub remap_ds_data {
 					$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
 				}
 			}
-		
+
 			$j++;
 		}
 		return $response_obj;
 	}
 	else {
 		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
-		
+
 		my $j = 0;
 		while ( my $dsinfo = $rs_dsinfo->next ) {
 			my $org_fqdn                  	= $dsinfo->org_server_fqdn;
@@ -1125,7 +1125,7 @@ sub remap_ds_data {
 			my $range_request_handling      = $dsinfo->range_request_handling;
 			my $cacheurl                    = $dsinfo->cacheurl;
 			my $remap_text                  = $dsinfo->remap_text;
-			
+
 			if ( $re_type eq 'HOST_REGEXP' && defined($org_fqdn) ) {
 				my $host_re = $dsinfo->pattern;
 				my $map_to  = $org_fqdn . "/";
@@ -1147,10 +1147,10 @@ sub remap_ds_data {
 						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 					}
 					elsif ( $protocol == HTTP_AND_HTTPS ) {
-	
+
 						#add the first one with http
 						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-	
+
 						#add the second one for https
 						my $map_from2 = "https://" . $hname . $re . $ds_domain . "/";
 						$response_obj->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
@@ -1166,10 +1166,10 @@ sub remap_ds_data {
 						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
 					}
 					elsif ( $protocol == HTTP_AND_HTTPS ) {
-	
+
 						#add the first with http
 						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
-	
+
 						#add the second with https
 						my $map_from2 = "https://" . $host_re . "/";
 						$response_obj->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
@@ -1187,7 +1187,7 @@ sub remap_ds_data {
 			$response_obj->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
 			$response_obj->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
 			$response_obj->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
-	
+
 			if ( defined($edge_header_rewrite) ) {
 				my $fname = "hdr_rw_" . $ds_xml_id . ".config";
 				$response_obj->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
@@ -1196,10 +1196,10 @@ sub remap_ds_data {
 				my $fname = "cacheurl_" . $ds_xml_id . ".config";
 				$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
 			}
-	
+
 			$j++;
 		}
-		
+
 		return $response_obj;
 
 	}
@@ -1359,7 +1359,7 @@ sub logs_xml_dot_config {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
-	
+
 	# This is an XML file, so we need to massage the header a bit for XML commenting.
 	my $text = "<!-- " . $self->header_comment( $profile_obj->name );
 	$text =~ s/# //;
@@ -1553,7 +1553,7 @@ sub cacheurl_dot_config {
 	my $filename = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
-	
+
 	if ( $filename eq "cacheurl_qstring.config" ) {    # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
 		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
 		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
@@ -1768,7 +1768,7 @@ sub server_cache_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
 	my $filename   = shift;
-	
+
 
 	my $text = $self->header_comment( $server_obj->host_name );
 	my $data = $self->ds_data($server_obj);
@@ -1783,7 +1783,7 @@ sub server_cache_dot_config {
 
 	#remove duplicate lines, since we're looking up by profile
 	my @lines = split(/\n/,$text);
-	
+
 	my %seen;
 	@lines = grep { !$seen{$_}++ } @lines;
 
@@ -1796,7 +1796,7 @@ sub profile_cache_dot_config {
 	my $self       = shift;
 	my $profile_obj = shift;
 	my $filename   = shift;
-	
+
 
 	my $text = $self->header_comment( $profile_obj->name );
 	my $data = $self->profile_ds_data($profile_obj);
@@ -1811,7 +1811,7 @@ sub profile_cache_dot_config {
 
 	#remove duplicate lines, since we're looking up by profile
 	my @lines = split(/\n/,$text);
-	
+
 	my %seen;
 	@lines = grep { !$seen{$_}++ } @lines;
 
@@ -2179,7 +2179,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 	my $header = $self->header_comment( $server_obj->host_name );
 	my @text_array;
 
-	
+
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
 		if ( !defined($data) ) {
@@ -2274,7 +2274,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 				push @text_array, $text;
 			}
 		}
-		
+
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
 		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
 		my $text = $header;
@@ -2330,7 +2330,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 			else {
 				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
 				# then edges will use the qstring handling value specified in the parameter for all profiles.
-				
+
 				# If there is no defined parameter in the profile, then check the delivery service profile.
 				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
 				# This is used only if not overridden by a server profile qstring handling parameter.
@@ -2339,7 +2339,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 					$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 				}
 				my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
-				
+
 				if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
 					$parent_qstring = "consider";
 				}
@@ -2402,7 +2402,7 @@ sub remap_dot_config {
 	my $data;
 	my @text_array;
 
-	
+
 	my $pdata = $self->param_data( $server_obj, 'package' );
 	my $header = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
@@ -2445,14 +2445,20 @@ sub remap_dot_config {
 	# mids don't get here.
 	foreach my $ds ( @{ $data->{dslist} } ) {
 		my $remap_text;
-		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
-			my $map_to = $ds->{remap_line}->{$map_from};
-			$remap_text = $self->build_remap_line( $server_obj, $pdata, $remap_text, $ds, $map_from, $map_to );
+		if ( $ds->{type} eq 'ANY_MAP' ) {
+			$remap_text .= $ds->{remap_text} . "\n";
 		}
-		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
-			my $map_to = $ds->{remap_line2}->{$map_from};
-			$remap_text = $self->build_remap_line( $server_obj, $pdata, $remap_text, $ds, $map_from, $map_to );
+		else {
+			foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
+				my $map_to = $ds->{remap_line}->{$map_from};
+				$remap_text = $self->build_remap_line( $server_obj, $pdata, $remap_text, $ds, $map_from, $map_to );
+			}
+			foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
+				my $map_to = $ds->{remap_line2}->{$map_from};
+				$remap_text = $self->build_remap_line( $server_obj, $pdata, $remap_text, $ds, $map_from, $map_to );
+			}
 		}
+
 		push @text_array, $remap_text;
 	}
 	my $text = $header;
@@ -2471,10 +2477,7 @@ sub build_remap_line {
 	my $map_from    = shift;
 	my $map_to      = shift;
 
-	if ( $remap->{type} eq 'ANY_MAP' ) {
-		$text .= $remap->{remap_text} . "\n";
-		return $text;
-	}
+
 
 	my $dscp      = $remap->{dscp};
 	my $hostname  = $server_obj->host_name;
@@ -2512,11 +2515,11 @@ sub build_remap_line {
 		$text .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
 	}
 
-	if ( defined( $remap->{'param'}->{'cachekey.config'} ) ) {		
-		$text .= " \@plugin=cachekey.so";		
-		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {		
-			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};		
-		}		
+	if ( defined( $remap->{'param'}->{'cachekey.config'} ) ) {
+		$text .= " \@plugin=cachekey.so";
+		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {
+			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
+		}
 	}
 
 	# Note: should use full path here?
