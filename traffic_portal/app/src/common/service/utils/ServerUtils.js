@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ServerUtils = function() {
+var ServerUtils = function($window, userModel) {
 
 	this.isOffline = function(status) {
 		return (status == 'OFFLINE' || status == 'ADMIN_DOWN');
@@ -27,7 +27,12 @@ var ServerUtils = function() {
 		return (server.offlineReason) ? server.offlineReason : 'None';
 	};
 
+	this.ssh = function(ip, $event) {
+		$window.location.href = 'ssh://' + userModel.user.username + '@' + ip;
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+	};
+
 };
 
-ServerUtils.$inject = [];
+ServerUtils.$inject = ['$window', 'userModel'];
 module.exports = ServerUtils;

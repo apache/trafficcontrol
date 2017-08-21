@@ -31,6 +31,8 @@ var TableStatusServersController = function(status, servers, $scope, $state, loc
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.ssh = serverUtils.ssh;
+
 	$scope.isOffline = serverUtils.isOffline;
 
 	$scope.offlineReason = serverUtils.offlineReason;
