@@ -64,7 +64,7 @@ under the License.
                 </td>
                 <td>{{::server.hostName}}</td>
                 <td>{{::server.domainName}}</td>
-                <td>{{::server.ipAddress}}</td>
+                <td><a ng-click="ssh(server.ipAddress, $event)">{{::server.ipAddress}}</a></td>
                 <td>{{::server.ip6Address}}</td>
                 <td>
                     <span ng-if="!isOffline(server.status)">{{::server.status}}</span>

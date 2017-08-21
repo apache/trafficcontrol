@@ -33,8 +33,6 @@ under the License.
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="confirmQueueServerUpdates()">Queue Server Updates</a></li>
                     <li role="menuitem"><a ng-click="confirmClearServerUpdates()">Clear Server Updates</a></li>
-                    <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="uploadServerCSV()">Upload Bulk CSV</a></li>
                 </ul>
             </div>
         </div>
@@ -65,7 +63,7 @@ under the License.
                 </td>
                 <td>{{::server.hostName}}</td>
                 <td>{{::server.domainName}}</td>
-                <td>{{::server.ipAddress}}</td>
+                <td><a ng-click="ssh(server.ipAddress, $event)">{{::server.ipAddress}}</a></td>
                 <td>{{::server.ip6Address}}</td>
                 <td>
                     <span ng-if="!isOffline(server.status)">{{::server.status}}</span>
