@@ -31,6 +31,6 @@ DROP CONSTRAINT fk_job_deliveryservice1,
 ADD CONSTRAINT fk_job_deliveryservice1
   FOREIGN KEY (job_deliveryservice)
   REFERENCES deliveryservice (id)
-  ON DELETE NO_ACTION
-  ON UPDATE NO_ACTION;
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
 
