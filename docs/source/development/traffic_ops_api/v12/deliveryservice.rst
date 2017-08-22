@@ -41,6 +41,8 @@ Delivery Service
   +-----------------+----------+---------------------------------------------------+
   | ``profile``     | no       | Filter delivery services by Profile ID.           |
   +-----------------+----------+---------------------------------------------------+
+  | ``tenant``      | no       | Filter delivery services by Tenant ID.            |
+  +-----------------+----------+---------------------------------------------------+
   | ``type``        | no       | Filter delivery services by Type ID.              |
   +-----------------+----------+---------------------------------------------------+
   | ``logsEnabled`` | no       | Filter by logs enabled (true|false).              |

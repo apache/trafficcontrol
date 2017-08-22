@@ -37,6 +37,8 @@ sub index {
 	my $profile_id   = $self->param('profile');
 	my $type_id      = $self->param('type');
 	my $logs_enabled = $self->param('logsEnabled');
+	my $tenant_id	 = $self->param('tenant');
+
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
@@ -52,6 +54,9 @@ sub index {
 	}
 	if ( defined $logs_enabled ) {
 		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
+	}
+	if ( defined $tenant_id ) {
+		$criteria{'me.tenant_id'} = $tenant_id;
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
