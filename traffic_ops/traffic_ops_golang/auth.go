@@ -25,6 +25,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
+const PrivLevelInvalid = -1
 const PrivLevelReadOnly = 10
 const PrivLevelOperations = 20
 const PrivLevelAdmin = 30
@@ -33,17 +34,18 @@ func preparePrivLevelStmt(db *sql.DB) (*sql.Stmt, error) {
 	return db.Prepare("select r.priv_level from tm_user as u join role as r on u.role = r.id where u.username = $1")
 }
 
-func hasPrivLevel(privLevelStmt *sql.Stmt, user string, level int) bool {
+// privLevel returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
+func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	var privLevel int
 	err := privLevelStmt.QueryRow(user).Scan(&privLevel)
 	switch {
 	case err == sql.ErrNoRows:
 		log.Errorf("checking user %v priv level: user not in database", user)
-		return false
+		return PrivLevelInvalid
 	case err != nil:
 		log.Errorf("Error checking user %v priv level: %v", user, err.Error())
-		return false
+		return PrivLevelInvalid
 	default:
-		return privLevel >= level
+		return privLevel
 	}
 }
