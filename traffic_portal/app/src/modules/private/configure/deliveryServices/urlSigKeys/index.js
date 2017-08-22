@@ -22,7 +22,7 @@ module.exports = angular.module('trafficPortal.private.configure.deliveryService
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.configure.deliveryServices.urlSigKeys', {
-				url: '/{deliveryServiceId}/urlSigKeys',
+				url: '/{deliveryServiceId}/url-sig-keys',
 				views: {
 					deliveryServicesContent: {
 						templateUrl: 'modules/private/configure/deliveryServices/urlSigKeys/deliveryServiceUrlSigKeys.tpl.html',
@@ -30,13 +30,13 @@ module.exports = angular.module('trafficPortal.private.configure.deliveryService
 					}
 				},
 				resolve: {
-							deliveryService: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
-							},
-							urlSigKeys: function($stateParams, deliveryServiceUrlSigKeysService) {
-								return deliveryServiceUrlSigKeysService.getDeliveryServiceUrlSigKeys($stateParams.deliveryServiceId);
-							}
-						}
+					deliveryService: function($stateParams, deliveryServiceService) {
+						return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
+					},
+					urlSigKeys: function($stateParams, deliveryServiceUrlSigKeysService) {
+						return deliveryServiceUrlSigKeysService.getDeliveryServiceUrlSigKeys($stateParams.deliveryServiceId);
+					}
+				}
 			})
 		;
 		$urlRouterProvider.otherwise('/');

@@ -19,6 +19,28 @@
 
 var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, $scope, $state, locationUtils, deliveryServiceService, deliveryServiceUrlSigKeysService, $uibModal) {
 	$scope.deliveryService = deliveryService;
+    //Here we take the unordered map of keys returned from riak: 
+    //"response": {
+    //   "key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
+    //   "key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
+    //   "key8":"ySXdp1T8IeDEE1OCMftzZb9EIw_20wwq",
+    //   "key0":"D4AYzJ1AE2nYisA9MxMtY03TPDCHji9C",
+    //   "key3":"W90YHlGc_kYlYw5_I0LrkpV9JOzSIneI",
+    //   "key12":"ZbtMb3mrKqfS8hnx9_xWBIP_OPWlUpzc",
+    //   "key2":"0qgEoDO7sUsugIQemZbwmMt0tNCwB1sf",
+    //   "key4":"aFJ2Gb7atmxVB8uv7T9S6OaDml3ycpGf",
+    //   "key1":"wnWNR1mCz1O4C7EFPtcqHd0xUMQyNFhA",
+    //   "key11":"k6HMzlBH1x6htKkypRFfWQhAndQqe50e",
+    //   "key10":"zYONfdD7fGYKj4kLvIj4U0918csuZO0d",
+    //   "key15":"3360cGaIip_layZMc_0hI2teJbazxTQh",
+    //   "key5":"SIwv3GOhWN7EE9wSwPFj18qE4M07sFxN",
+    //   "key13":"SqQKBR6LqEOzp8AewZUCVtBcW_8YFc1g",
+    //   "key14":"DtXsu8nsw04YhT0kNoKBhu2G3P9WRpQJ",
+    //   "key7":"cmKoIIxXGAxUMdCsWvnGLoIMGmNiuT5I"
+    // }
+    // and sort it based on the keys' label resulting in data looking like:
+    //[{"label":"key1","urlSigKey":"wnWNR1mCz1O4C7EFPtcqHd0xUMQyNFhA"},{"label":"key2","urlSigKey":"0qgEoDO7sUsugIQemZbwmMt0tNCwB1sf"}...]
+
 	$scope.urlSigKeys = Object.keys(urlSigKeys).map(function(key) {
 			return {sortBy: parseInt(key.slice(3)), label: key, urlSigKey: urlSigKeys[key]};
 	});
@@ -26,7 +48,7 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
 	$scope.generateUrlSigKeys = function() {
         var params = {
             title: 'Confirmation required',
-            message: 'Are you sure you want to generate new URL signature keys for ' + deliveryService.displayName + '?'
+            message: 'Are you sure you want to generate new URL signature keys for ' + deliveryService.xmlId + '?'
         };
         var modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -54,7 +76,7 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
 
 	$scope.selectCopyFromDS = function() {
         var params = {
-            title: 'Copy URL Sig Keys to: ' + deliveryService.displayName,
+            title: 'Copy URL Sig Keys to: ' + deliveryService.xmlId,
             message: "Please select a Delivery Service to copy from:",
             label: "xmlId"
         };
@@ -70,6 +92,7 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
                     return deliveryServiceService.getDeliveryServices({ signed: true })
                     .then(function(result){
                     	return _.filter(result, function(ds){
+                            //you can't copy url sig keys from yourself
                     		return ds.id !== deliveryService.id;
                     	})
                     });
@@ -88,7 +111,7 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#regexesTable').dataTable({
+		$('#urlSigKeysTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"aaSorting": []

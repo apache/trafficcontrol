@@ -27,7 +27,7 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 				messageModel.setMessages([ { level: 'success', text: 'URL Sig Keys generated' } ], true);
 				request.resolve();
 			},
-			function() {
+			function(fault) {
 				messageModel.setMessages(fault.data.alerts, false);
 				request.reject();
 			}
@@ -43,7 +43,7 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 				messageModel.setMessages([ { level: 'success', text: 'URL Sig Keys copied' } ], true);
 				request.resolve();
 			},
-			function() {
+			function(fault) {
 				messageModel.setMessages(fault.data.alerts, false);
 				request.reject();
 			}
@@ -58,7 +58,8 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
             function(result) {
                 request.resolve(result.data.response);
             },
-            function() {
+            function(fault) {
+            	messageModel.setMessages(fault.data.alerts, false);
                 request.reject();
             }
         );
