@@ -242,6 +242,7 @@ sub gen_crconfig_json {
 
             if ( !exists $cache_tracker{ $row->id } ) {
                 $cache_tracker{ $row->id } = $row->host_name;
+                $cache_tracker{ type }{ $row->id } = $row->type->name;
             }
 
             my $pid = $row->profile->id;
@@ -349,7 +350,7 @@ sub gen_crconfig_json {
             }
             foreach my $server ( keys %server_subrow_dedup ) {
 
-                next if ( !defined( $cache_tracker{$server} ) );
+                next if ( !defined( $cache_tracker{$server} ) || $cache_tracker{type}{$server} ne 'EDGE' );
 
                 foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
                     my $remap;
