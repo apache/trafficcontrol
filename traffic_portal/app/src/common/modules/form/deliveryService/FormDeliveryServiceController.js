@@ -169,7 +169,7 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     };
 
     $scope.manageUrlSigKeys = function() {
-        $location.path($location.path() + '/urlSigKeys');
+        $location.path($location.path() + '/url-sig-keys');
     };
     
     $scope.viewStaticDnsEntries = function() {

@@ -31,6 +31,19 @@ our @EXPORT_OK = qw(URL_SIG_KEYS_BUCKET);
 sub view_by_id {
 	my $self                = shift;
 	my $id              = $self->param('id');
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
+
+		# check to see if deliveryservice is assigned to user, if not return forbidden
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !$self->is_delivery_service_assigned($id) );
+	}
+
+
+
+
 	my $rs = $self->db->resultset("Deliveryservice")->find( { id => $id } ); 
 	my $xml_id;
 	if ( defined($rs) ) {
@@ -39,6 +52,9 @@ sub view_by_id {
 	else {
 		return $self->alert("Delivery Service '$id' does not exist.");
 	}
+
+
+
 
 	my $config_file = $self->url_sig_config_file_name($xml_id);
 	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $config_file );
