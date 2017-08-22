@@ -59,6 +59,7 @@ stopHypnotoad ()
 
 start () 
 {
+	stop
 	echo -e "Starting Traffic Ops\n"
 	cd $TO_DIR && $TO_DIR/bin/traffic_ops_golang -cfg $TO_DIR/conf/traffic_ops_golang.config &
 	cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
@@ -80,13 +81,21 @@ status ()
 {
 	_PID=`/bin/cat $PIDFILE`
 	PID=`/bin/ps -ef|/bin/awk '/traffic_ops\/app\/script\/cdn/ {if ($3 == 1) {print $2}}'`
-	if [ -z $PID ] && [ -z $_PID ]; then
+	PID_GOLANG=`pidof -s /opt/traffic_ops/app/bin/traffic_ops_golang`
+	if [[ -z $PID && -z $_PID ]]; then
 		echo -e "\nTraffic Ops is offline\n"
-	else
-		if [ $_PID = $PID ] ; then
-			echo -e "\nTraffic Ops is running, pid = $PID\n"
-		fi
+		return 1
 	fi
+	if [ -z $PID_GOLANG ] ; then
+		echo -e "\nTraffic Ops is offline (Golang)\n"
+		return 1
+	fi
+	if [[ $_PID = $PID && ! -z $PID_GOLANG ]] ; then
+		echo -e "\nTraffic Ops is running, pid = $PID , golang pid = $PID_GOLANG\n"
+		return 0
+	fi
+	echo -e "\nTraffic Ops not running (Perl pid file = $_PID , actual pid(s) = $PID , Golang pid = $PID_GOLANG)\n"
+	return 1
 }
 
 case "$1" in
