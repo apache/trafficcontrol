@@ -68,12 +68,6 @@ ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->sta
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can an assigned DeliveryService url keys for the portal user be regenerated?';
 
-set_param_value("use_tenancy", "0");
-ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds2/urlkeys/generate')->status_is(403)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Can an unassigned DeliveryService url keys for the portal user be regenerated?';
-set_param_value("use_tenancy", "1");
-
 ok $t->post_ok('/api/1.1/deliveryservices/xmlId/XXX/urlkeys/generate')->status_is(400)
 	->json_is( "/alerts/0/text/", "Delivery Service 'XXX' does not exist." )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can a non existent DeliveryService url keys for the portal user be regenerated?';
@@ -189,16 +183,3 @@ ok $t->post_ok(
 # logout
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 done_testing();
-
-
-sub set_param_value {
-	my $name = shift;
-	my $value = shift;
-	my $q      = "UPDATE parameter SET value=\'$value\' where name = \'$name\'";
-	my $get_svr = $dbh->prepare($q);
-	$get_svr->execute();
-	my $p = $get_svr->fetchall_arrayref( {} );
-	$get_svr->finish();
-	my $id = $p->[0]->{id};
-	return $id;
-}
