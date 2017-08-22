@@ -241,8 +241,10 @@ sub gen_crconfig_json {
             }
 
             if ( !exists $cache_tracker{ $row->id } ) {
-                $cache_tracker{ $row->id } = $row->host_name;
-                $cache_tracker{ type }{ $row->id } = $row->type->name;
+                $cache_tracker{$row->id} = {
+                    name => $row->host_name,
+                    type  => $row->type->name,
+                }
             }
 
             my $pid = $row->profile->id;
@@ -350,7 +352,7 @@ sub gen_crconfig_json {
             }
             foreach my $server ( keys %server_subrow_dedup ) {
 
-                next if ( !defined( $cache_tracker{$server} ) || $cache_tracker{type}{$server} ne 'EDGE' );
+                next if ( !defined( $cache_tracker{$server}{name} ) || $cache_tracker{$server}{type} ne 'EDGE' );
 
                 foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
                     my $remap;
@@ -361,13 +363,13 @@ sub gen_crconfig_json {
                             $remap = 'edge' . $host_copy . $ccr_domain_name;
                         }
                         else {
-                            $remap = $cache_tracker{$server} . $host_copy . $ccr_domain_name;
+                            $remap = $cache_tracker{$server}{name} . $host_copy . $ccr_domain_name;
                         }
                     }
                     else {
                         $remap = $host;
                     }
-                    push( @{ $data_obj->{'contentServers'}->{ $cache_tracker{$server} }->{'deliveryServices'}->{ $row->xml_id } }, $remap );
+                    push( @{ $data_obj->{'contentServers'}->{ $cache_tracker{$server}{name} }->{'deliveryServices'}->{ $row->xml_id } }, $remap );
                 }
             }
         }
