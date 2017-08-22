@@ -234,6 +234,10 @@ sub generateCdnConf {
             $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
+    if (exists $cdnConfiguration{base_url}) {
+        $cdnConf->{to}{base_url} = $cdnConfiguration{base_url};
+    }
+
     $cdnConf = setCdnConfGoPort($cdnConf);
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
