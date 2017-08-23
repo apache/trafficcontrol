@@ -18,6 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.private', [])
+    .controller('PrivateController', require('./PrivateController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private', {
@@ -37,11 +38,18 @@ module.exports = angular.module('trafficPortal.private', [])
                         controller: 'MessageController'
                     },
                     content: {
-                        templateUrl: 'modules/private/private.tpl.html'
+                        templateUrl: 'modules/private/private.tpl.html',
+                        controller: 'PrivateController'
                     }
                 },
                 resolve: {
-                    currentUser: function($state, userService, userModel) {
+                    tokenLogin: function($location, authService) {
+                        var token = $location.search().token; // if there is a token query param, attempt to login with it
+                        if (angular.isDefined(token)) {
+                            return authService.tokenLogin(token);
+                        }
+                    },
+                    currentUser: function(tokenLogin, $state, userService, userModel) {
                         if (userModel.loaded) {
                             return userModel.user;
                         } else {
