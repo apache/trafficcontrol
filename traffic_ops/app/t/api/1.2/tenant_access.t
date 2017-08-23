@@ -898,6 +898,19 @@ sub test_ds_resource_read_allow_access {
         , 'Success for read ds state: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     logout_from_tenant();
+    login_to_tenant_portal($resource_tenant, $tenants_data);
+
+    my $dses_target_tenant = $t->get_ok('/api/1.2/deliveryservices')->status_is(200)->$responses_counter();
+
+    #now check that the access tests goes both ways
+    ok $t->get_ok('/api/1.2/users/'.$tenants_data->{$resource_tenant}->{'portal_uid'}.'/deliveryservices')->status_is(200)->$count_response_test($dses_target_tenant);
+
+    logout_from_tenant();
+    login_to_tenant_portal($login_tenant, $tenants_data);
+
+    ok $t->get_ok('/api/1.2/users/'.$tenants_data->{$resource_tenant}->{'portal_uid'}.'/deliveryservices')->status_is(200)->$count_response_test($dses_target_tenant);
+
+    logout_from_tenant();
 }
 
 sub test_ds_resource_read_block_access {
@@ -925,6 +938,9 @@ sub test_ds_resource_read_block_access {
     ok $t->get_ok('/api/1.2/deliveryservices/'.$tenants_data->{$resource_tenant}->{'ds_id'}.'/state')
             ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         , '403 for read ds state: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+
+    ok $t->get_ok('/api/1.2/users/'.$tenants_data->{$resource_tenant}->{'admin_uid'}.'/deliveryservices')
+            ->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
     logout_from_tenant();
 }
