@@ -143,6 +143,7 @@ sub view_by_xml_id {
 		if ( !$version ) {
 			$version = 'latest';
 		}
+		my $key = "$xml_id-$version";
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
 		if (!$ds) {
 			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
@@ -152,19 +153,11 @@ sub view_by_xml_id {
 		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
-		my $ds_id = $ds->id;
-		my $key = "ds_$ds_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		if ($response->is_success()) {
-			my $ssl_keys = decode_json( $response->content );
-			$ssl_keys->{certificate}->{csr} = decode_base64($ssl_keys->{certificate}->{csr}),
-			$ssl_keys->{certificate}->{crt} = decode_base64($ssl_keys->{certificate}->{crt}),
-			$ssl_keys->{certificate}->{key} = decode_base64($ssl_keys->{certificate}->{key}),
-			$self->success( $ssl_keys )
-		} else {
-			$self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
-		}
+		$response->is_success()
+			? $self->success( decode_json( $response->content ) )
+			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
 	}
 }
 
@@ -204,23 +197,17 @@ sub view_by_hostname {
 		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
-		my $ds_id = $ds->id;
+		my $xml_id = $ds->xml_id;
 
 		if ( !$version ) {
 			$version = 'latest';
 		}
-		$key = "ds_$ds_id-$version";
+		$key = "$xml_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		if ($response->is_success()) {
-			my $ssl_keys = decode_json( $response->content );
-			$ssl_keys->{certificate}->{csr} = decode_base64($ssl_keys->{certificate}->{csr}),
-			$ssl_keys->{certificate}->{crt} = decode_base64($ssl_keys->{certificate}->{crt}),
-			$ssl_keys->{certificate}->{key} = decode_base64($ssl_keys->{certificate}->{key}),
-			$self->success( $ssl_keys )
-		} else {
-			$self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
-		}
+		$response->is_success()
+			? $self->success( decode_json( $response->content ) )
+			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
 	}
 }
 
@@ -243,8 +230,7 @@ sub delete {
 		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
 			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 		}
-		my $ds_id = $ds->id;
-		my $key = "ds_$ds_id";
+		my $key = $xml_id;
 		if ($version) {
 			$key = $key . "-" . $version;
 			$self->app->log->info("deleting key_type = ssl, key = $key");
@@ -262,7 +248,7 @@ sub delete {
 		# $self->app->log->info("delete rc = $rc");
 		if ( $response->is_success() ) {
 			&log( $self, "Deleted ssl keys for Delivery Service $xml_id", "APICHANGE" );
-			return $self->success("Successfully deleted ssl keys for $xml_id");
+			return $self->success("Successfully deleted ssl keys for $key");
 		}
 		else {
 			return $self->alert( $response->content );

@@ -312,6 +312,9 @@ sub update {
 		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
+	my $upd_ssl = 0;
+	my $old_hostname = UI::SslKeys::get_hostname($self, $id, $ds);
+
 	my $values = {
 		active                 => $params->{active},
 		cacheurl               => $params->{cacheurl},
@@ -452,6 +455,10 @@ sub update {
 		);
 
 		&log( $self, "Updated deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
+
+		my $new_hostname = UI::SslKeys::get_hostname($self, $id, $ds);
+		$upd_ssl = 1 if $old_hostname ne $new_hostname;
+		UI::SslKeys::update_sslkey($self, $params->{xmlId}, $new_hostname) if $upd_ssl;
 
 		return $self->success( \@response, "Deliveryservice update was successful." );
 	}

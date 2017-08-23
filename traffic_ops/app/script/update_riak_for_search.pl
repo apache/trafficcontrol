@@ -46,6 +46,9 @@ foreach my $ds (@$dss) {
 		}
 		$record->{deliveryservice} = $xml_id;
 		$record->{cdn} = $cdn;
+		$record->{certificate}->{crt} = decode_base64($record->{certificate}->{crt});
+		$record->{certificate}->{csr} = decode_base64($record->{certificate}->{csr});
+		$record->{certificate}->{key} = decode_base64($record->{certificate}->{key});
 		if (!defined($record->{hostname})) {  #add the hostname if it's not there
 			my $hostname = $ds->{exampleURLs}[0];
 			$hostname =~ /(https?:\/\/)(.*)/;
