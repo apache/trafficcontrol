@@ -166,13 +166,13 @@ ok $t->get_ok("/api/1.1/deliveryservices/xmlId/test-ds1-root/sslkeys/delete.json
 # #delete ssl key
 # #delete version
 ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json?version=$version")
-	->json_is( "/response" => "Successfully deleted ssl keys for $key" )
+	->json_is( "/response" => "Successfully deleted ssl keys for $key-$version" )
 
 	# ->json_has( "Successfully deleted" )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #delete latest
-ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json")->json_is( "/response" => "Successfully deleted ssl keys for $key" )
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json")->json_is( "/response" => "Successfully deleted ssl keys for $key-latest" )
 
 	# ->json_has( "Successfully deleted" )
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );

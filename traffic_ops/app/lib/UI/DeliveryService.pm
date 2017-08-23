@@ -921,7 +921,7 @@ sub update {
 
 		my $new_hostname = UI::SslKeys::get_hostname($self, $id, $update);
 		$upd_ssl = 1 if $old_hostname ne $new_hostname;
-		UI::SslKeys::update_sslkey($self, $id, $hash{xml_id}, $new_hostname) if $upd_ssl;
+		UI::SslKeys::update_sslkey($self, $hash{xml_id}, $new_hostname) if $upd_ssl;
 
 		my $type = $self->db->resultset('Type')->search( { id => $self->paramAsScalar('ds.type') } )->get_column('name')->single();
 		$self->header_rewrite(
@@ -938,6 +938,7 @@ sub update {
 			$self->param('ds.mid_header_rewrite'),
 			"mid", $type
 		);
+
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
 		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.signed') );
