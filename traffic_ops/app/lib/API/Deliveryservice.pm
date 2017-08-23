@@ -65,7 +65,7 @@ sub index {
 	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-		$criteria{'me.id'} = { -in => \@ds_ids },;
+		$criteria{'me.id'} = { -in => \@ds_ids };
 	}
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search(
@@ -964,15 +964,22 @@ sub get_deliveryservices_by_userId {
 		#no access to resource tenant
 		return $self->forbidden("Forbidden. User tenant is not available to the working user.");
 	}
-	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
+	my %criteria;
+	if ( !$tenant_utils->use_tenancy() ) {
+		my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
+		$criteria{'me.id'} = { -in => $user_ds_ids->get_column('deliveryservice')->as_query };
+	}
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
+		->search( \%criteria, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
 
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
+			if (!$tenant_utils->is_ds_resource_accessible_to_tenant($tenants_data, $row->tenant_id, $user->tenant_id)) {
 				next;
 			}
 			push(
