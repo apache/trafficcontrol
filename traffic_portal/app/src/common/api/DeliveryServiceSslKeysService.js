@@ -27,7 +27,7 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
 
 		generateSslKeyForm.cdn = deliveryService.cdnName;
 		generateSslKeyForm.deliveryservice = deliveryService.id;
-		generateSslKeyForm.key = "ds_" + deliveryService.xmlId;
+		generateSslKeyForm.key = deliveryService.xmlId;
 
 		var request = $q.defer();
         $http.post(ENV.api['root'] + "deliveryservices/sslkeys/generate", generateSslKeyForm)
