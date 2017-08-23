@@ -17,11 +17,13 @@
  * under the License.
  */
 
-var TableUserDeliveryServicesController = function(user, userDeliveryServices, $scope, $state, $uibModal, locationUtils, userService) {
+var TableUserDeliveryServicesController = function(user, userDeliveryServices, useTenancy, $scope, $state, $uibModal, locationUtils, userService) {
 
 	$scope.user = user;
 
 	$scope.userDeliveryServices = userDeliveryServices;
+
+	$scope.useTenancy = useTenancy[0].value;
 
 	$scope.removeDS = function(dsId) {
 		userService.deleteUserDeliveryService(user.id, dsId)
@@ -78,5 +80,5 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, $
 
 };
 
-TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', '$state', '$uibModal', 'locationUtils', 'userService'];
+TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', 'useTenancy', '$scope', '$state', '$uibModal', 'locationUtils', 'userService'];
 module.exports = TableUserDeliveryServicesController;

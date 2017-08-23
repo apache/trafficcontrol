@@ -32,6 +32,9 @@ module.exports = angular.module('trafficPortal.private.admin.users.deliveryServi
 							},
 							userDeliveryServices: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getUserDeliveryServices($stateParams.userId);
+							},
+							useTenancy: function(parameterService) {
+								return parameterService.getParameters({ name: 'use_tenancy', configFile: 'global' });
 							}
 						}
 					}
