@@ -41,16 +41,11 @@ sub view_by_id {
 		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !$self->is_delivery_service_assigned($id) );
 	}
 	
-
-
-
 	my $rs = $self->db->resultset("Deliveryservice")->find( { id => $id } ); 
 	
 	if ($tenant_utils->use_tenancy() and !$tenant_utils->is_ds_resource_accessible($tenants_data, $rs->tenant_id)) {
 		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
 	}							
-	
-	
 	
 	my $xml_id;
 	if ( defined($rs) ) {
@@ -59,9 +54,6 @@ sub view_by_id {
 	else {
 		return $self->not_found("Delivery Service '$id' does not exist.");
 	}
-
-
-
 
 	my $config_file = $self->url_sig_config_file_name($xml_id);
 	my $response_container  = $self->riak_get( URL_SIG_KEYS_BUCKET, $config_file );
@@ -72,7 +64,7 @@ sub view_by_id {
 	} else {
 		my $error_msg = $response_container->{"response"}->{_content};
 		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
-		return $self->success("{}");
+		return $self->success({}, "No url sig keys found");
 	} 
 }
 
@@ -88,7 +80,7 @@ sub view_by_xmlid {
 	} else {
 		my $error_msg = $response_container->{"response"}->{_content};
 		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
-		return $self->success("{}");
+		return $self->success({}, "No url sig keys found");
 	} 
 }
 
