@@ -56,13 +56,13 @@ me.host_name as hostName,
 CONCAT(me.host_name, '.', me.domain_name) as fqdn,
 status.name as status,
 cachegroup.name as cachegroup,
-me.tcp_port as port,
+COALESCE(me.tcp_port, 0) as port,
 me.ip_address as ip,
-me.ip6_address as ip6,
+COALESCE(me.ip6_address, '') as ip6,
 profile.name as profile,
 me.interface_name as interfaceName,
 type.name as type,
-me.xmpp_id as hashId
+COALESCE(me.xmpp_id, '') as hashId
 FROM server me
 JOIN type type ON type.id = me.type
 JOIN status status ON status.id = me.status
@@ -72,7 +72,7 @@ JOIN cdn cdn ON cdn.id = me.cdn_id
 WHERE cdn.name = $1
 `
 const monitoringCachegroupsQuery = `
-SELECT name, latitude, longitude
+SELECT name, COALESCE(latitude, 0), COALESCE(longitude, 0)
 FROM cachegroup
 WHERE id IN
   (SELECT cachegroup FROM server WHERE server.cdn_id =
@@ -86,7 +86,7 @@ JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
 WHERE pr.config_file = $2;
 `
 const monitoringDeliveryServicesQuery = `
-SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
+SELECT ds.xml_id, COALESCE(ds.global_max_tps, 0), COALESCE(ds.global_max_mbps, 0)
 FROM deliveryservice ds
 JOIN profile profile ON profile.id = ds.profile
 WHERE profile.name = ANY($1)
@@ -224,55 +224,26 @@ func getMonitoringServers(stmt *sql.Stmt, cdn string) ([]Monitor, []Cache, []Rou
 	routers := []Router{}
 
 	for rows.Next() {
-		var hostName sql.NullString
-		var fqdn sql.NullString
-		var status sql.NullString
-		var cachegroup sql.NullString
-		var port sql.NullInt64
-		var ip sql.NullString
-		var ip6 sql.NullString
-		var profile sql.NullString
-		var interfaceName sql.NullString
-		var ttype sql.NullString
-		var hashId sql.NullString
-
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &interfaceName, &ttype, &hashId); err != nil {
+		ttype := ""
+		hashId := ""
+		interfaceName := ""
+		s := BasicServer{}
+		if err := rows.Scan(&s.HostName, &s.FQDN, &s.Status, &s.Cachegroup, &s.Port, &s.IP, &s.IP6, &s.Profile, &interfaceName, &ttype, &hashId); err != nil {
 			return nil, nil, nil, err
 		}
-
-		if ttype.String == MonitorType {
-			monitors = append(monitors, Monitor{
-				BasicServer: BasicServer{
-					Profile:    profile.String,
-					Status:     status.String,
-					IP:         ip.String,
-					IP6:        ip6.String,
-					Port:       int(port.Int64),
-					Cachegroup: cachegroup.String,
-					HostName:   hostName.String,
-					FQDN:       fqdn.String,
-				},
-			})
-		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
+		if ttype == MonitorType {
+			monitors = append(monitors, Monitor{BasicServer: s})
+		} else if strings.HasPrefix(ttype, "EDGE") || strings.HasPrefix(ttype, "MID") {
 			caches = append(caches, Cache{
-				BasicServer: BasicServer{
-					Profile:    profile.String,
-					Status:     status.String,
-					IP:         ip.String,
-					IP6:        ip6.String,
-					Port:       int(port.Int64),
-					Cachegroup: cachegroup.String,
-					HostName:   hostName.String,
-					FQDN:       fqdn.String,
-				},
-				InterfaceName: interfaceName.String,
-				Type:          ttype.String,
-				HashID:        hashId.String,
+				BasicServer:   s,
+				InterfaceName: interfaceName,
+				Type:          ttype,
+				HashID:        hashId,
 			})
-		} else if ttype.String == RouterType {
+		} else if ttype == RouterType {
 			routers = append(routers, Router{
-				Type:    ttype.String,
-				Profile: profile.String,
+				Type:    ttype,
+				Profile: s.Profile,
 			})
 		}
 	}
@@ -287,21 +258,12 @@ func getCachegroups(stmt *sql.Stmt, cdn string) ([]Cachegroup, error) {
 	defer rows.Close()
 
 	cachegroups := []Cachegroup{}
-
 	for rows.Next() {
-		var name sql.NullString
-		var lat sql.NullFloat64
-		var lon sql.NullFloat64
-		if err := rows.Scan(&name, &lat, &lon); err != nil {
+		cg := Cachegroup{}
+		if err := rows.Scan(&cg.Name, &cg.Coordinates.Latitude, &cg.Coordinates.Longitude); err != nil {
 			return nil, err
 		}
-		cachegroups = append(cachegroups, Cachegroup{
-			Name: name.String,
-			Coordinates: Coordinates{
-				Latitude:  lat.Float64,
-				Longitude: lon.Float64,
-			},
-		})
+		cachegroups = append(cachegroups, cg)
 	}
 	return cachegroups, nil
 }
@@ -335,26 +297,26 @@ func getProfiles(stmt *sql.Stmt, caches []Cache, routers []Router) ([]Profile, e
 	defer rows.Close()
 
 	for rows.Next() {
-		var profileName sql.NullString
-		var name sql.NullString
-		var value sql.NullString
+		profileName := ""
+		name := ""
+		value := ""
 		if err := rows.Scan(&profileName, &name, &value); err != nil {
 			return nil, err
 		}
-		if name.String == "" {
+		if name == "" {
 			return nil, fmt.Errorf("null name") // TODO continue and warn?
 		}
-		profile := profiles[profileName.String]
+		profile := profiles[profileName]
 		if profile.Parameters == nil {
 			profile.Parameters = map[string]interface{}{}
 		}
 
-		if valNum, err := strconv.Atoi(value.String); err == nil {
-			profile.Parameters[name.String] = valNum
+		if valNum, err := strconv.Atoi(value); err == nil {
+			profile.Parameters[name] = valNum
 		} else {
-			profile.Parameters[name.String] = value.String
+			profile.Parameters[name] = value
 		}
-		profiles[profileName.String] = profile
+		profiles[profileName] = profile
 
 	}
 
@@ -378,20 +340,14 @@ func getDeliveryServices(stmt *sql.Stmt, routers []Router) ([]DeliveryService, e
 	defer rows.Close()
 
 	dses := []DeliveryService{}
-
 	for rows.Next() {
-		var xmlid sql.NullString
-		var tps sql.NullFloat64
-		var mbps sql.NullFloat64
-		if err := rows.Scan(&xmlid, &tps, &mbps); err != nil {
+		mbps := 0.0
+		ds := DeliveryService{Status: DeliveryServiceStatus}
+		if err := rows.Scan(&ds.XMLID, &ds.TotalTPSThreshold, &mbps); err != nil {
 			return nil, err
 		}
-		dses = append(dses, DeliveryService{
-			XMLID:              xmlid.String,
-			TotalTPSThreshold:  tps.Float64,
-			Status:             DeliveryServiceStatus,
-			TotalKBPSThreshold: mbps.Float64 * KilobitsPerMegabit,
-		})
+		ds.TotalKBPSThreshold = mbps * KilobitsPerMegabit
+		dses = append(dses, ds)
 	}
 	return dses, nil
 }
@@ -406,15 +362,15 @@ func getConfig(stmt *sql.Stmt) (map[string]interface{}, error) {
 	cfg := map[string]interface{}{}
 
 	for rows.Next() {
-		var name sql.NullString
-		var val sql.NullString
+		name := ""
+		val := ""
 		if err := rows.Scan(&name, &val); err != nil {
 			return nil, err
 		}
-		if valNum, err := strconv.Atoi(val.String); err == nil {
-			cfg[name.String] = valNum
+		if valNum, err := strconv.Atoi(val); err == nil {
+			cfg[name] = valNum
 		} else {
-			cfg[name.String] = val.String
+			cfg[name] = val
 		}
 	}
 	return cfg, nil
