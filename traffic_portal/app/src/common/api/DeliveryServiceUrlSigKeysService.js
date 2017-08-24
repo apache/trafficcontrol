@@ -24,7 +24,7 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 		$http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/generate')
 		.then(
 			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'URL Sig Keys generated' } ], true);
+				messageModel.setMessages(result.data.alerts, false);
 				request.resolve();
 			},
 			function(fault) {
@@ -40,7 +40,7 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 		 $http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/copyFromXmlId/' + copyFromXmlId)
 		.then(
 			function(result) {
-				messageModel.setMessages([ { level: 'success', text: 'URL Sig Keys copied' } ], true);
+				messageModel.setMessages(result.data.alerts, false);
 				request.resolve();
 			},
 			function(fault) {
