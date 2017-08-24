@@ -268,14 +268,14 @@ sub generateLdapConf {
 
     my %ldapConf = getConfig( $userInput, $fileName );
     # convert any deprecated keys to the correct key name
-    my %keys_converted = ( password => 'admin_pw', hostname => 'host' );
+    my %keys_converted = ( password => 'admin_pass', hostname => 'host' );
     for my $key (keys %ldapConf) {
         if ( exists $keys_converted{$key} ) {
             $ldapConf{ $keys_converted{$key} } = delete $ldapConf{$key};
         }
     }
 
-    my @requiredKeys = qw{ host admin_dn admin_pw search_base };
+    my @requiredKeys = qw{ host admin_dn admin_pass search_base };
     for my $k (@requiredKeys) {
         if (! exists $ldapConf{$k} ) {
             errorOut("$k is a required key in $fileName");
@@ -494,7 +494,7 @@ sub getDefaults {
             },
             {
                 "LDAP Admin Password" => "",
-                "config_var"          => "admin_pw",
+                "config_var"          => "admin_pass",
                 "hidden"              => "true"
             },
             {
