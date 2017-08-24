@@ -23,6 +23,7 @@ use Utils::Helper;
 use Utils::Tenant;
 use JSON;
 use UI::Utils;
+use Utils::Tenant;
 use constant URL_SIG_KEYS_BUCKET => "url_sig_keys";
 use Exporter qw(import);
 our @EXPORT_OK = qw(URL_SIG_KEYS_BUCKET);
@@ -40,17 +41,24 @@ sub view_by_id {
 		# check to see if deliveryservice is assigned to user, if not return forbidden
 		return $self->forbidden("Forbidden. Delivery service not assigned to user.") if ( !$self->is_delivery_service_assigned($id) );
 	}
-
+	
 
 
 
 	my $rs = $self->db->resultset("Deliveryservice")->find( { id => $id } ); 
+	
+	if ($tenant_utils->use_tenancy() and !$tenant_utils->is_ds_resource_accessible($tenants_data, $rs->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}							
+	
+	
+	
 	my $xml_id;
 	if ( defined($rs) ) {
 		$xml_id = $rs->xml_id;
 	}
 	else {
-		return $self->alert("Delivery Service '$id' does not exist.");
+		return $self->not_found("Delivery Service '$id' does not exist.");
 	}
 
 
@@ -65,7 +73,7 @@ sub view_by_id {
 	} else {
 		my $error_msg = $response_container->{"response"}->{_content};
 		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
-		return $self->alert("Unable to retrieve keys from Delivery Service '$xml_id'");
+		return $self->success("{}");
 	} 
 }
 
@@ -92,7 +100,7 @@ sub view_by_xmlid {
 	} else {
 		my $error_msg = $response_container->{"response"}->{_content};
 		$self->app->log->debug("received error code '$rc' from riak: '$error_msg'");
-		return $self->alert("Unable to retrieve keys from Delivery Service '$xml_id'");
+		return $self->success("{}");
 	} 
 }
 
