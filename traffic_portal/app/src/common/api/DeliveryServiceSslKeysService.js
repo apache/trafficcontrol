@@ -68,7 +68,7 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
                 request.resolve(result.data.response);
             },
             function(fault) {
-            	messageModel.setMessages(fault.data.alerts, false);
+            	messageModel.setMessages(fault.data.alerts, true);
                 request.reject(fault);
             }
         );
