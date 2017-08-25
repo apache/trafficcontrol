@@ -231,12 +231,12 @@ Upgrading Traffic Ops
 =====================
 To upgrade:
 
-.. Note:: TODO : review for > 2.0
-
-1. Enter the following command:``service traffic_ops stop``
-2. Enter the following command:``yum upgrade traffic_ops``
-3. See :ref:`rl-to-install` to run postinstall.
-4. Enter the following command:``service traffic_ops start``
+#. Enter the following command:``service traffic_ops stop``
+#. Enter the following command:``yum upgrade traffic_ops``
+#. Enter the following command from the /opt/traffic_ops/app directory:
+   ``PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade``
+#. See :ref:`rl-to-install` to run postinstall.
+#. Enter the following command:``service traffic_ops start``
 
 
 
