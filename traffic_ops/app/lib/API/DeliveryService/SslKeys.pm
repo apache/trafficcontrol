@@ -157,7 +157,7 @@ sub view_by_xml_id {
 		my $response = $response_container->{"response"};
 		$response->is_success()
 			? $self->success( decode_json( $response->content ) )
-			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+			: self->success({}, " - A record for ssl key $key could not be found. ");
 	}
 }
 
