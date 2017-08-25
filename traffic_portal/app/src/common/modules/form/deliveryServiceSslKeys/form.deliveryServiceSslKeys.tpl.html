@@ -22,7 +22,7 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
             <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.displayName}}</a></li>
-            <li><a ng-click="navigateToPath('/configure/delivery-services/' + deliveryService.id + '/ssl-keys')">SSL Keys</a></li>
+            <li class="active">SSL keys</li>
         </ol>
         <ol class="breadcrumb pull-right">
         <li><button type="button" class="btn btn-success" ng-click="generateKeys()">Generate New Keys</button></li>
