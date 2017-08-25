@@ -179,9 +179,10 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-		    /opt/traffic_ops/install/bin/migratedb
-        echo -e "\nUpgrade complete.\n\n"
-    	 echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
+        echo -e "\n\nTo complete the update, perform the following steps:\n"
+        echo -e "1. Run `PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade`\n"
+        echo -e "   from the /opt/traffic_ops/app directory.\n"
+        echo -e "2. Run `/opt/traffic_ops/install/bin/postinstall` from the root home directory.\n\n"
         echo -e "To start Traffic Ops:  service traffic_ops start\n";
         echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
     fi
