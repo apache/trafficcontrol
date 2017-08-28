@@ -323,7 +323,7 @@ sub sanitize_routing_name {
 	my $ds_data      = shift;
 	if ( !defined($routing_name) || $routing_name eq '') {
 		# because routingName is optional in the API, use the existing value if it's not defined in the PUT request
-		return !defined($ds_data) ? 'ds' : $ds_data->routing_name;
+		return !defined($ds_data) ? 'cdn' : $ds_data->routing_name;
 	}
 	return $routing_name;
 }
