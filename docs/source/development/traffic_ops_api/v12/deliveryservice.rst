@@ -171,7 +171,7 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  | ``routingName``          | string | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
@@ -409,7 +409,7 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  | ``routingName``          | string | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
@@ -1953,7 +1953,7 @@ URL Sig Keys
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>routingType``                       | string | yes      | Eg. DNS or HTTP Redirect                                                                    |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
-  | ``>routingName``                       | string | no       | The routing name for the delivery service, e.g. <routingName>.myds.cdn.com                  |
+  | ``>routingName``                       | string | no       | The routing name for the delivery service, e.g. <routingName>.<xmlId>.cdn.com               |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>serviceDesc``                       | string | yes      | A description of the delivery service.                                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
@@ -2194,7 +2194,7 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | routingName            | no       | The routing name of this deliveryservice.                                                               |
+  | routingName            | no       | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
@@ -2368,7 +2368,7 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  | ``routingName``          | string | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
@@ -2590,7 +2590,7 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | routingName            | no       | The routing name of this deliveryservice.                                                               |
+  | routingName            | no       | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
@@ -2764,7 +2764,7 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  | ``routingName``          | string | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
@@ -3028,7 +3028,7 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  | ``routingName``          | string | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
