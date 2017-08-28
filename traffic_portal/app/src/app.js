@@ -32,7 +32,6 @@ var trafficPortal = angular.module('trafficPortal', [
         'ngResource',
         'ngSanitize',
         'ngRoute',
-        'ngMap',
         'ui.router',
         'ui.bootstrap',
         'restangular',
@@ -165,7 +164,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/monitor').name,
         require('./modules/private/monitor/dashboard').name,
         require('./modules/private/monitor/dashboard/view').name,
-        require('./modules/private/monitor/map').name,
 
         // tools
         require('./modules/private/tools').name,
