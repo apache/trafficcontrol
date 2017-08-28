@@ -180,10 +180,10 @@ func (s *statsSystem) SetAstatsLoad(t time.Time) {
 
 const ATSVersion = "5.3.2" // of course, we're not really ATS. We're terrible liars.
 
-type StatsATSJSON struct {
-	Server string            `json:"server"`
-	Remap  map[string]uint64 `json:"remap"`
-}
+// type StatsATSJSON struct {
+// 	Server string            `json:"server"`
+// 	Remap  map[string]uint64 `json:"remap"`
+// }
 
 type StatsSystemJSON struct {
 	InterfaceName        string `json:"inf.name"`
@@ -199,8 +199,8 @@ type StatsSystemJSON struct {
 }
 
 type StatsJSON struct {
-	ATS    StatsATSJSON    `json:"ats"`
-	System StatsSystemJSON `json:"system"`
+	ATS    map[string]interface{} `json:"ats"`
+	System StatsSystemJSON        `json:"system"`
 }
 
 func loadFileAndLogGrep(filename string, grepStr string) string {
@@ -246,30 +246,36 @@ func (h statHandler) LoadSystemStats() StatsSystemJSON {
 	return s
 }
 
-func (h statHandler) LoadRemapStats() map[string]uint64 {
+func (h statHandler) LoadRemapStats() map[string]interface{} {
 	statsRemaps := h.stats.Remap()
 	rules := statsRemaps.Rules()
-	jsonStats := make(map[string]uint64, len(rules)*6) // remap has 6 members: in, out, 2xx, 3xx, 4xx, 5xx
+	jsonStats := make(map[string]interface{}, len(rules)*6) // remap has 6 members: in, out, 2xx, 3xx, 4xx, 5xx
+	jsonStats["server"] = "6.2.1"
 	for _, rule := range rules {
 		ruleName := rule
 		statsRemap, ok := statsRemaps.Stats(ruleName)
 		if !ok {
 			continue // TODO warn?
 		}
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.in_bytes", ruleName)] = statsRemap.InBytes()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.out_bytes", ruleName)] = statsRemap.OutBytes()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_2xx", ruleName)] = statsRemap.Status2xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_3xx", ruleName)] = statsRemap.Status3xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_4xx", ruleName)] = statsRemap.Status4xx()
-		jsonStats[fmt.Sprintf("plugin.remap_stats.%s.status_5xx", ruleName)] = statsRemap.Status5xx()
+		jsonStats["plugin.remap_stats."+ruleName+".in_bytes"] = statsRemap.InBytes()
+		jsonStats["plugin.remap_stats."+ruleName+".out_bytes"] = statsRemap.OutBytes()
+		jsonStats["plugin.remap_stats."+ruleName+".status_2xx"] = statsRemap.Status2xx()
+		jsonStats["plugin.remap_stats."+ruleName+".status_3xx"] = statsRemap.Status3xx()
+		jsonStats["plugin.remap_stats."+ruleName+".status_4xx"] = statsRemap.Status4xx()
+		jsonStats["plugin.remap_stats."+ruleName+".status_5xx"] = statsRemap.Status5xx()
 	}
 	return jsonStats
 }
 
 func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// TODO gzip
 	system := h.LoadSystemStats() // TODO goroutine on a timer?
-	remap := h.LoadRemapStats()
-	stats := StatsJSON{System: system, ATS: StatsATSJSON{Server: ATSVersion, Remap: remap}}
+	ats := map[string]interface{}{"server": "6.2.1"}
+	if r.URL.Query().Get("application") != "system" {
+		ats = h.LoadRemapStats()
+	}
+	stats := StatsJSON{System: system, ATS: ats}
+
 	bytes, err := json.Marshal(stats)
 	if err != nil {
 		code := http.StatusInternalServerError
