@@ -87,7 +87,7 @@ __PACKAGE__->add_columns(
 	"multi_site_origin",           { data_type => "integer", is_nullable => 0 },
 	"ds_id",                       { data_type => "integer", is_nullable => 0 },
 	"dscp",                        { data_type => "integer", is_nullable => 0 },
-	"routing_name",                { data_type => "varchar", is_nullable => 0, size => 45 },
+	"routing_name",                { data_type => "varchar", is_nullable => 0, size => 48 },
 	"signed",                      { data_type => "integer", is_nullable => 0 },
 	"qstring_ignore",              { data_type => "integer", is_nullable => 0 },
 	"pattern",                     { data_type => "varchar", is_nullable => 0, size => 45 },
