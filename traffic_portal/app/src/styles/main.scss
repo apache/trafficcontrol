@@ -64,12 +64,7 @@ $fa-font-path: "../assets/fonts";
 
 // monitor
 @import "../modules/private/monitor/monitor";
-
-// dashboard
 @import "../modules/private/monitor/dashboard/dashboard";
-
-// map
-@import "../modules/private/monitor/map/map";
 
 [ng-click] {
   cursor: pointer;
