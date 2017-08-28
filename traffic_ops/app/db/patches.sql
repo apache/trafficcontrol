@@ -31,6 +31,6 @@ SET routing_name = (
 WHERE routing_name IS NULL;
 UPDATE deliveryservice SET routing_name = 'tr' WHERE routing_name IS NULL;
 ALTER TABLE deliveryservice ALTER COLUMN routing_name SET NOT NULL;
-ALTER TABLE deliveryservice ALTER COLUMN routing_name SET DEFAULT 'ds';
+ALTER TABLE deliveryservice ALTER COLUMN routing_name SET DEFAULT 'cdn';
 ALTER TABLE deliveryservice DROP CONSTRAINT IF EXISTS routing_name_not_empty;
 ALTER TABLE deliveryservice ADD CONSTRAINT routing_name_not_empty CHECK (length(routing_name) > 0);
