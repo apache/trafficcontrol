@@ -136,6 +136,12 @@ sub view_by_xml_id {
 	my $self    = shift;
 	my $xml_id     = $self->param('xmlid');
 	my $version = $self->param('version');
+	my $decode  = $self->param('decode');
+
+	if ( ! defined $decode ) {
+		$decode = 0;
+	}
+
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
 	}
@@ -155,9 +161,23 @@ sub view_by_xml_id {
 		}
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
-			: $self->success({}, " - A record for ssl key $key could not be found. ");
+
+
+		if ( $response->is_success() ){
+			my $toSend = decode_json( $response->content );
+
+			if ( $decode ){
+				$toSend->{certificate}->{csr} = decode_base64($toSend->{certificate}->{csr});
+				$toSend->{certificate}->{crt} = decode_base64($toSend->{certificate}->{crt});
+				$toSend->{certificate}->{key} = decode_base64($toSend->{certificate}->{key});
+			}
+
+		
+			$self->success( $toSend )
+
+		} else {
+			$self->success({}, " - A record for ssl key $key could not be found. ");
+		}
 	}
 }
 
@@ -165,6 +185,11 @@ sub view_by_hostname {
 	my $self    = shift;
 	my $key     = $self->param('hostname');
 	my $version = $self->param('version');
+	my $decode  = $self->param('decode');
+
+	if ( ! defined $decode ) {
+		$decode = 0;
+	}
 
 	if ( !&is_admin($self) ) {
 		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
@@ -205,9 +230,23 @@ sub view_by_hostname {
 		$key = "$xml_id-$version";
 		my $response_container = $self->riak_get( "ssl", $key );
 		my $response = $response_container->{"response"};
-		$response->is_success()
-			? $self->success( decode_json( $response->content ) )
-			: $self->alert( { Error => " - A record for ssl key $key could not be found.  Response was: " . $response->content } );
+
+
+		if ( $response->is_success() ){
+			my $toSend = decode_json( $response->content );
+
+			if ( $decode ){
+				$toSend->{certificate}->{csr} = decode_base64($toSend->{certificate}->{csr});
+				$toSend->{certificate}->{crt} = decode_base64($toSend->{certificate}->{crt});
+				$toSend->{certificate}->{key} = decode_base64($toSend->{certificate}->{key});
+			}
+
+		
+			$self->success( $toSend )
+
+		} else {
+			$self->success({}, " - A record for ssl key $key could not be found. ");
+		}
 	}
 }
 
