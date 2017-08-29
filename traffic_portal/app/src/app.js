@@ -167,6 +167,13 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/monitor/dashboard/view').name,
         require('./modules/private/monitor/map').name,
 
+        // permissions
+        require('./modules/private/permissions').name,
+        require('./modules/private/permissions/capabilities').name,
+        require('./modules/private/permissions/capabilities/list').name,
+        require('./modules/private/permissions/roles').name,
+        require('./modules/private/permissions/roles/list').name,
+
         // tools
         require('./modules/private/tools').name,
         require('./modules/private/tools/iso').name,
@@ -244,6 +251,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/cacheGroupParameters').name,
         require('./common/modules/table/cacheGroupServers').name,
         require('./common/modules/table/cacheGroupStaticDnsEntries').name,
+        require('./common/modules/table/capabilities').name,
         require('./common/modules/table/changeLogs').name,
         require('./common/modules/table/asns').name,
         require('./common/modules/table/cdns').name,
@@ -271,6 +279,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/profiles').name,
         require('./common/modules/table/regions').name,
         require('./common/modules/table/regionPhysLocations').name,
+        require('./common/modules/table/roles').name,
         require('./common/modules/table/servers').name,
         require('./common/modules/table/serverDeliveryServices').name,
         require('./common/modules/table/statuses').name,

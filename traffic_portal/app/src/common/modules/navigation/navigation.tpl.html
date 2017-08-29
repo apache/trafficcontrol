@@ -54,6 +54,12 @@ under the License.
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.admin.users')}"><a ng-click="navigateToPath('/admin/users')">Users</a></li>
                     </ul>
                 </li>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Permissions</span></a>
+                    <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.permissions.capabilities')}"><a ng-click="navigateToPath('/permissions/capabilities')">Capabilities</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.permissions.roles')}"><a ng-click="navigateToPath('/permissions/roles')">Roles</a></li>
+                    </ul>
+                </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Tools</span></a>
                     <ul class="nav child_menu" style="display: none">
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.tools.iso')}"><a ng-click="navigateToPath('/tools/generate-iso')">Generate ISO</a></li>
