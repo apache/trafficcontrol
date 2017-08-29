@@ -73,22 +73,21 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
 
 	this.getSslKeys = function(deliveryService) {
 		var request = $q.defer();
-        $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys")
+        $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys?decode=true")
         .then(
             function(result) {
-                if (!result.data.response.hasOwnProperty('hostname')){
-                    var url = deliveryService.exampleURLs[0];
-                    if( deliveryService.protocol == 2 && deliveryService.exampleURLs > 1 ) {
-                        url = deliveryService.exampleURLs[1];
-                    }
-                    var hostName = url.split("://")[1];
-                    if (deliveryService.type == ""){
-                        var parts = hostName.split(".");
-                        parts[0] = "*";
-                        hostName = parts.join(".");
-                    }
-                    result.data.response.hostname = hostName;
+                var url = deliveryService.exampleURLs[0];
+                if( deliveryService.protocol == 2 && deliveryService.exampleURLs > 1 ) {
+                    url = deliveryService.exampleURLs[1];
                 }
+                var hostName = url.split("://")[1];
+                if (deliveryService.type == ""){
+                    var parts = hostName.split(".");
+                    parts[0] = "*";
+                    hostName = parts.join(".");
+                }
+                result.data.response.hostname = hostName;
+                
                 request.resolve(result.data.response);
             },
             function(fault) {
