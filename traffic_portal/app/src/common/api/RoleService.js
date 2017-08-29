@@ -39,8 +39,8 @@ var RoleService = function(Restangular, messageModel) {
         );
     };
 
-    this.deleteRole = function(id) {
-        return Restangular.one("roles", id).remove()
+    this.deleteRole = function(role) {
+        return role.remove()
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Role deleted' } ], true);
