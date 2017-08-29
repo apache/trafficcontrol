@@ -76,7 +76,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.commonName), 'has-feedback': hasError(dsGenerateSslKeyForm.commonName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Common Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="commonName" type="text" class="form-control" ng-model="sslRequest.hostname" ng-required="true" ng-maxlength="256" placeholder="www.example.com or example.com or *.example.com" autofocus>
+                    <input name="commonName" type="text" class="form-control" ng-model="sslRequest.hostname" ng-required="true" ng-maxlength="256" readonly autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.commonName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.commonName, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(dsGenerateSslKeyForm.commonName)" class="form-control-feedback"><i class="fa fa-times"></i></span>

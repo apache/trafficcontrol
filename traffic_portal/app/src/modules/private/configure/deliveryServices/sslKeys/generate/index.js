@@ -30,11 +30,11 @@ module.exports = angular.module('trafficPortal.private.configure.deliveryService
 							deliveryService: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
-							sslRequest: function () {
-								return {};
-							},
 							sslKeys: function(deliveryService, deliveryServiceSslKeysService) {
-								return deliveryServiceSslKeysService.getSslKeys(deliveryService.xmlId);
+								return deliveryServiceSslKeysService.getSslKeys(deliveryService);
+							},
+							sslRequest: function (sslKeys) {
+								return {hostname: sslKeys.hostname};
 							}
 						}
 					}

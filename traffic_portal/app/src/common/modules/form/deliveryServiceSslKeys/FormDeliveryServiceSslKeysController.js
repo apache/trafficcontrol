@@ -43,7 +43,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 			}
 		});
 		modalInstance.result.then(function() {
-			deliveryServiceSslKeysService.addSslKeys(sslKeys).then(
+			deliveryServiceSslKeysService.addSslKeys(sslKeys, deliveryService).then(
                 function() {
                     $anchorScroll();
                     if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
