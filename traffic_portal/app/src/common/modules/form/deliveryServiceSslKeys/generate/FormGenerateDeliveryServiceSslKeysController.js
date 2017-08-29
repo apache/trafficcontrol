@@ -20,6 +20,7 @@
 var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, sslKeys, sslRequest, $scope, $uibModal, locationUtils, deliveryServiceSslKeysService, formUtils) {
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
+	$scope.sslRequest = sslRequest;
 
 	$scope.deliveryService = deliveryService;
 	$scope.countries = [
@@ -276,29 +277,29 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 		{code:"ZW", name: "Zimbabwe (ZW)"}
 	];
 
-
-		$scope.confirmGenerate = function(sslRequest) {
-		var params = {
-			title: 'Generate New SSL Keys for Delivery Service: ' + deliveryService.xmlId + ' (replacing any previous keys)'
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
+	$scope.confirmGenerate = function(sslRequest) {
+	var params = {
+		title: 'Generate New SSL Keys for Delivery Service: ' + deliveryService.xmlId ,
+		message: ' (replacing any previous keys)'
+	};
+	var modalInstance = $uibModal.open({
+		templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+		controller: 'DialogConfirmController',
+		size: 'md',
+		resolve: {
+			params: function () {
+				return params;
 			}
-		});
-		modalInstance.result.then(function() {
-			deliveryServiceSslKeysService.generateSslKeys(deliveryService, sslKeys, sslRequest).then(
-                function() {
-                    locationUtils.navigateToPath('/configure/delivery-services/' + deliveryService.id + '/ssl-keys');
-                });
-		}, function () {
-			// do nothing
-		});
+		}
+	});
+	modalInstance.result.then(function() {
+		deliveryServiceSslKeysService.generateSslKeys(deliveryService, sslKeys, sslRequest).then(
+            function() {
+                locationUtils.navigateToPath('/configure/delivery-services/' + deliveryService.id + '/ssl-keys');
+            });
+	}, function () {
+		// do nothing
+	});
 	};
 
 };

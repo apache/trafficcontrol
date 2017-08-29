@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.configure.deliveryService
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
 							sslKeys: function(deliveryService, deliveryServiceSslKeysService) {
-								return deliveryServiceSslKeysService.getSslKeys(deliveryService.xmlId);
+								return deliveryServiceSslKeysService.getSslKeys(deliveryService);
 							}
 						}
 					}

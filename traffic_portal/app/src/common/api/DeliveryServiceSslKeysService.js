@@ -19,7 +19,7 @@
 
 var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageModel, ENV) {
 	this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
-		if (sslKeys.version != 'undefined'){
+		if (sslKeys.hasOwnProperty('version')){
 			generateSslKeyForm.version = parseInt(sslKeys.version) + 1;
 		} else {
 			generateSslKeyForm.version = 1;
@@ -44,8 +44,19 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         return request.promise;
 	};
 
-	this.addSslKeys = function(sslKeys) {
+	this.addSslKeys = function(sslKeys, deliveryService) {
 		var request = $q.defer();
+
+        sslKeys.key = deliveryService.xmlId;
+        if (sslKeys.hasOwnProperty('version')){
+            sslKeys.version = parseInt(sslKeys.version) + 1;
+        } else {
+            sslKeys.version = 1;
+        }
+
+        sslKeys.cdn = deliveryService.cdnName;
+        sslKeys.deliveryservice = deliveryService.xmlId;
+
         $http.post(ENV.api['root'] + "deliveryservices/sslkeys/add", sslKeys)
         .then(
             function(result) {
@@ -60,11 +71,24 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         return request.promise;
 	};
 
-	this.getSslKeys = function(dsXmlId) {
+	this.getSslKeys = function(deliveryService) {
 		var request = $q.defer();
-        $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + dsXmlId + "/sslkeys")
+        $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys")
         .then(
             function(result) {
+                if (!result.data.response.hasOwnProperty('hostname')){
+                    var url = deliveryService.exampleURLs[0];
+                    if( deliveryService.protocol == 2 && deliveryService.exampleURLs > 1 ) {
+                        url = deliveryService.exampleURLs[1];
+                    }
+                    var hostName = url.split("://")[1];
+                    if (deliveryService.type == ""){
+                        var parts = hostName.split(".");
+                        parts[0] = "*";
+                        hostName = parts.join(".");
+                    }
+                    result.data.response.hostname = hostName;
+                }
                 request.resolve(result.data.response);
             },
             function(fault) {
