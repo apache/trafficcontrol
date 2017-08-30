@@ -26,24 +26,24 @@ services:
     volumes:
       - ../../..:/trafficcontrol
 
-  traffic_monitor_build:
-    image: traffic_monitor_builder
-    build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
-      context: ../../..
-    volumes:
-      - ../../..:/trafficcontrol
-
-  # NOTE: Disabled since rpm name collides with current traffic_monitor.  To
-  # build golang version,  uncomment this section and use `docker-compose ...
-  # up traffic_monitor_golang_build`
-  # traffic_monitor_golang_build:
-  #   image: traffic_monitor_golang_builder
+  # NOTE: Disabled java traffic_monitor in favor of golang version.
+  # The java version is to be renamed to traffic_monitor_legacy soon
+  # and eventually removed.
+  # traffic_monitor_build:
+  #   image: traffic_monitor_builder
   #   build:
-  #     dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor_golang
+  #     dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
   #     context: ../../..
   #   volumes:
   #     - ../../..:/trafficcontrol
+
+  traffic_monitor_golang_build:
+    image: traffic_monitor_golang_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor_golang
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol
 
   traffic_ops_build:
     image: traffic_ops_builder
