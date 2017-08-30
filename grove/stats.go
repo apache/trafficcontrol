@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+	"unicode"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
@@ -214,7 +215,8 @@ func loadFileAndLogGrep(filename string, grepStr string) string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		l := scanner.Text()
-		if i := strings.Index(l, grepStr); i == -1 {
+		l = strings.TrimLeftFunc(l, unicode.IsSpace)
+		if strings.HasPrefix(l, grepStr) {
 			return l
 		}
 	}
