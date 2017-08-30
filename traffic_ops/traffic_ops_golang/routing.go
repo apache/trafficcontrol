@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"database/sql"
 	"net/http"
 	"regexp"
 	"sort"
@@ -28,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/jmoiron/sqlx"
 )
 
 const RoutePrefix = "api" // TODO config?
@@ -42,12 +42,12 @@ type Route struct {
 
 type ServerData struct {
 	Config
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
-type ParamMap map[string]string
+type PathParams map[string]string
 
-type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params ParamMap)
+type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams)
 
 type CompiledRoute struct {
 	Handler RegexHandlerFunc

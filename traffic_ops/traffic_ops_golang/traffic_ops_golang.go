@@ -20,12 +20,12 @@ package main
  */
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 )
@@ -70,7 +70,7 @@ func main() {
 		sslStr = "disable"
 	}
 
-	db, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DBUser, cfg.DBPass, cfg.DBServer, cfg.DBDB, sslStr))
+	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DBUser, cfg.DBPass, cfg.DBServer, cfg.DBDB, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		return
