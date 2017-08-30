@@ -33,13 +33,15 @@ RUN	yum -y install \
 RUN	yum -y install \
 		expat-devel \
 		gcc \
-		golang \
 		libcurl-devel \
 		make \
 		openssl-devel \
 		perl-ExtUtils-MakeMaker \
 		tar && \
 	yum -y clean all
+
+ADD traffic_ops/install/bin/install_go.sh /
+RUN /install_go.sh
 
 ADD infrastructure/docker/build/clean_build.sh /
 CMD /clean_build.sh traffic_ops
