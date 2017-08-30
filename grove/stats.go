@@ -230,7 +230,7 @@ func loadFileAndLog(filename string) string {
 		log.Errorf("reading system stat file %v: %v\n", filename, err)
 		return ""
 	}
-	return string(f)
+	return strings.TrimSpace(string(f))
 }
 
 func (h statHandler) LoadSystemStats() StatsSystemJSON {
