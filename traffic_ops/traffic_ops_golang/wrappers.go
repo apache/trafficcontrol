@@ -24,16 +24,17 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
 	"net/http"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version
 
 func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
@@ -47,10 +48,10 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 	}
 }
 
-type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params ParamMap, user string, privLevel int)
+type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams, user string, privLevel int)
 
 func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap, user string, privLevel int) { h(w, r, p) }
+	return func(w http.ResponseWriter, r *http.Request, p PathParams, user string, privLevel int) { h(w, r, p) }
 }
 
 func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
@@ -59,11 +60,11 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 
 func wrapAuthWithData(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
 	if noAuth {
-		return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+		return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 			h(w, r, p, "", PrivLevelInvalid)
 		}
 	}
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		// TODO remove, and make username available to wrapLogTime
 		start := time.Now()
 		iw := &Interceptor{w: w}
