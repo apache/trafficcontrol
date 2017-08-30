@@ -23,6 +23,7 @@ import (
 	"database/sql"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/jmoiron/sqlx"
 )
 
 const PrivLevelInvalid = -1
@@ -30,7 +31,7 @@ const PrivLevelReadOnly = 10
 const PrivLevelOperations = 20
 const PrivLevelAdmin = 30
 
-func preparePrivLevelStmt(db *sql.DB) (*sql.Stmt, error) {
+func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
 	return db.Prepare("select r.priv_level from tm_user as u join role as r on u.role = r.id where u.username = $1")
 }
 
