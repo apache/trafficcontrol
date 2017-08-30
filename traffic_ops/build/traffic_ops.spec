@@ -55,7 +55,14 @@ Built: %(date) by %{getenv: USER}
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
 
+    export PATH=$PATH:/usr/local/go/bin
     export GOPATH=$(pwd)
+
+    echo "PATH: $PATH"
+    echo "GOPATH: $GOPATH"
+    go version
+    go env
+    
     # Create build area with proper gopath structure
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
