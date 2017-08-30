@@ -105,9 +105,9 @@ type DeliveryService struct {
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
 }
 
-// TODO change to use the ParamMap, instead of parsing the URL
+// TODO change to use the PathParams, instead of parsing the URL
 func monitoringHandler(db *sql.DB) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
