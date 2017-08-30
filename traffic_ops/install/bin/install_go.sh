@@ -45,13 +45,3 @@ if [[ $? ]]; then
 else
     echo "Checksum failed please verify $GO_TARBALL_VERSION against $GO_TARBALL_VERSION_SHA_FILE"
 fi
-
-echo "Now installing goose"
-export GOPATH=/opt/traffic_ops/go
-mkdir -p $GOPATH
-
-echo "GO_BINARY: $GO_BINARY"
-$GO_BINARY get bitbucket.org/liamstask/goose/cmd/goose
-$GO_BINARY get github.com/lib/pq
-
-echo "Successfully installed goose to $GOPATH/bin/goose"
