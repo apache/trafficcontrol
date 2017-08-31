@@ -2900,7 +2900,7 @@ sub adv_processing_ssl {
 			$remap =~ s/\.key$//;
 			$remap =~ /^(.*?)(\..*)/;
 			# HTTP delivery services use wildcard certs
-			$wildcard = "*$2";
+			my $wildcard = "*$2";
 			my $found = 0;
 			foreach my $record (@$certs){
 				if ($record->{'hostname'} eq $remap || $record->{'hostname'} eq $wildcard) {
