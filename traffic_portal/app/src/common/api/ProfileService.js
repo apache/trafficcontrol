@@ -23,8 +23,8 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
         return Restangular.all('profiles').getList(queryParams);
     };
 
-    this.getProfile = function(id) {
-        return Restangular.one("profiles", id).get();
+    this.getProfile = function(id, queryParams) {
+        return Restangular.one("profiles", id).get(queryParams);
     };
 
     this.createProfile = function(profile) {
