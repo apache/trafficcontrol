@@ -23,14 +23,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/lib/pq"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/lib/pq"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
-const MonitoringPrivLevel = 10
+const MonitoringPrivLevel = PrivLevelReadOnly
 
 const CacheMonitorConfigFile = "rascal.properties"
 const MonitorType = "RASCAL"
@@ -73,18 +75,18 @@ type Coordinates struct {
 }
 
 type Profile struct {
-	Name       string            `json:"name"`
-	Type       string            `json:"type"`
-	Parameters map[string]string `json:"parameters"`
+	Name       string                 `json:"name"`
+	Type       string                 `json:"type"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 type Monitoring struct {
-	TrafficServers   []Cache           `json:"trafficServers"`
-	TrafficMonitors  []Monitor         `json:"trafficMonitors"`
-	Cachegroups      []Cachegroup      `json:"cacheGroups"`
-	Profiles         []Profile         `json:"profiles"`
-	DeliveryServices []DeliveryService `json:"deliveryServices"`
-	Config           map[string]string `json:"config"`
+	TrafficServers   []Cache                `json:"trafficServers"`
+	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
+	Cachegroups      []Cachegroup           `json:"cacheGroups"`
+	Profiles         []Profile              `json:"profiles"`
+	DeliveryServices []DeliveryService      `json:"deliveryServices"`
+	Config           map[string]interface{} `json:"config"`
 }
 
 type MonitoringResponse struct {
@@ -131,7 +133,7 @@ func monitoringHandler(db *sql.DB) RegexHandlerFunc {
 	}
 }
 
-func getServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
+func getMonitoringServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
 	query := `SELECT
 me.host_name as hostName,
 CONCAT(me.host_name, '.', me.domain_name) as fqdn,
@@ -299,9 +301,14 @@ WHERE pr.config_file = $2;
 		}
 		profile := profiles[profileName.String]
 		if profile.Parameters == nil {
-			profile.Parameters = map[string]string{}
+			profile.Parameters = map[string]interface{}{}
 		}
-		profile.Parameters[name.String] = value.String
+
+		if valNum, err := strconv.Atoi(value.String); err == nil {
+			profile.Parameters[name.String] = valNum
+		} else {
+			profile.Parameters[name.String] = value.String
+		}
 		profiles[profileName.String] = profile
 
 	}
@@ -351,7 +358,7 @@ AND ds.active = true
 	return dses, nil
 }
 
-func getConfig(db *sql.DB) (map[string]string, error) {
+func getConfig(db *sql.DB) (map[string]interface{}, error) {
 	// TODO remove 'like' in query? Slow?
 	query := fmt.Sprintf(`
 SELECT pr.name, pr.value
@@ -367,7 +374,7 @@ WHERE pr.config_file = '%s'
 	}
 	defer rows.Close()
 
-	cfg := map[string]string{}
+	cfg := map[string]interface{}{}
 
 	for rows.Next() {
 		var name sql.NullString
@@ -375,13 +382,17 @@ WHERE pr.config_file = '%s'
 		if err := rows.Scan(&name, &val); err != nil {
 			return nil, err
 		}
-		cfg[name.String] = val.String
+		if valNum, err := strconv.Atoi(val.String); err == nil {
+			cfg[name.String] = valNum
+		} else {
+			cfg[name.String] = val.String
+		}
 	}
 	return cfg, nil
 }
 
 func getMonitoringJson(cdnName string, db *sql.DB) (*MonitoringResponse, error) {
-	monitors, caches, routers, err := getServers(db, cdnName)
+	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
 	}

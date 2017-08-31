@@ -135,7 +135,18 @@ func Eventf(t time.Time, format string, v ...interface{}) {
 
 // EventfRaw writes to the event log with no prefix.
 func EventfRaw(format string, v ...interface{}) {
+	if Event == nil {
+		return
+	}
 	Event.Printf(format, v...)
+}
+
+// EventRaw writes to the event log with no prefix, and no newline. Go's Printf is slow, using this with string concatenation is by far the fastest way to log, and should be used for frequent logs.
+func EventRaw(s string) {
+	if Event == nil {
+		return
+	}
+	Event.Output(stackFrame, s)
 }
 
 // Close calls `Close()` on the given Closer, and logs any error. On error, the context is logged, followed by a colon, the error message, and a newline. This is primarily designed to be used in `defer`, for example, `defer log.Close(resp.Body, "readData fetching /foo/bar")`.

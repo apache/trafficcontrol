@@ -27,10 +27,20 @@ use MojoPlugins::Job;
 use Utils::Helper::ResponseHelper;
 
 sub index {
-	my $self         = shift;
+    my $self        = shift;
+    my $name        = $self->param('name');
+    my $config_file = $self->param('configFile');
 
-	my $rs_data = $self->db->resultset("Parameter")->search();
-	my @data = ();
+    my %criteria;
+    if ( defined $name ) {
+        $criteria{'me.name'} = $name;
+    }
+    if ( defined $config_file ) {
+        $criteria{'me.config_file'} = $config_file;
+    }
+
+    my $rs_data = $self->db->resultset("Parameter")->search(\%criteria);
+    my @data = ();
 	while ( my $row = $rs_data->next ) {
 		my $value = $row->value;
 		&UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );

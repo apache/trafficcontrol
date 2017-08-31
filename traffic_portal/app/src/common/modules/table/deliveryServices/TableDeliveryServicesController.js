@@ -19,11 +19,17 @@
 
 var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $uibModal, locationUtils) {
 
-    $scope.deliveryServices = deliveryServices;
+    var protocols = {
+        0: "HTTP",
+        1: "HTTPS",
+        2: "HTTP AND HTTPS",
+        3: "HTTP TO HTTPS"
+    };
 
-    $scope.editDeliveryService = function(ds) {
-        var path = '/configure/delivery-services/' + ds.id + '?type=' + ds.type;
-        locationUtils.navigateToPath(path);
+    var qstrings = {
+        0: "USE",
+        1: "IGNORE",
+        2: "DROP"
     };
 
     var createDeliveryService = function(typeName) {
@@ -31,8 +37,23 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
         locationUtils.navigateToPath(path);
     };
 
+    $scope.deliveryServices = deliveryServices;
+
+    $scope.editDeliveryService = function(ds) {
+        var path = '/configure/delivery-services/' + ds.id + '?type=' + ds.type;
+        locationUtils.navigateToPath(path);
+    };
+
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
+    };
+
+    $scope.protocol = function(ds) {
+        return protocols[ds.protocol];
+    };
+
+    $scope.qstring = function(ds) {
+        return qstrings[ds.qstringIgnore];
     };
 
     $scope.selectDSType = function() {

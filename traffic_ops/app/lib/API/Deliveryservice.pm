@@ -37,6 +37,8 @@ sub index {
 	my $profile_id   = $self->param('profile');
 	my $type_id      = $self->param('type');
 	my $logs_enabled = $self->param('logsEnabled');
+	my $tenant_id	 = $self->param('tenant');
+	my $signed       = $self->param('signed');
 	my $current_user = $self->current_user()->{username};
 	my @data;
 
@@ -52,6 +54,12 @@ sub index {
 	}
 	if ( defined $logs_enabled ) {
 		$criteria{'me.logs_enabled'} = $logs_enabled ? 1 : 0;    # converts bool to 0|1
+	}
+	if ( defined $tenant_id ) {
+		$criteria{'me.tenant_id'} = $tenant_id;
+	}
+	if ( defined $signed ) {
+		$criteria{'me.signed'} = $signed ? 1 : 0;    # converts bool to 0|1
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
@@ -307,6 +315,9 @@ sub update {
 		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
+	my $upd_ssl = 0;
+	my $old_hostname = UI::SslKeys::get_hostname($self, $id, $ds);
+
 	my $values = {
 		active                 => $params->{active},
 		cacheurl               => $params->{cacheurl},
@@ -448,6 +459,10 @@ sub update {
 
 		&log( $self, "Updated deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
 
+		my $new_hostname = UI::SslKeys::get_hostname($self, $id, $ds);
+		$upd_ssl = 1 if $old_hostname ne $new_hostname;
+		UI::SslKeys::update_sslkey($self, $params->{xmlId}, $new_hostname) if $upd_ssl;
+
 		return $self->success( \@response, "Deliveryservice update was successful." );
 	}
 	else {
@@ -468,6 +483,12 @@ sub safe_update {
 		return $self->not_found();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+	
 
 	if ( &is_oper($self) || $helper->is_delivery_service_assigned($id) ) {
 

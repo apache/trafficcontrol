@@ -40,8 +40,21 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
     };
 
     this.tokenLogin = function(token) {
+        var deferred = $q.defer();
+
         userModel.resetUser();
-        return httpService.post(ENV.api['root'] + 'user/login/token', { t: token });
+
+        $http.post(ENV.api['root'] + "user/login/token", { t: token })
+            .then(
+                function() {
+                    deferred.resolve();
+                },
+                function() {
+                    deferred.reject();
+                }
+            );
+
+        return deferred.promise;
     };
 
     this.logout = function() {
@@ -59,10 +72,6 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
                     return result;
                 }
         );
-    };
-
-    this.resetPassword = function(email) {
-        // Todo: api endpoint not implemented yet
     };
 
 };

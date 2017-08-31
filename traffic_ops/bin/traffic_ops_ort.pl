@@ -24,7 +24,7 @@ use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
-
+use Digest::SHA qw(sha512_base64);
 
 $| = 1;
 my $date           = `/bin/date`;
@@ -76,6 +76,8 @@ if ( defined( $ARGV[2] ) ) {
 	else {
 		$traffic_ops_host = $ARGV[2];
 		$traffic_ops_host =~ s/\/*$//g;
+                # Stash to_url for later use...
+                $to_url = $traffic_ops_host;
 	}
 }
 else {
@@ -1414,12 +1416,15 @@ sub lwp_get {
 			$request = $uri;
 			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
 		}
-
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/) && $rev_proxy_in_use == 1 ) {
+			$request = $to_url . $uri;
+			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
+		}
 
 		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
 			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
 					return $response->code;
@@ -1444,7 +1449,7 @@ sub lwp_get {
 
 	}
 
-	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
 
 	&eval_json($response) if ( $uri =~ m/\.json$/ );
 
@@ -1623,27 +1628,38 @@ sub check_lwp_response_code {
 	}
 }
 
-sub check_lwp_response_content_length {
+sub check_lwp_response_message_integrity {
 	my $lwp_response  = shift;
 	my $panic_level   = shift;
 	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
-	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n";
-		exit;
-		return 1;
+	my $mic_header = 'Whole-Content-SHA512';
+
+	if ( defined($lwp_response->header($mic_header)) ) {
+		if ( $lwp_response->header($mic_header) ne sha512_base64($lwp_response->content()) . '==') {
+			( $log_level >> $panic_level ) && print $log_level_str . " $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", however actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "!\n";
+			exit 1 if ($log_level_str eq 'FATAL');
+			return 1;
+		} else {
+			( $log_level >> $DEBUG ) && print "DEBUG $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", and actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "\n";
+			return 0;
+		}
 	}
-	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
-		exit 1 if ($log_level_str eq 'FATAL');
-		return 1;
+	elsif ( defined($lwp_response->header('Content-Length')) ) {
+		if ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
+			( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
+			exit 1 if ($log_level_str eq 'FATAL');
+			return 1;
+		} else {
+			( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
+			return 0;
+		}
 	}
 	else {
-		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
-		return 0;
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a $mic_header or Content-Length header! Cannot Message Integrity Check!\n";
+		return 1;
 	}
-
 }
 
 sub check_script_mode {
@@ -1741,16 +1757,16 @@ sub get_cfg_file_list {
 	my $ort_ref = decode_json($result);
 	
 	if ($api_in_use == 1) {
-		$to_url = $ort_ref->{'info'}->{'toUrl'};
-		$to_url =~ s/\/*$//g;
-		$traffic_ops_host = $to_url;
-		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $to_url\n");
 		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
 		if ( $to_rev_proxy_url ) {
 			$to_rev_proxy_url =~ s/\/*$//g;
+                        # Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
+                        #       Secrets might not be the same on all Traffic Ops instance.
 			$traffic_ops_host = $to_rev_proxy_url;
 			$rev_proxy_in_use = 1;
 			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
+		} else {
+			$traffic_ops_host = $to_url;
 		}
 		$profile_name = $ort_ref->{'info'}->{'profileName'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
@@ -2952,3 +2968,4 @@ sub log_level_to_string {
 		}
 	}
 }
+

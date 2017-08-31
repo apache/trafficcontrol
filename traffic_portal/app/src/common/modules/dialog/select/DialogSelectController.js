@@ -34,6 +34,14 @@ var DialogSelectController = function(params, collection, $scope, $uibModalInsta
 		$uibModalInstance.dismiss('cancel');
 	};
 
+	$scope.label = function () {
+		if ($scope.params.label !== undefined) {
+			return $scope.params.label
+		} else {
+			return 'name';
+		}
+	};
+
 };
 
 DialogSelectController.$inject = ['params', 'collection', '$scope', '$uibModalInstance'];

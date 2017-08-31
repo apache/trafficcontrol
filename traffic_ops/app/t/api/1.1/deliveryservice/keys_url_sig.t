@@ -68,10 +68,6 @@ ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->sta
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can an assigned DeliveryService url keys for the portal user be regenerated?';
 
-ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds2/urlkeys/generate')->status_is(403)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Can an unassigned DeliveryService url keys for the portal user be regenerated?';
-
 ok $t->post_ok('/api/1.1/deliveryservices/xmlId/XXX/urlkeys/generate')->status_is(400)
 	->json_is( "/alerts/0/text/", "Delivery Service 'XXX' does not exist." )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can a non existent DeliveryService url keys for the portal user be regenerated?';
@@ -81,6 +77,7 @@ ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_i
 
 ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds2/urlkeys.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can unassigned DeliveryService url keys can be viewed?';
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # Admin User checks
@@ -119,6 +116,33 @@ ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/copyFromXmlId/t
 #compare contents of call below to stored response body from other ds.
 ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_is(200)->json_is($jsonKeys)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Are the url sig keys equal after the copy?';
+
+
+# Out of tenant tests
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1-root/urlkeys/generate')->status_is(403)
+		->json_is( "/alerts/0/text" => "Forbidden. Delivery-service tenant is not available to the user.")
+		->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Cannot generate delivery-service url keys when tenancy not allow?';
+
+ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1-root/urlkeys.json')->status_is(403)
+		->json_is( "/alerts/0/text" => "Forbidden. Delivery-service tenant is not available to the user.")
+		->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'DeliveryService Url Keys cannot be viewed out of tenancy?';
+
+ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1-not-there/urlkeys.json')->status_is(404)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'DeliveryService Url Keys cannot be viewed out of tenancy?';
+
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1-root/urlkeys/copyFromXmlId/test-ds1')->status_is(403)
+		->json_is( "/alerts/0/text" => "Forbidden. Delivery-service tenant is not available to the user.")
+		->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can an unassigned DeliveryService url keys be copied to an assigned DeliveryService url keys?';
+
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/copyFromXmlId/test-ds1-root')->status_is(403)
+		->json_is( "/alerts/0/text" => "Forbidden. Source delivery-service tenant is not available to the user.")
+		->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can an unassigned DeliveryService url keys be copied to an assigned DeliveryService url keys?';
+
 
 # Negative Testing
 # With error content

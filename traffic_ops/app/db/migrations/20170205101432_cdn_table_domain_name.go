@@ -54,7 +54,7 @@ func Up_20170205101432(txn *sql.Tx) {
 		4: "latched",
 	}
 
-	fmt.Println("  Starting migration 20130106222315...")
+	fmt.Println("  Starting migration 20170205101432...")
 	doExec("CREATE TYPE profile_type AS ENUM ("+
 		"'ATS_PROFILE', 'TR_PROFILE', 'TM_PROFILE', 'TS_PROFILE', 'TP_PROFILE', 'INFLUXDB_PROFILE',"+
 		"'RIAK_PROFILE', 'SPLUNK_PROFILE', 'DS_PROFILE', 'ORG_PROFILE', 'KAFKA_PROFILE', 'LOGSTASH_PROFILE',"+
@@ -62,24 +62,24 @@ func Up_20170205101432(txn *sql.Tx) {
 
 	doExec("CREATE OR REPLACE VIEW \"profile_type_values\" AS SELECT unnest(enum_range(NULL::profile_type )) AS value ORDER BY value", txn)
 
-	doExec("ALTER TABLE public.profile ADD COLUMN type profile_type", txn)
-	doExec("UPDATE public.profile SET type='UNK_PROFILE'", txn) // So we don't get any NULL, these should be checked.
-	doExec("UPDATE public.profile SET type='TR_PROFILE' WHERE name like 'CCR_%' OR name like 'TR_%'", txn)
-	doExec("UPDATE public.profile SET type='TM_PROFILE' WHERE name like 'RASCAL_%' OR name like 'TM_%'", txn)
-	doExec("UPDATE public.profile SET type='TS_PROFILE' WHERE name like 'TRAFFIC_STATS%'", txn)
-	doExec("UPDATE public.profile SET type='TP_PROFILE' WHERE name like 'TRAFFIC_PORTAL%'", txn)
-	doExec("UPDATE public.profile SET type='INFLUXDB_PROFILE' WHERE name like 'INFLUXDB%'", txn)
-	doExec("UPDATE public.profile SET type='RIAK_PROFILE' WHERE name like 'RIAK%'", txn)
-	doExec("UPDATE public.profile SET type='SPLUNK_PROFILE' WHERE name like 'SPLUNK%'", txn)
-	doExec("UPDATE public.profile SET type='ORG_PROFILE' WHERE name like '%ORG%' or name like 'MSO%' or name like '%ORIGIN%'", txn)
-	doExec("UPDATE public.profile SET type='KAFKA_PROFILE' WHERE name like 'KAFKA%'", txn)
-	doExec("UPDATE public.profile SET type='LOGSTASH_PROFILE' WHERE name like 'LOGSTASH_%'", txn)
-	doExec("UPDATE public.profile SET type='ES_PROFILE' WHERE name like 'ELASTICSEARCH%'", txn)
-	doExec("UPDATE public.profile SET type='ATS_PROFILE' WHERE name like 'EDGE%' or name like 'MID%'", txn)
+	doExec("ALTER TABLE profile ADD COLUMN type profile_type", txn)
+	doExec("UPDATE profile SET type='UNK_PROFILE'", txn) // So we don't get any NULL, these should be checked.
+	doExec("UPDATE profile SET type='TR_PROFILE' WHERE name like 'CCR_%' OR name like 'TR_%'", txn)
+	doExec("UPDATE profile SET type='TM_PROFILE' WHERE name like 'RASCAL_%' OR name like 'TM_%'", txn)
+	doExec("UPDATE profile SET type='TS_PROFILE' WHERE name like 'TRAFFIC_STATS%'", txn)
+	doExec("UPDATE profile SET type='TP_PROFILE' WHERE name like 'TRAFFIC_PORTAL%'", txn)
+	doExec("UPDATE profile SET type='INFLUXDB_PROFILE' WHERE name like 'INFLUXDB%'", txn)
+	doExec("UPDATE profile SET type='RIAK_PROFILE' WHERE name like 'RIAK%'", txn)
+	doExec("UPDATE profile SET type='SPLUNK_PROFILE' WHERE name like 'SPLUNK%'", txn)
+	doExec("UPDATE profile SET type='ORG_PROFILE' WHERE name like '%ORG%' or name like 'MSO%' or name like '%ORIGIN%'", txn)
+	doExec("UPDATE profile SET type='KAFKA_PROFILE' WHERE name like 'KAFKA%'", txn)
+	doExec("UPDATE profile SET type='LOGSTASH_PROFILE' WHERE name like 'LOGSTASH_%'", txn)
+	doExec("UPDATE profile SET type='ES_PROFILE' WHERE name like 'ELASTICSEARCH%'", txn)
+	doExec("UPDATE profile SET type='ATS_PROFILE' WHERE name like 'EDGE%' or name like 'MID%'", txn)
 
-	doExec("ALTER TABLE public.profile ALTER type SET NOT NULL", txn)
+	doExec("ALTER TABLE profile ALTER type SET NOT NULL", txn)
 
-	doExec("ALTER TABLE public.cdn ADD COLUMN domain_name text", txn)
+	doExec("ALTER TABLE cdn ADD COLUMN domain_name text", txn)
 
 	doExec("UPDATE cdn SET domain_name=domainlist.value "+
 		"FROM (SELECT distinct cdn_id,value FROM server,parameter WHERE type=(SELECT id FROM type WHERE name='EDGE') "+
@@ -88,19 +88,19 @@ func Up_20170205101432(txn *sql.Tx) {
 		"AND config_file='CRConfig.json') AS domainlist "+
 		"WHERE id = domainlist.cdn_id", txn)
 
-	doExec("UPDATE public.cdn SET domain_name='-' WHERE name='ALL'", txn)
+	doExec("UPDATE cdn SET domain_name='-' WHERE name='ALL'", txn)
 
-	doExec("ALTER TABLE public.cdn ALTER COLUMN domain_name SET NOT NULL", txn)
+	doExec("ALTER TABLE cdn ALTER COLUMN domain_name SET NOT NULL", txn)
 
-	doExec("ALTER TABLE public.profile ADD COLUMN cdn bigint", txn)
+	doExec("ALTER TABLE profile ADD COLUMN cdn bigint", txn)
 
-	doExec("ALTER TABLE public.profile "+
+	doExec("ALTER TABLE profile "+
 		"ADD CONSTRAINT fk_cdn1 FOREIGN KEY (cdn) "+
-		"REFERENCES public.cdn (id) MATCH SIMPLE "+
+		"REFERENCES cdn (id) MATCH SIMPLE "+
 		"ON UPDATE RESTRICT ON DELETE RESTRICT", txn)
 
 	doExec("CREATE INDEX idx_181818_fk_cdn1 "+
-		"ON public.profile "+
+		"ON profile "+
 		"USING btree "+
 		"(cdn)", txn)
 

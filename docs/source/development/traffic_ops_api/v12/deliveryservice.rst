@@ -41,6 +41,8 @@ Delivery Service
   +-----------------+----------+---------------------------------------------------+
   | ``profile``     | no       | Filter delivery services by Profile ID.           |
   +-----------------+----------+---------------------------------------------------+
+  | ``tenant``      | no       | Filter delivery services by Tenant ID.            |
+  +-----------------+----------+---------------------------------------------------+
   | ``type``        | no       | Filter delivery services by Type ID.              |
   +-----------------+----------+---------------------------------------------------+
   | ``logsEnabled`` | no       | Filter by logs enabled (true|false).              |
@@ -1440,22 +1442,24 @@ SSL Keys
 
   **Request Query Parameters**
 
-  +-------------+----------+--------------------------------+
-  |     Name    | Required |          Description           |
-  +=============+==========+================================+
-  | ``version`` | no       | The version number to retrieve |
-  +-------------+----------+--------------------------------+
+  +-------------+----------+--------------------------------------------+
+  |     Name    | Required |          Description                       |
+  +=============+==========+============================================+
+  | ``version`` | no       | The version number to retrieve             |
+  +-------------+----------+--------------------------------------------+
+  | ``decode``  | no       | a boolean value to decode the certs or not |
+  +-------------+----------+--------------------------------------------+
 
   **Response Properties**
 
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
   |    Parameter        |  Type  |                                                               Description                                                               |
   +=====================+========+=========================================================================================================================================+
-  | ``crt``             | string | base64 encoded crt file for delivery service                                                                                            |
+  | ``crt``             | string | base64 encoded (or not if decode=true) crt file for delivery service                                                                    |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``csr``             | string | base64 encoded csr file for delivery service                                                                                            |
+  | ``csr``             | string | base64 encoded (or not if decode=true) csr file for delivery service                                                                    |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``key``             | string | base64 encoded private key file for delivery service                                                                                    |
+  | ``key``             | string | base64 encoded (or not if decode=true) private key file for delivery service                                                            |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
   | ``cdn``             | string | The CDN of the delivery service for which the certs were generated.                                                                     |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -1517,22 +1521,24 @@ SSL Keys
 
   **Request Query Parameters**
 
-  +-------------+----------+--------------------------------+
-  |     Name    | Required |          Description           |
-  +=============+==========+================================+
-  | ``version`` | no       | The version number to retrieve |
-  +-------------+----------+--------------------------------+
+  +-------------+----------+--------------------------------------------+
+  |     Name    | Required |          Description                       |
+  +=============+==========+============================================+
+  | ``version`` | no       | The version number to retrieve             |
+  +-------------+----------+--------------------------------------------+
+  | ``decode``  | no       | a boolean value to decode the certs or not |
+  +-------------+----------+--------------------------------------------+
 
   **Response Properties**
 
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
   |    Parameter        |  Type  |                                                               Description                                                               |
   +=====================+========+=========================================================================================================================================+
-  | ``crt``             | string | base64 encoded crt file for delivery service                                                                                            |
+  | ``crt``             | string | base64 encoded (or not if decode=true) crt file for delivery service                                                                    |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``csr``             | string | base64 encoded csr file for delivery service                                                                                            |
+  | ``csr``             | string | base64 encoded (or not if decode=true) csr file for delivery service                                                                    |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
-  | ``key``             | string | base64 encoded private key file for delivery service                                                                                    |
+  | ``key``             | string | base64 encoded (or not if decode=true) private key file for delivery service                                                            |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
   | ``cdn``             | string | The CDN of the delivery service for which the certs were generated.                                                                     |
   +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -1739,6 +1745,59 @@ SSL Keys
 
 URL Sig Keys
 +++++++++
+
+**GET /api/1.2/deliveryservices/:id/urlkeys**
+
+  Retrieves URL sig keys for a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: None
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``id``    | yes      | id of the desired delivery service     |
+  +-----------+----------+----------------------------------------+
+
+  **Response Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``key0``            | string | base64 encoded key for delivery service                                                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``key2``            | string | base64 encoded key for delivery service                                                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keyn...``         | string | base64 encoded key for delivery service -- repeats to 15 (16 total) and is currently unsorted.                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {  
+      "response": {
+        key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
+        "key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
+        "key8":"ySXdp1T8IeDEE1OCMftzZb9EIw_20wwq",
+        "key0":"D4AYzJ1AE2nYisA9MxMtY03TPDCHji9C",
+        "key3":"W90YHlGc_kYlYw5_I0LrkpV9JOzSIneI",
+        "key12":"ZbtMb3mrKqfS8hnx9_xWBIP_OPWlUpzc",
+        "key2":"0qgEoDO7sUsugIQemZbwmMt0tNCwB1sf",
+        "key4":"aFJ2Gb7atmxVB8uv7T9S6OaDml3ycpGf",
+        "key1":"wnWNR1mCz1O4C7EFPtcqHd0xUMQyNFhA",
+        "key11":"k6HMzlBH1x6htKkypRFfWQhAndQqe50e",
+        "key10":"zYONfdD7fGYKj4kLvIj4U0918csuZO0d",
+        "key15":"3360cGaIip_layZMc_0hI2teJbazxTQh",
+        "key5":"SIwv3GOhWN7EE9wSwPFj18qE4M07sFxN",
+        "key13":"SqQKBR6LqEOzp8AewZUCVtBcW_8YFc1g",
+        "key14":"DtXsu8nsw04YhT0kNoKBhu2G3P9WRpQJ",
+        "key7":"cmKoIIxXGAxUMdCsWvnGLoIMGmNiuT5I"
+      }
+    }
+
+|
 
 **GET /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys**
 

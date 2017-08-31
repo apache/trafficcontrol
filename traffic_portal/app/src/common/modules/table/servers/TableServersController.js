@@ -97,14 +97,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
         });
     };
 
-
-    $scope.uploadServerCSV = function() {
-        alert('not hooked up yet: uploadServerCSV');
-    };
-
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
     };
+
+    $scope.ssh = serverUtils.ssh;
 
     $scope.isOffline = serverUtils.isOffline;
 

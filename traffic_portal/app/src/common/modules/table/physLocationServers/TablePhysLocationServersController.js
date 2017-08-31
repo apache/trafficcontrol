@@ -31,6 +31,8 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.ssh = serverUtils.ssh;
+
 	$scope.isOffline = serverUtils.isOffline;
 
 	$scope.offlineReason = serverUtils.offlineReason;

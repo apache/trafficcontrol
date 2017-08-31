@@ -22,31 +22,32 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
     var service = this;
 
     this.getCurrentUser = function() {
-        var token = $location.search().token,
-            deferred = $q.defer();
+        var deferred = $q.defer();
 
-        if (angular.isDefined(token)) {
-            $location.search('token', null); // remove the token query param
-            authService.tokenLogin(token)
-                .then(
-                    function(response) {
-                        service.getCurrentUser();
-                    }
-                );
-        } else {
-            $http.get(ENV.api['root'] + "user/current")
-                .then(
-                    function(result) {
-                        userModel.setUser(result.data.response);
-                        deferred.resolve(result.data.response);
-                    },
-                    function(fault) {
-                        deferred.reject(fault);
-                    }
-                );
+        $http.get(ENV.api['root'] + "user/current")
+            .then(
+                function(result) {
+                    userModel.setUser(result.data.response);
+                    deferred.resolve(result.data.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
-            return deferred.promise;
-        }
+        return deferred.promise;
+    };
+
+    this.resetPassword = function(email) {
+        return $http.post(ENV.api['root'] + "user/reset_password", { email: email })
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     this.getUsers = function(queryParams) {

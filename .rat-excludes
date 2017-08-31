@@ -50,7 +50,8 @@ select2\..*(?:                       MIT. Properly documented in LICENSE ){0}
 prettyprint\.js(?:                   BSD 2-clause. Properly documented in LICENSE ){0}
 seelog(?:                            BSD 3-clause. Properly documented in LICENSE ){0}
 loading.scss(?:                      MIT. Properly documented in LICENSE ){0}
-theme.scss(?:                      MIT. Properly documented in LICENSE ){0}
+theme.scss(?:                        MIT. Properly documented in LICENSE ){0}
 influxdb(?:                          MIT. Properly documented in LICENSE ){0}
 errors(?:                            BSD 2-clause. Properly documented in LICENTS ){0}
 net(?:                               Go BSD. Properly documented in LICENSE ){0}
+go-sqlmock.v1(?:                     BSD 3-clause. Properly documented in LICENSE ){0}

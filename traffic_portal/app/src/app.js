@@ -104,9 +104,11 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/admin/statuses/new').name,
         require('./modules/private/admin/statuses/servers').name,
         require('./modules/private/admin/tenants').name,
+        require('./modules/private/admin/tenants/deliveryServices').name,
         require('./modules/private/admin/tenants/edit').name,
         require('./modules/private/admin/tenants/list').name,
         require('./modules/private/admin/tenants/new').name,
+        require('./modules/private/admin/tenants/users').name,
         require('./modules/private/admin/types').name,
         require('./modules/private/admin/types/edit').name,
         require('./modules/private/admin/types/list').name,
@@ -149,6 +151,10 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/configure/deliveryServices/targets/list').name,
         require('./modules/private/configure/deliveryServices/targets/new').name,
         require('./modules/private/configure/deliveryServices/users').name,
+        require('./modules/private/configure/deliveryServices/urlSigKeys').name,
+        require('./modules/private/configure/deliveryServices/sslKeys').name,
+        require('./modules/private/configure/deliveryServices/sslKeys/view').name,
+        require('./modules/private/configure/deliveryServices/sslKeys/generate').name,
         require('./modules/private/configure/servers').name,
         require('./modules/private/configure/servers/deliveryServices').name,
         require('./modules/private/configure/servers/edit').name,
@@ -160,13 +166,13 @@ var trafficPortal = angular.module('trafficPortal', [
 
         // monitor
         require('./modules/private/monitor').name,
-
-        // dashboard
         require('./modules/private/monitor/dashboard').name,
         require('./modules/private/monitor/dashboard/view').name,
-
-        // map
         require('./modules/private/monitor/map').name,
+
+        // tools
+        require('./modules/private/tools').name,
+        require('./modules/private/tools/iso').name,
 
         // common modules
         require('./common/modules/dialog/confirm').name,
@@ -196,6 +202,8 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/deliveryServiceRegex').name,
         require('./common/modules/form/deliveryServiceRegex/edit').name,
         require('./common/modules/form/deliveryServiceRegex/new').name,
+        require('./common/modules/form/deliveryServiceSslKeys').name,
+        require('./common/modules/form/deliveryServiceSslKeys/generate').name,
         require('./common/modules/form/deliveryServiceTarget').name,
         require('./common/modules/form/deliveryServiceTarget/edit').name,
         require('./common/modules/form/deliveryServiceTarget/new').name,
@@ -204,6 +212,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/division').name,
         require('./common/modules/form/division/edit').name,
         require('./common/modules/form/division/new').name,
+        require('./common/modules/form/iso').name,
         require('./common/modules/form/job').name,
         require('./common/modules/form/job/new').name,
         require('./common/modules/form/physLocation').name,
@@ -272,6 +281,8 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/statuses').name,
         require('./common/modules/table/statusServers').name,
         require('./common/modules/table/tenants').name,
+        require('./common/modules/table/tenantDeliveryServices').name,
+        require('./common/modules/table/tenantUsers').name,
         require('./common/modules/table/types').name,
         require('./common/modules/table/typeCacheGroups').name,
         require('./common/modules/table/typeDeliveryServices').name,

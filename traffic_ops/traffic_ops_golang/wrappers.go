@@ -20,7 +20,9 @@ package main
  */
 
 import (
+	"crypto/sha512"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
@@ -37,13 +39,29 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
+		iw := &BodyInterceptor{w: w}
+		w = iw
 		h(w, r, p)
+		sha := sha512.Sum512(iw.body)
+		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 	}
 }
 
+type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params ParamMap, user string, privLevel int)
+
+func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, p ParamMap, user string, privLevel int) { h(w, r, p) }
+}
+
 func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
+	return wrapAuthWithData(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+}
+
+func wrapAuthWithData(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
 	if noAuth {
-		return h
+		return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+			h(w, r, p, "", PrivLevelInvalid)
+		}
 	}
 	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
 		// TODO remove, and make username available to wrapLogTime
@@ -80,15 +98,16 @@ func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql
 		}
 
 		username = oldCookie.AuthData
-		if !hasPrivLevel(privLevelStmt, username, privLevelRequired) {
+		privLevel := PrivLevel(privLevelStmt, username)
+		if privLevel < privLevelRequired {
 			handleUnauthorized("insufficient privileges")
 			return
 		}
 
 		newCookieVal := tocookie.Refresh(oldCookie, secret)
-		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal})
+		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
 
-		h(w, r, p)
+		h(w, r, p, username, privLevel)
 	}
 }
 
@@ -134,5 +153,24 @@ func (i *Interceptor) Write(b []byte) (int, error) {
 }
 
 func (i *Interceptor) Header() http.Header {
+	return i.w.Header()
+}
+
+type BodyInterceptor struct {
+	w    http.ResponseWriter
+	body []byte
+}
+
+func (i *BodyInterceptor) WriteHeader(rc int) {
+	i.w.WriteHeader(rc)
+}
+
+func (i *BodyInterceptor) Write(b []byte) (int, error) {
+	i.body = append(i.body, b...)
+	wi, werr := i.w.Write(b)
+	return wi, werr
+}
+
+func (i *BodyInterceptor) Header() http.Header {
 	return i.w.Header()
 }

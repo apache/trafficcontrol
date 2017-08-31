@@ -36,7 +36,7 @@ Requires:         cpanminus, expat-devel, gcc-c++, libcurl, libpcap-devel, mkiso
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
 Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql96 >= 9.6.2 , postgresql96-devel >= 9.6.2
-Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey
+Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey, perl-Crypt-ScryptKDF
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
@@ -179,9 +179,10 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-		    /opt/traffic_ops/install/bin/migratedb
-        echo -e "\nUpgrade complete.\n\n"
-    	 echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
+        echo -e "\n\nTo complete the update, perform the following steps:\n"
+        echo -e "1. Run 'PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade'\n"
+        echo -e "   from the /opt/traffic_ops/app directory.\n"
+        echo -e "2. Run '/opt/traffic_ops/install/bin/postinstall' from the root home directory.\n\n"
         echo -e "To start Traffic Ops:  service traffic_ops start\n";
         echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
     fi
