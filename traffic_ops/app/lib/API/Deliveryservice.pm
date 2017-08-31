@@ -861,7 +861,10 @@ sub assign_servers {
 		$insert->insert();
 	}
 
+	# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+	&UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+	&UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 
 	my $response;
 	$response->{xmlId} = $ds->xml_id;
