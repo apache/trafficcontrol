@@ -68,7 +68,7 @@ func (s *stats) System() StatsSystem {
 func (s *stats) Remap() StatsRemaps { return s.remap }
 
 type StatsRemaps interface {
-	Stats(remapRule string) (StatsRemap, bool)
+	Stats(fqdn string) (StatsRemap, bool)
 	Rules() []string
 }
 
@@ -87,10 +87,23 @@ type StatsRemap interface {
 	AddStatus5xx(uint64)
 }
 
+func getFromFQDN(r RemapRule) string {
+	path := r.From
+	schemeEnd := `://`
+	if i := strings.Index(path, schemeEnd); i != -1 {
+		path = path[i+len(schemeEnd):]
+	}
+	pathStart := `/`
+	if i := strings.Index(path, pathStart); i != -1 {
+		path = path[:i]
+	}
+	return path
+}
+
 func NewStatsRemaps(remapRules []RemapRule) StatsRemaps {
 	m := make(map[string]StatsRemap, len(remapRules))
 	for _, rule := range remapRules {
-		m[rule.Name] = NewStatsRemap() // must pre-allocate, for threadsafety, so users are never changing the map itself, only the value pointed to.
+		m[getFromFQDN(rule)] = NewStatsRemap() // must pre-allocate, for threadsafety, so users are never changing the map itself, only the value pointed to.
 	}
 	return statsRemaps(m)
 }

@@ -331,7 +331,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
 	cacheKey := remappingProducer.CacheKey()
-	remapName := remappingProducer.Name()
+	reqFQDN := r.Host
 
 	retryGetFunc := func(remapping Remapping, retryFailures bool, obj *CacheObj) *CacheObj {
 		// return true for Revalidate, and issue revalidate requests separately.
@@ -364,7 +364,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
+		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
 		return
 	}
 
@@ -380,7 +380,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// TODO check for ReuseMustRevalidate
-		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
+		h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
 		return
 	}
 
@@ -412,7 +412,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	log.Debugf("cacheHandler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.code)
-	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, remapName, connectionClose)
+	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
 }
 
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
@@ -506,7 +506,7 @@ func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int
 }
 
 // respond writes the given code, header, and body to the ResponseWriter.
-func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, stats Stats, conns *ConnMap, remoteAddr string, remapRuleName string, connectionClose bool) {
+func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, stats Stats, conns *ConnMap, remoteAddr string, reqFQDN string, connectionClose bool) {
 	dH := w.Header()
 	copyHeader(header, &dH)
 	if connectionClose {
@@ -515,9 +515,9 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 	w.WriteHeader(code)
 	w.Write(body)
 
-	remapRuleStats, ok := stats.Remap().Stats(remapRuleName)
+	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
 	if !ok {
-		log.Errorf("Remap rule %v not in Stats\n", remapRuleName)
+		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
 		return
 	}
 
