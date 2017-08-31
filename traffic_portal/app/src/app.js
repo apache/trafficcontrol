@@ -86,6 +86,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/admin/parameters/new').name,
         require('./modules/private/admin/parameters/profiles').name,
         require('./modules/private/admin/profiles').name,
+        require('./modules/private/admin/profiles/compare').name,
         require('./modules/private/admin/profiles/deliveryServices').name,
         require('./modules/private/admin/profiles/edit').name,
         require('./modules/private/admin/profiles/list').name,
@@ -174,6 +175,8 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/tools/iso').name,
 
         // common modules
+        require('./common/modules/compare').name,
+        require('./common/modules/dialog/compare').name,
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/delete').name,
         require('./common/modules/dialog/input').name,
