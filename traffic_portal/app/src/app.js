@@ -134,6 +134,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/configure/cacheGroups/servers').name,
         require('./modules/private/configure/cacheGroups/staticDnsEntries').name,
         require('./modules/private/configure/deliveryServices').name,
+        require('./modules/private/configure/deliveryServices/compare').name,
         require('./modules/private/configure/deliveryServices/edit').name,
         require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/deliveryServices/new').name,
