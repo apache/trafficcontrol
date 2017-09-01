@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -201,7 +202,7 @@ const ATSVersion = "5.3.2" // of course, we're not really ATS. We're terrible li
 
 type StatsSystemJSON struct {
 	InterfaceName        string `json:"inf.name"`
-	InterfaceSpeed       string `json:"inf.speed"`
+	InterfaceSpeed       int64  `json:"inf.speed"`
 	ProcNetDev           string `json:"proc.net.dev"`
 	ProcLoadAvg          string `json:"proc.loadavg"`
 	ConfigReloadRequests uint64 `json:"configReloadRequests"`
@@ -246,10 +247,19 @@ func loadFileAndLog(filename string) string {
 	return strings.TrimSpace(string(f))
 }
 
+func loadFileAndLogInt(filename string) int64 {
+	s := loadFileAndLog(filename)
+	i, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		log.Errorf("parsing system stat file %v: %v\n", filename, err)
+	}
+	return i
+}
+
 func (h statHandler) LoadSystemStats() StatsSystemJSON {
 	s := StatsSystemJSON{}
 	s.InterfaceName = h.interfaceName
-	s.InterfaceSpeed = loadFileAndLog(fmt.Sprintf("/sys/class/net/%v/speed", h.interfaceName))
+	s.InterfaceSpeed = loadFileAndLogInt(fmt.Sprintf("/sys/class/net/%v/speed", h.interfaceName))
 	s.ProcNetDev = loadFileAndLogGrep("/proc/net/dev", h.interfaceName)
 	s.ProcLoadAvg = loadFileAndLog("/proc/loadavg")
 	s.ConfigReloadRequests = h.stats.System().ConfigReloadRequests()
