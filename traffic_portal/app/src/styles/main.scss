@@ -25,8 +25,8 @@ $fa-font-path: "../assets/fonts";
 @import "font-awesome/scss/font-awesome";
 
 // common
-@import "../common/modules/dialog/confirm/dialog.confirm";
-@import "../common/modules/dialog/reset/dialog.reset";
+@import "../common/modules/dialog/dialog";
+@import "../common/modules/dialog/text/dialog.text";
 @import "../common/modules/form/user/form.user";
 @import "../common/modules/header/header";
 @import "../common/modules/message/message";
