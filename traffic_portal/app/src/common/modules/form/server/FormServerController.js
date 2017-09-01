@@ -134,8 +134,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
 
-    $scope.viewConfig = function() {
-        alert('not hooked up yet: view config files for server');
+    $scope.viewConfigFiles = function() {
+        $location.path($location.path() + '/config-files');
     };
 
     $scope.viewDeliveryServices = function() {
