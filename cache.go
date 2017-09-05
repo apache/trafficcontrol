@@ -301,6 +301,10 @@ func CanReuse(reqHeader http.Header, reqCacheControl CacheControl, cacheObj *Cac
 // Serving acts as a state machine.
 func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	log.EventRaw(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + "\n")
+
+	h.stats.IncConnections()
+	defer h.stats.DecConnections()
+
 	// inBytes := getBytes(r)
 	reqTime := time.Now()
 
