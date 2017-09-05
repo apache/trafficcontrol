@@ -190,7 +190,7 @@ sub gen_crconfig_json {
             'me.cdn_id' => $cdn_id
         }, {
             prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
-            columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
+            columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id', 'profile.routing_disabled' ]
         }
     );
 
@@ -267,6 +267,7 @@ sub gen_crconfig_json {
             $data_obj->{'contentServers'}->{ $row->host_name }->{'type'}          = $row->type->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'}     = int( $weight * $weight_multiplier );
+            $data_obj->{'contentServers'}->{ $row->host_name }->{'routingDisabled'} = $row->profile->routing_disabled;
         }
     }
     my $regexps;
@@ -352,6 +353,7 @@ sub gen_crconfig_json {
             foreach my $server ( keys %server_subrow_dedup ) {
 
                 next if ( !defined( $cache_tracker{$server} ) );
+                next if ( $data_obj->{'contentServers'}->{ $cache_tracker{$server} }->{'routingDisabled'} == 1);
 
                 foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
                     my $remap;

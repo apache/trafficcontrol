@@ -75,12 +75,14 @@ ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/jso
         "name" => "CCR_UPDATE",
         "description" => "CCR_UPDATE description",
         "cdn" => 100,
-        "type" => "TR_PROFILE"
+        "type" => "TR_PROFILE",
+		"routingDisabled" => 1
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/id" => "$profile_id")
     ->json_is( "/response/name" => "CCR_UPDATE")
     ->json_is( "/response/description" => "CCR_UPDATE description")
+	->json_is( "/response/routingDisabled" => 1)
             , 'Does the profile details return?';
 
 ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
@@ -111,9 +113,11 @@ ok $t->get_ok('/api/1.2/profiles?param=9&orderby=profile' => {Accept => 'applica
 	->json_is( "/response/0/id" => "100" )
 	->json_is( "/response/0/name" => "EDGE1" )
 	->json_is( "/response/0/description" => "edge description" )
+	->json_is( "/response/0/routingDisabled" => 0 )
 	->json_is( "/response/1/id" => "200" )
 	->json_is( "/response/1/name" => "MID1" )
 	->json_is( "/response/1/description" => "mid description" )
+	->json_is( "/response/1/routingDisabled" => 0 )
 		, 'Does the profile details return?';
 
 $t->get_ok("/api/1.2/profiles/8")->status_is(200)->json_is( "/response/0/id", 8 )
