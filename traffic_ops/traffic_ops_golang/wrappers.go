@@ -40,10 +40,10 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
 		iw := &BodyInterceptor{w: w}
-		w = iw
-		h(w, r, p)
-		sha := sha512.Sum512(iw.body)
+		h(iw, r, p)
+		sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
+		iw.RealWrite(iw.Body())
 	}
 }
 
@@ -156,6 +156,7 @@ func (i *Interceptor) Header() http.Header {
 	return i.w.Header()
 }
 
+// BodyInterceptor fulfills the Writer interface, but records the body and doesn't actually write. This allows performing operations on the entire body written by a handler, for example, compressing or hashing. To actually write, call `RealWrite()`. Note this means `len(b)` and `nil` are always returned by `Write()`, any real write errors will be returned by `RealWrite()`.
 type BodyInterceptor struct {
 	w    http.ResponseWriter
 	body []byte
@@ -164,13 +165,17 @@ type BodyInterceptor struct {
 func (i *BodyInterceptor) WriteHeader(rc int) {
 	i.w.WriteHeader(rc)
 }
-
 func (i *BodyInterceptor) Write(b []byte) (int, error) {
 	i.body = append(i.body, b...)
-	wi, werr := i.w.Write(b)
-	return wi, werr
+	return len(b), nil
 }
-
 func (i *BodyInterceptor) Header() http.Header {
 	return i.w.Header()
+}
+func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
+	wi, werr := i.w.Write(i.body)
+	return wi, werr
+}
+func (i *BodyInterceptor) Body() []byte {
+	return i.body
 }
