@@ -51,15 +51,34 @@ type StatsSystem interface {
 type Stats interface {
 	System() StatsSystem
 	Remap() StatsRemaps
+
+	Connections() uint64
+	IncConnections()
+	DecConnections()
 }
 
 func NewStats(remapRules []RemapRule) Stats {
-	return &stats{system: NewStatsSystem(), remap: NewStatsRemaps(remapRules)}
+	connections := uint64(0)
+	return &stats{system: NewStatsSystem(), remap: NewStatsRemaps(remapRules), connections: &connections}
 }
 
 type stats struct {
 	system StatsSystem
 	remap  StatsRemaps
+
+	connections *uint64
+}
+
+func (s stats) Connections() uint64 {
+	return atomic.LoadUint64(s.connections)
+}
+
+func (s stats) IncConnections() {
+	atomic.AddUint64(s.connections, 1)
+}
+
+func (s stats) DecConnections() {
+	atomic.AddUint64(s.connections, ^uint64(0))
 }
 
 func (s *stats) System() StatsSystem {
@@ -289,6 +308,9 @@ func (h statHandler) LoadRemapStats() map[string]interface{} {
 		jsonStats["plugin.remap_stats."+ruleName+".status_4xx"] = statsRemap.Status4xx()
 		jsonStats["plugin.remap_stats."+ruleName+".status_5xx"] = statsRemap.Status5xx()
 	}
+
+	jsonStats["proxy.process.http.current_client_connections"] = h.stats.Connections()
+
 	return jsonStats
 }
 
