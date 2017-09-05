@@ -125,7 +125,7 @@ func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Set-Cookie, Cookie, Vary, Whole-Content-SHA512")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
@@ -134,28 +134,32 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		h(w, r, p)
 		sha := sha512.Sum512(iw.body)
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
+
+		gzipHandler(w, r, iw.body)
+
+		fmt.Printf("outbound headers ---> %v\n", w.Header())
+
 	}
 }
 
-// wrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
+// gzipHandler takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
 //TODO: drichardson - refactor these to a generic area
-func wrapBytes(f func() []byte, contentType string) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-		bytes := f()
-		bytes, err := gzipIfAccepts(r, w, bytes)
-		if err != nil {
-			log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
-			code := http.StatusInternalServerError
-			w.WriteHeader(code)
-			if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
-				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
-			}
-			return
-		}
+func gzipHandler(w http.ResponseWriter, r *http.Request, bytes []byte) {
 
-		w.Header().Set("Content-Type", contentType)
-		log.Write(w, bytes, r.URL.EscapedPath())
+	bytes, err := gzipIfAccepts(r, w, bytes)
+	if err != nil {
+		log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
+		code := http.StatusInternalServerError
+		w.WriteHeader(code)
+		if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
+			log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
+		}
+		return
 	}
+
+	w.Write(bytes)
+
+	log.Write(w, bytes, r.URL.EscapedPath())
 }
 
 // gzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
@@ -188,12 +192,14 @@ func acceptsGzip(r *http.Request) bool {
 		encodings := strings.Split(encodingHeader, ",")
 		for _, encoding := range encodings {
 			if strings.ToLower(encoding) == "gzip" { // encoding is case-insensitive, per the RFC
+				fmt.Printf("gzip accepted? ---> %v\n", true)
 				return true
 			}
 		}
 	}
 	return false
 }
+
 func stripAllWhitespace(s string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
