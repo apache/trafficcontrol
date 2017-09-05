@@ -650,7 +650,7 @@ sub profile_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "http_routing";
 				my $portstr  = ":" . "__SERVER_TCP_PORT__";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -772,7 +772,7 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "http_routing";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -901,9 +901,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? "edge" : "http_routing";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+				if ( $hname eq "http_routing" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -1133,9 +1133,9 @@ sub remap_ds_data {
 					my $re = $host_re;
 					$re =~ s/\\//g;
 					$re =~ s/\.\*//g;
-					my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+					my $hname = $ds_type =~ /^DNS/ ? "edge" : "http_routing";
 					my $portstr = "";
-					if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+					if ( $hname eq "http_routing" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 						$portstr = ":" . $server_obj->tcp_port;
 					}
 					my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -2482,7 +2482,7 @@ sub build_remap_line {
 	my $dscp      = $remap->{dscp};
 	my $hostname  = $server_obj->host_name;
 
-	$map_from =~ s/ccr/$hostname/;
+	$map_from =~ s/http_routing/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
