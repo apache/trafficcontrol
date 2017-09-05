@@ -722,7 +722,11 @@ sub aprofile {
 
     while ( my $row = $rs->next ) {
         my $ctext = defined( $row->cdn ) ? $row->cdn->name : "-";
-        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $row->last_updated ];
+        my $routing_text = "No";
+        if ( $row->routing_disabled == 1 ) {
+            $routing_text = "Yes";
+        }
+        my @line = [ $row->id, $row->name, $row->name, $row->description, $row->type, $ctext, $routing_text, $row->last_updated ];
         push( @{ $data{'aaData'} }, @line );
     }
     $self->render( json => \%data );
