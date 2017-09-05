@@ -39,6 +39,26 @@ const ServerName = "traffic_ops_golang" + "/" + Version
 
 type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams, user string, privLevel int)
 
+func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
+		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("X-Server-Name", ServerName)
+		iw := &BodyInterceptor{w: w}
+		h(iw, r, p)
+
+		sha := sha512.Sum512(iw.Body())
+		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
+
+		gzipResponse(w, r, iw.Body())
+
+		iw.RealWrite(iw.Body())
+
+	}
+}
+
 func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, user string, privLevel int) { h(w, r, p) }
 }
@@ -122,29 +142,8 @@ func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 	}
 }
 
-func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Set-Cookie, Cookie, Vary, Whole-Content-SHA512")
-		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("X-Server-Name", ServerName)
-		iw := &BodyInterceptor{w: w}
-		w = iw
-		h(w, r, p)
-		sha := sha512.Sum512(iw.body)
-		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
-
-		//TODO: - drichardson - hook in
-		//gzipHandler(w, r, iw.body)
-		//fmt.Printf("outbound headers ---> %v\n", w.Header())
-
-	}
-}
-
-// gzipHandler takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
-//TODO: drichardson - refactor these to a generic area
-func gzipHandler(w http.ResponseWriter, r *http.Request, bytes []byte) {
+// gzipResponse takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
+func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 
 	bytes, err := gzipIfAccepts(r, w, bytes)
 	if err != nil {
@@ -192,7 +191,6 @@ func acceptsGzip(r *http.Request) bool {
 		encodings := strings.Split(encodingHeader, ",")
 		for _, encoding := range encodings {
 			if strings.ToLower(encoding) == "gzip" { // encoding is case-insensitive, per the RFC
-				fmt.Printf("gzip accepted? ---> %v\n", true)
 				return true
 			}
 		}
@@ -233,6 +231,7 @@ func (i *Interceptor) Header() http.Header {
 	return i.w.Header()
 }
 
+// BodyInterceptor fulfills the Writer interface, but records the body and doesn't actually write. This allows performing operations on the entire body written by a handler, for example, compressing or hashing. To actually write, call `RealWrite()`. Note this means `len(b)` and `nil` are always returned by `Write()`, any real write errors will be returned by `RealWrite()`.
 type BodyInterceptor struct {
 	w    http.ResponseWriter
 	body []byte
@@ -241,13 +240,17 @@ type BodyInterceptor struct {
 func (i *BodyInterceptor) WriteHeader(rc int) {
 	i.w.WriteHeader(rc)
 }
-
 func (i *BodyInterceptor) Write(b []byte) (int, error) {
 	i.body = append(i.body, b...)
-	wi, werr := i.w.Write(b)
-	return wi, werr
+	return len(b), nil
 }
-
 func (i *BodyInterceptor) Header() http.Header {
 	return i.w.Header()
+}
+func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
+	wi, werr := i.w.Write(i.body)
+	return wi, werr
+}
+func (i *BodyInterceptor) Body() []byte {
+	return i.body
 }
