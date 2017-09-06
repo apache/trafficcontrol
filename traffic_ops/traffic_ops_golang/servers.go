@@ -56,63 +56,13 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
-
-func ServersQuery() string {
-	query := `SELECT
-cg.name as cachegroup,
-s.cachegroup as cachegroupId,
-s.cdn_id as cdnId,
-cdn.name as cdnName,
-s.domain_name as domainName,
-COALESCE(s.guid, '') as guid,
-s.host_name as hostName,
-COALESCE(s.https_port, 0) as httpsPort,
-s.id as id,
-COALESCE(s.ilo_ip_address, '') as iloIpAddress,
-COALESCE(s.ilo_ip_gateway, '') as iloIpGateway,
-COALESCE(s.ilo_ip_netmask, '') as iloIpNetmask,
-COALESCE(s.ilo_password, '') as iloPassword,
-COALESCE(s.ilo_username, '') as iloUsername,
-s.interface_mtu as interfaceMtu,
-s.interface_name as interfaceName,
-s.ip6_address as ip6Address,
-s.ip6_gateway as ip6Gateway,
-s.ip_address as ipAddress,
-s.ip_gateway as ipGateway,
-s.ip_netmask as ipNetmask,
-s.last_updated as lastUpdated,
-s.mgmt_ip_address as mgmtIpAddress,
-s.mgmt_ip_gateway as mgmtIpGateway,
-s.mgmt_ip_netmask as mgmtIpNetmask,
-s.offline_reason as offlineReason,
-pl.name as physLocation,
-s.phys_location as physLocationId,
-p.name as profile,
-p.description as profileDesc,
-s.profile as profileId,
-s.rack as rack,
-s.router_host_name as routerHostName,
-s.router_port_name as routerPortName,
-st.name as status,
-s.status as statusId,
-s.tcp_port as tcpPort,
-t.name as serverType,
-s.type as serverTypeId,
-s.upd_pending as updPending,
-s.xmpp_id as xmppId,
-s.xmpp_passwd as xmppPasswd
-FROM server s
-JOIN cachegroup cg ON s.cachegroup = cg.id
-JOIN cdn cdn ON s.cdn_id = cdn.id
-JOIN phys_location pl ON s.phys_location = pl.id
-JOIN profile p ON s.profile = p.id
-JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id`
-
-	return query
-}
-
 func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
+
+	//query := `SELECT
+	//cg.name as cachegroup,
+	//s.host_name as host_name
+	//FROM server s
+	//JOIN cachegroup cg ON s.cachegroup = cg.id`
 
 	rows, err := db.Queryx(ServersQuery())
 	defer rows.Close()
@@ -122,17 +72,62 @@ func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	servers := []Server{}
 
 	const HiddenField = "********"
+	// Get column names
+	columns, err := rows.Columns()
+	fmt.Printf("columns ---> %v\n", columns)
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+	}
+
 	for rows.Next() {
 		var s Server
 		err = rows.StructScan(&s)
-		if privLevel < PrivLevelAdmin {
-			s.IloPassword = HiddenField
-			s.XmppPasswd = HiddenField
+		fmt.Printf("s ---> %v\n", s)
+		if err != nil {
+			return nil, fmt.Errorf("error getting servers: %v", err)
 		}
+		//if privLevel < PrivLevelAdmin {
+		//s.IloPassword = HiddenField
+		//s.XmppPasswd = HiddenField
+		//}
 		servers = append(servers, s)
 	}
 	return servers, nil
 }
+
+/*
+func getServersLong(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
+
+	rows, err := db.Queryx(ServersQuery())
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	servers := []Server{}
+
+	const hiddenField = "********"
+	// Get column names
+	columns, err := rows.Columns()
+	fmt.Printf("columns ---> %v\n", columns)
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+	}
+	for rows.Next() {
+		s := Server{}
+		if err := rows.Scan(&s.Cachegroup, &s.CachegroupId, &s.CdnId, &s.CdnName, &s.DomainName, &s.Guid, &s.HostName, &s.HttpsPort, &s.Id, &s.IloIpAddress, &s.IloIpGateway, &s.IloIpNetmask, &s.IloPassword, &s.IloUsername, &s.InterfaceMtu, &s.InterfaceName, &s.Ip6Address, &s.Ip6Gateway, &s.IpAddress, &s.IpGateway, &s.IpNetmask, &s.LastUpdated, &s.MgmtIpAddress, &s.MgmtIpGateway, &s.MgmtIpNetmask, &s.OfflineReason, &s.PhysLocation, &s.PhysLocationId, &s.Profile, &s.ProfileDesc, &s.ProfileId, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.StatusId, &s.TcpPort, &s.ServerType, &s.ServerTypeId, &s.UpdPending, &s.XmppId, &s.XmppPasswd); err != nil {
+			return nil, err
+		}
+
+		if privLevel < PrivLevelAdmin {
+			s.IloPassword = hiddenField
+			s.XmppPasswd = hiddenField
+		}
+		servers = append(servers, s)
+	}
+
+	return servers, nil
+}
+*/
 
 func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
@@ -144,4 +139,64 @@ func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersRespo
 		Response: servers,
 	}
 	return &resp, nil
+}
+
+func ServersQuery() string {
+
+	//COALESCE is needed to default values that are nil in the database
+	// because Go does not allow that to marshal into the struct
+	query := `SELECT
+cg.name as cachegroup,
+s.cachegroup as cachegroup_id,
+s.cdn_id,
+cdn.name as cdn_name,
+s.domain_name,
+COALESCE(s.guid, '') as guid,
+s.host_name,
+COALESCE(s.https_port, 0) as https_port,
+s.id,
+s.ilo_ip_address,
+s.ilo_ip_gateway,
+s.ilo_ip_netmask,
+COALESCE(s.ilo_password, '') as ilo_password,
+COALESCE(s.ilo_username, '') as ilo_username,
+COALESCE(s.interface_mtu, 9000) as interface_mtu,
+COALESCE(s.interface_name, '') as interface_name,
+COALESCE(s.ip6_address, '') as ip6_address,
+COALESCE(s.ip6_gateway, '') as ip6_gateway,
+s.ip_address,
+s.ip_gateway,
+s.ip_netmask,
+s.last_updated,
+COALESCE(s.mgmt_ip_address, '') as mgmt_ip_address,
+COALESCE(s.mgmt_ip_gateway, '') as mgmt_ip_gateway,
+COALESCE(s.mgmt_ip_netmask, '') as mgmt_ip_netmask,
+COALESCE(s.offline_reason, '') as offline_reason,
+pl.name as phys_location,
+s.phys_location,
+p.name as profile,
+p.description as profile_desc,
+s.profile as profile_id,
+COALESCE(s.rack, '') as rack,
+s.router_host_name,
+COALESCE(s.router_port_name, '') as router_port_name,
+st.name as status,
+s.status as status_id,
+COALESCE(s.tcp_port, '') as tcp_port,
+t.name as server_type,
+s.type as server_type_id,
+s.upd_pending as upd_pending,
+COALESCE(s.xmpp_id, '') as xmpp_id,
+COALESCE(s.xmpp_passwd, '') as xmpp_passwd
+
+FROM server s
+
+JOIN cachegroup cg ON s.cachegroup = cg.id
+JOIN cdn cdn ON s.cdn_id = cdn.id
+JOIN phys_location pl ON s.phys_location = pl.id
+JOIN profile p ON s.profile = p.id
+JOIN status st ON s.status = st.id
+JOIN type t ON s.type = t.id`
+
+	return query
 }
