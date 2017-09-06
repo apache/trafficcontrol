@@ -31,6 +31,32 @@ import (
 
 const ServersPrivLevel = 10
 
+const (
+	EQUAL     = "="
+	NOT_EQUAL = "!="
+	OR        = "OR"
+)
+
+type Condition struct {
+	Key     string
+	Operand string
+	Value   string
+}
+type WhereClause struct {
+	Condition  Condition
+	Conditions []Condition
+}
+
+func (w *WhereClause) SetCondition(c Condition) Condition {
+	w.Condition = c
+	return w.Condition
+}
+
+func (w *WhereClause) Statement() string {
+	c := w.Condition
+	return "\nWHERE " + c.Key + c.Operand + "$1"
+}
+
 func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
 		handleErr := func(err error, status int) {
@@ -61,16 +87,20 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
 	var rows *sqlx.Rows
 	var err error
-	query := serversQuery(v)
-	where, dbQueryColumnValue := whereClause(v)
-	if where != "" {
+
+	query := serversQuery()
+	wc := whereClause(v)
+	where := wc.Statement()
+	if wc.Condition.Value != "" {
 		query = query + where
-		rows, err = db.Queryx(query, dbQueryColumnValue)
+		rows, err = db.Queryx(query, wc.Condition.Value)
 	} else {
 		rows, err = db.Queryx(query)
 	}
-	defer rows.Close()
+
 	if err != nil {
+		//TODO: drichardson - send back an alert if the Query Count is larger than 1
+		//                    Test for bad Query Parameters
 		return nil, err
 	}
 	servers := []Server{}
@@ -80,11 +110,12 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
 
+	defer rows.Close()
 	for rows.Next() {
 		var s Server
 		err = rows.StructScan(&s)
 		if err != nil {
-			return nil, fmt.Errorf("error getting servers: %v", err)
+			return nil, fmt.Errorf("getting servers: %v", err)
 		}
 		if privLevel < PrivLevelAdmin {
 			s.IloPassword = HiddenField
@@ -98,7 +129,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
 	if err != nil {
-		return nil, fmt.Errorf("error getting servers: %v", err)
+		return nil, fmt.Errorf("getting servers response: %v", err)
 	}
 
 	resp := ServersResponse{
@@ -107,7 +138,7 @@ func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersRespo
 	return &resp, nil
 }
 
-func serversQuery(v url.Values) string {
+func serversQuery() string {
 
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
@@ -166,61 +197,35 @@ JOIN type t ON s.type = t.id`
 	return query
 }
 
-func whereClause(v url.Values) (string, string) {
-	var queryParam string
-	//TODO: drichardson - send back an alert if the Query Count is larger than 1
-	//                    Test for bad Query Parameters
-	//queryCount := len(q)
-	var dbQueryColumn string
-	var dbQueryColumnValue string
+func whereClause(v url.Values) WhereClause {
+
+	whereClause := WhereClause{}
 
 	switch {
 	case v.Get("cachegroup") != "":
-		queryParam = "cachegroup"
-		dbQueryColumn = "s.cachegroup"
-		dbQueryColumnValue = v.Get("cachegroup")
+		whereClause.SetCondition(Condition{"s.cachegroup", EQUAL, v.Get("cachegroup")})
 
 	// Support what should have been the cachegroupId as well
 	case v.Get("cachegroupId") != "":
-		queryParam = "cachegroupId"
-		dbQueryColumn = "s.cachegroup"
-		dbQueryColumnValue = v.Get("cachegroupId")
+		whereClause.SetCondition(Condition{"s.cachegroup", EQUAL, v.Get("cachegroupId")})
 
 	case v.Get("cdn") != "":
-		queryParam = "cdn"
-		dbQueryColumn = "s.cdn_id"
-		dbQueryColumnValue = v.Get("cdn")
+		whereClause.SetCondition(Condition{"s.cdn_id", EQUAL, v.Get("cdn")})
 
 	case v.Get("physLocation") != "":
-		queryParam = "physLocation"
-		dbQueryColumn = "s.phys_location"
-		dbQueryColumnValue = v.Get("physLocation")
+		whereClause.SetCondition(Condition{"s.phys_location", EQUAL, v.Get("physLocation")})
 
 	case v.Get("physLocationId") != "":
-		queryParam = "physLocationId"
-		dbQueryColumn = "s.phys_location"
-		dbQueryColumnValue = v.Get("physLocationId")
+		whereClause.SetCondition(Condition{"s.phys_location", EQUAL, v.Get("physLocationId")})
 
 	case v.Get("profileId") != "":
-		queryParam = "profileId"
-		dbQueryColumn = "s.profile"
-		dbQueryColumnValue = v.Get("profileId")
+		whereClause.SetCondition(Condition{"s.profile", EQUAL, v.Get("profileId")})
 
 	case v.Get("type") != "":
-		queryParam = "type"
-		dbQueryColumn = "s.type"
-		dbQueryColumnValue = v.Get("type")
+		whereClause.SetCondition(Condition{"s.type", EQUAL, v.Get("type")})
 
 	case v.Get("typeId") != "":
-		queryParam = "typeId"
-		dbQueryColumn = "s.type"
-		dbQueryColumnValue = v.Get("typeId")
+		whereClause.SetCondition(Condition{"s.type", EQUAL, v.Get("typeId")})
 	}
-
-	w := ""
-	if queryParam != "" {
-		w = "\nWHERE " + dbQueryColumn + "=$1"
-	}
-
-	return w, dbQueryColumnValue
+	return whereClause
 }
