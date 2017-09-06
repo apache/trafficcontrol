@@ -24,10 +24,6 @@ type ServersResponse struct {
 	Response []Server `json:"response"`
 }
 
-type ServerShort struct {
-	Cachegroup string `json:"cachegroup" db:"cachegroup"`
-	HostName   string `json:"hostName" db:"host_name"`
-}
 type Server struct {
 	Cachegroup     string `json:"cachegroup" db:"cachegroup"`
 	CachegroupId   int    `json:"cachegroupId" db:"cachegroup_id"`
