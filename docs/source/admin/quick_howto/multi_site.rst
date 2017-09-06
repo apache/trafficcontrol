@@ -20,7 +20,7 @@ Configure Multi Site Origin
 ***************************
 
 
-1) Create "cachegroups" for the origin locations, and assign the appropriate parent-child relationship between the mid cg's and org cgs (click the image to see full size).  Each mid cachegroup can be assigned a primary and secondary origin parent cachegroup.  Primary cachegroups will be listed first, secondary next, and origin servers in neither primary or secondary will be listed last.
+1) Create cachegroups for the origin locations, and assign the appropriate parent-child relationship between the mid and org cachegroups (click the image to see full size).  Each mid cachegroup can be assigned a primary and secondary origin parent cachegroup.  When the mid cache parent configuration is generated, origins in the primary cachegroups will be listed first, followed by origins in the secondary cachegroup. Origin servers assigned to the delivery service that are assigned to neither the primary nor secondary cachegroups will be listed last.
 
 .. image:: C5C4CD22-949A-48FD-8976-C673083E2177.png
 	:scale: 100%
