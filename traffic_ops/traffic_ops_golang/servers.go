@@ -31,32 +31,6 @@ import (
 
 const ServersPrivLevel = 10
 
-const (
-	EQUAL     = "="
-	NOT_EQUAL = "!="
-	OR        = "OR"
-)
-
-type Condition struct {
-	Key     string
-	Operand string
-	Value   string
-}
-type WhereClause struct {
-	Condition  Condition
-	Conditions []Condition
-}
-
-func (w *WhereClause) SetCondition(c Condition) Condition {
-	w.Condition = c
-	return w.Condition
-}
-
-func (w *WhereClause) Statement() string {
-	c := w.Condition
-	return "\nWHERE " + c.Key + c.Operand + "$1"
-}
-
 func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
 		handleErr := func(err error, status int) {
@@ -88,14 +62,15 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	query := serversQuery()
 	wc := whereClause(v)
-	where := wc.Statement()
-	if wc.Condition.Value != "" {
-		query = query + where
-		rows, err = db.Queryx(query, wc.Condition.Value)
+	query := SelectStatement{
+		Select: selectQuery(),
+		Where:  wc,
+	}
+	if wc.Exists() {
+		rows, err = db.Queryx(query.String(), wc.Condition.Value)
 	} else {
-		rows, err = db.Queryx(query)
+		rows, err = db.Queryx(query.String())
 	}
 
 	if err != nil {
@@ -138,7 +113,7 @@ func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersRespo
 	return &resp, nil
 }
 
-func serversQuery() string {
+func selectQuery() string {
 
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
@@ -195,6 +170,53 @@ JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id`
 	return query
+}
+
+const (
+	EQUAL     = "="
+	NOT_EQUAL = "!="
+	OR        = "OR"
+)
+
+type Condition struct {
+	Key     string
+	Operand string
+	Value   string
+}
+
+type SelectStatement struct {
+	Select string
+	Where  WhereClause
+}
+
+func (q *SelectStatement) String() string {
+	if q.Where.Exists() {
+		return q.Select + q.Where.String()
+	} else {
+		return q.Select
+	}
+}
+
+type WhereClause struct {
+	Condition Condition
+}
+
+func (w *WhereClause) SetCondition(c Condition) Condition {
+	w.Condition = c
+	return w.Condition
+}
+
+func (w *WhereClause) String() string {
+	c := w.Condition
+	return "\nWHERE " + c.Key + c.Operand + "$1"
+}
+
+func (w *WhereClause) Exists() bool {
+	if (Condition{}) != w.Condition {
+		return true
+	} else {
+		return false
+	}
 }
 
 func whereClause(v url.Values) WhereClause {
