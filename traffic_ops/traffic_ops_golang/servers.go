@@ -56,13 +56,8 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
-func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
-	//query := `SELECT
-	//cg.name as cachegroup,
-	//s.host_name as host_name
-	//FROM server s
-	//JOIN cachegroup cg ON s.cachegroup = cg.id`
+func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
 	rows, err := db.Queryx(ServersQuery())
 	defer rows.Close()
@@ -72,9 +67,6 @@ func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	servers := []Server{}
 
 	const HiddenField = "********"
-	// Get column names
-	columns, err := rows.Columns()
-	fmt.Printf("columns ---> %v\n", columns)
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
@@ -82,52 +74,17 @@ func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	for rows.Next() {
 		var s Server
 		err = rows.StructScan(&s)
-		fmt.Printf("s ---> %v\n", s)
 		if err != nil {
 			return nil, fmt.Errorf("error getting servers: %v", err)
 		}
-		//if privLevel < PrivLevelAdmin {
-		//s.IloPassword = HiddenField
-		//s.XmppPasswd = HiddenField
-		//}
-		servers = append(servers, s)
-	}
-	return servers, nil
-}
-
-/*
-func getServersLong(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
-
-	rows, err := db.Queryx(ServersQuery())
-	defer rows.Close()
-	if err != nil {
-		return nil, err
-	}
-	servers := []Server{}
-
-	const hiddenField = "********"
-	// Get column names
-	columns, err := rows.Columns()
-	fmt.Printf("columns ---> %v\n", columns)
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-	for rows.Next() {
-		s := Server{}
-		if err := rows.Scan(&s.Cachegroup, &s.CachegroupId, &s.CdnId, &s.CdnName, &s.DomainName, &s.Guid, &s.HostName, &s.HttpsPort, &s.Id, &s.IloIpAddress, &s.IloIpGateway, &s.IloIpNetmask, &s.IloPassword, &s.IloUsername, &s.InterfaceMtu, &s.InterfaceName, &s.Ip6Address, &s.Ip6Gateway, &s.IpAddress, &s.IpGateway, &s.IpNetmask, &s.LastUpdated, &s.MgmtIpAddress, &s.MgmtIpGateway, &s.MgmtIpNetmask, &s.OfflineReason, &s.PhysLocation, &s.PhysLocationId, &s.Profile, &s.ProfileDesc, &s.ProfileId, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.StatusId, &s.TcpPort, &s.ServerType, &s.ServerTypeId, &s.UpdPending, &s.XmppId, &s.XmppPasswd); err != nil {
-			return nil, err
-		}
-
 		if privLevel < PrivLevelAdmin {
-			s.IloPassword = hiddenField
-			s.XmppPasswd = hiddenField
+			s.IloPassword = HiddenField
+			s.XmppPasswd = HiddenField
 		}
 		servers = append(servers, s)
 	}
-
 	return servers, nil
 }
-*/
 
 func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
@@ -155,9 +112,9 @@ COALESCE(s.guid, '') as guid,
 s.host_name,
 COALESCE(s.https_port, 0) as https_port,
 s.id,
-s.ilo_ip_address,
-s.ilo_ip_gateway,
-s.ilo_ip_netmask,
+COALESCE(s.ilo_ip_address, '') as ilo_ip_address,
+COALESCE(s.ilo_ip_gateway, '') as ilo_ip_gateway,
+COALESCE(s.ilo_ip_netmask, '') as ilo_ip_netmask,
 COALESCE(s.ilo_password, '') as ilo_password,
 COALESCE(s.ilo_username, '') as ilo_username,
 COALESCE(s.interface_mtu, 9000) as interface_mtu,
@@ -173,16 +130,16 @@ COALESCE(s.mgmt_ip_gateway, '') as mgmt_ip_gateway,
 COALESCE(s.mgmt_ip_netmask, '') as mgmt_ip_netmask,
 COALESCE(s.offline_reason, '') as offline_reason,
 pl.name as phys_location,
-s.phys_location,
+s.phys_location as phys_location_id,
 p.name as profile,
 p.description as profile_desc,
 s.profile as profile_id,
 COALESCE(s.rack, '') as rack,
-s.router_host_name,
+COALESCE(s.router_host_name, '') as router_host_name,
 COALESCE(s.router_port_name, '') as router_port_name,
 st.name as status,
 s.status as status_id,
-COALESCE(s.tcp_port, '') as tcp_port,
+COALESCE(s.tcp_port, 0) as tcp_port,
 t.name as server_type,
 s.type as server_type_id,
 s.upd_pending as upd_pending,
