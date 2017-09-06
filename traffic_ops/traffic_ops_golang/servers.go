@@ -57,9 +57,18 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getServers(q url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
+func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
-	rows, err := db.Queryx(ServersQuery())
+	var rows *sqlx.Rows
+	var err error
+	query := serversQuery(v)
+	where, dbQueryColumnValue := whereClause(v)
+	if where != "" {
+		query = query + where
+		rows, err = db.Queryx(query, dbQueryColumnValue)
+	} else {
+		rows, err = db.Queryx(query)
+	}
 	defer rows.Close()
 	if err != nil {
 		return nil, err
@@ -98,7 +107,7 @@ func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersRespo
 	return &resp, nil
 }
 
-func ServersQuery() string {
+func serversQuery(v url.Values) string {
 
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
@@ -154,6 +163,64 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id`
-
 	return query
+}
+
+func whereClause(v url.Values) (string, string) {
+	var queryParam string
+	//TODO: drichardson - send back an alert if the Query Count is larger than 1
+	//                    Test for bad Query Parameters
+	//queryCount := len(q)
+	var dbQueryColumn string
+	var dbQueryColumnValue string
+
+	switch {
+	case v.Get("cachegroup") != "":
+		queryParam = "cachegroup"
+		dbQueryColumn = "s.cachegroup"
+		dbQueryColumnValue = v.Get("cachegroup")
+
+	// Support what should have been the cachegroupId as well
+	case v.Get("cachegroupId") != "":
+		queryParam = "cachegroupId"
+		dbQueryColumn = "s.cachegroup"
+		dbQueryColumnValue = v.Get("cachegroupId")
+
+	case v.Get("cdn") != "":
+		queryParam = "cdn"
+		dbQueryColumn = "s.cdn_id"
+		dbQueryColumnValue = v.Get("cdn")
+
+	case v.Get("physLocation") != "":
+		queryParam = "physLocation"
+		dbQueryColumn = "s.phys_location"
+		dbQueryColumnValue = v.Get("physLocation")
+
+	case v.Get("physLocationId") != "":
+		queryParam = "physLocationId"
+		dbQueryColumn = "s.phys_location"
+		dbQueryColumnValue = v.Get("physLocationId")
+
+	case v.Get("profileId") != "":
+		queryParam = "profileId"
+		dbQueryColumn = "s.profile"
+		dbQueryColumnValue = v.Get("profileId")
+
+	case v.Get("type") != "":
+		queryParam = "type"
+		dbQueryColumn = "s.type"
+		dbQueryColumnValue = v.Get("type")
+
+	case v.Get("typeId") != "":
+		queryParam = "typeId"
+		dbQueryColumn = "s.type"
+		dbQueryColumnValue = v.Get("typeId")
+	}
+
+	w := ""
+	if queryParam != "" {
+		w = "\nWHERE " + dbQueryColumn + "=$1"
+	}
+
+	return w, dbQueryColumnValue
 }
