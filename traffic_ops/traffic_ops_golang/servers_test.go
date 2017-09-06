@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"fmt"
 	"net/url"
 	"sort"
 	"testing"
@@ -32,21 +31,16 @@ import (
 
 var cols = []string{
 	"cachegroup",
-	"host_name",
-}
-
-var colsLong = []string{
-	"cachegroup",
 	"cachegroup_id",
 	"cdn_id",
 	"cdn_name",
 	"domain_name",
 	"guid",
-	"name",
+	"host_name",
 	"https_port",
 	"id",
 	"ilo_ip_address",
-	"ilo_ip_aateway",
+	"ilo_ip_gateway",
 	"ilo_ip_netmask",
 	"ilo_password",
 	"ilo_username",
@@ -73,11 +67,11 @@ var colsLong = []string{
 	"status",
 	"status_id",
 	"tcp_port",
-	"type",
-	"type_id",
+	"server_type",
+	"server_type_id",
 	"upd_pending",
 	"xmpp_id",
-	"xmpp_password",
+	"xmpp_passwd",
 }
 
 func getTestServers() []Server {
@@ -146,15 +140,52 @@ func TestGetServersByDsId(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
-	fmt.Printf("testServers ---> %v\n", testServers)
-	fmt.Printf("cols ---> %v\n", cols)
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testServers {
-		fmt.Printf("ts ---> %v\n", ts)
 		rows = rows.AddRow(
 			ts.Cachegroup,
+			ts.CachegroupId,
+			ts.CdnId,
+			ts.CdnName,
+			ts.DomainName,
+			ts.Guid,
 			ts.HostName,
+			ts.HttpsPort,
+			ts.Id,
+			ts.IloIpAddress,
+			ts.IloIpGateway,
+			ts.IloIpNetmask,
+			ts.IloPassword,
+			ts.IloUsername,
+			ts.InterfaceMtu,
+			ts.InterfaceName,
+			ts.Ip6Address,
+			ts.Ip6Gateway,
+			ts.IpAddress,
+			ts.IpNetmask,
+			ts.IpGateway,
+			ts.LastUpdated,
+			ts.MgmtIpAddress,
+			ts.MgmtIpGateway,
+			ts.MgmtIpNetmask,
+			ts.OfflineReason,
+			ts.PhysLocation,
+			ts.PhysLocationId,
+			ts.Profile,
+			ts.ProfileDesc,
+			ts.ProfileId,
+			ts.Rack,
+			ts.RouterHostName,
+			ts.RouterPortName,
+			ts.Status,
+			ts.StatusId,
+			ts.TcpPort,
+			ts.ServerType,
+			ts.ServerTypeId,
+			ts.UpdPending,
+			ts.XmppId,
+			ts.XmppPasswd,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
@@ -162,10 +193,6 @@ func TestGetServersByDsId(t *testing.T) {
 	v.Set("dsId", "1")
 
 	servers, err := getServers(v, db, PrivLevelAdmin)
-	fmt.Printf("servers ---> %v\n", servers)
-	//for _, s := range servers {
-	//fmt.Printf("s ---> %v\n", s)
-	//}
 	if err != nil {
 		t.Errorf("getServers expected: nil error, actual: %v", err)
 	}
