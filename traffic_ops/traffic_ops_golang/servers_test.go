@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"fmt"
 	"net/url"
 	"sort"
 	"testing"
@@ -29,15 +30,66 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func setupServer() Server {
-	return Server{
+var cols = []string{
+	"cachegroup",
+	"host_name",
+}
+
+var colsLong = []string{
+	"cachegroup",
+	"cachegroup_id",
+	"cdn_id",
+	"cdn_name",
+	"domain_name",
+	"guid",
+	"name",
+	"https_port",
+	"id",
+	"ilo_ip_address",
+	"ilo_ip_aateway",
+	"ilo_ip_netmask",
+	"ilo_password",
+	"ilo_username",
+	"interface_mtu",
+	"interface_name",
+	"ip6_address",
+	"ip6_gateway",
+	"ip_address",
+	"ip_gateway",
+	"ip_netmask",
+	"last_updated",
+	"mgmt_ip_address",
+	"mgmt_ip_gateway",
+	"mgmt_ip_netmask",
+	"offline_reason",
+	"phys_location",
+	"phys_location_id",
+	"profile",
+	"profile_desc",
+	"profile_id",
+	"rack",
+	"router_host_name",
+	"router_port_name",
+	"status",
+	"status_id",
+	"tcp_port",
+	"type",
+	"type_id",
+	"upd_pending",
+	"xmpp_id",
+	"xmpp_password",
+}
+
+func getTestServers() []Server {
+	servers := []Server{}
+	testServer := Server{
 		Cachegroup:     "Cachegroup",
 		CachegroupId:   1,
 		CdnId:          1,
 		CdnName:        "cdnName",
 		DomainName:     "domainName",
 		Guid:           "guid",
-		HostName:       "hostName",
+		HostName:       "server1",
 		HttpsPort:      443,
 		Id:             1,
 		IloIpAddress:   "iloIpAddress",
@@ -74,9 +126,17 @@ func setupServer() Server {
 		XmppId:         "xmppId",
 		XmppPasswd:     "xmppPasswd",
 	}
+	servers = append(servers, testServer)
+
+	testServer2 := testServer
+	testServer2.Cachegroup = "cachegroup2"
+	testServer2.HostName = "server2"
+	servers = append(servers, testServer2)
+
+	return servers
 }
 
-func TestGetServers(t *testing.T) {
+func TestGetServersByDsId(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -85,105 +145,32 @@ func TestGetServers(t *testing.T) {
 	}
 	defer db.Close()
 
-	testServer := setupServer()
+	testServers := getTestServers()
+	fmt.Printf("testServers ---> %v\n", testServers)
+	fmt.Printf("cols ---> %v\n", cols)
+	rows := sqlmock.NewRows(cols)
 
-	rows := sqlmock.NewRows([]string{
-		"cachegroup",
-		"cachegroupId",
-		"cdnId",
-		"cdnName",
-		"domainName",
-		"guid",
-		"hostName",
-		"httpsPort",
-		"id",
-		"iloIpAddress",
-		"iloIpGateway",
-		"iloIpNetMask",
-		"iloPassword",
-		"iloUsername",
-		"interfaceMtu",
-		"interfaceName",
-		"ip6Address",
-		"ip6Gateway",
-		"ipAddress",
-		"ipGateway",
-		"ipNetmask",
-		"lastUpdated",
-		"mgmtIpAddress",
-		"mgmtIpGateway",
-		"mgmtIpNetmask",
-		"offlineReason",
-		"physLocation",
-		"physLocationId",
-		"profile",
-		"profileDesc",
-		"profileId",
-		"rack",
-		"routerHostName",
-		"routerPortName",
-		"status",
-		"statusId",
-		"tcpPort",
-		"type",
-		"typeId",
-		"updPending",
-		"xmppId",
-		"xmppPassword",
-	})
-	rows = rows.AddRow(
-		testServer.Cachegroup,
-		testServer.CachegroupId,
-		testServer.CdnId,
-		testServer.CdnName,
-		testServer.DomainName,
-		testServer.Guid,
-		testServer.HostName,
-		testServer.HttpsPort,
-		testServer.Id,
-		testServer.IloIpAddress,
-		testServer.IloIpGateway,
-		testServer.IloIpNetmask,
-		testServer.IloPassword,
-		testServer.IloUsername,
-		testServer.InterfaceMtu,
-		testServer.InterfaceName,
-		testServer.Ip6Address,
-		testServer.Ip6Gateway,
-		testServer.IpAddress,
-		testServer.IpGateway,
-		testServer.IpNetmask,
-		testServer.LastUpdated,
-		testServer.MgmtIpAddress,
-		testServer.MgmtIpGateway,
-		testServer.MgmtIpNetmask,
-		testServer.OfflineReason,
-		testServer.PhysLocation,
-		testServer.PhysLocationId,
-		testServer.Profile,
-		testServer.ProfileDesc,
-		testServer.ProfileId,
-		testServer.Rack,
-		testServer.RouterHostName,
-		testServer.RouterPortName,
-		testServer.Status,
-		testServer.StatusId,
-		testServer.TcpPort,
-		testServer.ServerType,
-		testServer.ServerTypeId,
-		testServer.UpdPending,
-		testServer.XmppId,
-		testServer.XmppPasswd,
-	)
+	for _, ts := range testServers {
+		fmt.Printf("ts ---> %v\n", ts)
+		rows = rows.AddRow(
+			ts.Cachegroup,
+			ts.HostName,
+		)
+	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := url.Values{}
-	v.Set("type", "EDGE")
+	v.Set("dsId", "1")
+
 	servers, err := getServers(v, db, PrivLevelAdmin)
+	fmt.Printf("servers ---> %v\n", servers)
+	//for _, s := range servers {
+	//fmt.Printf("s ---> %v\n", s)
+	//}
 	if err != nil {
 		t.Errorf("getServers expected: nil error, actual: %v", err)
 	}
 
-	if len(servers) != 1 {
+	if len(servers) != 2 {
 		t.Errorf("getServers expected: len(servers) == 1, actual: %v", len(servers))
 	}
 
