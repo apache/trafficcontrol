@@ -20,7 +20,7 @@
 var FormUserController = function(user, $scope, $location, formUtils, stringUtils, locationUtils, roleService, tenantService) {
 
     var getRoles = function() {
-        roleService.getRoles()
+        roleService.getRoles({ orderby: 'priv_level DESC' })
             .then(function(result) {
                 $scope.roles = result;
             });

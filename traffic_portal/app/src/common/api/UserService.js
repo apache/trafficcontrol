@@ -152,6 +152,19 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
             );
     };
 
+    this.registerUser = function(registration) {
+        return $http.post(ENV.api['root'] + "users/register", registration)
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
+
 };
 
 UserService.$inject = ['Restangular', '$http', '$location', '$q', 'authService', 'httpService', 'locationUtils', 'userModel', 'messageModel', 'ENV'];

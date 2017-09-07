@@ -122,6 +122,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/admin/users/edit').name,
         require('./modules/private/admin/users/list').name,
         require('./modules/private/admin/users/new').name,
+        require('./modules/private/admin/users/register').name,
 
         // configure
         require('./modules/private/configure').name,
@@ -246,6 +247,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/user').name,
         require('./common/modules/form/user/edit').name,
         require('./common/modules/form/user/new').name,
+        require('./common/modules/form/user/register').name,
 
         // tables
         require('./common/modules/table/cacheGroups').name,

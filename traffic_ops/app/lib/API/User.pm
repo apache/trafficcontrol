@@ -31,6 +31,8 @@ use Utils::Helper::ResponseHelper;
 use Validate::Tiny ':all';
 use UI::ConfigFiles;
 use UI::Tools;
+use Data::GUID;
+use POSIX qw(strftime);
 
 sub login {
 	my $self    = shift;
@@ -366,6 +368,64 @@ sub reset_password {
 	}
 
 }
+
+sub register_user {
+	my $self    = shift;
+	my $params  = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_registration_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $email_to 	= $params->{email};
+	my $token    	= Data::GUID->new;
+	my $role 		= $params->{role};
+	my $tenant 		= $params->{tenantId};
+
+	my $now = strftime( "%Y-%m-%d %H:%M:%S", gmtime() );
+	my $existing_user = $self->db->resultset('TmUser')->find( { email => $email_to } );
+
+	if (!defined($existing_user)) {
+		my $new_user = $self->db->resultset('TmUser')->create(
+			{
+				email				=> $email_to,
+				role				=> $role,
+				tenant_id			=> $tenant,
+				username			=> $token,
+				token				=> $token,
+				new_user			=> 1,
+				registration_sent	=>  $now,
+			}
+		);
+		$new_user->insert();
+	} elsif ( defined($existing_user) && $existing_user->new_user() ) {
+		$existing_user->token($token);
+		$existing_user->role($role);
+		$existing_user->tenant_id($tenant);
+		$existing_user->registration_sent($now);
+		$existing_user->update();
+	} else {
+		return $self->alert("User already exists and has completed registration.");
+	}
+
+	#send the registration email with a link the user can follow to finish the registration
+	$self->send_registration_email( $email_to, $token );
+
+	my $role_name 	= $self->db->resultset("Role")->search( { id => $role } )->get_column('name')->single();
+	my $tenant_name = $self->db->resultset("Tenant")->search( { id => $tenant } )->get_column('name')->single();
+
+	my $msg = "Sent user registration to $email_to with the following permissions [ role: $role_name | tenant: $tenant_name ]";
+	&log( $self, $msg, "APICHANGE" );
+
+	return $self->success_message($msg);
+}
+
 
 sub get_available_deliveryservices_not_assigned_to_user {
 	my $self = shift;
@@ -707,6 +767,79 @@ sub is_valid {
 		return ( 0, $result->{error} );
 	}
 
+}
+
+sub is_registration_valid {
+	my $self   = shift;
+	my $params = shift;
+
+	my $rules = {
+		fields => [
+			qw/email role tenantId/
+		],
+
+		# Validation checks to perform
+		checks => [
+			email		=> [ is_required("is required"), sub { is_valid_email($self, @_) } ],
+			role		=> [ is_required("is required"), sub { is_valid_role($self, @_) } ],
+			tenantId	=> [ is_required("is required"), sub { is_valid_tenant($self, @_) } ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
+sub is_valid_email {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	return Email::Valid->address($value) ? undef : 'is not valid';
+}
+
+sub is_valid_role {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	my $role_priv_level = $self->db->resultset("Role")->search( { id => $value } )->get_column('priv_level')->single();
+	if ( !defined($role_priv_level) ) {
+		return "not found";
+	}
+
+	my $my_role = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('role')->single();
+	my $my_role_priv_level = $self->db->resultset("Role")->search( { id => $my_role } )->get_column('priv_level')->single();
+
+	if ( $role_priv_level > $my_role_priv_level ) {
+		return "cannot exceed current user's role";
+	}
+
+	return undef;
+}
+
+sub is_valid_tenant {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	my $tenant = $self->db->resultset("Tenant")->search( { id => $value } )->single();
+	if ( !defined($tenant) ) {
+		return "not found";
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
+
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $value)) {
+		return "not available to current user.";
+	}
+
+	return undef;
 }
 
 sub is_username_taken {
