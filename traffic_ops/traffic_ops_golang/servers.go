@@ -57,6 +57,18 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
+func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersResponse, error) {
+	servers, err := getServers(q, db, privLevel)
+	if err != nil {
+		return nil, fmt.Errorf("getting servers response: %v", err)
+	}
+
+	resp := ServersResponse{
+		Response: servers,
+	}
+	return &resp, nil
+}
+
 func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
 	var rows *sqlx.Rows
@@ -99,18 +111,6 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 		servers = append(servers, s)
 	}
 	return servers, nil
-}
-
-func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersResponse, error) {
-	servers, err := getServers(q, db, privLevel)
-	if err != nil {
-		return nil, fmt.Errorf("getting servers response: %v", err)
-	}
-
-	resp := ServersResponse{
-		Response: servers,
-	}
-	return &resp, nil
 }
 
 func selectQuery() string {
@@ -170,84 +170,4 @@ JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id`
 	return query
-}
-
-const (
-	EQUAL     = "="
-	NOT_EQUAL = "!="
-	OR        = "OR"
-)
-
-type Condition struct {
-	Key     string
-	Operand string
-	Value   string
-}
-
-type SelectStatement struct {
-	Select string
-	Where  WhereClause
-}
-
-func (q *SelectStatement) String() string {
-	if q.Where.Exists() {
-		return q.Select + q.Where.String()
-	} else {
-		return q.Select
-	}
-}
-
-type WhereClause struct {
-	Condition Condition
-}
-
-func (w *WhereClause) SetCondition(c Condition) Condition {
-	w.Condition = c
-	return w.Condition
-}
-
-func (w *WhereClause) String() string {
-	c := w.Condition
-	return "\nWHERE " + c.Key + c.Operand + "$1"
-}
-
-func (w *WhereClause) Exists() bool {
-	if (Condition{}) != w.Condition {
-		return true
-	} else {
-		return false
-	}
-}
-
-func newWhereClause(v url.Values) WhereClause {
-
-	whereClause := WhereClause{}
-
-	switch {
-	case v.Get("cachegroup") != "":
-		whereClause.SetCondition(Condition{"s.cachegroup", EQUAL, v.Get("cachegroup")})
-
-	// Support what should have been the cachegroupId as well
-	case v.Get("cachegroupId") != "":
-		whereClause.SetCondition(Condition{"s.cachegroup", EQUAL, v.Get("cachegroupId")})
-
-	case v.Get("cdn") != "":
-		whereClause.SetCondition(Condition{"s.cdn_id", EQUAL, v.Get("cdn")})
-
-	case v.Get("physLocation") != "":
-		whereClause.SetCondition(Condition{"s.phys_location", EQUAL, v.Get("physLocation")})
-
-	case v.Get("physLocationId") != "":
-		whereClause.SetCondition(Condition{"s.phys_location", EQUAL, v.Get("physLocationId")})
-
-	case v.Get("profileId") != "":
-		whereClause.SetCondition(Condition{"s.profile", EQUAL, v.Get("profileId")})
-
-	case v.Get("type") != "":
-		whereClause.SetCondition(Condition{"s.type", EQUAL, v.Get("type")})
-
-	case v.Get("typeId") != "":
-		whereClause.SetCondition(Condition{"s.type", EQUAL, v.Get("typeId")})
-	}
-	return whereClause
 }
