@@ -25,8 +25,12 @@ var TableUsersController = function(users, $scope, $state, locationUtils) {
         locationUtils.navigateToPath('/admin/users/' + id);
     };
 
-    $scope.createUser = function() {
+    $scope.create = function() {
         locationUtils.navigateToPath('/admin/users/new');
+    };
+
+    $scope.register = function() {
+        locationUtils.navigateToPath('/admin/users/register');
     };
 
     $scope.refresh = function() {

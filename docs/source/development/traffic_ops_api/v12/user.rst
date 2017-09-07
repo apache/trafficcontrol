@@ -375,6 +375,51 @@ Users
 
 |
 
+
+**POST /api/1.2/users/register**
+
+  Register a user and send registration email.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Properties**
+
+  +-------------------------+--------+----------+-------------------------------------------------+
+  | Parameter               | Type   | Required | Description                                     |
+  +=========================+========+==========+=================================================+
+  |``email``                | string | yes      | Email address of the new user.                  |
+  +-------------------------+--------+----------+-------------------------------------------------+
+  |``role``                 |  int   | yes      | Role ID of the new user.                        |
+  +-------------------------+--------+----------+-------------------------------------------------+
+  |``tenantId``             |  int   | yes      | Tenant ID of the new user.                      |
+  +-------------------------+--------+----------+-------------------------------------------------+
+
+
+  **Request Example** ::
+
+    {
+        "email": "foo@bar.com"
+        "role": 1,
+        "tenantId": "1"
+    }
+
+|
+
+  **Response Example** ::
+
+    {
+    	"alerts": [
+             {
+                 "level":"success",
+                 "text":"Sent user registration to foo@bar.com with the following permissions [ role: admin | tenant: root ]"
+             }
+         ]
+     }
+
+|
+
 **GET /api/1.2/users/:id/deliveryservices**
 
   Retrieves all delivery services assigned to the user. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
