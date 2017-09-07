@@ -37,7 +37,7 @@ RUN	yum -y install \
 
 WORKDIR /opt
 RUN curl -L -b "oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz | tar xzf - && \
-    curl -L http://mirror.nexcess.net/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar xzf -
+    curl -L https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz | tar xzf -
 RUN ln -s jdk* java && ln -s apache-maven* maven
 
 RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
