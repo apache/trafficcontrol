@@ -2193,9 +2193,9 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 			my $xml_id                             = $ds->{ds_xml_id};
 			my $origin_shield                      = $ds->{origin_shield};
 			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
-			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 0;
-			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'};
-			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'};
+			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 'consistent_hash';
+			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'} || 'both';
+			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'} || '';
 			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
 			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
@@ -2266,8 +2266,8 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
-					if ( $unavailable_server_retry_responses ne "") {
-						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					if ( $unavailable_server_retry_responses ne "" && $unavailable_server_retry_responses =~ /^"(?:\d{3},)+\d{3}"\s*$/) {
+						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";	
 					} else {
 						$text .= " parent_retry=$parent_retry";
 					}
