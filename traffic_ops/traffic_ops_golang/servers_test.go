@@ -29,51 +29,6 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-var cols = []string{
-	"cachegroup",
-	"cachegroup_id",
-	"cdn_id",
-	"cdn_name",
-	"domain_name",
-	"guid",
-	"host_name",
-	"https_port",
-	"id",
-	"ilo_ip_address",
-	"ilo_ip_gateway",
-	"ilo_ip_netmask",
-	"ilo_password",
-	"ilo_username",
-	"interface_mtu",
-	"interface_name",
-	"ip6_address",
-	"ip6_gateway",
-	"ip_address",
-	"ip_gateway",
-	"ip_netmask",
-	"last_updated",
-	"mgmt_ip_address",
-	"mgmt_ip_gateway",
-	"mgmt_ip_netmask",
-	"offline_reason",
-	"phys_location",
-	"phys_location_id",
-	"profile",
-	"profile_desc",
-	"profile_id",
-	"rack",
-	"router_host_name",
-	"router_port_name",
-	"status",
-	"status_id",
-	"tcp_port",
-	"server_type",
-	"server_type_id",
-	"upd_pending",
-	"xmpp_id",
-	"xmpp_passwd",
-}
-
 func getTestServers() []Server {
 	servers := []Server{}
 	testServer := Server{
@@ -140,8 +95,11 @@ func TestGetServersByDsId(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
+	cols := ColsFromStructByTag("db", Server{})
 	rows := sqlmock.NewRows(cols)
 
+	//TODO: drichardson - build helper to add these Rows from the struct values
+	//                    or by CSV if types get in the way
 	for _, ts := range testServers {
 		rows = rows.AddRow(
 			ts.Cachegroup,
