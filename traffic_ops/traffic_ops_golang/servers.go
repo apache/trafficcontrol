@@ -62,7 +62,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	wc := whereClause(v)
+	wc := newWhereClause(v)
 	query := SelectStatement{
 		Select: selectQuery(),
 		Where:  wc,
@@ -219,7 +219,7 @@ func (w *WhereClause) Exists() bool {
 	}
 }
 
-func whereClause(v url.Values) WhereClause {
+func newWhereClause(v url.Values) WhereClause {
 
 	whereClause := WhereClause{}
 
