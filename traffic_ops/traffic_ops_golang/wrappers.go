@@ -135,9 +135,9 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		sha := sha512.Sum512(iw.body)
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 
+		//TODO: - drichardson - hook in
 		//gzipHandler(w, r, iw.body)
-
-		fmt.Printf("outbound headers ---> %v\n", w.Header())
+		//fmt.Printf("outbound headers ---> %v\n", w.Header())
 
 	}
 }
