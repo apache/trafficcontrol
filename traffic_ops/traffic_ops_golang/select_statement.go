@@ -19,8 +19,6 @@ package main
  * under the License.
  */
 
-import "net/url"
-
 const (
 	EQUAL     = "="
 	NOT_EQUAL = "!="
@@ -66,37 +64,4 @@ func (w *WhereClause) Exists() bool {
 	} else {
 		return false
 	}
-}
-
-func newWhereClause(v url.Values) WhereClause {
-
-	whereClause := WhereClause{}
-
-	switch {
-	case v.Get("cachegroup") != "":
-		whereClause.SetCondition(Condition{"s.cachegroup", EQUAL, v.Get("cachegroup")})
-
-	// Support what should have been the cachegroupId as well
-	case v.Get("cachegroupId") != "":
-		whereClause.SetCondition(Condition{"s.cachegroup", EQUAL, v.Get("cachegroupId")})
-
-	case v.Get("cdn") != "":
-		whereClause.SetCondition(Condition{"s.cdn_id", EQUAL, v.Get("cdn")})
-
-	case v.Get("physLocation") != "":
-		whereClause.SetCondition(Condition{"s.phys_location", EQUAL, v.Get("physLocation")})
-
-	case v.Get("physLocationId") != "":
-		whereClause.SetCondition(Condition{"s.phys_location", EQUAL, v.Get("physLocationId")})
-
-	case v.Get("profileId") != "":
-		whereClause.SetCondition(Condition{"s.profile", EQUAL, v.Get("profileId")})
-
-	case v.Get("type") != "":
-		whereClause.SetCondition(Condition{"s.type", EQUAL, v.Get("type")})
-
-	case v.Get("typeId") != "":
-		whereClause.SetCondition(Condition{"s.type", EQUAL, v.Get("typeId")})
-	}
-	return whereClause
 }
