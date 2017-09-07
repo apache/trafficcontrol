@@ -26,6 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	. "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -76,7 +77,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
 	wc := newServersWhereClause(v)
 	query := SelectStatement{
-		Select: selectQuery(),
+		Select: selectServersQuery(),
 		Where:  wc,
 	}
 	if wc.Exists() {
@@ -113,7 +114,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	return servers, nil
 }
 
-func selectQuery() string {
+func selectServersQuery() string {
 
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct

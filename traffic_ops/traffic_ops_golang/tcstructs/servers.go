@@ -1,4 +1,4 @@
-package main
+package tcstructs
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,7 +20,6 @@ package main
  */
 
 type ServersResponse struct {
-	Version  string   `json:"version"`
 	Response []Server `json:"response"`
 }
 
@@ -57,6 +56,7 @@ type Server struct {
 	ProfileDesc    string `json:"profileDesc" db:"profile_desc"`
 	ProfileId      int    `json:"profileId" db:"profile_id"`
 	Rack           string `json:"rack" db:"rack"`
+	//TODO: drichardson - add reval_pending
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
 	RouterPortName string `json:"routerPortName" db:"router_port_name"`
 	Status         string `json:"status" db:"status"`
