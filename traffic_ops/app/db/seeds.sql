@@ -332,7 +332,8 @@ insert into api_capability (http_method, route, capability) values ('DELETE', '/
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/users', 'user-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 289
 insert into api_capability (http_method, route, capability) values ('GET', '/api/*/users/*', 'user-read') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 290
 insert into api_capability (http_method, route, capability) values ('PUT', '/api/*/users/*', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
-
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/users', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
+insert into api_capability (http_method, route, capability) values ('POST', '/api/*/users/register', 'user-write') ON CONFLICT (http_method, route, capability) DO NOTHING; -- 292
 
 -- types
 -- delivery service types

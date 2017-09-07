@@ -781,6 +781,9 @@ sub api_routes {
 	$r->put("/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'User#update', namespace => $namespace );
 	$r->post("/api/$version/users")->over( authenticated => 1, not_ldap => 1 )->to( 'User#create', namespace => $namespace );
 
+	# -- USERS: REGISTER NEW USER AND SEND REGISTRATION EMAIL
+	$r->post("/api/$version/users/register")->to( 'User#register_user', namespace => $namespace );
+
 	# -- USERS: DELIVERY SERVICE ASSIGNMENTS
 	$r->get( "/api/$version/users/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#get_deliveryservices_by_userId', namespace => $namespace );
 	$r->get("/api/$version/user/:id/deliveryservices/available" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )
