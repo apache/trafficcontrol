@@ -44,10 +44,10 @@ type Config struct {
 	LogLocationDebug   string `json:"log_location_debug"`
 	LogLocationEvent   string `json:"log_location_event"`
 
-	ReqTimeoutMS         int `json:"req_timeout_ms"`
-	ReqKeepAliveMS       int `json:"req_keep_alive_ms"`
-	ReqMaxIdleConns      int `json:"req_max_idle_connections"`
-	ReqIdleConnTimeoutMS int `json:"req_idle_connection_timeout_ms"`
+	ReqTimeoutMS         int `json:"parent_request_timeout_ms"` // TODO rename "parent_request" to distinguish from client requests
+	ReqKeepAliveMS       int `json:"parent_request_keep_alive_ms"`
+	ReqMaxIdleConns      int `json:"parent_request_max_idle_connections"`
+	ReqIdleConnTimeoutMS int `json:"parent_request_idle_connection_timeout_ms"`
 }
 
 func (c Config) ErrorLog() log.LogLocation {
