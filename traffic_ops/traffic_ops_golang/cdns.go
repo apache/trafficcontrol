@@ -75,16 +75,7 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]Cdn, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	wc := cdnsParamsToWhereClause(v)
-	query := SelectStatement{
-		Select: selectCdnsQuery(),
-		Where:  wc,
-	}
-	if wc.Exists() {
-		rows, err = db.Queryx(query.String(), wc.Condition.Value)
-	} else {
-		rows, err = db.Queryx(query.String())
-	}
+	rows, err = db.Queryx(selectCdnsQuery())
 
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
@@ -120,15 +111,4 @@ name
 
 FROM cdn c`
 	return query
-}
-
-func cdnsParamsToWhereClause(v url.Values) WhereClause {
-
-	whereClause := WhereClause{}
-
-	switch {
-	case v.Get("name") != "":
-		whereClause.SetCondition(Condition{"name", EQUAL, v.Get("name")})
-	}
-	return whereClause
 }
