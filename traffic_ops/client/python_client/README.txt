@@ -18,7 +18,7 @@ NOTE: Assuming in a already newly created virtualenv and cd'd to the root of a f
             $ source ~/VENV/my_venv/bin/activate
             (my_venv) $
     2. Install the software for the correct environment in the activated virtualenv
-        (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>/traffic_ops/client/python-client
+        (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>/traffic_ops/client/python_client
         (my_venv) $ python setup.py install
         ...
         (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>
@@ -38,4 +38,4 @@ NOTE: Assuming in a already newly created virtualenv and cd'd to the root of a f
                     >>> exit()
         (my_venv) $
 
-        NOTE: No errors on the import statement means you should be good to go.
+        NOTE: No errors/exceptions (warnings are okay) means you should be good to go.
