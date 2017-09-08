@@ -13,7 +13,7 @@ setup(
     version=version,
     author='Robert Scrimo Jr.',
     author_email='robert_scrimo@comcast.com',
-    packages=['trafficops'],
+    packages=['common', 'trafficops'],
     url='http://trafficcontrol.apache.org/',
     license='http://www.apache.org/licenses/LICENSE-2.0',
     description='Python API Client for Traffic Ops',

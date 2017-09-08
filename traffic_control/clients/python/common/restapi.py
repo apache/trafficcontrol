@@ -31,7 +31,7 @@ import requests
 import requests.adapters as ra
 
 # Local Modules
-import trafficops.utils as utils
+import common.utils as utils
 
 # Python 2 to Python 3 Compatibility
 import requests.compat as compat

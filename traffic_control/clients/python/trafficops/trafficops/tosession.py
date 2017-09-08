@@ -31,8 +31,8 @@ import munch
 import requests.exceptions as rex
 
 # Local Modules
-import trafficops.restapi as restapi
-import trafficops.utils as utils
+import common.restapi as restapi
+import common.utils as utils
 
 
 logger = logging.getLogger(__name__)

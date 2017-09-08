@@ -20,8 +20,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Import Local Modules into the 'trafficops' package namespace for convenience.
-from .restapi import *
-from .tosession import *
+from common.restapi import *
+from trafficops.tosession import *
 
 # The Module Version
 __version__ = '0.1.0'
