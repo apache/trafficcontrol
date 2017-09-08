@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -48,6 +49,10 @@ type Config struct {
 	ReqKeepAliveMS       int `json:"parent_request_keep_alive_ms"`
 	ReqMaxIdleConns      int `json:"parent_request_max_idle_connections"`
 	ReqIdleConnTimeoutMS int `json:"parent_request_idle_connection_timeout_ms"`
+
+	ServerIdleTimeoutMS  int `json:"server_idle_timeout_ms"`
+	ServerWriteTimeoutMS int `json:"server_write_timeout_ms"`
+	ServerReadTimeoutMS  int `json:"server_read_timeout_ms"`
 }
 
 func (c Config) ErrorLog() log.LogLocation {
@@ -86,6 +91,9 @@ var DefaultConfig = Config{
 	ReqKeepAliveMS:         30 * MSPerSec,
 	ReqMaxIdleConns:        100,
 	ReqIdleConnTimeoutMS:   90 * MSPerSec,
+	ServerIdleTimeoutMS:    10 * MSPerSec,
+	ServerWriteTimeoutMS:   3 * MSPerSec,
+	ServerReadTimeoutMS:    3 * MSPerSec,
 }
 
 // Load loads the given config file. If an empty string is passed, the default config is returned.
@@ -145,11 +153,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	httpsListener, httpsConns, httpsConnStateCallback, err := grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile)
-	if err != nil {
-		log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
-	}
-
 	stats := grove.NewStats(remapper.Rules())
 
 	buildHandler := func(scheme string, conns *grove.ConnMap) (http.Handler, *grove.CacheHandlerPointer) {
@@ -176,14 +179,29 @@ func main() {
 		return handler, cacheHandlerPointer
 	}
 
+	httpsServer := (*http.Server)(nil)
+	httpsListener := net.Listener(nil)
+	httpsConns := (*grove.ConnMap)(nil)
+	httpsConnStateCallback := (func(net.Conn, http.ConnState))(nil)
+	if cfg.CertFile != "" && cfg.KeyFile != "" {
+		if httpsListener, httpsConns, httpsConnStateCallback, err = grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
+			log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+			return
+		}
+	}
+
 	httpHandler, httpHandlerPointer := buildHandler("http", httpConns)
 	httpsHandler, httpsHandlerPointer := buildHandler("https", httpsConns)
 
+	idleTimeout := time.Duration(cfg.ServerIdleTimeoutMS) * time.Millisecond
+	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
+	writeTimeout := time.Duration(cfg.ServerWriteTimeoutMS) * time.Millisecond
+
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
-	httpServer := startHTTPServer(httpHandler, httpListener, httpConnStateCallback, cfg.Port)
-	httpsServer := (*http.Server)(nil)
+	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
+
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		httpsServer = startHTTPSServer(httpsHandler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
+		httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
 	}
 
 	reloadConfig := func() {
@@ -195,7 +213,6 @@ func main() {
 			log.Errorf("reloading config: loading config file: %v\n", err)
 			return
 		}
-
 		eventW, errW, warnW, infoW, debugW, err := log.GetLogWriters(cfg)
 		if err != nil {
 			log.Errorf("relaoding config: getting log writers '%v': %v", *configFileName, err)
@@ -276,7 +293,7 @@ func main() {
 			if err := httpServer.Close(); err != nil {
 				log.Errorf("closing http server: %v\n", err)
 			}
-			httpServer = startHTTPServer(handler, httpListener, httpConnStateCallback, cfg.Port)
+			httpServer = startServer(handler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
@@ -289,7 +306,7 @@ func main() {
 					log.Errorf("closing https server: %v\n", err)
 				}
 			}
-			httpsServer = startHTTPSServer(handler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, cfg.CertFile, cfg.KeyFile)
+			httpsServer = startServer(handler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
 		}
 	}
 
@@ -326,36 +343,20 @@ func signalReloader(sig os.Signal, f func()) {
 	}
 }
 
-const IdleTimeout = time.Second * 10 // TODO config
-
-// startHTTPServer starts an HTTP server on the given port, and returns it
-func startHTTPServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), port int) *http.Server {
+// startServer starts an HTTP or HTTPS server on the given port, and returns it.
+func startServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), port int, idleTimeout time.Duration, readTimeout time.Duration, writeTimeout time.Duration, protocol string) *http.Server {
 	server := &http.Server{
-		Handler:     handler,
-		Addr:        fmt.Sprintf(":%d", port),
-		ConnState:   connState,
-		IdleTimeout: IdleTimeout,
+		Handler:      handler,
+		Addr:         fmt.Sprintf(":%d", port),
+		ConnState:    connState,
+		IdleTimeout:  idleTimeout,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
 	}
 	go func() {
-		log.Infof("listening on http://%d\n", port)
+		log.Infof("listening on %s://%d\n", protocol, port)
 		if err := server.Serve(listener); err != nil {
-			log.Errorf("serving HTTP port %v: %v\n", port, err)
-		}
-	}()
-	return server
-}
-
-func startHTTPSServer(handler http.Handler, listener net.Listener, connState func(net.Conn, http.ConnState), port int, certFile string, keyFile string) *http.Server {
-	server := &http.Server{
-		Handler:     handler,
-		Addr:        fmt.Sprintf(":%d", port),
-		ConnState:   connState,
-		IdleTimeout: IdleTimeout,
-	}
-	go func() {
-		log.Infof("listening on https://%d\n", port)
-		if err := server.Serve(listener); err != nil {
-			log.Errorf("serving HTTPS port %v: %v\n", port, err)
+			log.Errorf("serving %s port %v: %v\n", strings.ToUpper(protocol), port, err)
 		}
 	}()
 	return server
