@@ -24,9 +24,9 @@ type CdnsResponse struct {
 }
 
 type Cdn struct {
-	Id            int    `json:"id" db:"id"`
-	Name          string `json:"name" db:"name"`
-	LastUpdated   string `json:"lastUpdated" db:"last_updated"`
 	DnssecEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
 	DomainName    string `json:"domainName" db:"domain_name"`
+	Id            int    `json:"id" db:"id"`
+	LastUpdated   string `json:"lastUpdated" db:"last_updated"`
+	Name          string `json:"name" db:"name"`
 }

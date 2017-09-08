@@ -112,11 +112,12 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]Cdn, error) {
 func selectCdnsQuery() string {
 
 	query := `SELECT
-id,
-name,
-last_updated,
 dnssec_enabled,
-domain_name
+domain_name,
+id,
+last_updated,
+name 
+
 FROM cdn c`
 	return query
 }
