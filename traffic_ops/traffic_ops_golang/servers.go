@@ -75,7 +75,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	wc := newServersWhereClause(v)
+	wc := serversParamsToWhereClause(v)
 	query := SelectStatement{
 		Select: selectServersQuery(),
 		Where:  wc,
@@ -151,6 +151,7 @@ p.name as profile,
 p.description as profile_desc,
 s.profile as profile_id,
 COALESCE(s.rack, '') as rack,
+s.reval_pending,
 COALESCE(s.router_host_name, '') as router_host_name,
 COALESCE(s.router_port_name, '') as router_port_name,
 st.name as status,
@@ -173,7 +174,7 @@ JOIN type t ON s.type = t.id`
 	return query
 }
 
-func newServersWhereClause(v url.Values) WhereClause {
+func serversParamsToWhereClause(v url.Values) WhereClause {
 
 	whereClause := WhereClause{}
 

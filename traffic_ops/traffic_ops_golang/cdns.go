@@ -75,7 +75,7 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]Cdn, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	wc := newCdnsWhereClause(v)
+	wc := cdnsParamsToWhereClause(v)
 	query := SelectStatement{
 		Select: selectCdnsQuery(),
 		Where:  wc,
@@ -122,7 +122,7 @@ FROM cdn c`
 	return query
 }
 
-func newCdnsWhereClause(v url.Values) WhereClause {
+func cdnsParamsToWhereClause(v url.Values) WhereClause {
 
 	whereClause := WhereClause{}
 
