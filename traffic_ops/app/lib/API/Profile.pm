@@ -25,7 +25,6 @@ use JSON;
 
 sub index {
 	my $self = shift;
-	my $orderby = $self->param('orderby');
 	my $parameter_id = $self->param('param');
 	my $cdn_id = $self->param('cdn');
 
@@ -33,7 +32,7 @@ sub index {
 	my %criteria;
 
 	if ( defined $parameter_id ) {
-		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ], order_by => $orderby }  );
+		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ], order_by => 'profile.name' }  );
 		while ( my $row = $rs->next ) {
 			push(
 				@data, {
@@ -51,7 +50,7 @@ sub index {
 		if ( defined $cdn_id ) {
 			$criteria{'cdn'} = $cdn_id;
 		}
-		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => $orderby } );
+		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => 'me.name' } );
 		while ( my $row = $rs_data->next ) {
 			push(
 				@data, {
@@ -155,7 +154,7 @@ sub show {
 		my %criteria;
 		$criteria{'profile.id'} = $id;
 
-		my $rs_profile_params = $self->db->resultset("ProfileParameter")->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } );
+		my $rs_profile_params = $self->db->resultset("ProfileParameter")->search( \%criteria, { prefetch => [ 'parameter', 'profile' ], order_by => 'parameter.name, parameter.config_file, parameter.value' } );
 
 		while ( my $pp = $rs_profile_params->next ) {
 			my $value = $pp->parameter->value;
