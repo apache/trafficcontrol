@@ -56,6 +56,7 @@ type Server struct {
 	ProfileDesc    string `json:"profileDesc" db:"profile_desc"`
 	ProfileId      int    `json:"profileId" db:"profile_id"`
 	Rack           string `json:"rack" db:"rack"`
+	RevalPending   bool   `json:"revalPending" db:"reval_pending"`
 	//TODO: drichardson - add reval_pending
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
 	RouterPortName string `json:"routerPortName" db:"router_port_name"`
