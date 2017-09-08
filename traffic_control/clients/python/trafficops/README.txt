@@ -18,7 +18,7 @@ NOTE: Assuming in a already newly created virtualenv and cd'd to the root of a f
             $ source ~/VENV/my_venv/bin/activate
             (my_venv) $
     2. Install the software for the correct environment in the activated virtualenv
-        (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>/traffic_ops/client/python_client
+        (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>/traffic_control/clients/python/trafficops
         (my_venv) $ python setup.py install
         ...
         (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>
@@ -32,7 +32,7 @@ NOTE: Assuming in a already newly created virtualenv and cd'd to the root of a f
                     ['LoginError', 'OperationError', 'RestApiSession', 'TOSession', '__builtins__', '__cached__',
                      '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__',
                       '__version__', 'api_request', 'default_headers', 'restapi', 'tosession']
-                    >>> tos = TOSession(host_ip=u'to.somedomain.net', verify_cert=True)
+                    >>> tos = trafficops.TOSession(host_ip=u'to.somedomain.net', verify_cert=True)
                     >>> tos.login(u'someuser', u'someuser123')
                     >>> cdns, response = tos.get_cdns()
                     >>> exit()
