@@ -308,7 +308,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | DSCP Tag                                         | The DSCP value to mark IP packets to the client with.                                                                                                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Routing Name                                     | The routing name to use for the delivery FQDN, i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``. It must be a valid hostname without periods.                                                                 |
+| Routing Name                                     | The routing name to use for the delivery FQDN, i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``. It must be a valid hostname without periods. [2]_                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Signed URLs                                      | Use Signed URLs? See :ref:`rl-signed-urls`.                                                                                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -399,6 +399,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. [1] These fields are not validated by Traffic Ops to be correct syntactically, and can cause Traffic Server to not start if invalid. Please use with caution.
+.. [2] It is not recommended to change the Routing Name of a Delivery Service after deployment because this changes its Delivery FQDN (i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``), which means that SSL certificates may need to be updated and clients using the Delivery Service will need to be transitioned to the new Delivery URL.
 
 
 .. index::
