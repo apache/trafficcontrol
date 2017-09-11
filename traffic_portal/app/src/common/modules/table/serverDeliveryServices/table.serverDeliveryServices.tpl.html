@@ -73,7 +73,7 @@ under the License.
                 <td>{{::ds.signed}}</td>
                 <td>{{::qstring(ds)}}</td>
                 <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from Server" ng-click="removeDeliveryService(ds.id, server.id)"><i class="fa fa-chain-broken"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from Server" ng-click="confirmRemoveDS(ds)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>
