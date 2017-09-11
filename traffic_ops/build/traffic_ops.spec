@@ -147,7 +147,7 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-	service traffic_ops stop
+	systemctl stop traffic_ops
     fi
 
 %post
@@ -187,11 +187,11 @@ Built: %(date) by %{getenv: USER}
     # upgrade
     if [ "$1" == "2" ]; then
         echo -e "\n\nTo complete the update, perform the following steps:\n"
-        echo -e "1. Run 'PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade'\n"
+        echo -e "1. If any *.rpmnew files are in /opt/traffic_ops/...,  reconcile with any local changes\n"
+        echo -e "2. Run 'PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade'\n"
         echo -e "   from the /opt/traffic_ops/app directory.\n"
-        echo -e "2. Run '/opt/traffic_ops/install/bin/postinstall' from the root home directory.\n\n"
-        echo -e "To start Traffic Ops:  service traffic_ops start\n";
-        echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
+        echo -e "To start Traffic Ops:  systemctl start traffic_ops\n";
+        echo -e "To stop Traffic Ops:   systemctl stop traffic_ops\n\n";
     fi
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
@@ -201,7 +201,7 @@ Built: %(date) by %{getenv: USER}
 
 if [ "$1" = "0" ]; then
     # stop service before starting the uninstall
-    service traffic_ops stop
+    systemctl stop traffic_ops
 fi
 
 %postun
