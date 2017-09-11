@@ -46,6 +46,8 @@ RUN yum -y install \
 RUN cpanm -n Carton
 
 ADD install/bin/install_goose.sh /
+ADD install/bin/install_go.sh /
+RUN /install_go.sh
 RUN /install_goose.sh
 
 ADD app /opt/traffic_ops/app
