@@ -38,7 +38,7 @@ type Server struct {
 	IloIpNetmask   string `json:"iloIpNetmask" db:"ilo_ip_netmask"`
 	IloPassword    string `json:"iloPassword" db:"ilo_password"`
 	IloUsername    string `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu   string `json:"interfaceMtu" db:"interface_mtu"`
+	InterfaceMtu   int    `json:"interfaceMtu" db:"interface_mtu"`
 	InterfaceName  string `json:"interfaceName" db:"interface_name"`
 	Ip6Address     string `json:"ip6Address" db:"ip6_address"`
 	Ip6Gateway     string `json:"ip6Gateway" db:"ip6_gateway"`
@@ -57,7 +57,6 @@ type Server struct {
 	ProfileId      int    `json:"profileId" db:"profile_id"`
 	Rack           string `json:"rack" db:"rack"`
 	RevalPending   bool   `json:"revalPending" db:"reval_pending"`
-	//TODO: drichardson - add reval_pending
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
 	RouterPortName string `json:"routerPortName" db:"router_port_name"`
 	Status         string `json:"status" db:"status"`
