@@ -23,7 +23,6 @@ import (
 	"net/url"
 	"testing"
 
-	. "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
