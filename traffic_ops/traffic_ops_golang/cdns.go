@@ -84,10 +84,6 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]Cdn, error) {
 	}
 	cdns := []Cdn{}
 
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-
 	defer rows.Close()
 	for rows.Next() {
 		var s Cdn
