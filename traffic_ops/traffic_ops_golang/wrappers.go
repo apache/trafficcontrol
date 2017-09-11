@@ -158,7 +158,6 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 
 	w.Write(bytes)
 
-	log.Write(w, bytes, r.URL.EscapedPath())
 }
 
 // gzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
