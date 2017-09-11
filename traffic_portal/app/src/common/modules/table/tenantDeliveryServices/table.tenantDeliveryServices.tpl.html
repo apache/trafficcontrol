@@ -34,40 +34,34 @@ under the License.
         <table id="tenantDSsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>tenant</th>
-                <th>xmlId</th>
-                <th>orgServerFqdn</th>
-                <th>cdn</th>
-                <th>profile</th>
-                <th>ccrDnsTtl</th>
-                <th>active</th>
-                <th>type</th>
-                <th>dscp</th>
-                <th>signed</th>
-                <th>qstringIgnore</th>
-                <th>geoLimit</th>
-                <th>protocol</th>
-                <th>ipv6RoutingEnabled</th>
-                <th>rangeRequestHandling</th>
+                <th>XML ID</th>
+                <th>Tenant</th>
+                <th>Origin Server FQDN</th>
+                <th>Active</th>
+                <th>Type</th>
+                <th>Protocol</th>
+                <th>CDN</th>
+                <th>IPv6 Enabled</th>
+                <th>DSCP</th>
+                <th>Signed</th>
+                <th>Qstring Handling</th>
+                <th>Last Updated</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::tenantDeliveryServices">
-                <td>{{::ds.tenant}}</td>
                 <td>{{::ds.xmlId}}</td>
+                <td>{{::ds.tenant}}</td>
                 <td>{{::ds.orgServerFqdn}}</td>
-                <td>{{::ds.cdnName}}</td>
-                <td>{{::ds.profileName}}</td>
-                <td>{{::ds.ccrDnsTtl}}</td>
                 <td>{{::ds.active}}</td>
                 <td>{{::ds.type}}</td>
+                <td>{{::protocol(ds)}}</td>
+                <td>{{::ds.cdnName}}</td>
+                <td>{{::ds.ipv6RoutingEnabled}}</td>
                 <td>{{::ds.dscp}}</td>
                 <td>{{::ds.signed}}</td>
-                <td>{{::ds.qstringIgnore}}</td>
-                <td>{{::ds.geoLimit}}</td>
-                <td>{{::ds.protocol}}</td>
-                <td>{{::ds.ipv6RoutingEnabled}}</td>
-                <td>{{::ds.rangeRequestHandling}}</td>
+                <td>{{::qstring(ds)}}</td>
+                <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
             </tr>
             </tbody>
         </table>
