@@ -280,6 +280,13 @@ sub run_ut {
 
 	ok $t->delete_ok('/api/1.2/deliveryservices/' . &get_ds_id('ds_1'))->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+	#change the use_tenancy parameter to 0 (id from Parameters fixture) to test assigned dses table
+	ok $t->put_ok('/api/1.2/parameters/67' => {Accept => 'application/json'} => json => 
+        {
+			'value'       => '0',
+        }
+	)->status_is(200);
+
 	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 
@@ -331,7 +338,6 @@ sub run_ut {
     ->json_is("/response/0/longDesc" => "long_update_new")
     ->json_is("/response/0/longDesc1" => "cust_update_new")
             , 'A safe update only changes safe fields';
-
 
 
 	my $ds_id_portal_unassigned = &get_ds_id('test-ds2');
