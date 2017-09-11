@@ -17,11 +17,20 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, deliveryServiceService) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, deliveryServiceService) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
 	var qstrings = deliveryServiceUtils.qstrings;
+
+	var removeDeliveryService = function(dsId) {
+		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
+	};
 
 	$scope.server = server;
 
@@ -45,14 +54,28 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		alert('not hooked up yet: addDeliveryService to server');
 	};
 
-	$scope.removeDeliveryService = function(dsId, serverId) {
-		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
-			.then(
-				function() {
-					$scope.refresh();
+	$scope.confirmRemoveDS = function(ds) {
+		var params = {
+			title: 'Remove Delivery Service from Server?',
+			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
 				}
-			);
+			}
+		});
+		modalInstance.result.then(function() {
+			removeDeliveryService(ds.id);
+		}, function () {
+			// do nothing
+		});
 	};
+
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -70,5 +93,5 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'deliveryServiceService'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'deliveryServiceService'];
 module.exports = TableServerDeliveryServicesController;
