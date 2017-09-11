@@ -21,7 +21,6 @@ package main
 
 import (
 	"net/url"
-	"sort"
 	"testing"
 
 	. "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
@@ -98,9 +97,4 @@ func (s SortableCdns) Swap(i, j int) {
 }
 func (s SortableCdns) Less(i, j int) bool {
 	return s[i].Name < s[j].Name
-}
-
-func sortCdns(p []Cdn) []Cdn {
-	sort.Sort(SortableCdns(p))
-	return p
 }
