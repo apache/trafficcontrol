@@ -87,8 +87,7 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]Cdn, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var s Cdn
-		err = rows.StructScan(&s)
-		if err != nil {
+		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting cdns: %v", err)
 		}
 		cdns = append(cdns, s)
