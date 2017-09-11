@@ -24,9 +24,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	. "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -58,19 +59,19 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*ServersResponse, error) {
+func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting servers response: %v", err)
 	}
 
-	resp := ServersResponse{
+	resp := tcstructs.ServersResponse{
 		Response: servers,
 	}
 	return &resp, nil
 }
 
-func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
+func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Server, error) {
 
 	var rows *sqlx.Rows
 	var err error
@@ -82,13 +83,13 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 		//                    Test for bad Query Parameters
 		return nil, err
 	}
-	servers := []Server{}
+	servers := []tcstructs.Server{}
 
 	const HiddenField = "********"
 
 	defer rows.Close()
 	for rows.Next() {
-		var s Server
+		var s tcstructs.Server
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
@@ -103,7 +104,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
 func selectServersQuery() string {
 
-	const JumboFrameBps = 9000
+	const JumboFrameBPS = 9000
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
 	query := `SELECT
@@ -121,7 +122,7 @@ COALESCE(s.ilo_ip_gateway, '') as ilo_ip_gateway,
 COALESCE(s.ilo_ip_netmask, '') as ilo_ip_netmask,
 COALESCE(s.ilo_password, '') as ilo_password,
 COALESCE(s.ilo_username, '') as ilo_username,
-COALESCE(s.interface_mtu, 9000) as interface_mtu,
+COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
 COALESCE(s.interface_name, '') as interface_name,
 COALESCE(s.ip6_address, '') as ip6_address,
 COALESCE(s.ip6_gateway, '') as ip6_gateway,
