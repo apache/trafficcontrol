@@ -23,14 +23,15 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCdns() []Cdn {
-	cdns := []Cdn{}
-	testCdn := Cdn{
+func getTestCdns() []tcstructs.Cdn {
+	cdns := []tcstructs.Cdn{}
+	testCdn := tcstructs.Cdn{
 		DnssecEnabled: false,
 		DomainName:    "domainName",
 		Id:            1,
@@ -57,7 +58,7 @@ func TestGetCdns(t *testing.T) {
 	defer db.Close()
 
 	testCdns := getTestCdns()
-	cols := ColsFromStructByTag("db", Cdn{})
+	cols := ColsFromStructByTag("db", tcstructs.Cdn{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
@@ -86,7 +87,7 @@ func TestGetCdns(t *testing.T) {
 
 }
 
-type SortableCdns []Cdn
+type SortableCdns []tcstructs.Cdn
 
 func (s SortableCdns) Len() int {
 	return len(s)
