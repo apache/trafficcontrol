@@ -17,11 +17,25 @@
  * under the License.
  */
 
-var TableProfileDeliveryServicesController = function(profile, deliveryServices, $scope, $state, locationUtils) {
+var TableProfileDeliveryServicesController = function(profile, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils) {
+
+	var protocols = deliveryServiceUtils.protocols;
+
+	var qstrings = deliveryServiceUtils.qstrings;
 
 	$scope.profile = profile;
 
 	$scope.deliveryServices = deliveryServices;
+
+	$scope.protocol = function(ds) {
+		return protocols[ds.protocol];
+	};
+
+	$scope.qstring = function(ds) {
+		return qstrings[ds.qstringIgnore];
+	};
+
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.editDeliveryService = function(ds) {
 		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
@@ -43,5 +57,5 @@ var TableProfileDeliveryServicesController = function(profile, deliveryServices,
 
 };
 
-TableProfileDeliveryServicesController.$inject = ['profile', 'deliveryServices', '$scope', '$state', 'locationUtils'];
+TableProfileDeliveryServicesController.$inject = ['profile', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
 module.exports = TableProfileDeliveryServicesController;

@@ -17,20 +17,11 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $location, $uibModal, locationUtils) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $location, $uibModal, dateUtils, deliveryServiceUtils, locationUtils) {
 
-    var protocols = {
-        0: "HTTP",
-        1: "HTTPS",
-        2: "HTTP AND HTTPS",
-        3: "HTTP TO HTTPS"
-    };
+    var protocols = deliveryServiceUtils.protocols;
 
-    var qstrings = {
-        0: "USE",
-        1: "IGNORE",
-        2: "DROP"
-    };
+    var qstrings = deliveryServiceUtils.qstrings;
 
     var createDeliveryService = function(typeName) {
         var path = '/configure/delivery-services/new?type=' + typeName;
@@ -38,6 +29,8 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
     };
 
     $scope.deliveryServices = deliveryServices;
+
+    $scope.getRelativeTime = dateUtils.getRelativeTime;
 
     $scope.editDeliveryService = function(ds) {
         var path = '/configure/delivery-services/' + ds.id + '?type=' + ds.type;
@@ -117,5 +110,5 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$location', '$uibModal', 'locationUtils'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$location', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
 module.exports = TableDeliveryServicesController;

@@ -17,11 +17,25 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, locationUtils, deliveryServiceService) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, deliveryServiceService) {
+
+	var protocols = deliveryServiceUtils.protocols;
+
+	var qstrings = deliveryServiceUtils.qstrings;
 
 	$scope.server = server;
 
 	$scope.serverDeliveryServices = serverDeliveryServices;
+
+	$scope.protocol = function(ds) {
+		return protocols[ds.protocol];
+	};
+
+	$scope.qstring = function(ds) {
+		return qstrings[ds.qstringIgnore];
+	};
+
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.cloneDsAssignments = function() {
 		alert('not hooked up yet: cloneDsAssignments');
@@ -56,5 +70,5 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', 'locationUtils', 'deliveryServiceService'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'deliveryServiceService'];
 module.exports = TableServerDeliveryServicesController;

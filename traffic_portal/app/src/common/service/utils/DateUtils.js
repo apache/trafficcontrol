@@ -125,6 +125,10 @@ var DateUtils = function() {
 		]
 	};
 
+	this.getRelativeTime = function(date) {
+		return moment(date).fromNow();
+	}
+
 };
 
 DateUtils.$inject = [];
