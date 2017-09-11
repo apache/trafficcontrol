@@ -235,7 +235,7 @@ func GetAndCache(
 		// TODO Verify overriding the passed reqTime is the right thing to do
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(transport, req, proxyURL)
 		if err != nil {
-			log.Errorf("Parent error for %v rule %v error %v\n", cacheKey, remapName, err)
+			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURL.String(), err)
 			code := CodeConnectFailure
 			body := []byte(http.StatusText(code))
 			return NewCacheObj(reqHeader, body, code, respHeader, reqTime, reqRespTime, reqRespTime)
@@ -488,7 +488,7 @@ func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int
 	log.Debugf("request requesting %v headers %v\n", r.RequestURI, r.Header)
 	rr := r
 
-	if proxyURL != nil {
+	if proxyURL != nil && proxyURL.Host != "" {
 		transport.Proxy = http.ProxyURL(proxyURL)
 	}
 	reqTime := time.Now()
