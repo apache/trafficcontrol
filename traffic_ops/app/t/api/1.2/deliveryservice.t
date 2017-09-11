@@ -70,6 +70,7 @@ $t->get_ok('/api/1.2/deliveryservices/100/servers/eligible')->status_is(200)->$c
 # It gets existing delivery services
 ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "steering-ds1" )
+		->json_is( "/response/0/routingName", "foo" )
 		->json_is( "/response/0/logsEnabled", 0 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "steering-ds2" );
@@ -86,6 +87,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 			"cdnId" => 100,
 			"displayName" => "ds_displayname_1",
 			"dscp" => 0,
+			"routingName" => "foo",
 			"geoLimit" => 0,
 			"geoProvider" => 0,
 			"initialDispersion" => 1,
@@ -107,6 +109,7 @@ ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => 
 		->json_is( "/response/0/active" => 0)
         ->json_is( "/response/0/tenantId" => $tenant_id)
         ->json_is( "/response/0/cdnName" => "cdn1")
+		->json_is( "/response/0/routingName" => "foo")
 		->json_is( "/response/0/displayName" => "ds_displayname_1")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
@@ -122,6 +125,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 			"cdnId" => 100,
             "displayName" => "ds_displayname_11",
 			"dscp" => 1,
+			"routingName" => "bar",
 			"geoLimit" => 1,
 			"geoProvider" => 1,
 			"initialDispersion" => 2,
@@ -144,6 +148,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 		->json_is( "/response/0/cdnName" => "cdn1")
 		->json_is( "/response/0/displayName" => "ds_displayname_11")
 		->json_is( "/response/0/xmlId" => "ds_1")
+		->json_is( "/response/0/routingName" => "bar")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
 		->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 		->json_is( "/response/0/protocol" => 2)
@@ -156,6 +161,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"cdnId" => 100,
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
+				"routingName" => "baz",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"initialDispersion" => 2,
@@ -184,6 +190,7 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"cdnId" => 100,
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
+				"routingName" => "foo",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"initialDispersion" => 2,

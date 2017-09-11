@@ -18,14 +18,13 @@ package API::Profile;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
-
+use UI::Parameter;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 
 sub index {
 	my $self = shift;
-	my $orderby = $self->param('orderby');
 	my $parameter_id = $self->param('param');
 	my $cdn_id = $self->param('cdn');
 
@@ -33,7 +32,7 @@ sub index {
 	my %criteria;
 
 	if ( defined $parameter_id ) {
-		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ], order_by => $orderby }  );
+		my $rs = $self->db->resultset('ProfileParameter')->search( { parameter => $parameter_id },  { prefetch => [ 'profile' ], order_by => 'profile.name' }  );
 		while ( my $row = $rs->next ) {
 			push(
 				@data, {
@@ -51,7 +50,7 @@ sub index {
 		if ( defined $cdn_id ) {
 			$criteria{'cdn'} = $cdn_id;
 		}
-		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => $orderby } );
+		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => 'me.name' } );
 		while ( my $row = $rs_data->next ) {
 			push(
 				@data, {
@@ -144,25 +143,49 @@ sub get_unassigned_profiles_by_paramId {
 }
 
 sub show {
-	my $self = shift;
-	my $id   = $self->param('id');
+	my $self 			= shift;
+	my $id   			= $self->param('id');
+	my $include_params	= $self->param('includeParams') ? 1 : 0;
+	my @params 			= ();
 
-	my $rs_data = $self->db->resultset("Profile")->search( { 'me.id' => $id }, { prefetch => [ 'cdn' ] } );
-	my @data = ();
-	while ( my $row = $rs_data->next ) {
-		push(
-			@data, {
-				"id"          => $row->id,
-				"name"        => $row->name,
-				"description" => $row->description,
-				"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
-				"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
-				"type"        => $row->type,
-				"lastUpdated" => $row->last_updated
-			}
-		);
+	my $profile = $self->db->resultset("Profile")->search( { 'me.id' => $id }, { prefetch => [ 'cdn' ] } );
+
+	if ($include_params) {
+		my %criteria;
+		$criteria{'profile.id'} = $id;
+
+		my $rs_profile_params = $self->db->resultset("ProfileParameter")->search( \%criteria, { prefetch => [ 'parameter', 'profile' ], order_by => 'parameter.name, parameter.config_file, parameter.value' } );
+
+		while ( my $pp = $rs_profile_params->next ) {
+			my $value = $pp->parameter->value;
+			&UI::Parameter::conceal_secure_parameter_value( $self, $pp->parameter->secure, \$value );
+			push(
+				@params, {
+					"name"        => $pp->parameter->name,
+					"configFile"  => $pp->parameter->config_file,
+					"value"       => $value,
+				}
+			);
+		}
 	}
-	$self->success( \@data );
+
+	my @profiles = ();
+	while ( my $row = $profile->next ) {
+		my $profile = {
+			"id"          => $row->id,
+			"name"        => $row->name,
+			"description" => $row->description,
+			"cdn"         => defined($row->cdn) ? $row->cdn->id : undef,
+			"cdnName"     => defined($row->cdn) ? $row->cdn->name : undef,
+			"type"        => $row->type,
+			"lastUpdated" => $row->last_updated
+		};
+		if ($include_params) {
+			$profile->{params} = \@params;
+		}
+		push(@profiles, $profile);
+	}
+	$self->success( \@profiles );
 }
 
 sub create {

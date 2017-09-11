@@ -85,8 +85,6 @@ public class ZoneManager extends Resolver {
 	private static final Logger LOGGER = Logger.getLogger(ZoneManager.class);
 
 	private final TrafficRouter trafficRouter;
-	private static String dnsRoutingName;
-	private static String httpRoutingName;
 	private static LoadingCache<ZoneKey, Zone> dynamicZoneCache = null;
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
 	private static ScheduledExecutorService zoneMaintenanceExecutor = null;
@@ -98,6 +96,7 @@ public class ZoneManager extends Resolver {
 	private static SignatureManager signatureManager;
 
 	private static Name topLevelDomain;
+	private static Set<String> dnsRoutingNames;
 	private static final String AAAA = "AAAA";
 
 	protected static enum ZoneCacheType {
@@ -105,6 +104,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) throws IOException {
+		initDnsRoutingNames(tr.getCacheRegister());
 		initTopLevelDomain(tr.getCacheRegister());
 		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils, trafficRouterManager);
 		initZoneCache(tr);
@@ -120,6 +120,16 @@ public class ZoneManager extends Resolver {
 
 	protected void rebuildZoneCache() {
 		initZoneCache(trafficRouter);
+	}
+
+	private static void initDnsRoutingNames(final CacheRegister cacheRegister) {
+		final Set<String> dnsRoutingNames = new HashSet<>();
+		for (final DeliveryService ds : cacheRegister.getDeliveryServices().values()) {
+			if (ds.isDns()) {
+				dnsRoutingNames.add(ds.getRoutingName());
+			}
+		}
+		setDnsRoutingNames(dnsRoutingNames);
 	}
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -428,7 +438,7 @@ public class ZoneManager extends Resolver {
 						// prime the dynamic zone cache
 						if (primeDynCache && ds != null && ds.isDns()) {
 							final DNSRequest request = new DNSRequest();
-							final Name edgeName = newName(getDnsRoutingName(), domain);
+							final Name edgeName = newName(ds.getRoutingName(), domain);
 							request.setHostname(edgeName.toString(true)); // Name.toString(true) - omit the trailing dot
 
 							for (final CacheLocation cacheLocation : data.getCacheLocations()) {
@@ -541,14 +551,14 @@ public class ZoneManager extends Resolver {
 			}
 
 			if (ds != null && !ds.isDns()) {
-				addHttpRoutingRecords(list, domain, trJo, ttl, ip6RoutingEnabled);
+				addHttpRoutingRecords(list, ds.getRoutingName(), domain, trJo, ttl, ip6RoutingEnabled);
 			}
 		}
 	}
 
-	private static void addHttpRoutingRecords(final List<Record> list, final String domain, final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA) 
+	private static void addHttpRoutingRecords(final List<Record> list, final String routingName, final String domain, final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA)
 					throws TextParseException, UnknownHostException {
-		final Name trName = newName(getHttpRoutingName(), domain);
+		final Name trName = newName(routingName, domain);
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
@@ -584,7 +594,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
 			final Map<String, DeliveryService> dsMap, final CacheRegister data) throws IOException {
 		final Map<String, List<Record>> superDomains = new HashMap<String, List<Record>>();
@@ -615,7 +625,7 @@ public class ZoneManager extends Resolver {
 					superDomains.put(superdomain, new ArrayList<Record>());
 				}
 
-				if (host.equalsIgnoreCase(getDnsRoutingName())) {
+				if (ds.isDns() && host.equalsIgnoreCase(ds.getRoutingName())) {
 					continue;
 				}
 
@@ -888,7 +898,7 @@ public class ZoneManager extends Resolver {
 
 		if (sr.isSuccessful()) {
 			return zone;
-		} else if (qname.toString().toLowerCase().matches(getDnsRoutingName() + "\\..*")) {
+		} else if (isDnsRoutingName(qname.toString().toLowerCase().split("\\.")[0])) {
 			final Zone dynamicZone = createDynamicZone(zone, qname, qtype, clientAddress, isDnssecRequest, builder);
 
 			if (dynamicZone != null) {
@@ -899,28 +909,24 @@ public class ZoneManager extends Resolver {
 		return zone;
 	}
 
+	private static boolean isDnsRoutingName(final String routingName) {
+		return getDnsRoutingNames().contains(routingName);
+	}
+
+	private static Set<String> getDnsRoutingNames() {
+		return dnsRoutingNames;
+	}
+
+	private static void setDnsRoutingNames(final Set<String> dnsRoutingNames) {
+		ZoneManager.dnsRoutingNames = dnsRoutingNames;
+	}
+
 	public static File getZoneDirectory() {
 		return zoneDirectory;
 	}
 
 	public static void setZoneDirectory(final File zoneDirectory) {
 		ZoneManager.zoneDirectory = zoneDirectory;
-	}
-
-	protected static String getDnsRoutingName() {
-		return dnsRoutingName;
-	}
-
-	public static void setDnsRoutingName(final String dnsRoutingName) {
-		ZoneManager.dnsRoutingName = dnsRoutingName.toLowerCase();
-	}
-
-	private static String getHttpRoutingName() {
-		return httpRoutingName;
-	}
-
-	public static void setHttpRoutingName(final String httpRoutingName) {
-		ZoneManager.httpRoutingName = httpRoutingName.toLowerCase();
 	}
 
 	protected static Name getTopLevelDomain() {

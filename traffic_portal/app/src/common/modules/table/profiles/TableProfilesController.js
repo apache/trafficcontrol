@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfilesController = function(profiles, $scope, $state, locationUtils) {
+var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, locationUtils) {
 
     $scope.profiles = profiles;
 
@@ -34,8 +34,30 @@ var TableProfilesController = function(profiles, $scope, $state, locationUtils) 
     };
 
     $scope.compareProfiles = function() {
-        alert('not hooked up yet: compareProfiles');
+        var params = {
+            title: 'Compare Profile Parameters',
+            message: "Please select 2 profiles to compare parameters"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
+            controller: 'DialogCompareController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                },
+                collection: function(profileService) {
+                    return profileService.getProfiles();
+                }
+            }
+        });
+        modalInstance.result.then(function(profiles) {
+            $location.path($location.path() + '/compare/' + profiles[0].id + '/' + profiles[1].id);
+        }, function () {
+            // do nothing
+        });
     };
+
 
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
@@ -51,5 +73,5 @@ var TableProfilesController = function(profiles, $scope, $state, locationUtils) 
 
 };
 
-TableProfilesController.$inject = ['profiles', '$scope', '$state', 'locationUtils'];
+TableProfilesController.$inject = ['profiles', '$scope', '$state', '$location', '$uibModal', 'locationUtils'];
 module.exports = TableProfilesController;

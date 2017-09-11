@@ -52,78 +52,78 @@ type MatchType struct {
 }
 
 type Config struct {
-	APICacheControlMaxAge                          *int      `json:"api.cache-control.max_age,string,omitempty"`
+	APICacheControlMaxAge                          *string   `json:"api.cache-control.max_age,omitempty"`
 	APICacheControlMaxAgeLastTime                  time.Time `json:"-"`
-	ConsistentDNSRouting                           *bool     `json:"consistent.dns.routing,string,omitempty"`
+	ConsistentDNSRouting                           *string   `json:"consistent.dns.routing,omitempty"`
 	ConsistentDNSRoutingTime                       time.Time `json:"-"`
-	CoverageZonePollingIntervalSeconds             *int      `json:"coveragezone.polling.interval,string,omitempty"`
+	CoverageZonePollingIntervalSeconds             *string   `json:"coveragezone.polling.interval,omitempty"`
 	CoverageZonePollingIntervalSecondsTime         time.Time `json:"-"`
 	CoverageZonePollingURL                         *string   `json:"coveragezone.polling.url,omitempty"`
 	CoverageZonePollingURLTime                     time.Time `json:"-"`
 	DNSSecDynamicResponseExpiration                *string   `json:"dnssec.dynamic.response.expiration,omitempty"`
 	DNSSecDynamicResponseExpirationTime            time.Time `json:"-"`
-	DNSSecEnabled                                  *bool     `json:"dnssec.enabled,string,omitempty"`
+	DNSSecEnabled                                  *string   `json:"dnssec.enabled,omitempty"`
 	DNSSecEnabledTime                              time.Time `json:"-"`
 	DomainName                                     *string   `json:"domain_name,omitempty"`
 	DomainNameTime                                 time.Time `json:"-"`
-	FederationMappingPollingIntervalSeconds        *int      `json:"federationmapping.polling.interval,string,omitempty"`
+	FederationMappingPollingIntervalSeconds        *string   `json:"federationmapping.polling.interval,omitempty"`
 	FederationMappingPollingIntervalSecondsTime    time.Time `json:"-"`
 	FederationMappingPollingURL                    *string   `json:"federationmapping.polling.url"`
 	FederationMappingPollingURLTime                time.Time `json:"-"`
-	GeoLocationPollingInterval                     *int      `json:"geolocation.polling.interval,string,omitempty"`
+	GeoLocationPollingInterval                     *string   `json:"geolocation.polling.interval,omitempty"`
 	GeoLocationPollingIntervalTime                 time.Time `json:"-"`
 	GeoLocationPollingURL                          *string   `json:"geolocation.polling.url,omitempty"`
 	GeoLocationPollingURLTime                      time.Time `json:"-"`
-	KeyStoreMaintenanceIntervalSeconds             *int      `json:"keystore.maintenance.interval,string,omitempty"`
+	KeyStoreMaintenanceIntervalSeconds             *string   `json:"keystore.maintenance.interval,omitempty"`
 	KeyStoreMaintenanceIntervalSecondsTime         time.Time `json:"-"`
-	NeustarPollingIntervalSeconds                  *int      `json:"neustar.polling.interval,string,omitempty"`
+	NeustarPollingIntervalSeconds                  *string   `json:"neustar.polling.interval,omitempty"`
 	NeustarPollingIntervalSecondsTime              time.Time `json:"-"`
 	NeustarPollingURL                              *string   `json:"neustar.polling.url,omitempty"`
 	NeustarPollingURLTime                          time.Time `json:"-"`
 	SOA                                            *SOA      `json:"soa,omitempty"`
 	SOATime                                        time.Time `json:"-"`
-	DNSSecInceptionSeconds                         *int      `json:"dnssec.inception,string,omitempty"`
+	DNSSecInceptionSeconds                         *string   `json:"dnssec.inception,omitempty"`
 	DNSSecInceptionSecondsTime                     time.Time `json:"-"`
 	Ttls                                           *TTL      `json:"ttls,omitempty"`
 	TtlsTime                                       time.Time `json:"-"`
-	Weight                                         *float64  `json:"weight,string,omitempty"`
+	Weight                                         *string   `json:"weight,omitempty"`
 	WeightTime                                     time.Time `json:"-"`
-	ZoneManagerCacheMaintenanceIntervalSeconds     *int      `json:"zonemanager.cache.maintenance.interval,string,omitempty"`
+	ZoneManagerCacheMaintenanceIntervalSeconds     *string   `json:"zonemanager.cache.maintenance.interval,omitempty"`
 	ZoneManagerCacheMaintenanceIntervalSecondsTime time.Time `json:"-"`
-	ZoneManagerThreadpoolScale                     *float64  `json:"zonemanager.threadpool.scale,string,omitempty"`
+	ZoneManagerThreadpoolScale                     *string   `json:"zonemanager.threadpool.scale,omitempty"`
 	ZoneManagerThreadpoolScaleTime                 time.Time `json:"-"`
 }
 
 type SOA struct {
 	Admin              *string `json:"admin,omitempty"`
 	AdminTime          time.Time
-	ExpireSeconds      *int `json:"expire,string,omitempty"`
+	ExpireSeconds      *string `json:"expire,omitempty"`
 	ExpireSecondsTime  time.Time
-	MinimumSeconds     *int `json:"minimum,string,omitempty"`
+	MinimumSeconds     *string `json:"minimum,omitempty"`
 	MinimumSecondsTime time.Time
-	RefreshSeconds     *int `json:"refresh,string,omitempty"`
+	RefreshSeconds     *string `json:"refresh,omitempty"`
 	RefreshSecondsTime time.Time
-	RetrySeconds       *int `json:"retry,string,omitempty"`
+	RetrySeconds       *string `json:"retry,omitempty"`
 	RetrySecondsTime   time.Time
 }
 
 type TTL struct {
-	ASeconds          *int `json:"A,string,omitempty"`
+	ASeconds          *string `json:"A,omitempty"`
 	ASecondsTime      time.Time
-	AAAASeconds       *int `json:"AAAA,string,omitempty"`
+	AAAASeconds       *string `json:"AAAA,omitempty"`
 	AAAASecondsTime   time.Time
-	DNSkeySeconds     *int `json:"DNSKEY,string,omitempty"`
+	DNSkeySeconds     *string `json:"DNSKEY,omitempty"`
 	DNSkeySecondsTime time.Time
-	DSSeconds         *int `json:"DS,string,omitempty"`
+	DSSeconds         *string `json:"DS,omitempty"`
 	DSSecondsTime     time.Time
-	NSSeconds         *int `json:"NS,string,omitempty"`
+	NSSeconds         *string `json:"NS,omitempty"`
 	NSSecondsTime     time.Time
-	SOASeconds        *int `json:"SOA,string,omitempty"`
+	SOASeconds        *string `json:"SOA,omitempty"`
 	SOASecondsTime    time.Time
 }
 
 type Router struct {
-	APIPort       *int `json:"apiPort,string,omitempty"`
+	APIPort       *string `json:"apiPort,omitempty"`
 	APIPortTime   time.Time
 	FQDN          *string `json:"fqdn,omitempty"`
 	FQDNTime      time.Time
@@ -177,7 +177,7 @@ type Server struct {
 }
 
 type DeliveryService struct {
-	CoverageZoneOnly        *bool                    `json:"coverageZoneOnly,string,omitempty"`
+	CoverageZoneOnly        *string                  `json:"coverageZoneOnly,omitempty"`
 	CoverageZoneOnlyTime    time.Time                `json:"-"`
 	Dispersion              *Dispersion              `json:"dispersion,omitempty"`
 	DispersionTime          time.Time                `json:"-"`
@@ -191,13 +191,13 @@ type DeliveryService struct {
 	MissLocationTime        time.Time                `json:"-"`
 	Protocol                *DeliveryServiceProtocol `json:"protocol,omitempty"`
 	ProtocolTime            time.Time                `json:"-"`
-	RegionalGeoBlocking     *bool                    `json:"regionalGeoBlocking,string,omitempty"`
+	RegionalGeoBlocking     *string                  `json:"regionalGeoBlocking,omitempty"`
 	RegionalGeoBlockingTime time.Time                `json:"-"`
 	ResponseHeaders         map[string]string        `json:"responseHeaders,omitempty"`
 	ResponseHeadersTime     time.Time                `json:"-"`
 	Soa                     *SOA                     `json:"soa,omitempty"`
 	SoaTime                 time.Time                `json:"-"`
-	SSLEnabled              *bool                    `json:"sslEnabled,string,omitempty"`
+	SSLEnabled              *string                  `json:"sslEnabled,omitempty"`
 	SSLEnabledTime          time.Time                `json:"-"`
 	TTL                     *int                     `json:"ttl,omitempty"`
 	TTLTime                 time.Time                `json:"-"`
@@ -205,8 +205,8 @@ type DeliveryService struct {
 	TTLsTime                time.Time                `json:"-"`
 }
 type Dispersion struct {
-	Limit    int  `json:"limit,omitempty"`
-	Shuffled bool `json:"shuffled,string,omitempty"`
+	Limit    int     `json:"limit,omitempty"`
+	Shuffled *string `json:"shuffled,omitempty"`
 }
 
 type LatitudeLongitude struct {
@@ -215,8 +215,8 @@ type LatitudeLongitude struct {
 }
 
 type DeliveryServiceProtocol struct {
-	AcceptHTTPS     bool `json:"acceptHttps,string,omitempty"`
-	RedirectOnHTTPS bool `json:"redirectOnHttps,string,omitempty"`
+	AcceptHTTPS     *string `json:"acceptHttps,omitempty"`
+	RedirectOnHTTPS *string `json:"redirectOnHttps,omitempty"`
 }
 
 type Monitor struct {

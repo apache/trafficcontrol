@@ -25,9 +25,9 @@ $fa-font-path: "../assets/fonts";
 @import "font-awesome/scss/font-awesome";
 
 // common
-@import "../common/modules/dialog/confirm/dialog.confirm";
-@import "../common/modules/dialog/reset/dialog.reset";
-@import "../common/modules/form/user/form.user";
+@import "../common/modules/compare/compare ";
+@import "../common/modules/dialog/dialog";
+@import "../common/modules/dialog/text/dialog.text";
 @import "../common/modules/header/header";
 @import "../common/modules/message/message";
 @import "../common/modules/navigation/navigation";
@@ -65,7 +65,6 @@ $fa-font-path: "../assets/fonts";
 // monitor
 @import "../modules/private/monitor/monitor";
 @import "../modules/private/monitor/dashboard/dashboard";
-@import "../modules/private/monitor/map/map";
 
 [ng-click] {
   cursor: pointer;

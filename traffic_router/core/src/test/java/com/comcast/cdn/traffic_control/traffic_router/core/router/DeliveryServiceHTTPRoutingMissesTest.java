@@ -41,6 +41,7 @@ public class DeliveryServiceHTTPRoutingMissesTest {
         JSONObject unusedByTest = mock(JSONObject.class);
         JSONObject ttls = mock(JSONObject.class);
         when(unusedByTest.optJSONObject("ttls")).thenReturn(ttls);
+        when(unusedByTest.getString("routingName")).thenReturn("edge");
         deliveryService = new DeliveryService("ignoredbytest", unusedByTest);
         httpRequest = mock(HTTPRequest.class);
         track = StatTracker.getTrack();

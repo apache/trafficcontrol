@@ -64,6 +64,26 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
             );
     };
 
+    this.getServerConfigFiles = function(id) {
+        return Restangular.one("servers", id).customGET('configfiles/ats');
+    };
+
+    this.getServerConfigFile = function(url) {
+        var request = $q.defer();
+
+        $http.get(url)
+            .then(
+                function(result) {
+                    request.resolve(result.data);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
     this.getDeliveryServiceServers = function(dsId) {
         return Restangular.one('deliveryservices', dsId).getList('servers');
     };

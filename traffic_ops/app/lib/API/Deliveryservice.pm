@@ -68,12 +68,12 @@ sub index {
 	if ( !&is_privileged($self) and !$tenant_utils->use_tenancy()) {
 		my $tm_user = $self->db->resultset('TmUser')->search( { username => $current_user } )->single();
 		my @ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $tm_user->id } )->get_column('deliveryservice')->all();
-		$criteria{'me.id'} = { -in => \@ds_ids },;
+		$criteria{'me.id'} = { -in => \@ds_ids };
 	}
 
 	my $rs_data = $self->db->resultset("Deliveryservice")->search(
 		\%criteria,
-		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ], order_by => 'me.' . $orderby }
+		{ prefetch => [ 'cdn', { 'deliveryservice_regexes' => { 'regex' => 'type' } }, 'profile', 'type', 'tenant' ], order_by => [ 'me.' . $orderby, 'deliveryservice_regexes.set_number' ]}
 	);
 
 	while ( my $row = $rs_data->next ) {
@@ -145,6 +145,7 @@ sub index {
 				"regexRemap"           => $row->regex_remap,
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 				"remapText"            => $row->remap_text,
+				"routingName"          => $row->routing_name,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"		       => $row->tenant_id,
@@ -263,6 +264,7 @@ sub show {
 				"rangeRequestHandling" => $row->range_request_handling,
 				"regexRemap"           => $row->regex_remap,
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
+				"routingName"          => $row->routing_name,
 				"remapText"            => $row->remap_text,
 				"signed"               => \$row->signed,
 				"sslKeyVersion"        => $row->ssl_key_version,
@@ -359,6 +361,7 @@ sub update {
 		regex_remap            => $params->{regexRemap},
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
+		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName}, $ds ),
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
@@ -446,6 +449,7 @@ sub update {
 				"regexRemap"               => $rs->regex_remap,
 				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 				"remapText"                => $rs->remap_text,
+				"routingName"              => $rs->routing_name,
 				"signed"                   => $rs->signed,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"tenantId"                 => $rs->tenant_id,
@@ -485,112 +489,113 @@ sub safe_update {
 
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+
+	if ( $tenant_utils->use_tenancy) {
+		if ( !$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id) ) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+	} else {
+		if ( !&is_oper($self) && !$helper->is_delivery_service_assigned($id) ) {
+			return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+		}
 	}
-	
 
-	if ( &is_oper($self) || $helper->is_delivery_service_assigned($id) ) {
+	my $values = {
+		display_name           => $params->{displayName},
+		info_url               => $params->{infoUrl},
+		long_desc              => $params->{longDesc},
+		long_desc_1            => $params->{longDesc1},
+	};
 
-		my $values = {
-			display_name           => $params->{displayName},
-			info_url               => $params->{infoUrl},
-			long_desc              => $params->{longDesc},
-			long_desc_1            => $params->{longDesc1},
-		};
+	my $rs = $ds->update($values);
+	if ($rs) {
 
-		my $rs = $ds->update($values);
-		if ($rs) {
+		# build example urls
+		my @example_urls  = ();
+		my $cdn_domain    = $rs->cdn->domain_name;
+		my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
+		@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
 
-			# build example urls
-			my @example_urls  = ();
-			my $cdn_domain    = $rs->cdn->domain_name;
-			my $regexp_set   = &UI::DeliveryService::get_regexp_set( $self, $rs->id );
-			@example_urls = &UI::DeliveryService::get_example_urls( $self, $rs->id, $regexp_set, $rs, $cdn_domain, $rs->protocol );
-
-			# build the matchlist (the list of ds regexes and their type)
-			my @matchlist  = ();
-			my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $rs->id }, { prefetch => [ { 'regex' => 'type' } ] } );
-			while ( my $ds_regex = $ds_regexes->next ) {
-				push(
-					@matchlist, {
-						type      => $ds_regex->regex->type->name,
-						pattern   => $ds_regex->regex->pattern,
-						setNumber => $ds_regex->set_number
-					}
-				);
-			}
-
-			my @response;
+		# build the matchlist (the list of ds regexes and their type)
+		my @matchlist  = ();
+		my $ds_regexes = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $rs->id }, { prefetch => [ { 'regex' => 'type' } ] } );
+		while ( my $ds_regex = $ds_regexes->next ) {
 			push(
-				@response, {
-					"active"                   => $rs->active,
-					"cacheurl"                 => $rs->cacheurl,
-					"ccrDnsTtl"                => $rs->ccr_dns_ttl,
-					"cdnId"                    => $rs->cdn->id,
-					"cdnName"                  => $rs->cdn->name,
-					"checkPath"                => $rs->check_path,
-					"displayName"              => $rs->display_name,
-					"dnsBypassCname"           => $rs->dns_bypass_cname,
-					"dnsBypassIp"              => $rs->dns_bypass_ip,
-					"dnsBypassIp6"             => $rs->dns_bypass_ip6,
-					"dnsBypassTtl"             => $rs->dns_bypass_ttl,
-					"dscp"                     => $rs->dscp,
-					"edgeHeaderRewrite"        => $rs->edge_header_rewrite,
-					"exampleURLs"              => \@example_urls,
-					"geoLimitRedirectURL"      => $rs->geolimit_redirect_url,
-					"geoLimit"                 => $rs->geo_limit,
-					"geoLimitCountries"        => $rs->geo_limit_countries,
-					"geoProvider"              => $rs->geo_provider,
-					"globalMaxMbps"            => $rs->global_max_mbps,
-					"globalMaxTps"             => $rs->global_max_tps,
-					"httpBypassFqdn"           => $rs->http_bypass_fqdn,
-					"id"                       => $rs->id,
-					"infoUrl"                  => $rs->info_url,
-					"initialDispersion"        => $rs->initial_dispersion,
-					"ipv6RoutingEnabled"       => $rs->ipv6_routing_enabled,
-					"lastUpdated"              => $rs->last_updated,
-					"logsEnabled"              => $rs->logs_enabled,
-					"longDesc"                 => $rs->long_desc,
-					"longDesc1"                => $rs->long_desc_1,
-					"longDesc2"                => $rs->long_desc_2,
-					"matchList"                => \@matchlist,
-					"maxDnsAnswers"            => $rs->max_dns_answers,
-					"midHeaderRewrite"         => $rs->mid_header_rewrite,
-					"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
-					"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
-					"multiSiteOrigin"          => $rs->multi_site_origin,
-					"orgServerFqdn"            => $rs->org_server_fqdn,
-					"originShield"             => $rs->origin_shield,
-					"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
-					"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
-					"profileDescription"       => defined($rs->profile) ? $rs->profile->description : undef,
-					"protocol"                 => $rs->protocol,
-					"qstringIgnore"            => $rs->qstring_ignore,
-					"rangeRequestHandling"     => $rs->range_request_handling,
-					"regexRemap"               => $rs->regex_remap,
-					"regionalGeoBlocking"      => $rs->regional_geo_blocking,
-					"remapText"                => $rs->remap_text,
-					"signed"                   => $rs->signed,
-					"sslKeyVersion"            => $rs->ssl_key_version,
-					"trRequestHeaders"         => $rs->tr_request_headers,
-					"trResponseHeaders"        => $rs->tr_response_headers,
-					"type"                     => $rs->type->name,
-					"typeId"                   => $rs->type->id,
-					"xmlId"                    => $rs->xml_id
+				@matchlist, {
+					type      => $ds_regex->regex->type->name,
+					pattern   => $ds_regex->regex->pattern,
+					setNumber => $ds_regex->set_number
 				}
 			);
-
-			&log( $self, " Safe update applied to deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
-
-			return $self->success( \@response, "Deliveryservice safe update was successful." );
 		}
-		else {
-			return $self->alert("Deliveryservice safe update failed.");
-		}
+
+		my @response;
+		push(
+			@response, {
+				"active"                   => $rs->active,
+				"cacheurl"                 => $rs->cacheurl,
+				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
+				"cdnId"                    => $rs->cdn->id,
+				"cdnName"                  => $rs->cdn->name,
+				"checkPath"                => $rs->check_path,
+				"displayName"              => $rs->display_name,
+				"dnsBypassCname"           => $rs->dns_bypass_cname,
+				"dnsBypassIp"              => $rs->dns_bypass_ip,
+				"dnsBypassIp6"             => $rs->dns_bypass_ip6,
+				"dnsBypassTtl"             => $rs->dns_bypass_ttl,
+				"dscp"                     => $rs->dscp,
+				"edgeHeaderRewrite"        => $rs->edge_header_rewrite,
+				"exampleURLs"              => \@example_urls,
+				"geoLimitRedirectURL"      => $rs->geolimit_redirect_url,
+				"geoLimit"                 => $rs->geo_limit,
+				"geoLimitCountries"        => $rs->geo_limit_countries,
+				"geoProvider"              => $rs->geo_provider,
+				"globalMaxMbps"            => $rs->global_max_mbps,
+				"globalMaxTps"             => $rs->global_max_tps,
+				"httpBypassFqdn"           => $rs->http_bypass_fqdn,
+				"id"                       => $rs->id,
+				"infoUrl"                  => $rs->info_url,
+				"initialDispersion"        => $rs->initial_dispersion,
+				"ipv6RoutingEnabled"       => $rs->ipv6_routing_enabled,
+				"lastUpdated"              => $rs->last_updated,
+				"logsEnabled"              => $rs->logs_enabled,
+				"longDesc"                 => $rs->long_desc,
+				"longDesc1"                => $rs->long_desc_1,
+				"longDesc2"                => $rs->long_desc_2,
+				"matchList"                => \@matchlist,
+				"maxDnsAnswers"            => $rs->max_dns_answers,
+				"midHeaderRewrite"         => $rs->mid_header_rewrite,
+				"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
+				"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
+				"multiSiteOrigin"          => $rs->multi_site_origin,
+				"orgServerFqdn"            => $rs->org_server_fqdn,
+				"originShield"             => $rs->origin_shield,
+				"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
+				"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
+				"profileDescription"       => defined($rs->profile) ? $rs->profile->description : undef,
+				"protocol"                 => $rs->protocol,
+				"qstringIgnore"            => $rs->qstring_ignore,
+				"rangeRequestHandling"     => $rs->range_request_handling,
+				"regexRemap"               => $rs->regex_remap,
+				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
+				"remapText"                => $rs->remap_text,
+				"routingName"              => $rs->routing_name,
+				"signed"                   => $rs->signed,
+				"sslKeyVersion"            => $rs->ssl_key_version,
+				"trRequestHeaders"         => $rs->tr_request_headers,
+				"trResponseHeaders"        => $rs->tr_response_headers,
+				"type"                     => $rs->type->name,
+				"typeId"                   => $rs->type->id,
+				"xmlId"                    => $rs->xml_id
+			}
+		);
+
+		&log( $self, " Safe update applied to deliveryservice [ '" . $rs->xml_id . "' ] with id: " . $rs->id, "APICHANGE" );
+
+		return $self->success( \@response, "Deliveryservice safe update was successful." );
 	}
 	else {
-		return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+		return $self->alert("Deliveryservice safe update failed.");
 	}
 }
 
@@ -664,6 +669,7 @@ sub create {
 		regex_remap            => $params->{regexRemap},
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
+		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName} ),
 		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
@@ -691,7 +697,7 @@ sub create {
 		my $cdn = $self->db->resultset('Cdn')->search( { id => $params->{cdnId} } )->single();
 		my $dnssec_enabled = $cdn->dnssec_enabled;
 		if ($dnssec_enabled) {
-			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id );
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id, $cdn->domain_name );
 			&log( $self, "Created delivery service dnssec keys for [ '" . $insert->xml_id . "' ]", "APICHANGE" );
 		}
 
@@ -764,6 +770,7 @@ sub create {
 				"regexRemap"               => $insert->regex_remap,
 				"regionalGeoBlocking"      => $insert->regional_geo_blocking,
 				"remapText"                => $insert->remap_text,
+				"routingName"              => $insert->routing_name,
 				"signed"                   => $insert->signed,
 				"sslKeyVersion"            => $insert->ssl_key_version,
 				"tenantId"                 => $insert->tenant_id,
@@ -876,7 +883,10 @@ sub assign_servers {
 		$insert->insert();
 	}
 
+	# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
 	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+	&UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+	&UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 
 	my $response;
 	$response->{xmlId} = $ds->xml_id;
@@ -949,6 +959,7 @@ sub get_deliveryservices_by_serverId {
 					"regexRemap"           => $row->regex_remap,
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
+					"routingName"          => $row->routing_name,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
@@ -980,15 +991,22 @@ sub get_deliveryservices_by_userId {
 		#no access to resource tenant
 		return $self->forbidden("Forbidden. User tenant is not available to the working user.");
 	}
-	my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 
+	my %criteria;
+	if ( !$tenant_utils->use_tenancy() ) {
+		my $user_ds_ids = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
+		$criteria{'me.id'} = { -in => $user_ds_ids->get_column('deliveryservice')->as_query };
+	}
 	my $deliveryservices = $self->db->resultset('Deliveryservice')
-		->search( { 'me.id' => { -in => $user_ds_ids->get_column('deliveryservice')->as_query } }, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
+		->search( \%criteria, { prefetch => [ 'cdn', 'profile', 'type', 'tenant' ] } );
 
 	my @data;
 	if ( defined($deliveryservices) ) {
 		while ( my $row = $deliveryservices->next ) {
 			if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+				next;
+			}
+			if (!$tenant_utils->is_ds_resource_accessible_to_tenant($tenants_data, $row->tenant_id, $user->tenant_id)) {
 				next;
 			}
 			push(
@@ -1038,6 +1056,7 @@ sub get_deliveryservices_by_userId {
 					"regexRemap"           => $row->regex_remap,
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
+					"routingName"          => $row->routing_name,
 					"signed"               => \$row->signed,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
@@ -1268,7 +1287,7 @@ sub is_deliveryservice_request_valid {
 
 	my $rules = {
 		fields => [
-			qw/customer contentType deliveryProtocol routingType serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+			qw/customer contentType deliveryProtocol routingType routingName serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
 		],
 
 		# Validation checks to perform
@@ -1303,7 +1322,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# Validation checks to perform
@@ -1327,6 +1346,7 @@ sub is_deliveryservice_valid {
 			qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			regionalGeoBlocking  => [ is_required("is required") ],
+			routingName          => [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
 			signed               => [ is_required("is required") ],
 		]
 	};
@@ -1340,6 +1360,24 @@ sub is_deliveryservice_valid {
 	else {
 		return ( 0, $result->{error} );
 	}
+}
+
+sub is_valid_routing_name {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value or $value eq '' ) {
+		return undef;
+	}
+
+	if ( !&UI::Utils::is_hostname($value) ) {
+		return "invalid. Must be a valid hostname.";
+	}
+
+	if ( $value =~ /\./ ) {
+		return "invalid. Periods not allowed.";
+	}
+
+	return undef;
 }
 
 sub is_valid_deliveryservice_type {

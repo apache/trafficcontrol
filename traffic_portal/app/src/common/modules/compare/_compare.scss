@@ -14,3 +14,29 @@
  limitations under the License.
 
 */
+
+#compareContainer {
+
+  pre {
+    margin: 20px 0 20px 0;
+  }
+
+  .source {
+    text-align: center;
+  }
+
+  .item1 {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .item2 {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .same {
+    color: grey;
+  }
+}
+

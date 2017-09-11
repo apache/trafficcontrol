@@ -299,12 +299,20 @@ public class TrafficRouter {
 		return caches;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
 		track.setRouteType(RouteType.DNS, request.getHostname());
 
 		final DeliveryService ds = selectDeliveryService(request, false);
 
 		if (ds == null) {
+			track.setResult(ResultType.STATIC_ROUTE);
+			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
+			return null;
+		}
+
+		if (!ds.getRoutingName().equalsIgnoreCase(request.getHostname().split("\\.")[0])) {
+			// request matched the Delivery Service but is using the wrong routing name
 			track.setResult(ResultType.STATIC_ROUTE);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;

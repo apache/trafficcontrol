@@ -49,7 +49,7 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		iw := &BodyInterceptor{w: w}
 		h(iw, r, p)
 
-		sha := sha512.Sum512(iw.Body())
+    sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 
 		gzipResponse(w, r, iw.Body())

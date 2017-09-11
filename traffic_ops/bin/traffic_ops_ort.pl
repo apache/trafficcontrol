@@ -2898,14 +2898,12 @@ sub adv_processing_ssl {
 			( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
 			my $remap = $keypair->{'key_name'};
 			$remap =~ s/\.key$//;
-			if ($remap !~ /^edge/) {
-				#remove routing name (ccr/tr) and add * for wildcard certs
-				$remap =~ /^(.*?)(\..*)/;
-				$remap = "*$2";
-			}
+			$remap =~ /^(.*?)(\..*)/;
+			# HTTP delivery services use wildcard certs
+			my $wildcard = "*$2";
 			my $found = 0;
 			foreach my $record (@$certs){
-				if ($record->{'hostname'} eq $remap){
+				if ($record->{'hostname'} eq $remap || $record->{'hostname'} eq $wildcard) {
 					$found = 1;
 					my $ssl_key         = decode_base64($record->{'certificate'}->{'key'});
 					my $ssl_cert        = decode_base64($record->{'certificate'}->{'crt'});

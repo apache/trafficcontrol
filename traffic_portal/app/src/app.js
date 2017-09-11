@@ -32,7 +32,6 @@ var trafficPortal = angular.module('trafficPortal', [
         'ngResource',
         'ngSanitize',
         'ngRoute',
-        'ngMap',
         'ui.router',
         'ui.bootstrap',
         'restangular',
@@ -87,6 +86,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/admin/parameters/new').name,
         require('./modules/private/admin/parameters/profiles').name,
         require('./modules/private/admin/profiles').name,
+        require('./modules/private/admin/profiles/compare').name,
         require('./modules/private/admin/profiles/deliveryServices').name,
         require('./modules/private/admin/profiles/edit').name,
         require('./modules/private/admin/profiles/list').name,
@@ -122,6 +122,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/admin/users/edit').name,
         require('./modules/private/admin/users/list').name,
         require('./modules/private/admin/users/new').name,
+        require('./modules/private/admin/users/register').name,
 
         // configure
         require('./modules/private/configure').name,
@@ -134,6 +135,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/configure/cacheGroups/servers').name,
         require('./modules/private/configure/cacheGroups/staticDnsEntries').name,
         require('./modules/private/configure/deliveryServices').name,
+        require('./modules/private/configure/deliveryServices/compare').name,
         require('./modules/private/configure/deliveryServices/edit').name,
         require('./modules/private/configure/deliveryServices/list').name,
         require('./modules/private/configure/deliveryServices/new').name,
@@ -156,6 +158,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/configure/deliveryServices/sslKeys/view').name,
         require('./modules/private/configure/deliveryServices/sslKeys/generate').name,
         require('./modules/private/configure/servers').name,
+        require('./modules/private/configure/servers/configFiles').name,
         require('./modules/private/configure/servers/deliveryServices').name,
         require('./modules/private/configure/servers/edit').name,
         require('./modules/private/configure/servers/new').name,
@@ -168,19 +171,21 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/monitor').name,
         require('./modules/private/monitor/dashboard').name,
         require('./modules/private/monitor/dashboard/view').name,
-        require('./modules/private/monitor/map').name,
 
         // tools
         require('./modules/private/tools').name,
         require('./modules/private/tools/iso').name,
 
         // common modules
+        require('./common/modules/compare').name,
+        require('./common/modules/dialog/compare').name,
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/delete').name,
         require('./common/modules/dialog/input').name,
         require('./common/modules/dialog/reset').name,
         require('./common/modules/dialog/select').name,
         require('./common/modules/dialog/select/status').name,
+        require('./common/modules/dialog/text').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
@@ -242,6 +247,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/user').name,
         require('./common/modules/form/user/edit').name,
         require('./common/modules/form/user/new').name,
+        require('./common/modules/form/user/register').name,
 
         // tables
         require('./common/modules/table/cacheGroups').name,
@@ -277,6 +283,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/regions').name,
         require('./common/modules/table/regionPhysLocations').name,
         require('./common/modules/table/servers').name,
+        require('./common/modules/table/serverConfigFiles').name,
         require('./common/modules/table/serverDeliveryServices').name,
         require('./common/modules/table/statuses').name,
         require('./common/modules/table/statusServers').name,
