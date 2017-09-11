@@ -85,15 +85,11 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 	servers := []Server{}
 
 	const HiddenField = "********"
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
 
 	defer rows.Close()
 	for rows.Next() {
 		var s Server
-		err = rows.StructScan(&s)
-		if err != nil {
+		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
 		if privLevel < PrivLevelAdmin {
@@ -107,6 +103,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]Server, error) {
 
 func selectServersQuery() string {
 
+	const JumboFrameBps = 9000
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
 	query := `SELECT
