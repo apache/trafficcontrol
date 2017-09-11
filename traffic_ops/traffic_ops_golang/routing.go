@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"database/sql"
 	"net/http"
 	"regexp"
 	"sort"
@@ -42,7 +43,8 @@ type Route struct {
 
 type ServerData struct {
 	Config
-	DB *sqlx.DB
+	DB  *sql.DB
+	DBX *sqlx.DB
 }
 
 type PathParams map[string]string

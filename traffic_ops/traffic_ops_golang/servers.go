@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -28,12 +29,11 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
-	"github.com/jmoiron/sqlx"
 )
 
 const ServersPrivLevel = 10
 
-func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
+func serversHandler(db *sql.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -59,7 +59,7 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.ServersResponse, error) {
+func getServersResponse(q url.Values, db *sql.DB, privLevel int) (*tcstructs.ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting servers response: %v", err)
@@ -71,33 +71,122 @@ func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.Se
 	return &resp, nil
 }
 
-func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Server, error) {
+func getServers(q url.Values, db *sql.DB, privLevel int) ([]tcstructs.Server, error) {
 
-	var rows *sqlx.Rows
-	var err error
-
-	rows, err = db.Queryx(selectServersQuery())
+	rows, err := db.Query(selectServersQuery())
 
 	if err != nil {
-		//TODO: drichardson - send back an alert if the Query Count is larger than 1
-		//                    Test for bad Query Parameters
 		return nil, err
 	}
+	defer rows.Close()
+
 	servers := []tcstructs.Server{}
 
 	const HiddenField = "********"
 
-	defer rows.Close()
 	for rows.Next() {
-		var s tcstructs.Server
-		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting servers: %v", err)
+		var cachegroup sql.NullString
+		var cachegroupId sql.NullInt64
+		var cdnId sql.NullInt64
+		var cdnName sql.NullString
+		var domainName sql.NullString
+		var guid sql.NullString
+		var hostName sql.NullString
+		var httpsPort sql.NullInt64
+		var id sql.NullInt64
+		var iloIpAddress sql.NullString
+		var iloIpGateway sql.NullString
+		var iloIpNetmask sql.NullString
+		var iloPassword sql.NullString
+		var iloUsername sql.NullString
+		var interfaceMtu sql.NullInt64
+		var interfaceName sql.NullString
+		var ip6Address sql.NullString
+		var ip6Gateway sql.NullString
+		var ipAddress sql.NullString
+		var ipGateway sql.NullString
+		var ipNetmask sql.NullString
+		var lastUpdated sql.NullString
+		var mgmtIpAddress sql.NullString
+		var mgmtIpGateway sql.NullString
+		var mgmtIpNetmask sql.NullString
+		var offlineReason sql.NullString
+		var physLocation sql.NullString
+		var physLocationId sql.NullInt64
+		var profile sql.NullString
+		var profileDesc sql.NullString
+		var profileId sql.NullInt64
+		var rack sql.NullString
+		var revalPending sql.NullBool
+		var routerHostName sql.NullString
+		var routerPortName sql.NullString
+		var status sql.NullString
+		var statusId sql.NullInt64
+		var tcpPort sql.NullInt64
+		var serverType sql.NullString
+		var serverTypeId sql.NullInt64
+		var updPending sql.NullBool
+		var xmppId sql.NullString
+		var xmppPasswd sql.NullString
+		if err := rows.Scan(&cachegroup, &cachegroupId, &cdnId, &cdnName, &domainName, &guid, &hostName, &httpsPort, &id, &iloIpAddress, &iloIpGateway, &iloIpNetmask, &iloPassword, &iloUsername, &interfaceMtu, &interfaceName, &ip6Address, &ip6Gateway, &ipAddress, &ipGateway, &ipNetmask, &lastUpdated, &mgmtIpAddress, &mgmtIpGateway, &mgmtIpNetmask, &offlineReason, &physLocation, &physLocationId, &profile, &profileDesc, &profileId, &rack, &revalPending, &routerHostName, &routerPortName, &status, &statusId, &tcpPort, &serverType, &serverTypeId, &updPending, &xmppId, &xmppPasswd); err != nil {
+			return nil, err
 		}
+
+		var iloPasswordField string
+		var xmppPasswdField string
 		if privLevel < PrivLevelAdmin {
-			s.IloPassword = HiddenField
-			s.XmppPasswd = HiddenField
+			iloPasswordField = HiddenField
+			xmppPasswdField = HiddenField
+		} else {
+			iloPasswordField = iloPassword.String
+			xmppPasswdField = iloPassword.String
 		}
-		servers = append(servers, s)
+
+		servers = append(servers, tcstructs.Server{
+			Cachegroup:     cachegroup.String,
+			CachegroupId:   int(cachegroupId.Int64),
+			CdnId:          int(cdnId.Int64),
+			CdnName:        cdnName.String,
+			DomainName:     domainName.String,
+			Guid:           guid.String,
+			HostName:       hostName.String,
+			HttpsPort:      int(httpsPort.Int64),
+			Id:             int(id.Int64),
+			IloIpAddress:   iloIpAddress.String,
+			IloIpGateway:   iloIpGateway.String,
+			IloIpNetmask:   iloIpNetmask.String,
+			IloPassword:    iloPasswordField,
+			IloUsername:    iloUsername.String,
+			InterfaceMtu:   int(interfaceMtu.Int64),
+			InterfaceName:  interfaceName.String,
+			Ip6Address:     ip6Address.String,
+			Ip6Gateway:     ip6Gateway.String,
+			IpAddress:      ipAddress.String,
+			IpGateway:      ipGateway.String,
+			IpNetmask:      ipNetmask.String,
+			LastUpdated:    lastUpdated.String,
+			MgmtIpAddress:  mgmtIpAddress.String,
+			MgmtIpGateway:  mgmtIpGateway.String,
+			MgmtIpNetmask:  mgmtIpNetmask.String,
+			OfflineReason:  offlineReason.String,
+			PhysLocation:   physLocation.String,
+			PhysLocationId: int(physLocationId.Int64),
+			Profile:        profile.String,
+			ProfileDesc:    profileDesc.String,
+			ProfileId:      int(profileId.Int64),
+			Rack:           rack.String,
+			RevalPending:   revalPending.Bool,
+			RouterHostName: routerHostName.String,
+			RouterPortName: routerPortName.String,
+			Status:         status.String,
+			StatusId:       int(statusId.Int64),
+			TcpPort:        int(tcpPort.Int64),
+			ServerType:     serverType.String,
+			ServerTypeId:   int(serverTypeId.Int64),
+			UpdPending:     bool(updPending.Bool),
+			XmppId:         xmppId.String,
+			XmppPasswd:     xmppPasswdField,
+		})
 	}
 	return servers, nil
 }

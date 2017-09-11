@@ -64,7 +64,65 @@ func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
 }
 
 func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
-	return wrapAuthWithData(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+	return wrapAuthWithDataX(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+}
+
+func wrapAuthX(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
+	return wrapAuthWithDataX(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+}
+
+func wrapAuthWithDataX(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
+	if noAuth {
+		return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+			h(w, r, p, "", PrivLevelInvalid)
+		}
+	}
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+		// TODO remove, and make username available to wrapLogTime
+		start := time.Now()
+		iw := &Interceptor{w: w}
+		w = iw
+		username := "-"
+		defer func() {
+			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+		}()
+
+		handleUnauthorized := func(reason string) {
+			status := http.StatusUnauthorized
+			w.WriteHeader(status)
+			fmt.Fprintf(w, http.StatusText(status))
+			log.Infof("%v %v %v %v returned unauthorized: %v\n", r.RemoteAddr, r.Method, r.URL.Path, username, reason)
+		}
+
+		cookie, err := r.Cookie(tocookie.Name)
+		if err != nil {
+			handleUnauthorized("error getting cookie: " + err.Error())
+			return
+		}
+
+		if cookie == nil {
+			handleUnauthorized("no auth cookie")
+			return
+		}
+
+		oldCookie, err := tocookie.Parse(secret, cookie.Value)
+		if err != nil {
+			handleUnauthorized("cookie error: " + err.Error())
+			return
+		}
+
+		username = oldCookie.AuthData
+		privLevel := PrivLevel(privLevelStmt, username)
+		if privLevel < privLevelRequired {
+			handleUnauthorized("insufficient privileges")
+			return
+		}
+
+		newCookieVal := tocookie.Refresh(oldCookie, secret)
+		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+
+		h(w, r, p, username, privLevel)
+	}
 }
 
 func wrapAuthWithData(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
