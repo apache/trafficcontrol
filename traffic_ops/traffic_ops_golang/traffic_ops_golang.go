@@ -65,6 +65,8 @@ func main() {
 		return
 	}
 
+	log.Infof("Using Config: %+v\n", cfg)
+
 	sslStr := "require"
 	if !cfg.DBSSL {
 		sslStr = "disable"
