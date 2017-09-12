@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	. "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
-	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -46,7 +45,7 @@ func getTestServers() []Server {
 		IloIpNetmask:   "iloIpNetmask",
 		IloPassword:    "iloPassword",
 		IloUsername:    "iloUsername",
-		InterfaceMtu:   "interfaceMtu",
+		InterfaceMtu:   9500,
 		InterfaceName:  "interfaceName",
 		Ip6Address:     "ip6Address",
 		Ip6Gateway:     "ip6Gateway",
@@ -87,9 +86,7 @@ func getTestServers() []Server {
 }
 
 func TestGetServersByDsId(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}

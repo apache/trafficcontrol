@@ -24,15 +24,12 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestGetMonitoringServers(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -117,9 +114,7 @@ func TestGetMonitoringServers(t *testing.T) {
 }
 
 func TestGetCachegroups(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -244,9 +239,7 @@ func sortDeliveryServices(p []DeliveryService) []DeliveryService {
 }
 
 func TestGetProfiles(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -339,9 +332,7 @@ func TestGetProfiles(t *testing.T) {
 }
 
 func TestGetDeliveryServices(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -395,7 +386,7 @@ func TestGetDeliveryServices(t *testing.T) {
 func TestGetConfig(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -429,9 +420,7 @@ func TestGetConfig(t *testing.T) {
 
 func TestGetMonitoringJson(t *testing.T) {
 	resp := MonitoringResponse{}
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
+	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
