@@ -30,7 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
 )
 
-const CdnsPrivLevel = 10
+const CDNsPrivLevel = 10
 
 func cdnsHandler(db *sql.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
@@ -41,7 +41,7 @@ func cdnsHandler(db *sql.DB) AuthRegexHandlerFunc {
 		}
 
 		q := r.URL.Query()
-		resp, err := getCdnsResponse(q, db, privLevel)
+		resp, err := getCDNsResponse(q, db, privLevel)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -58,36 +58,31 @@ func cdnsHandler(db *sql.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getCdnsResponse(q url.Values, db *sql.DB, privLevel int) (*tcstructs.CdnsResponse, error) {
-	cdns, err := getCdns(q, db, privLevel)
+func getCDNsResponse(q url.Values, db *sql.DB, privLevel int) (*tcstructs.CDNsResponse, error) {
+	cdns, err := getCDNs(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting cdns response: %v", err)
 	}
 
-	resp := tcstructs.CdnsResponse{
+	resp := tcstructs.CDNsResponse{
 		Response: cdns,
 	}
 	return &resp, nil
 }
 
-func getCdns(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Cdn, error) {
-
-	var rows *sql.Rows
-	var err error
-
-	rows, err = db.Query(selectCdnsQuery())
-
+func getCDNs(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.CDN, error) {
+	rows, err := db.Query(selectCDNsQuery())
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
 		//                    Test for bad Query Parameters
 		return nil, err
 	}
-	cdns := []tcstructs.Cdn{}
-
 	defer rows.Close()
+
+	cdns := []tcstructs.CDN{}
 	for rows.Next() {
-		var s tcstructs.Cdn
-		if err = rows.Scan(&s.DnssecEnabled, &s.DomainName, &s.Id, &s.LastUpdated, &s.Name); err != nil {
+		s := tcstructs.CDN{}
+		if err = rows.Scan(&s.DNSSECEnabled, &s.DomainName, &s.ID, &s.LastUpdated, &s.Name); err != nil {
 			return nil, fmt.Errorf("getting cdns: %v", err)
 		}
 		cdns = append(cdns, s)
@@ -95,15 +90,14 @@ func getCdns(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Cdn, error) {
 	return cdns, nil
 }
 
-func selectCdnsQuery() string {
-
-	query := `SELECT
-dnssec_enabled,
-domain_name,
-id,
-last_updated,
-name 
-
-FROM cdn c`
-	return query
+func selectCDNsQuery() string {
+	return `
+SELECT
+ dnssec_enabled,
+ domain_name,
+ id,
+ last_updated,
+ name
+FROM cdn c
+`
 }

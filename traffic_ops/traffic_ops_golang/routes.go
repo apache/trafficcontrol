@@ -38,8 +38,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring.json", wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
 		{1.2, http.MethodGet, "servers", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
 		{1.2, http.MethodGet, "servers.json", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "cdns", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
-		{1.2, http.MethodGet, "cdns.json", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
+		{1.2, http.MethodGet, "cdns", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CDNsPrivLevel))},
+		{1.2, http.MethodGet, "cdns.json", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CDNsPrivLevel))},
 	}, rootHandler(d), nil
 }
 
