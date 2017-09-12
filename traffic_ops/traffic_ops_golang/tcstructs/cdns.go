@@ -19,14 +19,14 @@ package tcstructs
  * under the License.
  */
 
-type CdnsResponse struct {
-	Response []Cdn `json:"response"`
+type CDNsResponse struct {
+	Response []CDN `json:"response"`
 }
 
-type Cdn struct {
-	DnssecEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    string `json:"domainName" db:"domain_name"`
-	Id            int    `json:"id" db:"id"`
-	LastUpdated   string `json:"lastUpdated" db:"last_updated"`
-	Name          string `json:"name" db:"name"`
+type CDN struct {
+	DNSSECEnabled bool   `json:"dnssecEnabled"`
+	DomainName    string `json:"domainName"`
+	ID            int    `json:"id"`
+	LastUpdated   string `json:"lastUpdated"`
+	Name          string `json:"name"`
 }

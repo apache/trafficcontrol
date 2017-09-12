@@ -32,6 +32,8 @@ import (
 )
 
 const ServersPrivLevel = 10
+const JumboFrameBPS = 9000
+const HiddenField = "********"
 
 func serversHandler(db *sql.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
@@ -72,30 +74,23 @@ func getServersResponse(q url.Values, db *sql.DB, privLevel int) (*tcstructs.Ser
 }
 
 func getServers(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Server, error) {
-
-	var rows *sql.Rows
-	var err error
-
-	rows, err = db.Query(selectServersQuery())
-
+	rows, err := db.Query(selectServersQuery())
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
 		//                    Test for bad Query Parameters
 		return nil, err
 	}
-	servers := []tcstructs.Server{}
-
-	const HiddenField = "********"
-
 	defer rows.Close()
+
+	servers := []tcstructs.Server{}
 	for rows.Next() {
-		var s tcstructs.Server
-		if err = rows.Scan(&s.Cachegroup, &s.CachegroupId, &s.CdnId, &s.CdnName, &s.DomainName, &s.Guid, &s.HostName, &s.HttpsPort, &s.Id, &s.IloIpAddress, &s.IloIpGateway, &s.IloIpNetmask, &s.IloPassword, &s.IloUsername, &s.InterfaceMtu, &s.InterfaceName, &s.Ip6Address, &s.Ip6Gateway, &s.IpAddress, &s.IpGateway, &s.IpNetmask, &s.LastUpdated, &s.MgmtIpAddress, &s.MgmtIpGateway, &s.MgmtIpNetmask, &s.OfflineReason, &s.PhysLocation, &s.PhysLocationId, &s.Profile, &s.ProfileDesc, &s.ProfileId, &s.Rack, &s.RevalPending, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.StatusId, &s.TcpPort, &s.ServerType, &s.ServerTypeId, &s.UpdPending, &s.XmppId, &s.XmppPasswd); err != nil {
+		s := tcstructs.Server{}
+		if err = rows.Scan(&s.Cachegroup, &s.CachegroupID, &s.CdnID, &s.CdnName, &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &s.InterfaceMTU, &s.InterfaceName, &s.IP6Address, &s.IP6Gateway, &s.IPAddress, &s.IPGateway, &s.IPNetmask, &s.LastUpdated, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.PhysLocationID, &s.Profile, &s.ProfileDesc, &s.ProfileID, &s.Rack, &s.RevalPending, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.StatusID, &s.TCPPort, &s.ServerType, &s.ServerTypeID, &s.UpdPending, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
 		if privLevel < PrivLevelAdmin {
-			s.IloPassword = HiddenField
-			s.XmppPasswd = HiddenField
+			s.ILOPassword = HiddenField
+			s.XMPPPasswd = HiddenField
 		}
 		servers = append(servers, s)
 	}
@@ -103,11 +98,10 @@ func getServers(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Server, er
 }
 
 func selectServersQuery() string {
-
-	const JumboFrameBPS = 9000
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
-	query := `SELECT
+	return `
+SELECT
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,
@@ -151,14 +145,12 @@ s.type as server_type_id,
 s.upd_pending as upd_pending,
 COALESCE(s.xmpp_id, '') as xmpp_id,
 COALESCE(s.xmpp_passwd, '') as xmpp_passwd
-
 FROM server s
-
 JOIN cachegroup cg ON s.cachegroup = cg.id
 JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id`
-	return query
+JOIN type t ON s.type = t.id
+`
 }

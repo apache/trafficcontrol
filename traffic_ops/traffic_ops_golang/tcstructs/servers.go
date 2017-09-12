@@ -24,47 +24,47 @@ type ServersResponse struct {
 }
 
 type Server struct {
-	Cachegroup     string `json:"cachegroup" db:"cachegroup"`
-	CachegroupId   int    `json:"cachegroupId" db:"cachegroup_id"`
-	CdnId          int    `json:"cdnId" db:"cdn_id"`
-	CdnName        string `json:"cdnName" db:"cdn_name"`
-	DomainName     string `json:"domainName" db:"domain_name"`
-	Guid           string `json:"guid" db:"guid"`
-	HostName       string `json:"hostName" db:"host_name"`
-	HttpsPort      int    `json:"httpsPort" db:"https_port"`
-	Id             int    `json:"id" db:"id"`
-	IloIpAddress   string `json:"iloIpAddress" db:"ilo_ip_address"`
-	IloIpGateway   string `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	IloIpNetmask   string `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	IloPassword    string `json:"iloPassword" db:"ilo_password"`
-	IloUsername    string `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu   int    `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName  string `json:"interfaceName" db:"interface_name"`
-	Ip6Address     string `json:"ip6Address" db:"ip6_address"`
-	Ip6Gateway     string `json:"ip6Gateway" db:"ip6_gateway"`
-	IpAddress      string `json:"ipAddress" db:"ip_address"`
-	IpGateway      string `json:"ipGateway" db:"ip_gateway"`
-	IpNetmask      string `json:"ipNetmask" db:"ip_netmask"`
-	LastUpdated    string `json:"lastUpdated" db:"last_updated"`
-	MgmtIpAddress  string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIpGateway  string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIpNetmask  string `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason  string `json:"offlineReason" db:"offline_reason"`
-	PhysLocation   string `json:"physLocation" db:"phys_location"`
-	PhysLocationId int    `json:"physLocationId" db:"phys_location_id"`
-	Profile        string `json:"profile" db:"profile"`
-	ProfileDesc    string `json:"profileDesc" db:"profile_desc"`
-	ProfileId      int    `json:"profileId" db:"profile_id"`
-	Rack           string `json:"rack" db:"rack"`
-	RevalPending   bool   `json:"revalPending" db:"reval_pending"`
-	RouterHostName string `json:"routerHostName" db:"router_host_name"`
-	RouterPortName string `json:"routerPortName" db:"router_port_name"`
-	Status         string `json:"status" db:"status"`
-	StatusId       int    `json:"statusId" db:"status_id"`
-	TcpPort        int    `json:"tcpPort" db:"tcp_port"`
-	ServerType     string `json:"type" db:"server_type"`
-	ServerTypeId   int    `json:"typeId" db:"server_type_id"`
-	UpdPending     bool   `json:"updPending" db:"upd_pending"`
-	XmppId         string `json:"xmppId" db:"xmpp_id"`
-	XmppPasswd     string `json:"xmppPasswd" db:"xmpp_passwd"`
+	Cachegroup     string `json:"cachegroup"`
+	CachegroupID   int    `json:"cachegroupId"`
+	CdnID          int    `json:"cdnId"`
+	CdnName        string `json:"cdnName"`
+	DomainName     string `json:"domainName"`
+	GUID           string `json:"guid"`
+	HostName       string `json:"hostName"`
+	HTTPSPort      int    `json:"httpsPort"`
+	ID             int    `json:"id"`
+	ILOIPAddress   string `json:"iloIpAddress"`
+	ILOIPGateway   string `json:"iloIpGateway"`
+	ILOIPNetmask   string `json:"iloIpNetmask"`
+	ILOPassword    string `json:"iloPassword"`
+	ILOUsername    string `json:"iloUsername"`
+	InterfaceMTU   int    `json:"interfaceMtu"`
+	InterfaceName  string `json:"interfaceName"`
+	IP6Address     string `json:"ip6Address"`
+	IP6Gateway     string `json:"ip6Gateway"`
+	IPAddress      string `json:"ipAddress"`
+	IPGateway      string `json:"ipGateway"`
+	IPNetmask      string `json:"ipNetmask"`
+	LastUpdated    string `json:"lastUpdated"`
+	MgmtIPAddress  string `json:"mgmtIpAddress"`
+	MgmtIPGateway  string `json:"mgmtIpGateway"`
+	MgmtIPNetmask  string `json:"mgmtIpNetmask"`
+	OfflineReason  string `json:"offlineReason"`
+	PhysLocation   string `json:"physLocation"`
+	PhysLocationID int    `json:"physLocationId"`
+	Profile        string `json:"profile"`
+	ProfileDesc    string `json:"profileDesc"`
+	ProfileID      int    `json:"profileId"`
+	Rack           string `json:"rack"`
+	RevalPending   bool   `json:"revalPending"`
+	RouterHostName string `json:"routerHostName"`
+	RouterPortName string `json:"routerPortName"`
+	Status         string `json:"status"`
+	StatusID       int    `json:"statusId"`
+	TCPPort        int    `json:"tcpPort"`
+	ServerType     string `json:"type"`
+	ServerTypeID   int    `json:"typeId"`
+	UpdPending     bool   `json:"updPending"`
+	XMPPID         string `json:"xmppId"`
+	XMPPPasswd     string `json:"xmppPasswd"`
 }
