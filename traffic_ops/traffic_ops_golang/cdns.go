@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -27,12 +28,11 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
-	"github.com/jmoiron/sqlx"
 )
 
 const CdnsPrivLevel = 10
 
-func cdnsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
+func cdnsHandler(db *sql.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -58,7 +58,7 @@ func cdnsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getCdnsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.CdnsResponse, error) {
+func getCdnsResponse(q url.Values, db *sql.DB, privLevel int) (*tcstructs.CdnsResponse, error) {
 	cdns, err := getCdns(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting cdns response: %v", err)
@@ -70,9 +70,9 @@ func getCdnsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.CdnsR
 	return &resp, nil
 }
 
-func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Cdn, error) {
+func getCdns(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Cdn, error) {
 
-	var rows *sqlx.Rows
+	var rows *sql.Rows
 	var err error
 
 	rows, err = db.Queryx(selectCdnsQuery())
