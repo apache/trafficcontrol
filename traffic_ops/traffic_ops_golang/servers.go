@@ -76,7 +76,7 @@ func getServers(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Server, er
 	var rows *sql.Rows
 	var err error
 
-	rows, err = db.Queryx(selectServersQuery())
+	rows, err = db.Query(selectServersQuery())
 
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
@@ -90,7 +90,7 @@ func getServers(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Server, er
 	defer rows.Close()
 	for rows.Next() {
 		var s tcstructs.Server
-		if err = rows.StructScan(&s); err != nil {
+		if err = rows.Scan(&s.Cachegroup, &s.CachegroupId, &s.CdnId, &s.CdnName, &s.DomainName, &s.Guid, &s.HostName, &s.HttpsPort, &s.Id, &s.IloIpAddress, &s.IloIpGateway, &s.IloIpNetmask, &s.IloPassword, &s.IloUsername, &s.InterfaceMtu, &s.InterfaceName, &s.Ip6Address, &s.Ip6Gateway, &s.IpAddress, &s.IpGateway, &s.IpNetmask, &s.LastUpdated, &s.MgmtIpAddress, &s.MgmtIpGateway, &s.MgmtIpNetmask, &s.OfflineReason, &s.PhysLocation, &s.PhysLocationId, &s.Profile, &s.ProfileDesc, &s.ProfileId, &s.Rack, &s.RevalPending, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.StatusId, &s.TcpPort, &s.ServerType, &s.ServerTypeId, &s.UpdPending, &s.XmppId, &s.XmppPasswd); err != nil {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
 		if privLevel < PrivLevelAdmin {

@@ -75,7 +75,7 @@ func getCdns(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Cdn, error) {
 	var rows *sql.Rows
 	var err error
 
-	rows, err = db.Queryx(selectCdnsQuery())
+	rows, err = db.Query(selectCdnsQuery())
 
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
@@ -87,7 +87,7 @@ func getCdns(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Cdn, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var s tcstructs.Cdn
-		if err = rows.StructScan(&s); err != nil {
+		if err = rows.Scan(&s.DnssecEnabled, &s.DomainName, &s.Id, &s.LastUpdated, &s.Name); err != nil {
 			return nil, fmt.Errorf("getting cdns: %v", err)
 		}
 		cdns = append(cdns, s)
