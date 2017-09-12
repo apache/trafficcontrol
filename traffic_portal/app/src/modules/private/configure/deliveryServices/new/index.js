@@ -58,7 +58,8 @@ module.exports = angular.module('trafficPortal.private.configure.deliveryService
                                     qstringIgnore: 0,
                                     rangeRequestHandling: 0,
                                     regionalGeoBlocking: false,
-                                    signed: false
+                                    signed: false,
+                                    routingName: 'cdn'
                                 };
                             },
                             type: function($stateParams) {

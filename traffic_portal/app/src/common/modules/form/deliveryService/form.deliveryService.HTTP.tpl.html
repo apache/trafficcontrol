@@ -115,6 +115,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.routingName), 'has-feedback': hasError(deliveryServiceForm.routingName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Routing Name</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
+                    <small class="input-warning" ng-show="!settings.isNew && deliveryServiceForm.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
                     <input id="routingName" name="routingName" type="text" class="form-control" placeholder="The routing name to use for the delivery FQDN, i.e. <routing name>.<XML ID>.<CDN domain>" ng-model="deliveryService.routingName" ng-maxlength="48" ng-pattern="/^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'pattern')">Invalid. Must be a valid hostname without periods</small>
