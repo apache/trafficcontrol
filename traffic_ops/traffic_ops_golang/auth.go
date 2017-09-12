@@ -43,7 +43,7 @@ func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 		log.Errorf("checking user %v priv level: user not in database", user)
 		return PrivLevelInvalid
 	case err != nil:
-		log.Errorf("Error checking user %v priv level: %v", user, err.Error())
+		log.Errorf("checking user %v priv level: %v", user, err.Error())
 		return PrivLevelInvalid
 	default:
 		return privLevel

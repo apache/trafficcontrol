@@ -42,6 +42,85 @@ const MonitorConfigFile = "rascal-config.txt"
 const KilobitsPerMegabit = 1000
 const DeliveryServiceStatus = "REPORTED"
 
+type MonitoringData struct {
+	Servers          *sql.Stmt
+	Cachegroups      *sql.Stmt
+	Profiles         *sql.Stmt
+	DeliveryServices *sql.Stmt
+	Config           *sql.Stmt
+}
+
+const monitoringServersQuery = `
+SELECT
+me.host_name as hostName,
+CONCAT(me.host_name, '.', me.domain_name) as fqdn,
+status.name as status,
+cachegroup.name as cachegroup,
+COALESCE(me.tcp_port, 0) as port,
+me.ip_address as ip,
+COALESCE(me.ip6_address, '') as ip6,
+profile.name as profile,
+me.interface_name as interfaceName,
+type.name as type,
+COALESCE(me.xmpp_id, '') as hashId
+FROM server me
+JOIN type type ON type.id = me.type
+JOIN status status ON status.id = me.status
+JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
+JOIN profile profile ON profile.id = me.profile
+JOIN cdn cdn ON cdn.id = me.cdn_id
+WHERE cdn.name = $1
+`
+const monitoringCachegroupsQuery = `
+SELECT name, COALESCE(latitude, 0), COALESCE(longitude, 0)
+FROM cachegroup
+WHERE id IN
+  (SELECT cachegroup FROM server WHERE server.cdn_id =
+    (SELECT id FROM cdn WHERE name = $1));
+`
+const monitoringProfilesQuery = `
+SELECT p.name as profile, pr.name, pr.value
+FROM parameter pr
+JOIN profile p ON p.name = ANY($1)
+JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
+WHERE pr.config_file = $2;
+`
+const monitoringDeliveryServicesQuery = `
+SELECT ds.xml_id, COALESCE(ds.global_max_tps, 0), COALESCE(ds.global_max_mbps, 0)
+FROM deliveryservice ds
+JOIN profile profile ON profile.id = ds.profile
+WHERE profile.name = ANY($1)
+AND ds.active = true
+`
+const monitoringConfigQuery = `
+SELECT pr.name, pr.value
+FROM parameter pr
+JOIN profile p ON p.name LIKE '` + MonitorProfilePrefix + `%%'
+JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
+WHERE pr.config_file = '` + MonitorConfigFile + `'
+` // TODO remove 'like' in query? Slow?
+
+func monitoringData(db *sql.DB) (*MonitoringData, error) {
+	d := MonitoringData{}
+	err := error(nil)
+	if d.Servers, err = db.Prepare(monitoringServersQuery); err != nil {
+		return nil, err
+	}
+	if d.Cachegroups, err = db.Prepare(monitoringCachegroupsQuery); err != nil {
+		return nil, err
+	}
+	if d.Profiles, err = db.Prepare(monitoringProfilesQuery); err != nil {
+		return nil, err
+	}
+	if d.DeliveryServices, err = db.Prepare(monitoringDeliveryServicesQuery); err != nil {
+		return nil, err
+	}
+	if d.Config, err = db.Prepare(monitoringConfigQuery); err != nil {
+		return nil, err
+	}
+	return &d, nil
+}
+
 type BasicServer struct {
 	Profile    string `json:"profile"`
 	Status     string `json:"status"`
@@ -106,7 +185,7 @@ type DeliveryService struct {
 }
 
 // TODO change to use the ParamMap, instead of parsing the URL
-func monitoringHandler(db *sql.DB) RegexHandlerFunc {
+func monitoringHandler(d *MonitoringData) RegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -116,7 +195,7 @@ func monitoringHandler(db *sql.DB) RegexHandlerFunc {
 
 		cdnName := p["cdn"]
 
-		resp, err := getMonitoringJson(cdnName, db)
+		resp, err := getMonitoringJson(cdnName, d)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -133,28 +212,8 @@ func monitoringHandler(db *sql.DB) RegexHandlerFunc {
 	}
 }
 
-func getMonitoringServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
-	query := `SELECT
-me.host_name as hostName,
-CONCAT(me.host_name, '.', me.domain_name) as fqdn,
-status.name as status,
-cachegroup.name as cachegroup,
-me.tcp_port as port,
-me.ip_address as ip,
-me.ip6_address as ip6,
-profile.name as profile,
-me.interface_name as interfaceName,
-type.name as type,
-me.xmpp_id as hashId
-FROM server me
-JOIN type type ON type.id = me.type
-JOIN status status ON status.id = me.status
-JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
-JOIN profile profile ON profile.id = me.profile
-JOIN cdn cdn ON cdn.id = me.cdn_id
-WHERE cdn.name = $1`
-
-	rows, err := db.Query(query, cdn)
+func getMonitoringServers(stmt *sql.Stmt, cdn string) ([]Monitor, []Cache, []Router, error) {
+	rows, err := stmt.Query(cdn)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -165,96 +224,51 @@ WHERE cdn.name = $1`
 	routers := []Router{}
 
 	for rows.Next() {
-		var hostName sql.NullString
-		var fqdn sql.NullString
-		var status sql.NullString
-		var cachegroup sql.NullString
-		var port sql.NullInt64
-		var ip sql.NullString
-		var ip6 sql.NullString
-		var profile sql.NullString
-		var interfaceName sql.NullString
-		var ttype sql.NullString
-		var hashId sql.NullString
-
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &interfaceName, &ttype, &hashId); err != nil {
+		ttype := ""
+		hashId := ""
+		interfaceName := ""
+		s := BasicServer{}
+		if err := rows.Scan(&s.HostName, &s.FQDN, &s.Status, &s.Cachegroup, &s.Port, &s.IP, &s.IP6, &s.Profile, &interfaceName, &ttype, &hashId); err != nil {
 			return nil, nil, nil, err
 		}
-
-		if ttype.String == MonitorType {
-			monitors = append(monitors, Monitor{
-				BasicServer: BasicServer{
-					Profile:    profile.String,
-					Status:     status.String,
-					IP:         ip.String,
-					IP6:        ip6.String,
-					Port:       int(port.Int64),
-					Cachegroup: cachegroup.String,
-					HostName:   hostName.String,
-					FQDN:       fqdn.String,
-				},
-			})
-		} else if strings.HasPrefix(ttype.String, "EDGE") || strings.HasPrefix(ttype.String, "MID") {
+		if ttype == MonitorType {
+			monitors = append(monitors, Monitor{BasicServer: s})
+		} else if strings.HasPrefix(ttype, "EDGE") || strings.HasPrefix(ttype, "MID") {
 			caches = append(caches, Cache{
-				BasicServer: BasicServer{
-					Profile:    profile.String,
-					Status:     status.String,
-					IP:         ip.String,
-					IP6:        ip6.String,
-					Port:       int(port.Int64),
-					Cachegroup: cachegroup.String,
-					HostName:   hostName.String,
-					FQDN:       fqdn.String,
-				},
-				InterfaceName: interfaceName.String,
-				Type:          ttype.String,
-				HashID:        hashId.String,
+				BasicServer:   s,
+				InterfaceName: interfaceName,
+				Type:          ttype,
+				HashID:        hashId,
 			})
-		} else if ttype.String == RouterType {
+		} else if ttype == RouterType {
 			routers = append(routers, Router{
-				Type:    ttype.String,
-				Profile: profile.String,
+				Type:    ttype,
+				Profile: s.Profile,
 			})
 		}
 	}
 	return monitors, caches, routers, nil
 }
 
-func getCachegroups(db *sql.DB, cdn string) ([]Cachegroup, error) {
-	query := `
-SELECT name, latitude, longitude
-FROM cachegroup
-WHERE id IN
-  (SELECT cachegroup FROM server WHERE server.cdn_id =
-    (SELECT id FROM cdn WHERE name = $1));`
-
-	rows, err := db.Query(query, cdn)
+func getCachegroups(stmt *sql.Stmt, cdn string) ([]Cachegroup, error) {
+	rows, err := stmt.Query(cdn)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	cachegroups := []Cachegroup{}
-
 	for rows.Next() {
-		var name sql.NullString
-		var lat sql.NullFloat64
-		var lon sql.NullFloat64
-		if err := rows.Scan(&name, &lat, &lon); err != nil {
+		cg := Cachegroup{}
+		if err := rows.Scan(&cg.Name, &cg.Coordinates.Latitude, &cg.Coordinates.Longitude); err != nil {
 			return nil, err
 		}
-		cachegroups = append(cachegroups, Cachegroup{
-			Name: name.String,
-			Coordinates: Coordinates{
-				Latitude:  lat.Float64,
-				Longitude: lon.Float64,
-			},
-		})
+		cachegroups = append(cachegroups, cg)
 	}
 	return cachegroups, nil
 }
 
-func getProfiles(db *sql.DB, caches []Cache, routers []Router) ([]Profile, error) {
+func getProfiles(stmt *sql.Stmt, caches []Cache, routers []Router) ([]Profile, error) {
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
 	profileNames := []string{}
@@ -276,40 +290,33 @@ func getProfiles(db *sql.DB, caches []Cache, routers []Router) ([]Profile, error
 		}
 	}
 
-	query := `
-SELECT p.name as profile, pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name = ANY($1)
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = $2;
-`
-	rows, err := db.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
+	rows, err := stmt.Query(pq.Array(profileNames), CacheMonitorConfigFile)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var profileName sql.NullString
-		var name sql.NullString
-		var value sql.NullString
+		profileName := ""
+		name := ""
+		value := ""
 		if err := rows.Scan(&profileName, &name, &value); err != nil {
 			return nil, err
 		}
-		if name.String == "" {
+		if name == "" {
 			return nil, fmt.Errorf("null name") // TODO continue and warn?
 		}
-		profile := profiles[profileName.String]
+		profile := profiles[profileName]
 		if profile.Parameters == nil {
 			profile.Parameters = map[string]interface{}{}
 		}
 
-		if valNum, err := strconv.Atoi(value.String); err == nil {
-			profile.Parameters[name.String] = valNum
+		if valNum, err := strconv.Atoi(value); err == nil {
+			profile.Parameters[name] = valNum
 		} else {
-			profile.Parameters[name.String] = value.String
+			profile.Parameters[name] = value
 		}
-		profiles[profileName.String] = profile
+		profiles[profileName] = profile
 
 	}
 
@@ -320,55 +327,33 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(db *sql.DB, routers []Router) ([]DeliveryService, error) {
+func getDeliveryServices(stmt *sql.Stmt, routers []Router) ([]DeliveryService, error) {
 	profileNames := []string{}
 	for _, router := range routers {
 		profileNames = append(profileNames, router.Profile)
 	}
 
-	query := `
-SELECT ds.xml_id, ds.global_max_tps, ds.global_max_mbps
-FROM deliveryservice ds
-JOIN profile profile ON profile.id = ds.profile
-WHERE profile.name = ANY($1)
-AND ds.active = true
-`
-	rows, err := db.Query(query, pq.Array(profileNames))
+	rows, err := stmt.Query(pq.Array(profileNames))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	dses := []DeliveryService{}
-
 	for rows.Next() {
-		var xmlid sql.NullString
-		var tps sql.NullFloat64
-		var mbps sql.NullFloat64
-		if err := rows.Scan(&xmlid, &tps, &mbps); err != nil {
+		mbps := 0.0
+		ds := DeliveryService{Status: DeliveryServiceStatus}
+		if err := rows.Scan(&ds.XMLID, &ds.TotalTPSThreshold, &mbps); err != nil {
 			return nil, err
 		}
-		dses = append(dses, DeliveryService{
-			XMLID:              xmlid.String,
-			TotalTPSThreshold:  tps.Float64,
-			Status:             DeliveryServiceStatus,
-			TotalKBPSThreshold: mbps.Float64 * KilobitsPerMegabit,
-		})
+		ds.TotalKBPSThreshold = mbps * KilobitsPerMegabit
+		dses = append(dses, ds)
 	}
 	return dses, nil
 }
 
-func getConfig(db *sql.DB) (map[string]interface{}, error) {
-	// TODO remove 'like' in query? Slow?
-	query := fmt.Sprintf(`
-SELECT pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name LIKE '%s%%'
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = '%s'
-`, MonitorProfilePrefix, MonitorConfigFile)
-
-	rows, err := db.Query(query)
+func getConfig(stmt *sql.Stmt) (map[string]interface{}, error) {
+	rows, err := stmt.Query()
 	if err != nil {
 		return nil, err
 	}
@@ -377,42 +362,42 @@ WHERE pr.config_file = '%s'
 	cfg := map[string]interface{}{}
 
 	for rows.Next() {
-		var name sql.NullString
-		var val sql.NullString
+		name := ""
+		val := ""
 		if err := rows.Scan(&name, &val); err != nil {
 			return nil, err
 		}
-		if valNum, err := strconv.Atoi(val.String); err == nil {
-			cfg[name.String] = valNum
+		if valNum, err := strconv.Atoi(val); err == nil {
+			cfg[name] = valNum
 		} else {
-			cfg[name.String] = val.String
+			cfg[name] = val
 		}
 	}
 	return cfg, nil
 }
 
-func getMonitoringJson(cdnName string, db *sql.DB) (*MonitoringResponse, error) {
-	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
+func getMonitoringJson(cdnName string, d *MonitoringData) (*MonitoringResponse, error) {
+	monitors, caches, routers, err := getMonitoringServers(d.Servers, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)
 	}
 
-	cachegroups, err := getCachegroups(db, cdnName)
+	cachegroups, err := getCachegroups(d.Cachegroups, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting cachegroups: %v", err)
 	}
 
-	profiles, err := getProfiles(db, caches, routers)
+	profiles, err := getProfiles(d.Profiles, caches, routers)
 	if err != nil {
 		return nil, fmt.Errorf("error getting profiles: %v", err)
 	}
 
-	deliveryServices, err := getDeliveryServices(db, routers)
+	deliveryServices, err := getDeliveryServices(d.DeliveryServices, routers)
 	if err != nil {
 		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
 	}
 
-	config, err := getConfig(db)
+	config, err := getConfig(d.Config)
 	if err != nil {
 		return nil, fmt.Errorf("error getting config: %v", err)
 	}
