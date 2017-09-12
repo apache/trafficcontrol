@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -28,12 +29,11 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
-	"github.com/jmoiron/sqlx"
 )
 
 const ServersPrivLevel = 10
 
-func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
+func serversHandler(db *sql.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -59,7 +59,7 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.ServersResponse, error) {
+func getServersResponse(q url.Values, db *sql.DB, privLevel int) (*tcstructs.ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting servers response: %v", err)
@@ -71,9 +71,9 @@ func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.Se
 	return &resp, nil
 }
 
-func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Server, error) {
+func getServers(v url.Values, db *sql.DB, privLevel int) ([]tcstructs.Server, error) {
 
-	var rows *sqlx.Rows
+	var rows *sql.Rows
 	var err error
 
 	rows, err = db.Queryx(selectServersQuery())

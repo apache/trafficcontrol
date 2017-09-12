@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"database/sql"
 	"net/http"
 	"regexp"
 	"sort"
@@ -27,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/jmoiron/sqlx"
 )
 
 const RoutePrefix = "api" // TODO config?
@@ -42,7 +42,7 @@ type Route struct {
 
 type ServerData struct {
 	Config
-	DB *sqlx.DB
+	DB *sql.DB
 }
 
 type PathParams map[string]string
