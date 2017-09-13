@@ -120,10 +120,10 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
             );
     };
 
-    this.getStatusCount = function() {
+    this.getEdgeStatusCount = function() {
         var request = $q.defer();
 
-        $http.get(ENV.api['root'] + "servers/status")
+        $http.get(ENV.api['root'] + "servers/status?type=EDGE")
             .then(
                 function(result) {
                     request.resolve(result.data.response);
