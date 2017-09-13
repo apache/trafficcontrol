@@ -26,7 +26,7 @@ under the License.
             <li>
                 <div class="btn-group" uib-dropdown is-open="userMenu.isopen">
                     <button id="userButton" type="button" class="btn btn-link" uib-dropdown-toggle>
-                        <span id="headerUsername">{{::user.username}}</span><span ng-if="user.newUser">New User</span> <i class="fa fa-angle-down fa-lg"></i>
+                        <span id="headerUsername">{{::user.username}}</span> <i class="fa fa-angle-down fa-lg"></i>
                     </button>
                     <ul class="uib-dropdown-menu dropdown-usermenu animated fadeInDown" role="menu" aria-labelledby="userMenu-button">
                         <li><a ui-sref="trafficPortal.private.user.edit">Manage User Profile</a></li>
