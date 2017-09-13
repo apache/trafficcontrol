@@ -715,8 +715,10 @@ sub is_valid {
 		# Checks to perform on all fields
 		checks => [
 
-			# All of these are required
-			[qw/fullName username email role/] => is_required("is required"),
+			fullName	=> [ is_required("is required") ],
+			username	=> [ is_required("is required") ],
+			email		=> [ is_required("is required") ],
+			role		=> [ is_required("is required"), sub { is_valid_role($self, @_) } ],
 
 			# pass2 must be equal to pass
 			localPasswd => sub {
@@ -817,7 +819,7 @@ sub is_valid_role {
 	my $my_role_priv_level = $self->db->resultset("Role")->search( { id => $my_role } )->get_column('priv_level')->single();
 
 	if ( $role_priv_level > $my_role_priv_level ) {
-		return "cannot exceed current user's role";
+		return "cannot exceed current user's privilege level ($my_role_priv_level)";
 	}
 
 	return undef;

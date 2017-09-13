@@ -61,8 +61,8 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
     this.createUser = function(user) {
         return Restangular.service('users').post(user)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, true);
                     locationUtils.navigateToPath('/admin/users');
                 },
                 function(fault) {
@@ -74,15 +74,15 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
     this.updateUser = function(user) {
         return $http.put(ENV.api['root'] + "users/" + user.id, user)
             .then(
-                function() {
+                function(result) {
                     if (userModel.user.id == user.id) {
                         // if you are updating the currently logged in user...
                         userModel.setUser(user);
                     }
-                    messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
+                    messageModel.setMessages(result.data.alerts, false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };

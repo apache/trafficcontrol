@@ -35,6 +35,10 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
 
     $scope.user = user;
 
+    $scope.label = function(role) {
+        return role.name + ' (' + role.privLevel + ')';
+    };
+
     $scope.labelize = stringUtils.labelize;
 
     $scope.viewDeliveryServices = function() {
