@@ -24,6 +24,10 @@ var UserEditController = function($scope) {
         saveLabel: 'Update'
     };
 
+    $scope.label = function(role) {
+        return role.name + ' (' + role.privLevel + ')';
+    };
+
 };
 
 UserEditController.$inject = ['$scope'];

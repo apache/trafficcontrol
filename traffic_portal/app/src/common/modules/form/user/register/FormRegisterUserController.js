@@ -39,6 +39,10 @@ var FormRegisterUserController = function($scope, $location, formUtils, location
 		userService.registerUser(registration);
 	};
 
+	$scope.label = function(role) {
+		return role.name + ' (' + role.privLevel + ')';
+	};
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.hasError = formUtils.hasError;
