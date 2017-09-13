@@ -39,7 +39,7 @@ module.exports = angular.module('trafficPortal.private.monitor.dashboard', [])
                                 return cdnService.getCurrentStats();
                             },
                             serverCount: function(serverService) {
-                                return serverService.getStatusCount();
+                                return serverService.getEdgeStatusCount();
                             }
                         }
 

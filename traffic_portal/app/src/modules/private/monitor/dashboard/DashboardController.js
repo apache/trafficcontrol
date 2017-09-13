@@ -17,12 +17,14 @@
  * under the License.
  */
 
-var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope, $interval, cacheGroupService, cdnService, serverService, propertiesModel) {
+var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope, $interval, $filter, cacheGroupService, cdnService, serverService, propertiesModel) {
 
 	var cacheGroupHealthInterval,
 		currentStatsInterval,
 		serverCountInterval,
 		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
+
+	var serverCount = serverCount;
 
 	var getCacheGroupHealth = function() {
 		cacheGroupService.getCacheGroupHealth()
@@ -42,9 +44,9 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 	};
 
 	var getServerCount = function() {
-		serverService.getStatusCount()
+		serverService.getEdgeStatusCount()
 			.then(function(result) {
-				$scope.serverCount = result;
+				serverCount = result;
 			});
 	};
 
@@ -79,7 +81,25 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 		return item.cdn == 'total';
 	});
 
-	$scope.serverCount = serverCount;
+	$scope.online = function() {
+		if (!serverCount.ONLINE) return 0;
+		return $filter('number')(serverCount.ONLINE, 0);
+	};
+
+	$scope.offline = function() {
+		if (!serverCount.OFFLINE) return 0;
+		return $filter('number')(serverCount.OFFLINE, 0);
+	};
+
+	$scope.reported = function() {
+		if (!serverCount.REPORTED) return 0;
+		return $filter('number')(serverCount.REPORTED, 0);
+	};
+
+	$scope.adminDown = function() {
+		if (!serverCount.ADMIN_DOWN) return 0;
+		return $filter('number')(serverCount.ADMIN_DOWN, 0);
+	};
 
 	$scope.$on("$destroy", function() {
 		killIntervals();
@@ -94,5 +114,5 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 
 };
 
-DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope', '$interval', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
+DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope', '$interval', '$filter', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
 module.exports = DashboardController;
