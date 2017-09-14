@@ -78,7 +78,9 @@ func Parse(secret, cookie string) (*Cookie, error) {
 	}
 
 	if cookieData.ExpiresUnix-time.Now().Unix() < 0 {
-		return nil, fmt.Errorf("signature expired")
+		now := time.Now()
+		then := time.Unix(cookieData.ExpiresUnix, 0)
+		return nil, fmt.Errorf("signature expired: %s < %s", then.Format(time.RFC3339), now.Format(time.RFC3339))
 	}
 
 	return &cookieData, nil
