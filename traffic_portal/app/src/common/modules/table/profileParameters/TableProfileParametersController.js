@@ -95,20 +95,19 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 				profile: function() {
 					return profile;
 				},
-				parameters: function(parameterService) {
-					return parameterService.getProfileUnassignedParams(profile.id);
+				allParams: function(parameterService) {
+					return parameterService.getParameters();
+				},
+				assignedParams: function() {
+					return profileParameters;
 				}
 			}
 		});
-		modalInstance.result.then(function(selectedParams) {
-			var massagedArray = [];
-			for (i = 0; i < selectedParams.length; i++) {
-				massagedArray.push( { profileId: profile.id, parameterId: selectedParams[i] } );
-			}
-			profileParameterService.linkProfileParameters(massagedArray)
+		modalInstance.result.then(function(selectedParamIds) {
+			profileParameterService.linkProfileParameters(profile.id, selectedParamIds)
 				.then(
 					function() {
-						$scope.refresh();
+						$scope.refresh(); // refresh the table
 					}
 				);
 		}, function () {

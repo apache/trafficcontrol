@@ -97,7 +97,8 @@ var TableUserDSUnassignedController = function(user, deliveryServices, userDeliv
 			"columnDefs": [
 				{ 'orderable': false, 'targets': 0 },
 				{ "width": "5%", "targets": 0 }
-			]
+			],
+			"stateSave": false
 		});
 		userDSUnassignedTable.on( 'search.dt', function () {
 			var search = $('#userDSUnassignedTable_filter input').val();

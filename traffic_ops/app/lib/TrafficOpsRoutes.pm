@@ -634,6 +634,8 @@ sub api_routes {
 	# -- PARAMETERS: PROFILE PARAMETERS
 	$r->get("/api/$version/profileparameters")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#index', namespace => $namespace );
 	$r->post("/api/$version/profileparameters")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#create', namespace => $namespace );
+	$r->post("/api/$version/profileparameter")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#assign_params_to_profile', namespace => $namespace );
+	$r->post("/api/$version/parameterprofile")->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#assign_profiles_to_param', namespace => $namespace );
 	$r->delete("/api/$version/profileparameters/:profile_id/:parameter_id")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'ProfileParameter#delete', namespace => $namespace );
 

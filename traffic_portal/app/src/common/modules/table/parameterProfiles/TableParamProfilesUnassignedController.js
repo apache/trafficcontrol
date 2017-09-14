@@ -17,22 +17,59 @@
  * under the License.
  */
 
-var TableParamProfilesUnassignedController = function(parameter, profiles, $scope, $uibModalInstance) {
+var TableParamProfilesUnassignedController = function(parameter, allProfiles, assignedProfiles, $scope, $uibModalInstance) {
 
-	var selectedProfiles = [];
-
-	$scope.parameter = parameter;
-
-	$scope.unassignedProfiles = profiles;
+	var selectedProfileIds = [];
 
 	var addProfile = function(profileId) {
-		if (_.indexOf(selectedProfiles, profileId) == -1) {
-			selectedProfiles.push(profileId);
+		if (_.indexOf(selectedProfileIds, profileId) == -1) {
+			selectedProfileIds.push(profileId);
 		}
 	};
 
 	var removeProfile = function(profileId) {
-		selectedProfiles = _.without(selectedProfiles, profileId);
+		selectedProfileIds = _.without(selectedProfileIds, profileId);
+	};
+
+	var addAll = function() {
+		markProfiles(true);
+		selectedProfileIds = _.pluck(allProfiles, 'id');
+	};
+
+	var removeAll = function() {
+		markProfiles(false);
+		selectedProfileIds = [];
+	};
+
+	var markProfiles = function(selected) {
+		$scope.selectedProfiles = _.map(allProfiles, function(profile) {
+			profile['selected'] = selected;
+			return profile;
+		});
+	};
+
+	$scope.parameter = parameter;
+
+	$scope.selectedProfiles = _.map(allProfiles, function(profile) {
+		var isAssigned = _.find(assignedProfiles, function(assignedProfile) { return assignedProfile.id == profile.id });
+		if (isAssigned) {
+			profile['selected'] = true; // so the checkbox will be checked
+			selectedProfileIds.push(profile.id); // so the profile is added to selected profiles
+		}
+		return profile;
+	});
+
+	$scope.allSelected = function() {
+		return allProfiles.length == selectedProfileIds.length;
+	};
+
+	$scope.selectAll = function($event) {
+		var checkbox = $event.target;
+		if (checkbox.checked) {
+			addAll();
+		} else {
+			removeAll();
+		}
 	};
 
 	$scope.updateProfiles = function($event, profileId) {
@@ -45,7 +82,7 @@ var TableParamProfilesUnassignedController = function(parameter, profiles, $scop
 	};
 
 	$scope.submit = function() {
-		$uibModalInstance.close(selectedProfiles);
+		$uibModalInstance.close(selectedProfileIds);
 	};
 
 	$scope.cancel = function () {
@@ -53,17 +90,26 @@ var TableParamProfilesUnassignedController = function(parameter, profiles, $scop
 	};
 
 	angular.element(document).ready(function () {
-		$('#paramProfilesUnassignedTable').dataTable({
+		var paramProfilesUnassignedTable = $('#paramProfilesUnassignedTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"order": [[ 1, 'asc' ]],
 			"columnDefs": [
 				{ "width": "5%", "targets": 0 }
-			]
+			],
+			"stateSave": false
 		});
+		paramProfilesUnassignedTable.on( 'search.dt', function () {
+			var search = $('#paramProfilesUnassignedTable_filter input').val();
+			if (search.length > 0) {
+				$("#selectAllCB").attr("disabled", true);
+			} else {
+				$("#selectAllCB").removeAttr("disabled");
+			}
+		} );
 	});
 
 };
 
-TableParamProfilesUnassignedController.$inject = ['parameter', 'profiles', '$scope', '$uibModalInstance'];
+TableParamProfilesUnassignedController.$inject = ['parameter', 'allProfiles', 'assignedProfiles', '$scope', '$uibModalInstance'];
 module.exports = TableParamProfilesUnassignedController;

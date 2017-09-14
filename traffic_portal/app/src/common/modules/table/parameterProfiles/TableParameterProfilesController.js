@@ -100,20 +100,19 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 				parameter: function() {
 					return parameter;
 				},
-				profiles: function(profileService) {
-					return profileService.getParamUnassignedProfiles(parameter.id);
+				allProfiles: function(profileService) {
+					return profileService.getProfiles();
+				},
+				assignedProfiles: function() {
+					return parameterProfiles;
 				}
 			}
 		});
-		modalInstance.result.then(function(selectedProfiles) {
-			var massagedArray = [];
-			for (i = 0; i < selectedProfiles.length; i++) {
-				massagedArray.push( { parameterId: parameter.id, profileId: selectedProfiles[i] } );
-			}
-			profileParameterService.linkProfileParameters(massagedArray)
+		modalInstance.result.then(function(selectedProfileIds) {
+			profileParameterService.linkParamProfiles(parameter.id, selectedProfileIds)
 				.then(
 					function() {
-						$scope.refresh();
+						$scope.refresh(); // refresh the table
 					}
 				);
 		}, function () {
