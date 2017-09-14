@@ -27,18 +27,18 @@ under the License.
     <table id="profileParamsUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
-            <th></th>
+            <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
             <th>name</th>
             <th>configFile</th>
             <th>value</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="parameter in ::unassignedParams">
-            <td><input type="checkbox" ng-click="updateParams($event, parameter.id)"></td>
-            <td>{{::parameter.name}}</td>
-            <td>{{::parameter.configFile}}</td>
-            <td>{{::parameter.value}}</td>
+        <tr ng-repeat="param in ::selectedParams">
+            <td><input type="checkbox" ng-click="updateParams($event, param.id)" ng-checked="param.selected"></td>
+            <td>{{::param.name}}</td>
+            <td>{{::param.configFile}}</td>
+            <td>{{::param.value}}</td>
         </tr>
         </tbody>
     </table>

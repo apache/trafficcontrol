@@ -97,7 +97,8 @@ var TableDSServersUnassignedController = function(deliveryService, eligibleServe
 			"columnDefs": [
 				{ 'orderable': false, 'targets': 0 },
 				{ "width": "5%", "targets": 0 }
-			]
+			],
+			"stateSave": false
 		});
 		dsServersUnassignedTable.on( 'search.dt', function () {
 			var search = $('#dsServersUnassignedTable_filter input').val();
