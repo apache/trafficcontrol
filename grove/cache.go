@@ -414,6 +414,17 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			h.serveReqErr(w)
 			return
 		}
+	case ReuseMustRevalidateCanStale:
+		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
+		// r := remapping.Request
+		// TODO verify setting the existing request header here works
+		r.Header.Set("If-Modified-Since", cacheObj.respRespTime.Format(time.RFC1123))
+		oldCacheObj := cacheObj
+		cacheObj, err = retryingGet(r, cacheObj)
+		if err != nil {
+			log.Errorf("retrying get error - serving stale as allowed: %v\n", err)
+			cacheObj = oldCacheObj
+		}
 	}
 	log.Debugf("cacheHandler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.code)
 	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
