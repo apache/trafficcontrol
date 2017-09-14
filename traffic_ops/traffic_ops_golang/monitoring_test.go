@@ -30,6 +30,7 @@ import (
 
 func TestGetMonitoringServers(t *testing.T) {
 	db, mock, err := sqlmock.New()
+
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -383,6 +384,8 @@ func TestGetDeliveryServices(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)

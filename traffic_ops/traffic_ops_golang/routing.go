@@ -45,9 +45,9 @@ type ServerData struct {
 	DB *sql.DB
 }
 
-type ParamMap map[string]string
+type PathParams map[string]string
 
-type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params ParamMap)
+type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams)
 
 type CompiledRoute struct {
 	Handler RegexHandlerFunc

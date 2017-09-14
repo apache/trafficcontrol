@@ -20,20 +20,27 @@ package main
  */
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/sha512"
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+	"unicode"
+
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"net/http"
-	"time"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version
 
+type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams, user string, privLevel int)
+
 func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
@@ -41,29 +48,90 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		w.Header().Set("X-Server-Name", ServerName)
 		iw := &BodyInterceptor{w: w}
 		h(iw, r, p)
+
 		sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
+
+		gzipResponse(w, r, iw.Body())
+
 		iw.RealWrite(iw.Body())
+
 	}
 }
 
-type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params ParamMap, user string, privLevel int)
-
 func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap, user string, privLevel int) { h(w, r, p) }
+	return func(w http.ResponseWriter, r *http.Request, p PathParams, user string, privLevel int) { h(w, r, p) }
 }
 
 func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
-	return wrapAuthWithData(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+	return wrapAuthWithDataX(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+}
+
+func wrapAuthX(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
+	return wrapAuthWithDataX(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
+}
+
+func wrapAuthWithDataX(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
+	if noAuth {
+		return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+			h(w, r, p, "", PrivLevelInvalid)
+		}
+	}
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+		// TODO remove, and make username available to wrapLogTime
+		start := time.Now()
+		iw := &Interceptor{w: w}
+		w = iw
+		username := "-"
+		defer func() {
+			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+		}()
+
+		handleUnauthorized := func(reason string) {
+			status := http.StatusUnauthorized
+			w.WriteHeader(status)
+			fmt.Fprintf(w, http.StatusText(status))
+			log.Infof("%v %v %v %v returned unauthorized: %v\n", r.RemoteAddr, r.Method, r.URL.Path, username, reason)
+		}
+
+		cookie, err := r.Cookie(tocookie.Name)
+		if err != nil {
+			handleUnauthorized("error getting cookie: " + err.Error())
+			return
+		}
+
+		if cookie == nil {
+			handleUnauthorized("no auth cookie")
+			return
+		}
+
+		oldCookie, err := tocookie.Parse(secret, cookie.Value)
+		if err != nil {
+			handleUnauthorized("cookie error: " + err.Error())
+			return
+		}
+
+		username = oldCookie.AuthData
+		privLevel := PrivLevel(privLevelStmt, username)
+		if privLevel < privLevelRequired {
+			handleUnauthorized("insufficient privileges")
+			return
+		}
+
+		newCookieVal := tocookie.Refresh(oldCookie, secret)
+		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+
+		h(w, r, p, username, privLevel)
+	}
 }
 
 func wrapAuthWithData(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
 	if noAuth {
-		return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+		return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 			h(w, r, p, "", PrivLevelInvalid)
 		}
 	}
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		// TODO remove, and make username available to wrapLogTime
 		start := time.Now()
 		iw := &Interceptor{w: w}
@@ -130,6 +198,70 @@ func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		}()
 		h.ServeHTTP(iw, r)
 	}
+}
+
+// gzipResponse takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
+func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
+
+	bytes, err := gzipIfAccepts(r, w, bytes)
+	if err != nil {
+		log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
+		code := http.StatusInternalServerError
+		w.WriteHeader(code)
+		if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
+			log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
+		}
+		return
+	}
+
+	w.Write(bytes)
+
+}
+
+// gzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
+//TODO: drichardson - refactor these to a generic area
+func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, error) {
+	// TODO this could be made more efficient by wrapping ResponseWriter with the GzipWriter, and letting callers writer directly to it - but then we'd have to deal with Closing the gzip.Writer.
+	if len(b) == 0 || !acceptsGzip(r) {
+		return b, nil
+	}
+	w.Header().Set("Content-Encoding", "gzip")
+
+	buf := bytes.Buffer{}
+	zw := gzip.NewWriter(&buf)
+
+	if _, err := zw.Write(b); err != nil {
+		return nil, fmt.Errorf("gzipping bytes: %v")
+	}
+
+	if err := zw.Close(); err != nil {
+		return nil, fmt.Errorf("closing gzip writer: %v")
+	}
+
+	return buf.Bytes(), nil
+}
+
+func acceptsGzip(r *http.Request) bool {
+	encodingHeaders := r.Header["Accept-Encoding"] // headers are case-insensitive, but Go promises to Canonical-Case requests
+	for _, encodingHeader := range encodingHeaders {
+		encodingHeader = stripAllWhitespace(encodingHeader)
+		encodings := strings.Split(encodingHeader, ",")
+		for _, encoding := range encodings {
+			if strings.ToLower(encoding) == "gzip" { // encoding is case-insensitive, per the RFC
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func stripAllWhitespace(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, s)
 }
 
 type Interceptor struct {
