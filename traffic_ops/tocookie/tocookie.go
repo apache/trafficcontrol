@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 const GeneratedByStr = "trafficcontrol-go-tocookie"
@@ -80,9 +78,6 @@ func Parse(secret, cookie string) (*Cookie, error) {
 	}
 
 	if cookieData.ExpiresUnix-time.Now().Unix() < 0 {
-		now := time.Now()
-		then := time.Unix(cookieData.ExpiresUnix, 0)
-		log.Errorf("signature expired: %s < %s", then.Format(time.RFC3339), now.Format(time.RFC3339))
 		return nil, fmt.Errorf("signature expired")
 	}
 
