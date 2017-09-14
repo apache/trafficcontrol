@@ -13,9 +13,11 @@ import (
 type Reuse int
 
 const (
-	ReuseCan = iota
+	ReuseCan Reuse = iota
 	ReuseCannot
 	ReuseMustRevalidate
+	// ReuseMustRevalidateCanStale indicates the response must be revalidated, but if the parent cannot be reached, may be served stale, per RFC7234§4.2.4
+	ReuseMustRevalidateCanStale
 )
 
 // validHttpCodes provides fast lookup whether a HTTP response code is valid per RFC7234§3
@@ -405,22 +407,29 @@ func AllowedStale(respHeaders http.Header, reqCacheControl CacheControl, respCac
 	// TODO return ReuseMustRevalidate where permitted
 	_, reqHasMaxAge := reqCacheControl["max-age"]
 	_, reqHasMaxStale := reqCacheControl["max-stale"]
+	log.Debugf("AllowedStale: reqHasMaxAge %v reqHasMaxStale %v strictRFC %v\n", reqHasMaxAge, reqHasMaxStale, strictRFC)
 	if strictRFC && reqHasMaxAge && !reqHasMaxStale {
-		return ReuseCan
+		log.Debugf("AllowedStale: returning can - strictRFC & reqHasMaxAge & !reqHasMaxStale\n")
+		return ReuseMustRevalidateCanStale
 	}
 	if _, ok := respCacheControl["must-revalidate"]; ok {
+		log.Debugf("AllowedStale: returning mustreval - must-revalidate\n")
 		return ReuseMustRevalidate
 	}
 	if _, ok := respCacheControl["no-cache"]; ok {
+		log.Debugf("AllowedStale: returning reusecannot - no-cache\n")
 		return ReuseCannot // TODO verify RFC doesn't allow Revalidate here
 	}
 	if _, ok := respCacheControl["no-store"]; ok {
+		log.Debugf("AllowedStale: returning reusecannot - no-store\n")
 		return ReuseCannot // TODO verify RFC doesn't allow revalidate here
 	}
 	if !InMaxStale(respHeaders, respCacheControl, respReqTime, respRespTime) {
+		log.Debugf("AllowedStale: returning mustreval - not in max stale\n")
 		return ReuseMustRevalidate // TODO verify RFC allows
 	}
-	return ReuseCan
+	log.Debugf("AllowedStale: returning can - all preconditions passed\n")
+	return ReuseMustRevalidateCanStale
 }
 
 // InMaxStale returns whether the given response is within the `max-stale` request directive. If no `max-stale` directive exists in the request, `true` is returned.
