@@ -115,12 +115,12 @@ const bytesPerGibibyte = 1024 * 1024 * 1024
 
 func main() {
 	runtime.GOMAXPROCS(32) // DEBUG
-	configFileName := flag.String("config", "", "The config file path")
+	configFileName := flag.String("cfg", "", "The config file path")
 	pprof := flag.Bool("pprof", false, "Whether to profile")
 	flag.Parse()
 
 	if *configFileName == "" {
-		fmt.Printf("Error starting service: The --config argument is required\n")
+		fmt.Printf("Error starting service: The -cfg argument is required\n")
 		os.Exit(1)
 	}
 

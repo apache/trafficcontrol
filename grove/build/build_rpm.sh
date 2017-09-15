@@ -10,10 +10,10 @@ echo "$BUILDDIR" > ~/.rpmmacros
 go build -v
 
 # tar
-tar -cvzf $BUILDDIR/SOURCES/grove-0.1.tgz grove grove.cfg grove.init
+tar -cvzf $BUILDDIR/SOURCES/grove-0.1.tgz grove conf/grove.cfg build/grove.init
 
 # build RPM
-rpmbuild -ba grove.spec
+rpmbuild -ba build/grove.spec
 
 # copy build RPM to .
-cp $BUILDDIR/RPMS/x86_64/grove-0.1.x86_64.rpm .
+cp $BUILDDIR/RPMS/x86_64/grove-0.1-1.x86_64.rpm .
