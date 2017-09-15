@@ -694,8 +694,10 @@ sub update_current {
 		}
 		# token is intended for new user registrations and on current user update, it should be cleared from the db
 		$db_user->{"token"} = undef;
+		# new_user flag is intended to identify new user registrations and on current user update, registration is complete
+		$db_user->{"new_user"} = 0;
 		$dbh->update($db_user);
-		return $self->success_message("UserProfile was successfully updated.");
+		return $self->success_message("User profile was successfully updated");
 	}
 	else {
 		return $self->alert($result);

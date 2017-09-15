@@ -63,7 +63,7 @@ sub run_ut {
 	$t->post_ok( '/api/1.2/user/current/update',
 		json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 6 } } )
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
+		->json_is( "/alerts/0/text", "User profile was successfully updated" );
 
 	$t->post_ok( '/api/1.2/user/current/update',
 		json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 2 } } )
@@ -82,7 +82,7 @@ sub run_ut {
 		$t->post_ok( '/api/1.2/user/current/update',
 			json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 6 } } )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
+			->json_is( "/alerts/0/text", "User profile was successfully updated" );
 		#verify tenancy	
 		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/username", $login_user )
@@ -93,7 +93,7 @@ sub run_ut {
 		$t->post_ok( '/api/1.2/user/current/update',
 			json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => undef, role => 6 } } )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
+			->json_is( "/alerts/0/text", "User profile was successfully updated" );
 		#verify tenancy	
 		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/username", $login_user )
@@ -104,7 +104,7 @@ sub run_ut {
 		$t->post_ok( '/api/1.2/user/current/update',
 			json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 6 } } )
 			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-			->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
+			->json_is( "/alerts/0/text", "User profile was successfully updated" );
 		#verify tenancy	
 		$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/username", $login_user )
