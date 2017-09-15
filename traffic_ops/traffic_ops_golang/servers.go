@@ -81,7 +81,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Server, e
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
 		//                    Test for bad Query Parameters
-		return nil, err
+		return nil, fmt.Errorf("querying: %v", err)
 	}
 	servers := []tcstructs.Server{}
 
