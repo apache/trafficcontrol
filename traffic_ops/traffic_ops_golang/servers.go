@@ -31,6 +31,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// ServersPrivLevel - privileges for the /servers endpoint
 const ServersPrivLevel = 10
 
 func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
