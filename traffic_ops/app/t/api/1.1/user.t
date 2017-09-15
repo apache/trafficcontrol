@@ -52,7 +52,7 @@ $t->get_ok('/api/1.1/user/current.json')->status_is(200)->or( sub { diag $t->tx-
 # Test required fields
 $t->post_ok( '/api/1.1/user/current/update',
 	json => { user => { username => Test::TestHelper::PORTAL_USER, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 6 } } )
-	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "UserProfile was successfully updated." );
+	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "User profile was successfully updated" );
 
 $t->post_ok( '/api/1.1/user/current/update',
 	json => { user => { username => Test::TestHelper::PORTAL_USER, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 2 } } )
