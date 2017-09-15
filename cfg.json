@@ -1,0 +1,6 @@
+{
+  "rfc_compliant": false,
+  "port": 8080,
+  "cache_size_bytes": 50000,
+  "remap_rules_file": "./remap.json"
+}
