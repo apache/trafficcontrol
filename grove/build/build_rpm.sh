@@ -10,7 +10,7 @@ echo "$BUILDDIR" > ~/.rpmmacros
 go build -v
 
 # tar
-tar -cvzf $BUILDDIR/SOURCES/grove-0.1.tgz grove grove.cfg grove.service
+tar -cvzf $BUILDDIR/SOURCES/grove-0.1.tgz grove grove.cfg grove.init
 
 # build RPM
 rpmbuild -ba grove.spec
