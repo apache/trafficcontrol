@@ -18,8 +18,10 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 
+	"github.com/apache/incubator-trafficcontrol/grove/cache"
+	"github.com/apache/incubator-trafficcontrol/grove/web"
+
 	"github.com/hashicorp/golang-lru"
-	"github.com/apache/incubator-trafficcontrol/grove"
 )
 
 type Config struct {
@@ -135,30 +137,30 @@ func main() {
 	}
 	log.Init(eventW, errW, warnW, infoW, debugW)
 
-	cache, err := lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
+	lruCache, err := lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 	if err != nil {
 		log.Errorf("starting service: creating cache: %v\n")
 		os.Exit(1)
 	}
 
-	remapper, err := grove.LoadRemapper(cfg.RemapRulesFile)
+	remapper, err := cache.LoadRemapper(cfg.RemapRulesFile)
 	if err != nil {
 		log.Errorf("starting service: loading remap rules: %v\n", err)
 		os.Exit(1)
 	}
 
-	httpListener, httpConns, httpConnStateCallback, err := grove.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	httpListener, httpConns, httpConnStateCallback, err := web.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		log.Errorf("creating HTTP listener %v: %v\n", cfg.Port, err)
 		os.Exit(1)
 	}
 
-	stats := grove.NewStats(remapper.Rules())
+	stats := cache.NewStats(remapper.Rules())
 
-	buildHandler := func(scheme string, conns *grove.ConnMap) (http.Handler, *grove.CacheHandlerPointer) {
-		statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
-		cacheHandler := grove.NewCacheHandler(
-			cache,
+	buildHandler := func(scheme string, conns *web.ConnMap) (http.Handler, *cache.CacheHandlerPointer) {
+		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+		cacheHandler := cache.NewCacheHandler(
+			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -171,7 +173,7 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 		)
-		cacheHandlerPointer := grove.NewCacheHandlerPointer(cacheHandler)
+		cacheHandlerPointer := cache.NewCacheHandlerPointer(cacheHandler)
 
 		handler := http.NewServeMux()
 		handler.Handle("/_astats", statHandler)
@@ -181,10 +183,10 @@ func main() {
 
 	httpsServer := (*http.Server)(nil)
 	httpsListener := net.Listener(nil)
-	httpsConns := (*grove.ConnMap)(nil)
+	httpsConns := (*web.ConnMap)(nil)
 	httpsConnStateCallback := (func(net.Conn, http.ConnState))(nil)
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		if httpsListener, httpsConns, httpsConnStateCallback, err = grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
+		if httpsListener, httpsConns, httpsConnStateCallback, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
 			log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			return
 		}
@@ -221,21 +223,21 @@ func main() {
 
 		if cfg.CacheSizeBytes != oldCfg.CacheSizeBytes {
 			// TODO determine if it's ok for the cache to temporarily exceed the value. This means the cache usage could be temporarily double, as old requestors still have the old object. We could call `Purge` on the old cache, to empty it, to mitigate this.
-			cache, err = lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
+			lruCache, err = lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 			if err != nil {
 				log.Errorf("reloading config: creating cache: %v\n")
 				return
 			}
 		}
 
-		remapper, err = grove.LoadRemapper(cfg.RemapRulesFile)
+		remapper, err = cache.LoadRemapper(cfg.RemapRulesFile)
 		if err != nil {
 			log.Errorf("starting service: loading remap rules: %v\n", err)
 			os.Exit(1)
 		}
 
 		if cfg.Port != oldCfg.Port {
-			if httpListener, httpConns, httpConnStateCallback, err = grove.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port)); err != nil {
+			if httpListener, httpConns, httpConnStateCallback, err = web.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port)); err != nil {
 				log.Errorf("reloading config: creating HTTP listener %v: %v\n", cfg.Port, err)
 				return
 			}
@@ -246,15 +248,15 @@ func main() {
 		}
 
 		if cfg.HTTPSPort != oldCfg.HTTPSPort {
-			if httpsListener, httpsConns, httpsConnStateCallback, err = grove.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
+			if httpsListener, httpsConns, httpsConnStateCallback, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
 				log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			}
 		}
 
-		stats = grove.NewStats(remapper.Rules()) // TODO copy stats from old stats object?
+		stats = cache.NewStats(remapper.Rules()) // TODO copy stats from old stats object?
 
-		httpCacheHandler := grove.NewCacheHandler(
-			cache,
+		httpCacheHandler := cache.NewCacheHandler(
+			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -269,8 +271,8 @@ func main() {
 		)
 		httpHandlerPointer.Set(httpCacheHandler)
 
-		httpsCacheHandler := grove.NewCacheHandler(
-			cache,
+		httpsCacheHandler := cache.NewCacheHandler(
+			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -286,7 +288,7 @@ func main() {
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
-			statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpHandlerPointer)
@@ -297,7 +299,7 @@ func main() {
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
-			statHandler := grove.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpsHandlerPointer)
