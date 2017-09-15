@@ -1,4 +1,4 @@
-package grove
+package thread
 
 import (
 	"sync"

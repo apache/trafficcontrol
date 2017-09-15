@@ -1,4 +1,4 @@
-package grove
+package cache
 
 import (
 	"encoding/json"
@@ -10,6 +10,9 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/grove/chash"
+	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
@@ -155,7 +158,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	if err != nil {
 		return Remapping{}, false, fmt.Errorf("creating new request: %v\n", err)
 	}
-	copyHeader(r.Header, &newReq.Header)
+	web.CopyHeader(r.Header, &newReq.Header)
 
 	log.Debugf("GetNext oldUri: %v, Host: %v\n", p.oldURI, newReq.Header.Get("Host"))
 	log.Debugf("GetNext newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
@@ -235,14 +238,6 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 // 		RetryCodes:      rule.RetryCodes,
 // 	}
 // }
-
-func copyHeader(source http.Header, dest *http.Header) {
-	for n, v := range source {
-		for _, vv := range v {
-			dest.Add(n, vv)
-		}
-	}
-}
 
 func RemapperToHTTP(r Remapper) HTTPRequestRemapper {
 	return simpleHttpRequestRemapper{remapper: r}
@@ -357,7 +352,7 @@ type RemapRule struct {
 	Allow           []*net.IPNet
 	Deny            []*net.IPNet
 	RetryCodes      map[int]struct{}
-	ConsistentHash  ATSConsistentHash
+	ConsistentHash  chash.ATSConsistentHash
 }
 
 func GetIP(r *http.Request) (net.IP, error) {
@@ -574,10 +569,10 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 
 const DefaultReplicas = 1024
 
-func makeRuleHash(rule RemapRule) ATSConsistentHash {
-	h := NewSimpleATSConsistentHash(DefaultReplicas)
+func makeRuleHash(rule RemapRule) chash.ATSConsistentHash {
+	h := chash.NewSimpleATSConsistentHash(DefaultReplicas)
 	for _, to := range rule.To {
-		h.Insert(&ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL}, *to.Weight)
+		h.Insert(&chash.ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL}, *to.Weight)
 	}
 	if h.First() == nil {
 		fmt.Printf("DEBUGLL makeRuleHash %v NodeMap empty!\n", rule.Name)

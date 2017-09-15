@@ -1,4 +1,4 @@
-package grove
+package web
 
 import (
 	"net/http"
@@ -26,7 +26,7 @@ func (t *HTTPResponseWriterTee) Write(b []byte) (int, error) {
 	wrote, err := t.realWriter.Write(b)
 	// copy, because after Write is called, no more headers are written to the real connection.
 	if t.Code == 0 {
-		copyHeader(t.realWriter.Header(), &t.WrittenHeader) // if we didn't copy, someone could call Write() then change the headers, and we'd get the changed but unwritten headers.
+		CopyHeader(t.realWriter.Header(), &t.WrittenHeader) // if we didn't copy, someone could call Write() then change the headers, and we'd get the changed but unwritten headers.
 		t.Code = http.StatusOK                              // emulate http.ResponseWriter.Write behavior
 	}
 	return wrote, err
@@ -35,5 +35,5 @@ func (t *HTTPResponseWriterTee) Write(b []byte) (int, error) {
 func (t *HTTPResponseWriterTee) WriteHeader(code int) {
 	t.Code = code
 	t.realWriter.WriteHeader(code)
-	copyHeader(t.realWriter.Header(), &t.WrittenHeader) // if we didn't copy, someone could call Write() then change the headers, and we'd get the changed but unwritten headers.
+	CopyHeader(t.realWriter.Header(), &t.WrittenHeader) // if we didn't copy, someone could call Write() then change the headers, and we'd get the changed but unwritten headers.
 }

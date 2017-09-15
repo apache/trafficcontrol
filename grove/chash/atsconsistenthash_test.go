@@ -1,4 +1,4 @@
-package grove
+package chash
 
 import (
 	"testing"

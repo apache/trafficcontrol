@@ -1,14 +1,16 @@
-package grove
+package thread
 
 import (
 	"sync"
+
+	cacheobj "github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 )
 
 type Getter interface {
-	Get(key string, actualGet func() *CacheObj, canUse func(*CacheObj) bool) *CacheObj
+	Get(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool) *cacheobj.CacheObj
 }
 
-type CanUseCachedFunc func(obj *CacheObj) bool
+type CanUseCachedFunc func(obj *cacheobj.CacheObj) bool
 
 type getter struct {
 	objs map[string][]GetterObj
@@ -16,7 +18,7 @@ type getter struct {
 }
 
 type GetterObj struct {
-	c      chan *CacheObj
+	c      chan *cacheobj.CacheObj
 	canUse CanUseCachedFunc
 }
 
@@ -24,7 +26,7 @@ func NewGetter() Getter {
 	return &getter{objs: map[string][]GetterObj{}}
 }
 
-func (g *getter) Get(key string, actualGet func() *CacheObj, canUse func(*CacheObj) bool) *CacheObj {
+func (g *getter) Get(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool) *cacheobj.CacheObj {
 	getChan := g.atomicGetOrCreateGetter(key, actualGet, canUse)
 	return <-getChan
 }
@@ -33,7 +35,7 @@ func (g *getter) Get(key string, actualGet func() *CacheObj, canUse func(*CacheO
 // TODO test increase. Make configurable?
 const GetterBuffer = 10
 
-func (g *getter) atomicGetOrCreateGetter(key string, actualGet func() *CacheObj, canUse func(*CacheObj) bool) <-chan *CacheObj {
+func (g *getter) atomicGetOrCreateGetter(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool) <-chan *cacheobj.CacheObj {
 	g.m.Lock()
 	defer g.m.Unlock()
 	getterObjs, ok := g.objs[key]
@@ -41,7 +43,7 @@ func (g *getter) atomicGetOrCreateGetter(key string, actualGet func() *CacheObj,
 		getterObjs = make([]GetterObj, 0, 1)
 		go gogetter(g, key, actualGet, canUse)
 	}
-	c := make(chan *CacheObj, GetterBuffer)
+	c := make(chan *cacheobj.CacheObj, GetterBuffer)
 	getterObj := GetterObj{c: c, canUse: canUse}
 	getterObjs = append(getterObjs, getterObj)
 	g.objs[key] = getterObjs
@@ -62,7 +64,7 @@ func (g *getter) atomicPopGetter(key string) (GetterObj, bool) {
 	}
 }
 
-func gogetter(g *getter, key string, actualGet func() *CacheObj, canReuse func(*CacheObj) bool) {
+func gogetter(g *getter, key string, actualGet func() *cacheobj.CacheObj, canReuse func(*cacheobj.CacheObj) bool) {
 	getter, noRemainingGetters := g.atomicPopGetter(key)
 	for {
 		obj := actualGet()
