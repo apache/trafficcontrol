@@ -33,8 +33,7 @@ cp -p  %{name}.cfg %{buildroot}/etc/%{name}
 rm -rf %{buildroot}/var/log/%{name}
 mkdir -p -m 777 %{buildroot}/var/log/%{name}
 
-mkdir -p %{buildroot}/usr/lib/systemd/system/
-cp -p  %{name}.service %{buildroot}/usr/lib/systemd/system/
+cp -p  %{name}.service %{buildroot}/etc/init.d
 
 %clean
 echo "cleaning"
@@ -44,4 +43,4 @@ rm -r -f %{buildroot}
 /opt/%{name}
 /var/log/%{name}
 %config(noreplace) /etc/%{name}
-/usr/lib/systemd/system/
+/etc/init.d
