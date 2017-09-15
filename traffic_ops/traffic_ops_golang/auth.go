@@ -26,16 +26,23 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
+
+// PrivLevelReadOnly - The user cannot do any API updates
 const PrivLevelReadOnly = 10
+
+// PrivLevelOperations - The user has minimal privileges
 const PrivLevelOperations = 20
+
+// PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
 func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
 	return db.Prepare("select r.priv_level from tm_user as u join role as r on u.role = r.id where u.username = $1")
 }
 
-// privLevel returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
+// PrivLevel - returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
 func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	var privLevel int
 	err := privLevelStmt.QueryRow(user).Scan(&privLevel)

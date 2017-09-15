@@ -325,10 +325,10 @@ func TestGetProfiles(t *testing.T) {
 		for paramName, paramVal := range profile.Parameters {
 			val, ok := sqlProfiles[i].Parameters[paramName]
 			if !ok {
-				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: nil", i, paramName, paramVal)
+				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: nil", i, paramName, paramVal, val)
 			}
 			if val != paramVal {
-				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: %v", i, paramName, paramVal)
+				t.Errorf("getProfiles expected: profiles[%v].Parameters[%v] = %v, actual: %v", i, paramName, paramVal, val)
 			}
 		}
 	}
