@@ -46,7 +46,7 @@ func getTestServers() []Server {
 		IloIpNetmask:   "iloIpNetmask",
 		IloPassword:    "iloPassword",
 		IloUsername:    "iloUsername",
-		InterfaceMtu:   "interfaceMtu",
+		InterfaceMtu:   9500,
 		InterfaceName:  "interfaceName",
 		Ip6Address:     "ip6Address",
 		Ip6Gateway:     "ip6Gateway",
