@@ -23,24 +23,25 @@ tar -xvzf %{_sourcedir}/%{name}-%{version}.tgz --directory %{_builddir}
 
 %install
 rm -rf %{buildroot}/opt/%{name}
-mkdir -p %{buildroot}/opt/%{name}
-cp -p %{name} %{buildroot}/opt/%{name}
+mkdir -p %{buildroot}/opt/%{name}/bin/
+cp -p %{name} %{buildroot}/opt/%{name}/bin/
 
 rm -rf %{buildroot}/etc/%{name}
 mkdir -p -m 777 %{buildroot}/etc/%{name}
-cp -p  %{name}.cfg %{buildroot}/etc/%{name}
+cp -p conf/%{name}.cfg %{buildroot}/etc/%{name}
 
 rm -rf %{buildroot}/var/log/%{name}
 mkdir -p -m 777 %{buildroot}/var/log/%{name}
 
-cp -p  %{name}.service %{buildroot}/etc/init.d
+mkdir -p -m 777 %{buildroot}/etc/init.d/
+cp -p  build/%{name}.init %{buildroot}/etc/init.d/%{name}
 
 %clean
 echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
-/opt/%{name}
+/opt/%{name}/bin/%{name}
 /var/log/%{name}
 %config(noreplace) /etc/%{name}
-/etc/init.d
+/etc/init.d/%{name}
