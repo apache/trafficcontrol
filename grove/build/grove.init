@@ -47,7 +47,7 @@ runpath=var/run
 prog=$basepath/$binpath/$name
 lockfile=$basepath/$runpath/$name
 
-options="-cfg /opt/${name}/conf/json.cfg"
+options="-cfg /etc/${name}/grove.cfg"
 
 start() {
         [ "$NETWORKING" = "no" ] && exit 1
