@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
+// Config - represents the traffic_ops_golang.config file
 type Config struct {
 	HTTPPort           string   `json:"port"`
 	DBUser             string   `json:"db_user"`
@@ -49,12 +50,22 @@ type Config struct {
 	LogLocationEvent   string   `json:"log_location_event"`
 }
 
-func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
-func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
-func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
-func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
-func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
+// ErrorLog - critical messages
+func (c Config) ErrorLog() log.LogLocation { return log.LogLocation(c.LogLocationError) }
 
+// WarningLog - warning messages
+func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
+
+// InfoLog - information messages
+func (c Config) InfoLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+
+// DebugLog - troubleshooting messages
+func (c Config) DebugLog() log.LogLocation { return log.LogLocation(c.LogLocationDebug) }
+
+// EventLog - access.log high level transactions
+func (c Config) EventLog() log.LogLocation { return log.LogLocation(c.LogLocationEvent) }
+
+// LoadConfig - reads the config file into the Config struct
 func LoadConfig(fileName string) (Config, error) {
 	if fileName == "" {
 		return Config{}, fmt.Errorf("no filename")
