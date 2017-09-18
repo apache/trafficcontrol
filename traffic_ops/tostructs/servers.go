@@ -25,46 +25,46 @@ type ServersResponse struct {
 
 type Server struct {
 	Cachegroup     string `json:"cachegroup" db:"cachegroup"`
-	CachegroupId   int    `json:"cachegroupId" db:"cachegroup_id"`
-	CdnId          int    `json:"cdnId" db:"cdn_id"`
+	CachegroupID   int    `json:"cachegroupId" db:"cachegroup_id"`
+	CdnID          int    `json:"cdnId" db:"cdn_id"`
 	CdnName        string `json:"cdnName" db:"cdn_name"`
 	DomainName     string `json:"domainName" db:"domain_name"`
-	Guid           string `json:"guid" db:"guid"`
+	GUID           string `json:"guid" db:"guid"`
 	HostName       string `json:"hostName" db:"host_name"`
-	HttpsPort      int    `json:"httpsPort" db:"https_port"`
-	Id             int    `json:"id" db:"id"`
-	IloIpAddress   string `json:"iloIpAddress" db:"ilo_ip_address"`
-	IloIpGateway   string `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	IloIpNetmask   string `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	IloPassword    string `json:"iloPassword" db:"ilo_password"`
-	IloUsername    string `json:"iloUsername" db:"ilo_username"`
+	HTTPSPort      int    `json:"httpsPort" db:"https_port"`
+	ID             int    `json:"id" db:"id"`
+	ILOIPAddress   string `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway   string `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask   string `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword    string `json:"iloPassword" db:"ilo_password"`
+	ILOUsername    string `json:"iloUsername" db:"ilo_username"`
 	InterfaceMtu   int    `json:"interfaceMtu" db:"interface_mtu"`
 	InterfaceName  string `json:"interfaceName" db:"interface_name"`
-	Ip6Address     string `json:"ip6Address" db:"ip6_address"`
-	Ip6Gateway     string `json:"ip6Gateway" db:"ip6_gateway"`
-	IpAddress      string `json:"ipAddress" db:"ip_address"`
-	IpGateway      string `json:"ipGateway" db:"ip_gateway"`
-	IpNetmask      string `json:"ipNetmask" db:"ip_netmask"`
+	IP6Address     string `json:"ip6Address" db:"ip6_address"`
+	IP6Gateway     string `json:"ip6Gateway" db:"ip6_gateway"`
+	IPAddress      string `json:"ipAddress" db:"ip_address"`
+	IPGateway      string `json:"ipGateway" db:"ip_gateway"`
+	IPNetmask      string `json:"ipNetmask" db:"ip_netmask"`
 	LastUpdated    string `json:"lastUpdated" db:"last_updated"`
-	MgmtIpAddress  string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIpGateway  string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIpNetmask  string `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	MgmtIPAddress  string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway  string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask  string `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason  string `json:"offlineReason" db:"offline_reason"`
 	PhysLocation   string `json:"physLocation" db:"phys_location"`
-	PhysLocationId int    `json:"physLocationId" db:"phys_location_id"`
+	PhysLocationID int    `json:"physLocationId" db:"phys_location_id"`
 	Profile        string `json:"profile" db:"profile"`
 	ProfileDesc    string `json:"profileDesc" db:"profile_desc"`
-	ProfileId      int    `json:"profileId" db:"profile_id"`
+	ProfileID      int    `json:"profileId" db:"profile_id"`
 	Rack           string `json:"rack" db:"rack"`
 	RevalPending   bool   `json:"revalPending" db:"reval_pending"`
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
 	RouterPortName string `json:"routerPortName" db:"router_port_name"`
 	Status         string `json:"status" db:"status"`
-	StatusId       int    `json:"statusId" db:"status_id"`
-	TcpPort        int    `json:"tcpPort" db:"tcp_port"`
+	StatusID       int    `json:"statusId" db:"status_id"`
+	TCPPort        int    `json:"tcpPort" db:"tcp_port"`
 	ServerType     string `json:"type" db:"server_type"`
-	ServerTypeId   int    `json:"typeId" db:"server_type_id"`
+	ServerTypeID   int    `json:"typeId" db:"server_type_id"`
 	UpdPending     bool   `json:"updPending" db:"upd_pending"`
-	XmppId         string `json:"xmppId" db:"xmpp_id"`
-	XmppPasswd     string `json:"xmppPasswd" db:"xmpp_passwd"`
+	XMPPID         string `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd     string `json:"xmppPasswd" db:"xmpp_passwd"`
 }
