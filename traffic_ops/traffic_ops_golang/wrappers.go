@@ -52,11 +52,7 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 		sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 
-		if acceptsGzip(r) {
-			gzipResponse(w, r, iw.Body())
-		} else {
-			iw.RealWrite(iw.Body())
-		}
+		gzipResponse(w, r, iw.Body())
 
 	}
 }
@@ -186,7 +182,7 @@ func wrapBytes(f func() []byte, contentType string) RegexHandlerFunc {
 //TODO: drichardson - refactor these to a generic area
 func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, error) {
 	// TODO this could be made more efficient by wrapping ResponseWriter with the GzipWriter, and letting callers writer directly to it - but then we'd have to deal with Closing the gzip.Writer.
-	if len(b) == 0 {
+	if len(b) == 0 || !acceptsGzip(r) {
 		return b, nil
 	}
 	w.Header().Set("Content-Encoding", "gzip")
