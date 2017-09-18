@@ -1,4 +1,4 @@
-package tcstructs
+package tostructs
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,9 +24,9 @@ type CdnsResponse struct {
 }
 
 type Cdn struct {
-	DnssecEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
+	DNSSECEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
 	DomainName    string `json:"domainName" db:"domain_name"`
-	Id            int    `json:"id" db:"id"`
+	ID            int    `json:"id" db:"id"`
 	LastUpdated   string `json:"lastUpdated" db:"last_updated"`
 	Name          string `json:"name" db:"name"`
 }

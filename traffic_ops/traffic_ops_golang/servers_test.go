@@ -23,15 +23,15 @@ import (
 	"net/url"
 	"testing"
 
-	. "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestServers() []Server {
-	servers := []Server{}
-	testServer := Server{
+func getTestServers() []tostructs.Server {
+	servers := []tostructs.Server{}
+	testServer := tostructs.Server{
 		Cachegroup:     "Cachegroup",
 		CachegroupId:   1,
 		CdnId:          1,
@@ -96,7 +96,7 @@ func TestGetServersByDsId(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
-	cols := ColsFromStructByTag("db", Server{})
+	cols := ColsFromStructByTag("db", tostructs.Server{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
@@ -163,7 +163,7 @@ func TestGetServersByDsId(t *testing.T) {
 
 }
 
-type SortableServers []Server
+type SortableServers []tostructs.Server
 
 func (s SortableServers) Len() int {
 	return len(s)

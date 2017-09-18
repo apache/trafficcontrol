@@ -27,7 +27,7 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tcstructs"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -60,19 +60,19 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tcstructs.ServersResponse, error) {
+func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.ServersResponse, error) {
 	servers, err := getServers(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting servers response: %v", err)
 	}
 
-	resp := tcstructs.ServersResponse{
+	resp := tostructs.ServersResponse{
 		Response: servers,
 	}
 	return &resp, nil
 }
 
-func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Server, error) {
+func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, error) {
 
 	var rows *sqlx.Rows
 	var err error
@@ -84,13 +84,13 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tcstructs.Server, e
 		//                    Test for bad Query Parameters
 		return nil, fmt.Errorf("querying: %v", err)
 	}
-	servers := []tcstructs.Server{}
+	servers := []tostructs.Server{}
 
 	const HiddenField = "********"
 
 	defer rows.Close()
 	for rows.Next() {
-		var s tcstructs.Server
+		var s tostructs.Server
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
