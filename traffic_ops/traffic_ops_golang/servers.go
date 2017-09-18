@@ -95,8 +95,8 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
 		if privLevel < PrivLevelAdmin {
-			s.IloPassword = HiddenField
-			s.XmppPasswd = HiddenField
+			s.ILOPassword = HiddenField
+			s.XMPPPasswd = HiddenField
 		}
 		servers = append(servers, s)
 	}
