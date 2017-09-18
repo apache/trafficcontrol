@@ -13,7 +13,7 @@ import (
 
 	// "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-	"github.com/apache/incubator-trafficcontrol/grove"
+	grove "github.com/apache/incubator-trafficcontrol/grove/cache"
 )
 
 const Version = "0.1"
