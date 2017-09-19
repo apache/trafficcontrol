@@ -323,7 +323,7 @@ sub run_ut {
 	}
 	ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-	# It creates new delivery services, tenant id derived from user
+	# It creates new delivery services, tenant id is derived from user if not use_tenancy
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 	        "xmlId" => "ds_1",
 	        "displayName" => "ds_displayname_1",
@@ -346,10 +346,11 @@ sub run_ut {
 	        "geoLimit" => 0,
 	        "geoProvider" => 0,
 	        "qstringIgnore" => 0,
+			"tenantId" => $use_tenancy ? $tenant_id : undef,
 	        })
 	    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	    ->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/tenantId" => $tenant_id)
+	    ->json_is( "/response/0/tenantId" => $use_tenancy ? $tenant_id : undef)
 	            , 'Was the tenant id dervied from the creating user?';
 
 	ok $t->delete_ok('/api/1.2/deliveryservices/' . &get_ds_id('ds_1'))->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
