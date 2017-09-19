@@ -164,7 +164,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 		t.Errorf("getServers expected: nil error, actual: %v", err)
 	}
 
-	if len(servers) != 1 {
+	if len(servers) != 3 {
 		t.Errorf("getServers expected: len(servers) == 3, actual: %v", len(servers))
 	}
 
