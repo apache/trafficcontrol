@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -149,6 +151,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	certs, err := loadCerts(remapper.Rules())
+	if err != nil {
+		log.Errorf("starting service: loading certificates: %V\n", err)
+		os.Exit(1)
+	}
+	defaultCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
+	if err != nil {
+		log.Errorf("starting service: loading default certificate: %V\n", err)
+		os.Exit(1)
+	}
+	certs = append(certs, defaultCert)
+
 	httpListener, httpConns, httpConnStateCallback, err := web.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		log.Errorf("creating HTTP listener %v: %v\n", cfg.Port, err)
@@ -186,7 +200,7 @@ func main() {
 	httpsConns := (*web.ConnMap)(nil)
 	httpsConnStateCallback := (func(net.Conn, http.ConnState))(nil)
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		if httpsListener, httpsConns, httpsConnStateCallback, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
+		if httpsListener, httpsConns, httpsConnStateCallback, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
 			log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			return
 		}
@@ -248,7 +262,7 @@ func main() {
 		}
 
 		if cfg.HTTPSPort != oldCfg.HTTPSPort {
-			if httpsListener, httpsConns, httpsConnStateCallback, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), cfg.CertFile, cfg.KeyFile); err != nil {
+			if httpsListener, httpsConns, httpsConnStateCallback, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
 				log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 			}
 		}
@@ -396,4 +410,28 @@ func copyHeader(source http.Header, dest *http.Header) {
 			dest.Add(n, vv)
 		}
 	}
+}
+
+func loadCerts(rules []cache.RemapRule) ([]tls.Certificate, error) {
+	certs := []tls.Certificate{}
+	for _, rule := range rules {
+		if rule.CertificateFile == "" && rule.CertificateKeyFile == "" {
+			continue
+		}
+		if rule.CertificateFile == "" {
+			return nil, errors.New("rule " + rule.Name + " has a certificate but no key, using default certificate\n")
+			continue
+		}
+		if rule.CertificateKeyFile == "" {
+			return nil, errors.New("rule " + rule.Name + " has a key but no certificate, using default certificate\n")
+			continue
+		}
+
+		cert, err := tls.LoadX509KeyPair(rule.CertificateFile, rule.CertificateKeyFile)
+		if err != nil {
+			return nil, errors.New("loading rule " + rule.Name + " certificate: " + err.Error() + "\n")
+		}
+		certs = append(certs, cert)
+	}
+	return certs, nil
 }
