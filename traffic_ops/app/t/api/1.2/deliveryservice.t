@@ -146,7 +146,8 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 			"rangeRequestHandling" => 1,
 			"regionalGeoBlocking" => 1,
 			"signed" => 1,
-			"typeId" => 7,
+            "tenantId" => $tenant_id,
+            "typeId" => 7,
 			"xmlId" => "ds_1",
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -180,7 +181,8 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"rangeRequestHandling" => 1,
 				"regionalGeoBlocking" => 1,
 				"signed" => 1,
-				"typeId" => 7,
+                "tenantId" => $tenant_id,
+                "typeId" => 7,
 				"xmlId" => "ds_2",
 			})
 			->json_is( "/alerts/0/text" => "A deliveryservice xmlId is immutable.")
@@ -208,7 +210,8 @@ ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/j
 				"rangeRequestHandling" => 1,
 				"regionalGeoBlocking" => 1,
 				"signed" => 1,
-				"typeId" => 7,
+                "tenantId" => $tenant_id,
+                "typeId" => 7,
 				"xmlId" => "ds_1",
 	})->status_is(404)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
