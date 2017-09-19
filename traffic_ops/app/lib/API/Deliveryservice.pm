@@ -303,6 +303,9 @@ sub update {
 	
 	#setting tenant_id to undef if tenant is not set. 
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
+	if ($tenant_utils->use_tenancy() and !defined($tenant_id) and defined($ds->tenant_id)) {
+		return $self->alert("Invalid tenant. Cannot clear the delivery-service tenancy.");
+	}
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
 		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}

@@ -1018,23 +1018,28 @@ sub test_ds_resource_write_allow_access {
             ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
         , 'Success change ds orgServerFqdn: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    #change the tenant to my tenant
-    $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
-    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
-            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
-            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
-            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
-        , 'Success change ds tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    if ($resource_tenant ne "none" and $login_tenant ne "none") {
+        #change the tenant to my tenant
+        $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
+        ok$t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => { Accept => 'application/json' } => json =>
+                $response2edit)
+                ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+                ->json_is( "/response/0/xmlId" => $response2edit->{"xmlId"})
+                ->json_is( "/response/0/orgServerFqdn" => $response2edit->{"orgServerFqdn"} )
+                ->json_is( "/response/0/tenantId" => $response2edit->{"tenantId"})
+            ,
+            'Success change ds tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    #change the tenant back to his tenant
-    $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
-    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
-            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
-            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
-            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
-        , 'Success change ds tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+        #change the tenant back to his tenant - if possible
+        $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
+        ok$t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => { Accept => 'application/json' } => json =>
+                $response2edit)
+                ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+                ->json_is( "/response/0/xmlId" => $response2edit->{"xmlId"})
+                ->json_is( "/response/0/orgServerFqdn" => $response2edit->{"orgServerFqdn"} )
+                ->json_is( "/response/0/tenantId" => $response2edit->{"tenantId"})
+            , 'Success change ds tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    }
 
     #delete the ds for test and cleanup
     ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)

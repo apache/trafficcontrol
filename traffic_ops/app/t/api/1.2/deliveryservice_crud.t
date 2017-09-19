@@ -37,8 +37,9 @@ sub run_ut {
 	my $schema = shift;
 	my $login_user = shift;
 	my $login_password = shift;
+    my $use_tenancy = shift;
 
-	Test::TestHelper->unload_core_data($schema);
+    Test::TestHelper->unload_core_data($schema);
 	Test::TestHelper->load_core_data($schema);
 
 	my $tenant_id = $schema->resultset('TmUser')->find( { username => $login_user } )->get_column('tenant_id');
@@ -46,6 +47,16 @@ sub run_ut {
 
 	ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password } )->status_is(302)
 		->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+
+	my $useTenancyParamId = &get_param_id('use_tenancy');
+	ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+				'value'      => $use_tenancy,
+			})->status_is(200)
+			->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/name" => "use_tenancy" )
+			->json_is( "/response/configFile" => "global" )
+			->json_is( "/response/value" => $use_tenancy )
+		, 'Was the disabling paramter set?';
 
 	# It gets existing delivery services
 	ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
@@ -149,96 +160,156 @@ sub run_ut {
 	            , 'A minor change';
 
 
-	# Removing tenancy by not putting it in the put
-	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
-	        "xmlId" => "ds_1",
-	        "displayName" => "ds_displayname_1",
-	        "protocol" => "1",
-	        "orgServerFqdn" => "http://10.75.168.92",
-	        "cdnName" => "cdn1",
-	        "profileId" => 300,
-	        "typeId" => "36",
-	        "multiSiteOrigin" => "0",
-	        "regionalGeoBlocking" => "1",
-	        "active" => "false",
-	        "dscp" => 0,
-	        "ipv6RoutingEnabled" => "true",
-	        "logsEnabled" => "true",
-	        "initialDispersion" => 0,
-	        "cdnId" => 100,
-	        "signed" => "false",
-	        "rangeRequestHandling" => 0,
-	        "geoLimit" => 0,
-	        "geoProvider" => 0,
-	        "qstringIgnore" => 0,
-	        })
-	    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/displayName" => "ds_displayname_1")
-	    ->json_is( "/response/0/tenantId" => undef)
-	            , 'Was tenant id removed?';
+	if ($use_tenancy) {
+		# Removing tenancy by not putting it in the put - should fail
+		ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
+			"xmlId" => "ds_1",
+				"displayName" => "ds_displayname_1",
+				"protocol" => "1",
+				"orgServerFqdn" => "http://10.75.168.92",
+				"cdnName" => "cdn1",
+				"profileId" => 300,
+				"typeId" => "36",
+				"multiSiteOrigin" => "0",
+				"regionalGeoBlocking" => "1",
+				"active" => "false",
+				"dscp" => 0,
+				"ipv6RoutingEnabled" => "true",
+				"logsEnabled" => "true",
+				"initialDispersion" => 0,
+				"cdnId" => 100,
+				"signed" => "false",
+				"rangeRequestHandling" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"qstringIgnore" => 0,
+				})
+				->status_is(400)
+				->json_is( "/alerts/0/text/",
+				"Invalid tenant. Cannot clear the delivery-service tenancy." )->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			,
+			, 'Cannot remove tenant by forgetting it?';
+
+		# removing tenant id
+		ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
+					"xmlId" => "ds_1",
+					"displayName" => "ds_displayname_1",
+					"protocol" => "1",
+					"orgServerFqdn" => "http://10.75.168.92",
+					"cdnName" => "cdn1",
+					"tenantId" => undef,
+					"profileId" => 300,
+					"typeId" => "36",
+					"multiSiteOrigin" => "0",
+					"regionalGeoBlocking" => "1",
+					"active" => "false",
+					"dscp" => 0,
+					"ipv6RoutingEnabled" => "true",
+					"logsEnabled" => "true",
+					"initialDispersion" => 0,
+					"cdnId" => 100,
+					"signed" => "false",
+					"rangeRequestHandling" => 0,
+					"geoLimit" => 0,
+					"geoProvider" => 0,
+					"qstringIgnore" => 0,
+				})
+				->status_is(400)
+				->json_is( "/alerts/0/text/",
+				"Invalid tenant. Cannot clear the delivery-service tenancy." )->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			, 'Cannot remove tenant?';
+	}
+	else{
+		# Removing tenancy by not putting it in the put
+		ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
+				"xmlId" => "ds_1",
+				"displayName" => "ds_displayname_1",
+				"protocol" => "1",
+				"orgServerFqdn" => "http://10.75.168.92",
+				"cdnName" => "cdn1",
+				"profileId" => 300,
+				"typeId" => "36",
+				"multiSiteOrigin" => "0",
+				"regionalGeoBlocking" => "1",
+				"active" => "false",
+				"dscp" => 0,
+				"ipv6RoutingEnabled" => "true",
+				"logsEnabled" => "true",
+				"initialDispersion" => 0,
+				"cdnId" => 100,
+				"signed" => "false",
+				"rangeRequestHandling" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"qstringIgnore" => 0,
+			})
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/displayName" => "ds_displayname_1")
+			->json_is( "/response/0/tenantId" => undef)
+		, 'Was tenant id removed?';
 
 	# Putting tenant id back
 	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
-	        "xmlId" => "ds_1",
-	        "displayName" => "ds_displayname_1",
-	        "protocol" => "1",
-	        "orgServerFqdn" => "http://10.75.168.92",
-	        "cdnName" => "cdn1",
-	        "tenantId" => $tenant_id,
-	        "profileId" => 300,
-	        "typeId" => "36",
-	        "multiSiteOrigin" => "0",
-	        "regionalGeoBlocking" => "1",
-	        "active" => "false",
-	        "dscp" => 0,
-	        "ipv6RoutingEnabled" => "true",
-	        "logsEnabled" => "true",
-	        "initialDispersion" => 0,
-	        "cdnId" => 100,
-	        "signed" => "false",
-	        "rangeRequestHandling" => 0,
-	        "geoLimit" => 0,
-	        "geoProvider" => 0,
-	        "qstringIgnore" => 0,
-	        })
-	    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/displayName" => "ds_displayname_1")
-	    ->json_is( "/response/0/tenantId" => $tenant_id)
-	            , 'Was the tenant ID set again?';
+				"xmlId" => "ds_1",
+				"displayName" => "ds_displayname_1",
+				"protocol" => "1",
+				"orgServerFqdn" => "http://10.75.168.92",
+				"cdnName" => "cdn1",
+				"tenantId" => $tenant_id,
+				"profileId" => 300,
+				"typeId" => "36",
+				"multiSiteOrigin" => "0",
+				"regionalGeoBlocking" => "1",
+				"active" => "false",
+				"dscp" => 0,
+				"ipv6RoutingEnabled" => "true",
+				"logsEnabled" => "true",
+				"initialDispersion" => 0,
+				"cdnId" => 100,
+				"signed" => "false",
+				"rangeRequestHandling" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"qstringIgnore" => 0,
+			})
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/displayName" => "ds_displayname_1")
+			->json_is( "/response/0/tenantId" => $tenant_id)
+		, 'Was the tenant ID set again?';
 
 
-	# removing tenant id
-	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
-	        "xmlId" => "ds_1",
-	        "displayName" => "ds_displayname_1",
-	        "protocol" => "1",
-	        "orgServerFqdn" => "http://10.75.168.92",
-	        "cdnName" => "cdn1",
-	        "tenantId" => undef,
-	        "profileId" => 300,
-	        "typeId" => "36",
-	        "multiSiteOrigin" => "0",
-	        "regionalGeoBlocking" => "1",
-	        "active" => "false",
-	        "dscp" => 0,
-	        "ipv6RoutingEnabled" => "true",
-	        "logsEnabled" => "true",
-	        "initialDispersion" => 0,
-	        "cdnId" => 100,
-	        "signed" => "false",
-	        "rangeRequestHandling" => 0,
-	        "geoLimit" => 0,
-	        "geoProvider" => 0,
-	        "qstringIgnore" => 0,
-	        })
-	    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
-	    ->json_is( "/response/0/displayName" => "ds_displayname_1")
-	    ->json_is( "/response/0/tenantId" => undef)
-	            , 'Was the tenant ID set again?';
-
+		# removing tenant id
+		ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id => {Accept => 'application/json'} => json => {
+				"xmlId" => "ds_1",
+				"displayName" => "ds_displayname_1",
+				"protocol" => "1",
+				"orgServerFqdn" => "http://10.75.168.92",
+				"cdnName" => "cdn1",
+				"tenantId" => undef,
+				"profileId" => 300,
+				"typeId" => "36",
+				"multiSiteOrigin" => "0",
+				"regionalGeoBlocking" => "1",
+				"active" => "false",
+				"dscp" => 0,
+				"ipv6RoutingEnabled" => "true",
+				"logsEnabled" => "true",
+				"initialDispersion" => 0,
+				"cdnId" => 100,
+				"signed" => "false",
+				"rangeRequestHandling" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"qstringIgnore" => 0,
+			})
+			->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/xmlId" => "ds_1")->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/0/displayName" => "ds_displayname_1")
+			->json_is( "/response/0/tenantId" => undef)
+		, 'Was the tenant ID set again?';
+	}
 	ok $t->delete_ok('/api/1.2/deliveryservices/' . $ds_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 	# It creates new delivery services, tenant id is derived from user if not use_tenancy
@@ -323,8 +394,6 @@ sub run_ut {
     ->json_is("/response/0/longDesc1" => "cust_update_new")
             , 'A safe update only changes safe fields';
 
-
-
 	my $ds_id_portal_unassigned = &get_ds_id('test-ds2');
 
 	ok $t->put_ok('/api/1.2/deliveryservices/'.$ds_id_portal_unassigned.'/safe' => {Accept => 'application/json'} => json => {
@@ -362,8 +431,9 @@ my $schema = Schema->connect_to_database;
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
-run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD);
-run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD);
+run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD, 0);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD, 0);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD, 1);
 
 $dbh->disconnect();
 done_testing();
@@ -378,3 +448,15 @@ sub get_ds_id {
     my $id = $p->[0]->{id};
     return $id;
 }
+
+sub get_param_id {
+	my $name = shift;
+	my $q      = "select id from parameter where name = \'$name\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}
+
