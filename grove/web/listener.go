@@ -2,6 +2,7 @@ package web
 
 import (
 	"crypto/tls"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -31,16 +32,13 @@ func InterceptListen(network, laddr string) (net.Listener, *ConnMap, func(net.Co
 }
 
 // InterceptListenTLS is like InterceptListen but for serving HTTPS.
-func InterceptListenTLS(net, laddr, certFile, keyFile string) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
+func InterceptListenTLS(net string, laddr string, certs []tls.Certificate) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
 	interceptListener, connMap, connState, err := InterceptListen(net, laddr)
-
-	config := &tls.Config{NextProtos: []string{"h2"}}
-	config.Certificates = make([]tls.Certificate, 1)
-	config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.New("creating InterceptListen: " + err.Error())
 	}
-
+	config := &tls.Config{NextProtos: []string{"h2"}}
+	config.Certificates = certs
 	tlsListener := tls.NewListener(interceptListener, config)
 	return tlsListener, connMap, connState, nil
 }
