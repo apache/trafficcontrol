@@ -45,12 +45,14 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		q := r.URL.Query()
 		resp, err := getServersResponse(q, db, privLevel)
 		if err != nil {
+			log.Errorln(err)
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
+			log.Errorln("marshaling response %v", err)
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
@@ -77,7 +79,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 	var rows *sqlx.Rows
 	var err error
 
-	rows, err = db.Queryx(selectServersQuery())
+	rows, err = db.Queryx(selectStmt(v))
 
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
@@ -89,6 +91,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 	const HiddenField = "********"
 
 	defer rows.Close()
+
 	for rows.Next() {
 		var s tostructs.Server
 		if err = rows.StructScan(&s); err != nil {
@@ -103,12 +106,54 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 	return servers, nil
 }
 
-func selectServersQuery() string {
+func selectStmt(v url.Values) string {
+	selectStmt := selectServersQuery(v)
+	var sqlQuery string
+	if len(v) > 0 {
+		sqlQuery = selectStmt + "\nWHERE " + appendCriteria(selectStmt, v)
+	} else {
+		sqlQuery = selectStmt
+	}
+	log.Debugln("\n" + sqlQuery)
+	return sqlQuery
+}
+
+func appendCriteria(selectStmt string, v url.Values) string {
+
+	var criteria string
+	switch {
+	case v.Get("cachegroup") != "":
+		criteria = "cg.name='" + v.Get("cachegroup") + "'"
+
+	case v.Get("cdn") != "":
+		criteria = "s.cdn_id=" + v.Get("cdn")
+
+		//TODO: drichardson - implement dsId query parameter when tenancy comes available
+		//
+
+	case v.Get("physLocation") != "":
+		criteria = "s.phys_location=" + v.Get("physLocation")
+
+	case v.Get("profileId") != "":
+		criteria = "s.profile=" + v.Get("profileId")
+
+	case v.Get("status") != "":
+		criteria = "st.name='" + v.Get("status") + "'"
+
+	case v.Get("type") != "":
+		criteria = "t.name='" + v.Get("type") + "'"
+
+	}
+
+	return criteria
+}
+
+func selectServersQuery(v url.Values) string {
 
 	const JumboFrameBPS = 9000
 	//COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
-	query := `SELECT
+	selectStmt := `SELECT
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,
@@ -161,5 +206,6 @@ JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id`
-	return query
+
+	return selectStmt
 }
