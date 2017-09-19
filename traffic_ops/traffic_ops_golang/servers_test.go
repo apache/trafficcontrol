@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 	"github.com/jmoiron/sqlx"
 
@@ -83,10 +84,15 @@ func getTestServers() []tostructs.Server {
 	testServer2.HostName = "server2"
 	servers = append(servers, testServer2)
 
+	testServer3 := testServer
+	testServer3.Cachegroup = "cachegroup3"
+	testServer3.HostName = "server3"
+	servers = append(servers, testServer2)
+
 	return servers
 }
 
-func TestGetServersByDsId(t *testing.T) {
+func TestGetServersByCachegroup(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -150,15 +156,16 @@ func TestGetServersByDsId(t *testing.T) {
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := url.Values{}
-	v.Set("dsId", "1")
+	v.Set("cachegroup", "cachegroup2")
 
 	servers, err := getServers(v, db, PrivLevelAdmin)
+	log.Debugln("%v-->", servers)
 	if err != nil {
 		t.Errorf("getServers expected: nil error, actual: %v", err)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("getServers expected: len(servers) == 1, actual: %v", len(servers))
+	if len(servers) != 1 {
+		t.Errorf("getServers expected: len(servers) == 3, actual: %v", len(servers))
 	}
 
 }
