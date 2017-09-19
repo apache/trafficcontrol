@@ -589,8 +589,17 @@ sub create {
 
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	#setting tenant_id to the user id if tenant is not set.
-	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  $tenant_utils->current_user_tenant();
+	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
+	if (!defined($tenant_id)) {
+		if ($tenant_utils->use_tenancy()){
+			return $self->alert("Invalid tenant. Must set tenant for delivery-service.");
+		}
+		elsif (!exists($params->{tenantId})){
+			$tenant_id = $tenant_utils->current_user_tenant();
+		}
+	}
 	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $tenant_id)) {
 		return $self->alert("Invalid tenant. This tenant is not available to you for delivery-service assignment.");
 	}
