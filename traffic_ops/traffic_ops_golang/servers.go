@@ -36,6 +36,7 @@ const ServersPrivLevel = 10
 
 func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
@@ -43,6 +44,9 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		}
 
 		q := r.URL.Query()
+		for k, v := range p {
+			q.Set(k, v)
+		}
 		resp, err := getServersResponse(q, db, privLevel)
 		if err != nil {
 			log.Errorln(err)
@@ -62,8 +66,8 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getServersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.ServersResponse, error) {
-	servers, err := getServers(q, db, privLevel)
+func getServersResponse(v url.Values, db *sqlx.DB, privLevel int) (*tostructs.ServersResponse, error) {
+	servers, err := getServers(v, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting servers response: %v", err)
 	}
@@ -79,11 +83,23 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 	var rows *sqlx.Rows
 	var err error
 
-	rows, err = db.Queryx(selectStmt(v))
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]string{
+		"cachegroup":   "cg.name",
+		"cdn":          "s.cdn_id",
+		"id":           "s.id",
+		"physLocation": "s.phys_location",
+		"profileId":    "s.profileId",
+		"status":       "st.name",
+		"type":         "t.name",
+	}
+
+	query, queryValues := SelectStmt(v, selectServersQuery(), queryParamsToQueryCols)
+
+	rows, err = db.NamedQuery(query, queryValues)
 
 	if err != nil {
-		//TODO: drichardson - send back an alert if the Query Count is larger than 1
-		//                    Test for bad Query Parameters
 		return nil, fmt.Errorf("querying: %v", err)
 	}
 	servers := []tostructs.Server{}
@@ -106,52 +122,11 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 	return servers, nil
 }
 
-func selectStmt(v url.Values) string {
-	selectStmt := selectServersQuery(v)
-	var sqlQuery string
-	if len(v) > 0 {
-		sqlQuery = selectStmt + "\nWHERE " + appendCriteria(selectStmt, v)
-	} else {
-		sqlQuery = selectStmt
-	}
-	log.Debugln("\n" + sqlQuery)
-	return sqlQuery
-}
-
-func appendCriteria(selectStmt string, v url.Values) string {
-
-	var criteria string
-	switch {
-	case v.Get("cachegroup") != "":
-		criteria = "cg.name='" + v.Get("cachegroup") + "'"
-
-	case v.Get("cdn") != "":
-		criteria = "s.cdn_id=" + v.Get("cdn")
-
-		//TODO: drichardson - implement dsId query parameter when tenancy comes available
-		//
-
-	case v.Get("physLocation") != "":
-		criteria = "s.phys_location=" + v.Get("physLocation")
-
-	case v.Get("profileId") != "":
-		criteria = "s.profile=" + v.Get("profileId")
-
-	case v.Get("status") != "":
-		criteria = "st.name='" + v.Get("status") + "'"
-
-	case v.Get("type") != "":
-		criteria = "t.name='" + v.Get("type") + "'"
-
-	}
-
-	return criteria
-}
-
-func selectServersQuery(v url.Values) string {
+func selectServersQuery() string {
 
 	const JumboFrameBPS = 9000
-	//COALESCE is needed to default values that are nil in the database
+
+	// COALESCE is needed to default values that are nil in the database
 	// because Go does not allow that to marshal into the struct
 	selectStmt := `SELECT
 cg.name as cachegroup,

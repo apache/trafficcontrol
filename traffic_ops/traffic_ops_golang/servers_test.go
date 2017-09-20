@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -102,7 +103,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
-	cols := ColsFromStructByTag("db", tostructs.Server{})
+	cols := test.ColsFromStructByTag("db", tostructs.Server{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
