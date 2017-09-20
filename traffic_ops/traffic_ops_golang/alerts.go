@@ -28,39 +28,23 @@ package main
  	Alerts []Alert `json:"alerts"`
  }
 
- const errorLevel = "error"
- const successLevel = "success"
- const infoLevel = "info"
- const warnLevel = "warn"
+ const ErrorLevel = "error"
+ const SuccessLevel = "success"
+ const InfoLevel = "info"
+ const WarnLevel = "warn"
 
  func CreateErrorAlerts(errs ...error) Alerts {
  	alerts := []Alert{}
 	for _ , err := range errs {
-		alerts = append(alerts,Alert{err.Error(),errorLevel})
+		alerts = append(alerts,Alert{err.Error(),ErrorLevel})
 	}
 	return Alerts{alerts}
  }
 
- func CreateSuccessAlerts(messages ...string) Alerts {
+ func CreateAlerts(level string, messages ...string) Alerts {
 	 alerts := []Alert{}
 	 for _ , message := range messages {
-		 alerts = append(alerts,Alert{message,successLevel})
+		 alerts = append(alerts,Alert{message,level})
 	 }
 	 return Alerts{alerts}
- }
-
- func CreateInfoAlerts(messages ...string) Alerts {
-	 alerts := []Alert{}
-	 for _ , message := range messages {
-		 alerts = append(alerts,Alert{message,infoLevel})
-	 }
-	 return Alerts{alerts}
- }
-
-func CreateWarnAlerts(messages ...string) Alerts {
-	alerts := []Alert{}
-	for _ , message := range messages {
-		alerts = append(alerts,Alert{message,warnLevel})
-	}
-	return Alerts{alerts}
 }
