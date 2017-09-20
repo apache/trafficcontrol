@@ -79,6 +79,14 @@ sub generate {
 		return $self->alert($result);
 	}
 
+	my $response = $self->generate_iso($params);
+	return $self->success( $response, "Generate ISO was successful." );
+}
+
+sub generate_iso {
+	my $self = shift;
+	my $params = shift;
+
 	my $osversion_dir  = $params->{osversionDir};
 	my $fqdn           = $params->{hostName} . '.' . $params->{domainName};
 	my $rootpass       = $params->{rootPass};
@@ -91,6 +99,10 @@ sub generate {
 	my $interface_name = $params->{interfaceName};
 	my $interface_mtu  = $params->{interfaceMtu};
 	my $ondisk         = $params->{disk};
+	my $mgmt_ip_address = $params->{mgmtIpAddress};
+	my $mgmt_ip_netmask = $params->{mgmtIpNetmask};
+	my $mgmt_ip_gateway = $params->{mgmtIpGateway};
+	my $mgmt_interface = $params->{mgmtInterface};
 
 	# This sets up the "strength" of the hash. So far $1 works (md5). It will produce a sha256 ($5), but it's untested.
 	# PROTIP: Do not put the $ in.
@@ -203,10 +215,12 @@ sub generate {
 
 	my $iso_url = join( "/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name );
 
-	my $response;
-	$response->{isoURL} = $iso_url;
+	my $response = {
+		isoName => $iso_file_name,
+		isoURL => $iso_url,
+	};
 
-	return $self->success( $response, "Generate ISO was successful." );
+	return $response;
 }
 
 sub is_valid {
@@ -214,7 +228,7 @@ sub is_valid {
 	my $params = shift;
 
 	my $rules = {
-		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk/],
+		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk mgmtInterface mgmtIpGateway/],
 
 		# Validation checks to perform
 		checks => [
@@ -224,6 +238,9 @@ sub is_valid {
 			rootPass     => [ is_required("is required") ],
 			dhcp         => [ is_required("is required") ],
 			interfaceMtu => [ is_required("is required") ],
+			disk => [ is_required("is required") ],
+			mgmtInterface => [ is_required_if(defined($params->{mgmtIpAddress}), "- Management interface is required when Management IP is provided") ],
+			mgmtIpGateway => [ is_required_if(defined($params->{mgmtIpAddress}), "- Management gateway is required when Management IP is provided") ],
 			ipAddress    => is_required_if(
 				sub {
 					my $params = shift;
