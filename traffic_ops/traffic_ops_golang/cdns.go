@@ -40,7 +40,11 @@ func cdnsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		// Load the PathParams into the query parameters for pass through
 		q := r.URL.Query()
+		for k, v := range p {
+			q.Set(k, v)
+		}
 		resp, err := getCdnsResponse(q, db, privLevel)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
