@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -19,6 +20,7 @@ import (
 const Version = "0.1"
 const UserAgent = "grove-tc-cfg/" + Version
 const TrafficOpsTimeout = time.Second * 90
+const DefaultCertificateDir = "/etc/grove/ssl"
 
 func AvailableStatuses() map[string]struct{} {
 	return map[string]struct{}{
@@ -35,6 +37,7 @@ func main() {
 	host := flag.String("host", "", "The hostname of the server whose config to generate")
 	api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
 	toInsecure := flag.Bool("insecure", false, "Whether to allow invalid certificates with Traffic Ops")
+	certDir := flag.String("certdir", DefaultCertificateDir, "Directory to save certificates to")
 	flag.Parse()
 
 	useCache := false
@@ -48,7 +51,7 @@ func main() {
 	if *api == "1.3" {
 		rules, err = createRulesNewAPI(toc, *host)
 	} else {
-		rules, err = createRulesOldAPI(toc, *host) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
+		rules, err = createRulesOldAPI(toc, *host, *certDir) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
 	}
 	if err != nil {
 		fmt.Printf("Error creating rules: %v\n", err)
@@ -71,7 +74,7 @@ func main() {
 	os.Exit(0)
 }
 
-func createRulesOldAPI(toc *to.Session, host string) (grove.RemapRules, error) {
+func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.RemapRules, error) {
 	cachegroupsArr, err := toc.CacheGroups()
 	if err != nil {
 		fmt.Printf("Error getting Traffic Ops Cachegroups: %v\n", err)
@@ -168,7 +171,14 @@ func createRulesOldAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 	// 	fmt.Println(parent.HostName)
 	// }
 
-	return createRulesOld(host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters)
+	cdnSSLKeys, err := toc.CDNSSLKeys(hostServer.CDNName)
+	if err != nil {
+		fmt.Printf("Error getting %v SSL keys: %v\n", hostServer.CDNName, err)
+		os.Exit(1)
+	}
+	dsCerts := makeDSCertMap(cdnSSLKeys)
+
+	return createRulesOld(host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters, dsCerts, certDir)
 }
 
 func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
@@ -318,6 +328,14 @@ func makeCDNMap(cdns []to.CDN) map[string]to.CDN {
 	m := map[string]to.CDN{}
 	for _, cdn := range cdns {
 		m[cdn.Name] = cdn
+	}
+	return m
+}
+
+func makeDSCertMap(sslKeys []to.CDNSSLKeys) map[string]to.CDNSSLKeys {
+	m := map[string]to.CDNSSLKeys{}
+	for _, sslkey := range sslKeys {
+		m[sslkey.DeliveryService] = sslkey
 	}
 	return m
 }
@@ -501,7 +519,16 @@ func makeAllowIP(ips []string) ([]*net.IPNet, error) {
 	return cidrs, nil
 }
 
-func createRulesOld(hostname string, dses []to.DeliveryService, parents []to.Server, dsRegexes map[string][]to.DeliveryServiceRegex, cdns map[string]to.CDN, hostParams []to.Parameter) (grove.RemapRules, error) {
+func createRulesOld(
+	hostname string,
+	dses []to.DeliveryService,
+	parents []to.Server,
+	dsRegexes map[string][]to.DeliveryServiceRegex,
+	cdns map[string]to.CDN,
+	hostParams []to.Parameter,
+	dsCerts map[string]to.CDNSSLKeys,
+	certDir string,
+) (grove.RemapRules, error) {
 	rules := []grove.RemapRule{}
 	allowedIPs, err := getAllowIP(hostParams)
 	if err != nil {
@@ -539,6 +566,15 @@ func createRulesOld(hostname string, dses []to.DeliveryService, parents []to.Ser
 			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
 		}
 
+		cert, hasCert := dsCerts[ds.XMLID]
+		if protocol != ProtocolHTTP {
+			if !hasCert {
+				fmt.Fprint(os.Stderr, "HTTPS delivery service: "+ds.XMLID+" has no certificate!\n")
+			} else if err := createCertificateFiles(cert, certDir); err != nil {
+				fmt.Fprint(os.Stderr, "HTTPS delivery service "+ds.XMLID+" failed to create certificate: "+err.Error()+"\n")
+			}
+		}
+
 		dsType := strings.ToLower(ds.Type)
 		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
 			fmt.Printf("createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
@@ -556,6 +592,13 @@ func createRulesOld(hostname string, dses []to.DeliveryService, parents []to.Ser
 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex.Pattern)
 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, hostname, dsType, cdn.DomainName)
+
+				if protocolStr.From == "https" && hasCert {
+					rule.CertificateFile = getCertFileName(cert, certDir)
+					rule.CertificateKeyFile = getCertKeyFileName(cert, certDir)
+					// fmt.Fprintf(os.Stderr, "HTTPS delivery service: "+ds.XMLID+" certificate %+v\n", cert)
+				}
+
 				for _, parent := range parents {
 					to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
 					proxyURL, err := url.Parse(proxyURLStr)
@@ -600,6 +643,37 @@ func createRulesOld(hostname string, dses []to.DeliveryService, parents []to.Ser
 	}
 
 	return remapRules, nil
+}
+
+func getCertFileName(cert to.CDNSSLKeys, dir string) string {
+	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".crt"
+}
+
+func getCertKeyFileName(cert to.CDNSSLKeys, dir string) string {
+	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".key"
+}
+
+func createCertificateFiles(cert to.CDNSSLKeys, dir string) error {
+	certFileName := getCertFileName(cert, dir)
+	certFile, err := os.OpenFile(certFileName, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return errors.New("creating certificate file " + certFileName + ": " + err.Error())
+	}
+	defer certFile.Close()
+	if _, err := certFile.WriteString(cert.Certificate.Crt); err != nil {
+		return errors.New("writing certificate file " + certFileName + ": " + err.Error())
+	}
+
+	keyFileName := getCertKeyFileName(cert, dir)
+	keyFile, err := os.OpenFile(keyFileName, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return errors.New("creating certificate key file " + keyFileName + ": " + err.Error())
+	}
+	defer certFile.Close()
+	if _, err := keyFile.WriteString(cert.Certificate.Key); err != nil {
+		return errors.New("writing certificate key file " + keyFileName + ": " + err.Error())
+	}
+	return nil
 }
 
 // if ( $remap→{type} eq "HTTP_NO_CACHE" || $remap→{type} eq "HTTP_LIVE" || $remap→{type} eq "DNS_LIVE" ) {
