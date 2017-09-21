@@ -25,6 +25,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 	var chartInterval,
 		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
 
+	var bandwidthChartData = [],
+		connectionsChartData = [];
 
 	var getCDN = function(id) {
 		cdnService.getCDN(id)
@@ -57,9 +59,9 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 		$q.all(promises)
 			.then(
 				function(responses) {
-					// set chart data
-					var bandwidthChartData = buildBandwidthChartData(responses[0], start),
-						connectionsChartData = buildConnectionsChartData(responses[1], start);
+						// set chart data
+						bandwidthChartData = (responses[0].series) ? buildBandwidthChartData(responses[0].series, start) : bandwidthChartData;
+						connectionsChartData = (responses[1].series) ? buildConnectionsChartData(responses[1].series, start) : connectionsChartData;
 
 					$timeout(function () {
 						buildChart(bandwidthChartData, connectionsChartData);
@@ -71,9 +73,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	};
 
-	var buildBandwidthChartData = function(result, start) {
-		var normalizedChartData = [],
-			series = result.series;
+	var buildBandwidthChartData = function(series, start) {
+		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
 			_.each(series.values, function(seriesItem) {
@@ -86,9 +87,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 		return normalizedChartData;
 	};
 
-	var buildConnectionsChartData = function(result, start) {
-		var normalizedChartData = [],
-			series = result.series;
+	var buildConnectionsChartData = function(series, start) {
+		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
 			_.each(series.values, function(seriesItem) {
