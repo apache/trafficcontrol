@@ -42,6 +42,11 @@ type Config struct {
 	Insecure           bool     `json:"insecure"`
 	CertPath           string   `json:"cert_path"`
 	KeyPath            string   `json:"key_path"`
+	ProxyTimeout       int      `json:"proxy_timeout"`
+	ReadTimeout        int      `json:"read_timeout"`
+	ReadHeaderTimeout  int      `json:"read_header_timeout"`
+	WriteTimeout       int      `json:"write_timeout"`
+	IdleTimeout        int      `json:"idle_timeout"`
 	MaxDBConnections   int      `json:"max_db_connections"`
 	LogLocationError   string   `json:"log_location_error"`
 	LogLocationWarning string   `json:"log_location_warning"`

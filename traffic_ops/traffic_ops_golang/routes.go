@@ -23,8 +23,10 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
+	"time"
 )
 
 // Routes returns the routes, and a catchall route for when no route matches.
@@ -63,6 +65,7 @@ func rootHandler(d ServerData) http.Handler {
 	// debug
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		DialContext:     (&net.Dialer{Timeout: time.Duration(d.Config.ProxyTimeout) * time.Second}).DialContext,
 	}
 	rp := httputil.NewSingleHostReverseProxy(d.TOURL)
 	rp.Transport = tr

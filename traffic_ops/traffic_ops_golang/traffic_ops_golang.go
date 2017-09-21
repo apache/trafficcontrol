@@ -28,6 +28,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
+	"time"
 )
 
 const Version = "0.1"
@@ -65,7 +66,27 @@ func main() {
 		return
 	}
 
-	log.Infof("Using Config: %+v\n", cfg)
+	log.Infof(`Using Config values:
+		Port:                %d
+		Db Server:           %s
+		Db User:             %s
+		Db Name:             %s
+		Db Ssl:              %s
+		Max Db Connections:  %d
+		TO URL:              %s
+		Insecure:            %s
+		Cert Path:           %s
+		Key Path:            %s
+		Proxy Timeout:       %d
+		Read Timeout:        %d
+		Read Header Timeout: %d
+		Write Timeout:       %d
+		Idle Timeout:        %d
+		Error Log:           %s
+		Warn Log:            %s
+		Info Log:            %s
+		Debug Log:           %s
+		Event Log:           %s`, cfg.HTTPPort, cfg.DBServer, cfg.DBUser, cfg.DBDB, cfg.DBSSL, cfg.MaxDBConnections, cfg.TOURLStr, cfg.Insecure, cfg.CertPath, cfg.KeyPath, cfg.ProxyTimeout, cfg.ReadTimeout, cfg.ReadHeaderTimeout, cfg.WriteTimeout, cfg.IdleTimeout, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
 
 	sslStr := "require"
 	if !cfg.DBSSL {
@@ -87,7 +108,10 @@ func main() {
 	}
 
 	log.Infof("Listening on " + cfg.HTTPPort)
-	if err := http.ListenAndServeTLS(":"+cfg.HTTPPort, cfg.CertPath, cfg.KeyPath, nil); err != nil {
+
+	server := &http.Server{Addr: ":" + cfg.HTTPPort, ReadTimeout: time.Duration(cfg.ReadTimeout), ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeout), WriteTimeout: time.Duration(cfg.WriteTimeout), IdleTimeout: time.Duration(cfg.IdleTimeout)}
+
+	if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
 		log.Errorf("stopping server: %v\n", err)
 		return
 	}
