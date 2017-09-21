@@ -64,12 +64,18 @@ func TestGetCDNConf(t *testing.T) {
 `
 
 	expected := Config{
-		HTTPPort:         "443",
-		TOSecret:         "walrus",
-		TOURLStr:         "https://127.0.0.1:60443",
-		CertPath:         "/etc/pki/tls/certs/localhost.crt",
-		KeyPath:          "/etc/pki/tls/private/localhost.key",
-		MaxDBConnections: 50,
+		HTTPPort:          "443",
+		TOSecret:          "walrus",
+		TOURLStr:          "https://127.0.0.1:60443",
+		CertPath:          "/etc/pki/tls/certs/localhost.crt",
+		KeyPath:           "/etc/pki/tls/private/localhost.key",
+		MaxDBConnections:  50,
+		ProxyTimeout:      60,
+		ProxyKeepAlive:    60,
+		ReadTimeout:       60,
+		ReadHeaderTimeout: 60,
+		WriteTimeout:      60,
+		IdleTimeout:       60,
 	}
 	err := error(nil)
 	if expected.TOURL, err = url.Parse(expected.TOURLStr); err != nil {
@@ -118,7 +124,9 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 		iso_root_path => '/opt/traffic_ops/app/public',          # the location where the iso files will be written
 	},
 	inactivity_timeout => 60,
-	traffic_ops_golang_port => '443'
+	traffic_ops_golang_port => '443',
+	traffic_ops_golang_proxy_timeout => 90,
+	traffic_ops_golang_read_timeout => 90
 };
 `
 
@@ -145,6 +153,12 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 		TOURLStr:           "https://127.0.0.1:60443",
 		CertPath:           "/etc/pki/tls/certs/localhost.crt",
 		KeyPath:            "/etc/pki/tls/private/localhost.key",
+		ProxyTimeout:       90,
+		ProxyKeepAlive:     60,
+		ReadTimeout:        90,
+		ReadHeaderTimeout:  60,
+		WriteTimeout:       60,
+		IdleTimeout:        60,
 		MaxDBConnections:   DefaultMaxDBConnections,
 		LogLocationError:   NewLogPath,
 		LogLocationWarning: NewLogPath,

@@ -34,6 +34,12 @@ import (
 const OldAccessLogPath = "/var/log/traffic_ops/access.log"
 const NewLogPath = "/var/log/traffic_ops/traffic_ops_golang.log"
 const DefaultMaxDBConnections = 50
+const DefaultProxyTimeout = 60
+const DefaultProxyKeepAlive = 60
+const DefaultReadTimeout = 60
+const DefaultReadHeaderTimeout = 60
+const DefaultWriteTimeout = 60
+const DefaultIdleTimeout = 60
 
 func GetPerlConfigs(cdnConfPath string, dbConfPath string) (Config, error) {
 	configBytes, err := ioutil.ReadFile(cdnConfPath)
@@ -96,7 +102,7 @@ func getCDNConf(s string) (Config, error) {
 	}
 	cfg.TOURLStr = "https://127.0.0.1:" + oldPort
 	if cfg.TOURL, err = url.Parse(cfg.TOURLStr); err != nil {
-		return Config{}, fmt.Errorf("Invalid Traffic Ops URL '%v': err", cfg.TOURL, err)
+		return Config{}, fmt.Errorf("Invalid Traffic Ops URL '%v': %s", cfg.TOURL, err)
 	}
 
 	cfg.CertPath, err = getConfigCert(obj)
@@ -109,8 +115,50 @@ func getCDNConf(s string) (Config, error) {
 		return Config{}, err
 	}
 
-	if dbMaxConns, err := getDBMaxConns(obj); err != nil {
-		log.Warnf("failed to get Max DB Connections from cdn.conf (%v), using default %v\n", err, DefaultMaxDBConnections)
+	if proxyTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_proxy_timeout", obj); err != nil {
+		log.Warnf("failed to get proxy timeout from cdn.conf (%s), using default %d\n", err, DefaultProxyTimeout)
+		cfg.ProxyTimeout = DefaultProxyTimeout
+	} else {
+		cfg.ProxyTimeout = proxyTimeout
+	}
+
+	if proxyKeepAlive, err := getIntFromConfigurationKey("traffic_ops_golang_proxy_keep_alive", obj); err != nil {
+		log.Warnf("failed to get proxy keepAlive from cdn.conf (%s), using default %d\n", err, DefaultProxyKeepAlive)
+		cfg.ProxyKeepAlive = DefaultProxyKeepAlive
+	} else {
+		cfg.ProxyKeepAlive = proxyKeepAlive
+	}
+
+	if readTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_read_timeout", obj); err != nil {
+		log.Warnf("failed to get read timeout from cdn.conf (%s), using default %d\n", err, DefaultReadTimeout)
+		cfg.ReadTimeout = DefaultReadTimeout
+	} else {
+		cfg.ReadTimeout = readTimeout
+	}
+
+	if readHeaderTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_read_header_timeout", obj); err != nil {
+		log.Warnf("failed to get readHeader timeout from cdn.conf (%s), using default %d\n", err, DefaultReadHeaderTimeout)
+		cfg.ReadHeaderTimeout = DefaultReadHeaderTimeout
+	} else {
+		cfg.ReadHeaderTimeout = readHeaderTimeout
+	}
+
+	if writeTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_write_timeout", obj); err != nil {
+		log.Warnf("failed to get write timeout from cdn.conf (%s), using default %d\n", err, DefaultWriteTimeout)
+		cfg.WriteTimeout = DefaultWriteTimeout
+	} else {
+		cfg.WriteTimeout = writeTimeout
+	}
+
+	if idleTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_idle_timeout", obj); err != nil {
+		log.Warnf("failed to get idle timeout from cdn.conf (%s), using default %d\n", err, DefaultIdleTimeout)
+		cfg.IdleTimeout = DefaultIdleTimeout
+	} else {
+		cfg.IdleTimeout = idleTimeout
+	}
+
+	if dbMaxConns, err := getIntFromConfigurationKey("traffic_ops_golang_max_db_connections", obj); err != nil {
+		log.Warnf("failed to get Max DB Connections from cdn.conf (%s), using default %d\n", err, DefaultMaxDBConnections)
 		cfg.MaxDBConnections = DefaultMaxDBConnections
 	} else {
 		cfg.MaxDBConnections = dbMaxConns
@@ -136,16 +184,16 @@ func getPort(obj map[string]interface{}) (string, error) {
 	return strconv.Itoa(port), nil
 }
 
-func getDBMaxConns(obj map[string]interface{}) (int, error) {
-	inum, ok := obj["traffic_ops_golang_max_db_connections"]
+func getIntFromConfigurationKey(key string, obj map[string]interface{}) (int, error) {
+	confNum, ok := obj[key]
 	if !ok {
-		return 0, fmt.Errorf("missing traffic_ops_golang_max_db_connections key")
+		return 0, fmt.Errorf("missing %s key", key)
 	}
-	num, ok := inum.(float64)
+	confFloat, ok := confNum.(float64)
 	if !ok {
-		return 0, fmt.Errorf("traffic_ops_golang_max_db_connections key '%v' type %T not a number", inum, inum)
+		return 0, fmt.Errorf("key: %s's value: '%v' type %T not a number", key, confNum, confNum)
 	}
-	return int(num), nil
+	return int(confFloat), nil
 }
 
 func getOldPort(obj map[string]interface{}) (string, error) {
