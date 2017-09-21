@@ -803,7 +803,7 @@ sub status_count {
 	} else {
 		my %criteria;
 		if ( defined $type ) {
-			$criteria{'type.name'} = $type;
+			%criteria = ( 'type.name' => { '~' => $type } );
 		}
 		my $rs = $self->db->resultset('Server')->search(
 			\%criteria,
