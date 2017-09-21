@@ -1,0 +1,18 @@
+{
+  "port": "8443",
+  "db_user": "traffic_ops",
+  "db_pass": "twelve",
+  "db_server": "localhost",
+  "db_name": "traffic_ops",
+  "db_ssl": false,
+  "to_secret": "mONKEYDOmONKEYSEE.",
+  "to_url": "https://localhost:60443",
+  "insecure": false,
+  "cert_path": "/etc/pki/tls/certs/localhost.crt",
+  "key_path": "/etc/pki/tls/private/localhost.key",
+  "log_location_error": "stderr",
+  "log_location_warning": "stdout",
+  "log_location_info": "traffic_ops_golang.log",
+  "log_location_debug": "null",
+  "log_location_event": "access.log"
+}
