@@ -12,7 +12,7 @@
   "key_path": "/etc/pki/tls/private/localhost.key",
   "log_location_error": "stderr",
   "log_location_warning": "stdout",
-  "log_location_info": "stdout",
-  "log_location_debug": "stdout",
+  "log_location_info": "traffic_ops_golang.log",
+  "log_location_debug": "null",
   "log_location_event": "access.log"
 }
