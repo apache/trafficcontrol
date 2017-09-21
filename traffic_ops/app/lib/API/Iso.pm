@@ -228,7 +228,7 @@ sub is_valid {
 	my $params = shift;
 
 	my $rules = {
-		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk mgmtInterface mgmtIpGateway/],
+		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk mgmtInterface mgmtIpGateway mgmtIpAddress mgmtIpNetmask/],
 
 		# Validation checks to perform
 		checks => [
