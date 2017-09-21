@@ -25,41 +25,35 @@ import (
  * under the License.
 */
 
-func SelectStmt(v url.Values, selectStmt string, queryParamsToQueryCols map[string]string) (string, map[string]interface{}) {
-
+func BuildQuery(v url.Values, selectStmt string, queryParamsToSQLCols map[string]string) (string, map[string]interface{}) {
 	var sqlQuery string
+	var criteria string
+	var queryValues map[string]interface{}
 	if len(v) > 0 {
-		sqlQuery = selectStmt + "\nWHERE " + appendCriteria(queryParamsToQueryCols, v)
+		criteria, queryValues = parseCriteriaAndQueryValues(queryParamsToSQLCols, v)
+		if len(queryValues) > 0 {
+			sqlQuery = selectStmt + "\nWHERE " + criteria
+		} else {
+			sqlQuery = selectStmt
+		}
 	} else {
 		sqlQuery = selectStmt
 	}
 	log.Debugln("\n--\n" + sqlQuery)
-	queryValues := queryValues(queryParamsToQueryCols, v)
 	return sqlQuery, queryValues
 }
 
-func appendCriteria(queryParamsToQueryCols map[string]string, v url.Values) string {
-
+func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]string, v url.Values) (string, map[string]interface{}) {
 	m := make(map[string]interface{})
 	var criteria string
-	for key, val := range queryParamsToQueryCols {
+	queryValues := make(map[string]interface{})
+	for key, val := range queryParamsToSQLCols {
 		if urlValue, ok := v[key]; ok {
 			m[key] = urlValue[0]
 			criteria = val + "=:" + key
-			break
-		}
-	}
-	return criteria
-}
-
-func queryValues(queryParamsToQueryCols map[string]string, v url.Values) map[string]interface{} {
-
-	queryValues := make(map[string]interface{})
-	for key, _ := range queryParamsToQueryCols {
-		if urlValue, ok := v[key]; ok {
 			queryValues[key] = urlValue[0]
 			break
 		}
 	}
-	return queryValues
+	return criteria, queryValues
 }

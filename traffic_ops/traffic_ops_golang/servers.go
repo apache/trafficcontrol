@@ -85,7 +85,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]string{
+	queryParamsToSQLCols := map[string]string{
 		"cachegroup":   "cg.name",
 		"cdn":          "s.cdn_id",
 		"id":           "s.id",
@@ -95,7 +95,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Server, e
 		"type":         "t.name",
 	}
 
-	query, queryValues := SelectStmt(v, selectServersQuery(), queryParamsToQueryCols)
+	query, queryValues := BuildQuery(v, selectServersQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 
