@@ -72,6 +72,13 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(profileForm.cdn, 'required')">Required</small>
                 </div>
             </div>
+            <div class="form-group" ng-class="{'has-error': hasError(profileForm.routingDisabled), 'has-feedback': hasError(profileForm.routingDisabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Routing Disabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select name="routingDisabled" class="form-control" ng-model="profile.routingDisabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(profileForm.routingDisabled, 'required')">Required</small>
+                </div>
+            </div>
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Description</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
