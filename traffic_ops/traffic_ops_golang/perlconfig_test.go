@@ -64,18 +64,20 @@ func TestGetCDNConf(t *testing.T) {
 `
 
 	expected := Config{
-		HTTPPort:          "443",
-		TOSecret:          "walrus",
-		TOURLStr:          "https://127.0.0.1:60443",
-		CertPath:          "/etc/pki/tls/certs/localhost.crt",
-		KeyPath:           "/etc/pki/tls/private/localhost.key",
-		MaxDBConnections:  50,
-		ProxyTimeout:      60,
-		ProxyKeepAlive:    60,
-		ReadTimeout:       60,
-		ReadHeaderTimeout: 60,
-		WriteTimeout:      60,
-		IdleTimeout:       60,
+		HTTPPort:               "443",
+		TOSecret:               "walrus",
+		TOURLStr:               "https://127.0.0.1:60443",
+		CertPath:               "/etc/pki/tls/certs/localhost.crt",
+		KeyPath:                "/etc/pki/tls/private/localhost.key",
+		MaxDBConnections:       50,
+		ProxyTimeout:           60,
+		ProxyKeepAlive:         60,
+		ProxyTLSTimeout:        60,
+		ProxyReadHeaderTimeout: 60,
+		ReadTimeout:            60,
+		ReadHeaderTimeout:      60,
+		WriteTimeout:           60,
+		IdleTimeout:            60,
 	}
 	err := error(nil)
 	if expected.TOURL, err = url.Parse(expected.TOURLStr); err != nil {
@@ -126,6 +128,7 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 	inactivity_timeout => 60,
 	traffic_ops_golang_port => '443',
 	traffic_ops_golang_proxy_timeout => 90,
+	traffic_ops_golang_proxy_tls_timeout => 30,
 	traffic_ops_golang_read_timeout => 90
 };
 `
@@ -143,28 +146,30 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 `
 
 	expected := Config{
-		HTTPPort:           "443",
-		DBUser:             "bill",
-		DBPass:             "thelizard",
-		DBServer:           "db.to.example.net:5432",
-		DBDB:               "to",
-		DBSSL:              false,
-		TOSecret:           "walrus",
-		TOURLStr:           "https://127.0.0.1:60443",
-		CertPath:           "/etc/pki/tls/certs/localhost.crt",
-		KeyPath:            "/etc/pki/tls/private/localhost.key",
-		ProxyTimeout:       90,
-		ProxyKeepAlive:     60,
-		ReadTimeout:        90,
-		ReadHeaderTimeout:  60,
-		WriteTimeout:       60,
-		IdleTimeout:        60,
-		MaxDBConnections:   DefaultMaxDBConnections,
-		LogLocationError:   NewLogPath,
-		LogLocationWarning: NewLogPath,
-		LogLocationInfo:    NewLogPath,
-		LogLocationEvent:   OldAccessLogPath,
-		LogLocationDebug:   log.LogLocationNull,
+		HTTPPort:               "443",
+		DBUser:                 "bill",
+		DBPass:                 "thelizard",
+		DBServer:               "db.to.example.net:5432",
+		DBDB:                   "to",
+		DBSSL:                  false,
+		TOSecret:               "walrus",
+		TOURLStr:               "https://127.0.0.1:60443",
+		CertPath:               "/etc/pki/tls/certs/localhost.crt",
+		KeyPath:                "/etc/pki/tls/private/localhost.key",
+		ProxyTimeout:           90,
+		ProxyKeepAlive:         60,
+		ProxyTLSTimeout:        30,
+		ProxyReadHeaderTimeout: 60,
+		ReadTimeout:            90,
+		ReadHeaderTimeout:      60,
+		WriteTimeout:           60,
+		IdleTimeout:            60,
+		MaxDBConnections:       DefaultMaxDBConnections,
+		LogLocationError:       NewLogPath,
+		LogLocationWarning:     NewLogPath,
+		LogLocationInfo:        NewLogPath,
+		LogLocationEvent:       OldAccessLogPath,
+		LogLocationDebug:       log.LogLocationNull,
 	}
 	err := error(nil)
 	if expected.TOURL, err = url.Parse(expected.TOURLStr); err != nil {

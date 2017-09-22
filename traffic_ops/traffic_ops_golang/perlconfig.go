@@ -35,6 +35,8 @@ const OldAccessLogPath = "/var/log/traffic_ops/access.log"
 const NewLogPath = "/var/log/traffic_ops/traffic_ops_golang.log"
 const DefaultMaxDBConnections = 50
 const DefaultProxyTimeout = 60
+const DefaultProxyTLSTimeout = 60
+const DefaultProxyReadHeaderTimeout = 60
 const DefaultProxyKeepAlive = 60
 const DefaultReadTimeout = 60
 const DefaultReadHeaderTimeout = 60
@@ -127,6 +129,20 @@ func getCDNConf(s string) (Config, error) {
 		cfg.ProxyKeepAlive = DefaultProxyKeepAlive
 	} else {
 		cfg.ProxyKeepAlive = proxyKeepAlive
+	}
+
+	if proxyTLSTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_proxy_tls_timeout", obj); err != nil {
+		log.Warnf("failed to get proxy TLSTimeout from cdn.conf (%s), using default %d\n", err, DefaultProxyTLSTimeout)
+		cfg.ProxyTLSTimeout = DefaultProxyTLSTimeout
+	} else {
+		cfg.ProxyTLSTimeout = proxyTLSTimeout
+	}
+
+	if proxyReadHeaderTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_proxy_read_header_timeout", obj); err != nil {
+		log.Warnf("failed to get proxy readHeaderTimeout from cdn.conf (%s), using default %d\n", err, DefaultProxyReadHeaderTimeout)
+		cfg.ProxyReadHeaderTimeout = DefaultProxyReadHeaderTimeout
+	} else {
+		cfg.ProxyReadHeaderTimeout = proxyReadHeaderTimeout
 	}
 
 	if readTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_read_timeout", obj); err != nil {

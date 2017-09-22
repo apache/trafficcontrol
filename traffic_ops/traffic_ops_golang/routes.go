@@ -27,6 +27,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 )
 
 // Routes returns the routes, and a catchall route for when no route matches.
@@ -69,10 +71,16 @@ func rootHandler(d ServerData) http.Handler {
 			Timeout: time.Duration(d.Config.ProxyTimeout) * time.Second,
 			KeepAlive: time.Duration(d.Config.ProxyKeepAlive) * time.Second,
 		}).DialContext,
+		TLSHandshakeTimeout: time.Duration(d.Config.ProxyTLSTimeout) * time.Second,
+		ResponseHeaderTimeout: time.Duration(d.Config.ProxyReadHeaderTimeout) * time.Second,
+		//Other knobs we can turn: ExpectContinueTimeout,IdleConnTimeout
 	}
 	rp := httputil.NewSingleHostReverseProxy(d.TOURL)
 	rp.Transport = tr
 
+	rp.ErrorLog = log.Error //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
+	log.Debugf("our reverseProxy: %++v\n",rp)
+	log.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.TOSecret, rp)
 	return loggingProxyHandler
 }
