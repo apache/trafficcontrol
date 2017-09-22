@@ -226,6 +226,7 @@ sub generate_iso {
 sub is_valid {
 	my $self   = shift;
 	my $params = shift;
+	my $mgmtIpAddress = $params->{mgmtIpAddress};
 
 	my $rules = {
 		fields => [qw/osversionDir hostName domainName rootPass dhcp ipAddress ipNetmask ipGateway ip6Address ip6Gateway interfaceName interfaceMtu disk mgmtInterface mgmtIpGateway mgmtIpAddress mgmtIpNetmask/],
@@ -239,8 +240,8 @@ sub is_valid {
 			dhcp         => [ is_required("is required") ],
 			interfaceMtu => [ is_required("is required") ],
 			disk => [ is_required("is required") ],
-			mgmtInterface => [ is_required_if(defined($params->{mgmtIpAddress}), "- Management interface is required when Management IP is provided") ],
-			mgmtIpGateway => [ is_required_if(defined($params->{mgmtIpAddress}), "- Management gateway is required when Management IP is provided") ],
+			mgmtInterface => [ is_required_if((defined($mgmtIpAddress) && $mgmtIpAddress ne ""), "- Management interface is required when Management IP is provided") ],
+			mgmtIpGateway => [ is_required_if((defined($mgmtIpAddress) && $mgmtIpAddress ne ""), "- Management gateway is required when Management IP is provided") ],
 			ipAddress    => is_required_if(
 				sub {
 					my $params = shift;
