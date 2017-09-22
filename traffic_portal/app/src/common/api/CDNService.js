@@ -207,8 +207,38 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
         return request.promise;
     };
 
+    this.getDNSSECKeys = function(cdnName) {
+        var request = $q.defer();
 
+        $http.get(ENV.api['root'] + "cdns/name/" + cdnName + "/dnsseckeys")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
 
+        return request.promise;
+    };
+
+    this.generateDNSSECKeys = function(dnssecKeysRequest) {
+        var request = $q.defer();
+
+        $http.post(ENV.api['root'] + "cdns/dnsseckeys/generate", dnssecKeysRequest)
+            .then(
+                function(result) {
+                    request.resolve(result);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
 
 };
 
